@@ -77,6 +77,8 @@ Set up the `SentryWebpackPlugin` as the last running plugin, otherwise, the resu
 
 If you prefer to upload source maps manually, configure Webpack to output source maps:
 
+<PlatformSection notSupported={["javascript.nextjs"]}>
+
 ```javascript
 module.exports = {
   output: {
@@ -87,6 +89,31 @@ module.exports = {
   // other configuration
 };
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+```javascript {filename:next.config.js}
+const { withSentryConfig } = require("@sentry/nextjs");
+
+const moduleExports = {
+  output: {
+    path: path.join(__dirname, "dist"),
+    filename: "[name].js",
+    sourceMapFilename: "[name].js.map",
+  },
+  // Other configuration.
+};
+
+const SentryWebpackPluginOptions = {
+  // Additional config options for the Sentry Webpack plugin.
+};
+
+module.exports = withSentryConfig(moduleExports, SentryWebpackPluginOptions);
+```
+
+</PlatformSection>
 
 If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
 
