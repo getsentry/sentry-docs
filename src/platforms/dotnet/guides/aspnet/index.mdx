@@ -25,19 +25,30 @@ as well as your logs as breadcrumbs. The logging integrations also capture event
 You configure the SDK in the `Global.asax.cs`:
 
 ```csharp
-
+using System.Web;
 using Sentry;
+using Sentry.AspNet;
+using Sentry.EntityFramework; // if you also installed Sentry.EntityFramework
 
-public class MvcApplication : System.Web.HttpApplication
+public class MvcApplication : HttpApplication
 {
     private IDisposable _sentry;
 
     protected void Application_Start()
     {
+        // Initialize Sentry to capture AppDomain unhandled exceptions and more.
         _sentry = SentrySdk.Init(o =>
         {
             o.AddAspNet();
             o.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+            // Set TracesSampleRate to 1.0 to capture 100%
+            // of transactions for performance monitoring.
+            // We recommend adjusting this value in production
+            options.TracesSampleRate = 1.0;
+            // If you are using EF (and installed the NuGet package):
+            o.AddEntityFramework();
         });
     }
 
@@ -47,12 +58,22 @@ public class MvcApplication : System.Web.HttpApplication
         SentrySdk.CaptureException(exception);
     }
 
+    protected void Application_BeginRequest()
+    {
+        Context.StartSentryTransaction();
+    }
+
+    protected void Application_EndRequest()
+    {
+        Context.FinishSentryTransaction();
+    }
+
     protected void Application_End()
     {
+        // Flushes out events before shutting down.
         _sentry?.Dispose();
     }
 }
-
 ```
 
 ### Capturing the affected user

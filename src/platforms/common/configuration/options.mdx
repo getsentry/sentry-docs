@@ -63,15 +63,37 @@ Enabling `debug` mode makes the SDK generate as much diagnostic data as possible
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/).
 
+<PlatformSection notSupported={["unity"]}>
+
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if available).
+
+</PlatformSection>
+
+<PlatformSection supported={["unity"]}>
+
+By default the SDK will read from `Application.productName` and `Application.version` to create the release in the format `$"{Application.productName}@{Application.version}".`
+
+</PlatformSection>
 
 </ConfigKey>
 
 <ConfigKey name="environment">
 
+<PlatformSection notSupported={["unity"]}>
+
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["unity"]}>
+
+Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default, the SDK reports `editor` when running inside the Unity Editor. Otherwise, the default environment is `production`.
+
+</PlatformSection>
 
 </ConfigKey>
 
@@ -120,7 +142,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust", "dart"]}>
+<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart"]}>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -141,13 +163,13 @@ will attempt to auto-discover this value.
 
 </ConfigKey>
 
-<ConfigKey name="deny-urls" supported={["javascript"]}>
+<ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
 
 A list of strings or regex patterns that match error URLs that should not be sent to Sentry. By default, all errors will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 
 </ConfigKey>
 
-<ConfigKey name="allow-urls" supported={["javascript"]}>
+<ConfigKey name="allow-urls" supported={["javascript"]} notSupported={["node"]}>
 
 A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. By default, all errors
 will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
@@ -227,6 +249,24 @@ A path to an alternative CA bundle file in PEM-format.
 
 </ConfigKey>
 
+<ConfigKey name="frame-context-lines" supported={["node"]}>
+
+The number of context lines for each frame when loading a file.
+
+</ConfigKey>
+
+<ConfigKey name="initial-scope" supported={["javascript","node"]}>
+
+Data to be set to the initial scope.
+
+</ConfigKey>
+
+<ConfigKey name="max-value-length" supported={["javascript", "node"]}>
+
+Maximum number of characters a single value can have before it will be truncated (defaults to `250`).
+
+</ConfigKey>
+
 <ConfigKey name="normalize-depth" supported={["javascript", "node"]}>
 
 Sentry SDKs normalize any contextual data to a given depth. Any keys containing data with a structure deeper than this will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed `3` levels deep.
@@ -292,7 +332,7 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 <ConfigKey name="cache-directory-path" supported={["dotnet", "android"]}>
 
-Specifies a local directory used for cacheing payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
+Specifies a local directory used for caching payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
 
 Default: not set (caching is disabled).
 
@@ -300,7 +340,7 @@ Default: not set (caching is disabled).
 
 <ConfigKey name="init-cache-flush-timeout" supported={["dotnet"]}>
 
-When cacheing is enabled (that is, <PlatformIdentifier name="cache-directory-path" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
+When caching is enabled (that is, <PlatformIdentifier name="cache-directory-path" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
 
 The default is `1` (one) second.
 
