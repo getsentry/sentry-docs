@@ -1,5 +1,5 @@
 ---
-name: WP
+name: UWP
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/uwp/
 support_level: production
 type: language
@@ -33,12 +33,12 @@ sealed partial class App : Application
 {
     protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        Application.Current.UnhandledException += UnhandledExceptionHandler;
         SentrySdk.Init("___PUBLIC_DSN___");
+        Current.UnhandledException += UnhandledExceptionHandler;
     }
 
     [HandleProcessCorruptedStateExceptions, SecurityCritical]
-    void UnhandledExceptionHandler(object sender, UwpUnhandledExceptionEventArgs e)
+    void UnhandledExceptionHandler(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         //We need to backup the reference, because the Exception reference last for one access.
         //After that, a new  Exception reference is going to be set into e.Exception.
@@ -48,8 +48,10 @@ sealed partial class App : Application
             exception.Data[Mechanism.HandledKey] = false;
             exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
             SentrySdk.CaptureException(exception);
-            SentrySdk.FlushAsync(TimeSpan.FromSeconds(10)).Wait();
-            }
+            //If you are not going to use the Sentry's Cache functionality, it's recommended to flush 
+            //Sentry for forcing it to send the Exception before the app closes.
+            //  SentrySdk.FlushAsync(TimeSpan.FromSeconds(10)).Wait();
+        }
     }
 }
 ```
@@ -60,7 +62,7 @@ Once you've verified the package is initialized properly and sent a test event, 
 
 ### Samples
 
-You can find an example UWP app with Sentry integrated [on this GitHub repository.](https://github.com/sentry-demos/uwp-csharp)
+You can find an example UWP app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/examples/tree/master/dotnet/UwpCSharp)
 
 See the following examples that demonstrate how to integrate Sentry with various frameworks.
 
