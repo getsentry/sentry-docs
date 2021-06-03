@@ -42,9 +42,9 @@ Still, it is always a good idea to provide all available debug information.
 `sentry-cli` can be used to list properties of supported debug files and
 validate their contents. See [_Debug Information Files in sentry-cli_](/product/cli/dif/) for more information.
 
-<PlatformSection notSupported={["native.wasm"]}>
+<PlatformSection supported={["apple", "rust", "native", "dart", "flutter", "react-native"]} notSupported={["native.wasm"]}>
 
-## MachO and dSYM
+## Mach-O and dSYM
 
 Executables, dynamic libraries and debug companions on all Apple platforms use
 the _Mach Object_, or short _MachO_, container format. This applies to iOS,
@@ -70,6 +70,10 @@ however, the dSYM file must be created using the following command:
 ```bash
 dsymutil /path/to/output[.dylib]
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["android", "rust", "native", "dart", "flutter", "react-native"]} notSupported={["native.wasm"]}>
 
 ## Executable and Linkable Format (ELF)
 
@@ -130,6 +134,10 @@ readelf -S path/to/file
        000000000000e133  0000000000000000   C       0     0     1
 ```
 
+</PlatformSection>
+
+<PlatformSection supported={["rust", "native"]} notSupported={["native.wasm"]}>
+
 ## PE and PDB
 
 On Microsoft Windows, executables and dynamic libraries use the _Portable
@@ -170,9 +178,11 @@ that is not required to process minidumps. Most notably, inline functions are
 not declared, such that Sentry is not able to display inline frames in stack
 traces.
 
-## WASM
-
 </PlatformSection>
+
+<PlatformSection supported={["native.wasm"]}>
+
+## WASM
 
 For WebAssembly, we support [DWARF in WASM containers](https://yurydelendik.github.io/webassembly-dwarf/).
 Note that we do not support source maps, which are also a format used for WASM
@@ -184,17 +194,17 @@ add build IDs and split files called [wasm-split](https://github.com/getsentry/s
 to help you create a debug companion file ready for uploading to Sentry
 while removing all debug information from the release binary.
 
-<PlatformSection notSupported={["native.wasm"]}>
+</PlatformSection>
+
+<PlatformSection supported={["android", "flutter", "react-native", "dart"]} notSupported={["native.wasm"]}>
 
 ## ProGuard Mappings
 
-<PlatformSection supported={["android", "flutter", "react-native"]}>
 <Note>
 
 The recommended method for [Android users is to use the Gradle plugin](/platforms/android/proguard/).
 
 </Note>
-</PlatformSection>
 
 ProGuard mapping files allow Sentry to resolve obfuscated Java classpaths and
 method names into their original form. In that sense, they act as debug
