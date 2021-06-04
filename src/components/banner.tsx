@@ -5,12 +5,12 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Upcoming Technical Workshop: How to Measure and Analyze Application Health.";
+  "We don't like surveys either. But we do like socks.";
 const BANNER_LINK_URL =
-  "https://us06web.zoom.us/webinar/register/2116196539886/WN_cTW7PIYURvqn2eJz2FQ9rg";
-const BANNER_LINK_TEXT = "Register here.";
+  "https://www.surveymonkey.com/r/83BKWC7";
+const BANNER_LINK_TEXT = "Answer our survey to win a pair.";
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
