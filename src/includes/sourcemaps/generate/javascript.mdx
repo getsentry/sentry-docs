@@ -1,7 +1,6 @@
----
-title: Webpack
-description: "Webpack is a powerful build tool that resolves, bundles, and compresses your JavaScript modules."
----
+Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
+
+### Webpack
 
 Webpack is a powerful build tool that resolves, bundles, and compresses your JavaScript modules. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
 
@@ -73,7 +72,7 @@ Set up the `SentryWebpackPlugin` as the last running plugin, otherwise, the resu
 
 </Note>
 
-## Advanced Usage
+#### Advanced Usage
 
 If you prefer to upload source maps manually, configure Webpack to output source maps:
 
@@ -91,3 +90,65 @@ module.exports = {
 If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
 
 Additionally, the Webpack plugin will automatically set `window.SENTRY_RELEASE`, so your `Sentry.init` call will not need to be updated.
+
+### Rollup
+
+TODO
+
+<PlatformSection notSupported={["javascript.nextjs"]}>
+
+### SystemJS
+
+
+SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and can be configured to output source maps.
+
+```javascript
+builder.bundle("src/app.js", "dist/app.min.js", {
+  minify: true,
+  sourceMaps: true,
+  sourceMapContents: true,
+});
+```
+
+<Note>
+
+The example configuration above will inline your original, un-transformed source code into the generated source map file. Sentry requires both source map(s) **and** your original source files to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry in _addition_ to your source maps (see below).
+
+</Note>
+
+</PlatformSection>
+
+### TypeScript
+
+The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
+
+```javascript {filename:tsconfig.json}
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "/"
+  }
+}
+```
+<PlatformSection notSupported={["javascript.nextjs"]}>
+
+### UglifyJS
+
+UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
+
+<Note>
+
+We strongly encourage you to use a higher level bundler (or transpiler) as UglifyJS configuration can get quite complicated to achieve the desired results.
+
+</Note>
+
+If you are using UglifyJS to minify your source code, the following command will additionally generate a source map that maps the minified code back to the original source:
+
+```bash
+uglifyjs app.js \
+  -o app.min.js.map \
+  --source-map url=app.min.js.map,includeSources
+```
+
+</PlatformSection>

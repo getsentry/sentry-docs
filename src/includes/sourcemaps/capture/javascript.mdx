@@ -1,0 +1,124 @@
+Most modern JavaScript transpilers support source maps. Below you'll find our recommended instructions, though we also provide instructions for various [common tools](tools/).
+
+<PlatformSection notSupported={["javascript.angular", "javascript.nextjs"]}>
+
+We recommend using [Sentry's Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) to configure source maps and upload them automatically during the build:
+
+```shell {tabTitle:npm}
+npm install --save-dev @sentry/webpack-plugin
+```
+
+```shell {tabTitle:yarn}
+yarn add --dev @sentry/webpack-plugin
+```
+
+Next you need to generate an access token for our API. Within your organization's settings, navigate to Developer Settings, [create a new internal integration](/product/integrations/integration-platform/#internal-integrations), and provide a name appropriate to your organization. **Important:** Select **Releases -> Admin** for Permissions.
+
+<Note>
+
+The Releases -> Admin permission is also known as 'project:releases' in other API documentation.
+
+</Note>
+
+You may configure [sentry-cli](/product/cli/configuration/) through its documented mechanisms, or instead simply bind required parameters when initializing the plugin:
+
+<PlatformSection notSupported={["javascript.gatsby"]}>
+
+```javascript {filename:webpack.config.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // other configuration
+  configureWebpack: {
+    plugins: [
+      new SentryWebpackPlugin({
+        // sentry-cli configuration
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: "___ORG_SLUG___",
+        project: "___PROJECT_SLUG___",
+        release: process.env.SENTRY_RELEASE,
+
+        // webpack specific configuration
+        include: ".",
+        ignore: ["node_modules", "webpack.config.js"],
+      }),
+    ],
+  },
+};
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.gatsby"]}>
+
+```javascript {filename:webpack.config.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+
+exports.onCreateWebpackConfig = ({ stage, actions }) => {
+  if (stage === "build-javascript") {
+    actions.setWebpackConfig({
+      plugins: [
+        new SentryWebpackPlugin({
+          // sentry-cli configuration
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: "___ORG_SLUG___",
+          project: "___PROJECT_SLUG___",
+
+          // webpack specific configuration
+          include: "./public",
+          release: process.env.SENTRY_RELEASE,
+        }),
+      ],
+    });
+  }
+};
+```
+
+You can change `SENTRY_RELEASE` directly to an [appropriate env variable](https://github.com/getsentry/sentry-javascript/blob/master/packages/gatsby/gatsby-node.js) based on the environment on which you are going to deploy your application.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.vue"]}>
+
+In Vue 2.x, you should use `vue.config.js` instead of `webpack.config.js`, and use `include: "./dist"` instead of `include: "."`
+
+</PlatformSection>
+
+Note: The release value provided during source maps upload must match the value in the `Sentry.init` call.
+
+Additional information can be found in our [Webpack documentation](tools/webpack/).
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.angular"]}>
+
+SystemJS is the default module loader for Angular projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and can be configured to output source maps.
+
+```javascript
+builder.bundle("src/app.js", "dist/app.min.js", {
+  minify: true,
+  sourceMaps: true,
+  sourceMapContents: true,
+});
+```
+
+Additional information can be found in our [SystemJS documentation](tools/systemjs/).
+
+From here, you can [upload your source maps](uploading/) to Sentry.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+You need to generate an access token for our API. Within your organization's settings, navigate to Developer Settings, [create a new internal integration](/product/integrations/integration-platform/#internal-integrations), and provide a name appropriate to your organization. **Important:** Select **Releases -> Admin** for Permissions.
+
+
+<Note>
+
+The Releases -> Admin permission is also known as 'project:releases' in other API documentation.
+
+</Note>
+
+You may configure [sentry-cli](/product/cli/configuration/) through its documented mechanisms, or follow the [recommended instructions for webpack](/platforms/javascript/guides/nextjs/sourcemaps/tools/webpack/) for Next.js.
+
+</PlatformSection>
