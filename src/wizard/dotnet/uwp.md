@@ -64,6 +64,16 @@ sealed partial class App : Application
 }
 ```
 
+## Verify
+
+To verify your set up, you can capture a message with the SDK:
+
+```csharp
+SentrySdk.CaptureMessage("Hello Sentry");
+```
+
+If you don't want to depend on the static class, the SDK registers a client in the DI container. In this case, you can [take `IHub` as a dependency](https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/unit-testing/).
+
 ### Documentation
 
 Once you've verified the package is initialized properly and sent a test event, consider visiting our [complete UWP docs](https://docs.sentry.io/platforms/dotnet/guides/uwp/).
