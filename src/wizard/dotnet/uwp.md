@@ -33,24 +33,32 @@ sealed partial class App : Application
 {
     protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        SentrySdk.Init("___PUBLIC_DSN___");
+        SentrySdk.Init(o => 
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+        });
         Current.UnhandledException += UnhandledExceptionHandler;
     }
 
     [HandleProcessCorruptedStateExceptions, SecurityCritical]
-    void UnhandledExceptionHandler(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+    internal void ExceptionHandler(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        //We need to backup the reference, because the Exception reference last for one access.
-        //After that, a new  Exception reference is going to be set into e.Exception.
+        // We need to hold the reference, because the Exception property is cleared when accessed.
         var exception = e.Exception;
         if (exception != null)
         {
+            // Tells Sentry this was an Unhandled Exception
             exception.Data[Mechanism.HandledKey] = false;
             exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
             SentrySdk.CaptureException(exception);
-            //If you are not going to use the Sentry's Cache functionality, it's recommended to flush 
-            //Sentry for forcing it to send the Exception before the app closes.
-            //  SentrySdk.FlushAsync(TimeSpan.FromSeconds(10)).Wait();
+            // Make sure the event is flushed to disk or to Sentry
+            SentrySdk.FlushAsync(TimeSpan.FromSeconds(3)).Wait();
         }
     }
 }

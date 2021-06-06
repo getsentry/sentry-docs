@@ -31,7 +31,13 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
     {
         SentryXamarin.Init(options =>
         {
+            // Tells which project in Sentry to send events to:
             options.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
             options.AddXamarinFormsIntegration();
         });
 ```
