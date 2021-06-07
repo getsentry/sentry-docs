@@ -74,13 +74,12 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
             });
 ```
 
-### Verifying Your Setup
+## Verify
 
-You can Verify Sentry by raising an unhandled exception. For example, you can use the following snippet to raise a NullReferenceException:
+To verify your set up, you can capture a message with the SDK:
 
 ```csharp
-    throw null;
-}
+SentrySdk.CaptureMessage("Hello Sentry");
 ```
 
 You might need to open the app again for the crash report to be sent to the server.
