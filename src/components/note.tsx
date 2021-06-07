@@ -1,16 +1,8 @@
 import React from "react";
-import styled from "@emotion/styled";
 
 type Props = {
   children?: any;
 };
-
-const Note = styled.div`
-  color: var(--light-text);
-  line-height: 1.65;
-`;
-
-const NoteBody = styled.div``;
 
 export default ({ children }: Props): JSX.Element => {
   //   let className = "";
@@ -18,8 +10,8 @@ export default ({ children }: Props): JSX.Element => {
   //     className += " markdown-text-only";
   //   }
   return (
-    <Note role="alert">
-      <NoteBody>{children}</NoteBody>
-    </Note>
+    <div role="alert" className="note">
+      <div className="note-body">{children}</div>
+    </div>
   );
 };
