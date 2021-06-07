@@ -98,6 +98,26 @@ All SDK methods have been annotated with [JetBrains Annotations](https://github.
 
 `SentryOptions#getCacheDirSize` has been deprecated in favor of `SentryOptions#getMaxCacheItems`.
 
+`InvalidDsnException` has been removed in favor of `IllegalArgumentException`.
+
+`EventProcessor` interface has a new `default` method and this could break the instantiation when using trailing lambdas.
+
+_Old_:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+_New_:
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(event: SentryEvent, hint: Any?): SentryEvent? {
+        return event
+    }
+})
+```
+
 A random generated `installationId` replaces `Settings.Secure.ANDROID_ID`, which has been removed. This may affect the number of unique users displayed on the the Issues page and Alerts.
 If you always set a custom user using `Sentry.setUser(customUser)`, the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet:
 
