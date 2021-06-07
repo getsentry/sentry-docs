@@ -16,6 +16,26 @@ The `ShutdownHookIntegration` now flushes the SDK instead of closing it.
 
 `SentryOptions#getCacheDirSize` has been deprecated in favor of `SentryOptions#getMaxCacheItems`.
 
+`InvalidDsnException` has been removed. It is replaced by `IllegalArgumentException`.
+
+`EventProcessor` interface has a new `default` method which could break the instantiation when using trailing lambdas.
+
+_Old_:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+_New_:
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(event: SentryEvent, hint: Any?): SentryEvent? {
+        return event
+    }
+})
+```
+
 ### Spring Boot
 
 The property `sentry.enable-tracing` is deprecated. To enable tracing simply set `sentry.traces-sample-rate` or create a bean implementing `TracesSamplerCallback`.
