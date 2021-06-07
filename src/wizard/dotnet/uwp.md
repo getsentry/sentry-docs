@@ -1,6 +1,6 @@
 ---
-name: WinForms
-doc_link: https://docs.sentry.io/platforms/dotnet/guides/winforms/
+name: UWP
+doc_link: https://docs.sentry.io/platforms/dotnet/guides/uwp/
 support_level: production
 type: language
 ---
@@ -26,16 +26,13 @@ dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
 Initialize the SDK as early as possible, like in the constructor of the `App`:
 
 ```csharp
-using System;
-using System.Windows.Forms;
+using System.Windows;
 using Sentry;
 
-static class Program
+sealed partial class App : Application
 {
-    [STAThread]
-    static void Main()
+    protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        // Init the Sentry SDK
         SentrySdk.Init(o => 
         {
             // Tells which project in Sentry to send events to:
@@ -46,12 +43,23 @@ static class Program
             // We recommend adjusting this value in production.
             o.TracesSampleRate = 1.0;
         });
-        // Configure WinForms to throw exceptions so Sentry can capture them.
-        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+        Current.UnhandledException += UnhandledExceptionHandler;
+    }
 
-        // Any other configuration you might have goes here...
-        
-        Application.Run(new Form1());
+    [HandleProcessCorruptedStateExceptions, SecurityCritical]
+    internal void ExceptionHandler(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        // We need to hold the reference, because the Exception property is cleared when accessed.
+        var exception = e.Exception;
+        if (exception != null)
+        {
+            // Tells Sentry this was an Unhandled Exception
+            exception.Data[Mechanism.HandledKey] = false;
+            exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
+            SentrySdk.CaptureException(exception);
+            // Make sure the event is flushed to disk or to Sentry
+            SentrySdk.FlushAsync(TimeSpan.FromSeconds(3)).Wait();
+        }
     }
 }
 ```
@@ -63,6 +71,8 @@ To verify your set up, you can capture a message with the SDK:
 ```csharp
 SentrySdk.CaptureMessage("Hello Sentry");
 ```
+
+If you don't want to depend on the static class, the SDK registers a client in the DI container. In this case, you can [take `IHub` as a dependency](https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/unit-testing/).
 
 ### Performance Monitoring
 
@@ -90,13 +100,13 @@ Check out [the documentation](https://docs.sentry.io/platforms/dotnet/performanc
 
 ### Documentation
 
-Once you've verified the package is initialized properly and sent a test event, consider visiting our [complete WinForms docs](https://docs.sentry.io/platforms/dotnet/guides/winforms/).
+Once you've verified the package is initialized properly and sent a test event, consider visiting our [complete UWP docs](https://docs.sentry.io/platforms/dotnet/guides/uwp/).
 
 ### Samples
 
-You can find an example WinForms app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/examples/tree/master/dotnet/WindowsFormsCSharp)
+You can find an example UWP app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/examples/tree/master/dotnet/UwpCSharp)
 
-See the following examples that demonstrate how to integrate Sentry with various frameworks:
+See the following examples that demonstrate how to integrate Sentry with various frameworks.
 
 - [Multiple samples in the `dotnet` SDK repository](https://github.com/getsentry/sentry-dotnet/tree/main/samples) (**C#**)
 - [Basic F# sample](https://github.com/sentry-demos/fsharp) (**F#**)
