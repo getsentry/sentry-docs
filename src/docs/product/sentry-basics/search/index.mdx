@@ -5,15 +5,15 @@ redirect_from:
   - /workflow/search/
   - /product/search/
   - /learn/search/
-keywords: ["saved search"]
-description: "Learn more about Search, which is available on several major Sentry views: Issues, Events, and Releases."
+  - /product/sentry-basics/search/
+description: "Learn more about Search, which is available in several Sentry features."
 ---
 
-Search is available on several major [sentry.io](https://sentry.io) views: Issues, Events, and Releases.
+Search is available on several features throughout [sentry.io](https://sentry.io) such as, **Issues** and **Releases**.
 
 <Alert title="Looking for information on searching and Discover?" level="info">
 
-Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation](/product/discover-queries/).
+**Discover** is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation](/product/discover-queries/).
 
 </Alert>
 
@@ -34,7 +34,7 @@ In the example above, there are three keys (`is:`, `user.username:`, `server:`),
 - `server:web-8`
 - `example error`
 
-The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Event Properties](#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](#custom-tags) for more information on how to set tags.
+The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](/product/sentry-basics/search/searchable-properties/#issue-properties) and [Event Properties](/product/sentry-basics/search/searchable-properties/#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](/product/sentry-basics/search/search-properties/#custom-tags) for more information on how to set tags.
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
@@ -128,133 +128,6 @@ You may also combine operators like so:
 
 In the above example, the search query returns results which do not have message values like `ConnectionTimeout`, `ReadTimeout`, etc.
 
-## Search Properties
+## Learn more
 
-In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
-
-### Issue Properties
-
-Issues are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
-
-Below is a list of Issue-level tokens reserved and known to Sentry:
-
-| Token                    | Description |
-|--------------------------|-------------|
-| age | Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command. Supported suffixes: `m -> minutes`, `h -> hours`, `d -> days` `w -> weeks` |
-| age:-24h | Return issues that are new in the last 24 hours. |
-| age:+12h | Return issues older than 12 hours. |
-| age:+12h age:-24h | Return issues created between 12 and 24 hours ago. |
-| assigned | Filter on the user which the issue is assigned to. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`. |
-| assigned_or_suggested | Filter on the user or team to which the issue is assigned or suggested to be assigned. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`. |
-| bookmarks | Filter on the user which the issue is bookmarked by. Values can be your user ID (your email address) or `me` for yourself. |
-| first-release | Restrict results to issues first seen within the given release. Exact match on the version of a release, or `first-release:latest` to pick the most recent release. |
-| has | Restrict results to issues which have _any_ value for a tag. |
-| has:user | Restrict results to issues which have a user value for a tag. |
-| is | Filter on various properties of an issue. |
-| is:unresolved<br /> is:resolved<br /> is:ignored | Filter on the state of an issue. |
-| is:assigned<br /> is:unassigned | Return issues based on whether they are are assigned or not. |
-| is:linked<br /> is:unlinked | Return issues based on whether they are linked (to an external issue tracker) or not. |
-| lastSeen | Restrict results to issues that were last seen since or until a given point in time. Usage is similar to the `age` token (see above). |
-| lastSeen:+30d | Return issues last seen 30 days ago or more. |
-| lastSeen:-2d | Return issues last seen within the last two days. |
-| timesSeen | Restrict results to issues that have been seen exactly, at least, or at most some number of times.<br /><br /> An exact match token: `timesSeen:10`.<br /><br /> Upper or lower bounds tokens: `timesSeen:>10`, `timesSeen:>=10`, `timesSeen:<10`, `timesSeen:<=10` |
-
-
-
-### Event Properties
-
-Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
-
-When searching on Event properties within the Issues search, Issue Search will return any Issue that has _one or more events_ matching the supplied event filters.
-
-Below is a list of Event-level tokens reserved and known to Sentry:
-
-| Token                     | Description |
-|---------------------------| ----------- |
-| location | Restrict results to the events with a matching location. |
-| message | Restrict results to events with a matching message. |
-| environment | Restrict results to events tagged with the matching environment. |
-| release | Restrict results to events tagged with the matching release. You can create a token with an exact match on the version of a release, or `release:latest` to pick the most recent release. |
-| transaction | Restrict results to events tagged with a URL template/job name. |
-| geo.country_code<br /> geo.region geo.city | Restrict results to events triggered by a geographic area. |
-| http.method<br /> http.referer<br /> http.url | Restrict results based on the HTTP request context. |
-| user.id user.email<br /> user.username<br /> user.ip | Restrict results to events affecting a given user. |
-| event.timestamp | Restrict results to events that occurred at the given timestamp. This filter can be passed twice to provide a range.<br /><br /> Events occurred on January 2, 2016: `event.timestamp:2016-01-02`<br /><br /> Events between 01:00 and 02:00 (UTC): `event.timestamp:>=2016-01-02T01:00:00 event.timestamp:<2016-01-02T02:00:00`<br /><br /> The following comparative operators are available: greater than (`>`), greater than or equal (`>=`), less than (`<`), less than or equal (`<=`) |
-| device.arch<br /> device.battery_level<br /> device.brand<br /> device.charging<br /> device.locale<br /> device.model_id<br /> device.name<br /> device.online<br /> device.orientation<br /> device.simulator<br /> device.uuid | Restrict results to events tagged with a specific device attribute. |
-| os.build<br /> os.kernel_version | Restrict results to events tagged with a specific operating system property. |
-| stack.abs_path<br /> stack.filename<br /> stack.function<br /> stack.module<br /> stack.package<br /> stack.stack_level<br /> stack.lineno | Restrict results to events with a matching stack property.<br /><br /> For Native SDK users, `stack.package` is the Native equivalent for `stack.module`. For more details about enhancing search, see the full documentation on [adding context and customizing tags](/platforms/native/enriching-events/). |
-| error.type<br /> error.value<br /> error.mechanism<br /> error.handled | Restrict results to events with a matching error property. |
-
-### Custom Tags
-
-Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
-
-Most SDKs generally support configuring tags by configuring the scope:
-
-<PlatformContent includePath="sensitive-data/set-tag" />
-
-Several common uses for tags include:
-
-- The hostname of the server
-- The version of your platform (for example, iOS 5.0)
-- The user’s language
-
-## Premade Searches
-
-Premade searches are common search terms that we think you're likely to use. The premade searches are listed under "Recommended Searches" in the "Saved Searches" dropdown, and they're listed in order of when you've most recently used them.
-
-![Open Saved Searches dropdown on the Issues page.](search-premade-dropdown.png)
-
-## Pinned Searches
-
-You can pin a search, and it will become the default view you see on the **Issues** page. The pinned search is only visible to you and is relevant across your projects.
-
-1. Type a search into the search bar.
-
-   ![The search bar of the Issues page with two search terms.](search-pinning-step-one.png)
-
-2. Click the pin icon next to that search.
-
-   ![Cursor mousing over the pin icon and tool-tip displayed.](search-pinning-step-two.png)
-
-3. Once pinned, Sentry will add the search to the "Saved Searches" dropdown. The search label in the text will read, "My Pinned Search".
-
-   ![Pinned search in Saved Searches dropdown.](search-pinning-step-three.png)
-
-### Changing a Pinned Search
-
-To change your pinned search, do the following:
-
-1. Select your pinned search. Un-click the pin icon. Your default search will return to `is:unresolved`.
-
-2. Run another search. Click the pin icon. The query listed as "My Pinned Search" will now be the new pinned query, instead of the original one.
-
-### Pinning a Premade Search
-
-You can pin a premade search the same way you pin any other search. When you've selected a premade search, and the premade search query populates the search bar, pin it.
-
-## Organization Wide Saved Searches
-
-### Creating an org-wide saved search
-
-Owners and managers can create a persistent view for their organization by creating custom saved searched. These saved searches will not be associated with a specific project, but with all projects (and users) across the org.
-
-1. Type a search into the search bar, click the actions menu (three dots). Select "Create Saved Search".
-
-   ![Cursor mousing over Create Saved Search in actions menu.](search-add-org-filter-step-one.png)
-
-2. In the modal that opens, name the search and set the sort order for the issues list. You can also update the query here. Then click "Save".
-
-   ![Modal for naming and setting sort order of search.](search-add-org-filter-step-two.png)
-
-3. The view will then become part of the "Saved Search" dropdown.
-
-   ![Saved search in the dropdown.](search-add-org-filter-step-three.png)
-
-### Deleting an org-wide saved search
-
-When you hover over a custom saved search, you can see a trash icon next to the name of the search. Click the trash icon to remove the custom saved search from the dropdown.
-
-This action is only available for organization owners or managers.
-
-![Delete saved search icon.](delete-saved-search.png)
+<PageGrid />
