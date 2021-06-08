@@ -15,8 +15,13 @@ For the client configuration:
 ```javascript {filename:sentry.client.config.js}
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
   // ...
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
@@ -29,8 +34,13 @@ And the server configuration:
 ```javascript {filename:sentry.server.config.js}
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
   // ...
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
@@ -56,7 +66,7 @@ You can include your DSN directly in these two files, or provide it in either of
 
 Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will do two things:
 
-- Automatically call the code in `sentry.server.config.js` and `sentry.client.config.js`, at server start up and client page load, respectively. Using `withSentryConfig` is the only way to guarantee that the SDK is initialized early enough to catch all errors.
+- Automatically call the code in `sentry.server.config.js` and `sentry.client.config.js`, at server start up and client page load, respectively. Using `withSentryConfig` is the only way to guarantee that the SDK is initialized early enough to catch all errors and start performance monitoring.
 - Generate and upload source maps to Sentry, so that your stacktraces contain original, demangled code.
 
 Include the following in your `next.config.js`:
