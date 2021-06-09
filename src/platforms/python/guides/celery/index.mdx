@@ -26,6 +26,10 @@ The integration will automatically report errors from all celery jobs.
 
 Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
+There are many valid ways to do that, for example by using a signal like [`worker_process_init`](https://docs.celeryproject.org/en/stable/userguide/signals.html#worker-process-init), or by initializing the SDK in the configuration file loaded with Celery's `--config` parameter.
+
+To verify if your SDK is initialized on worker start, you can pass `debug=True` to see extra output when the SDK is initialized. If the output appears during worker startup and not only after a task has started, you should be fine.
+
 <Alert level="info" title="Note on distributed tracing">
 
 Sentry uses custom message headers for distributed tracing. Since Celery version 4.0, for [message protocol of version 1](https://docs.celeryproject.org/en/stable/internals/protocol.html#version-1), this functionality is broken and Celery fails to propagate custom headers to the worker. Protocol version 2, which is default since Celery version 4.0, is not affected.
