@@ -9,12 +9,17 @@ Sentry.init({
       // root path that will be appended to the basename of the current frame's url
       root: string;
 
+      // a custom prefix that will be used by the default iteratee (default: `app://`)
+      prefix: string;
+
       // function that takes the frame, applies a transformation, and returns it
       iteratee: (frame) => frame;
     }
   )],
 });
 ```
+
+<PlatformSection notSupported={["node"]}>
 
 ```jsx {tabTitle: CDN}
 <script
@@ -36,9 +41,24 @@ Sentry.init({
       // root path that will be appended to the basename of the current frame's url
       root: string;
 
+      // a custom prefix that will be used by the default iteratee (default: `app://`)
+      prefix: string;
+
       // function that takes the frame, applies a transformation, and returns it
       iteratee: (frame) => frame;
     }
   )],
 });
 ```
+
+</PlatformSection>
+
+#### Usage examples
+
+Let's say the full path to your file is : `/www/src/app/file.js`:
+
+| Usage                             | Path in stacktrace       | Description                                                                                                                                     |
+| --------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RewriteFrames()`                 | `app:///file.js`         | The default behavior is <br/> to replace the absolute path <br/> except the filename and prefixing it <br/> with the default prefix (`app://`). |
+| `RewriteFrames({prefix: 'foo/'})` | `foo/file.js`            | Prefix `foo/` is used instead of <br/> the default prefix `app://`.                                                                             |
+| `RewriteFrames({root: '/www'})`   | `app:///src/app/file.js` | Root is defined as `/www`, <br/> so only that part is trimmed <br/> from beginning of the path.                                                 |
