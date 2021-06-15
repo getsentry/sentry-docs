@@ -110,6 +110,24 @@ fun displayUserData() {
 
 When you didn't finish the transaction yet, but you start a new Activity, the SDK always automatically finishes the previous Activity transaction. This is due to the fact that only one transaction at a time can be bound to the Scope. To work around that, you may create transactions manually using the custom instrumentation and its instance to start spans instead of the Static API.
 
+### App Start Instrumentation
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It adds a span from the application launch to the first auto-generated UI transaction.
+
+To enable this feature enable `enableAutoActivityLifecycleTracing`. The SDK differentiates between a cold and a warm start, and doesn't track hot starts/resumes.
+* __Cold start__: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
+* __Warm start__: App launched at least once, is partially in memory, and no process exists.
+
+The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first `Activity#onResume` call as the end.
+
+You can opt out of Android's Activity Instrumentation and App Start Instrumentation using options:
+
+```xml {filename:AndroidManifest.xml}
+<manifest>
+    <meta-data android:name="io.sentry.traces.activity.enable" android:value="false" />
+</manifest>
+```
+
 ### OkHttp library Instrumentation
 
 The OkHttp's instrumentation, once added the `SentryOkHttpInterceptor`, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
