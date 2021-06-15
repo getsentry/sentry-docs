@@ -1,0 +1,56 @@
+---
+title: Alerts Best Practices
+sidebar_order: 40
+description: "Learn best practices for creating alerts."
+---
+
+It’s really important that alerts notify the right people at the right time. If you send too many notifications to too many people, you risk having those notifications ignored. The best practices below will help you create or fine tune your alerts, so they don’t become too noisy, while still telling you what you need to know.
+
+## Detecting Important Problems
+
+**Frequency**: Generally, you set alerts for when errors exceed a certain frequency, but frequency isn't everything: a low-frequency error can be more important than a high-frequency one if it's in a more important part of your app.
+
+**Users affected**: Sometimes a very small number of users  create lots of errors, so alerting on users affected can be better than error frequency. However, not all errors that have user counts in Sentry may be actually user-facing, and vice versa. Make sure such issues are filtered so that you’re not being alerted about errors that are not user facing.
+
+**Tags**: Use tags to categorize errors. For example you can filter on the auto-captured `url` tag to identify business-critical pages, or filter on a custom tag like `customer_type` to treat those alerts with more importance. You can find the list of tags available in your project under **[Project] > Settings > Tags**. The list is an aggregation of all tag keys (default and custom) encountered in events in a specific project.
+
+## Reducing Noise
+
+**Seeing the same alerts**: If you're repeatedly seeing alerts you've seen before, try filtering your issue alerts to issues created in the last few days using the `The issue is older or newer than...` filter.
+
+**Transient alerts**: Often there are transient issues that happen only a few times in quick succession and never again, that you do not want to be alerted about. To filter these out, use the `Issue has happened at least {X} times` filter in your issue alert.
+
+**Limit to latest release**: Use the `The event is from the latest release` filter to have your issue alert apply only to the latest release. <!--[TODO: describe what “latest” means]-->
+
+**Use the “For Review” list**: New issues and issues becoming unresolved are things you generally want to know about, but they can be very noisy. Sentry has a [“For Review” tab](/product/issues/states-triage/#mark-reviewed) in the issue list that surfaces such issues so that you can use email/integrations for higher urgency alerts, while making sure these low-urgency ones don’t slip through the cracks. We recommend reviewing the For Review list once a day. The For Review list surfaces:
+
+- New issues
+- Regressions (Issue changes state from Resolved -> Unresolved)
+- Issues that have met their ignore conditions (Issue changes state from Ignored -> Unresolved)
+
+### Ignored Issues
+
+You can ignore issues to reduce noise, however, ignored issues don't alert you when ignore conditions are met; they only become unresolved and appear in the [“For Review” list](/product/issues/states-triage/#mark-reviewed). So if you're worried about missing these issues, create an issue alert using the `An issue changes state from ignored to unresolved` trigger.
+
+## Routing
+
+**Issue owners**: Leverage [issue owners](/product/issues/issue-owners/) to let Sentry automatically send alerts to the right people, as well as to ease configuration burden. You can configure ownership rules in **[Project] > Settings > Issue Owners**. When there are no matching owners, the alert goes to all project members by default, which can be too broad. If you'd like a specific owner to be the fallback, end your ownership rules with a rule like `*:<owner>`.
+
+**Delivery methods for different priorities**: Use different delivery methods to separate alerts of different priorities. For example, you might route from highest to lowest priority like so:
+
+- Page - PagerDuty or OpsGenie
+- Chat app - Slack
+- Email
+
+The “For Review” tab in the issue list is where you can check on your lowest priority issues without receiving any alerts.
+
+**Build an integration**: If you would like to route alert notifications to other solutions that Sentry doesn't have an out-of-the-box integration with, you can use our [Integration Platform](/product/integrations/integration-platform/). When you create an integration, it will be available in the alert actions menu. You might want use your own integration for:
+
+- Sending alerts to integrations not supported natively
+- Aggregating alerts from your different monitoring systems
+- Writing custom rules in the webhook handler to route alerts more intelligently
+
+## Auto-Resolve
+
+Use the default auto-resolve setting in a metric alert if you mostly care about a sustained (not transient) change in your metric. For example, if there's an occasional latency spike in an endpoint caused by a single user, that's just noise, so you can set the alert to auto-resolve. On the other hand, if you get an alert for a spike in errors, that could be indicative of a real incident even if it subsides, so you probably want the alert to stick around and show up in your default view, and you should unset the auto-resolve option.
+<!-- this needs to be updated by adi-->
