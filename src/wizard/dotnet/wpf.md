@@ -26,6 +26,7 @@ dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
 Initialize the SDK as early as possible, like in the constructor of the `App`:
 
 ```csharp
+using System.Windows.Threading;
 using System.Windows;
 using Sentry;
 
