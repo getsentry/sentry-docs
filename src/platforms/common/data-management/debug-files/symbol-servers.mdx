@@ -96,7 +96,7 @@ selected layout and the file type, we try to download files at specific paths.
 The following table contains a mapping from the supported layouts to file path
 schemas applied for specific files:
 
-| Layout                          |  MachO  |   ELF   |    PE    |   PDB    | Breakpad |  WASM   |
+| Layout                          |  Mach-O  |   ELF   |    PE    |   PDB    | Breakpad |  WASM   |
 | ------------------------------- | :-----: | :-----: | :------: | :------: | :------: | :-----: |
 | Platform-Specific               |  LLDB   | BuildID | SymStore | SymStore | Breakpad | BuildID |
 | Microsoft SymStore              |    -    |    -    | SymStore | SymStore |    -     |    -    |
@@ -191,7 +191,7 @@ The `build_id` construction differs among file formats:
 - PE: `<Signature><Age>` (age in hex, not padded)
 - PDB: `<Signature><Age>` (age in hex, not padded)
 - ELF: the gnu-build-id code note byte sequence.
-- MachO: `LC_UUID` bytes
+- Mach-O: `LC_UUID` bytes
 - WASM: `build_id` section as bytes
 
 Examples:
@@ -206,11 +206,11 @@ Examples:
 Path: `<file_name>/<prefix>-<identifier>/<file_name>`
 
 [SSQP Key Conventions] are an extension to the original Microsoft Symbol
-Server protocol for .NET. It specifies lookup paths for PE, PDB, MachO and ELF
+Server protocol for .NET. It specifies lookup paths for PE, PDB, Mach-O and ELF
 files. The case of all lookup paths is generally **lowercase** except for the
 age field of PDB identifiers which should be **uppercase**.
 
-For MachO files and ELF files, SSQP specifies to use the same identifiers as
+For Mach-O files and ELF files, SSQP specifies to use the same identifiers as
 used in the LLDB and GNU build id method, respectively. See the sections above
 for more information. This results in the following paths for all possible
 file types:
@@ -222,8 +222,8 @@ file types:
 - `<code_name>/elf-buildid-<buildid>/<code_name>` (ELF
   binary)
 - `_.debug/elf-buildid-sym-<buildid>/_.debug` (ELF debug file)
-- `<code_name>/mach-uuid-<uuid>/<code_name>` (MachO binary)
-- `_.dwarf/mach-uuid-sym-<uuid>/_.dwarf` (MachO binary)
+- `<code_name>/mach-uuid-<uuid>/<code_name>` (Mach-O binary)
+- `_.dwarf/mach-uuid-sym-<uuid>/_.dwarf` (Mach-O binary)
 
 SSQP specifies an additional lookup method by SHA1 checksum over the
 file contents, commonly used for source file lookups. _Sentry does not support
@@ -253,7 +253,7 @@ the default casing rules:
 - The timestamp of a PE identifier is **uppercase**, but the size is
   **lowercase**.
 
-Since the original Microsoft Symbol Server did not serve ELF or MachO files,
+Since the original Microsoft Symbol Server did not serve ELF or Mach-O files,
 we do not recommend using this convention for these types. However, Sentry
 will support the SSQP conventions with adapted casing rules when this layout
 is selected.
