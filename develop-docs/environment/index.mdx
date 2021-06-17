@@ -89,6 +89,17 @@ computer is actually compiling Python!
 make setup-pyenv
 ```
 
+fish users will need to manually set some of the environment variables. This only needs to be done
+once.
+
+```shell {tabTitle: Fish}
+set -Ux PYENV_ROOT $HOME/.pyenv
+# fish >=3.2.0
+fish_add_path $PYENV_ROOT/bin
+# fish <3.2.0
+set -U fish_user_paths $PYENV_ROOT/bin $fish_user_paths
+```
+
 Once that's done, your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it
 again and cd into sentry. To reload it, run:
 
@@ -97,15 +108,21 @@ exec "$SHELL"
 ```
 
 After this, if you type `which python`, you should see something like `$HOME/.pyenv/shims/python`
-rather than `/usr/bin/python` this is because the following has been added to your start up script:
+rather than `/usr/bin/python`. This is because the following has been added to your start up script:
 
-```shell
-if command -v pyenv 1>/dev/null 2>&1; then
-  eval "$(pyenv init -)"
-fi
+```shell {tabTitle: Bash}
+Given that the bash instructions vary greatly based on the user's configuration, it is recommended to visit https://github.com/pyenv/pyenv#installation for instructions on how to set up Bash.
 ```
 
-Note: If you use Fish, add `source (pyenv init - | psub)` to `~/.config/fish/config.fish`.
+```shell {filename: ~/.zprofile} {tabTitle: Zsh}
+# It is assumed that pyenv is installed via Brew, so this is all we need to do.
+eval "$(pyenv init --path)"
+```
+
+```shell {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
+# pyenv init
+status is-login; and pyenv init --path | source
+```
 
 ### Virtual Environment
 
@@ -117,8 +134,16 @@ python -m venv .venv
 
 And activate the virtual environment:
 
-```shell
+```shell {tabTitle: Bash}
 source .venv/bin/activate
+```
+
+```shell {tabTitle: Zsh}
+source .venv/bin/activate
+```
+
+```shell {tabTitle: Fish}
+source .venv/bin/activate.fish
 ```
 
 If everything worked, running `which python` should now result in something like `/Users/you/sentry/.venv/bin/python`.
@@ -145,26 +170,24 @@ startup script:
 ```shell {filename: ~/.bashrc} {tabTitle: Bash}
 export VOLTA_HOME="~/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
-
-````
+```
 
 ```shell {filename: ~/.zshrc} {tabTitle: Zsh}
 export VOLTA_HOME="~/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
-````
+```
 
 ```shell {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
 set -gx VOLTA_HOME "$HOME/.volta"
-set -gx PATH "$VOLTA_HOME/bin" \$PATH
-
-````
+set -gx PATH "$VOLTA_HOME/bin" $PATH
+```
 
 Now, if you try and run `volta`, you should see some help text, meaning volta is installed correctly. To install node,
 simply run:
 
 ```shell
 node -v
-````
+```
 
 Volta intercepts this and automatically downloads and installs the node and yarn versions in sentry's `package.json`.
 
@@ -195,25 +218,23 @@ startup script:
 
 ```shell {filename: ~/.bashrc} {tabTitle: Bash}
 eval "\$(direnv hook bash)"
-
-````
+```
 
 ```shell {filename: ~/.zshrc} {tabTitle: Zsh}
 eval "$(direnv hook zsh)"
-````
+```
 
 ```shell {filename ~/.config/fish/config.fish} {tabTitle: Fish}
 direnv hook fish | source
-
-````
+```
 
 And after doing that, reload your shell:
 
 ```shell
 exec "$SHELL"
-````
+```
 
-Any time the `.envrc` configuration changes (including the first time) you will be prompted to run `direnv allow` before any
+Any time the `.envrc` configuration changes (including the first load) you will be prompted to run `direnv allow` before any
 of the configuration will run. This is for security purposes and you are encouraged to inspect the changes before running this command.
 
 ### Customize your development environment variables
@@ -221,8 +242,8 @@ of the configuration will run. This is for security purposes and you are encoura
 If you want to personalize your environment variables, you can do so by creating a `.env` file. This file is
 ignored by `git`, thus, you will not be able to leak it into one of your PRs.
 
-Two examples of variables that you can place there are `SENTRY_SILENCE_DIRENV_NOTICE` to make `direnv` output less noisy
-and `SENTRY_DEVENV_NO_REPORT=1` to prevent the development environment to report errors to Sentry.
+Running `make direnv-help` will list all of the latest supported environment variables. Using `SENTRY_DEVENV_NO_REPORT` as an example,
+to enable that setting you would insert `SENTRY_DEVENV_NO_REPORT=1` into your `.env` file.
 
 ## Running the Development Server
 
@@ -308,9 +329,9 @@ You might also be interested in <Link to="/continuous-integration/#troubleshooti
 
 ---
 
-**Problem:** something like `pkg_resources.DistributionNotFound: The 'some_dependency<0.6.0,>=0.5.5' distribution was not found and is required by sentry`
+**Problem:** You see an error that mentions something like `pkg_resources.DistributionNotFound: The 'some_dependency<0.6.0,>=0.5.5' distribution was not found and is required by sentry`
 
-**Solution:** Your virtualenv needs to be updated. run `make install-py-dev`.
+**Solution:** Your virtualenv needs to be updated. Run `make install-py-dev`.
 
 ---
 
@@ -330,9 +351,9 @@ make build-platform-assets
 
 ---
 
-**Problem:** `SessionNotCreatedException: Message: session not created: This version of ChromeDriver only supports Chrome version 76`
+**Problem:** You see `SessionNotCreatedException: Message: session not created: This version of ChromeDriver only supports Chrome version 76`
 
-Also, another symptom indicating you need to upgrade chromedriver:
+Or:
 
 ```shell
 Traceback (most recent call last):
@@ -346,6 +367,8 @@ RetryException: Could not successfully execute <functools.partial object at 0x10
 ```
 
 **Solution:**
+
+ChromeDriver needs to be updated.
 
 ```shell
 brew upgrade --cask chromedriver
@@ -383,9 +406,9 @@ pip install --no-cache-dir uwsgi
 
 ---
 
-**Problem:** `DoesNotExist: Subscription matching query does not exist`
+**Problem:** You see `DoesNotExist: Subscription matching query does not exist`
 
-**Solution:** In getsentry run the following to mock a subscription:
+**Solution:** In getsentry, run the following to mock a subscription:
 
 ```shell
 ./bin/mock-subscription <org_slug>
@@ -393,7 +416,7 @@ pip install --no-cache-dir uwsgi
 
 ---
 
-**Problem:** Something like `Error: No such container: sentry_postgres`
+**Problem:** You see something like `Error: No such container: sentry_postgres`
 
 **Solution:** Review the [bootstrap services](/environment/#bootstrap-services)
 section or spin up Docker services with:
