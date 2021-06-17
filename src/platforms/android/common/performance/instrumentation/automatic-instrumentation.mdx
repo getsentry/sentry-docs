@@ -110,6 +110,31 @@ fun displayUserData() {
 
 When you didn't finish the transaction yet, but you start a new Activity, the SDK always automatically finishes the previous Activity transaction. This is due to the fact that only one transaction at a time can be bound to the Scope. To work around that, you may create transactions manually using the custom instrumentation and its instance to start spans instead of the Static API.
 
+### App Start Instrumentation
+
+<Note>
+
+This is a preview API, available in `5.1.0-beta.1` and above. Features available in a preview API are still in progress and may have bugs. We recognize the irony. The API may be renamed, changed, or removed in a future version.
+
+</Note>
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It adds a span from the application launch to the first auto-generated UI transaction.
+
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+* __Cold start__: A cold start refers to an app’s starting from scratch: the system’s process has not, until this start, created the app’s process. Cold starts happen in cases such as your app’s being launched for the first time since the device booted, or since the system killed the app.
+* __Warm start__: A warm start encompasses some subset of the operations that take place during a cold start; at the same time, it represents more overhead than a hot start. For instance: The user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch via a call to `onCreate()`.
+
+
+The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first `Activity#onResume` call as the end.
+
+You can opt out of Android's Activity Instrumentation and App Start Instrumentation using options:
+
+```xml {filename:AndroidManifest.xml}
+<manifest>
+    <meta-data android:name="io.sentry.traces.activity.enable" android:value="false" />
+</manifest>
+```
+
 ### OkHttp library Instrumentation
 
 The OkHttp's instrumentation, once added the `SentryOkHttpInterceptor`, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
