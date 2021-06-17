@@ -159,16 +159,37 @@ stack.function:myapplication::* +app
 
 In many cases, you want to remove the top or bottom of the stack trace. For instance, many code bases use a common function to generate an error. In this case, the error machinery will appear as part of the stack trace.
 
-<PlatformContent includePath="grouping/remove-frames" />
+For example, if you use Rust, you likely want to remove some frames that are related to panic handling:
+
+```discover {tabTitle:Enhancement Rules}
+stack.function:std::panicking::begin_panic       ^-app -app ^-group
+stack.function:core::panicking::begin_panic      ^-app -app ^-group
+```
 
 Here we tell the system that all frames from `begin-panic` to the crash location are not part of the application (including the panic frame itself). All frames above are, in all cases, irrelevant for grouping.
 
 Likewise, you can also remove the base of a stack trace. This is particularly useful if you have different main loops that drive an application:
 
-<PlatformContent includePath="grouping/remove-frames" />
+```discover {tabTitle:Enhancement Rules}
+stack.function:myapp::LinuxMainLoop         v-group -group
+stack.function:myapp::MacMainLoop           v-group -group
+stack.function:myapp::WinMainLoop           v-group -group
+```
 
 ### Stack Trace Frame Limits
 
 This isn't useful for _all_ projects, but it can work well for large applications with many crashes. The default strategy is to consider most of the stack trace relevant for grouping. This means that every different stack trace that leads to a crashing function will cause a different group to be created. If you do not want that, you can force the groups to be much larger by limiting how many frames should be considered.
 
-<PlatformContent includePath="grouping/max-frames" />
+For instance, if any of the frames in the stack trace refer to a common external library, you could tell the system only to consider the top N frames:
+
+```discover {tabTitle:Enhancement Rules}
+# always only consider the top 1 frame for all native events
+family:native max-frames=1
+
+# if the bug is in proprietarymodule.so, only consider top 2 frames
+family:native stack.package:**/proprietarymodule.so  max-frames=2
+
+# these are functions we want to consider much more of the stack trace for
+family:native stack.function:KnownBadFunction1  max-frames=5
+family:native stack.function:KnownBadFunction2  max-frames=5
+```
