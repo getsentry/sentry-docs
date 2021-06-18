@@ -27,6 +27,7 @@ Initialize the SDK as early as possible, like in the constructor of the `App`:
 
 ```csharp
 using System.Windows;
+using Sentry.Protocol;
 using Sentry;
 
 sealed partial class App : Application
