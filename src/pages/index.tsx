@@ -153,7 +153,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/performance/distributed-tracing/">
+                <a href="/product/sentry-basics/tracing/distributed-tracing/">
                   Distributed Tracing
                 </a>
               </li>
