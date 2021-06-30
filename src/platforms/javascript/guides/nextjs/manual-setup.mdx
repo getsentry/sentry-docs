@@ -6,7 +6,7 @@ description: "Learn how to set up the SDK manually."
 
 If you can’t (or prefer not to) run the [configuration step](/platforms/javascript/guides/nextjs/#configure), you can follow the instructions below to configure your application.
 
-## Set Initialization Config Files
+## Create Initialization Config Files
 
 Create two files in the root directory of your project, `sentry.client.config.js` and `sentry.server.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
 
@@ -51,11 +51,11 @@ Sentry.init({
 If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
 
 ```javascript {filename:pages/api*}
-import { withSentry } from '@sentry/nextjs';
+import { withSentry } from "@sentry/nextjs";
 
 const handler = async (req, res) => {
-  res.status(200).json({ name: 'John Doe' })
-}
+  res.status(200).json({ name: "John Doe" });
+};
 
 export default withSentry(handler);
 ```
@@ -68,7 +68,7 @@ You can include your DSN directly in these two files, or provide it in either of
 
 </Alert>
 
-## Extend Default Webpack Usage
+## Use `withSentryConfig`
 
 Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will do two things:
 
@@ -107,15 +107,39 @@ module.exports = withSentryConfig(moduleExports, SentryWebpackPluginOptions);
 ```
 
 Make sure to add the Sentry config last; otherwise, the source maps the plugin receives may not be final.
-Also keep in mind, by default we disable source map upload in `dev` mode when running `next dev` to not upload the source maps on every file change. If you build your app for production, we'll upload your source maps by default.
 
-## Configure sentry-cli
+## Configure Source Maps
+
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), `sentry-cli` will automatically detect and upload your source files, source maps, and bundles to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), because otherwise the full upload process would reoccur on each file change.)
+
+To configure the plugin, pass a `SentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
+
+If you want or need to handle source map uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
+
+```javascript
+const moduleExports = {
+  sentry: {
+    disableServerWebpackPlugin: true,
+    disableClientWebpackPlugin: true,
+  },
+};
+```
+
+If you disable the plugin for both server and client builds, it's safe to omit the `SentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
+
+```javascript
+module.exports = withSentryConfig(moduleExports);
+```
+
+In that case you can also skip the `sentry-cli` confuguration step below.
+
+## Configure `sentry-cli`
 
 The `SentryWebpackPlugin` uses `sentry-cli`, which can be configured in one of two ways - using a properties file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](https://docs.sentry.io/product/cli/configuration/).
 
 If you choose to combine the two approaches, the environment variables will take precedence over values set in the properties file. One common approach is to set sensitive data (like tokens) in the environment and include everything else in a properties file, which can then be added to your VCS.
 
-### Properties File
+### Use a Properties File
 
 You can create a `sentry.properties` file in the base directory of your project. (This is the approach taken by the wizard.) Here is an example:
 
@@ -127,7 +151,7 @@ auth.token=___TOKEN___
 # cli.executable=../path/to/bin/sentry-cli
 ```
 
-### Environment Variables
+### Use Environment Variables
 
 Alternatively, the cli can be configured using environment variables.
 
