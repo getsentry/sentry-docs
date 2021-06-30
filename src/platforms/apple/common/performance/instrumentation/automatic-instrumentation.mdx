@@ -1,0 +1,61 @@
+---
+title: Automatic Instrumentation Preview
+sidebar_order: 10
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+<Note>
+
+This is a preview API, available in `7.2.0-beta.0` and above. Features available in a preview API are still in progress and may have bugs. We recognize the irony. The API may be renamed, changed, or removed in a future version.
+We welcome your [feedback](https://github.com/getsentry/sentry-cocoa/discussions/1187).
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+## UIViewController Instrumentation
+
+This feature is available for iOS, tvOS, and Mac Catalyst, and only works for UIViewControllers.
+
+The UIViewController Instrumentation, once enabled, captures transactions whenever your app loads a ViewController. The SDK sets the transaction name to the name of the ViewController, including the module; for example, `Your_App.MainViewController`, and the transaction operation to `ui.load`. The SDK creates spans to provide insight into the length of time each consumed by each of the following methods.
+
+![UIViewController Transaction](ui-view-controller-transaction.png)
+
+## App Start Instrumentation
+
+This feature is available for iOS, tvOS, and Mac Catalyst.
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
+To enable this feature enable `AutoUIPerformanceTracking`. The SDK differentiates between a cold and a warm start, and doesn't track hot starts/resumes.
+* __Cold start__: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
+* __Warm start__: App launched at least once, is partially in memory, and no process exists.
+
+The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][UIWindow] as the end. It creates the following spans:
+* __Pre Main__: From the process start time to the runtime init.
+* __UIKit and Application Init__: From the runtime init to the [`didFinishLaunchingNotification`][didFinishLaunching].
+* __Initial Frame Render__: From the [`didFinishLaunchingNotification`][didFinishLaunching] to [`UIWindowDidBecomeVisibleNotification`][UIWindow].
+
+![App Start Transaction](app-start-transaction.png)
+
+You can opt out of UIViewController and App Start Instrumentation using options:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableAutoUIPerformanceTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAutoUIPerformanceTracking = NO;
+}];
+```
+
+[UIWindow]: https://developer.apple.com/documentation/uikit/uiwindowdidbecomevisiblenotification
+[didFinishLaunching]: https://developer.apple.com/documentation/uikit/uiapplication/1622971-didfinishlaunchingnotification

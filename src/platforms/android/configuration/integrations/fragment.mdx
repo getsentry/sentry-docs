@@ -1,0 +1,81 @@
+---
+title: Fragment
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.android.fragment
+categories:
+  - mobile
+---
+
+<Note>
+
+This is a preview API, available in `5.1.0-beta.2` and above. Features available in a preview API are still in progress and may have bugs. We recognize the irony. The API may be renamed, changed, or removed in a future version.
+
+</Note>
+
+The `sentry-android-fragment` library provides [Fragment](https://developer.android.com/jetpack/androidx/releases/fragment) support for Sentry using the [FragmentLifecycleIntegration](https://github.com/getsentry/sentry-java/blob/a5f30b43b1dad2634ce020809f3b52e0d564a22a/sentry-android-fragment/src/main/java/io/sentry/android/fragment/FragmentLifecycleIntegration.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/main/sentry-android-fragment/src/main/java/io/sentry/android/fragment).
+
+On this page, we get you up and running with Sentry's Fragment Integration, so that it will automatically add a breadcrumb for each fragment's lifecycle and start a span out of the active transaction bound to the scope for each launch of a fragment.
+
+## Install
+
+To add the Fragment integration, [manually initialize](/platforms/android/configuration/manual-init/) the Android SDK, then add the `sentry-android-fragment` dependency. Using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:5.1.0-beta.2'
+implementation 'io.sentry:sentry-android-fragment:5.1.0-beta.2'
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+```kotlin
+import android.app.Application
+import io.sentry.android.core.SentryAndroid
+import io.sentry.android.fragment.FragmentLifecycleIntegration
+
+SentryAndroid.init(this) { options ->
+    options.addIntegration(
+        FragmentLifecycleIntegration(
+            this,
+            enableFragmentLifecycleBreadcrumbs = true, // enabled by default
+            enableAutoFragmentLifecycleTracing = true  // disabled by default
+            )
+        )
+}
+```
+
+## Verify
+
+Create a new `Fragment` view and add a button to it.
+This snippet captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import io.sentry.Sentry
+
+class SampleFragment : Fragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // generated databinding
+        return FragmentSampleBinding.inflate(inflater).apply {
+            this.sendMessage.setOnClickListener {
+                Sentry.captureMessage("Some message from Fragment Lifecycle events in breadcrumbs.")
+            }
+        }.root
+    }
+
+    companion object {
+        @JvmStatic fun newInstance() = SampleFragment()
+    }
+}
+```

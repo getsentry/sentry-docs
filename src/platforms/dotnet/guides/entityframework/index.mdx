@@ -30,9 +30,8 @@ All queries executed are added as breadcrumbs and are sent with any event which 
 
 ## Configuration
 
-There are 2 steps to adding Entity Framework 6 support to your project:
+Add the Entity Framework 6 support to your project in one step:
 
-- Call `SentryDatabaseLogging.UseBreadcrumbs()` to either your application's startup method, or into a static constructor inside your Entity Framework object. Make sure you only call this method once! This will add the interceptor to Entity Framework to log database queries.
 - When initializing the SDK, call the extension method `AddEntityFramework()` on `SentryOptions`. This will register all error processors to extract extra data, such as validation errors, from the exceptions thrown by Entity Framework.
 
 ### Example configuration
@@ -40,14 +39,16 @@ There are 2 steps to adding Entity Framework 6 support to your project:
 For example, configuring an ASP.NET app with _global.asax_:
 
 ```csharp {filename:global.asax}
+using System;
+using System.Configuration;
+using Sentry;
+
 public class MvcApplication : System.Web.HttpApplication
 {
     private IDisposable _sentrySdk;
 
     protected void Application_Start()
     {
-        // We add the query logging here so multiple DbContexts in the same project are supported
-        SentryDatabaseLogging.UseBreadcrumbs();
         _sentrySdk = SentrySdk.Init(o =>
         {
             // We store the DSN inside Web.config
