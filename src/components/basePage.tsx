@@ -101,7 +101,6 @@ export default ({
   if (tx) {
     tx.setStatus("ok");
   }
-
   const { title, excerpt, description } = pageContext;
   const hasToc = !pageContext.notoc;
 

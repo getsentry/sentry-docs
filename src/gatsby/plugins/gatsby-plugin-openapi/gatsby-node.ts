@@ -32,6 +32,36 @@ export const sourceNodes = async (
 
     const parsedContent = parseContent();
 
+    // temporarily create a mock api description so the apiDoc query doesnt fail
+    createNode({
+      name: "mockAPIDescription",
+      id: createNodeId(`APIDescription-mockdata`),
+      children: [],
+      parent: null,
+      internal: {
+        type: "APIDescription",
+        content: "this is mock data",
+        mediaType: "text/markdown",
+        contentDigest: createContentDigest("this is mock data"),
+      },
+    })
+
+    parsedContent.tags.forEach(tag => {
+    if (tag['x-display-description']) {
+      createNode({
+          name: tag.name,
+          id: createNodeId(`APIDescription-${tag.name}`),
+          children: [],
+          parent: null,
+          internal: {
+            type: "APIDescription",
+            content: tag.description,
+            mediaType: "text/markdown",
+            contentDigest: createContentDigest(tag.description),
+          },
+        })
+    }
+    })
     var data: OpenApiPath[] =
       parsedContent.paths &&
       Object.keys(parsedContent.paths).reduce((acc, apiPath) => {
