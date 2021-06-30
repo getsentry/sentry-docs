@@ -1,0 +1,72 @@
+---
+title: Searchable Properties
+sidebar_order: 10
+description: "Learn more about searchable issue and event properties."
+---
+
+Sentry's Search provides you with reserved keywords, like `is`, `user`, `server`, and `browser`, that you can use to search on the properties of issues and events. You can also create [custom tags](#custom-tags) on which to search. Below are canonical lists of all available issue and event search terms.
+
+### Issue Properties
+
+[Issues](/product/issues/) are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
+
+Below is a list of issue-level keys and tokens reserved and known to Sentry:
+
+| Key/Token                    | Description |
+|--------------------------|-------------|
+| age | Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command. Supported suffixes: `m -> minutes`, `h -> hours`, `d -> days` `w -> weeks` |
+| age:-24h | Return issues that are new in the last 24 hours. |
+| age:+12h | Return issues older than 12 hours. |
+| age:+12h age:-24h | Return issues created between 12 and 24 hours ago. |
+| assigned | Filter on the user which the issue is assigned to. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`. |
+| assigned_or_suggested | Filter on the user or team to which the issue is assigned or suggested to be assigned. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`. |
+| bookmarks | Filter on the user which the issue is bookmarked by. Values can be your user ID (your email address) or `me` for yourself. |
+| first-release | Restrict results to issues first seen within the given release. Exact match on the version of a release, or `first-release:latest` to pick the most recent release. |
+| has | Restrict results to issues which have _any_ value for a tag. |
+| has:user | Restrict results to issues which have a user value for a tag. |
+| is | Filter on various properties of an issue. |
+| is:unresolved<br /> is:resolved<br /> is:ignored | Filter on the state of an issue. |
+| is:assigned<br /> is:unassigned | Return issues based on whether they are are assigned or not. |
+| is:linked<br /> is:unlinked | Return issues based on whether they are linked (to an external issue tracker) or not. |
+| lastSeen | Restrict results to issues that were last seen since or until a given point in time. Usage is similar to the `age` token (see above). |
+| lastSeen:+30d | Return issues last seen 30 days ago or more. |
+| lastSeen:-2d | Return issues last seen within the last two days. |
+| timesSeen | Restrict results to issues that have been seen exactly, at least, or at most some number of times.<br /><br /> An exact match token: `timesSeen:10`.<br /><br /> Upper or lower bounds tokens: `timesSeen:>10`, `timesSeen:>=10`, `timesSeen:<10`, `timesSeen:<=10` |
+
+
+
+### Event Properties
+
+Events are the underlying event data captured using Sentry SDKs (read: errors and transactions).
+
+When searching on event properties within the **Issues** page, the search will return any issue that has _one or more events_ matching the supplied event filters.
+
+Below is a list of event-level keys and tokens reserved and known to Sentry:
+
+| Key/Token                     | Description |
+|---------------------------| ----------- |
+| location | Restrict results to the events with a matching location. |
+| message | Restrict results to events with a matching message. |
+| environment | Restrict results to events tagged with the matching environment. |
+| release | Restrict results to events tagged with the matching release. You can create a token with an exact match on the version of a release, or `release:latest` to pick the most recent release. |
+| transaction | Restrict results to events tagged with a URL template/job name. |
+| geo.country_code<br /> geo.region geo.city | Restrict results to events triggered by a geographic area. |
+| http.method<br /> http.referer<br /> http.url | Restrict results based on the HTTP request context. |
+| user.id user.email<br /> user.username<br /> user.ip | Restrict results to events affecting a given user. |
+| event.timestamp | Restrict results to events that occurred at the given timestamp. This filter can be passed twice to provide a range.<br /><br /> Events occurred on January 2, 2016: `event.timestamp:2016-01-02`<br /><br /> Events between 01:00 and 02:00 (UTC): `event.timestamp:>=2016-01-02T01:00:00 event.timestamp:<2016-01-02T02:00:00`<br /><br /> The following comparative operators are available: greater than (`>`), greater than or equal (`>=`), less than (`<`), less than or equal (`<=`) |
+| device.arch<br /> device.battery_level<br /> device.brand<br /> device.charging<br /> device.locale<br /> device.model_id<br /> device.name<br /> device.online<br /> device.orientation<br /> device.simulator<br /> device.uuid | Restrict results to events tagged with a specific device attribute. |
+| os.build<br /> os.kernel_version | Restrict results to events tagged with a specific operating system property. |
+| stack.abs_path<br /> stack.filename<br /> stack.function<br /> stack.module<br /> stack.package<br /> stack.stack_level<br /> stack.lineno | Restrict results to events with a matching stack property.<br /><br /> For Native SDK users, `stack.package` is the Native equivalent for `stack.module`. For more details about enhancing search, see the full documentation on [adding context and customizing tags](/platforms/native/enriching-events/). |
+| error.type<br /> error.value<br /> error.mechanism<br /> error.handled | Restrict results to events with a matching error property. |
+
+### Custom Tags
+
+Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by <PlatformLink to="/enriching-events/tags/">configuring the scope</PlatformLink>. 
+
+Several common uses for tags include:
+
+- The hostname of the server
+- The version of your platform (for example, iOS 5.0)
+- The user’s language

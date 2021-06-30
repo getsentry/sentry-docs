@@ -31,7 +31,13 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
     {
         SentryXamarin.Init(options =>
         {
+            // Tells which project in Sentry to send events to:
             options.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
             options.AddXamarinFormsIntegration();
         });
 ```
@@ -68,16 +74,39 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
             });
 ```
 
-### Verifying Your Setup
+## Verify
 
-You can Verify Sentry by raising an unhandled exception. For example, you can use the following snippet to raise a NullReferenceException:
+To verify your set up, you can capture a message with the SDK:
 
 ```csharp
-    throw null;
-}
+SentrySdk.CaptureMessage("Hello Sentry");
 ```
 
 You might need to open the app again for the crash report to be sent to the server.
+
+### Performance Monitoring
+
+You can measure the performance of your code by capturing transactions and spans.
+
+```csharp
+// Transaction can be started by providing, at minimum, the name and the operation
+var transaction = SentrySdk.StartTransaction(
+  "test-transaction-name",
+  "test-transaction-operation"
+);
+
+// Transactions can have child spans (and those spans can have child spans as well)
+var span = transaction.StartChild("test-child-operation");
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+span.Finish(); // Mark the span as finished
+transaction.Finish(); // Mark the transaction as finished and send it to Sentry
+```
+
+Check out [the documentation](https://docs.sentry.io/platforms/dotnet/performance/instrumentation/) to learn more about the API and automatic instrumentations.
 
 ### Documentation
 
