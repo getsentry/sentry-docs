@@ -79,17 +79,6 @@ public class MvcApplication : HttpApplication
         // Flushes out events before shutting down.
         _sentry?.Dispose();
     }
-    
-    protected void Application_BeginRequest()
-    {
-        // Start a transaction that encompasses the current request
-        Context.StartSentryTransaction();
-    }
-
-    protected void Application_EndRequest()
-    {
-        Context.FinishSentryTransaction();
-    }
 }
 ```
 
