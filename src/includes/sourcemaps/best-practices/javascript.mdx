@@ -6,13 +6,41 @@
 
 The filenames/paths of your source maps should match with the reported names in stacktraces. You can use [options](https://github.com/getsentry/sentry-webpack-plugin#options) to adjust the paths to your files. (Both `sentry-webpack-plugin` and `sentry-cli` have the same options.)
 
-Here are details and examples for some options you might need to adjust your source maps.
+Here are details and examples for some options you might need to use for your source maps.
+
+### `release`
+
+For Sentry to associate error stacktraces with your source maps, you should define the same release number, both in your `sentry-webpack-plugin` / `sentry-cli` (whichever you use) and your `Sentry.init()` call. The easiest way to do that is to set the release number as an environment variable in your project.
+
+```bash {tabTitle:.env}
+# ...
+SENTRY_RELEASE="1.2.3"
+# ...
+```
+
+```javascript {tabTitle: webpack.config.js}
+// ...
+new SentryWebpackPlugin({
+  // ... other options
+  release: process.env.SENTRY_RELEASE
+})
+// ...
+```
+
+```javascript {tabTitle: index.js}
+// ...
+Sentry.init({
+  // ... other options
+  release: process.env.SENTRY_RELEASE
+})
+// ...
+```
 
 ### `include`
 
-This option accepts one or more paths to scan recursively for sources. It will upload all `.map` files and match associated source code files.
+This option accepts one or more paths to scan recursively for sources and `*.map` files.
 
-Examples: 
+Examples:
 
 - Including from where your transpiler/bundler outputs files.
   - `include: './app/.next'`
@@ -26,19 +54,42 @@ Examples:
 
 ### `rewrite`
 
-Enables rewriting of matching source maps so that indexed maps are flattened and missing sources are inlined if possible. Defaults to `true`. This option should be enabled for `stripPrefix` and `stripCommonPrefix` to work. 
+Enables rewriting of matching source maps so that indexed maps are flattened and missing sources are inlined if possible. Defaults to `true`.
+This option should be enabled for `stripPrefix` and `stripCommonPrefix` to work.
 
 ### `urlPrefix`
 
-This option adds a common prefix to beginning of all filenames. Defaults to `~/`. It can be used to adjust paths of your files in a sub folder.
+This option adds a common prefix to beginning of all filenames. Defaults to `~/`.
+This option is useful when the entry point of the application (generally `index.html` for the browser side and `index.js` for Node), is one or more levels above the source / source map files like below: 
+
+```{tabTitle: Target Folder Structure}
+├── build/
+│   ├── index.html
+│   ├── static/
+│   │   ├── app.js
+│   │   ├── app.js.map
+```
+
+In this case, the configuration should be like:
+
+```javascript {tabTitle: webpack.config.js}
+// ...
+new SentryWebpackPlugin({
+  // ...
+  include: "build/static/", 
+  urlPrefix: "~/static/"
+  // ...
+}),
+// ...
+```
 
 ### `stripPrefix`
 
-Accepts an array of prefixes to be removed from uploaded filenames.
+This option removes given prefixes from filenames. This is useful when you need to trim extra prefixes that your bundler / development server may add to your filenames such as `webpack://_N_E/`.
 
-### `stripCommonPrefix`
+When you have the parent folders of your target files as unwanted prefixes, it's recommended to refine your `include` folders instead of using `stripPrefix`.
 
-You can refer to our working examples for commonly used setups [here](TODO).
+For example, if your files are at `./build/static/js/` and you have `include: "build"` in your configuration; Sentry might fail to resolve your sources because of the extra prefix. If you update your configuration as `include: "build/static/js"`, you won't need to use `stripPrefix`.
 
 <Note>
 
@@ -46,4 +97,74 @@ Depending on your setup, you might need different configurations for your source
 
 </Note>
 
-## Setting Releases
+## Examples
+
+### 1. Basic Setup
+
+If both your minified / transpiled files and their source maps reside in the same directory like below:
+
+```{tabTitle: Project Structure}
+├── build/
+│   ├── worker.js
+│   ├── worker.js.map
+│   ├── app.js
+│   ├── app.js.map
+│   ├── index.html
+├── package.json
+├── public/
+│   └── index.html
+├── sentry.properties
+├── src/
+│   ├── app.js
+│   └── worker.js
+├── webpack.config.js
+```
+
+You can use a simple configuration like:
+
+```javascript {tabTitle: webpack.config.js}
+// ...
+new SentryWebpackPlugin({
+    // sentry-cli configuration
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  // webpack specific configuration
+  include: "build",
+  configFile: "sentry.properties",
+  release: process.env.SENTRY_RELEASE,
+}),
+// ...
+```
+
+### 3. Next.js
+
+Sentry's Next.JS SDK automatically handles and uploads your source maps without requiring any configuration. You don't need to install `sentry-webpack-plugin` if you are using Sentry's Next.JS SDK.
+
+If you want to extend the default Next.JS SDK configuration, you can refer [here](/platforms/javascript/guides/nextjs/manual-setup/).
+
+### 4. Gatsby
+
+You can configure Sentry's webpack plugin in your `gatsby-node.js` like below:
+
+```javascript {filename:gatsby-node.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+/// ...
+exports.onCreateWebpackConfig = ({ stage, actions }) => {
+  if (stage === "build-javascript") {
+    actions.setWebpackConfig({
+      plugins: [
+        new SentryWebpackPlugin({
+          // sentry-cli configuration
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: "___ORG_SLUG___",
+          project: "___PROJECT_SLUG___",
+          // webpack specific configuration
+          include: "./public",
+          release: process.env.SENTRY_RELEASE,
+        }),
+      ],
+    });
+  }
+};
+```
