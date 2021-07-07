@@ -2,27 +2,35 @@
 title: Source Maps
 sidebar_order: 95
 redirect_from:
-  - /platforms/react-native/manual-setup/sourcemaps/
+  - /platforms/react-native/manual-setup/source maps/
 description: "Learn more about how to upload your source maps to Sentry."
 ---
 
-To get unminified stack traces for JavaScript code, source maps must be generated and uploaded. The React Native SDK handles source maps _automatically_ for iOS with Xcode and Android with Gradle. However, if you use custom values for your release other than the version included with the build in XCode or Android Studio, you will need to manually upload sourcemaps.
+To get unminified stack traces for JavaScript code, source maps must be generated and uploaded. The React Native SDK handles source maps _automatically_ for iOS with Xcode and Android with Gradle. However, if you use custom values for your release other than the version included with the build in XCode or Android Studio, you will need to manually upload source maps.
 
 ### The Release and Distribution
 
-For events sent from Sentry to correctly be attributed to a release and subsequently its sourcemaps, **both the `release` and `dist` values will need to be set.** You can set these values in the call to `init` which you can read about in [Releases & Health](/platforms/react-native/configuration/releases/).
+For events sent from Sentry to correctly be attributed to a release and subsequently its source maps, **both the `release` and `dist` values will need to be set.** You can set these values in the call to `init` which you can read about in [Releases & Health](/platforms/react-native/configuration/releases/).
+
+### Disabling the Automatic Source Maps Upload Script
+
+When you set a custom release or manually upload source maps, you will need to disable the automatic source map upload script:
+
+On iOS you will need to [revert the build script "Bundle React Native code and images"](/platforms/react-native/manual-setup/manual-setup/#bundle-react-native-code-and-images).
+
+On Android you will need to [remove the gradle integration](/platforms/react-native/manual-setup/manual-setup/#enable-gradle-integration).
 
 ## Preparing the Source Maps for a Release
 
-You will need to generate and upload the sourcemaps for every release of your app for the events sent to be correctly unminified.
+You will need to generate and upload the source maps at build time for every release of your app for the events sent to be correctly unminified.
 
 ### Configure CLI
 
 Configure the CLI by reviewing the [configuration guide](https://docs.sentry.io/product/cli/configuration/) for CLI commands.
 
-### Generating the Bundle and Sourcemaps
+### Generating the Bundle and Source Maps
 
-You would use the React Native CLI to generate the JavaScript bundle and sourcemaps for your app:
+You would use the React Native CLI to generate the JavaScript bundle and source maps for your app:
 
 ```bash {tabTitle:Android}
 react-native bundle \
@@ -50,21 +58,21 @@ You would pass your entry file to `--entry-file` for Android or iOS respectively
 
 #### Outputs
 
-This will output your bundle file and sourcemaps. By default these files are called
+This will output your bundle file and source maps. By default these files are called
 
 - iOS: `main.jsbundle` and `main.jsbundle.map`
 - Android: `index.android.bundle` and `index.android.bundle.map`
 
 <Note>
-Make sure that the sourcemap's name is the bundle's name + ".map" for sourcemaps to correctly be detected.
+Make sure that the sourcemap's name is the bundle's name + ".map" for source maps to correctly be detected.
 </Note>
 
-### Uploading the Bundle and Sourcemaps
+### Uploading the Bundle and Source Maps
 
 ```bash {tabTitle:Android}
 node_modules/@sentry/cli/bin/sentry-cli releases \
     files <release> \
-    upload-sourcemaps \
+    upload-source maps \
     --dist <dist> \
     --strip-prefix /path/to/project/root \
     --rewrite index.android.bundle index.android.bundle.map
@@ -73,7 +81,7 @@ node_modules/@sentry/cli/bin/sentry-cli releases \
 ```bash {tabTitle:iOS}
 node_modules/@sentry/cli/bin/sentry-cli releases \
     files <release> \
-    upload-sourcemaps \
+    upload-source maps \
     --dist <dist> \
     --strip-prefix /path/to/project/root \
     --rewrite main.jsbundle main.jsbundle.map
@@ -81,7 +89,7 @@ node_modules/@sentry/cli/bin/sentry-cli releases \
 
 <Note>
 
-If you're using `sentry-cli` prior to version 1.59.0, pass `--rewrite` to the `upload-sourcemaps` command to fix up the source maps before the upload (inlines sources and so forth). Version 1.59.0 does this automatically.
+If you're using `sentry-cli` prior to version 1.59.0, pass `--rewrite` to the `upload-source maps` command to fix up the source maps before the upload (inlines sources and so forth). Version 1.59.0 does this automatically.
 
 </Note>
 
@@ -89,6 +97,6 @@ If you're using `sentry-cli` prior to version 1.59.0, pass `--rewrite` to the `u
 
 If source maps are still not recognized, check for warnings similar to:
 
-![Missing sources warning](001-manual-sourcemaps.png)
+![Missing sources warning](001-manual-source maps.png)
 
 The bundle filename needs to match the filename on the event (and shown on the warning) to correctly apply the source maps.
