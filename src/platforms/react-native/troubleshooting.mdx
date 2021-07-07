@@ -1,0 +1,35 @@
+---
+title: Troubleshooting
+description: "Troubleshoot and resolve common issues with the React Native SDK."
+sidebar_order: 1000
+---
+
+## Source Maps
+
+When there is an issue with source maps on your event, there will usually be an error dialog at the top of the event page on your dashboard:
+
+> There was 1 problem processing this event: Source code was not found
+
+Common fixes to this are:
+
+- Make sure that both the `release` and `dist` and are set on the event by [setting it in the call to `init`](/platforms/react-native/configuration/releases/#bind-the-version).
+- Make sure that the source maps are correctly uploaded with the exact same `release` and `dist` values as the event.
+- If you set a custom `release` and `dist` make sure that you manually upload the sourcemaps as our automatic sourcemap upload script will not detect the custom values.
+- Make sure that you are not disabling the `RewriteFrames` default integration by filtering it out or setting `defaultIntegrations: false`.
+
+[For more details, please read the guide on React Native source maps.](/platforms/react-native/sourcemaps)
+
+## iOS Build Script Failed
+
+Try passing `--force_foreground` to the Sentry CLI command in the build script. This is possibly a bug with our CLI that we are investigating.
+
+```bash
+# ...
+../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
+  ../node_modules/react-native/scripts/react-native-xcode.sh --force_foreground
+```
+
+## Release Health
+
+- If your release health statistics are being attributed to the wrong release, make sure you [pass the `release` and `dist` to the `init` call](/platforms/react-native/configuration/releases/#bind-the-version).
+- If you are using Code Push, make sure that you are not using `setRelease` and `setDist` as they will break release health. You can read more on the [CodePush guide](/platforms/react-native/manual-setup/codepush/).
