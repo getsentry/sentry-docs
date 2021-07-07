@@ -24,7 +24,7 @@ This happens where Kafka and the consumers get out of sync. Possible reasons are
 
 ### Recovery
 
-The "nuclear option" here is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+#### Proper solution
 
 The _proper_ solution is as follows ([reported](https://github.com/getsentry/onpremise/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)):
 
@@ -49,6 +49,28 @@ The _proper_ solution is as follows ([reported](https://github.com/getsentry/onp
 You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
 </Alert>
 
+#### Nuclear option
+
+The _nuclear option_ is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+
+1. Stop the instance:
+   ```shell
+   docker-compose down --volumes
+   ```
+2. Remove the Kafka & Zookeeper related volumes:
+   ```shell
+   docker volume rm sentry-kafka
+   docker volume rm sentry-zookeeper
+   ```
+
+ 3. Run the install script again:
+    ```shell
+    ./install.sh
+    ```
+ 4. Start the instance:
+    ```shell
+    docker-compose up -d
+    ```
 ### Reducing disk usage
 
 If you want to reduce the disk space used by Kafka, you'll need to carefully calculate how much data you are ingesting, how much data loss you can tolerate and then follow the recommendations on [this awesome StackOverflow post](https://stackoverflow.com/a/52970982/90297) or [this post on our community forum](https://forum.sentry.io/t/sentry-disk-cleanup-kafka/11337/2?u=byk).
