@@ -32,20 +32,6 @@ export const sourceNodes = async (
 
     const parsedContent = parseContent();
 
-    // temporarily create a mock api description so the apiDoc query doesnt fail
-    createNode({
-      name: "mockAPIDescription",
-      id: createNodeId(`APIDescription-mockdata`),
-      children: [],
-      parent: null,
-      internal: {
-        type: "APIDescription",
-        content: "this is mock data",
-        mediaType: "text/markdown",
-        contentDigest: createContentDigest("this is mock data"),
-      },
-    })
-
     parsedContent.tags.forEach(tag => {
     if (tag['x-display-description']) {
       createNode({
