@@ -1,0 +1,31 @@
+---
+title:  Troubleshooting
+sidebar_order: 100
+description: "Solutions to common issues"
+---
+
+## Installation Issues
+
+### Package Manager - `Cannot perform upm operation: Unable to add package`
+
+Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
+
+### Package Manager - `'HEAD': cannot update ref 'refs/heads/master'`
+
+Some Unity versions, such as `2019.4.24f1` and `2020.3.2f1`, have a bug on UPM and fail to install with the error `'HEAD': cannot update ref 'refs/heads/master'`.
+Unity has resolved this issue on newer releases. Learn more by checking the [Unity Issue Tracker](https://issuetracker.unity3d.com/issues/package-resolution-error-when-using-a-git-dependency-referencing-an-annotated-tag-in-its-git-url).
+
+### PrecompiledAssemblyException: `Multiple precompiled assemblies with the same name`
+
+The Sentry package includes a couple of DLLs that might have been already been provided by other packages. [Unity's package manager does not resolve](https://forum.unity.com/threads/dll-conflicts-in-two-upm-package.1084307/#post-7038340) those dependency issues which means it has to be done manually:
+
+1. Choose which dependency you want to remove.
+2. [Embed the package](https://docs.unity3d.com/Manual/upm-embed.html#embed-create) so you can modify it. This means you copy the package from Unity's global cache into your project's package directory and it should be version controlled.
+3. Remove the additional dependency.
+#### Background information
+
+Sentry SDK for Unity targets [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard#net-implementation-support). It's based on the Sentry SDK for [.NET which supports many versions of .NET and Mono](https://docs.sentry.io/platforms/dotnet/compatibility/). Starting from **.NET 5.0** the .NET SDK has no dependencies.
+[Unity has announced its intention to support .NET 6](https://forum.unity.com/threads/unity-future-net-development-status.1092205/):
+> We would like to have something out in a preview in the fall of 2021 to coincide with .NET 6 release from Microsoft.
+
+With this release, Sentry's SDK for Unity will have no dependencies to any external DLLs and such DLL conflict issues that UPM is unable to handle will no longer be something you need to deal with when using Sentry for Unity.
