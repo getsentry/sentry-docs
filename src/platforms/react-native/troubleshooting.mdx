@@ -1,0 +1,35 @@
+---
+title: Troubleshooting
+description: "Troubleshoot and resolve common issues with the React Native SDK."
+sidebar_order: 1000
+---
+
+## Source Maps
+
+When there is an issue with source maps on your event, there will usually be an error dialog at the top of the Issue Details page in [sentry.io](https://sentry.io):
+
+> There was 1 problem processing this event: Source code was not found
+
+Common fixes to this issue include:
+
+- Checking that both the `release` and `dist` and are set on the event by [setting it in the call to `init`](/platforms/react-native/configuration/releases/#bind-the-version).
+- Checking that source maps are correctly uploaded with the exact same `release` and `dist` values as the event. They **must match** for source maps to upload correctly.
+- If you set a custom `release` and `dist`, confirming that you manually uploaded the sourcemaps since our automatic source map upload script will not detect the custom values.
+- Checking that you are not disabling the [`RewriteFrames`](/platforms/javascript/configuration/integrations/plugin/#rewriteframes) default integration by overwriting it, filtering it out, or setting `defaultIntegrations: false`.
+
+[For more details, please read the guide on React Native source maps.](/platforms/react-native/sourcemaps)
+
+## iOS Build Script Failed
+
+Try passing `--force_foreground` to the Sentry CLI command in the build script. This is possibly a bug with our CLI that [we are investigating](https://github.com/getsentry/sentry-react-native/issues/1424).
+
+```bash
+# ...
+../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
+  ../node_modules/react-native/scripts/react-native-xcode.sh --force_foreground
+```
+
+## Release Health
+
+- If your release health statistics are being attributed to the wrong release, confirm that you [pass the `release` and `dist` to the `init` call](/platforms/react-native/configuration/releases/#bind-the-version).
+- If you are using Code Push, check that you are not using `setRelease` and `setDist` as they will break release health. You can read more on the [CodePush guide](/platforms/react-native/manual-setup/codepush/).
