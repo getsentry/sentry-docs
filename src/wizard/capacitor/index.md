@@ -1,5 +1,5 @@
 ---
-name: Cordova
+name: Capacitor
 doc_link: https://docs.sentry.io/platforms/javascript/guides/capacitor/
 support_level: production
 type: framework
