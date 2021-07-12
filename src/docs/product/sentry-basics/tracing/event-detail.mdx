@@ -8,7 +8,7 @@ description: "Learn more about how to drill down into a span of a single transac
 
 From [Performance](/product/performance/) and [Discover](/product/discover-queries/), you can drill all the way down into a span for a single transaction and traverse multiple directions. This will accelerate your ability to debug slow HTTP requests, database queries, identify associated errors, and root out other bottlenecks.
 
-![Event detail showing critical event information, breakdowns, minimaps and waterfall view](./perf-transaction-detail.png)
+![Event detail showing critical event information, breakdowns, minimaps and waterfall view](./transaction-detail.png)
 
 You can get to an event detail from either a [Transaction Summary](/product/performance/transaction-summary/) or [Query Builder](/product/discover-queries/query-builder/). In [Discover](/product/discover-queries/), performing a search with the `event.type:transaction` or going into a pre-built query such as "Transactions by Volume" will generate a list of event IDs. Event IDs will be linked to open the corresponding **Event Detail** page.
 
@@ -19,10 +19,9 @@ Currently, only root transactions are searchable. Any span data that inherits fr
 
 Information about the specific event, such as the event ID, project, duration, time of occurrence, and status, is located at the top. You can find more information under "Tag Details".
 
-## Quick Trace
+## Trace Navigator
 
-The quick trace (which displays top right of the span view) is an abbreviated view of the related [trace](/product/performance/distributed-tracing) for the current transaction.
-The quick trace displays up to six nodes, each representing different groups of the event's trace:
+The trace navigator (which displays top right of the span view) is an abbreviated view of the related [trace](/product/sentry-basics/tracing/distributed-tracing) for the current transaction. It displays up to six nodes, each representing different groups of the event's trace:
 - **Root**: Starting transaction
 - **Ancestor**: Events in the generations between the Root and the Parent of the current Event
 - **Parent**: Event that directly started the current event
@@ -30,9 +29,9 @@ The quick trace displays up to six nodes, each representing different groups of 
 - **Children**: Events that the current event directly started
 - **Descendants**: Future generations of events created by children of this event
 
-![Quick trace showing related events](./quick-trace.png)
+![Trace navigator showing related events](./trace-navigator.png)
 
-If a node is associated with errors, it is displayed in red and has a flame icon next to it. Click "Trace ID" to open the [Trace View](/product/performance/trace-view).
+If a node is associated with errors, it is displayed in red and has a flame icon next to it. Click "Trace ID" to open the [Trace View](/product/sentry-basics/tracing/trace-view).
 
 ## Span View
 
@@ -41,9 +40,15 @@ The span view is a split view where the left-hand side shows the transaction’s
 ![Span detail view shows the span id, trace id, parent span id, and other data such as tags.](./span-detail.png)
 
 ### Operations Breakdown
-The operations breakdown corresponds to the waterfall span view as a legend. The operation type, duration, and percentage of the total duration are shown. Spans can overlap, but the total duration is based on operations that do not overlap and contribute to the overall duration. See the http example below.
+The operations breakdown shows you how much time was spent in each operation within a transaction. For each operation, the breakdown displays the operation type, duration, and percentage of the total duration.
+
+![Operations breakdown in the event detail.](operations-breakdown.png)
+
+Spans can overlap, but the total duration is based on operations that do not overlap and contribute to the overall duration. You can see this illustrated in the http example below.
 
 ![Operations calculation method.](./operations-calc.png)
+
+The breakdown can help you find transactions with an unusual distribution of operations, which might point to an underlying problem.
 
 ### Minimap
 
@@ -55,7 +60,7 @@ The waterfall view is a split view where the left reflects the transaction's spa
 
 ### Span Details
 
-Clicking on a span row expands the details of that span. From here, you can see all attached properties, such as tags and other field data. With the Trace ID, you'll be able to view all transactions within that given trace. Click "Search by Trace" to view that Discover list. Learn more about [distributed tracing](/product/performance/distributed-tracing/) in our docs.
+Clicking on a span row expands the details of that span. From here, you can see all attached properties, such as tags and other field data. With the trace ID, you'll be able to view all transactions within that given trace. Click "Search by Trace" to view that **Discover** list. Learn more about [distributed tracing](/product/sentry-basics/tracing/distributed-tracing/) in our docs.
 
 <Alert>
 
@@ -63,9 +68,19 @@ The span view may be limited to one project at a time if you're on the [Team pla
 
 </Alert>
 
-#### Traversing Transactions
+#### Traversing and Nesting Transactions
 
-Some spans within a transaction may be the parent of another transaction. Under these circumstances, some Span IDs will have a "View Child" or "View Children" button. These will potentially lead to another transaction or a list of transactions.
+<Note>
+
+Nesting transactions is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony. If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+You can click any part of a span row itself to investigate its details. In the details, spans that have child transactions have a “View Transaction” button in the “Child Transaction” row. Clicking this button leads to another transaction or list of transactions.
+
+In some cases, spans may be the parent of one or more transactions, and these spans are identified by the expand icon. Clicking this icon will pull in the first child transaction and display its span tree nested beneath the parent span. When that transaction is displayed, the collapse icon will appear so that you can hide the transaction again.
+
+![Embedded child transaction.](./embedded-transaction.png)
 
 <Alert>
 
