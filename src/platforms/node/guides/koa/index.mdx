@@ -113,6 +113,11 @@ const tracingMiddleWare = async (ctx, next) => {
   });
 
   ctx.__sentry_transaction = transaction;
+  
+  // We put the transaction on the scope so users can attach children to it
+  Sentry.getCurrentHub().configureScope(async scope => {
+    scope.setSpan(transaction);
+  });
 
   ctx.res.on('finish',()=>{
     // Push `transaction.finish` to the next event loop so open spans have a chance to finish before the transaction
