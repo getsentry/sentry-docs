@@ -1,6 +1,6 @@
 ---
 title: AWS Lambda
-sidebar_order: 1
+sidebar_order: 101
 description: "Learn more about Sentry's AWS Lambda integration and how you can automatically instrument your Node or Python Lambda functions with Sentry without changing your code."
 ---
 
@@ -94,14 +94,14 @@ Learn more about [how this integration works](/product/integrations/aws-lambda/h
 
 ## Serverless Framework
 
-Note that this integration will configure your existing lambda functions correctly to use the SDK layer and set the appropriate environment variables as per [how this integration works](/product/integrations/aws-lambda/how-it-works/).  You can check the output `aws lambda get-function-configuration --function-name <yourFunctioName>` and this works. 
+Note that this integration will configure your existing lambda functions correctly to use the SDK layer and set the appropriate environment variables as per [how this integration works](/product/integrations/aws-lambda/how-it-works/).  You can check the output `aws lambda get-function-configuration --function-name <yourFunctioName>` and this works.
 However when you perform a subsequent `sls deploy` the environment variables are not maintained but it appears the reference to the layer is retained.  A workaround exists where you can set the layer definition and environment variables in `serverless.yml`.  There are two problems with this, you have to manually add the reference to the SDK layer for every function you want "Sentrified" and you can't maintain the latest layer version automatically.
 ```
   environment:
     SENTRY_TRACES_SAMPLE_RATE: '1.0'
     SENTRY_DSN: '<your sentry dsn>'
     NODE_OPTIONS: '-r @sentry/serverless/dist/awslambda-auto'
-    
+
 custom:
   layers:
     - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDK:8
@@ -112,4 +112,4 @@ myHandler:
   layers: ${self:custom.layers}
 ```
 Currently there is no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the  lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK has not been given the necessary permissions.
-It is a relatively new integration but there is defintely a case to write a serverless plugin to make this super-smooth. There is an [older version](https://www.serverless.com/plugins/serverless-sentry-plugin) but it requires code changes to the handler and doesn't use `NODE_OPTIONS`.  A new plugin could also add the Sentry layer to every function automatically. 
+It is a relatively new integration but there is defintely a case to write a serverless plugin to make this super-smooth. There is an [older version](https://www.serverless.com/plugins/serverless-sentry-plugin) but it requires code changes to the handler and doesn't use `NODE_OPTIONS`.  A new plugin could also add the Sentry layer to every function automatically.
