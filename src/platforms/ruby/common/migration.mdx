@@ -37,9 +37,7 @@ Currently available integrations are:
 - [sentry-rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-rails)
 - [sentry-sidekiq](https://github.com/getsentry/sentry-ruby/tree/master/sentry-sidekiq)
 - [sentry-delayed_job](https://github.com/getsentry/sentry-ruby/tree/master/sentry-delayed_job)
-
-We'll also support these in the near future:
-- resque
+- [sentry-resque](https://github.com/getsentry/sentry-ruby/tree/master/sentry-resque)
 
 #### Removed Processors
 
@@ -47,6 +45,7 @@ In `sentry-raven` we have different processor classes for data scrubbing. But up
 - user ip
 - user cookie
 - request body
+- query parameters
 
 will **not** be sent to Sentry.
 
@@ -56,7 +55,7 @@ You can re-enable it by setting:
 config.send_default_pii = true
 ```
 
-As for scrubbing sensitive data, please use Sentry's [Advanced Data Scrubbing](https://docs.sentry.io/product/data-management-settings/advanced-datascrubbing/) feature.
+As for scrubbing sensitive data, please use Sentry's [Advanced Data Scrubbing](https://docs.sentry.io/product/data-management-settings/scrubbing/advanced-datascrubbing/) feature.
 
 #### New Components and Structure
 
@@ -110,6 +109,7 @@ config.server
 config.tags
 config.logger
 config.encoding
+config.silence_ready
 
 # please only use config.before_send
 config.should_capture
@@ -136,9 +136,19 @@ config.faraday_builder #=> config.transport.faraday_builder
 
 #### Added
 
+This section only lists a few important additions. See the full list of configuration options [here](/platforms/ruby/configuration/options/)
+
 ```ruby
 # this behaves similar to the old config.scheme option
 config.transport.transport_class = MyTransportClass
+
+# sentry-ruby sends events asynchronously with its own background workers
+# the default number of workers equals to your machine's processor count
+# you can adjust the number with
+config.background_worker_threads = 10
+
+# to send events synchronously like sentry-raven does, set it to 0
+config.background_worker_threads = 0
 ```
 
 ## API Changes
@@ -162,6 +172,7 @@ gem "sentry-ruby"
 gem "sentry-rails"
 gem "sentry-sidekiq"
 gem "sentry-delayed_job"
+gem "sentry-resque"
 ```
 
 **Configuration**
@@ -239,6 +250,21 @@ New:
 
 ```ruby
 Sentry.capture_message("test", extra: { debug: true })
+```
+
+The options for these methods are also changed. Currently available options are:
+
+- `contexts`
+- `tags`
+- `extra`
+- `user`
+- `level`
+- `fingerprint`
+
+To set `transaction_name` (`transaction` in `sentry-raven`) of the event, please use
+
+```ruby
+Sentry.get_current_scope.set_transaction_name("NewTransaction")
 ```
 
 ## Example Apps
