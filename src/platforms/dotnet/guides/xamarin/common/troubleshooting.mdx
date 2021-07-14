@@ -1,0 +1,28 @@
+---
+title:  Troubleshooting
+sidebar_order: 100
+description: "Solutions to common issues"
+---
+
+## Installation Issues
+
+### Event/Transaction Capture - `Failed to send cached envelope: System.MissingMethodException: Method not found: System.Text.Json.JsonDocument`
+
+If the above message appears for you when capturing an event or transaction on your debug window, you'll have to edit your have to manually edit your platform csproj 
+
+1. close your IDE
+2. open your iOS .csproj with an text/xml editor
+3. add the following nuget reference:
+```xml
+    <PackageReference Include="System.Memory" IncludeAssets="None">
+      <Version>4.5.4</Version>
+    </PackageReference>
+```  
+NOTE: it's important to add the IncludeAssets as None, otherwise this fix will not work.
+4. save and open your IDE
+5. wait for it to restore the packages and once finished try to capture an exception or transaction.
+
+Another way to validate if the problem is happening on an iOS project, is by adding the following code to your project and check if there's any conflict:
+```csharp
+    _ = new byte[2].AsMemory();
+```
