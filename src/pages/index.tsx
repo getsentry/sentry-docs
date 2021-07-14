@@ -148,7 +148,7 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/performance/getting-started/">
+                <a href="/product/performance/">
                   Performance Monitoring
                 </a>
               </li>
