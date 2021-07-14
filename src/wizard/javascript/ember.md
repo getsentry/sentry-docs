@@ -22,28 +22,20 @@ import config from "./config/environment";
 
 import * as Sentry from "@sentry/ember";
 
-Sentry.InitSentryForEmber();
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
 
 export default class App extends Application {
   modulePrefix = config.modulePrefix;
   podModulePrefix = config.podModulePrefix;
   Resolver = Resolver;
 }
-```
-
-Then add the following config to your `config/environment.js`:
-
-```javascript
-ENV["@sentry/ember"] = {
-  sentry: {
-    dsn: "___PUBLIC_DSN___",
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for performance monitoring.
-    // We recommend adjusting this value in production
-    tracesSampleRate: 1.0,
-  },
-};
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
