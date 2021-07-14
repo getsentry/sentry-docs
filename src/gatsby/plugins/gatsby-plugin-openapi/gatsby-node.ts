@@ -32,6 +32,22 @@ export const sourceNodes = async (
 
     const parsedContent = parseContent();
 
+    parsedContent.tags.forEach(tag => {
+    if (tag['x-display-description']) {
+      createNode({
+          name: tag.name,
+          id: createNodeId(`APIDescription-${tag.name}`),
+          children: [],
+          parent: null,
+          internal: {
+            type: "APIDescription",
+            content: tag.description,
+            mediaType: "text/markdown",
+            contentDigest: createContentDigest(tag.description),
+          },
+        })
+    }
+    })
     var data: OpenApiPath[] =
       parsedContent.paths &&
       Object.keys(parsedContent.paths).reduce((acc, apiPath) => {

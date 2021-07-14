@@ -10,50 +10,103 @@ description: "Set up Okta Single Sign-On (SSO) on Sentry."
 
 1. From the admin console's sidebar, click **Applications > Applications**, then click on "Add Application".
 
-1. Search for `Sentry` and click "Add", and you will be brought to the setup wizard.
-   
+1. Search for `Sentry`, then click "Add" to be brought to the setup wizard.
+
    ![Sentry in Okta Gallery of Integrations](okta-gallery.png)
-   
-1. For "1. General Settings", no special settings are needed. 
 
-1. For "2. Sign On Options", fill in these fields as follows: 
-   
+1. Provide the settings. Note that for "1. General Settings", you will not need to provide any special settings. For "2. Sign On Options", provide the following:
+
    - Base URL: `https://sentry.io`
-      
-      - Important: There should not be a trailing slash at the end of the URL as it will break the redirect from Okta to Sentry.
-      
+
+<Alert level="warning" title="No Trailing Spaces">
+
+Confirm the URL doesn't have a trailing whitespace at the end as it will break the redirect from Okta to Sentry.
+
+</Alert>
+
+
    - Organization Slug: *YOUR_ORG_SLUG*
-   
+
       - You can find your organization slug in the URL: `https://sentry.io/organizations/YOUR_ORG_SLUG/`
-      
+
    - Email: `Email`
-   
+
    ![Configuring Sentry in Okta](okta-settings-for-sentry.png)
-   
-1. Click "Save", and the Sentry app will be created. 
 
-1. You'll be redirected to the app settings page. Click "Sign On", and you'll be brought back to the same settings in Step 5. This time, click on "View Setup Instructions" in the bright yellow card, and a new tab will open.  
+1. Click "Save" to create the Sentry app.
 
-1. In the new tab, look for the "Metadata URL" in the setup instructions and copy it.
+1. Click "Sign On" to the app settings page to which you are redirected. When the settings displayed in Step 5 appear, select "View Setup Instructions" in the bright yellow card to open a new tab.
+
+1. Copy the "Metadata URL" in the set up instructions.
 
    ![Okta metadata URL in setup instructions](okta-setup-instructions-page.png)
 
-1. Sign in to Sentry. Click **Settings > Auth > Configure Okta**.
-      
+1. Sign in to Sentry. Select **Settings > Auth > Configure Okta**.
+
    ![Sentry Single Sign-On configuration page](okta-sentry-sso-settings-page.png)
-   
-1. Paste the Metadata URL from Step 8, and click "Continue".
+
+1. Paste the Metadata URL from Step 8, then click "Continue".
 
    ![Sentry Single Sign-On configuration for Okta](okta-sentry-settings-metadata-url.png)
-   
-1. Sentry will attempt to authenticate and link your account with Okta. After successful authentication, you'll be redirected to Sentry's SSO configuration page, where you can take the following actions:
 
-   - You can share the "Login URL" value, which will be used for SP-initiated SSO, with the users in your organization.
-   
+Sentry will attempt to authenticate and link your account with Okta. After successful authentication, you'll be redirected to Sentry's SSO configuration page, where you can:
+
+   - Share the "Login URL" value, which will be used for SP-initiated SSO, with the users in your organization.
+
    - Scroll down to the bottom and ensure that "Require SSO" is checked if you want to enforce logging in with Okta.
-   
-   - Set a "Default Role" for new SSO users. Selecting "Member" should cover most use-cases.
-   
-   - If you made changes, click "Save Settings" to complete your setup.
-   
+
+   - Set a "Default Role" for new SSO users. Selecting "Member" should cover most use cases.
+
+If you make any changes, click "Save Settings" to complete your set up.
+
    ![Sentry Single Sign-On settings for Okta](okta-sentry-settings-for-okta.png)
+
+## SCIM Integration
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+Sentry users can manage provisioning using Okta with SCIM. You'll need to have Okta SSO set up and configured for your organization already. Sentry supports the following operations:
+
+- Create users
+- Deactivate users
+- Group push
+- Import groups
+
+### Sentry Configuration
+
+1. Sign in to [sentry.io](https://sentry.io). Select **Settings > Auth**
+   ![Sentry Okta SCIM Auth Page](scim-settings-auth.png)
+1. Under General Settings select "Enable SCIM", then "Save Settings"
+   ![Sentry Enable SCIM Instruction](scim-enable-sentry.png)
+Sentry will display "SCIM Information" that contains your Auth Token and SCIM Base URL.
+   ![SCIM Credentials Fields](scim-sentry-fields.png)
+
+
+### Okta Configuration
+
+1. Sign in to your Okta organization with your administrator account. From the admin console's sidebar, select Applications > Applications, then select the existing Sentry application.
+
+1. Select the "Provisioning" tab, then "Configure API integration".
+   ![Okta configure SCIM API](scim-okta-configure.png)
+
+1. Select "Enable API Integration", provide the SCIM URL from the auth settings page as the Base URL field. For the API Token, copy the Auth Token value from the auth settings page, including `Bearer` in the value you copy.
+
+1. Select "Test API Credentials", and confirm the message "the app was verified successfully" displays:
+   ![Okta Test SCIM Credentials](scim-okta-test.png)
+   ![SCIM Verified Sucessfully](scim-okta-verified.png)
+
+1. Select "Save" to be directed to SCIM App settings:
+   ![Okta Save SCIM Settings](scim-okta-save.png)
+
+1. On the Provisioning page, select "To App", then "edit":
+   ![Okta Save SCIM Settings](scim-okta-edit.png)
+
+1. Enable both "Create Users" and "Deactivate Users", then "Save" your changes.
+
+As a result of these changes, users who are assigned will be sent an invitation email. When a user is un-assigned, their membership object in Sentry will be deleted.
+
+You can use "Push Groups" to sync and assign groups in Okta; they will be reflected in Sentry teams.
