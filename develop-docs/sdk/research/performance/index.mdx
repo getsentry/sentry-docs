@@ -1,0 +1,27 @@
+# Performance Monitoring: Sentry SDK API Evolution
+
+The objective of this document is to contextualize the evolution of the Performance Monitoring features in Sentry SDKs. We start with a summary of how Performance Monitoring was added to Sentry and to SDKs, and, later, we discuss lessons learned in the form of identified issues and the initiatives to address those issues.
+
+## Introduction
+
+Back in early 2019, Sentry started experimenting with adding tracing to SDKs. The [Python](https://github.com/getsentry/sentry-python/pull/342) and [JavaScript](https://github.com/getsentry/sentry-javascript/pull/1918) SDKs were the test bed where the first concepts were designed and developed. A proof-of-concept was [released](https://github.com/getsentry/sentry-python/releases/tag/0.7.13) on April 29th, 2019 and [shipped to Sentry](https://github.com/getsentry/sentry/pull/12952) on May 7, 2019. Python and JavaScript were obvious choices, because they allowed us to experiment with instrumenting Sentry’s own backend and frontend.
+
+Note that the aforementioned work was contemporary to the [merger of OpenCensus and OpenTracing to form OpenTelemetry](https://medium.com/opentracing/a-roadmap-to-convergence-b074e5815289). Sentry’s API and SDK implementations borrowed inspiration from pre-1.0 versions of OpenTelemetry, combined with our own ideas. For example, our [list of span statuses](https://github.com/getsentry/relay/blob/55127c75d4eeebf787848a05a12150ee5c59acd9/relay-common/src/constants.rs#L179-L181) openly match those that could be found in the OpenTelemetry specification around the end of 2019.
+
+After settling with an API, performance monitoring support was then expanded to other SDKs. [Sentry's Performance Monitoring](https://blog.sentry.io/2020/07/14/see-slow-faster-with-performance-monitoring) solution became Generally Available in July, 2020. [OpenTelemetry's Tracing Specification version 1.0](https://medium.com/opentelemetry/opentelemetry-specification-v1-0-0-tracing-edition-72dd08936978) was released in February, 2021.
+
+Our initial implementation reused the mechanisms we had in place for error reporting:
+
+- The [Event type](https://develop.sentry.dev/sdk/event-payloads/) was extended with new fields. That meant that instead of designing and implementing a whole new ingestion pipeline, we could save time and quickly start sending "events" to Sentry, this time, instead of errors, a new "transaction" event type.
+- Since we were just sending a new type of event, the SDK transport layer was also reused.
+- And since we were sharing the ingestion pipeline, that meant we were sharing storage and the many parts of the processing that happens to all events.
+
+Our implementation evolved such that there was a clear emphasis on the distinction between Transactions and Spans. Part of that was a side effect from reusing the Event interface.
+
+Transactions resonated well with customers. They allowed for important chunks of work in their code to be highlighted, like a browser page load or http server request. Customers can see and navigate through a list of transactions, while within a transaction the spans give detailed timing for more granular units of work.
+
+In the next section, we’ll discuss some of the shortcomings with the current model.
+
+## Identified Issues
+
+Coming soon.
