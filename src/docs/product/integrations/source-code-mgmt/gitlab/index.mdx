@@ -1,0 +1,177 @@
+---
+title: GitLab
+sidebar_order: 1
+redirect_from:
+  - /workflow/integrations/gitlab/
+  - /workflow/integrations/global-integrations/gitlab/
+  - /product/integrations/gitlab/
+description: "Learn more about Sentry’s GitLab integration and how it helps you track and resolve bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry."
+---
+
+Sentry’s GitLab integration helps you track and resolve bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+
+This integration needs to set up only once per organization, then it is available for _all_ projects.
+
+## Install
+
+<Note>
+
+Sentry owner or manager permissions and GitLab owner or maintainer permissions are required to install this integration.
+
+</Note>
+
+1. Navigate to **Settings > Integrations > GitLab**.
+
+   ![](gitlab-overview.png)
+
+1. In the resulting modal, click "Add Installation".
+
+   ![Connect Sentry to a GitLab instance](add-installation.png)
+
+1. In the pop-up window, complete the instructions to create a Sentry app within GitLab. Once you’re finished, click "Next".
+
+   ![Configuration modal and Sentry app within GitLab](configuration-modal.png)
+
+1. Fill out the resulting GitLab Configuration form with the following information:
+
+   1. The GitLab URL is the base URL for your GitLab instance. If using gitlab.com, enter https://gitlab.com/.
+
+   2. Find the GitLab Group Path in your group’s GitLab page. Groups might contain subgroups and projects. You should not specify the URL to any specific project, just to a group or subgroup.
+
+      ![GitLab page showing group path](gitlab-groups.png)
+
+   3. Find the GitLab Application ID and Secret in the Sentry app within GitLab.
+
+      ![GitLab application id and secret](gitlab-app-id.png)
+
+   4. Use this information to fill out the GitLab Configuration and click "Submit".
+
+      ![GitLab configuration form](gitlab-configuration.png)
+
+1. In the resulting panel, click "Authorize".
+
+1. In Sentry, return to Organization Settings > **Integrations**. You’ll see a new instance of GitLab underneath the list of integrations.
+
+1. Next to your GitLab Instance, click "Configure". _It’s important to configure to receive the full benefits of commit tracking._
+
+   ![GitLab instance with connected group and highlighted configure button](configure-button.png)
+
+1. On the resulting page, click "Add Repository" to select which repositories in which you’d like to begin tracking commits.
+
+   ![Add repository](add-repo.png)
+
+## Configure
+
+Use GitLab to [track commits](#commit-tracking), identify [suspect commits](#suspect-commits), [resolve via commit or PR](#resolve-via-commit-or-pull-request) and [manage issues](#issue-management).
+
+### Issue Management
+
+Issue tracking allows you to create GitLab issues from within Sentry and link Sentry issues to existing GitLab issues.
+
+1. Select your issue
+
+   ![List of unresolved issues](sentry-unresolved-issues.png)
+
+1. Navigate to Linked Issues on the right panel of the issue's page and click "Link GitLab Issue".
+
+   ![GitLab logo with Link GitLab Issue text](link-gitlab-issue.png)
+
+1. You have two options to complete the issue link:
+
+   1. In the pop-up, you can fill out the appropriate details in the _Create_ tab, and then click "Create Issue".
+
+      ![pop-up modal to create issue](gitlab-create-issue.png)
+
+   1. Or, in the pop-up, you can click the Link tab, search the issue by name, and then click "Link Issue". _Issues aren't currently searchable by number._
+
+      ![pop-up modal to search issue name](link-issue-by-name.png)
+
+1. To unlink an issue, click on the "X" next to its name under Linked Issues.
+
+   ![GitLab logo and project next to an X icon](unlink-issue.png)
+
+### Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
+
+Once you've configured both [release and commit tracking](/product/releases/), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
+
+![Dashboard with last commit highlighted](last-commit-in-releases.png)
+
+When you investigate deeper into that commit, you can leverage information from metadata like tags.
+
+![Issue detail highlighting tags](highlighting-tags.png)
+
+Broadly, this lets you isolate problems in order to see which commits might be problematic.
+
+Learn more about [release and commit tracking](/product/releases/).
+
+### Suspect Commits
+
+Once you are tracking the commits, the 'suspect commit' is the commit that likely introduced the error.
+
+One special benefit of using Sentry's Commit Tracking is the ability to know the suspect commit that likely caused the error, with a suggested plan of action for how to rectify the error. For example, after pinpointing the suspect commit, you can also identify the developer who made the commit and assign them the task of fixing the error.
+
+![Issue detail highlighting suspect commits](highlighting-suspect-commits.png)
+
+Here is where you can find info for [suspect commit setup](/product/releases/setup/release-automation/).
+
+### Resolve via Commit or Pull Request
+
+Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release.
+
+A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
+
+![Issue detail highlighting suspect commits](short-id.png)
+
+### Stack Trace Linking
+
+Stack trace linking takes you from a file in your Sentry stack trace to that same file in your source code. If you have commit tracking set up in Sentry, we can take you to the exact version (using the commit associated with the event) of the source code when the error occurred. Otherwise we'll link you to the current state of the source code (using the default **branch**).
+
+1. Navigate to **Settings > Integrations > GitLab > Configurations**.
+
+1. Click the "Configure" button next to your GitLab Instance.
+
+1. Click the **Code Mappings** tab.
+
+1. Set up a code mapping for each project for which you want to enable stack trace linking. To create a new code mapping, click **Add Mapping**.
+
+1. Fill out the form, then click **Save Changes**. Each form field is described below:
+   * **project** (required): This is the Sentry project.
+   * **repo** (required): This is the GitLab project associated with the Sentry project above. If you have more than one GitLab project being used per Sentry project, you'll need multiple code mappings.
+   * **branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
+   * **stack trace root** and **source code root** (optional):
+      1. If the file path in your Sentry stack trace frame matches the path to your source code, you do not need to set these values.
+         * ex. For example, everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py` so you don't need to set a **stack trace root** and **source code root**.
+
+      1. If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the **stack_root** part of the file path with your **source_root** to make the file path match the source code path.
+         * ex. For example, to get `src/code.py` to match `code.py` when the source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`, change the **stack trace root** to be set as `src/`, and leave **source code root** empty.
+
+
+## Troubleshooting
+
+- I'm using GitLab on-premises. Do I need to allow Sentry's IP addresses?
+
+  - Yes. You can find our IP ranges [ here ](/product/security/ip-ranges/).
+  - Verify the provided installation URL is a fully qualified domain name (FQDN), which is resolvable on the internet.
+  - Make sure that Sentry's access to your installation URL is not path restricted.
+  - To add the GitLab repo, navigate to ** GitLab > Admin area > Settings > Network > Outbound requests > Allow requests to the local network from hooks and services ** and enable the option.
+
+- I'm using both GitLab on-premises and self-hosted Sentry, and I get an error `Error Communicating with GitLab (HTTP 422): unknown error` when I try to use the integration. How can I fix this?
+
+  - By default, GitLab does not allow Hooks to communicate with the local private network, which prevents the integration with Sentry from working. To enable local network communication in GitLab, enable "Allow requests to the local network from hooks and services" on the **Admin > Settings > Network** page.
+
+- Do you support subgroups?
+
+  - Currently, we only support subgroups for users using GitLab 11.6 or higher.
+
+- My repositories are hosted under my user account, not a group account. Can I still use this integration?
+
+  - Unfortunately, not. The GitLab integration only works for repositories that are hosted under group accounts.
+
+- Are there pricing restrictions?
+
+  - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
+
+- Who has permission to install this?
+  - You must have both owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration.
