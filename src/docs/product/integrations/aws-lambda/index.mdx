@@ -99,9 +99,11 @@ However when you perform a subsequent `sls deploy` the environment variables are
 
 ### Node
 ```
+# other configuration
+
 provider:
 
-  # other configuration
+  # more configuration
   region: <AWS_REGION>
 
   environment:
@@ -109,37 +111,41 @@ provider:
     SENTRY_DSN: '<SENTRY_DSN>'
     NODE_OPTIONS: '-r @sentry/serverless/dist/awslambda-auto'
 
-layersResource:
+custom:
   layers:
     - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDK:26
 #    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDK:latest
 
-<yourFunctionName>:
-  handler: <yourLambdaHandlerFunctionPath>
-  layers: ${self:layersResource.layers}
+functions:
+  <yourFunctionName>:
+    handler: <yourLambdaHandlerFunctionPath>
+    layers: ${self:custom.layers}
 ```
 
 ### Python
 ```
+# other configuration
+
 provider:
 
-  # other configuration
+  # more configuration
   region: <AWS_REGION>
 
   environment:
     SENTRY_TRACES_SAMPLE_RATE: '1.0'
     SENTRY_DSN: '<SENTRY_DSN>'
 
-layersResource:
+custom:
   layers:
     - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryPythonServerlessSDK:6
-#    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryPythonServerlessSDK:latest
+#    - arn:aws:lambda:${self:provider.region:943013980633:layer:SentryPythonServerlessSDK:latest
 
-<yourFunctionName>:
-  handler: sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler
-  environment:
-    SENTRY_INITIAL_HANDLER: '<yourLambdaHandlerFunctionPath>'
-  layers: ${self:layersResource.layers}
+functions:
+  <yourFunctionName>:
+    handler: sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler
+    environment:
+      SENTRY_INITIAL_HANDLER: '<yourLambdaHandlerFunctionPath>'
+    layers: ${self:custom.layers}
 ```
 
 Currently there is no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the  lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK has not been given the necessary permissions.
