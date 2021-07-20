@@ -373,14 +373,13 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         pathRoot
       )}`;
       reporter.verbose(`${guide.key}: Creating global common - ${path}`);
-      // XXX: we dont index or add redirects for guide-common pages
+      // XXX: we dont add redirects for guide-common pages
       pages.push([
         node,
         path,
         {
           ...guidePageContext,
           title: path === pathRoot ? guide.title : undefined,
-          noindex: true,
           redirect_from: [],
         },
       ]);
@@ -394,14 +393,13 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         pathRoot
       )}`;
       reporter.verbose(`${guide.key}: Creating common - ${path}`);
-      // XXX: we dont index or add redirects for guide-common pages
+      // XXX: we dont add redirects for guide-common pages
       pages.push([
         node,
         path,
         {
           ...guidePageContext,
           title: path === pathRoot ? guide.title : undefined,
-          noindex: true,
           redirect_from: [],
         },
       ]);
