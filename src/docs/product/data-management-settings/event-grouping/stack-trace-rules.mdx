@@ -16,7 +16,7 @@ The syntax for stack trace rules is similar to:
 matcher-name:expression other-matcher:expression ... action1 action2 ...
 ```
 
-The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, you can prefix the expression with an exclamation mark (`!`).
+The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, you can prefix the expression with an exclamation mark (`!`). If a line is prefixed with a hash (`#`), it's a comment and ignored.
 
 The following is a practical example of how this looks:
 
@@ -99,13 +99,38 @@ stack.package:**/libcurl.dylib -group
 
 Matches on the current state of the in-app flag of a stack trace frame. `yes` means the frame is in-app, `no` means it's not.
 
+### `category`
+
+Matches on a built-in [built-in](#built-in-categories) or a user-defined frame category.
+See [variable actions](#variable-actions) on how to set a category.
+
+```discover {tabTitle:Enhancement Rules}
+category:telemetry -group
+```
+
+#### Built-in Categories
+
+Frame categorization is heavily used by our newest grouping algorithm, so [if you have it enabled](TODO),
+there is a variety of categories which you can match on, including:
+
+* `system` - detected system libraries
+* `std` - detected standard libraries
+* `ui` - UI frameworks
+* `driver` - graphics drivers, etc.
+* `telemetry` - crash reporting & analytics frameworks
+
+See [our source code](https://github.com/getsentry/sentry/blob/master/src/sentry/grouping/enhancer/enhancement-configs/mobile%402021-04-02.txt) for a full list of built-in categories.
+
+
 </DefinitionList>
 
 ## Actions
 
 There are two types of **actions**: flag and variables setting.
 
-1. A **flag** identifies the action to be taken if all matchers match and uses these prefixes:
+### Flag actions
+
+A **flag** identifies the action to be taken if all matchers match and uses these prefixes:
 
 - `+` sets the flag
 - `-` unsets the flag
@@ -116,28 +141,18 @@ As an example, `-group ^-group` removes the matching frame and all frames above 
 
 - `app`: marks or unmarks a frame in-app
 - `group`: adds or removes a frame from grouping
+- `sentinel`: marks a frame as [sentinel frame](#sentinel--prefix-frames)
+- `prefix`: marks a frame as [prefix frame](#sentinel--prefix-frames)
 
-2. **variables**: Variables can be set (`variable=value`). Currently, there is just one:
+### Variable actions
+
+A limited set of **variables** can be defined (`variable=value`):
 
 - `max-frames`: sets the total number of frames to be considered for grouping. The default is `0`, which means "all frames." If set to `3`, only the top three frames are considered.
+- `category`: Set a custom category for the frame.
+  - Custom categories overwrite [built-in categories](#built-in-categories).
+  - If multiple category-applying rules match a frame, only the category set in the bottom-most rule is preserved.
 
-If a line is prefixed with a hash (`#`), it's a comment and ignored.
-
-```discover {tabTitle:Enhancement Rules}
-stack.abs_path:**/node_modules/** -group
-stack.abs_path:**/app/utils/requestError.jsx -group
-stack.abs_path:**src/getsentry/src/getsentry/** +app
-
-family:native max-frames=3
-
-stack.function:fetchSavedSearches v-group
-stack.abs_path:**/app/views/**.jsx stack.function:fetchData ^-group
-
-family:native stack.function:SpawnThread v-app -app
-family:native stack.function:_NSRaiseError ^-group -app
-family:native stack.function:std::* -app
-family:native stack.function:core::* -app
-```
 
 ## Recommendations
 
@@ -264,3 +279,18 @@ family:native stack.package:**/proprietarymodule.so  max-frames=2
 family:native stack.function:KnownBadFunction1  max-frames=5
 family:native stack.function:KnownBadFunction2  max-frames=5
 ```
+
+### Sentinel & Prefix Frames
+
+TODO: warning, early adopters
+
+In [the grouping breakdown view](), you can adjust the level of detail by which
+an issue is grouped. To enable this, Sentry looks for interesting parts of the stack trace,
+adding a new level for every interesting group of frames it can find.
+
+To mark frames as interesting, use the `+sentinel` and `+prefix` actions. For the first level, our algorithm looks for the first frame `X` which is marked as sentinel. The fingerprint of this frame is added to the level. If `X` is also a prefix frame, the next frame `Y` is also added. If `Y` is again a prefix frame, the next frame `Z` is added, etc.
+
+TODO: insert example stack trace here (with prefix, sentinel markers)
+
+If no sentinel frame is found, every frame which contributes to grouping according to the usual
+stack trace rules (e.g. `+group`) constitutes its own level of detail.
