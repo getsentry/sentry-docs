@@ -1,12 +1,14 @@
 ---
-title: Performance Integration
+title: Vue Router Integration
 description: "Learn how Sentry's Vue Tracing Integration allows you to track rendering performance during an initial application load."
+redirect_from:
+  - /sdks/react/integrations/vue-router/
 ---
 
 The Vue Tracing Integration allows you to track rendering performance during an initial application load.
 
-Sentry injects a handler inside Vue's `beforeCreate` mixin, providing access to a Vue component during its life cycle stages.
-When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM BrowserTracing integration,
+Sentry uses mixins functionality to providing an access to a Vue component during its life cycle stages.
+When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our BrowserTracing integration,
 and create a new span named `Vue Application Render`. Once the `Vue Application Render` span has been created, it will wait until all of its child components render before marking the span as finished.
 
 The described instrumentation functionality will give you very high-level information about the rendering performance of the Vue instance. However, the integration can also provide more fine-grained details about what actually happened during a specific activity.
@@ -14,7 +16,7 @@ To do that, you need to specify which components to track and what hooks to list
 
 Note that when specifying hooks we use the simple verb rather than `before` and `-ed` pairs. For example, `destroy` is correct. `beforeDestroy` and `destroyed` are incorrect.
 
-To set up the Vue Tracing Integration, you will first need to configure the AM BrowserTracing integration itself. For details on how to do this, see [Performance](/platforms/javascript/guides/vue/performance/).
+To set up the Vue Tracing Integration, you will first need to configure the BrowserTracing integration itself. For details on how to do this, see [Performance](/platforms/javascript/guides/vue/performance/).
 Once you've configured the BrowserTracing integration, move on to configuring the Vue integration itself.
 Sentry built the new tracing capabilities into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 
@@ -27,9 +29,7 @@ import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   // ...
-  integrations: [
-    new Integrations.BrowserTracing(),
-  ],
+  integrations: [new Integrations.BrowserTracing()],
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
@@ -42,9 +42,7 @@ If you want to track child components, and see more details about the rendering 
 ```js
 Sentry.init({
   Vue,
-  tracingOptions: {
-    trackComponents: true,
-  },
+  trackComponents: true,
 });
 ```
 
@@ -53,18 +51,14 @@ Or, you can choose more granularity:
 ```js
 Sentry.init({
   Vue,
-  integrations: [
-    new Integrations.BrowserTracing(),
+  integrations: [new Integrations.BrowserTracing()],
+  trackComponents: [
+    "App",
+    "RwvHeader",
+    "RwvFooter",
+    "RwvArticleList",
+    "Pagination",
   ],
-  tracingOptions: {
-    trackComponents: [
-      "App",
-      "RwvHeader",
-      "RwvFooter",
-      "RwvArticleList",
-      "Pagination",
-    ],
-  },
 });
 ```
 
@@ -73,19 +67,15 @@ If you want to know if some components are, for example, removed during the init
 ```js
 Sentry.init({
   Vue,
-  integrations: [
-    new Integrations.BrowserTracing(),
+  integrations: [new Integrations.BrowserTracing()],
+  trackComponents: [
+    "App",
+    "RwvHeader",
+    "RwvFooter",
+    "RwvArticleList",
+    "Pagination",
   ],
-  tracingOptions: {
-    trackComponents: [
-      "App",
-      "RwvHeader",
-      "RwvFooter",
-      "RwvArticleList",
-      "Pagination",
-    ],
-    hooks: ["mount", "update", "destroy"],
-  },
+  hooks: ["mount", "update", "destroy"],
 });
 ```
 
@@ -95,13 +85,9 @@ Every new rendering cycle is debouncing the timeout, and it starts counting from
 ```js
 Sentry.init({
   Vue,
-  integrations: [
-    new Integrations.BrowserTracing(),
-  ],
-  tracingOptions: {
-    trackComponents: true,
-    timeout: 4000,
-  },
+  integrations: [new Integrations.BrowserTracing()],
+  trackComponents: true,
+  timeout: 4000,
 });
 ```
 
@@ -123,7 +109,7 @@ tracingOptions: {
   timeout: number;
   /**
    * List of hooks to keep track of during component lifecycle.
-   * Available hooks: 'activate' | 'create' | 'destroy' | 'mount' | 'update'
+   * Available hooks: 'activate' | 'create' | 'destroy' | 'mount' | 'unmount' | 'update'
    * Based on https://vuejs.org/v2/api/#Options-Lifecycle-Hooks
    */
   hooks: string[];
@@ -135,51 +121,49 @@ tracingOptions: {
 If you are using Vue Router, you can use our provided integration for better transaction names. Here is a full example how to use it:
 
 ```js
-import Vue from 'vue'
-import App from './App'
-import * as Sentry from '@sentry/vue'
-import { Integrations } from '@sentry/tracing'
-import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
+import Vue from "vue";
+import App from "./App";
+import * as Sentry from "@sentry/vue";
+import { Integrations } from "@sentry/tracing";
+import Router from "vue-router";
+import HelloWorld from "@/components/HelloWorld";
 
-Vue.use(Router)
+Vue.use(Router);
 
-const Foo = { template: '<div>foo</div>' }
-const Bar = { template: '<div>bar</div>' }
+const Foo = { template: "<div>foo</div>" };
+const Bar = { template: "<div>bar</div>" };
 
 const router = new Router({
   routes: [
     {
-      path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      path: "/",
+      name: "HelloWorld",
+      component: HelloWorld,
     },
-    { path: '/foo/:id', component: Foo },
-    { path: '/bar', component: Bar }
-  ]
-})
+    { path: "/foo/:id", component: Foo },
+    { path: "/bar", component: Bar },
+  ],
+});
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 Sentry.init({
   Vue: Vue,
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
   integrations: [
     new Integrations.BrowserTracing({
-      routingInstrumentation: Sentry.vueRouterInstrumentation(router)
-    })
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+    }),
   ],
-  tracingOptions: {
-    trackComponents: true
-  }
-})
+  trackComponents: true,
+});
 
 /* eslint-disable no-new */
 new Vue({
-  el: '#app',
+  el: "#app",
   router,
   components: { App },
-  template: '<App/>'
-})
+  template: "<App/>",
+});
 ```
