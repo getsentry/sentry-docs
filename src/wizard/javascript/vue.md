@@ -32,8 +32,15 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 
 ```js
 import Vue from "vue";
+import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
 import { Integrations } from "@sentry/tracing";
+
+Vue.use(Router);
+
+const router = new Router({
+  // ...
+});
 
 Sentry.init({
   Vue,
@@ -54,7 +61,6 @@ Sentry.init({
 
 new Vue({
   router,
-  store,
   render: h => h(App)
 }).$mount("#app");
 ```
@@ -67,8 +73,12 @@ import { createRouter } from 'vue-router'
 import * as Sentry from "@sentry/vue";
 import { Integrations } from "@sentry/tracing";
 
-const app = createApp({ /* ... */ });
-const router = createRouter({ /* ... */ });
+const app = createApp({
+  // ...
+});
+const router = createRouter({
+  // ...
+});
 
 Sentry.init({
   app,
