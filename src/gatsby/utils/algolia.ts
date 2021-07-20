@@ -19,6 +19,9 @@ const pageQuery = `{
             platform {
               name
             }
+            guide {
+              name
+            }
           }
         }
       }
@@ -36,7 +39,14 @@ const flatten = (arr: any[]) =>
       let platforms = [];
       if (context.platform) {
         const { slug } = standardSDKSlug(context.platform.name);
-        platforms = extrapolate(slug, ".");
+
+        let fullSlug = slug;
+
+        if (context.guide) {
+          const { slug } = standardSDKSlug(context.guide.name);
+          fullSlug += `.${slug}`;
+        }
+        platforms = extrapolate(fullSlug, ".");
       }
 
       return {
