@@ -128,7 +128,7 @@ See [our source code](https://github.com/getsentry/sentry/blob/master/src/sentry
 Sometimes, information about the surrounding frames is necessary to apply a rule to a frame.
 For this purpose, use caller / callee matching syntax, e.g.
 
-```discover {tabTitle:Caller match}
+```discover {tabTitle:Sibling matches}
 # Ignore in-app frames if they are called by telemetry
 [ category:telemetry ] | app:yes -group
 
@@ -294,15 +294,47 @@ family:native stack.function:KnownBadFunction2  max-frames=5
 
 ### Sentinel & Prefix Frames
 
-TODO: warning, early adopters
+<Note>
 
-In [the grouping breakdown view](), you can adjust the level of detail by which
+Sentinel & Prefix Frames are available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+In [the Grouping Breakdown tab](src/docs/product/sentry-basics/guides/grouping-and-fingerprints/grouping-breakdown), you can adjust the level of detail by which
 an issue is grouped. To enable this, Sentry looks for interesting parts of the stack trace,
 adding a new level for every interesting group of frames it can find.
 
 To mark frames as interesting, use the `+sentinel` and `+prefix` actions. For the first level, our algorithm looks for the first frame `X` which is marked as sentinel. The fingerprint of this frame is added to the level. If `X` is also a prefix frame, the next frame `Y` is also added. If `Y` is again a prefix frame, the next frame `Z` is added, etc.
 
-TODO: insert example stack trace here (with prefix, sentinel markers)
-
 If no sentinel frame is found, every frame which contributes to grouping according to the usual
 stack trace rules (e.g. `+group`) constitutes its own level of detail.
+
+#### Example
+
+Consider a stack trace with functions `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, with `a` being the crashing frame
+and `h` being the thread base. Imagine you have the following stack trace rules defined:
+
+```discover {tabTitle:Sentinel & Prefix Rules}
+function:b +sentinel +prefix
+function:c +prefix
+function:f +sentinel
+```
+
+You can see that the first occurence of a sentinel frame (`b`) is used for grouping.
+Because `c` is a prefix frame, `d` is also used:
+
+![Example stack trace with Sentinel & Prefix Frames](screenshots/stacktrace_sentinels.png)
+
+This becomes visible in the [Breakdown tab](/product/sentry-basics/guides/grouping-and-fingerprints/grouping-breakdown):
+
+![Example Breakdown with Sentinel & Prefix Frames (level 1)](screenshots/breakdown_sentinels_level_01.png)
+
+Increasing the level adds the second sentinel:
+
+![Example Breakdown with Sentinel & Prefix Frames (level 2)](screenshots/breakdown_sentinels_level_02.png)
+
+Finally, the deepest level contains the entire stack trace, ignoring Sentinel & Prefix Frames:
+
+![Example Breakdown with Sentinel & Prefix Frames (level 3)](screenshots/breakdown_sentinels_level_03.png)
