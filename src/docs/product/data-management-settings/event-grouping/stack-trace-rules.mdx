@@ -104,7 +104,7 @@ Matches on the current state of the in-app flag of a stack trace frame. `yes` me
 Matches on a built-in [built-in](#built-in-categories) or a user-defined frame category.
 See [variable actions](#variable-actions) on how to set a category.
 
-```discover {tabTitle:Enhancement Rules}
+```discover {tabTitle:Category Match}
 category:telemetry -group
 ```
 
@@ -121,8 +121,20 @@ there is a variety of categories which you can match on, including:
 
 See [our source code](https://github.com/getsentry/sentry/blob/master/src/sentry/grouping/enhancer/enhancement-configs/mobile%402021-04-02.txt) for a full list of built-in categories.
 
-
 </DefinitionList>
+
+### Matching sibling frames
+
+Sometimes, information about the surrounding frames is necessary to apply a rule to a frame.
+For this purpose, use caller / callee matching syntax, e.g.
+
+```discover {tabTitle:Caller match}
+# Ignore in-app frames if they are called by telemetry
+[ category:telemetry ] | app:yes -group
+
+# Ignore system frames if they call app frames
+category:system | [ app:yes ] -group
+```
 
 ## Actions
 
