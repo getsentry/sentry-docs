@@ -1,26 +1,115 @@
 To initialize Sentry in your Vue application, add this to your `app.js`:
 
-```javascript
+### Vue 2
+
+```js
 import Vue from "vue";
+import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
 import { Integrations } from "@sentry/tracing";
 
-Sentry.init({
-  Vue: Vue,
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new Integrations.BrowserTracing()],
+Vue.use(Router);
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+const router = new Router({
+  // ...
+});
+
+Sentry.init({
+  Vue,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Integrations.BrowserTracing({
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+    }),
+  ],
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
+});
+
+// ...
+
+new Vue({
+  router,
+  render: h => h(App),
+}).$mount("#app");
+```
+
+### Vue 3
+
+```js
+import { createApp } from "vue";
+import { createRouter } from "vue-router";
+import * as Sentry from "@sentry/vue";
+import { Integrations } from "@sentry/tracing";
+
+const app = createApp({
+  // ...
+});
+const router = createRouter({
+  // ...
+});
+
+Sentry.init({
+  app,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Integrations.BrowserTracing({
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+    }),
+  ],
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+app.use(router);
+app.mount("#app");
+```
+
+Additionally, Vue 3 allows you to use multiple apps with the same Sentry SDK instance, as well as add more apps dynamically after the SDK has been already initialized.
+
+### Vue 3 - Multiple Apps
+
+```js
+const appOne = Vue.createApp(App);
+const appTwo = Vue.createApp(App);
+const appThree = Vue.createApp(App);
+
+Sentry.init({
+  app: [appOne, appTwo, appThree],
 });
 ```
 
-Sentry's Vue SDK accepts a few different configuration options that let you change its behavior:
+### Vue 3 - Manual Initialization
 
-- Passing in `Vue` is optional. If you do not pass it, `window.Vue` must be present.
-- Passing in `attachProps` is optional and is `true` if it is not provided. If set to `false`, Sentry will suppress sending all Vue components' props for logging.
-- Passing in `logErrors` is optional and is `false` if it is not provided. If set to `true`, Sentry will call original Vue's `logError` function as well.
+```js
+import * as Sentry from "@sentry/vue";
+
+// ...
+const app = createApp(App);
+
+Sentry.init({
+  app,
+  // ...
+});
+
+const miscApp = createApp(MiscApp);
+miscApp.mixin(Sentry.createTracingMixins({ trackComponents: true }));
+Sentry.attachErrorHandler(miscApp, { logErrors: true });
+```
+
+The SDK accepts a few different configuration options that let you change its behavior:
+
+- `attachProps` (defaults to `true`) - Includes all Vue components' props with the events.
+- `logErrors` (defaults to `false`) - Decides whether SDK should call Vue's original `logError` function as well.
+- `trackComponents` (defaults to `false`) - Decides whether to track components by hooking into its lifecycle methods. Can be set to either `boolean`, to enable/disable tracking for all of them, or to an array of specific component names (case-sensitive).
+- `timeout` (defaults to `2000`) - Time in milliseconds dictating how long to wait until the tracked root activity is marked as finished and sent off to Sentry.
+- `hooks` (defaults to `['activate', 'mount', 'update']`) - List of hooks to keep track of during component lifecycle `'activate' | 'create' | 'destroy' | 'mount' | 'unmount' | 'update'`.
 
 <Note>
 

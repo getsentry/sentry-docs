@@ -41,15 +41,19 @@ Sentry.init({
 });
 ```
 
-### Tracking Child Components
+## Configure Tracing Instrumentation
 
-If you want to track child components, and see more details about the rendering process, configure the integration to track them all:
+If you want to track child components or use additional hooks to see more details about the rendering process, you can configure the SDK using options below. Captured data will be then stored as spans and attached to the currently active transaction on the scope:
+
+- `trackComponents` (defaults to `false`) - Decides whether to track components by hooking into its lifecycle methods. Can be set to either `boolean`, to enable/disable tracking for all of them, or to an array of specific component names (case-sensitive).
+- `timeout` (defaults to `2000`) - Time in milliseconds dictating how long to wait until the tracked root activity is marked as finished and sent off to Sentry.
+- `hooks` (defaults to `['activate', 'mount', 'update']`) - List of hooks to keep track of during component lifecycle `'activate' | 'create' | 'destroy' | 'mount' | 'unmount' | 'update'`.
 
 ```js
 Sentry.init({
   Vue,
-  tracingOptions: {
-    trackComponents: true,
-  },
+  tracesSampleRate: 0.1,
+  trackComponents: ["Header", "Navigation", "Footer"],
+  hooks: ["create", "mount"],
 });
 ```
