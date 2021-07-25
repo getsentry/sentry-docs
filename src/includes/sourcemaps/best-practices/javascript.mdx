@@ -41,13 +41,15 @@ We recommend using the Webpack plugin to integrate your source maps into Sentry.
 
 ## Consistent Release
 
-For Sentry to associate error stack traces with your source maps, define the same release number, both in the Webpack plugin or Sentry CLI (whichever you use) **and** your `Sentry.init()` call. The easiest way to do that is to set the release number as an environment variable in your project:
+For Sentry to associate error stack traces with your source maps, define your release number, as a Webpack plugin option or a Sentry CLI argument (whichever you use). If you are using Sentry CLI, you should also define the same release number in your `Sentry.init()` call. The easiest way to assure consistency of the release number is to set it as an environment variable in your project:
 
 ```bash {tabTitle:.env}
 # ...
 SENTRY_RELEASE="1.2.3"
 # ...
 ```
+
+Then, if you are using `sentry-webpack-plugin`:
 
 ```javascript {tabTitle: webpack.config.js}
 // ...
@@ -56,6 +58,13 @@ new SentryWebpackPlugin({
   release: process.env.SENTRY_RELEASE,
 });
 // ...
+```
+
+Or, if you are using `Sentry CLI`:
+
+```bash
+sentry-cli releases new "$SENTRY_RELEASE"
+sentry-cli releases files "$SENTRY_RELEASE" upload-sourcemaps /path/to/sourcemaps
 ```
 
 ```javascript {tabTitle: index.js}
