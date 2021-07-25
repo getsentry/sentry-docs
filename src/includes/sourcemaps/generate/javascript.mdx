@@ -1,16 +1,20 @@
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
-## Webpack
-
 <Note>
 
-We recommend using Sentry's Webpack plugin to configure source maps and upload them automatically during the build:
+We recommend using Sentry's [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) to configure source maps and upload them automatically during the build.
 
 </Note>
 
-Webpack is a powerful build tool that resolves, bundles, and compresses your JavaScript modules. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
+<Alert level="warning" title="source-map-support">
 
-Sentry provides a convenient [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) that configures source maps and uploads them to Sentry during the build.
+To rely on Sentry's source map resolution, your code cannot use the [source-map-support](https://www.npmjs.com/package/source-map-support) package. That package overwrites the captured stack trace in a way that prevents our processors from correctly parsing it.
+
+</Alert>
+
+## Webpack
+
+Sentry provides a convenient [Webpack](https://webpack.js.org/) plugin that [configures source maps and automatically uploads them to Sentry](https://github.com/getsentry/sentry-webpack-plugin).
 
 This process is an example of how to generate and upload your sources:
 
@@ -78,7 +82,7 @@ In Vue 2.x, you should use `vue.config.js` instead of `webpack.config.js`, and u
 
 <Note>
 
-Set up the Webpack plugin as the last running plugin; otherwise, the resulting source maps the plugin receives may not be the final one.
+Set up the Webpack plugin as the last running plugin; otherwise, the source maps the plugin receives may not be the final ones.
 
 </Note>
 
@@ -90,11 +94,10 @@ If you prefer to upload source maps manually, configure Webpack to output source
 
 If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
 
-Additionally, the Webpack plugin will automatically set `window.SENTRY_RELEASE`, so your `Sentry.init` call will not need to be updated.
 
 ## Rollup
 
-You can configure Rollup to generate source maps:
+You can configure [Rollup](https://rollupjs.org/) to generate source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps):
 
 ```javascript {filename:rollup.config.js}
 export default {
@@ -107,11 +110,9 @@ export default {
 };
 ```
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
-
 ## SystemJS
 
-SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and can be configured to output source maps.
+[SystemJSl](https://github.com/systemjs/builder) can be configured to output source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps):
 
 ```javascript
 builder.bundle("src/app.js", "dist/app.min.js", {
@@ -119,7 +120,8 @@ builder.bundle("src/app.js", "dist/app.min.js", {
   sourceMaps: true,
   sourceMapContents: true,
 });
-```
+// TODO: uncomment the backticks below
+// ```
 
 <Note>
 
@@ -127,11 +129,11 @@ This example configuration will inline your original, un-transformed source code
 
 </Note>
 
-</PlatformSection>
-
 ## TypeScript
 
-The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
+The [TypeScript](https://www.typescriptlang.org/) compiler can output source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps). 
+
+Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
 
 ```javascript {filename:tsconfig.json}
 {
@@ -143,24 +145,19 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 }
 ```
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
-
 ## UglifyJS
-
-UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
 
 <Note>
 
-We strongly encourage you to use a higher level bundler (or transpiler) as UglifyJS configuration can get quite complicated to achieve the desired results.
+We strongly encourage you to use a higher-level bundler (or transpiler), as UglifyJS configuration can get quite complicated and it is difficult to achieve the desired results.
 
 </Note>
 
-If you are using UglifyJS to minify your source code, the following command will additionally generate a source map that maps the minified code back to the original source:
+[UglifyJS](https://github.com/mishoo/UglifyJS) can be configured to output source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps):
 
 ```bash
 uglifyjs app.js \
   -o app.min.js.map \
   --source-map url=app.min.js.map,includeSources
-```
-
-</PlatformSection>
+// TODO: uncomment the backticks below
+// ```

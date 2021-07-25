@@ -19,24 +19,24 @@ In this simple project, the minified/transpiled files and their source maps resi
 ├── webpack.config.js
 ```
 
-For this project, can use a simple Sentry configuration:
+For this project, we can use a simple Sentry configuration:
 
 ```javascript {tabTitle: webpack.config.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 // ...
-new SentryWebpackPlugin({
-    // sentry-cli configuration
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  org: "___ORG_SLUG___",
-  project: "___PROJECT_SLUG___",
-  // webpack specific configuration
-  include: "build",
-  configFile: "sentry.properties",
-  release: process.env.SENTRY_RELEASE,
-}),
+  plugins: [
+	  new SentryWebpackPlugin({
+	    authToken: process.env.SENTRY_AUTH_TOKEN,
+	    org: "___ORG_SLUG___",
+	    project: "___PROJECT_SLUG___",
+	     include: "build",
+	    configFile: "sentry.properties",
+	    release: process.env.SENTRY_RELEASE,	   
+	  }),
+	],
 // ...
-```
-
-## Integration Tool
+// TODO: uncomment the backticks below
+// ```
 
 We recommend using the Webpack plugin to integrate your source maps into Sentry. You can use Sentry CLI if you are not using Webpack in your project.
 
@@ -70,7 +70,7 @@ Sentry.init({
 
 ## Correct Source Paths
 
-The filenames/paths of your source maps should match with the reported names in stack traces. You can use [options](https://github.com/getsentry/sentry-webpack-plugin#options) to adjust the paths to your files. Both the Webpack plugin and Sentry CLI have the same options; those relevant to source maps are covered below. It's also possible to adjust the paths inside your stack traces using our [`RewriteFrames` integration](/platforms/javascript/configuration/integrations/plugin/#rewriteframes).
+The filenames of your release artifacts (bundle files and source maps) should match with the reported paths in stack traces. You can use upload configuration to adjust the names of your files. Both the [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin#options and [Sentry CLI](https://docs.sentry.io/product/cli/releases/#sentry-cli-sourcemaps) have the same options; those relevant to source maps are covered below. It's also possible to adjust the paths inside your stack traces using our [`RewriteFrames` integration](/platforms/javascript/configuration/integrations/plugin/#rewriteframes).
 
 <Note>
 
@@ -107,7 +107,7 @@ This option should be enabled for `stripPrefix` and `stripCommonPrefix` to work.
 
 #### `urlPrefix`
 
-This option adds a common prefix to beginning of all filenames. Defaults to `~/`.
+This option adds a common prefix to the beginning of all filenames. Defaults to `~/`, which is a wildcard that matches any scheme and hostname (the `http://my.web.site/` part of `http://my.web.site/path/to/script.js`).
 
 This option is useful when the entry point of the application (generally `index.html` for the browser side and `index.js` for Node), is one or more levels above the source/source map files, as in this example:
 
@@ -134,9 +134,9 @@ new SentryWebpackPlugin({
 
 #### `stripPrefix`
 
-This option removes given prefixes from filenames. This is useful when you need to trim extra prefixes that your bundler/development server may add to your filenames such as `webpack://_N_E/`.
+This option removes the given prefix from filenames _as referenced from within a sourcemap_ (in the `sources` entry, for instance). This is useful when you need to trim extra prefixes that your bundler/development server may add to your filenames such as `webpack://_N_E/`.
 
-When you have the parent folders of your target files as unwanted prefixes, we recommend refining your `include` folders instead of using `stripPrefix`. For example, if your files are stored in `./build/static/js/` and you have `include: "build"` in your configuration, Sentry might fail to resolve your sources because of the extra prefix. If you update your configuration to `include: "build/static/js"`, you won't need to use `stripPrefix`.
+Note that using the `stripPrefix` option will _not_ change the names of your uploaded files. When you have the parent folders of your target files as unwanted prefixes,  include the portion you want stripped in your `include` Webpack plugin option or in the `path/to/sourcemaps` passed to `sentry-cli`. For example, if your files are stored in `./build/static/js/` and you have `include: "build"` in your Webpack plugin configuration, your files will be uploaded with names like `~/static/js/bundle.js`. If you update your configuration to `include: "build/static/js"`, your files will upload as `~/bundle.js` (etc.) instead.
 
 ### Adjusting Frames
 
