@@ -16,31 +16,19 @@ To rely on Sentry's source map resolution, your code cannot use the [source-map-
 
 Sentry provides a convenient [Webpack](https://webpack.js.org/) plugin that [configures source maps and automatically uploads them to Sentry](https://github.com/getsentry/sentry-webpack-plugin).
 
-This process is an example of how to generate and upload your sources:
-
-<PlatformSection notSupported={["javascript.nextjs"]}>
+To use the plugin, you first need to install it:
 
 ```shell {tabTitle:npm}
 npm install --save-dev @sentry/webpack-plugin
-```
+// TODO: uncomment the backticks below
+// ```
 
 ```shell {tabTitle:yarn}
 yarn add --dev @sentry/webpack-plugin
-```
+// TODO: uncomment the backticks below
+// ```
 
-</PlatformSection>
-
-<PlatformSection supported={["javascript.nextjs"]}>
-<Note>
-
-If you’ve installed the Next.js SDK, you don’t have to install the plugin.
-
-</Note>
-</PlatformSection>
-
-<PlatformSection notSupported={["javascript.nextjs"]}>
-
-You may configure [Sentry CLI](/product/cli/configuration/) through it's documented mechanisms, or instead simply bind required parameters when initializing the plugin:
+Then, to configure it:
 
 ```javascript {filename:webpack.config.js}
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
@@ -50,29 +38,23 @@ module.exports = {
   devtool: 'source-map',
   plugins: [
     new SentryWebpackPlugin({
-      // sentry-cli configuration
+      // sentry-cli configuration - can also be done directly through sentry-cli
+      // see https://docs.sentry.io/product/cli/configuration/ for details
       authToken: process.env.SENTRY_AUTH_TOKEN,
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       release: process.env.SENTRY_RELEASE,
 
-      // webpack-specific configuration
+      // other SentryWebpackPlugin configuration
       include: ".",
       ignore: ["node_modules", "webpack.config.js"],
     }),
   ],
 };
-```
+// TODO: uncomment the backticks below
+// ```
 
-</PlatformSection>
-
-<PlatformSection supported={["javascript.nextjs"]}>
-
-You don't need to install the Webpack plugin if you are using Sentry's Next.JS SDK because the SDK automatically handles and uploads your source maps without requiring any configuration. 
-
-If you want to extend the default Next.JS SDK configuration, you can refer [here](/platforms/javascript/guides/nextjs/manual-setup/).
-
-</PlatformSection>
+Additionally, the Webpack plugin will automatically set `window.SENTRY_RELEASE`, so your `Sentry.init` call does not need to include a `release` value.
 
 <PlatformSection supported={["javascript.vue"]}>
 
