@@ -42,15 +42,15 @@ Every `hub` knows what the current scope is. It is always the scope on top of th
 
 JavaScript, for example, is single-threaded with an event loop and async code execution. There is no standard way to carry contextual data that works across async calls. So for JavaScript browser applications, there is only one global `hub` shared for sync and async code.
 
-A similar situation appears on Mobile SDKs. There is an user expectation that contextual data like tags, what the current user is, breadcrumbs, and other information stored on the `scope` to be available and settable from any thread. Therefore, in those SDKs there is only one global `hub`.
+A similar situation appears on Mobile SDKs. There is a user expectation that contextual data like tags, what the current user is, breadcrumbs, and other information stored on the `scope` be available and settable from any thread. Therefore, in those SDKs there is only one global `hub`.
 
 In both cases, everything was relatively fine when the SDK had to deal with reporting errors. With the added responsibility to track transactions and spans, the `scope` became a poor fit to store the current `span`, because it limits the existence of concurrent spans.
 
 For Browser JavaScript, a possible solution is the use of [Zone.js](https://github.com/angular/angular/blob/master/packages/zone.js/README.md), part of the Angular framework. The main challenge is that it increases bundle size and may inadvertendly impact end user apps as it monkey-patches key parts of the JavaScript runtime engine.
 
-The scope propagation problem became specially apparent when we tried to create a simpler API for manual instrumentation. The idea was to expose a `Sentry.trace` function that would implicitly propagate tracing and scope data, and support deep nesting with sync and async code.
+The scope propagation problem became especially apparent when we tried to create a simpler API for manual instrumentation. The idea was to expose a `Sentry.trace` function that would implicitly propagate tracing and scope data, and support deep nesting with sync and async code.
 
-As an example, let’s say someone wanted to measure how long searching through a DOM tree took, tracing this operation would look something like this:
+As an example, let’s say someone wanted to measure how long searching through a DOM tree takes. Tracing this operation would look something like this:
 
 ```js
 await Sentry.trace(
@@ -64,11 +64,11 @@ await Sentry.trace(
 
 With the `Sentry.trace` function, users wouldn’t have to worry about keeping the reference to the correct transaction or span when adding timing data. Users are free to create child spans within the `walkDomTree` function and spans would be ordered in the correct hierarchy.
 
-The implementation of the actual `trace` function is relatively simple (see [a PR which has an example implementation](https://github.com/getsentry/sentry-javascript/pull/3697/files#diff-f5bf6e0cdf7709e5675fcdc3b4ff254dd68f3c9d1a399c8751e0fa1846fa85dbR158)), however, knowing what is the current span in async code and global integrations is a challenge yet to be overcome.
+The implementation of the actual `trace` function is relatively simple (see [a PR which has an example implementation](https://github.com/getsentry/sentry-javascript/pull/3697/files#diff-f5bf6e0cdf7709e5675fcdc3b4ff254dd68f3c9d1a399c8751e0fa1846fa85dbR158)). Knowing what the current span is, however, both in async code and global integrations, is a challenge yet to be overcome.
 
 The following two examples synthesize the scope propagation issues.
 
-### 1. Cannot Determine Current Span
+### Cannot Determine Current Span
 
 Consider some auto-instrumentation code that needs to get a reference to the current `span`, a case in which manual scope propagation is not available.
 
@@ -138,7 +138,7 @@ t2
   |- http.client GET https://example.com/f2
 ```
 
-As a side-effect of not being able to correctly determine the current span, the present implementation of the `fetch` integration (and others) in [the JavaScript Browser SDK chooses to create flat transactions](https://github.com/getsentry/sentry-javascript/blob/61eda62ed5df5654f93e34a4848fc9ae3fcac0f7/packages/tracing/src/browser/request.ts#L169-L178), where all child spans are direct children of the transaction (instead of having a proper multi-level tree structure).
+As a side effect of not being able to correctly determine the current span, the present implementation of the `fetch` integration (and others) in [the JavaScript Browser SDK choose to create flat transactions](https://github.com/getsentry/sentry-javascript/blob/61eda62ed5df5654f93e34a4848fc9ae3fcac0f7/packages/tracing/src/browser/request.ts#L169-L178), where all child spans are direct children of the transaction (instead of having a proper multi-level tree structure).
 
 Note that other tracing libraries have the same kind of challenge. There are several (at the time open) issues in OpenTelemetry for JavaScript related to determining the parent span and proper context propagation (including async code):
 
@@ -148,11 +148,11 @@ Note that other tracing libraries have the same kind of challenge. There are sev
 - [OpenTracing shim doesn't change context #2016](https://github.com/open-telemetry/opentelemetry-js/issues/2016)
 - [Http Spans are not linked / does not set parent span #2333](https://github.com/open-telemetry/opentelemetry-js/issues/2333)
 
-### 2. Conflicting Data Propagation Expectations
+### Conflicting Data Propagation Expectations
 
-There is a conflict of expectations that appear whenever we add a `trace` function as discussed earlier, or simply try to address scope propagation with Zones.
+There is a conflict of expectations that appears whenever we add a `trace` function as discussed earlier, or simply try to address scope propagation with Zones.
 
-The fact that the current `span` is stored in the `scope`, along with `tags`, `breadcrumbs` and more, makes data propagation messy as some parts of the `scope` are intended to propagate only into inner functions calls (for example, tags), while others are expected to propagate back into callers (for example, breadcrumbs), specially when there is an error.
+The fact that the current `span` is stored in the `scope`, along with `tags`, `breadcrumbs` and more, makes data propagation messy, as some parts of the `scope` are intended to propagate only into inner functions calls (for example, tags), while others are expected to propagate back into callers (for example, breadcrumbs), especially when there is an error.
 
 Here is one example:
 
@@ -190,9 +190,11 @@ function b() {
 }
 ```
 
-In the example above, if an error bubbles up the call stack we want to be able to report in which `span` (by referring to a `SpanID`) the error happened. We want to have breadcrumbs that describe everything that happened, no matter which Zones were executing, and we want a tag set in an inner Zone to override a tag with the same name from a parent Zone, while inherinting all other tags from the parent Zone. Every Zone has their own "current span".
+In the example above, if an error bubbles up the call stack we want to be able to report in which `span` (by referring to a `SpanID`) the error happened. We want to have breadcrumbs that describe everything that happened, no matter which Zones were executing, and we want a tag set in an inner Zone to override a tag with the same name from a parent Zone, while inherinting all other tags from the parent Zone. Every Zone has its own "current span."
 
-All those different expectations makes it hard to reuse, in an understandable way, the current notion of `scope`, how breadcrumbs are recorded, and how those different concepts interact.
+All those different expectations make it hard to reuse, in an understandable way, the current notion of `scope`, how breadcrumbs are recorded, and how those different concepts interact.
+
+Finally, it is worth noting that the changes to restructure scope management most likely cannot be done without breaking existing SDK APIs. Existing SDK concepts - like hubs, scopes, breadcrumbs, user, tags, and contexts - would all have to be remodeled.
 
 ## Span Ingestion Model
 
