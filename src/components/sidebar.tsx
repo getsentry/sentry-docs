@@ -12,7 +12,6 @@ const navQuery = graphql`
         context {
           draft
           title
-          nosidebar
           sidebar_order
           sidebar_title
         }
@@ -26,7 +25,6 @@ type NavNode = {
   context: {
     draft: boolean;
     title: string;
-    nosidebar?: boolean;
     sidebar_order: number;
     sidebar_title?: string;
   };

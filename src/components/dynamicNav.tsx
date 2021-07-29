@@ -12,7 +12,6 @@ type Node = {
     title?: string | null;
     sidebar_order?: number | null;
     sidebar_title?: string | null;
-    nosidebar?: boolean;
     [key: string]: any;
   };
   [key: string]: any;
@@ -63,7 +62,6 @@ export const renderChildren = (
       ({ name, node }) =>
         node &&
         !!node.context.title &&
-        !node.context.nosidebar &&
         name !== "" &&
         exclude.indexOf(node.path) === -1
     ),

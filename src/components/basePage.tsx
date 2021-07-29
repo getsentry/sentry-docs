@@ -53,7 +53,6 @@ export type PageContext = {
   excerpt?: string;
   noindex?: boolean;
   notoc?: boolean;
-  nosidebar?: boolean;
   platform?: {
     name: string;
   };
@@ -81,7 +80,6 @@ type Props = {
     excerpt?: string;
     noindex?: boolean;
     notoc?: boolean;
-    nosidebar?: boolean;
   };
   seoTitle?: string;
   sidebar?: JSX.Element;
