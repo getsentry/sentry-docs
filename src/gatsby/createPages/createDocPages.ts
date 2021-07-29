@@ -13,6 +13,7 @@ export default async ({ actions, graphql, reporter }) => {
                     description
                     draft
                     noindex
+                    nosidebar
                     notoc
                     sidebar_order
                     sidebar_title
@@ -31,6 +32,7 @@ export default async ({ actions, graphql, reporter }) => {
                     description
                     draft
                     noindex
+                    nosidebar
                     notoc
                     sidebar_order
                     sidebar_title
