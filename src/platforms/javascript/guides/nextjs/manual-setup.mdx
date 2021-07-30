@@ -29,12 +29,41 @@ Sentry.init({
 });
 ```
 
+```typescript {filename:sentry.server.config.ts/sentry.client.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+const SENTRY_DSN: string =
+  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
+Sentry.init({
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+  // ...
+  // Note: if you want to override the automatic release value, do not set a
+  // `release` value here - use the environment variable `SENTRY_RELEASE`, so
+  // that it will also get attached to your source maps
+});
+```
+
 If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
 
 ```javascript {filename:pages/api/*}
 import { withSentry } from "@sentry/nextjs";
 
 const handler = async (req, res) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next"
+import { withSentry } from "@sentry/nextjs";
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   res.status(200).json({ name: "John Doe" });
 };
 
