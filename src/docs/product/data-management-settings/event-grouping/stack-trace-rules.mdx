@@ -16,7 +16,7 @@ The syntax for stack trace rules is similar to:
 matcher-name:expression other-matcher:expression ... action1 action2 ...
 ```
 
-The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, you can prefix the expression with an exclamation mark (`!`).
+The syntax is the same as the syntax used for [Discover queries](/product/discover-queries/). If you want to negate the match, prefix the expression with an exclamation mark (`!`). If a line is prefixed with a hash (`#`), it's ignored and treated as a comment.
 
 The following is a practical example of how this looks:
 
@@ -44,9 +44,11 @@ Matches on the general platform family, which currently includes `javascript`, `
 ```discover {tabTitle:Match multiple}
 family:javascript,native stack.abs_path:**/generated/**  -group
 ```
+
 ```discover {tabTitle:Match only JavaScript}
 family:javascript stack.abs_path:**/generated/**  -group
 ```
+
 ```discover {tabTitle:Match only native}
 family:native stack.abs_path:**/generated/**  -group
 ```
@@ -99,13 +101,56 @@ stack.package:**/libcurl.dylib -group
 
 Matches on the current state of the in-app flag of a stack trace frame. `yes` means the frame is in-app, `no` means it's not.
 
+<!--
+
+### `category`
+
+Matches on a built-in [built-in](#built-in-categories) or a user-defined frame category.
+See [variable actions](#variable-actions) on how to set a category.
+
+```discover {tabTitle:Category Match}
+category:telemetry -group
+```
+
+#### Built-in Categories
+
+Frame categorization is heavily used by our newest grouping algorithm, so [if you have it enabled](/product/data-management-settings/event-grouping/grouping-breakdown#enable-the-grouping-breakdown-beta), you can match on a variety of categories, including:
+
+- `system` - detected system libraries
+- `std` - detected standard libraries
+- `ui` - UI frameworks
+- `driver` - graphics drivers, and so on
+- `telemetry` - crash reporting and analytics frameworks
+
+See [our source code](https://github.com/getsentry/sentry/blob/master/src/sentry/grouping/enhancer/enhancement-configs/mobile%402021-04-02.txt) for a full list of built-in categories.
+
+-->
+
 </DefinitionList>
+
+<!--
+
+### Matching Sibling Frames
+
+If information about the surrounding frames is necessary to apply a rule to a frame, use caller/callee matching syntax. For example:
+
+```discover {tabTitle:Sibling matches}
+# Ignore in-app frames if they are called by telemetry
+[ category:telemetry ] | app:yes -group
+
+# Ignore system frames if they call app frames
+category:system | [ app:yes ] -group
+```
+
+-->
 
 ## Actions
 
 There are two types of **actions**: flag and variables setting.
 
-1. A **flag** identifies the action to be taken if all matchers match and uses these prefixes:
+### Flag Actions
+
+A _flag_ identifies the action to be taken if all matchers match, and it uses these prefixes:
 
 - `+` sets the flag
 - `-` unsets the flag
@@ -117,11 +162,25 @@ As an example, `-group ^-group` removes the matching frame and all frames above 
 - `app`: marks or unmarks a frame in-app
 - `group`: adds or removes a frame from grouping
 
-2. **variables**: Variables can be set (`variable=value`). Currently, there is just one:
+<!--
+- `sentinel`: marks a frame as [sentinel frame](#sentinel--prefix-frames)
+- `prefix`: marks a frame as [prefix frame](#sentinel--prefix-frames)
+-->
 
-- `max-frames`: sets the total number of frames to be considered for grouping. The default is `0`, which means "all frames." If set to `3`, only the top three frames are considered.
+### Variable Actions
 
-If a line is prefixed with a hash (`#`), it's a comment and ignored.
+A limited set of _variables_ can be defined (`variable=value`):
+
+- `max-frames`: Sets the total number of frames to be considered for grouping. The default is `0`, which means "all frames". If set to `3`, only the top three frames are considered.
+
+<!--
+- `category`: Sets a custom category for the frame.
+
+  - Custom categories overwrite [built-in categories](#built-in-categories).
+  - If multiple category-applying rules match a frame, only the category set in the bottom-most rule is preserved.
+-->
+
+### Example
 
 ```discover {tabTitle:Enhancement Rules}
 stack.abs_path:**/node_modules/** -group
@@ -197,7 +256,6 @@ SentrySDK.start { options in
 When using static frameworks, the frameworks end up in the main executable. Therefore, the SDK currently can't detect if a frame of the main executable
 originates from your application or a private framework and marks all of them as `inApp`. To improve your experience, use the below explained stack trace rules on the server to tell Sentry which should be marked as `not inApp`.
 
-
 #### Stack Trace Rules
 
 The following marks frames from libdispatch starting with `_dispatch_` as `inApp`.
@@ -213,6 +271,7 @@ app:no                   +app
 stack.function:std::*    -app
 stack.function:boost::*  -app
 ```
+
 <Note>
 
 You need to force all frames to be in-app first because there might already have been some defaults set by the client SDK or earlier processing.
