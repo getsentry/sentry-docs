@@ -18,15 +18,15 @@ Alternatively, the dSYM files can be downloaded either with [Fastlane](#bitcode-
 
 ### Using App Store Connect {#bitcode-appstore}
 
-When you use the App Store Connect integration, Sentry will automatically discover and fetch dSYM files for Bitcode builds as they become available on App Store Connect.
+When you use the App Store Connect integration, Sentry will automatically discover and fetch dSYM files for Bitcode builds as they become available on App Store Connect. These dSYM files however contain obfuscated symbol names and paths. An additional BCSymbolMap file needs to be uploaded to provide properly symbolicated crash reports. These BCSymbolMap files can be uploaded using either [sentry-cli](#symbolmap-sentrycli) or [Fastlane](#symbolmap-fastlane).
 
-To configure the integration, go to **[Project] > Settings > Debug Files** and add App Store Connect as a new "Custom Repository".
+To configure the integration, go to **[Project] > Settings > Debug Files** and add App Store Connect as a new "Custom Repository". Setting up the integration will currently result in two separate audit entries being created.
 
 Setting up App Store Connect currently requires two separate credentials.
 
 **App Store Connect API Key**:
 
-Follow the documentation on [Creating API Keys for App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api) and provide the _Issuer_, _Key ID_, and _Private Key_.
+Follow the documentation on [Creating API Keys for App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api) and provide the _Issuer_, _Key ID_, and _Private Key_. The API Key needs to have the _Developer_ role in order to fetch build details.
 
 **iTunes Credentials**:
 
@@ -38,6 +38,8 @@ An iTunes user and password are required, in addition to the normal App Store Co
 
 We highly recommend that you create a dedicated iTunes user account for the purpose of this integration, and that you **not** use a regular user account.
 
+Using the configured iTunes account on a different device will disrupt Sentrys ability to use it in order to download dSYM files.
+
 </Alert>
 
 These credentials will need to be verified by a two-factor authentication token that can optionally be requested via SMS.
@@ -45,6 +47,17 @@ These credentials will need to be verified by a two-factor authentication token 
 **Re-authentication**
 
 The iTunes credentials and two-factor authentication are short-lived and need to be refreshed on a regular basis. Sentry will prompt users to re-authenticate once the iTunes credentials expire.
+
+#### Upload BCSymbolMaps using Fastlane {#symbolmap-fastlane}
+
+As dSYM download will be handled by sentry, it is not necessary to use the _download_dsyms_ or _sentry_upload_dsym_ commands.
+Instead, use the _sentry_upload_dif_ command to upload the BCSymbolMap.
+
+When using the _upload_to_testflight_ action, it is recommended to pass the _skip_waiting_for_build_processing_ parameter to speed up the action.
+
+#### Upload BCSymbolMaps using `sentry-cli` {#symbolmap-sentrycli}
+
+The `sentry-cli upload-dif` command will automatically find and upload all _BCSymbolMap_ files, given the path to the `.xcarchive`.
 
 ### Using Fastlane {#bitcode-fastlane}
 
