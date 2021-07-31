@@ -1,0 +1,42 @@
+---
+title: Transports
+sidebar_order: 1100
+description: "Transports let you change the way in which events are delivered to Sentry."
+---
+
+Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments. You can control the transport by passing [transport](/platforms/node/configuration/options/#transport) option to `Sentry.init(options)`.
+
+By default, Sentry Node.JS SDK uses `HTTPTransport` and `HTTPSTransport` transports with `keepAlive` setting turned off.
+
+## Forge transport for UI Kit apps
+
+You can use custom transport for your Forge UI Kit apps: [@atlassian/sentry-transport-forge](https://npmjs.com/package/@atlassian/sentry-transport-forge).
+
+```javascript
+import { ForgeRuntimeTransport } from "@atlassian/sentry-transport-forge";
+import * as Sentry from "@sentry/node";
+
+const DISABLE_INTEGRATIONS = [
+  Sentry.Integrations.Http,
+  Sentry.Integrations.OnUncaughtException,
+  Sentry.Integrations.OnUnhandledRejection,
+];
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  // version 6.9.0 enables `autoSessionTracking` by default
+  // `autoSessionTracking` uses `process.on('beforeExit')` which is not available in Forge runtime
+  transport: ForgeRuntimeTransport,
+  autoSessionTracking: false,
+  integrations: integrations => {
+    return integrations.filter(integration => {
+      return DISABLE_INTEGRATIONS.every(DisableIntegrationConstructor => {
+        return !(integration instanceof DisableIntegrationConstructor);
+      });
+    });
+  },
+  ...restOptions,
+});
+```
+
+Using default Sentry SDK for Node.JS transport won't work for UI Kit apps: the default transport expects standard Node.JS environment whereas functions in UI Kit are executed in a [special sandbox](https://developer.atlassian.com/platform/forge/runtime-reference#javascript-environment) which doesn’t support all Node.JS features. The custom transport uses Forge [Fetch API](https://developer.atlassian.com/platform/forge/runtime-reference/fetch-api/) to send errors and events.
