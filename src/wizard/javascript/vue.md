@@ -30,7 +30,7 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 
 #### Vue 2
 
-```js
+```javascript
 import Vue from "vue";
 import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
@@ -54,22 +54,22 @@ Sentry.init({
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
-  tracesSampleRate: 1.0
+  tracesSampleRate: 1.0,
 });
 
 // ...
 
 new Vue({
   router,
-  render: h => h(App)
+  render: h => h(App),
 }).$mount("#app");
 ```
 
 #### Vue 3
 
-```js
+```javascript
 import { createApp } from "vue";
-import { createRouter } from 'vue-router'
+import { createRouter } from "vue-router";
 import * as Sentry from "@sentry/vue";
 import { Integrations } from "@sentry/tracing";
 
@@ -92,7 +92,7 @@ Sentry.init({
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
-  tracesSampleRate: 1.0
+  tracesSampleRate: 1.0,
 });
 
 app.use(router);
