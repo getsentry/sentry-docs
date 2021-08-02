@@ -37,7 +37,7 @@ We recommend adjusting the value of `tracesSampleRate` in production. Learn more
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
-```js
+```javascript
 myUndefinedFunction();
 ```
 
