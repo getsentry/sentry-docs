@@ -95,23 +95,31 @@ Once configured, all events will be sent to the `/tunnel` endpoint. This solutio
 
 ```php
 <?php
+// Change $host appropriately if you run your own Sentry instance.
+$host = "sentry.io";
+// Set $known_project_ids to an array with your Sentry project IDs which you
+// want to accept through this proxy.
+$known_project_ids = array(  );
+
 $envelope = stream_get_contents(STDIN);
 $pieces = explode("\n", $envelope, 2);
 $header = json_decode($pieces[0], true);
 if (isset($header["dsn"])) {
     $dsn = parse_url($header["dsn"]);
     $project_id = intval(trim($dsn["path"], "/"));
-    $options = array(
+    if (in_array($project_id, $known_project_ids)) {
+      $options = array(
         'http' => array(
-            'header'  => "Content-type: application/octet-stream\r\n",
+            'header'  => "Content-type: application/x-sentry-envelope\r\n",
             'method'  => 'POST',
             'content' => $envelope
         )
-    );
-    echo file_get_contents(
-        "https://{$dsn['host']}/api/$project_id/envelope/",
-        false,
-        stream_context_create($options));
+      );
+      echo file_get_contents(
+          "https://$host/api/$project_id/envelope/",
+          false,
+          stream_context_create($options));
+    }
 }
 ```
 
@@ -127,6 +135,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
+// Change host appropriately if you run your own Sentry instance.
+const host = "sentry.io";
+// Set knownProjectIds to a list with your Sentry project IDs which you
+// want to accept through this proxy.
+var knownProjectIds = new List<string>(){};
+
 var client = new HttpClient();
 WebHost.CreateDefaultBuilder(args).Configure(a =>
     a.Run(async context =>
@@ -139,9 +153,11 @@ WebHost.CreateDefaultBuilder(args).Configure(a =>
             && Uri.TryCreate(dsnString.ToString(), UriKind.Absolute, out var dsn))
         {
             var projectId = dsn.AbsolutePath.Trim('/');
-            context.Request.Body.Position = 0;
-            await client.PostAsync($"https://{dsn.Host}/api/{projectId}/envelope/",
-                new StreamContent(context.Request.Body));
+            if (knownProjectIds.Contains(projectId)) {
+              context.Request.Body.Position = 0;
+              await client.PostAsync($"https://{dsn.Host}/api/{projectId}/envelope/",
+                  new StreamContent(context.Request.Body));
+            }
         }
     })).Build().Run();
 ```
