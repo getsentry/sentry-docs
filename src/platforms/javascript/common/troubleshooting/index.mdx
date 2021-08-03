@@ -136,10 +136,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
 // Change host appropriately if you run your own Sentry instance.
-const host = "sentry.io";
+const string host = "sentry.io";
 // Set knownProjectIds to a list with your Sentry project IDs which you
 // want to accept through this proxy.
-var knownProjectIds = new List<string>(){};
+var knownProjectIds = new HashSet<string>() {  };
 
 var client = new HttpClient();
 WebHost.CreateDefaultBuilder(args).Configure(a =>
@@ -153,7 +153,7 @@ WebHost.CreateDefaultBuilder(args).Configure(a =>
             && Uri.TryCreate(dsnString.ToString(), UriKind.Absolute, out var dsn))
         {
             var projectId = dsn.AbsolutePath.Trim('/');
-            if (knownProjectIds.Contains(projectId)) {
+            if (knownProjectIds.Contains(projectId) && string.Equals(dsn.Host, host, StringComparison.OrdinalIgnoreCase);) {
               context.Request.Body.Position = 0;
               await client.PostAsync($"https://{dsn.Host}/api/{projectId}/envelope/",
                   new StreamContent(context.Request.Body));
