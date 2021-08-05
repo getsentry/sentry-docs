@@ -6,11 +6,64 @@ title: Uploading Debug Symbols
 tags: []
 ---
 
-Sentry requires a dSYM upload to symbolicate your crash logs. The symbolication process unscrambles Apple’s crash logs to reveal the function, file names, and line numbers of the crash. Upload the dSYM file using either [sentry-cli](https://github.com/getsentry/sentry-cli) or the [Fastlane](https://fastlane.tools/) action.
+Sentry requires a dSYM upload to symbolicate your crash logs. The symbolication process unscrambles Apple’s crash logs to reveal the function, file names, and line numbers of the crash. Upload the dSYM file using either [sentry-cli](https://github.com/getsentry/sentry-cli), the [Fastlane](https://fastlane.tools/) action, or set up the Sentry [App Store Connect](#bitcode-appstore) integration for Bitcode builds.
 
 ## With Bitcode {#dsym-with-bitcode}
 
-If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, you will have to upload the dSYM to Sentry **after** it has finished processing in iTunesConnect. We also recommend using the latest Xcode version for submitting your build. The dSYM can be downloaded either with [Fastlane](#bitcode-fastlane) or with [sentry-cli](#bitcode-sentrycli).
+If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, dSYM files will only be available **after** builds have finished processing in App Store Connect. We recommend using the latest Xcode version for submitting your build.
+
+Sentry can fetch dSYM files automatically as they become available from App Store Connect when setting up the [App Store Connect](#bitcode-appstore) integration.
+
+Alternatively, the dSYM files can be downloaded either with [Fastlane](#bitcode-fastlane) or manually, and uploaded with [sentry-cli](#bitcode-sentrycli).
+
+### Using App Store Connect {#bitcode-appstore}
+
+_NOTE_: This feature will be available as an early access preview soon.
+
+When you use the App Store Connect integration, Sentry will automatically discover and fetch dSYM files for Bitcode builds as they become available on App Store Connect. These dSYM files however contain obfuscated symbol names and paths. An additional BCSymbolMap file needs to be uploaded to provide properly symbolicated crash reports. These BCSymbolMap files can be uploaded using either [sentry-cli](#symbolmap-sentrycli) or [Fastlane](#symbolmap-fastlane).
+
+To configure the integration, go to **[Project] > Settings > Debug Files** and add App Store Connect as a new "Custom Repository". Note that setting up the integration will currently result in two identical audit entries being created.
+
+Once setup the integration will ensure that new builds are detected and fetched within an hour of being available on App Store Connect.
+
+During Early Access, App Store Connect integration is limited to a single source per project. Free subscription plans will remain limited to one App Store Connect source per project, though subscribers to our Business plan will in future be able to integrate multiple App Store Connect sources per project. You can read further about our [plans](https://sentry.io/pricing/) or contact [sales@sentry.io](mailto:sales@sentry.io) if your organization needs more than one App Store Connect source.
+
+Setting up App Store Connect currently requires two separate credentials.
+
+**App Store Connect API Key**:
+
+Follow the documentation on [Creating API Keys for App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api) and provide the _Issuer_, _Key ID_, and _Private Key_. The API Key needs to have the _Developer_ role in order to fetch build details.
+
+**iTunes Credentials**:
+
+An iTunes user and password are required, in addition to the normal App Store Connect API Key, due to limitations of the App Store Connect API. The App Store Connect API Key alone will only allow detection of new builds; an iTunes user is required to fetch the associated dSYM files.
+
+[Create a new Apple ID](https://support.apple.com/en-us/HT204316) specifically for this integration and provide its credentials. The user needs to have the _Developer_ role in the appropriate App Store Organization.
+
+<Alert level="warning">
+
+We highly recommend that you create a dedicated iTunes user account for the purpose of this integration, and that you **not** use a regular user account.
+
+Using the configured iTunes account on a different device will disrupt Sentrys ability to use it in order to download dSYM files.
+
+</Alert>
+
+These credentials will need to be verified by a two-factor authentication token that you can choose to have sent by SMS.
+
+**Re-authentication**
+
+The iTunes credentials and two-factor authentication are short-lived and need to be refreshed on a regular basis. Sentry will prompt users to re-authenticate once the iTunes credentials expire.
+
+#### Upload BCSymbolMaps using Fastlane {#symbolmap-fastlane}
+
+As dSYM download will be handled by sentry, it is not necessary to use the _download_dsyms_ or _sentry_upload_dsym_ commands.
+Instead, use the _sentry_upload_dif_ command to upload the BCSymbolMap.
+
+When using the _upload_to_testflight_ action, it is recommended to pass the _skip_waiting_for_build_processing_ parameter to speed up the action.
+
+#### Upload BCSymbolMaps using `sentry-cli` {#symbolmap-sentrycli}
+
+The `sentry-cli upload-dif` command will automatically find and upload all _BCSymbolMap_ files, given the path to the `.xcarchive`.
 
 ### Using Fastlane {#bitcode-fastlane}
 
@@ -114,8 +167,9 @@ fi
 
 3.  If you are using Xcode 10 or newer, you also need to add the following line to the _Input Files_ section in the _Run Script_ from step 2:
 
-[//]: # (Don't use bash here. Clicking the copy button on the code sample with bash)
-[//]: # (removes the leading $.)
+[//]: # "Don't use bash here. Clicking the copy button on the code sample with bash"
+[//]: # "removes the leading $."
+
 ```text
 ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}
 ```
