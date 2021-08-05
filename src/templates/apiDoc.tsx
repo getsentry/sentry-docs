@@ -13,7 +13,7 @@ export default props => {
   return (
     <BasePage sidebar={<ApiSidebar />} {...props}>
       {apiDescription && <Content file={apiDescription} />}
-      <ul>
+      <ul data-noindex>
         {allOpenApi.edges.map(({ node: { path } }) => (
           <li
             key={path.operationId}
