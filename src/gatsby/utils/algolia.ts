@@ -92,10 +92,7 @@ if (!indexPrefix) {
 export default [
   {
     query: pageQuery,
-    transformer: ({ data }) => {
-      flatten(data.pages.nodes);
-      return [];
-    },
+    transformer: ({ data }) => flatten(data.pages.nodes),
     indexName: `${indexPrefix}docs`,
     settings: {
       ...sentryAlgoliaIndexSettings,
