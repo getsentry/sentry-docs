@@ -37,14 +37,36 @@ The SDK uses the process start time as the beginning of the app start and the [`
 
 ![App Start Transaction](app-start-transaction.png)
 
-You can opt out of UIViewController and App Start Instrumentation using options:
+
+## Slow and Frozen Frames
+
+This feature is available for iOS, tvOS, and Mac Catalyst.
+
+Unresponsive UI, animation hitches, or just jank annoy users and degrade the user experience. Two measurements to track this unwanted experience are slow frames and frozen frames. A smoothly running app should try to avoid both. That's why the SDK adds these two measurements for the transactions you capture.
+
+- **Slow frames** are captured by the SDK when the app needs more than 16.67 ms for a frame. Typically, a phone or tablet renders with 60 frames per second (fps), though the frame rate can be higher, especially as 120 fps displays become popular. With 60 fps, every frame has 16.67 ms to render; slower than that, and the app has slow frames.
+- **Frozen frames** are UI frames that take longer than 700 ms.  
+
+The detail view of the transaction displays the slow, frozen, and total frames:
+
+![Slow and Frozen Frames](slow-frozen-frames.png)
+
+## HTTP Instrumentation
+
+The SentrySDK adds spans for outgoing HTTP requests to ongoing transactions that are bound to the Scope.
+The SDK attaches auto-generated transactions automatically to the Scope if there is no other transaction bound.
+When starting a transaction, you can use bindToScope to indicate whether the SDK should bind the new transaction to the Scope or not.
+
+## Opt Out
+
+You can opt out of UIViewController, App Start, Slow and Frozen Frames, and HTTP Instrumentation using options:
 
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableAutoUIPerformanceTracking = false
+    options.enableAutoPerformanceTracking = false
 }
 ```
 
@@ -53,7 +75,7 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.enableAutoUIPerformanceTracking = NO;
+    options.enableAutoPerformanceTracking = NO;
 }];
 ```
 

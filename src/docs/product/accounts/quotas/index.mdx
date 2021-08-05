@@ -240,21 +240,49 @@ You can view and restore previously discarded issues by navigating to **[Project
 
 ## Spike Protection
 
-A spike is both a **large** and **temporary** increase in error event volume **spike protection is not currently available for transactions**. Sentry's spike protection prevents huge overages from consuming your error event capacity. We use your historical error event volume to implement a dynamic rate limit which discards error events when you hit its threshold. This dynamic rate limit is designed to protect you from short-term spikes. The threshold will increase if your increased volume persists for many hours.
+<Alert level="info">
 
-When spike protection is activated, we limit the number of error events accepted in any minute to:
+Spike protection is not currently available for transactions.
+
+</Alert>
+
+A spike is both a **large** and **temporary** increase in error event volume. Because Sentry bills based on monthly event volume, spikes can easily consume your capacity for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event capacity by dropping error events during the spike.
+
+Spike protection is an organization-level setting, so once it's triggered, it affects all the projects in the organization, regardless of which project triggered the spike.
+
+You can enable spike protection for your organization in **Settings > Subscription**. When it's enabled, Sentry continually monitors for spikes.
+
+### How Does Spike Protection Work?
+
+We use your historical error event volume to implement a dynamic rate limit, and then discard error events when you hit its threshold. When spike protection is activated, we limit the number of error events accepted in any minute to:
 
 ```
 maximum(20, 6 x average error events per minute over the last 24 hours)
 ```
 
-_The 24 hour window ends at the beginning of the current hour, not at the current minute._
+<Note>
 
-What this means is that if you experience a spike, we will temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually increase until Sentry finally accepts all events.
+The 24-hour window ends at the beginning of the current hour, not at the current minute.
 
-### How Does Spike Protection Help?
+</Note>
 
-Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike, spike protection drops error events during the spike to try and conserve your capacity. We also send teammates with the "owner" organization permission level a [notification](/product/alerts/notifications/#quota-notifications) email.
+This means if you experience a spike, we'll temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually **increase until Sentry accepts all events**.
+
+For example, in the last 24 hours, your organization has been receiving, on average, 10 events per minute (after any inbound filters have been applied). That means your current per-minute limit is 6 * 10 or 60 events. There have been no spikes in that time, so spike control is "inactive". Something breaks, and in the next minute, your organization sends Sentry 100 events. When we see the 61st event, three things happen:
+
+1. Spike protection becomes "active".
+
+1. If your organization has used more than 25% of your monthly quota, Sentry sends the organization owner a [notification](/product/alerts/notifications/#quota-notifications) including which project the 61st event came from. This is likely, but not guaranteed to be, the project in which something broke.
+
+1. Events 61-100 are dropped.
+
+When the next minute begins, we again record up to 60 events, dropping the rest until the minute is up. It continues like this for the remainder of the hour. After an hour, we re-calculate your per-minute limit, and for the next hour use that limit to decide whether events get dropped each minute. We repeat this process every hour until Sentry eventually accepts all events.
+
+If, instead of a single big spike (or an overall, permanent, increase in traffic), you experience many small spikes, there may be many days in a row when at least a few events are dropped. In that scenario, spike protection remains active the entire time.
+
+### When Does Spike Protection Become Inactive?
+
+Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes inactive again.
 
 ## Size Limits
 
