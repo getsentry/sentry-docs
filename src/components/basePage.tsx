@@ -34,7 +34,7 @@ const GitHubCTA = ({
       <SmartLink
         to={`https://docs.sentry.io/contributing/`}
       >
-        Read our contributor guidelines
+        Learn about contributing to Docs
       </SmartLink>{" "}
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <SmartLink
