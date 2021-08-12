@@ -10,9 +10,9 @@ const captureScreenshots = async () => {
   q.concurrency = 5;
 
   screenshotConfigs.forEach(filepath => {
-    q.push(async () => {
+    q.push(() => {
       console.log(`Capturing ${filepath}`);
-      await require(path.join(process.cwd(), filepath));
+      return require(path.join(process.cwd(), filepath));
     });
   });
 
