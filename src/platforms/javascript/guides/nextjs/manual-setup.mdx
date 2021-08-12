@@ -10,9 +10,9 @@ If you can’t (or prefer not to) run the [configuration step](/platforms/javasc
 
 Create two files in the root directory of your project, `sentry.client.config.js` and `sentry.server.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
 
-For the client configuration:
+For each configuration:
 
-```javascript {filename:sentry.client.config.js}
+```javascript {filename:sentry.server.config.js/sentry.client.config.js}
 import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -29,12 +29,11 @@ Sentry.init({
 });
 ```
 
-And the server configuration:
-
-```javascript {filename:sentry.server.config.js}
+```typescript {filename:sentry.server.config.ts/sentry.client.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
-const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+const SENTRY_DSN: string =
+  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 Sentry.init({
   dsn: SENTRY_DSN || "___PUBLIC_DSN___",
@@ -50,7 +49,7 @@ Sentry.init({
 
 If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
 
-```javascript {filename:pages/api*}
+```javascript {filename:pages/api/*}
 import { withSentry } from "@sentry/nextjs";
 
 const handler = async (req, res) => {
@@ -60,13 +59,18 @@ const handler = async (req, res) => {
 export default withSentry(handler);
 ```
 
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next"
+import { withSentry } from "@sentry/nextjs";
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
 You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
-
-<Alert level="warning" title="Serverless Environments">
-
-`@sentry/nextjs` does not support configurations with the `serverless` target. To use the SDK in serverless environments, switch to using the `experimental-serverless-trace` target, which is [recommended by the Next.js maintainers](https://github.com/vercel/next.js/issues/20487#issuecomment-753884085).
-
-</Alert>
 
 ## Extend Next.js Configuration
 
@@ -106,6 +110,12 @@ const SentryWebpackPluginOptions = {
 module.exports = withSentryConfig(moduleExports, SentryWebpackPluginOptions);
 ```
 
+<Alert level="warning" title="Serverless Environments">
+
+`@sentry/nextjs` does not support configurations with the `serverless` target. To use the SDK in serverless environments, switch to using the `experimental-serverless-trace` target, which is [recommended by the Next.js maintainers](https://github.com/vercel/next.js/issues/20487#issuecomment-753884085).
+
+</Alert>
+
 Make sure to add the Sentry config last; otherwise, the source maps the plugin receives may not be final.
 
 ## Configure Source Maps
@@ -116,7 +126,7 @@ To configure the plugin, pass a `SentryWebpackPluginOptions` argument to `withSe
 
 If you want or need to handle source map uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
 
-```javascript
+```javascript {filename:next.config.js}
 const moduleExports = {
   sentry: {
     disableServerWebpackPlugin: true,
@@ -127,7 +137,7 @@ const moduleExports = {
 
 If you disable the plugin for both server and client builds, it's safe to omit the `SentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
 
-```javascript
+```javascript {filename:next.config.js}
 module.exports = withSentryConfig(moduleExports);
 ```
 
