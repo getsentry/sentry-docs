@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Upcoming Technical Workshop: Monitor your Mobile Application Performance.";
+  "Upcoming Technical Workshop: Monitor your Mobile App Performance.";
 const BANNER_LINK_URL =
   "https://sentry.io/resources/mobile-performance-monitoring/?promo_name=docs";
 const BANNER_LINK_TEXT = "Register here.";
