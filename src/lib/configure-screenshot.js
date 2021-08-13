@@ -51,7 +51,7 @@ const generateScreenshot = async () => {
 
   const demo = "http://35.227.78.105:9000";
   execSync(
-    `npx playwright codegen --viewport-size "${width}, 720" --target javascript -o ./${fullPath} "${demo}"`
+    `npx playwright codegen --viewport-size "${width}, 600" --target javascript -o ./${fullPath} "${demo}"`
   );
 
   // Doctor the result file to add screenshot
