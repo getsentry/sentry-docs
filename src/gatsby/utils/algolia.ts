@@ -2,65 +2,88 @@ import {
   standardSDKSlug,
   extrapolate,
   sentryAlgoliaIndexSettings,
+  htmlToAlgoliaRecord,
 } from "@sentry-internal/global-search";
+import fs from "fs";
+import { resolve, join } from "path";
 
 const pageQuery = `{
     pages: allSitePage {
-      edges {
-        node {
-          objectID: id
-          path
-          context {
-            draft
-            title
-            excerpt
-            noindex
-            keywords
-            platform {
-              name
-            }
-            guide {
-              name
-            }
+      nodes {
+        id
+        path
+        context {
+          draft
+          title
+          noindex
+          keywords
+          platform {
+            name
+          }
+          guide {
+            name
           }
         }
       }
     }
   }`;
 
-const flatten = (arr: any[]) =>
-  arr
-    .filter(
-      ({ node: { context } }) =>
-        context && !context.draft && !context.noindex && context.title
+const pub = resolve(process.cwd(), "public");
+
+const flatten = async (pages: any[]) => {
+  const records = (
+    await Promise.all(
+      pages
+        .filter(
+          ({ context }) =>
+            context && !context.draft && !context.noindex && context.title
+        )
+        .map(async page => {
+          // It's prohibitively difficult to query fully rendered html out of MDX even though it's the
+          // preferred output format, due to performance and configuration problems.
+          // Instead, we're pulling in the generated pages and parsing out the sections we care about.
+          // This runs the risk of dirtier records but is much quicker and easier to work with.
+
+          const { context, path } = page;
+          const htmlFile = join(pub, path, "index.html");
+          const html = (await fs.promises.readFile(htmlFile)).toString();
+
+          // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
+          let platforms = [];
+          if (context.platform) {
+            const { slug } = standardSDKSlug(context.platform.name);
+
+            let fullSlug = slug;
+
+            if (context.guide) {
+              const { slug } = standardSDKSlug(context.guide.name);
+              fullSlug += `.${slug}`;
+            }
+            platforms = extrapolate(fullSlug, ".");
+          }
+
+          const newRecords = htmlToAlgoliaRecord(
+            html,
+            {
+              title: context.title,
+              url: path,
+              platforms,
+              pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+              keywords: context.keywords || [],
+              legacy: context.legacy || false,
+            },
+            "#main"
+          );
+
+          return newRecords;
+        })
     )
-    .map(({ node: { objectID, context, path } }) => {
-      // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
-      let platforms = [];
-      if (context.platform) {
-        const { slug } = standardSDKSlug(context.platform.name);
+  ).reduce((a, x) => {
+    return [...a, ...x];
+  }, []);
 
-        let fullSlug = slug;
-
-        if (context.guide) {
-          const { slug } = standardSDKSlug(context.guide.name);
-          fullSlug += `.${slug}`;
-        }
-        platforms = extrapolate(fullSlug, ".");
-      }
-
-      return {
-        objectID,
-        title: context.title,
-        section: context.title,
-        url: path,
-        text: context.excerpt,
-        platforms,
-        pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
-        keywords: context.keywords || [],
-        legacy: context.legacy || false,
-      };
-    });
+  return records;
+};
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
@@ -70,7 +93,7 @@ if (!indexPrefix) {
 export default [
   {
     query: pageQuery,
-    transformer: ({ data }) => flatten(data.pages.edges),
+    transformer: ({ data }) => flatten(data.pages.nodes),
     indexName: `${indexPrefix}docs`,
     settings: {
       ...sentryAlgoliaIndexSettings,

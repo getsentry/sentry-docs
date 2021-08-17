@@ -20,7 +20,7 @@ const Params = ({ params }) => (
       <React.Fragment key={param.name}>
         <dt>
           <div>
-            <code>{param.name}</code>
+            <code data-index>{param.name}</code>
             {!!param.schema?.type && <em> ({param.schema.type})</em>}
           </div>
 
