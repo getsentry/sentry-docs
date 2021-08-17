@@ -6,6 +6,8 @@ import {
   RequestBody,
 } from "./types";
 
+import { RequestBodySchema } from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
+
 export const sourceNodes = async (
   { actions, createNodeId, createContentDigest },
   pluginOptions
@@ -33,8 +35,8 @@ export const sourceNodes = async (
     const parsedContent = parseContent();
 
     parsedContent.tags.forEach(tag => {
-    if (tag['x-display-description']) {
-      createNode({
+      if (tag["x-display-description"]) {
+        createNode({
           name: tag.name,
           id: createNodeId(`APIDescription-${tag.name}`),
           children: [],
@@ -45,17 +47,17 @@ export const sourceNodes = async (
             mediaType: "text/markdown",
             contentDigest: createContentDigest(tag.description),
           },
-        })
-    }
-    })
-    var data: OpenApiPath[] =
+        });
+      }
+    });
+    const data: OpenApiPath[] =
       parsedContent.paths &&
       Object.keys(parsedContent.paths).reduce((acc, apiPath) => {
-        let result = Object.entries(parsedContent.paths[apiPath]).map(
+        const result = Object.entries(parsedContent.paths[apiPath]).map(
           ([method, rest]) => {
             const methodPath = parsedContent.paths[apiPath][method];
 
-            let readableUrl =
+            const readableUrl =
               `/api/` +
               `${methodPath["tags"][0]}/${methodPath["operationId"]}/`
                 .replace(/[^a-zA-Z0-9/ ]/g, "")
@@ -63,7 +65,7 @@ export const sourceNodes = async (
                 .replace(/\s/g, "-")
                 .toLowerCase();
 
-            let responses: Response[] =
+            const responses: Response[] =
               (methodPath["responses"] &&
                 Object.entries(methodPath["responses"]).map(
                   ([status_code, responses_rest]) => ({
@@ -86,7 +88,7 @@ export const sourceNodes = async (
                 )) ||
               null;
 
-            let requestBody =
+            const requestBody =
               (methodPath["requestBody"] && {
                 ...methodPath["requestBody"],
                 content:
@@ -121,10 +123,10 @@ export const sourceNodes = async (
       }, []);
 
     data.forEach(path => {
-      let nodeContent = { ...parsedContent, path };
+      const nodeContent = { ...parsedContent, path };
       delete nodeContent.paths;
 
-      let apiNode = {
+      const apiNode = {
         ...nodeContent,
         id: createNodeId(`openAPI-${path.method}-${path.apiPath}`),
         children: [],
@@ -165,7 +167,6 @@ export const onCreateNode = async ({
       parent: node,
       child: descriptionNode,
     });
-
     node.path.parameters.map((param, index) => {
       const paramNode = {
         id: createNodeId(`openApiPathParameter-${node.id}-${index}`),
@@ -184,6 +185,38 @@ export const onCreateNode = async ({
         parent: node,
         child: paramNode,
       });
-    })
+    });
+
+    const bodyParameterSchema = node.path?.requestBody?.content?.schema;
+    if (bodyParameterSchema) {
+      const bodyParameters: RequestBodySchema = JSON.parse(bodyParameterSchema);
+      Object.entries(bodyParameters?.properties).map(
+        ([name, { type, description }], index) => {
+          if (description) {
+            const bodyParamNode = {
+              // TODO: Add required field
+
+              id: createNodeId(`openApiBodyParameter-${node.id}-${index}`),
+              parent: node.id,
+              children: [],
+              name,
+              type,
+              description,
+              internal: {
+                type: "openApiBodyParameter",
+                content: description,
+                mediaType: "text/markdown",
+                contentDigest: createContentDigest(description),
+              },
+            };
+            actions.createNode(bodyParamNode);
+            actions.createParentChildLink({
+              parent: node,
+              child: bodyParamNode,
+            });
+          }
+        }
+      );
+    }
   }
 };

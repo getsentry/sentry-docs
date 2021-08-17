@@ -23,17 +23,17 @@ export const getApiTypeDefs = () => {
         query_parameters: [ApiParam]
         warning: String
       }
-      
+
       type ApiParameterSchema {
         enum: [String]
         format: String
         type: String
       }
-      
+
       type openApiPathDescription implements Node @childOf(types: ["openAPI"], ) {
         id: ID!
       }
-      
+
       type openApiPathParameter implements Node @childOf(types: ["openAPI"], many: true) {
         id: ID!
         schema: ApiParameterSchema
@@ -42,7 +42,14 @@ export const getApiTypeDefs = () => {
         description: String
         required: Boolean
       }
-      
+
+      type openApiBodyParameter implements Node @childOf(types: ["openAPI"], many: true) {
+        id: ID!
+        name: String
+        description: String
+        type: String
+      }
+
       type Mdx implements Node @childOf(types: ["openApiPathDescription", "openApiPathParameter"], mimeTypes: ["text/markdown"]) {
         body: String
       }

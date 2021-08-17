@@ -4,13 +4,13 @@ import Prism from "prismjs";
 
 import ApiSidebar from "~src/components/apiSidebar";
 import BasePage from "~src/components/basePage";
-import Content from "~src/components/content"
+import Content from "~src/components/content";
 import SmartLink from "~src/components/smartLink";
 
 import {
   OpenAPI,
   RequestBodySchema,
-} from "~src/gatsby/plugins/gatsby-plugin-openapi/types.ts";
+} from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
 
 import "prismjs/components/prism-json";
 
@@ -24,17 +24,18 @@ const Params = ({ params }) => (
             {!!param.schema?.type && <em> ({param.schema.type})</em>}
           </div>
 
-          {!!param.required && <div className="required">REQUIRED</div>}
-        </dt>
-        {!!param.description && (
-          <dd>
-            <Content file={param} />
-          </dd>
-        )}
-      </React.Fragment>
-    ))}
-  </dl>
-);
+            {!!param.required && <div className="required">REQUIRED</div>}
+          </dt>
+          {!!param.description && (
+            <dd>
+              <Content file={param} />
+            </dd>
+          )}
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+};
 
 const getScopes = (data, securityScheme) => {
   const obj = data.security.find(e => e[securityScheme]);
@@ -56,6 +57,8 @@ export default props => {
   const bodyParameters: RequestBodySchema | null =
     (requestBodyContent?.schema && JSON.parse(requestBodyContent.schema)) ||
     null;
+
+  const bodyParameters2 = openApi.childrenOpenApiBodyParameter || [];
   const pathParameters = (openApi.childrenOpenApiPathParameter || []).filter(
     param => param.in === "path"
   );
@@ -125,7 +128,6 @@ export default props => {
           {!!queryParameters.length && (
             <div className="api-info-row">
               <h3>Query Parameters:</h3>
-
               <Params params={queryParameters} />
             </div>
           )}
@@ -133,19 +135,7 @@ export default props => {
           {bodyParameters && (
             <div className="api-info-row">
               <h3>Body Parameters</h3>
-              <Params
-                params={Object.entries(bodyParameters.properties).map(
-                  ([name, { type, description }]) => ({
-                    schema: { type },
-                    description,
-                    name,
-                    required:
-                      (bodyParameters.required &&
-                        bodyParameters.required.includes(name)) ||
-                      false,
-                  })
-                )}
-              />
+              <Params params={bodyParameters2} />
             </div>
           )}
 
@@ -274,6 +264,14 @@ export const pageQuery = graphql`
         in
         description
         required
+      }
+      childrenOpenApiBodyParameter {
+        id
+        childMdx {
+          body
+        }
+        name
+        description
       }
       path {
         description
