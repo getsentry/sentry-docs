@@ -1,0 +1,96 @@
+---
+title: "API Concepts"
+---
+In this document, we will be looking at API concepts that exist and should be followed by endpoints. We also describe why these concepts exist so that developers can use them at their own discretion.
+
+## Expanding responses
+Expanding responses allow us to include relational information on a resource without loading it by default.
+
+In general, endpoints should expose the fewest fields that will make the API usable in the general scenario. Doing one SQL request per API request is a good rule of thumb. To return information on a bounded relationship, endpoints should rely on the `expand` parameter. To return an unbounded relationship, it should be another endpoint.
+
+To take an example, let's talk about the projects list endpoint. A project belongs to an organizations but could be on multiple teams.
+
+By default, here's what the project endpoint should look like
+
+```json
+GET /api/0/projects/{project_slug}/
+{
+  "id": 5,
+  "name": "foo",
+  ...
+}
+```
+
+To display information about a bounded relationship, a user should be able to use the `expand` parameter. This is generally only true for 1:1 relationships.
+
+```json
+GET /api/0/projects/{project_slug}/?expand=organization
+{
+  "id": 5,
+  "name": "foo",
+  "organization": {
+    "slug": "bar",
+    "isEarlyAdopter": false,
+    ...
+  }
+  ...
+}
+```
+
+For unbounded relationships, make a separate query. This allows the query to be paginated and reduces the risk of having an arbitrarily large payload.
+
+```json
+GET /api/0/projects/{project_slug}/teams
+[
+  {
+    "id": 1,
+		"name": "Team 1",
+		"slug": "team1",
+  },
+	{
+    "id": 2,
+		"name": "Team 2",
+		"slug": "team2",
+  }
+]
+
+```
+
+## Collapsing responses
+Similar to expanding responses, an API endpoint can also collapse responses. When the `collapse` parameter is passed, the API should not return attributes that have been collapsed.
+
+To take an example, let's look at the project list endpoints again. A project gets events and hence, has a `stats` component, which conveys information about how many events were received for the project. Let's say we made the stats part of the endpoint public, along with the rest of the projects list endpoint.
+
+```json
+GET /api/0/projects/{project_slug}/
+{
+  "id": 5,
+  "name": "foo",
+  "stats": {
+      "24h": [
+          [
+              1629064800,
+              27
+          ],
+          [
+              1629068400,
+              24
+          ],
+          ...
+      ]
+  }
+}
+```
+
+The `collapse` parameter can be passed to not return stats information.
+
+```json
+GET /api/0/projects/{project_slug}/?collapse=stats
+{
+  "id": 5,
+  "name": "foo",
+  ...
+}
+```
+
+This is typically only needed if the endpoint is already public and we do not want to introduce a breaking change. Remember, if the endpoint is public and we remove an attribute, it is a breaking change. If you are iterating on an undocumented endpoint, return the minimal set of attributes and rely on the `expand` parameter to get more detailed information.
