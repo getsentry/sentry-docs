@@ -188,13 +188,18 @@ export const onCreateNode = async ({
       });
     });
 
-    const bodyParameterSchemaString = node.path?.requestBody?.content?.schema;
+    const bodyParameterSchemaString =
+      node.path.requestBody !== null &&
+      node.path.requestBody.content !== null &&
+      node.path.requestBody.content.schema;
     if (bodyParameterSchemaString) {
       const bodyParameterSchema: RequestBodySchema = JSON.parse(
         bodyParameterSchemaString
       );
-      const bodyParameterRequired = { ...bodyParameterSchema?.required };
-      Object.entries(bodyParameterSchema?.properties).map(
+      const bodyParameterRequired = {
+        ...(bodyParameterSchema.required || []),
+      };
+      Object.entries(bodyParameterSchema.properties || []).map(
         ([name, { type, description }], index) => {
           if (description) {
             const bodyParamNode = {
