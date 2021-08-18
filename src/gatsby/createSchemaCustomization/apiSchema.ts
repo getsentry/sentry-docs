@@ -52,7 +52,7 @@ export const getApiTypeDefs = () => {
         required: Boolean
       }
 
-      type Mdx implements Node @childOf(types: ["openApiPathDescription", "openApiPathParameter, openApiBodyParameter"], mimeTypes: ["text/markdown"]) {
+      type Mdx implements Node @childOf(types: ["openApiPathDescription", "openApiPathParameter", "openApiBodyParameter"], mimeTypes: ["text/markdown"]) {
         body: String
       }
       `,
