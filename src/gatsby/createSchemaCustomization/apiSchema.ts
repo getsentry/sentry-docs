@@ -51,7 +51,6 @@ export const getApiTypeDefs = () => {
         description: String
         required: Boolean
       }
-
       type Mdx implements Node @childOf(types: ["openApiPathDescription", "openApiPathParameter"], mimeTypes: ["text/markdown"]) {
         body: String
       }
