@@ -97,7 +97,7 @@ export default props => {
   useEffect(() => {
     Prism.highlightAll();
   }, []);
-
+  console.log(bodyParameters);
   return (
     <BasePage sidebar={<ApiSidebar />} {...props}>
       <div className="row">
@@ -124,7 +124,7 @@ export default props => {
             </div>
           )}
 
-          {bodyParameters && (
+          {!!bodyParameters.length && (
             <div className="api-info-row">
               <h3>Body Parameters</h3>
               <Params params={bodyParameters} />
