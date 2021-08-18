@@ -167,6 +167,7 @@ export const onCreateNode = async ({
       parent: node,
       child: descriptionNode,
     });
+
     node.path.parameters.map((param, index) => {
       const paramNode = {
         id: createNodeId(`openApiPathParameter-${node.id}-${index}`),
@@ -187,21 +188,24 @@ export const onCreateNode = async ({
       });
     });
 
-    const bodyParameterSchema = node.path?.requestBody?.content?.schema;
-    if (bodyParameterSchema) {
-      const bodyParameters: RequestBodySchema = JSON.parse(bodyParameterSchema);
-      Object.entries(bodyParameters?.properties).map(
+    const bodyParameterSchemaString = node.path?.requestBody?.content?.schema;
+    if (bodyParameterSchemaString) {
+      const bodyParameterSchema: RequestBodySchema = JSON.parse(
+        bodyParameterSchemaString
+      );
+      const bodyParameterRequired = { ...bodyParameterSchema?.required };
+      Object.entries(bodyParameterSchema?.properties).map(
         ([name, { type, description }], index) => {
           if (description) {
             const bodyParamNode = {
-              // TODO: Add required field
-
+              name,
+              description,
+              schema: { type, format: null, enum: null },
+              required: bodyParameterRequired[name] !== null,
+              in: "body",
               id: createNodeId(`openApiBodyParameter-${node.id}-${index}`),
               parent: node.id,
               children: [],
-              name,
-              type,
-              description,
               internal: {
                 type: "openApiBodyParameter",
                 content: description,

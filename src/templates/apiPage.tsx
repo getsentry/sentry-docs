@@ -7,10 +7,7 @@ import BasePage from "~src/components/basePage";
 import Content from "~src/components/content";
 import SmartLink from "~src/components/smartLink";
 
-import {
-  OpenAPI,
-  RequestBodySchema,
-} from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
+import { OpenAPI } from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
 
 import "prismjs/components/prism-json";
 
@@ -24,18 +21,17 @@ const Params = ({ params }) => (
             {!!param.schema?.type && <em> ({param.schema.type})</em>}
           </div>
 
-            {!!param.required && <div className="required">REQUIRED</div>}
-          </dt>
-          {!!param.description && (
-            <dd>
-              <Content file={param} />
-            </dd>
-          )}
-        </React.Fragment>
-      ))}
-    </dl>
-  );
-};
+          {!!param.required && <div className="required">REQUIRED</div>}
+        </dt>
+        {!!param.description && (
+          <dd>
+            <Content file={param} />
+          </dd>
+        )}
+      </React.Fragment>
+    ))}
+  </dl>
+);
 
 const getScopes = (data, securityScheme) => {
   const obj = data.security.find(e => e[securityScheme]);
@@ -54,11 +50,7 @@ export default props => {
   const openApi: OpenAPI = props.data?.openApi || ({} as any);
   const data = openApi?.path;
   const requestBodyContent = data.requestBody?.content;
-  const bodyParameters: RequestBodySchema | null =
-    (requestBodyContent?.schema && JSON.parse(requestBodyContent.schema)) ||
-    null;
-
-  const bodyParameters2 = openApi.childrenOpenApiBodyParameter || [];
+  const bodyParameters = openApi.childrenOpenApiBodyParameter || [];
   const pathParameters = (openApi.childrenOpenApiPathParameter || []).filter(
     param => param.in === "path"
   );
@@ -80,7 +72,7 @@ export default props => {
     apiExample.push(` -H 'Content-Type: ${contentType}'`);
   }
 
-  if (bodyParameters) {
+  if (bodyParameters.length > 0) {
     const requestBodyExample =
       (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) ||
       {};
@@ -135,7 +127,7 @@ export default props => {
           {bodyParameters && (
             <div className="api-info-row">
               <h3>Body Parameters</h3>
-              <Params params={bodyParameters2} />
+              <Params params={bodyParameters} />
             </div>
           )}
 
@@ -270,8 +262,15 @@ export const pageQuery = graphql`
         childMdx {
           body
         }
+        schema {
+          enum
+          format
+          type
+        }
         name
+        in
         description
+        required
       }
       path {
         description

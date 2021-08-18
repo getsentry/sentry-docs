@@ -45,9 +45,11 @@ export const getApiTypeDefs = () => {
 
       type openApiBodyParameter implements Node @childOf(types: ["openAPI"], many: true) {
         id: ID!
+        schema: ApiParameterSchema
         name: String
+        in: String
         description: String
-        type: String
+        required: Boolean
       }
 
       type Mdx implements Node @childOf(types: ["openApiPathDescription", "openApiPathParameter"], mimeTypes: ["text/markdown"]) {
