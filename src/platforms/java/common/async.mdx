@@ -2,11 +2,14 @@
 title: Async Methods
 sidebar_order: 6
 description: "Learn about how to propagate Scope to Spring async methods."
+supported:
+  - java.spring
+  - java.spring-boot
 ---
 
 Sentry's SDK for Java stores the scope and the context in a thread-local variable. To make sure that an async method has access to the correct Sentry context, a `SentryTaskDecorator` must be set on the `ThreadPoolTaskExecutor`.
 
-## Configuring Spring MVC async task executor
+## Configuring Spring MVC Async Task Executor
 
 To propagate Sentry scope to Spring MVC methods returning a `Callable` or a `StreamingResponseBody`, a `ThreadPoolTaskExecutor` decorated with `SentryTaskDecorator` must be set on the `AsyncSupportConfigurer` through an implementation of `WebMvcConfigurer`:
 
@@ -60,7 +63,41 @@ class AsyncWebMvcConfiguration : WebMvcConfigurer {
 }
 ```
 
-## Configuring @Async methods task executor
+<PlatformSection supported={["java.spring-boot"]}>
+Alternatively, if there is a single bean of type `TaskDecorator` in the context, instead of custom `WebMvcConfigurer`, it is enough to create a `SentryTaskDecorator` bean.
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.sentry.spring.SentryTaskDecorator;
+
+@Configuration
+class SentryConfig {
+
+    @Bean
+    public SentryTaskDecorator sentryTaskDecorator() {
+        return new SentryTaskDecorator();
+    }
+}
+```
+
+```kotlin
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+import io.sentry.spring.SentryTaskDecorator
+
+@Configuration
+class SentryConfig {
+
+    @Bean
+    fun sentryTaskDecorator() = SentryTaskDecorator()
+}
+```
+</PlatformSection>
+
+## Configuring @Async Methods Task Executor
 
 To propagate Sentry scope to Spring `@Async` annotated methods, a custom `AsyncConfigurerSupport` must be configured to return a `ThreadPoolTaskExecutor` decorated with `SentryTaskDecorator`:
 
