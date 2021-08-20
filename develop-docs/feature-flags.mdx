@@ -28,15 +28,15 @@ may prove difficult to find because `trends` may appear throughout the codebase.
 But a name like `performance-trends-view` is more likely to be unique and easier
 to remove later
 
-# Creating a new Feature Flag
+## Creating a new Feature Flag
 
-## Determine what scope the feature should have
+### Determine what scope the feature should have
 
 Features can be scoped by organization, and projects. If you're not confident
 you want a project feature, create an organization level one. In this example
 we'll build a feature called `test-feature` scoped at the _organization_ level.
 
-## Add your feature to server.py
+### Add your feature to server.py
 
 [`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)
 contains many of the default settings in the application. Here you will add
@@ -55,7 +55,7 @@ SENTRY_FEATURES = {
 }
 ```
 
-## Add your feature to the FeatureManager
+### Add your feature to the FeatureManager
 
 The `FeatureManager` handles the application features. We add all the features
 to the `FeatureManager`, including the type of feature we want to add to the
@@ -74,7 +74,7 @@ If you don't plan to use flagr don't pass this third parameter, for example:
 default_manager.add('organizations:test-feature', OrganizationFeature)
 ```
 
-## Add it to the Organization Model Serializer
+### Add it to the Organization Model Serializer
 
 The Organization model serializer
 (`src/sentry/api/serializers/models/organization.py`) builds a list
@@ -101,9 +101,9 @@ if getattr(obj.flags, 'require_2fa'):
     feature_list.append('require-2fa')
 ```
 
-# Checking your feature
+## Checking your feature
 
-## In Python code
+### In Python code
 
 The FeatureManager's `has` method checks see if the feature exists. The has
 method takes in the feature's name, the object that corresponds to the scope of
@@ -121,13 +121,13 @@ the organization and the type of user given. Note that when we give the feature
 to the frontend, we remove the scope prefix, and
 our `'organizations:test-feature'` becomes `'test-feature'`.
 
-## In JavaScript
+### In JavaScript
 
 There is a difference between using the flag in Sentry and in GetSentry. At this
 stage you're not quite ready to use your feature flag in GetSentry, but you are
 able to use it inside Sentry.
 
-## Declarative features with the Feature component
+### Declarative features with the Feature component
 
 React uses a declarative programming paradigm. As such, we have a utility
 component that we use to hide components based on the feature flags available to
@@ -143,7 +143,7 @@ const toRender = (
 );
 ```
 
-## Imperative feature flag checks
+### Imperative feature flag checks
 
 There are some exceptions when React components are generated imperatively (e.g.
 headers/columns for Tables). In difficult times like these, the `Organization`
@@ -157,7 +157,7 @@ const {organization} = this.props;
 organization.features.includes('test-feature'); // evals to True/False
 ```
 
-# Enabling features in development
+## Enabling features in development
 
 In Sentry you can run `sentry devserver` to view your changes in development
 mode. If you would like to view a change behind a feature flag, you will need to
@@ -173,7 +173,7 @@ SENTRY_FEATURES['organizations:test-feature'] = True
 Where `SENTRY_FEATURES` will correspond to the `SENTRY_FEATURES` from `step 2`.
 Set it to `True` if you'd like the feature to be available and `False` if not.
 
-## Flagr in development
+### Flagr in development
 
 In general, you do not need to run flagr in development to test your feature
 flagging. If you do want to run flagr, you'll need to be running
@@ -185,7 +185,7 @@ flagging. If you do want to run flagr, you'll need to be running
 Your local instance of flagr can be found at
 [localhost:18000](http://localhost:18000/#/)
 
-# Enabling your feature in production
+## Enabling your feature in production
 
 Feature flags are declared in Sentry's codebase. For self-hosted users, those
 flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
@@ -241,7 +241,7 @@ must be matched for a feature to be enabled.
 Represents the distribution of variants in a segment, because we'll only have
 one variant this value should always be 100% for each segment.
 
-## Creating a segment constraint
+### Creating a segment constraint
 
 When creating a segment, without the distribution set, Flagr will respond as if
 the segment doesn't exist yet. This means that if you're creating or modifying a
@@ -382,14 +382,43 @@ your feature.
 
 ## After launch (Graduation)
 
-After your feature has been mainlined and is available for all hosted customers:
+After your feature has been mainlined and is available for all customers on
+sentry.io, you have a few potential paths:
 
-- If the feature cannot be disabled, or if no application specific overrides are required, remove the feature flag and all related checks from the Sentry code base. If necessary, also remove references to the feature from the [onpremise](https://github.com/getsentry/onpremise) and getsentry repositories.
-- If the feature flag controls a behavior specific to Sentry SaaS, leave it disabled in Sentry and add appropriate feature handlers in getsentry (see below). In this case, keep in mind that the feature is also disabled during development.
-- If the feature is generally available but is constrained to specific organizations or projects on Sentry SaaS, enable the feature by default in in [`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py) and add appropriate feature handlers in getsentry. This ensures that the feature is enabled in development and self-hosted Sentry installations.
-- If the feature was enabled through flagr, delete the feature from the Flagr UI. This is done by navigating to the flag configuration page then clicking **Delete Flag** at the bottom of the page.
+- If the feature cannot be disabled, or you don't need to conditionally disable
+  the feature, remove the feature flag and all related checks from the Sentry
+  code base. If necessary, also remove references to the feature from the
+  [onpremise](https://github.com/getsentry/onpremise) and getsentry
+  repositories.
+- If the feature will only be available to SaaS customers on specific plans, you
+  need to add your feature flag to the appropriate plans and update feature
+  handlers (see below).You should also enable the feature by default in
+  [`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)
+  in sentry to ensure that the feature is available for self-hosted deployments.
 
-To override features in getsentry, follow these steps:
+Finally, if your feature was enabled through flagr, delete the feature from the
+Flagr UI. This is done by navigating to the flag configuration page then
+clicking **Delete Flag** at the bottom of the page.
+
+
+## Getsentry feature handlers
+
+Getsentry contains a variety of feature handlers that override the
+`SENTRY_FEATURES` map. 
+
+### Plan specific features
+
+If your feature is available for a subset of plans (eg. only on Business plans)
+you need to:
+
+1. Disable the feature in `getsentry/conf/settings/defaults.py` by updating `SENTRY_FEATURES`.
+2. Add your feature to the appropriate plan feature list.
+3. Update `SubscriptionPlanFeatureHandler` to handle your feature.
+
+### Custom handlers
+
+If your feature requires additional logic to become active, you can also
+implement a feature handler in getsentry, follow these steps:
 
 1. Disable the feature in `getsentry/conf/settings/defaults.py` by updating `SENTRY_FEATURES`.
 2. Add a new feature handler class in `getsentry/features.py` that determines availability of the feature based on the organization or actor.
