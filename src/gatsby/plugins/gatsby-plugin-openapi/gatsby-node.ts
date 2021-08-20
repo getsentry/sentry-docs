@@ -4,9 +4,8 @@ import {
   DeRefedOpenAPI,
   OpenApiPath,
   RequestBody,
+  RequestBodySchema,
 } from "./types";
-
-import { RequestBodySchema } from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
 
 export const sourceNodes = async (
   { actions, createNodeId, createContentDigest },
@@ -188,10 +187,12 @@ export const onCreateNode = async ({
       });
     });
 
+    // Optional chaining seems to affect the Vercel build process
     const bodyParameterSchemaString =
       node.path.requestBody !== null &&
       node.path.requestBody.content !== null &&
       node.path.requestBody.content.schema;
+
     if (bodyParameterSchemaString) {
       const bodyParameterSchema: RequestBodySchema = JSON.parse(
         bodyParameterSchemaString

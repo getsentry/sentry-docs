@@ -72,7 +72,7 @@ export default props => {
     apiExample.push(` -H 'Content-Type: ${contentType}'`);
   }
 
-  if (bodyParameters.length > 0) {
+  if (bodyParameters.length) {
     const requestBodyExample =
       (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) ||
       {};
@@ -97,7 +97,6 @@ export default props => {
   useEffect(() => {
     Prism.highlightAll();
   }, []);
-  console.log(bodyParameters);
   return (
     <BasePage sidebar={<ApiSidebar />} {...props}>
       <div className="row">
