@@ -229,6 +229,22 @@ SENTRY_IN_APP_EXCLUDES=host1
 sentry.in-app-excludes=host1
 ```
 
+### Ignored Exceptions For Type
+
+To set exceptions that will be filtered out before sending to Sentry, use the `ignored-exceptions-for-type` option:
+
+```properties {tabTitle:sentry.properties}
+ignored-exceptions-for-type=java.lang.RuntimeException,java.lang.IllegalStateException
+```
+
+```properties {tabTitle:environment variable}
+SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE=java.lang.RuntimeException,java.lang.IllegalStateException
+```
+
+```properties {tabTitle:system property}
+sentry.ignored-exceptions-for-type=java.lang.RuntimeException,java.lang.IllegalStateException
+```
+
 ### Traces Sample Rate
 
 To set the traces sample rate, use the `traces-sample-rate` option:
@@ -331,4 +347,37 @@ sentry.proxy.host=proxy.example.com
 sentry.proxy.port=8080 # default 80
 sentry.proxy.user=proxy-user
 sentry.proxy.pass=proxy-password
+```
+
+## Configuring Offline Caching
+
+The SDK can store events on the disk in case of network errors, and send them to Sentry on another SDK init if the Sentry server is reachable.
+
+To turn on offline caching, set `cacheDirPath` and add `SendCachedEnvelopeFireAndForgetIntegration` to Sentry options:
+
+```java
+import io.sentry.SendCachedEnvelopeFireAndForgetIntegration;
+import io.sentry.SendFireAndForgetEnvelopeSender;
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+  ...
+  options.setCacheDirPath("/disk/path");
+  options.addIntegration(
+    new SendCachedEnvelopeFireAndForgetIntegration(
+      new SendFireAndForgetEnvelopeSender(options::getCacheDirPath)
+    )
+  );
+})
+```
+
+```kotlin
+import io.sentry.SendCachedEnvelopeFireAndForgetIntegration
+import io.sentry.SendFireAndForgetEnvelopeSender
+import io.sentry.Sentry
+
+Sentry.init {
+  it.cacheDirPath = "/disk/path"
+  it.addIntegration(SendCachedEnvelopeFireAndForgetIntegration(SendFireAndForgetEnvelopeSender { it.cacheDirPath }))
+}
 ```

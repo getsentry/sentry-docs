@@ -15,9 +15,19 @@ void ConfigureCrashReporter()
 {
     TSharedPtr<FJsonObject> config = MakeShareable(new FJsonObject);
 
-    // sentry specific attributes to here
+    // sentry specific attributes go here
     config->SetStringField("release", "my-project-name@2.3.12");
     config->SetStringField("environment", "production");
+    
+    TSharedPtr<FJsonObject> tags = MakeShareable(new FJsonObject);
+    tags->SetStringField("tag1", "value1");
+    tags->SetStringField("tag2", "value2");
+    config->SetObjectField("tags", tags);
+    
+    TSharedPtr<FJsonObject> user = MakeShareable(new FJsonObject);
+    user->SetStringField("ip_address", "{{auto}}");
+    user->SetStringField("email", "jane.doe@example.com");
+    config->SetObjectField("user", user);
 
     FString jsonConfig;
     TSharedRef<TJsonWriter<>> jsonWriter = TJsonWriterFactory<>::Create(&jsonConfig);

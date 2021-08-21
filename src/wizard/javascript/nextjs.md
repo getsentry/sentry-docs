@@ -13,19 +13,25 @@ yarn add @sentry/nextjs
 npm install --save @sentry/nextjs
 ```
 
-[Configure your app automatically](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure) with the sentry wizard. It will automatically patch your application:
-
-- create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
-- create `next.config.js` with the default configuration.
-- create `sentry.properties` with configuration for sentry-cli (which is used when automatically uploading source maps).
-
-You can also [configure it manually](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/).
+Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
 
 ```bash
 npx @sentry/wizard -i nextjs
 ```
 
-Wrap your handlers with a Sentry function to capture [Next.js API route errors](https://nextjs.org/docs/api-routes/introduction): 
+Sentry wizard will automatically patch your application:
+- create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
+- create `next.config.js` with the default configuration.
+- create `sentry.properties` with configuration for sentry-cli (which is used when automatically uploading source maps).
+
+
+You can also [configure it manually](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/).
+
+
+## Nextjs API routes
+While `@sentry/nextjs` will enable Sentry for your nextjs application, files under the `pages/api` require one additional installing step.
+
+Wrap your API handlers with a `withSentry` function to capture [Next.js API route errors](https://nextjs.org/docs/api-routes/introduction): 
 
 ```javascript
 import { withSentry } from '@sentry/nextjs';

@@ -6,22 +6,22 @@ description: "Learn how Sentry's React SDK exports an error boundary component t
 
 The React SDK exports an error boundary component that leverages [React component APIs](https://reactjs.org/docs/error-boundaries.html) to automatically catch and send JavaScript errors from inside a React component tree to Sentry.
 
-```jsx
+```javascript
 import React from "react";
 import * as Sentry from "@sentry/react";
 
-<Sentry.ErrorBoundary fallback={"An error has occurred"}>
+<Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}>
   <Example />
 </Sentry.ErrorBoundary>;
 ```
 
 The Sentry Error Boundary is also available as a higher order component.
 
-```jsx
+```javascript
 import React from "react";
 import * as Sentry from "@sentry/react";
 
-Sentry.withErrorBoundary(Example, { fallback: "an error has occurred" });
+Sentry.withErrorBoundary(Example, { fallback: <p>an error has occurred</p> });
 ```
 
 <Alert level="warning" title="Note">
@@ -32,7 +32,7 @@ In development mode, React will rethrow errors caught within an error boundary. 
 
 In the example below, when the `<Example />` component hits an error, the `<Sentry.ErrorBoundary>` component will send data about that error and the component tree to Sentry, open a user feedback dialog, and render a fallback UI.
 
-```jsx
+```javascript
 import React from "react";
 import * as Sentry from "@sentry/react";
 
@@ -89,7 +89,7 @@ The ErrorBoundary component exposes a variety of props that can be passed in for
 
 `beforeCapture` (Function)
 
-_(New in version 5.20.0)_
+_(Available in version 5.20.0 and above)_
 
 : A function that gets called before an error is sent to Sentry, allowing for extra tags or context to be added to the error.
 
@@ -97,9 +97,9 @@ _(New in version 5.20.0)_
 
 #### Setting a Fallback Function (Render Props)
 
-Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error, and gracefully return to a standard component state when reset.
+Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error. The fallback UI returns to a standard component state when reset using the `resetError()` API provided by the component through render props.
 
-```jsx
+```javascript
 import React from "react";
 import * as Sentry from "@sentry/react";
 
@@ -122,6 +122,8 @@ class App extends React.Component {
             <button
               onClick={() => {
                 this.setState({ message: "This is my app" });
+                {/* When resetError() is called it will remove the Fallback component */}
+                {/* and render the Sentry ErrorBoundary's children in their initial state */}
                 resetError();
               }}
             >
@@ -148,11 +150,11 @@ export default App;
 
 #### Using multiple error boundaries
 
-_(New in version 5.20.0)_
+_(Available in version 5.20.0 and above)_
 
 When using multiple error boundaries, we recommend using `beforeCapture` to set tags/context so that you can tell which error boundary the error occurred from. In the example below, we attach tags to errors based on what route they rendered in.
 
-```jsx
+```javascript
 import React from 'react';
 import * as Sentry from '@sentry/react';
 

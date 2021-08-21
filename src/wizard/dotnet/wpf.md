@@ -26,6 +26,7 @@ dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
 Initialize the SDK as early as possible, like in the constructor of the `App`:
 
 ```csharp
+using System.Windows.Threading;
 using System.Windows;
 using Sentry;
 
@@ -34,7 +35,16 @@ public partial class App : Application
     public App()
     {
         DispatcherUnhandledException += App_DispatcherUnhandledException;
-        SentrySdk.Init("___PUBLIC_DSN___");
+        SentrySdk.Init(o => 
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+        });
     }
 
     void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -46,6 +56,40 @@ public partial class App : Application
     }
 }
 ```
+
+## Verify
+
+To verify your set up, you can capture a message with the SDK:
+
+```csharp
+SentrySdk.CaptureMessage("Hello Sentry");
+```
+
+### Performance Monitoring
+
+You can measure the performance of your code by capturing transactions and spans.
+
+```csharp
+// Transaction can be started by providing, at minimum, the name and the operation
+var transaction = SentrySdk.StartTransaction(
+  "test-transaction-name",
+  "test-transaction-operation"
+);
+
+// Transactions can have child spans (and those spans can have child spans as well)
+var span = transaction.StartChild("test-child-operation");
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+span.Finish(); // Mark the span as finished
+transaction.Finish(); // Mark the transaction as finished and send it to Sentry
+```
+
+Check out [the documentation](https://docs.sentry.io/platforms/dotnet/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+
+If you don't want to depend on the static class, the SDK registers a client in the DI container. In this case, you can [take `IHub` as a dependency](https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/unit-testing/).
 
 ### Documentation
 

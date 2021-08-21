@@ -10,6 +10,8 @@ Lumen is supported via a native package, [sentry-laravel](https://github.com/get
 
 Sentry supports Lumen 5+.
 
+## Install
+
 Install the `sentry/sentry-laravel` package:
 
 ```bash
@@ -25,6 +27,12 @@ $app->register('Sentry\Laravel\ServiceProvider');
 require __DIR__ . '/../app/Http/routes.php';
 ```
 
+To enable Sentry Perfomance Monitoring, the TracingServiceProvider has to be registered additionally in `bootstrap/app.php`:
+
+```php {filename:bootstrap/app.php}
+$app->register('Sentry\Laravel\Tracing\ServiceProvider');
+```
+
 Add Sentry reporting to `app/Exceptions/Handler.php`:
 
 ```php {filename:app/Exceptions/Handler.php}
@@ -37,16 +45,41 @@ public function report(Exception $exception)
     parent::report($exception);
 }
 ```
+## Configure
 
-Create the Sentry configuration file (`config/sentry.php`):
+Copy the Sentry configuration file from the vendor directory:
 
-```php {filename:config/sentry.php}
-<?php
-
-return array(
-    'dsn' => '___PUBLIC_DSN___',
-
-    // capture release as git sha
-    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
-);
+```bash
+cp vendor/sentry/sentry-laravel/config/sentry.php config/sentry.php
 ```
+
+Afterwards, add your DSN to `.env`:
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+```
+
+### Verify with Artisan
+
+You can test your configuration using the provided `artisan` command:
+
+```shell
+php artisan sentry:test --transaction
+[Sentry] DSN discovered!
+[Sentry] Generating test Event
+[Sentry] Sending test Event
+[Sentry] Transaction sent: b22f130764c940c69d6860c212849d48
+[Sentry] Event sent with ID: 4cde238791a9433c8876f4a545d9a95b
+```
+
+## Verify with code
+
+You can easily verify that Sentry is capturing errors in your Lumen application by creating a debug route that will throw an exception:
+
+```php
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});
+```
+
+Visiting this route will trigger an exception that will be captured by Sentry.

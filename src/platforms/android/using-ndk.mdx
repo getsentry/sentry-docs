@@ -44,6 +44,19 @@ internally. As a result, this option will not work out of the box on newer Andro
 android.bundle.enableUncompressedNativeLibs=false
 ```
 
+## Symbolicate Stack Traces
+
+The Sentry Gradle Plugin can be [configured](/platforms/android/proguard/#gradle-configuration) to upload the debug symbols and sources automatically.
+
+To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](/platforms/android/data-management/debug-files/upload/) to learn more about the upload of the debug symbols.
+
+For example, you can upload your `.so` files:
+
+```bash
+sentry-cli login
+sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
+```
+
 ## Allowing the Compiler to Link Libraries
 
 To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
@@ -61,7 +74,7 @@ buildscript {
     dependencies {
         // Add the line below, the plugin that copies the binaries
         // https://github.com/howardpang/androidNativeBundle/releases
-        classpath 'com.ydq.android.gradle.build.tool:nativeBundle:{version}'
+        classpath 'io.github.howardpang:androidNativeBundle:{version}'
     }
 }
 ```
@@ -102,18 +115,7 @@ Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
 }
 ```
 
-## Symbolicate Stack Traces
 
-To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](/platforms/android/data-management/debug-files/upload/) to learn more about the upload of the debug symbols.
-
-For example, you can upload your `.so` files:
-
-```bash
-sentry-cli login
-sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
-```
-
-The Sentry Gradle Plugin can be [configured](/platforms/android/proguard/#gradle-configuration) to upload the debug symbols and sources automatically.
 
 ## Disable NDK Integration
 

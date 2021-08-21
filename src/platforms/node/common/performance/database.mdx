@@ -2,56 +2,31 @@
 title: Database integrations
 ---
 
-Node.js has a few integrations that support tracking database queries as Spans. For now you only need to use the latest version of our SDK and add the specific integration to `Sentry.init`:
+Node.js integrations support tracking database queries as spans. Starting in version `6.4.0`, `@sentry/tracing` will auto-detect supported database drivers or ORMs being used in your project, and automatically enable the relevant integrations with default options - without needing additional code.
 
-### MongoDB
+Supported packages and their integration name: 
+- `pg` (Postgres)
+- `mongodb` (Mongo)
+- `mongoose` (Mongo)
+- `mysql` (MySQL)
+
+### Disabling Automatic Instrumentation
+
+You can also (remove an automatically-enabled integration)[integrations](/platforms/node/configuration/integrations/#removing-an-integration), if needed.
+
+### Manually Adding Integrations
+
+If you need to add a specific database integration manually (for example, when using multiple client instances), you can import them from the `@sentry/tracing` package under the `Integrations` namespace.
+
+For example, to add MongoDB instrumentation to a custom client:
 
 ```javascript
 const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
 const mongodb = require("mongodb");
 
-Sentry.init({
-  // ....
-  integrations: [
-    // ....
-    new Tracing.Integrations.Mongo(), // Add this integration
-  ],
-  // ....
-});
-```
-
-### MySQL / MariaDB
-
-```javascript
-const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
-const mysql = require("mysql");
-
-Sentry.init({
-  // ....
-  integrations: [
-    // ....
-    new Tracing.Integrations.Mysql(), // Add this integration
-  ],
-  // ....
-});
-```
-
-### PostgreSQL
-
-
-```javascript
-const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
-const pg = require("pg");
-
-Sentry.init({
-  // ....
-  integrations: [
-    // ....
-    new Tracing.Integrations.Postgres(), // Add this integration
-  ],
-  // ....
+const client = new Sentry.NodeClient({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Tracing.Integrations.Mongo()],
 });
 ```

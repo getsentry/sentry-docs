@@ -13,7 +13,9 @@ type: language
 
 Install the SDK via Gradle, Maven, or SBT:
 
-```groovy {filename:build.gradle}
+For **Gradle**, add to your `build.gradle` file:
+
+```groovy
 // Make sure mavenCentral is there.
 repositories {
     mavenCentral()
@@ -25,7 +27,9 @@ dependencies {
 }
 ```
 
-```xml {tabTitle:Maven}{filename:pom.xml}
+For **Maven**, add to your `pom.xml` file:
+
+```xml
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
@@ -33,36 +37,33 @@ dependencies {
 </dependency>
 ```
 
-```scala {tabTitle:SBT}
+For **SBT**:
+
+```scala
 libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '4.0.0') }}"
 ```
-
 ## Configure
 
 Configure Sentry as soon as possible in your application's lifecycle:
 
-```java {tabTitle: Java}
+```java
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
   options.setDsn("___PUBLIC_DSN___");
+  // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+  // We recommend adjusting this value in production.
+  options.setTracesSampleRate(1.0);
+  // When first trying Sentry it's good to see what the SDK is doing:
+  options.setDebug(true);
 });
-```
-
-```kotlin {tabTitle: Kotlin}
-import io.sentry.Sentry
-
-Sentry.init { options ->
-  options.dsn = "___PUBLIC_DSN___"
-}
 ```
 
 ### Send First Event
 
 Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working:
 
-
-```java {tabTitle: Java}
+```java
 import java.lang.Exception;
 import io.sentry.Sentry;
 
@@ -73,15 +74,30 @@ try {
 }
 ```
 
-```kotlin {tabTitle: Kotlin}
-import java.lang.Exception
-import io.sentry.Sentry
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
+If you're an existing user and have disabled alerts, you won't receive this email.
+
+### Measure performance
+
+You can capture transactions using the SDK. For example:
+
+```java
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+// A good name for the transaction is key, to help identify what this is about
+ITransaction transaction = Sentry.startTransaction("processOrderBatch()", "task");
 try {
-  throw Exception("This is a test.")
-} catch (e: Exception) {
-  Sentry.captureException(e)
+  processOrderBatch();
+} catch (Exception e) {
+  transaction.setThrowable(e);
+  transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+  throw e;
+} finally {
+  transaction.finish();
 }
 ```
 
-To view and resolve the error, log in to <a href="https://sentry.io/">sentry.io</a> then open your project. Click the error's title to open a page with detailed information and mark it as resolved.
+For more information about the API and automatic instrumentations included in the SDK, [visit the docs](https://docs.sentry.io/platforms/java/performance/).

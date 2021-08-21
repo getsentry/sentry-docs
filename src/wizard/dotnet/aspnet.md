@@ -13,6 +13,12 @@ Package Manager:
 Install-Package Sentry.AspNet -Version {{ packages.version('sentry.dotnet.aspnet') }}
 ```
 
+Using Entity Framework 6?
+
+```shell
+Install-Package Sentry.EntityFramework -Version {{ packages.version('sentry.dotnet.ef') }}
+```
+
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
     <div class="alert-body content-flush-bottom">
         <a href="https://docs.sentry.io/clients/csharp/">Our legacy SDK</a> supports .NET Framework as early as 3.5.
@@ -22,8 +28,13 @@ Install-Package Sentry.AspNet -Version {{ packages.version('sentry.dotnet.aspnet
 You should `init` the Sentry SDK as soon as possible during your application load by adding Sentry to `Global.asax.cs`:
 
 ```csharp
-using System.Web;
+using System;
+using System.Configuration;
+using System.Web.Mvc;
+using System.Web.Routing;
 using Sentry;
+using Sentry.AspNet;
+using Sentry.EntityFramework; // if you installed Sentry.EntityFramework
 
 public class MvcApplication : HttpApplication
 {
@@ -36,14 +47,31 @@ public class MvcApplication : HttpApplication
         {
             o.AddAspNet();
             o.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+            // Set TracesSampleRate to 1.0 to capture 100%
+            // of transactions for performance monitoring.
+            // We recommend adjusting this value in production
+            options.TracesSampleRate = 1.0;
+            // If you are using EF (and installed the NuGet package):
+            o.AddEntityFramework();
         });
     }
 
     protected void Application_Error()
     {
         var exception = Server.GetLastError();
-        // Capture the server errors.
         SentrySdk.CaptureException(exception);
+    }
+
+    protected void Application_BeginRequest()
+    {
+        Context.StartSentryTransaction();
+    }
+
+    protected void Application_EndRequest()
+    {
+        Context.FinishSentryTransaction();
     }
 
     protected void Application_End()

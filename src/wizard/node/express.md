@@ -73,7 +73,7 @@ The above configuration captures both error and performance data. To reduce the 
 
 You can verify the Sentry integration is working by creating a route that will throw an error:
 
-```js
+```javascript
 app.get("/debug-sentry", function mainHandler(req, res) {
   throw new Error("My first Sentry error!");
 });
@@ -83,7 +83,7 @@ app.get("/debug-sentry", function mainHandler(req, res) {
 
 Possible options are:
 
-```js
+```javascript
 // keys to be extracted from req
 request?: boolean | string[]; // default: true = ['cookies', 'data', 'headers', 'method', 'query_string', 'url']
 // server name
@@ -105,7 +105,7 @@ flushTimeout?: number; // default: undefined
 
 For example, if you want to skip the server name and add just user, you would use `requestHandler` like this:
 
-```js
+```javascript
 app.use(
   Sentry.Handlers.requestHandler({
     serverName: false,
@@ -116,7 +116,7 @@ app.use(
 
 By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts middleware errors as its argument and decides, whether an error should be sent or not, by returning an appropriate boolean value.
 
-```js
+```javascript
 app.use(
   Sentry.Handlers.errorHandler({
     shouldHandleError(error) {

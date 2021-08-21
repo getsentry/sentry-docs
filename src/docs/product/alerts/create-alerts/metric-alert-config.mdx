@@ -1,0 +1,94 @@
+---
+title: Metric Alert Configuration
+sidebar_order: 20
+redirect_from:
+ - /product/sentry-basics/guides/alert-notifications/metric-alerts/
+description: "Learn more about the options for configuring a metric alert."
+---
+
+Sentry provides several configuration options to create a metric alert based on your organization's needs.
+
+## Filters
+
+The following set of filters translates into a [Discover query](/product/discover-queries/) that is displayed in the chart at the top of the alert configuration page.
+
+### Environment
+
+Specify which <PlatformLink to="/configuration/environments/">environment(s)</PlatformLink> will use this particular alert rule. This control filters on the `environment` tag in your events. This filter is helpful because the urgency and workflows you apply to production alerts might differ from those you apply to alerts originating from your QA environment, for example.
+
+The “Env:” dropdown list here has the same environments that are available for the selected project in the global “Environment” dropdown (this does not include hidden environments). Selecting "All" is equivalent to having no environment filter.
+
+### Event Type
+
+For some metric alerts, you can set the event type that you want to be alerted about in the “Events” dropdown:
+
+- `event.type:error` OR `event.type:default`
+- `event.type:default`
+- `event.type:error`
+- `event.type:transaction`
+
+### Tags & Attributes
+
+Add filters in the field provided to narrow down what you'll be alerted about, such as URL, tags, or other event properties.
+
+## Metric (Function + Time Interval)
+
+Depending on the type of alert you’ve selected, you may be able to choose functions and parameters to apply to it. In other cases, the function is built into the alert and the settings aren't displayed. For example, if you select “Number of Users Affected”, that translates to the function, `count_unique(user.id)`. Since editing this function would change the nature of the alert, it is not editable and thus hidden.
+
+### Functions for Alerting
+
+- `count()`
+- `count_unique(...)`
+- `avg(...)`
+- `percentile(...)`
+- `failure_rate()`
+- `apdex(...)`
+- `count()`
+- `p50()`
+- `p75()`
+- `p95()`
+- `p99()`
+- `p100()`
+
+### Time Interval
+
+Choose the time period over which to evaluate your metric. Your choices range between one minute and one day. Sentry evaluates the specified window each minute. For example, if you specify an hour time window, Sentry evaluates:
+
+- At 3:00pm: 2:00pm - 3:00pm
+- At 3:01pm: 2:01pm - 3:01pm
+- At 3:02pm: 2:02pm - 3:02pm
+- ...
+
+## Thresholds
+
+Thresholds are numerical values that help define an alert trigger. These numerical values are labeled:
+
+- Critical
+- Warning
+- Resolved
+
+You must set the “Warning” threshold so that it’s triggered before the “Critical” threshold. When Sentry evaluates an alert, the alert’s status is updated to the highest severity trigger that matches. If you don’t set a “Resolved” threshold, the alert automatically resolves when it's no longer breaching the “Critical” or “Warning” conditions. You can also resolve alerts manually.
+
+### Auto-Resolve
+
+By default, metric alerts are resolved automatically when the specified metric is no longer breaching the “Critical” or “Warning” conditions. However, you can set a different resolution threshold. For example, suppose a normal level of errors for your app is less than 2000/minute, and you want to be alerted when that exceeds 5000/minute. You might want the alert to resolve only if the level of errors goes back below 2000/minute, not 5000/minute. By setting the "Resolved" threshold this way, if the error level comes back down to only 4000/minute, which you’d consider problematic even though it’s below your alert threshold, the alert won't resolve.
+
+## Actions
+
+Actions define how you and your team will be alerted:
+
+- Send an email to a member or team. If sent to a member, the member's personal project alert opt-out settings are overridden.
+- Send a [Slack](/product/integrations/notification-incidents/slack/) notification.
+- Trigger a [PagerDuty](/product/integrations/notification-incidents/pagerduty/) incident.
+- Send a [Microsoft Teams](/product/integrations/notification-incidents/msteams/) notification.
+- Send a request using [internal integrations](/product/integrations/integration-platform/#internal-integrations).
+
+Learn more about [routing alerts with integrations](/product/alerts/create-alerts/routing-alerts/).
+
+## Rule Name
+
+Give your alert a descriptive name, such as the team affected and the topic of the alert. For example, "Frontend Latency", "Backend Failure Rate", or "Billing Apdex".
+
+## Team
+
+You can choose a team to associate with an alert so that members of that team can edit this alert. Note that you can only make this association if you are a member of the team. If no team is selected, anybody can edit the alert.
