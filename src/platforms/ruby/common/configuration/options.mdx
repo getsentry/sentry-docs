@@ -20,35 +20,11 @@ end
 
 `async`
 
-: When an error or message occurs, the notification is immediately sent to Sentry, synchronously. This means that returning a response to a user may be delayed.
+**This option has been deprecated and could be removed in the future.**
 
-We recommend creating a background job, using your background job processor, that will send Sentry notifications. The client will pass a JSON-compatible Hash representation of the Event into the callback.
+**For more information, please read [this issue](https://github.com/getsentry/sentry-ruby/issues/1522).**
 
-```ruby
-config.async = lambda do |event, hint|
-  SentryJob.perform_later(event, hint)
-end
-```
-
-```ruby
-class SentryJob < ActiveJob::Base
-  queue_as :default
-
-  def perform(event, hint)
-    Sentry.send_event(event, hint)
-  end
-end
-```
-
-Or if you also use `sentry-rails`, you can directly use the job we defined for you:
-
-```ruby
-config.async = lambda do |event, hint|
-  Sentry::SendEventJob.perform_later(event, hint)
-end
-```
-
-If the async callback raises an exception, Sentry will attempt to send synchronously.
+: By default, `sentry-ruby` sends events asynchronouly with its own background worker. This option only exists for compatibility reason and it's not recommended to new Sentry users.
 
 `background_worker_threads`
 
