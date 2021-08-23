@@ -14,8 +14,9 @@ If you’re adopting Performance in a high-throughput environment, we recommend 
 ```javascript
 const Sentry = require("@sentry/node");
 const SentryTracing = require("@sentry/tracing");
-
 const http = require("http");
+const express = require("express");
+const app = express();
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -30,6 +31,11 @@ Sentry.init({
   // for finer control
   tracesSampleRate: 1.0,
 });
+
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+// the rest of your app
 
 const transaction = Sentry.startTransaction({
   op: "transaction",
