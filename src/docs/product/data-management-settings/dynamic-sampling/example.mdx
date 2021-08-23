@@ -4,10 +4,10 @@ sidebar_order: 40
 description: "Review an example of Dynamic Sampling."
 ---
 
-The following examples illustrates when different sampling methods might be useful. In the examples, the system is composed of:
+The following examples illustrate when different sampling methods might be useful. In the examples below, the system is composed of:
 - UI clients that are mobile applications running on our clients' phones, which call
 - an API backend, which further calls
-- services
+- an internal service (S1)
 
 The system is replicated on multiple servers running differing versions of the software. Two versions of our mobile application, UI-1.1 and UI-1.2, have been released. Not all clients have yet upgraded to the last version (UI-1.2).
 
@@ -22,7 +22,7 @@ Users running UI 1.1. create traces like T1 that goes through API 1.0 or like T2
 Similarly, the users running UI 1.2 create traces like T3 and T4.
 The server running S1 service is reached by all four traces.
 
-After the deployment of new mobile application UI 1.2 and the updated backend API 2.0 the system occasionally generates errors.
+After the deployment of the new mobile application UI 1.2 and the updated backend API 2.0 the system occasionally generates errors.
 
 We will discuss to scenarios where different types of sampling may be useful.
 
@@ -37,17 +37,22 @@ Since all traces originate in the UI and therefore only contain information abou
 writing trace rules that select transactions passing through API 2.0 servers. To select transactions from API-2.0, we
 need to base the rules on the event data.
 
-For targeting specific versions of a software in services that do not initiate a trace, as is the case in our example for the API
-and S1 layers we need to write events.
+For targeting specific versions of a software in services that do not initiate a trace, as is the case in our example for
+the API and S1 layers we need to write event based sampling rules. In our case we would write an event rule for
+transactions that select release API 2.0.
+
+**When launching new versions of a system we typically want to temporarily turn up the amount of messages we keep from
+the new system, so we can catch any regressions introduced.**
 
 ### Understanding bugs caused by the interaction between multiple systems
 
 After deploying the new version of the mobile app (UI 1.2) and the api (API 2.0) we notice that we are getting errors from
 S1. This is rather unexpected since S1 1.4 has been deployed for a long time and has been operating flawlessly until now.
 
-Looking at errors and transactions in isolation does reveal any pattern.
-To understand what is going on we need to enable traces to try to understand exactly in what circumstances the error
-occur.
+Looking at errors and transactions in isolation doesn't reveal any pattern.
+To understand what is going on we need to enable sampling by trace information to try to understand exactly in what
+circumstances the error occur. If we sample by trace information, and we have see an error event we know that all the
+transactions from the trace containing the error will also be present.
 
 Here is a sequence of traces that we recorded from which we can get a hint of the problem.
 
@@ -78,7 +83,7 @@ Looking through a few traces we notice an interesting pattern: only traces that 
 generate errors.
 
 We realise that when we tested the new UI 1.2 we did test the new features with the new API 2.0.
-We assumed that UI 1.2 will work with the old API 1.0 and we did some smoke tests to check that everything seems fine
+We assumed that UI 1.2 will work with the old API 1.0 and we did some smoke tests to check that everything seems fine,
 but we have not tested the interaction in detail.
 
 After further investigation we realise that in version UI 1.2 an additional parameter was
@@ -91,13 +96,12 @@ This is an integration error, each system individually works correctly within th
 input but since the interface between UI and API has changed between UI 1.1->UI 1.2 and API 1.0->API 2.0, API 1.0
 incorrectly handles unexpected input from UI 1.2 and passes invalid data to S1.
 
-It could be argued that this is really a bug
-
 Errors that involve interaction among multiple systems running various versions of the software can be frustratingly
 difficult to understand in the absence of distributed traces.
 
 With trace sampling, the sampling decision is based on the trace state. All transactions within a trace are kept or
-discarded together, so you can understand the path of the request through the system and clearly identify
+discarded together, so you can understand the path of the request through the system and clearly identify integration
+conditions that lead to errors.
 
 To quickly identify the cause of this type of errors having access to the whole trace is very useful and this is what
 trace sampling offers.
