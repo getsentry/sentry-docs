@@ -25,13 +25,13 @@ type Markdown = {
 };
 
 type Tag = {
-  name: string,
-  description: string,
+  name: string;
+  description: string;
   externalDocs: {
-    description: string,
-    url: string
-  }
-}
+    description: string;
+    url: string;
+  };
+};
 
 export type DeRefedOpenAPI = {
   paths: {
@@ -62,8 +62,8 @@ export type DeRefedOpenAPI = {
         };
       };
     };
-  },
-  tags: Tag[]
+  };
+  tags: Tag[];
 };
 
 export type ResponseContent = {
@@ -106,4 +106,5 @@ export type OpenAPI = {
   path: OpenApiPath;
   childOpenApiPathDescription: Markdown;
   childrenOpenApiPathParameter: (Parameter & Markdown)[];
+  childrenOpenApiBodyParameter: (Parameter & Markdown)[];
 };
