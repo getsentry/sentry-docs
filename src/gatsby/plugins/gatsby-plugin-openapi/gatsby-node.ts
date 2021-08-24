@@ -189,8 +189,8 @@ export const onCreateNode = async ({
 
     // Optional chaining seems to affect the Vercel build process
     const bodyParameterSchemaString =
-      node.path.requestBody !== null &&
-      node.path.requestBody.content !== null &&
+      !!node.path.requestBody &&
+      !!node.path.requestBody.content &&
       node.path.requestBody.content.schema;
 
     if (bodyParameterSchemaString) {
