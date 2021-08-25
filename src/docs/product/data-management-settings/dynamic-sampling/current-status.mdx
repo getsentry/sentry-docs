@@ -1,0 +1,120 @@
+---
+title: Current implementation status
+sidebar_order: 60
+description: "Current status and limitations of Dynamic Sampling implementations."
+---
+
+## SDK support
+
+At the moment the Python and Javascript SDKs have full support for dynamic sampling.
+
+For Python you SDK version: (to be released) or higher.
+
+For Javascript you SDK version: (to be released) or higher
+
+**Note** that you can still use Dynamic Sampling rules for any project and SDKs for both Error and
+Transaction rules. To use transaction traces though you would need to use one of the supported SDKs
+listed above.
+
+## Current limitations
+
+The following section describes the known limitations and functionality particularities that might trip you when
+writing dynamic sampling rules.
+
+### Trace rules can only select based on the attributes of the initial transaction
+
+When sampling traces the decision on whether to keep or throw away a trace needs to be taken when the first transaction
+of the trace is seen. This in turn means that for transaction traces only the attributes of the first transaction can
+participate in the sampling decision.
+
+In conclusion all trace rules use the attributes (release, environment, etc.) of initiating transaction of the trace.
+
+### Changing trace attributes in secondary transactions
+
+Related to the previously discuss issue about trace rules, setting the transaction, the release or the environment in a
+transaction will have no influence on a trace sampling decision if the transaction is not the first transaction in the
+trace.
+
+When using transaction or error rules setting the transaction, the release, etc. will have the expected effect on
+sampling regardless if the event is the first or not in the trace.
+
+### Limited number of selection attributes
+
+Although transactions and errors have a lot of attributes only a limited number of them are
+available in the rules. We are working to expand the availability of attributes for both
+Error and Transaction rules.
+
+Trace rules have an even stricter amount of attributes available. This is a deliberate decision,
+in order to support more attributes in trace transaction we would need carry additional data in
+all messages belonging to a trace. We are currently investigating ways on how to offer maximum
+flexibility in writing rules while keeping data
+
+### Arbitrary logical composition for rule conditions
+
+At the moment rules containing more than one condition use a logical `and` for each condition.
+Multiple values for a condition use a logical `or` condition for matching .
+
+The decision to implement it like that was taken from the desire to keep the ui simple while still being able to cover
+all common scenarios.
+
+Having multiple arguments within a single condition use the or operator is what we commonly want since an attribute
+generally has one value and having an `and` condition would not make a lot of sense (e.g. the environment attribute
+could be `prod` or `dev` but it could not be `prod` and `dev` at the same time).
+
+While it is useful to have multiple conditions joined both with an `and` operator and an `or` operator. We can simulate
+an `or` operator by creating two rules with the same sampling rate.
+
+For example if we want to sample at 50% errors originating from the environment "production" `and` having release "1.2"
+we can create a rule with:
+
+```
+Sample at 50%  relese: ["1.2"] , environment: ["production"]
+```
+
+If we wanted to sample at 50% errors originating either from the environment "production" `or` having release "1.2" we
+could still do it by writing two rules and having them one after the other
+
+```
+Sample at 50%  environment: ["production"]
+Sample at 50%  relese: ["1.2"]
+```
+
+
+### Rule specificity is exclusively determined by the rule order
+
+When multiple rules match a particular event sentry always uses the first rule that matches the event.
+
+This gives a very easy to understand algorithm that does the obvious thing and does not surprise users.
+As a consequence more specific rules should be places ahead of less specific rules in order to have an effect.
+
+For example if we would want to sample events coming from the production environment at 10%, but we would like
+to keep all production events from the last release we would need to specify the rules in the following order:
+
+```
+Sample at 100%  relese: ["1.2"] , environment: ["production"]
+Sample at 10%  environment: ["production"]
+```
+
+Reversing the conditions would sample all production events at 10%.
+
+### Transaction trace rules and Transaction rules may interact in surprising ways
+
+Generally the first rule that matches an event is selected and used for a sampling decision.
+
+There is an exception when the project has both trace rules and transaction or event rules.
+
+If a transaction happens to match both a trace rule and a transaction rule a sampling decision will
+be taken twice having the net effect of sampling at the product of the two rules, the following example
+will help clarify the behaviour.
+
+Let's say we have a transaction originating from a trace that has the release set to 1.2. This transaction has
+the environment set to "production".
+
+Now if we have a trace rule specifying that "traces from release 1.2 should be sampled at 20%" and we also have
+a transaction rule specifying that "transactions from environment production should be sampled at 40%" the system
+will first match the transaction with the trace rule and will sample it at 20%, if the event is not discarded it will
+end up being also matched against the transaction rules and will be further sampled at 40%. Effectively only 0.4*0.2 = 0.08
+(i.e. 8%) of the transactions of this type will be kept.
+
+This is a corner case that we don't anticipate to happen a lot in practice, but it is good to keep in mind that if we have
+both transaction and transaction trace rules
