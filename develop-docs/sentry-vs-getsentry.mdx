@@ -1,16 +1,19 @@
 ---
-title: "sentry vs getsentry"
+title: "sentry vs. getsentry"
 ---
 
-You'll find numerous references to both `sentry`, the public repository and core of Sentry, and `getsentry`, the proprietary and closed source components used for sentry.io. `getsentry` is the application we deploy to production and contains additional functionality only offered in our SaaS offering.
+You'll find numerous references to both `sentry` and `getsentry` in our documentation. Both are [Django](https://www.djangoproject.com/) apps, but [`sentry` is open](https://github.com/getsentry/sentry) and `getsentry` is closed. What's in which?
 
-In most cases, the systems operate very similarly with subtle differences. That is, you can often swap the `sentry` CLI for the `getsentry` CLI and they'll behave the same. In other cases, we have attempted to call out differences in behavior.
+The main thing to emphasize is that all of our product features—[Issues](https://docs.sentry.io/product/issues/), [Performance](https://docs.sentry.io/product/performance/), [Dashboards](https://docs.sentry.io/product/dashboards/), and [such](https://docs.sentry.io/product/)—are implemented and available in `sentry`, the open component. It's really important to us that we're not an "open core" company that hides key functionality behind a paywall. [Sentry is as open-source as we can make it](https://open.sentry.io/licensing/).
 
-If you're not part of the Sentry team, you won't have access to develop on the `getsentry` codebase and you can ignore the related documentation.
+So what's in `getsentry`, then? Billing and account management features for [our SaaS, sentry.io](https://sentry.io/). `getsentry` is the Django app we deploy to production. It imports the `sentry` Django app, adds some routes and models, and re-exports it.  Additionally, `sentry` has many hooks, implemented using Django signals, which `getsentry` subscribes to. There's a homegrown feature-flagging system vendored into `sentry`, which has a hardcoded table of features ([`SENTRY_FEATURES`](https://github.com/getsentry/sentry/blob/master/src/sentry/features/__init__.py)).  [Self-hosted](/self-hosted/) installs can control feature availability using this system. `getsentry` registers a different feature flag handler that flips flags based on our [billing plans](https://sentry.io/pricing/) and early access program. There are some other swappable backends (`sentry.nodestore`, `sentry.quotas`) that `getsentry` utilizes, which are also available to self-hosted instances (though they're not documented thoroughly).
 
+For example, there's a Django signal called `event_received` in `sentry` that is triggered when an event is saved. If you're running self-hosted, nothing is subscribed to this hook. But in `getsentry` in sentry.io, our counters for billing runs when that signal fires.
 
-## Getsentry-specific Settings
+## Notes for Sentry Engineers
 
-Getsentry's settings are configured in `getsentry/conf/settings/defaults.py`.
-Additional environment specific overrides are found in files matching the
-environment name. For example, local development is found in `getsentry/conf/settings/dev.py`.
+If you're not on staff at Sentry, you won't have access to develop on the `getsentry` codebase and you can ignore the following notes and other mentions throughout this documentation.
+
+- You can often swap the `sentry` CLI for the `getsentry` CLI and they'll behave the same. In other cases, we have attempted to call out differences in behavior.
+
+- `getsentry`'s settings are configured in [`getsentry/conf/settings/defaults.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/conf/settings/defaults.py).  Additional environment specific overrides are found in files matching the environment name. For example, local development is found in [`getsentry/conf/settings/dev.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/conf/settings/dev.py).
