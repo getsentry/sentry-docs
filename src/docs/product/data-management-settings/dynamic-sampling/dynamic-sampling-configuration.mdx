@@ -1,0 +1,73 @@
+---
+title: Dynamic Sampling Configuration
+sidebar_order: 40
+description: "Learn more about how dynamic sampling rules are applied."
+---
+
+As described in [sampling types](/product/data-management-settings/dynamic-sampling/sampling-types/) dynamic sampling
+operates on both error events and transaction events, with transaction events having the ability to be sampled
+independently or as part of a complete trace.
+
+To configure dynamic sampling you need to have organization owner or manager role.
+
+The dynamic sampling configuration can be found in the project settings under "Filters & Sampling".
+You can find two lists one for error rules and one for transaction rules. The transaction rules list contains
+both rules for independent transactions and rules for transaction traces.
+
+Regardless of the type of rule the basic structure of the rule is the same:
+
+* has a type that determines the event type to which it applies (Error or Transaction).
+* has 0 or more conditions
+* has a sampling rate (in percentages)
+
+Transaction rules are further divided in, independent transaction rules and trace transaction rules.
+
+If a rule contains multiple conditions the conditions will have to be met simultaneously (`and` logical operation) in
+order to have the rule applied.
+
+A condition may contain multiple values to be matched, for the condition to be matched any of values must match
+(`or` logical operation).
+
+## Transaction trace rules
+
+While dynamic sampling rules for errors or independent transactions have a variety of conditions that can be selected
+transaction traces are a lot more limited in the information that can be used for selection.
+
+When sampling transaction traces, dynamic sampling rules are based on the transaction context.
+This means that dynamic sampling decisions are based on information extracted from the system that started the transaction.
+Transaction trace dynamic sampling rules are based on the following attributes,
+all of which belong to the transaction that started the trace:
+
+- Project ID
+- Release
+- Environment
+- User segment
+- Transaction name
+
+## Dynamic Sampling and Inbound Filters
+
+Inbound filters are a related concept, with key differences from Dynamic Sampling.
+
+Inbound filters may be viewed as a coarse sampling technique, where only 0% and 100% sampling rates are available.
+The key difference between filters and sampling is that filters compose while sampling rules do not, the example
+provides an illustration:
+
+With two filters defined - one that removes all requests coming from Internet Explorer 9 or lower, and one that filters
+requests coming from an application with release 1.* - all  events coming either from Explorer 9 or from a client
+with release 1.* will be filtered out, effectively the two filters are ORed together.
+
+With two sampling rules defined - first on release 1.* at 10%, and the second sampling on "prod1" environment
+at 20% - the combined effect will not be  similar to the inbound filters case. A request coming for release 1.1 and
+prod1 will match the first rule and will be sampled at 10% , a request for release 1.1 & prod2 will still match the
+first rule and will be sampled at 10% while a request for release 2.1 and prod1 will match the second rule and will be
+sampled at 20%.
+
+## Rule selection
+
+For all rule types the selection of the appropriate rule to be executed is the same.
+
+The system goes top to bottom through the list of rules for the type of event and tries to match the current event with
+the condition in the rule, the first rule that matches is then applied.
+
+Applying a rule means taking the associated sampling rate from the rule and making a probabilistic decision to keep or
+throw the event based on the sampling rate.

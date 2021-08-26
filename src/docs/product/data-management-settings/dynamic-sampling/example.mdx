@@ -51,35 +51,21 @@ S1. This is rather unexpected since S1 1.4 has been deployed for a long time and
 
 Looking at errors and transactions in isolation doesn't reveal any pattern.
 To understand what is going on we need to enable sampling by trace information to try to understand exactly in what
-circumstances the error occur. If we sample by trace information, and we have see an error event we know that all the
-transactions from the trace containing the error will also be present.
+circumstances the error occur. If we sample by trace information, we are able to see all transactions belonging to a
+trace and figure out all the interactions that ultimately caused the error.
 
 Here is a sequence of traces that we recorded from which we can get a hint of the problem.
 
 In the table below we Marked with `T` transaction events and with `E` error events.
-In addition to the system and type of message we show information from the trace context (Tr...) and information
-from the (Ev...).
-We have shown a representative trace for all four possible paths a call can go through (T1...T4)
 
-|Nr.|System|Type|Tr. Id|Tr. rel.| Tr. ProjId | Ev Id| Ev rel. |Ev ProjId|
-|: - :|: - :|: - :|: - :|: - :|: - :|: - :|: - :|: - :|
-|1 | UI | T| T1 | UI 1.1 |  p1 | E1 | 1.1 | p1 |
-|2 | API | T | T1 | UI 1.1 | p1 | E2  | API-1.0  | p2  |
-|3 | S1 | T | T1 | UI 1.1 | p1 | E3 | S1-1.4 | p3 |
-|4 | UI | T| T2 | UI 1.1 |  p1 | E4 | 1.1 | p1 |
-|5 | API | T | T2 | UI 1.1 | p1 | E5  | API-2.0  | p2  |
-|6 | S1 | T | T2 | UI 1.1 | p1 | E6 | S1-1.4 | p3 |
-|7 | UI | T| T3 | UI 1.2 |  p1 | E1 | 1.1 | p1 |
-|8 | API | T | T3 | UI 1.2 | p1 | E2  | API-1.0  | p2  |
-|9 | S1 | T | T3 | UI 1.2 | p1 | E3 | S1-1.4 | p3 |
-|10 | S1 | E | T3 | UI 1.2 | p1 | E3 | S1-1.4 | p3 |
-|11 | UI | T| T4 | UI 1.2 |  p1 | E4 | 1.1 | p1 |
-|12 | API | T | T4 | UI 1.2 | p1 | E5  | API-2.0  | p2  |
-|13 | S1 | T | T4 | UI 1.2 | p1 | E6 | S1-1.4 | p3 |
+|Nr.|System|Type|Release|
+|: - |: - |: - |: - |
+|1 | UI | T| 1.1 |
+|2 | API | T | API-1.0  |
+|3 | S1 | T | S1-1.4 |
+|4 | S1 | E | S1-1.4 |
 
-Each trace has 3 transactions, one for each system it passes through.
-
-Looking through a few traces we notice an interesting pattern: only traces that go through UI 1.2, API 1.0 and S1 1.4
+Looking through the traces we notice that the traces that generate errors go through UI 1.2, API 1.0 and S1 1.4
 generate errors.
 
 We realise that when we tested the new UI 1.2 we did test the new features with the new API 2.0.
