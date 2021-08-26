@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 description: "Troubleshoot and resolve edge cases."
-keywords: ["adblocker", "blocked", "tunnel"]
+keywords: ["adblocker", "blocked", "tunnel", "non-Error exception"]
 excerpt: ""
 notSupported: ["javascript.capacitor"]
 sidebar_order: 1000
@@ -336,3 +336,11 @@ hub2.run(currentHub => {
 When you include and configure Sentry, our JavaScript SDK automatically attaches global handlers to _capture_ uncaught exceptions and unhandled promise rejections. You can disable this default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 You may also need to manage your configuration if you are using a third-party library to implement promises. Also, remember that browsers often implement security measures that can block error reporting when serving script files from different origins.
+
+## Events With "Non-Error Exception"
+
+If you’re seeing errors with the message “Non-Error exception (or promise rejection) captured with keys: x, y, z.”, this happens when you a) call `Sentry.captureException()` with a plain object, b) throw a plain object, or c) reject a promise with a plain object.
+
+You can see the contents of the non-Error object in question in the `__serialized__` entry of the “Additional Data” section.
+
+To get better insight into these error events, we recommend finding where the plain object is being passed or thrown to Sentry based on the contents of the `__serialized__` data, and then turning the plain object into an Error object.
