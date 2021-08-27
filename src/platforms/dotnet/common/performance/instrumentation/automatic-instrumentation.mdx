@@ -41,9 +41,9 @@ var httpClient = new HttpClient(sentryHttpHandler);
 ## DiagnosticSource Integration
 
 Starting with version 3.9.0, the SDK will automatically integrate with Entity Framework Core and SQLClient whenever available. Those integrations will automatically be activated if your project matches one of the following conditions:
-* Includes Sentry.AspNet 3.9.0 or higher
-* Includes Sentry.AspNetCore 3.9.0 or higher
-* Targets .NET Core 3.0 or higher
+* Includes `Sentry.AspNet` 3.9.0 or higher
+* Includes `Sentry.AspNetCore` 3.9.0 or higher
+* Targets .NET Core 3.0 or higher (for example .NET 5)
 
 Even if your project doesn't meet any of those requirements, you'll be able to manually activate those instrumentations by including the package 'Sentry.DiagnosticSource' and enabling it during on the SDK's initialization.
 
@@ -56,20 +56,15 @@ SentrySdk.Init( option => {
 });
 ```
 
-If you don't want to have this integration, you can disable it on SentryOptions by calling DisableDiagnosticListenerIntegration();
+If you don't want to have this integration, you can disable it on `SentryOptions` by calling `DisableDiagnosticListenerIntegration();`
 ```csharp
-using Sentry;
-
-SentrySdk.Init( option => {
-    option.Dsn = "___PUBLIC_DSN___";
-    option.DisableDiagnosticListenerIntegration(); //Enables the diagnostic source integration if you require Sentry.DiagnosticSource.
-});
+option.DisableDiagnosticListenerIntegration();
 ```
 ### Entity Framework Core Integration
 
 ![Sample transaction  with Entity Framework Core Integration.](ef-core-integration.png)
 
-This integration is part of the DiagnosticSource integration and will automatically create spans for EF Core queries for the following operations:
+This integration is part of the `DiagnosticSource` integration and will automatically create spans for EF Core queries for the following operations:
 
 `Query compiling`
 
@@ -86,14 +81,14 @@ The parameters for this span are:
 : Represents the lifecycle of a database connection. One connection may contain one or more query execution spans, and, in some circumstances, may not be registered, due to the nature of the EF Core event model.
 The parameters for this span are:
 
-* Operation: db.connection
+* Operation: `db.connection`
 
 `Query Execution`
 
 : Happens during the execution of a query. It represents how long a query took to be executed
 The parameters for this span are:
 
-* Operation: db.query
+* Operation: `db.query`
 
 * Description: The query to be executed.
 
@@ -108,25 +103,25 @@ This integration is part of the DiagnosticSource integration and will automatica
 : Represents the lifecycle of a database connection. One connection may contain one or more query execution spans.
 The parameters for this span are:
 
-* Operation: db.connection
+* Operation: `db.connection`
 
-* db.connection_id: The Connection ID from the connection.
+* `db.connection_id`: The Connection ID from the connection.
 
-* db.operation_id: The Operation ID from the connection.
+* `db.operation_id`: The Operation ID from the connection.
 
-* rows_sent: The number of rows sent during the connection.
+* `rows_sent`: The number of rows sent during the connection.
 
-* bytes_received: The amount of data (in bytes) received during the connection.
+* `bytes_received`: The amount of data (in bytes) received during the connection.
 
-* bytes_sent: The amount of data (in bytes) sent during the connection.
+* `bytes_sent`: The amount of data (in bytes) sent during the connection.
 
 `Query Execution`
 
 : Happens during the execution of a query. It represents how long a query took to be executed.
 The parameters for this span are:
 
-* Operation: db.query
+* Operation: `db.query`
 
 * Description: The query to be executed.
 
-* db.operation_id: The Operation ID from the connection.
+* `db.operation_id`: The Operation ID from the connection.
