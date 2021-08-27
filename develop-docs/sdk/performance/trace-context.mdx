@@ -21,7 +21,7 @@ For event submission to sentry, the trace context is sent as JSON object embedde
 Regardless of the transport mechanism, the trace context is a JSON object with the following fields:
 
 - `trace_id` (string, required) - UUID V4 encoded as a hexadecimal sequence with no dashes (e.g. `771a43a4192642f0b136d5159a501700`) that is a sequence of 32 hexadecimal digits. This must match the trace id of the submitted transaction item.
-- `public_key` (string, required) - Public key from the DSN used by the SDK
+- `public_key` (string, required) - Public key from the DSN used by the SDK. It allows Sentry to sample traces spanning multiple projects, by resolving the same set of rules based on the starting project.
 - `release` (string, optional) - The release name as specified in client options, usually: `package@x.y.z+build`. *This should match the `release` attribute of the transaction event payload*.*
 - `environment` - The environment name as specified in client options, for example `staging`. *This should match the `environment` attribute of the transaction event payload*.*
 - `user` (object, optional) - A subset of the scope's user context containing the following fields:
@@ -131,11 +131,31 @@ An SDK supporting this header must:
 - Add the contents of trace context as `trace` header to Envelopes containing transaction events
 - Add `tracestate` headers to outgoing HTTP requests for propagation
 
-### Backgrounds
+### Background
 
 This is an extension of trace ID propagation covered by <Link to="/sdk/performance#header-sentry-trace">Performance Guidelines</Link>. According to the Unified API tracing spec, Sentry SDKs add an HTTP header `sentry-trace` to outgoing requests via integrations. Most importantly, this header contains the trace ID, which must match the trace id of the transaction event and also of the trace context below.
 
 The trace context shall be propagated in an additional `tracestate` header defined in [W3C traceparent header](https://www.w3.org/TR/trace-context/#trace-context-http-headers-format). Note that we must keep compatibility with the W3C spec as opposed to the proprietary `sentry-trace` header. The `tracestate` header also contains vendor-specific opaque data in addition to the contents placed by the Sentry SDK.
+
+### Client options
+
+While trace contexts are under development, they should be gated behind an internal `trace_sampling` boolean client option. The option defaults to `false` and should not be documented in Sentry docs.
+
+Based on platform naming guidelines, the option should be cased appropriately:
+
+- `trace_sampling` in snake case
+- `traceSampling` in camel case
+- `TraceSampling` in pascal case
+- `setTraceSampling` for Java-style setters
+
+### Adding the Envelope Header
+
+The Envelope header should be computed and added to outgoing Envelopes under any of the following conditions:
+
+1. The envelope contains a transaction event.
+2. A transaction is bound to the scope.
+
+Specifically, this means even Envelopes without transactions can contain the `trace` header. This allows Sentry to eventually sample attachments belonging to a transaction.
 
 ### Freezing the Context
 
@@ -159,6 +179,8 @@ It is recommended that SDKs log modifications of attributes that would result in
 ### Incoming Contexts
 
 Same as for intercepting trace IDs from inbound HTTP requests, SDKs should read `tracestate` headers and assume the Sentry trace context, if specified. Such a context is immediately frozen in the *SENT* state and should no longer allow for modifications.
+
+##
 
 ## Platform Specifics
 
@@ -226,3 +248,10 @@ function b64ToObj(b64) {
 // b64ToObj("eyJ4IjoiYS3wn5mCLeivu+WGmeaxieWtlyAtIOWtpuS4reaWhyJ9")
 // {"x":"a-🙂-读写汉字 - 学中文"}
 ```
+
+## Base64 with Command Line Utils
+
+The GNU `base64` command line utility comes with a switch to wrap the encoded
+string. This is not compatible with the `tracestate` header and should be
+avoided. If the base64 implementations creates multiple lines, they must be
+joined together.
