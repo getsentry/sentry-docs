@@ -1,0 +1,40 @@
+---
+title:  Troubleshooting
+sidebar_order: 100
+description: "Learn more about how to troubleshoot common issues with the Xamarin SDK."
+---
+
+If you need help solving issues with your Sentry's Xamarin SDK, you can read the edge cases documented here. If you need additional help, you can view our forums, and customers on a paid plan may also contact support.
+
+## Offline Caching Information 
+
+For users on Xamarin iOS, offline caching may cause this issue.
+
+### Event/Transaction Capture
+
+`Failed to send cached envelope: System.MissingMethodException: Method not found: System.Text.Json.JsonDocument`
+
+If this message displays in your debug window when capturing an event or transaction, manually edit your platform `csproj`:
+
+1. Close your IDE.
+2. Open your iOS `.csproj` with a text or xml editor.
+3. Add the following NuGet reference:
+```xml
+    <PackageReference Include="System.Memory" IncludeAssets="None">
+      <Version>4.5.4</Version>
+    </PackageReference>
+```  
+<Note>
+
+It's important to add the `IncludeAssets` as `None`, or this fix will not work.
+
+</Note>
+
+4. Save and open your IDE
+5. Wait for the IDE to restore the packages. Once finished, try to capture an exception or transaction
+
+
+Another way to validate if the problem is happening on an iOS project is by adding the following code to your iOS project, to check if there's a conflict:
+```csharp
+    _ = new byte[2].AsMemory();
+```
