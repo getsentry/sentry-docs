@@ -6,93 +6,25 @@ redirect_from:
   - /performance/included-instrumentation
 ---
 
-`@sentry/react-native` provides a `ReactNativeTracing` integration to add instrumentation for monitoring the performance of React Native applications.
+`@sentry/react-native` provides automatic performance instrumentation out of the box when tracing is enabled.
 
-## What Instrumentation Provides
+## Set Up
 
-The `ReactNativeTracing` integration creates a child span for every `XMLHttpRequest` or `fetch` request on the Javascript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/sentry-basics/tracing/distributed-tracing/).
+To make the most out of our automatic instrumentation, you should:
 
-## Configuration Options
+### Wrap Your Root Component
 
-You can pass many different options to the `ReactNativeTracing` integration (as an object of the form `{optionName: value}`), but it comes with sensible defaults out of the box. For all possible options, see [ReactNativeTracingOptions](https://github.com/getsentry/sentry-react-native/blob/211ec081b6bf8d7d29541afe9d800040f61e3c4e/src/js/tracing/reactnativetracing.ts#L23).
+Wrap your root component with Sentry to access the most Performance features.
 
-### beforeNavigate
-
-You can use `beforeNavigate` to modify the transaction from routing instrumentation before the transaction is created. If you prefer not sending the transaction, set `sampled = false`.
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.ReactNativeTracing({
-      routingInstrumentation,
-      beforeNavigate: context => {
-        // Decide to not send a transaction by setting sampled = false
-        if (context.data.route.name === "Do Not Send") {
-          context.sampled = false;
-        }
-
-        // Modify the transaction context
-        context.name = context.name.toUpperCase();
-        context.tags = {
-          ...context.tags,
-          customTag: "value",
-        };
-
-        return context;
-      },
-    }),
-  ],
-});
+```javascript {filename:App.js}
+export default Sentry.wrap(App);
 ```
 
-If you use our routing instrumentation for **React Navigation**, the route data is set on the transaction context passed to `beforeNavigate`. This has the type:
-
-```typescript
-type ReactNavigationTransactionContext = {
-  // ...
-  data: {
-    route: {
-      name: string;
-      key: string;
-      params: {
-        [key: string]: any;
-      };
-      /** Will be true if this is not the first time this screen with this key has been seen before. */
-      hasBeenSeen: boolean;
-    };
-    previousRoute: {
-      name: string;
-      key: string;
-      params: {
-        [key: string]: any;
-      };
-    } | null;
-  };
-};
-```
-
-If you use **Typescript**, you can type your `beforeNavigate` function with `Sentry.ReactNavigationTransactionContext`.
-
-### tracingOrigins
-
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
-
-<PlatformContent includePath="performance/tracingOrigins-example" />
-
-You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
-
-### shouldCreateSpanForRequest
-
-This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
-
-<PlatformContent includePath="performance/filter-span-example" />
-
-## Enable Routing Instrumentation
+### Enable Routing Instrumentation
 
 We currently provide two routing instrumentations out of the box to instrument route changes for React Navigation V5 and V4. In the future, we will add support for other libraries such as [react-native-navigation](https://github.com/wix/react-native-navigation). Otherwise, if you have a custom routing instrumentation, or use a routing library we don't yet support, you can use the bare bones routing instrumentation or create your own by extending it.
 
-### React Navigation V5
+#### React Navigation V5
 
 <Note>
 
@@ -158,7 +90,7 @@ class App extends React.Component {
 }
 ```
 
-#### Configuration
+##### Configuration
 
 You can configure the instrumentation by passing an options object to the constructor:
 
@@ -166,11 +98,11 @@ You can configure the instrumentation by passing an options object to the constr
 new Sentry.ReactNavigationV5Instrumentation({ ... });
 ```
 
-##### routeChangeTimeoutMs
+###### routeChangeTimeoutMs
 
 How long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. Default: 1000ms
 
-### React Navigation V4
+#### React Navigation V4
 
 Note that this routing instrumentation will create a transaction on every route change including `goBack` navigations.
 
@@ -224,7 +156,7 @@ class App extends React.Component {
 }
 ```
 
-#### Configuration
+##### Configuration
 
 You can configure the instrumentation by passing an options object to the constructor:
 
@@ -232,11 +164,11 @@ You can configure the instrumentation by passing an options object to the constr
 new Sentry.ReactNavigationV4Instrumentation({ ... });
 ```
 
-##### routeChangeTimeoutMs
+###### routeChangeTimeoutMs
 
 How long the instrumentation will wait for the **initial** route to mount after a change has been initiated before the transaction is discarded. Default: 1000ms
 
-### Other Routing Libraries or Custom Routing Implementations
+#### Other Routing Libraries or Custom Routing Implementations
 
 If you use another routing library that we don't yet support, or have a custom routing solution, you can use the basic `RoutingInstrumentation` we provide, or extend it to create your own instrumentation.
 
@@ -246,7 +178,7 @@ Every routing instrumentation revoles around one method:
 
 You need to ensure that this method is called **before** the route change occurs, and an `IdleTransaction` is created and set on the scope.
 
-#### Bare Bones
+##### Bare Bones
 
 ```javascript
 // Construct a new instrumentation instance. This is needed to communicate between the integration and React
@@ -276,7 +208,7 @@ const App = () => {
 };
 ```
 
-#### Custom Instrumentation
+##### Custom Instrumentation
 
 To create a custom routing instrumentation, look at how the `RoutingInstrumentation` class [is implemented](https://github.com/getsentry/sentry-react-native/blob/211ec081b6bf8d7d29541afe9d800040f61e3c4e/src/js/tracing/routingInstrumentation.ts). If you need an example of how to implement routing instrumentation, review the code of the existing official instrumentation such as [the one for React Navigation V4](https://github.com/getsentry/sentry-react-native/blob/211ec081b6bf8d7d29541afe9d800040f61e3c4e/src/js/tracing/reactnavigationv4.ts)
 
@@ -297,6 +229,147 @@ class CustomInstrumentation extends RoutingInstrumentation {
   }
 }
 ```
+
+## Features
+
+Sentry offers the following automatic instrumentation features.
+
+### App Start Instrumentation
+
+_Type: **Measurement, Span**_
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It tracks the length of time from the **earliest native process initialization** until the **React Native root component mounts**.
+
+<Note>
+
+If you don't [wrap your root component with Sentry](#wrap-your-root-component), the App Start measurement will finish when the JavaScript code is initialized instead of when the first component mount.
+
+</Note>
+
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+
+- **Cold start**: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
+- **Warm start**: App launched at least once, is partially in memory, and no process exists.
+
+### Slow and Frozen Frames
+
+_Type: **Measurement**_
+
+Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are slow frames and frozen frames. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
+
+- **Slow Frames**: Slow frames are captured by the SDK when the app takes more than 16.67 ms to render a frame. Typically, a phone or tablet renders 60 frames per second (fps), though the frame rate can be higher, especially as 120 fps displays become popular. At 60 fps, every frame has 16.67 ms to render; slower than that, and the app has slow frames.
+- **Frozen Frames** Frozen frames are UI frames that take longer than 700 ms to render.
+
+### Stall Tracking
+
+_Type: **Measurement**_
+
+A stall is when the JavaScript event loop takes longer than expected to complete. A stall in your JavaScript code will not just make your UI unresponsive, but also slow down the logic that is contained within JavaScript. This slows everything down, creating a bad experience for your users.
+
+We track stalls that occur in your React Native app during a transaction and provide you with these values:
+
+- **Longest Stall Time**: The time, in milliseconds, of the longest event loop stall.
+- **Total Stall Time**: The total combined time, in milliseconds, of all stalls.
+- **Stall Count**: The total number of stalls that occurred during the transaction.
+
+### Fetch/XML Request Instrumentation
+
+_Type: **Span**_
+
+The tracing integration creates a child span for every `XMLHttpRequest` or `fetch` request on the Javascript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/sentry-basics/tracing/distributed-tracing/).
+
+## Configuration Options
+
+To configure the automatic performance instrumentation, you will need to add the `ReactNativeTracing` integration yourself. We provide many options by default, so for the majority of apps you won't need to configure the integration yourself.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+      // ... other options
+    }),
+  ],
+});
+```
+
+For all possible options, see [ReactNativeTracingOptions](https://github.com/getsentry/sentry-react-native/blob/211ec081b6bf8d7d29541afe9d800040f61e3c4e/src/js/tracing/reactnativetracing.ts#L23).
+
+### beforeNavigate
+
+You can use `beforeNavigate` to modify the transaction from routing instrumentation before the transaction is created. If you prefer not to send the transaction, set `sampled = false`.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      routingInstrumentation,
+      beforeNavigate: context => {
+        // Decide to not send a transaction by setting sampled = false
+        if (context.data.route.name === "Do Not Send") {
+          context.sampled = false;
+        }
+
+        // Modify the transaction context
+        context.name = context.name.toUpperCase();
+        context.tags = {
+          ...context.tags,
+          customTag: "value",
+        };
+
+        return context;
+      },
+    }),
+  ],
+});
+```
+
+If you use our routing instrumentation for **React Navigation**, the route data is set on the transaction context passed to `beforeNavigate`. This has the type:
+
+```typescript
+type ReactNavigationTransactionContext = {
+  // ...
+  data: {
+    route: {
+      name: string;
+      key: string;
+      params: {
+        [key: string]: any;
+      };
+      /** Will be true if this is not the first time this screen with this key has been seen before. */
+      hasBeenSeen: boolean;
+    };
+    previousRoute: {
+      name: string;
+      key: string;
+      params: {
+        [key: string]: any;
+      };
+    } | null;
+  };
+};
+```
+
+If you use **Typescript**, you can type your `beforeNavigate` function with `Sentry.ReactNavigationTransactionContext`.
+
+### tracingOrigins
+
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+
+<PlatformContent includePath="performance/tracingOrigins-example" />
+
+You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
+
+### shouldCreateSpanForRequest
+
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
+
+<PlatformContent includePath="performance/filter-span-example" />
 
 ## Recipes
 
@@ -339,4 +412,18 @@ const SomeComponent = () => {
     //...
   )
 }
+```
+
+## Opt Out
+
+If you want to use tracing without our automatic instrumentation, you can disable it by setting `enableAutoPerformanceTracking` in your Sentry options and removing the `ReactNativeTracing` integration, if you added it:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  enableAutoPerformanceTracking: false,
+});
 ```
