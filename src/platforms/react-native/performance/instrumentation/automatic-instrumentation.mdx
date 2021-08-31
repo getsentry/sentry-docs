@@ -8,13 +8,13 @@ redirect_from:
 
 `@sentry/react-native` provides automatic performance instrumentation out of the box when tracing is enabled.
 
-## Set up
+## Set Up
 
 To make the most out of our automatic instrumentation, you should:
 
 ### Wrap Your Root Component
 
-You will need to wrap your root component with Sentry for us to provide the most features.
+Wrap your root component with Sentry to access the most Performance features.
 
 ```javascript {filename:App.js}
 export default Sentry.wrap(App);
@@ -232,26 +232,21 @@ class CustomInstrumentation extends RoutingInstrumentation {
 
 ## Features
 
-Types of features:
-
-- **Measurement**: Measurements are values that we add onto any transaction running on the global Sentry scope and can be viewed on the dashboard both within Mobile Vitals and the transaction view.
-- **Span(s)**: This feature will add span(s) to any transaction running on the global Sentry scope of your app.
-
-Below are details on the automatic instrumentation features that we provide:
+Sentry offers the following automatic instrumentation features.
 
 ### App Start Instrumentation
 
 _Type: **Measurement, Span**_
 
-The App Start Instrumentation provides insight into how long your application takes to launch. It tracks how long it takes the app from the **earliest native process initialization** until when the **React Native root component mounts**.
+The App Start Instrumentation provides insight into how long your application takes to launch. It tracks the length of time from the **earliest native process initialization** until the **React Native root component mounts**.
 
 <Note>
 
-If you don't [wrap your root component with Sentry](#wrap-your-root-component), the App Start measurement will finish when the JavaScript code is initialized instead of the first component mount.
+If you don't [wrap your root component with Sentry](#wrap-your-root-component), the App Start measurement will finish when the JavaScript code is initialized instead of when the first component mount.
 
 </Note>
 
-The SDK differentiates between a cold and a warm start, and doesn't track hot starts/resumes.
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
 - **Cold start**: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
 - **Warm start**: App launched at least once, is partially in memory, and no process exists.
@@ -260,22 +255,22 @@ The SDK differentiates between a cold and a warm start, and doesn't track hot st
 
 _Type: **Measurement**_
 
-Unresponsive UI, animation hitches, or just jank annoy users and degrade the user experience. Two measurements to track this unwanted experience are slow frames and frozen frames. A smoothly running app should try to avoid both. That's why the SDK adds these two measurements for the transactions you capture.
+Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are slow frames and frozen frames. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
 
-- **Slow Frames**: Slow frames are captured by the SDK when the app needs more than 16.67 ms for a frame. Typically, a phone or tablet renders with 60 frames per second (fps), though the frame rate can be higher, especially as 120 fps displays become popular. With 60 fps, every frame has 16.67 ms to render; slower than that, and the app has slow frames.
-- **Frozen Frames** Frozen frames are UI frames that take longer than 700 ms.
+- **Slow Frames**: Slow frames are captured by the SDK when the app takes more than 16.67 ms to render a frame. Typically, a phone or tablet renders 60 frames per second (fps), though the frame rate can be higher, especially as 120 fps displays become popular. At 60 fps, every frame has 16.67 ms to render; slower than that, and the app has slow frames.
+- **Frozen Frames** Frozen frames are UI frames that take longer than 700 ms to render.
 
 ### Stall Tracking
 
 _Type: **Measurement**_
 
-A stall is when the JavaScript event loop takes longer than expected to complete a loop. A stall in your JavaScript code will not just make your UI unresponsive or janky, but also slow down your logic that is contained within JavaScript, essentially slowing everything down altogether and creating a bad experience for your users.
+A stall is when the JavaScript event loop takes longer than expected to complete. A stall in your JavaScript code will not just make your UI unresponsive, but also slow down the logic that is contained within JavaScript. This slows everything down, creating a bad experience for your users.
 
-We track stalls that occur in your React Native app during the time of a transaction and provide you with these values:
+We track stalls that occur in your React Native app during a transaction and provide you with these values:
 
-- **Longest Stall Time**: The time in milliseconds of the longest event loop stall.
-- **Total Stall Time**: The total combined time in milliseconds of all stalls.
-- **Stall Count**: The total number of stalls that occured during the time of the transaction.
+- **Longest Stall Time**: The time, in milliseconds, of the longest event loop stall.
+- **Total Stall Time**: The total combined time, in milliseconds, of all stalls.
+- **Stall Count**: The total number of stalls that occurred during the transaction.
 
 ### Fetch/XML Request Instrumentation
 
@@ -285,7 +280,7 @@ The tracing integration creates a child span for every `XMLHttpRequest` or `fetc
 
 ## Configuration Options
 
-To configure the automatic performance instrumentation, you will need to add the `ReactNativeTracing` integration yourself. We provide many reasonable options by default so for the majority of apps you would not need to configure the integration yourself.
+To configure the automatic performance instrumentation, you will need to add the `ReactNativeTracing` integration yourself. We provide many options by default, so for the majority of apps you won't need to configure the integration yourself.
 
 ```javascript
 import * as Sentry from "@sentry/react-native";
@@ -306,7 +301,7 @@ For all possible options, see [ReactNativeTracingOptions](https://github.com/get
 
 ### beforeNavigate
 
-You can use `beforeNavigate` to modify the transaction from routing instrumentation before the transaction is created. If you prefer not sending the transaction, set `sampled = false`.
+You can use `beforeNavigate` to modify the transaction from routing instrumentation before the transaction is created. If you prefer not to send the transaction, set `sampled = false`.
 
 ```javascript
 Sentry.init({
@@ -372,7 +367,7 @@ You will need to configure your web server CORS to allow the `sentry-trace` head
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
 
 <PlatformContent includePath="performance/filter-span-example" />
 
@@ -421,7 +416,7 @@ const SomeComponent = () => {
 
 ## Opt Out
 
-If you seek to use tracing without our automatic instrumentation, you can disable it by setting `enableAutoPerformanceTracking` in your Sentry options and remove the `ReactNativeTracing` integration if you added it:
+If you want to use tracing without our automatic instrumentation, you can disable it by setting `enableAutoPerformanceTracking` in your Sentry options and removing the `ReactNativeTracing` integration, if you added it:
 
 ```javascript
 import * as Sentry from "@sentry/react-native";
