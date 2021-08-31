@@ -8,7 +8,7 @@ This feature is under development and not required for all SDKs supporting Perfo
 
 </Alert>
 
-In order to sample traces we need to pass along the call chain a trace id together with the  necessary information for making a sampling decision, the so-called "trace context".
+In order to sample traces we need to pass along the call chain a trace id together with the necessary information for making a sampling decision, the so-called "trace context".
 
 ## Protocol
 
@@ -22,14 +22,14 @@ Regardless of the transport mechanism, the trace context is a JSON object with t
 
 - `trace_id` (string, required) - UUID V4 encoded as a hexadecimal sequence with no dashes (e.g. `771a43a4192642f0b136d5159a501700`) that is a sequence of 32 hexadecimal digits. This must match the trace id of the submitted transaction item.
 - `public_key` (string, required) - Public key from the DSN used by the SDK. It allows Sentry to sample traces spanning multiple projects, by resolving the same set of rules based on the starting project.
-- `release` (string, optional) - The release name as specified in client options, usually: `package@x.y.z+build`. *This should match the `release` attribute of the transaction event payload*.*
-- `environment` - The environment name as specified in client options, for example `staging`. *This should match the `environment` attribute of the transaction event payload*.*
+- `release` (string, optional) - The release name as specified in client options, usually: `package@x.y.z+build`. _This should match the `release` attribute of the transaction event payload_.\*
+- `environment` - The environment name as specified in client options, for example `staging`. _This should match the `environment` attribute of the transaction event payload_.\*
 - `user` (object, optional) - A subset of the scope's user context containing the following fields:
-    - `id` (string, optional) - The `id` attribute of the user context.
-    - `segment` (string, optional) - The value of a `segment` attribute in the user's data bag, if it exists. In the future, this field may be promoted to a proper attribute of the user context.
-- `transaction` (string, optional) - The transaction name set on the scope. *This should match the `transaction` attribute of the transaction event payload*.*
+  - `id` (string, optional) - The `id` attribute of the user context.
+  - `segment` (string, optional) - The value of a `segment` attribute in the user's data bag, if it exists. In the future, this field may be promoted to a proper attribute of the user context.
+- `transaction` (string, optional) - The transaction name set on the scope. _This should match the `transaction` attribute of the transaction event payload_.\*
 
-** See "Freezing the Context" for more information on consistency between the trace context and fields in the event payload.*
+\*_ See "Freezing the Context" for more information on consistency between the trace context and fields in the event payload._
 
 **Example:**
 
@@ -43,7 +43,7 @@ Regardless of the transport mechanism, the trace context is a JSON object with t
     "id": "7efa4978da177713df088f846f8c484d",
     "segment": "vip"
   },
-  "transaction": "/api/0/project_details",
+  "transaction": "/api/0/project_details"
 }
 ```
 
@@ -55,7 +55,7 @@ Here's an example of a minimal envelope header containing the trace context (Alt
 
 ```json
 {
-  "event_id":"12c2d058d58442709aa2eca08bf20986",
+  "event_id": "12c2d058d58442709aa2eca08bf20986",
   "trace": {
     "trace_id": "771a43a4192642f0b136d5159a501700",
     "public_key": "49d0f7386ad645858ae85020e393bef3"
@@ -161,7 +161,7 @@ Specifically, this means even Envelopes without transactions can contain the `tr
 
 To ensure fully consistent trace contexts for all transactions in a trace, the trace context cannot be changed once it is sent over the wire, even if scope or options change afterwards. That is, once computed the trace context is no longer updated. Even if the app calls `setRelease`, the old release remains in the context.
 
-To compensate for lazy calls to functions like `setTransaction` and `setUser`, the trace context can be thought to be in two states: *NEW* and *SENT* . Initially, the context is in the *NEW* state and it is modifiable. Once sent for first time, it becomes *SENT* and can no longer change.
+To compensate for lazy calls to functions like `setTransaction` and `setUser`, the trace context can be thought to be in two states: _NEW_ and _SENT_ . Initially, the context is in the _NEW_ state and it is modifiable. Once sent for first time, it becomes _SENT_ and can no longer change.
 
 We recommend the trace context should be computed on-the-fly the first time it is needed in any of:
 
@@ -178,7 +178,7 @@ It is recommended that SDKs log modifications of attributes that would result in
 
 ### Incoming Contexts
 
-Same as for intercepting trace IDs from inbound HTTP requests, SDKs should read `tracestate` headers and assume the Sentry trace context, if specified. Such a context is immediately frozen in the *SENT* state and should no longer allow for modifications.
+Same as for intercepting trace IDs from inbound HTTP requests, SDKs should read `tracestate` headers and assume the Sentry trace context, if specified. Such a context is immediately frozen in the _SENT_ state and should no longer allow for modifications.
 
 ##
 
@@ -195,40 +195,47 @@ In short here's the function that converts a context into a base64 string that c
 ```jsx
 // Compact form
 function objToB64(obj) {
-    const utf16Json = JSON.stringify(obj)
-    const b64 = btoa(encodeURIComponent(utf16Json).replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }))
-    const len = b64.length
-    if (b64[len - 2] === '=')
-        return b64.substr(0, len - 2)
-    else if (b64[len - 1] === '=')
-        return b64.substr(0, len - 1)
-    return b64
+  const utf16Json = JSON.stringify(obj);
+  const b64 = btoa(
+    encodeURIComponent(utf16Json).replace(
+      /%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1) {
+        return String.fromCharCode("0x" + p1);
+      }
+    )
+  );
+  const len = b64.length;
+  if (b64[len - 2] === "=") {
+    return b64.substr(0, len - 2);
+  } else if (b64[len - 1] === "=") {
+    return b64.substr(0, len - 1);
+  }
+  return b64;
 }
 
 // Commented
 function objToB64(obj) {
-    // object to JSON string
-    const utf16Json = JSON.stringify(obj)
-    // still utf16 string but with non ASCI escaped as UTF-8 numbers)
-    const encodedUtf8 =encodeURIComponent(utf16Json);
+  // object to JSON string
+  const utf16Json = JSON.stringify(obj);
+  // still utf16 string but with non ASCI escaped as UTF-8 numbers)
+  const encodedUtf8 = encodeURIComponent(utf16Json);
 
-    // replace the escaped code points with utf16
-    // in the first 256 code points (the most wierd part)
-    const b64 = btoa(endcodedUtf8.replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }))
+  // replace the escaped code points with utf16
+  // in the first 256 code points (the most wierd part)
+  const b64 = btoa(
+    endcodedUtf8.replace(/%([0-9A-F]{2})/g, function toSolidBytes(match, p1) {
+      return String.fromCharCode("0x" + p1);
+    })
+  );
 
-    // drop the '=' or '==' padding from base64
-    const len = b64.length
-    if (b64[len - 2] === '=')
-        return b64.substr(0, len - 2)
-    else if (b64[len - 1] === '=')
-        return b64.substr(0, len - 1)
-    return b64
+  // drop the '=' or '==' padding from base64
+  const len = b64.length;
+  if (b64[len - 2] === "=") {
+    return b64.substr(0, len - 2);
+  } else if (b64[len - 1] === "=") {
+    return b64.substr(0, len - 1);
+  }
+  return b64;
 }
 // const test = {"x":"a-🙂-读写汉字 - 学中文"}
 // objToB64(test)
@@ -239,10 +246,15 @@ And here's the function that accepts a base64 string (with or without '=' paddin
 
 ```jsx
 function b64ToObj(b64) {
-    utf16 = decodeURIComponent(atob(b64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(utf16)
+  utf16 = decodeURIComponent(
+    atob(b64)
+      .split("")
+      .map(function(c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join("")
+  );
+  return JSON.parse(utf16);
 }
 
 // b64ToObj("eyJ4IjoiYS3wn5mCLeivu+WGmeaxieWtlyAtIOWtpuS4reaWhyJ9")
