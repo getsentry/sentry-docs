@@ -6,27 +6,42 @@ Node.js integrations support tracking database queries as spans. Starting in ver
 
 Supported packages and their integration name: 
 - `pg` (Postgres)
+- `pg-native` (Postgres) _Available from version 6.12.0_
 - `mongodb` (Mongo)
 - `mongoose` (Mongo)
 - `mysql` (MySQL)
 
 ### Disabling Automatic Instrumentation
 
-You can also (remove an automatically-enabled integration)[integrations](/platforms/node/configuration/integrations/#removing-an-integration), if needed.
+You can also [remove an automatically-enabled integration](/platforms/node/configuration/integrations/#removing-an-integration), if needed.
 
 ### Manually Adding Integrations
 
 If you need to add a specific database integration manually (for example, when using multiple client instances), you can import them from the `@sentry/tracing` package under the `Integrations` namespace.
 
-For example, to add MongoDB instrumentation to a custom client:
+For example:
 
-```javascript
+```javascript{tabTitle: MongoDB}
 const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
 const mongodb = require("mongodb");
 
 const client = new Sentry.NodeClient({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Tracing.Integrations.Mongo()],
+  integrations: [new Tracing.Integrations.Mongo({
+    useMongoose: true // Default: false
+  })],
+});
+```
+
+```javascript{tabTitle: Postgres}
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
+
+const client = new Sentry.NodeClient({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Tracing.Integrations.Postgres({
+    usePgNative: true // Default: false
+  })],
 });
 ```
