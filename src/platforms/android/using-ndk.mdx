@@ -12,38 +12,6 @@ NDK integration is packed with the SDK and requires API level 16. The package `s
 
 You can [disable the NDK integration](#disable-ndk-integration), use our Sentry Android SDK [without the NDK](#using-the-sdk-without-the-ndk), and support devices on [API levels lower than 16](#api-level-lower-than-16).
 
-Due to current limitations in how `sentry-native` works, it cannot yet identify native libraries loaded directly from `.apk` files. Instead, it needs to have access to the extracted libraries on the file system.
-This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
-when using an Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
-[`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
-
-If you're using [Android App Bundle](https://developer.android.com/guide/app-bundle), set `android.bundle.enableUncompressedNativeLibs=false` along with the `extractNativeLibs` configuration option.
-
-Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
-internally. As a result, the Android SDK will not work out of the box on newer Android devices which have their own conflicting pointer tagging.
-
-<Note>
-
-If you are using `sentry-android` version earlier than 3.1, you must manually disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option because `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
-internally. As a result, this option will not work out of the box on newer Android devices that have their own conflicting pointer tagging. This is fixed in `sentry-android` versions 3.1 and above.
-
-</Note>
-
-**Example AndroidManifest.xml**:
-
-```xml {filename:AndroidManifest.xml}
-<application
-    android:allowNativeHeapPointerTagging="false"
-    android:extractNativeLibs="true">
-</application>
-```
-
-**Example gradle.properties**:
-
-```properties {filename:gradle.properties}
-android.bundle.enableUncompressedNativeLibs=false
-```
-
 ## Symbolicate Stack Traces
 
 To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application.
@@ -142,3 +110,37 @@ To support the devices on the API level lower than 16, update your `AndroidManif
 ```
 
 With these changes the SDK will be enabled on all devices with API level ≥ 14 and the SDK with NDK will be enabled on all devices with API level ≥ 16.
+
+## Troubleshooting
+
+Due to current limitations in how `sentry-native` works, it cannot yet identify native libraries loaded directly from `.apk` files. Instead, it needs to have access to the extracted libraries on the file system.
+This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
+when using an Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
+[`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
+
+If you're using [Android App Bundle](https://developer.android.com/guide/app-bundle), set `android.bundle.enableUncompressedNativeLibs=false` along with the `extractNativeLibs` configuration option.
+
+Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally. As a result, the Android SDK will not work out of the box on newer Android devices which have their own conflicting pointer tagging.
+
+<Note>
+
+If you are using `sentry-android` version earlier than 3.1, you must manually disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option because `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally. As a result, this option will not work out of the box on newer Android devices that have their own conflicting pointer tagging. This is fixed in `sentry-android` versions 3.1 and above.
+
+</Note>
+
+**Example AndroidManifest.xml**:
+
+```xml {filename:AndroidManifest.xml}
+<application
+    android:allowNativeHeapPointerTagging="false"
+    android:extractNativeLibs="true">
+</application>
+```
+
+**Example gradle.properties**:
+
+```properties {filename:gradle.properties}
+android.bundle.enableUncompressedNativeLibs=false
+```
