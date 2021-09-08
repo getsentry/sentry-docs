@@ -145,21 +145,32 @@ In that case you can also skip the `sentry-cli` configuration step below.
 
 ## Configure `sentry-cli`
 
-The `SentryWebpackPlugin` uses `sentry-cli`, which can be configured in one of two ways - using a properties file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](/product/cli/configuration/).
+The `SentryWebpackPlugin` uses `sentry-cli` to manage releases and source maps, which can be configured in one of two ways - using configuration files, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](/product/cli/configuration/).
 
-If you choose to combine the two approaches, the environment variables will take precedence over values set in the properties file. One common approach is to set sensitive data (like tokens) in the environment and include everything else in a properties file, which can then be added to your VCS.
+If you choose to combine the two approaches, the environment variables will take precedence over values set in the configuration files. One common approach is to set sensitive data (like tokens) in the environment and include everything else in the configuration files added to your VCS.
 
-### Use a Properties File
+The URL, organization, and project properties identify your organization and project, and the auth token authenticates your user account.
 
-You can create a `sentry.properties` file in the base directory of your project. (This is the approach taken by the wizard.) Here is an example:
+### Use Configuration Files
+
+You should commit all the properties to your VCS, except the auth token. You can accomplish this by using two files: `sentry.properties` including the properties of your organization and project, and `.sentryclirc` including your auth token. This is the approach taken by the wizard and it allows you to commit the former while ignoring the latter in your VCS.
+
+Here is an example:
 
 ```properties {filename:sentry.properties}
 defaults.url=https://sentry.io/
 defaults.org=___ORG_SLUG___
 defaults.project=___PROJECT_SLUG___
-auth.token=___TOKEN___
 # cli.executable=../path/to/bin/sentry-cli
 ```
+
+Add the token to `.sentryclirc`:
+
+```ini {filename:.sentryclirc}
+auth.token=___TOKEN___
+```
+
+And don't forget to ignore `.sentryclirc` in your VCS.
 
 ### Use Environment Variables
 
