@@ -8,12 +8,20 @@ function myJsFunction() {
     .getScope()
     .getTransaction();
   if (transaction) {
-    let span = transaction.startChild({
+    const span = transaction.startChild({
       op: "encode",
       description: "parseAvatarImages",
     });
-    // Do something
-    span.finish();
+
+    try {
+      // Do something
+      span.setStatus(SpanStatus.Ok);
+    } catch (err) {
+      span.setStatus(SpanStatus.UnknownError);
+      throw err;
+    } finally {
+      span.finish();
+    }
   }
 }
 ```
