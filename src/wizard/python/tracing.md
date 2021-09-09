@@ -1,6 +1,6 @@
 ---
 name: Python
-doc_link: https://docs.sentry.io/performance-monitoring/getting-started/?platform=python
+doc_link: https://docs.sentry.io/platforms/python/performance/
 support_level: production
 type: language
 ---
