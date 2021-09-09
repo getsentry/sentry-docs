@@ -19,10 +19,16 @@ shopCheckout() {
     op: 'task',
     description: `processing shopping cart result`,
   });
-  processAndValidateShoppingCart(result);
-  span.finish();
-
-  transaction.finish();
+  try {
+    processAndValidateShoppingCart(result);
+    span.setStatus(SpanStatus.Ok);
+  } catch (err) {
+    span.setStatus(SpanStatus.UnknownError);
+    throw err;
+  } finally {
+    span.finish();
+    transaction.finish();
+  }
 }
 ```
 
