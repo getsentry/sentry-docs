@@ -128,10 +128,10 @@ tracestate: sentry=ewogIC...IH0KfQ,other=[omitted]
 
 An SDK supporting this header must:
 
-- Create a new trace context using scope information
-- Intercept `tracestate` headers from incoming HTTP requests where applicable and apply them to the local trace context
-- Add the contents of trace context as `trace` header to Envelopes containing transaction events
-- Add `tracestate` headers to outgoing HTTP requests for propagation
+- Use scope information when creating a new trace context
+- Add an envelope header with the trace context for envelopes containing transactions
+- Add a `tracestate` HTTP header to outgoing HTTP requests for propagation
+- Intercept incoming HTTP requests for `tracestate` HTTP headers where applicable and apply them to the local trace context
 
 ### Background
 
@@ -152,12 +152,15 @@ Based on platform naming guidelines, the option should be cased appropriately:
 
 ### Adding the Envelope Header
 
-The Envelope header should be computed and added to outgoing Envelopes under any of the following conditions:
+The SDK should add the envelope header to outgoing envelopes under any of the following conditions:
 
 1. The envelope contains a transaction event.
-2. A transaction is bound to the scope.
+2. The scope has a transaction bound.
 
-Specifically, this means even Envelopes without transactions can contain the `trace` header. This allows Sentry to eventually sample attachments belonging to a transaction.
+Specifically, this means even envelopes without transactions can contain the `trace` envelope header, 
+allowing Sentry to eventually sample attachments belonging to a transaction. When the envelope includes
+a transaction and the scope has a bound transaction, the SDK should use the transaction of the envelope
+to create the `trace` envelope header.
 
 ### Freezing the Context
 
