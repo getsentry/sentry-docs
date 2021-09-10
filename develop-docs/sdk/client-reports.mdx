@@ -1,0 +1,101 @@
+---
+title: Client Reports
+sidebar_order: 20
+---
+
+Client reports are a protocol feature that let clients send status reports
+about themselves to Sentry.  They are currently mainly used to emit outcomes
+for events that were never sent.
+
+## Basic Operation
+
+Client reports are sent as envelope items to Sentry, typically as separate
+envelopes or with one of the already scheduled envelopes.  They should not
+be sent too frequently but not too infrequently either.  Their main purpose
+is to bring visibility into what is happening on the SDK side which affects
+the user experience.
+
+For instance SDKs might drop events in a few places in the SDK and this loss
+of events can be invisible to a customer.  Client reports let an SDK emit
+such event outcomes to provide data about how often this is happening.  For
+instance SDKs might drop events if the transports hit their maximum internal
+queue size, because rate limits instruct the SDK to drop events as they are
+over quota etc.
+
+## Envelope Item Payload
+
+A client report is an item in an envelope called `client_report`. It consists
+of a JSON payload that looks roughly like this:
+
+```json
+{
+  "timestamp": "2020-02-07T14:16:00Z",
+  "discarded_events": [
+    {
+      "reason": "queue_overflow",
+      "category": "error",
+      "quantity": 23
+    },
+    {
+      "reason": "queue_overflow",
+      "category": "transaction",
+      "quantity": 1321
+    }
+  ]
+}
+```
+
+Note that this must be enclosed in an envelope. So the full event looks
+something like this:
+
+```json
+{}
+{"type":"client_report"}
+{"timestamp":"..."}
+```
+
+The following fields exist:
+
+`timestamp`
+
+: _String | Number, optional_. The timestamp of when the client report was created.
+Must be an ISO DateTime string or a UNIX timestamp. If not sent, the server
+will assume the current UTC timestamp. In the data model, this is called
+`received`.
+
+`discarded_events`
+
+: _List of outcome objects_ {`discard_reason`, `category`, `quantity`}
+
+- `discard_reason`: A string reason that defines why events were lost.
+- `category`: The data category for which the discard reason applies.
+- `quantity`: The number of events which were lost
+
+The following discard reasons are currently defined:
+
+- `queue_overflow`: a SDK internal queue (eg: transport queue) overflowed
+- `cache_overflow`: an SDK internal cache (eg: offline event cache) overflowed
+- `ratelimit_backoff`: the SDK dropped events because an earlier rate limit
+  instructed the SDK to back off.
+- `network_error`: events were dropped because of network errors and were not retried.
+- `sample_rate`: an event was dropped because of the configured sample rate.
+
+Additionally the following discard reasons are reserved but there is no expectation
+that SDKs send these under normal operation:
+
+- `before_send`: an event was dropped in `before_send`
+- `event_processor`: an event was dropped by an event processor
+
+## SDK Side Recommendations
+
+SDKs are encouraged to reduce the total amount of needless communciation.  As
+such a recommended approach is to keep track of the counts for the discard
+reasons in the transport directly and to periodically flush them out as separate
+envelope item or attach it to an already scheduled envelope.  As some SDKs still
+send legacy events instead of envelopes for backwards compatibility with older
+Sentry servers it would be recommended in such cases to send it as separate envelope
+instead or attach it to pending session envelopes.
+
+There is no expectation that such bookkeping can work transparently for custom
+transports which is why it's generally acceptable if client reports are optional
+for custom transports.
