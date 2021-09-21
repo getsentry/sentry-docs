@@ -62,19 +62,6 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 
 </Alert>
 
-## Features
-
-- Store log messages as breadcrumbs
-- Send events to sentry
-
-Two separate settings define the minimum log level to keep the log entry as a `Breadcrumb` and to send an `Event` to Sentry. The events include any stored breadcrumb on that [scope](enriching-events/scopes/).
-
-By default, Sentry will keep any message with log level `Info` or higher as a `Breadcrumb`.
-
-The default value to report a log entry as an event to Sentry is `Error`.
-
-This means that out of the box, any `Error` call will create an `Event` which will include all log messages of level `Info`, `Warn` and also `Error` and `Critical`.
-
 ## Configuration
 
 The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by using the assembly method `FunctionsStartup` to include the type `SentryStartup`, for example:
@@ -84,7 +71,6 @@ The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by 
 
 public class Function : IHttpFunction
 {
-  
 }
 ```
 
@@ -107,42 +93,7 @@ For example:
 
 > An example of some of the options that can be configured via `appsettings.json`.
 
-It's also possible to bind properties to the SDK via environment variables, like:
-
-Windows
-
-```shell
-set Sentry__Debug=true
-```
-
-Linux or macOS
-
-```shell
-export Sentry__Debug=true
-```
-
 ASP.NET Core will automatically read this environment variable and bind it to the SDK configuration object.
-
-When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information:
-
-```csharp
-public static IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(webBuilder =>
-        {
-            // Add the following line:
-            webBuilder.UseSentry();
-        });
-```
-
-```fsharp
-let CreateHostBuilder args =
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(fun webBuilder ->
-            // Add the following line:
-            webBuilder.UseSentry() |> ignore
-        )
-```
 
 Your DSN would be location if it was defined in `appsettings.json` or any other form of configuration.
 
@@ -150,7 +101,6 @@ Some of the settings require actual code. For those, like the `BeforeSend` callb
 
 ```csharp
 [assembly: FunctionsStartup(typeof(CustomOptions))]
-
 
 public class CustomOptions : FunctionsStartup
 {
@@ -173,7 +123,7 @@ public class CustomOptions : FunctionsStartup
 
 ## Dependency Injection
 
-Much of the behavior of the Google cloud functions integration with Sentry can be customized by using the frameworks dependency injection system. That is done by registering your own implementation of some of the exposed abstraction.
+Much of the behavior of the Google cloud functions integration with Sentry can be customized by using the frameworks dependency injection system. That is done by registering your own implementation of some of the exposed abstraction inside of `FunctionsStartup`.
 
 ### Capturing the affected user
 
@@ -182,9 +132,15 @@ When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically 
 If you wish to change the behavior of how to read the user from the request, you can register a new `IUserFactory` into the container:
 
 ```csharp
-public void ConfigureServices(IServiceCollection services)
+[assembly: FunctionsStartup(typeof(UserFactoryStartup))]
+
+public class UserFactoryStartup : FunctionsStartup
 {
-    services.AddSingleton<IUserFactory, MyUserFactory>();
+    public override void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        base.ConfigureServices(context, services);
+        services.AddSingleton<IUserFactory, MyUserFactory>();
+    }
 }
 ```
 
@@ -196,7 +152,7 @@ member this.ConfigureServices(services: IServiceCollection) =
 
 ## Options and Initialization
 
-As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
+As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/), [Sentry.AspNetCore](/platforms/dotnet/guides/aspnetcore/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
 
 Below, the options that are specific to `Sentry.AspNetCore` will be described.
 
