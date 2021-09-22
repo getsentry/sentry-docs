@@ -63,7 +63,7 @@ public Task HandleAsync(HttpContext context)
 }
 ```
 
-### Performance monitoring
+### Performance Monitoring
 
 You can measure the performance of your code by capturing transactions and spans.
 
