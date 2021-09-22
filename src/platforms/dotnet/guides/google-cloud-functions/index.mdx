@@ -56,6 +56,12 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by using the assembly method `FunctionsStartup` to include the type `SentryStartup`, for example:
 ```csharp
 //your function.cs
+
+using System.Threading.Tasks;
+using Google.Cloud.Functions.Framework;
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Http;
+
 [assembly: FunctionsStartup(typeof(SentryStartup))]
 
 public class Function : IHttpFunction
@@ -87,6 +93,11 @@ ASP.NET Core will automatically read this environment variable and bind it to th
 Some of the settings require actual code. For those, like the `BeforeSend` callback you will need to create a new FunctionsStartup class to set it up:
 
 ```csharp
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Sentry.AspNetCore;
+
 [assembly: FunctionsStartup(typeof(CustomOptions))]
 
 public class CustomOptions : FunctionsStartup
@@ -119,6 +130,11 @@ When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically 
 If you wish to change the behavior of how to read the user from the request, you can register a new `IUserFactory` into the container:
 
 ```csharp
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Sentry.AspNetCore;
+
 [assembly: FunctionsStartup(typeof(UserFactoryStartup))]
 
 public class UserFactoryStartup : FunctionsStartup
@@ -130,12 +146,6 @@ public class UserFactoryStartup : FunctionsStartup
     }
 }
 ```
-
-```fsharp
-member this.ConfigureServices(services: IServiceCollection) =
-    services.AddSingleton<IUserFactory, MyUserFactory>() |> ignore
-```
-
 
 ## Options and Initialization
 

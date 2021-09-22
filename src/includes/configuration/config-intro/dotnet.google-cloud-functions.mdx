@@ -1,0 +1,36 @@
+Options can be set on `appsettings.json` or on a class inheriting from `FunctionsStartup`.
+
+```json {tabTitle:appsettings.json}
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "MaxRequestBodySize": "Always",
+    "SendDefaultPii": true,
+    "Debug": true,
+  },
+```
+
+```csharp
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Sentry.AspNetCore;
+using Sentry.Extensibility;
+
+[assembly: FunctionsStartup(typeof(CustomOptions))]
+
+public class CustomOptions : FunctionsStartup
+{
+    public override void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        base.ConfigureServices(context, services);
+        services.Configure<SentryAspNetCoreOptions>(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.MaxBreadcrumbs = 50;
+            options.Debug = true;
+            options.SendDefaultPii = true;
+            options.MaxRequestBodySize = RequestSize.Always;
+        });
+    }
+}
+```
