@@ -10,13 +10,13 @@ Install the **NuGet** package:
 Package Manager:
 
 ```shell
-Install-Package Sentry.Google.Cloud.Functions -Version {{ packages.version('sentry.google.cloud.functions') }}
+Install-Package Sentry.Google.Cloud.Functions -Version {{ packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
 Or .NET Core CLI:
 
 ```shell
-dotnet add package Sentry.Google.Cloud.Functions -v {{ packages.version('sentry.google.cloud.functions') }}
+dotnet add package Sentry.Google.Cloud.Functions -v {{ packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
 Add Sentry to `Function` class through the `FunctionsStartup`:
@@ -35,7 +35,7 @@ public class Function : IHttpFunction
 }
 ```
 
-Additionally, you'll need to setup your `Sentry` settings on `appsettings.json`
+Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`
 
 ```json
 {
@@ -54,7 +54,7 @@ Additionally, you'll need to setup your `Sentry` settings on `appsettings.json`
 
 ## Verify
 
-To verify your set up, you can capture a message with the SDK:
+To verify your setup, you can capture a message with the SDK:
 
 ```csharp
 public Task HandleAsync(HttpContext context)
