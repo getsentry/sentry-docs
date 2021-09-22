@@ -35,7 +35,7 @@ public class Function : IHttpFunction
 }
 ```
 
-Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`
+Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`:
 
 ```json
 {
@@ -49,7 +49,6 @@ Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`
     "MaxRequestBodySize": "Always"
   }
 }
-
 ```
 
 ## Verify
@@ -57,6 +56,10 @@ Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`
 To verify your setup, you can capture a message with the SDK:
 
 ```csharp
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Sentry;
+
 public Task HandleAsync(HttpContext context)
 {
     SentrySdk.CaptureMessage("Hello Sentry");
@@ -68,6 +71,10 @@ public Task HandleAsync(HttpContext context)
 You can measure the performance of your code by capturing transactions and spans.
 
 ```csharp
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Sentry;
+
 public Task HandleAsync(HttpContext context)
 {
     // Transaction can be started by providing, at minimum, the name and the operation
@@ -98,4 +105,3 @@ See the following examples that demonstrate how to integrate Sentry with various
 - [Google Cloud Functions sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Google.Cloud.Functions)
 - [Multiple samples in the `dotnet` SDK repository](https://github.com/getsentry/sentry-dotnet/tree/main/samples) (**C#**)
 - [Basic F# sample](https://github.com/sentry-demos/fsharp) (**F#**)
-- [Giraffe F# sample](https://github.com/sentry-demos/giraffe) (**F#**)
