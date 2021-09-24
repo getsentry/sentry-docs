@@ -82,6 +82,7 @@ class MyActivity : AppCompatActivity() {
 ### Performance Monitoring
 
 Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
+
 We recommend adjusting this value in production.
 
 ```xml {filename:AndroidManifest.xml}
