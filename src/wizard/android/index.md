@@ -37,7 +37,7 @@ After you’ve completed setting up a project in Sentry, Sentry will give you a 
 
 Add your DSN to the manifest file.
 
-```xml
+```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
 </application>
@@ -84,7 +84,7 @@ class MyActivity : AppCompatActivity() {
 Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
 We recommend adjusting this value in production.
 
-```xml
+```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
