@@ -97,7 +97,7 @@ You can measure the performance of your code by capturing transactions and spans
 import io.sentry.Sentry
 
 // Transaction can be started by providing, at minimum, the name and the operation
-val transaction = Sentry.startTransaction("updateRepos", "task")
+val transaction = Sentry.startTransaction("test-transaction-name", "test-transaction-operation")
 
 // Transactions can have child spans (and those spans can have child spans as well)
 val span = transaction.startChild("test-child-operation")
