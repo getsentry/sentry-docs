@@ -33,6 +33,9 @@ Modify `src/main/application.properties`:
 
 ```
 sentry.dsn=___PUBLIC_DSN___
+# Set traces-sample-rate to 1.0 to capture 100% of transactions for performance monitoring.
+# We recommend adjusting this value in production.
+sentry.traces-sample-rate=1.0
 ```
 
 Or, modify `src/main/application.yml`:
@@ -40,6 +43,9 @@ Or, modify `src/main/application.yml`:
 ```yaml
 sentry:
   dsn: ___PUBLIC_DSN___
+  # Set traces-sample-rate to 1.0 to capture 100% of transactions for performance monitoring.
+  # We recommend adjusting this value in production.
+  traces-sample-rate: 1.0
 ```
 
 If you use Logback for logging you may also want to send error logs to Sentry. Add a dependency to the `sentry-logback` module using either Maven or Gradle. Sentry Spring Boot Starter will auto-configure `SentryAppender`.
@@ -90,3 +96,39 @@ try {
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
 If you're an existing user and have disabled alerts, you won't receive this email.
+
+### Measure Performance
+
+Each incoming Spring MVC HTTP request is automatically turned into a transaction. To create spans around bean method executions, annotate bean method with `@SentrySpan` annotation:
+
+### Java
+
+```java
+import org.springframework.stereotype.Component;
+import io.sentry.spring.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
+### Kotlin
+
+import org.springframework.stereotype.Component
+import io.sentry.spring.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+
+Check out [the documentation](https://docs.sentry.io/platforms/java/guides/spring-boot/performance/instrumentation/) to learn more about the API and integrated instrumentations.
