@@ -33,10 +33,66 @@ It's possible for translators to inject advertisements (links) or other bad cont
 
 ## Updating Translations (source code)
 
-Translations have to be updated manually in Sentry. Historically this happens before we tag a new release, but should be frequent (e.g. weekly).
+Translations have to be updated manually in Sentry.
 
-To update translations, open a terminal within the Sentry repo and run the following:
+To update untranslated strings in Transifex, open a terminal within the Sentry repo and run the following:
 
 ```bash
 make update-transifex
 ```
+
+This will extract strings from the frontend using a webpack loader, as well as from the backend using `django makemessages` -- which then gets merged together to create a `django.po` file for the default (English) locale. This then gets propagated to our other supported locales.
+
+It then uploads these PO files to transifex to be translated. Ideally, this process is automated so that it is run on a schedule to ensure that new strings are synced with Transifex.
+
+**Note:** You may need to go to Transifex and approve some previously reviewed translations. You can select a language and query for `reviewed:no origin:TM` to find strings that have shifted around in the source code but have been previously translated. The `TM` stands for [Translation Memory](https://www.transifex.com/blog/2021/tm-management-update-all-you-need-to-know/).
+
+
+### Updating Sentry with New Translations
+
+The process of updating Sentry should be separate from updating Transifex as there needs to be time for translations and reviews to occur. In order to update Sentry run the following command in the Sentry repo:
+
+
+```bash
+make update-local-locales
+```
+
+This will pull translations from Transifex and use `django compilemessages` to update the local translations. You should then commit the changes and submit a new Pull Request.
+
+
+
+### Troubleshooting
+
+You may encounter some errors when running `make update-local-locales`.
+
+
+```
+LC_MESSAGES/django.po:4790: number of format specifications in 'msgid_plural' and 'msgstr[0]' does not match
+```
+
+This means that we are using `tn()` with an unbalanced set of string placeholders. For example,
+
+```
+tn('one user', '%s users', userCount); // This is bad because the first argument needs to also have %s
+
+// Instead do something like this
+userCount === 1 ? t('one user') : tn('%s users', '%s users', userCount); // Not great as the first arg to `tn()` is always ignored, but at least it will compile
+```
+
+
+Another common error you may see is
+
+```
+LC_MESSAGES/django.po:10824: 'msgstr' is not a valid Python format string, unlike 'msgid'. Reason: The character that terminates the directive number 1 is not a valid conversion specifier.
+```
+
+This generally means there is a literal `%` that the parser is confusing for a string placeholder. For example,
+
+```
+#: static/app/views/dashboardsV2/manage/dashboardList.tsx:120
+#, python-format
+msgid "100% of releases"
+```
+
+This can be resolved by removing `#, python-format` (assuming you don't have any string formatting)
+
