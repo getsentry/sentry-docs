@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop: We team up with Vercel to build, deploy, & monitor Next.js applications.";
+  "Live Workshop @Jamstack Conf (1:30pm PT) on how to build an application w/ Sentry.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/deploy-and-monitor-with-vercel-and-sentry/?promo_name=docs";
+  "https://jamstackconf.com/talk/d7698b302f9b/building-with-sentry/?utm_medium=banner&utm_campaign=event-jamstack-2021&utm_content=session-promo";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
