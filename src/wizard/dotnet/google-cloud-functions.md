@@ -43,8 +43,6 @@ Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`
     "Dsn": "___PUBLIC_DSN___",
     // Sends Cookies, User Id when one is logged on and user IP address to sentry. It's turned off by default.
     "SendDefaultPii": true,
-    // Enable tracing.
-    "TracesSampleRate": 1.0,
     // Opt-in for payload submission.
     "MaxRequestBodySize": "Always"
   }

@@ -9,7 +9,7 @@ Sentry provides an integration with `Google Cloud Functions` through the [Sentry
 
 ## Overview of the Features
 
-- Easy Google Cloud Functions integration, single line: `UseSentry`
+- Easy Google Cloud Functions integration, single line: `[assembly: FunctionsStartup(typeof(SentryStartup))]`
 - Captures unhandled exceptions in the middleware pipeline
 - Captures exceptions handled by the framework `UseExceptionHandler` and Error page display
 - Captures process-wide unhandled exceptions (AppDomain)
@@ -18,7 +18,6 @@ Sentry provides an integration with `Google Cloud Functions` through the [Sentry
 - RequestId as tag
 - URL as tag
 - Environment is automatically set (IHostingEnvironment)
-- Release automatically set (`AssemblyInformationalVersionAttribute`, `AssemblyVersion` or environment variable)
 - Request payload can be captured if opt-in
 - Support for EventProcessors registered with DI
 - Support for ExceptionProcessors registered with DI
@@ -148,39 +147,6 @@ public class UserFactoryStartup : FunctionsStartup
 ## Options & Initialization
 
 As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/), [Sentry.AspNetCore](/platforms/dotnet/guides/aspnetcore/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
-
-Below, the options that are specific to `Sentry.Google.Cloud.Functions` will be described.
-
-### SendDefaultPii
-
-Although this setting is part of the [Sentry](/platforms/dotnet/) package, in the context of ASP.NET Core, it means reporting the user by reading the frameworks `HttpContext.User`. The strategy to create the `SentryUser` can be customized. Please read [retrieving user info](#capturing-the-affected-user) for more.
-
-### Environment
-
-The environment name is automatically populated by reading the framework's `IHostingEnvironment` value.
-
-This option is part of the [Sentry](/platforms/dotnet/) package. The value of `IHostingEnvironment` will only be used if **no other method was used**.
-
-Methods that take precedence over `IHostingEnvironment` are:
-
-- Programmatically: `options.Environment`
-- Environment variable _SENTRY_ENVIRONMENT_
-- Configuration system like `appsettings.json`
-
-### MaxRequestBodySize
-
-This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
-
-- `never`: Request bodies are never sent.
-- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
-- `medium`: Medium and small requests will be captured (typically 10KB).
-- `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
-
-If the request bodies should be captured, all requests will have the `EnableRewind` method invoked. This is done so that the request data can be read later, in case an error happens while processing the request.
-
-### Other Options
-
-- For more option configurations, please visit the [Basic Options Configuration](configuration/options/) page.
 
 ### Samples
 
