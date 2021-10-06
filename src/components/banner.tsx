@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop: How Nextdoor Finds the Right Person (at the Right Time) to Fix the Right Issue";
+  "Live Workshop: How Nextdoor Finds the Right Person (at the Right Time) to Fix the Right Issue.";
 const BANNER_LINK_URL =
   "https://sentry.io/resources/how-nextdoor-finds-right-person-right-time-right-issue/?promo_name=docs";
 const BANNER_LINK_TEXT = "Register here.";
