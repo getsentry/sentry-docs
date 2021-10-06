@@ -20,7 +20,7 @@ npm install --save @sentry/gatsby
 Register the plugin in your Gatsby configuration file (typically `gatsby-config.js`).
 
 ```javascript
-{
+module.exports = {
   // ...
   plugins: [
     {
@@ -31,6 +31,6 @@ Register the plugin in your Gatsby configuration file (typically `gatsby-config.
       },
     },
     // ...
-  ];
-}
+  ],
+};
 ```
