@@ -32,6 +32,14 @@ Optionally, the `tracesSampler` callback can also return a boolean to force a sa
 
 See more about how sampling should be performed below.
 
+### `maxSpans`
+
+Because transaction payloads have a maximum size enforced on the ingestion side, SDKs should limit the number of spans that are attached to a transaction. This is similar to how breadcrumbs and other arbitrarily sized lists are limited to prevent accidental misuse. If new spans are added once the maximum is reached, the SDK should drop the spans and ideally use the internal logging to help debugging.
+
+The `maxSpans` should be implemented as an internal, non-configurable, constant that defaults to 1000. It may become configurable if there is justification for that in a given platform.
+
+The `maxSpans` limit may also help avoiding transactions that never finish (in platforms that keep a transaction open for as long as spans are open), preventing OOM errors, and generally avoiding degraded application performance.
+
 ## `Event` Changes
 
 As of writing, transactions are implemented as an extension of the `Event`
@@ -68,6 +76,7 @@ tree as well as the unit of reporting to Sentry.
   - When a `Span` is created, set the `startTimestamp` to the current time
   - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail). When possible `SpanContext` should be immutable.
   - `Span` should have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
+  - The `startChild` method should respect the `maxSpans` limit, and once the limit is reached the SDK should not create new child spans for the given transaction.
   - `Span` should have a method called `toSentryTrace` which returns a string that could be sent as a header called `sentry-trace`.
   - `Span` should have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace()}` right now. See `continueFromHeaders` as to why this exists and should be preferred when writing integrations.
 
