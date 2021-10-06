@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop @Jamstack Conf (1:30pm PT) on how to build an application w/ Sentry.";
+  "Live Workshop: How Nextdoor Finds the Right Person (at the Right Time) to Fix the Right Issue";
 const BANNER_LINK_URL =
-  "https://jamstackconf.com/talk/d7698b302f9b/building-with-sentry/?utm_medium=banner&utm_campaign=event-jamstack-2021&utm_content=session-promo";
+  "https://sentry.io/resources/how-nextdoor-finds-right-person-right-time-right-issue/?promo_name=docs";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
