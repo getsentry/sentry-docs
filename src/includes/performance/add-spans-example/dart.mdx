@@ -8,15 +8,15 @@ import 'package:sentry/sentry.dart';
 final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
 
 try {
-  processOrderBatch(transaction);
+  await processOrderBatch(transaction);
 } catch (exception) {
   transaction.throwable = exception;
   transaction.status = SpanStatus.internalError();
 } finally {
-  transaction.finish();
+  await transaction.finish();
 }
 
-void processOrderBatch(ISentrySpan span) {
+Future<void> processOrderBatch(ISentrySpan span) async {
   // span operation: task, span description: operation
   final innerSpan = span.startChild('task', description: 'operation');
 
@@ -26,7 +26,7 @@ void processOrderBatch(ISentrySpan span) {
     innerSpan.throwable = exception;
     innerSpan.status = SpanStatus.notFound();
   } finally {
-    innerSpan.finish();
+    await innerSpan.finish();
   }
 }
 ```
