@@ -152,3 +152,33 @@ functions:
 
 Currently there is no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the  lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK has not been given the necessary permissions.
 It is a relatively new integration but there is definitely a case to write a serverless plugin to make this super-smooth. There is an [older version](https://www.serverless.com/plugins/serverless-sentry-plugin) but it requires code changes to the handler and doesn't use `NODE_OPTIONS`. A new plugin could also add the Sentry layer to every function automatically.
+
+## SST
+
+To use [this integration](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/) with Node functions in [SST](https://serverless-stack.com), you'll need to:
+
+1. Import the [Lambda layer](/platforms/node/guides/aws-lambda/layer/).
+   ```js
+   import { LayerVersion } from "@aws-cdk/aws-lambda";
+
+   const sentry = LayerVersion.fromLayerVersionArn(
+     this,
+     "SentryLayer",
+     `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:34`
+   );
+   ```
+   Make sure to replace the ARN for the layer by [selecting the region here](/platforms/node/guides/aws-lambda/layer/).
+
+2. Set the layer and the `NODE_OPTIONS`, `SENTRY_DSN`, and `SENTRY_TRACES_SAMPLE_RATE` environment variables for all the functions in your stack.
+   ```js
+   // Don't set it while running locally
+   if (!scope.local) {
+     stack.addDefaultFunctionLayers([layer]);
+     stack.addDefaultFunctionEnv({
+       SENTRY_DSN: "<SENTRY_DSN>",
+       SENTRY_TRACES_SAMPLE_RATE: "1.0",
+       NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
+     });
+   }
+   ```
+You can read more about [`addDefaultFunctionLayers`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionenv) over on the SST docs.
