@@ -157,28 +157,7 @@ It is a relatively new integration but there is definitely a case to write a ser
 
 To use [this integration](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/) with Node functions in [SST](https://serverless-stack.com), you'll need to:
 
-1. Import the [Lambda layer](/platforms/node/guides/aws-lambda/layer/).
-   ```js
-   import { LayerVersion } from "@aws-cdk/aws-lambda";
+1. Import the [Lambda layer](/platforms/node/guides/aws-lambda/layer/) using the [`LayerVersion`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.LayerVersion.html) construct and set it by calling [`addDefaultFunctionLayers`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionlayers).
+2. Then set the `NODE_OPTIONS`, `SENTRY_DSN`, and `SENTRY_TRACES_SAMPLE_RATE` environment variables with the [`addDefaultFunctionEnv`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionenv) method.
 
-   const sentry = LayerVersion.fromLayerVersionArn(
-     this,
-     "SentryLayer",
-     `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:34`
-   );
-   ```
-   Make sure to replace the ARN for the layer by [selecting the region here](/platforms/node/guides/aws-lambda/layer/).
-
-2. Set the layer and the `NODE_OPTIONS`, `SENTRY_DSN`, and `SENTRY_TRACES_SAMPLE_RATE` environment variables for all the functions in your stack.
-   ```js
-   // Don't set it while running locally
-   if (!scope.local) {
-     stack.addDefaultFunctionLayers([layer]);
-     stack.addDefaultFunctionEnv({
-       SENTRY_DSN: "<SENTRY_DSN>",
-       SENTRY_TRACES_SAMPLE_RATE: "1.0",
-       NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
-     });
-   }
-   ```
-You can read more about [`addDefaultFunctionLayers`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionenv) over on the SST docs.
+You can [read more about this over on the SST docs](https://docs.serverless-stack.com/monitoring-your-app-in-prod#sentry).
