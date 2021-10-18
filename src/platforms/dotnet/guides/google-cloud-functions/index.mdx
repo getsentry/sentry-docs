@@ -11,7 +11,7 @@ Sentry provides an integration with `Google Cloud Functions` through the [Sentry
 
 - Easy Google Cloud Functions integration, single line: `[assembly: FunctionsStartup(typeof(SentryStartup))]`
 - Captures unhandled exceptions in the middleware pipeline
-- Captures exceptions handled by the framework `UseExceptionHandler` and Error page display
+- Captures exceptions handled by the framework `UseExceptionHandler`
 - Captures process-wide unhandled exceptions (AppDomain)
 - Captures `LogError` or `LogCritical`
 - Any event sent will include relevant application log messages
@@ -42,6 +42,14 @@ Install-Package Sentry.Google.Cloud.Functions -Version {{ packages.version('sent
 dotnet add package Sentry.Google.Cloud.Functions -v {{ packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
+Or, manually add the Sentry dependency into your csproj file:
+
+```xml {tabTitle:project.csproj}
+  <ItemGroup>
+    <PackageReference Include="Sentry.Google.Cloud.Functions" Version="{{ packages.version('sentry.dotnet.google-cloud-function') }}"/>
+  </ItemGroup>
+```
+
 This package extends `Sentry.AspNetCore` which in turn extends `Sentry`'s main SDK. That means that besides the logging-related features, through this package you'll also get access to all API and features available in those packages.
 
 <Alert level="warning" title="Note">
@@ -52,21 +60,8 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 
 ## Configuration
 
-The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by using the assembly method `FunctionsStartup` to include the type `SentryStartup`, for example:
-```csharp {tabTitle:Function.cs}
-using System.Threading.Tasks;
-using Google.Cloud.Functions.Framework;
-using Google.Cloud.Functions.Hosting;
-using Microsoft.AspNetCore.Http;
-
-[assembly: FunctionsStartup(typeof(SentryStartup))]
-
-public class Function : IHttpFunction
-{
-}
-```
-
-When using `[assembly: FunctionsStartup(typeof(SentryStartup))]`, the framework automatically loads `appsettings.json` and environment variables, binding to `SentryAspNetCoreOptions`.
+The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by setting up your Sentry configuration into `appsettings.json`
+using the assembly method `FunctionsStartup` to include the type `SentryStartup`, for example:
 
 For example:
 
@@ -85,7 +80,20 @@ For example:
 
 > An example of some of the options that can be configured via `appsettings.json`.
 
-ASP.NET Core will automatically read this environment variable and bind it to the SDK configuration object.
+To load the configurations, you will need to use the assembly `[assembly: FunctionsStartup(typeof(SentryStartup))]`. After initialized, the framework automatically loads `appsettings.json` and environment variables, binding to `SentryAspNetCoreOptions`.
+
+```csharp {tabTitle:Function.cs}
+using System.Threading.Tasks;
+using Google.Cloud.Functions.Framework;
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Http;
+
+[assembly: FunctionsStartup(typeof(SentryStartup))]
+
+public class Function : IHttpFunction
+{
+}
+```
 
 Some of the settings require actual code. For those, like the `BeforeSend` callback you will need to create a new class implementing the abstract class `FunctionsStartup` to set it up:
 

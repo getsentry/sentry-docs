@@ -9,17 +9,24 @@ Install the **NuGet** package:
 
 Package Manager:
 
-```shell
+```powershell {tabTitle:Package Manager}
 Install-Package Sentry.Google.Cloud.Functions -Version {{ packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
-Or .NET Core CLI:
-
-```shell
+```shell {tabTitle:.NET Core CLI}
 dotnet add package Sentry.Google.Cloud.Functions -v {{ packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
-Add Sentry to `Function` class through the `FunctionsStartup`:
+Or, manually add the Sentry dependency into your csproj file:
+
+```xml {tabTitle:project.csproj}
+  <ItemGroup>
+    <PackageReference Include="Sentry.Google.Cloud.Functions" Version="{{ packages.version('sentry.dotnet.google-cloud-function') }}"/>
+  </ItemGroup>
+```
+
+
+Then, add Sentry to the  `Function` class through `FunctionsStartup`:
 
 
 ```csharp
@@ -63,38 +70,6 @@ public Task HandleAsync(HttpContext context)
     SentrySdk.CaptureMessage("Hello Sentry");
 }
 ```
-
-### Performance Monitoring
-
-You can measure the performance of your code by capturing transactions and spans.
-
-```csharp
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Sentry;
-
-public Task HandleAsync(HttpContext context)
-{
-    // Transaction can be started by providing, at minimum, the name and the operation
-    var transaction = SentrySdk.StartTransaction(
-    "test-transaction-name",
-    "test-transaction-operation"
-    );
-    SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
-
-    // Transactions can have child spans (and those spans can have child spans as well)
-    var span = transaction.StartChild("test-child-operation");
-
-    // ...
-    // (Perform the operation represented by the span/transaction)
-    // ...
-
-    span.Finish(); // Mark the span as finished
-    transaction.Finish(); // Mark the transaction as finished and send it to Sentry
-}
-```
-
-Check out [the documentation](https://docs.sentry.io/platforms/dotnet/performance/instrumentation/) to learn more about the API.
 
 ## Samples
 
