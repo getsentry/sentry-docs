@@ -37,7 +37,7 @@ After you’ve completed setting up a project in Sentry, Sentry will give you a 
 
 Add your DSN to the manifest file.
 
-```xml
+```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
 </application>
@@ -50,6 +50,11 @@ Great! Now that you’ve completed setting up the SDK, maybe you want to quickly
 In **Java**:
 
 ```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+import io.sentry.Sentry;
+
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -61,6 +66,11 @@ public class MyActivity extends AppCompatActivity {
 In **Kotlin**:
 
 ```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+
+import io.sentry.Sentry
+
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -68,6 +78,40 @@ class MyActivity : AppCompatActivity() {
   }
 }
 ```
+
+### Performance Monitoring
+
+Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
+
+We recommend adjusting this value in production.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+</application>
+```
+
+You can measure the performance of your code by capturing transactions and spans.
+
+```kotlin
+import io.sentry.Sentry
+
+// Transaction can be started by providing, at minimum, the name and the operation
+val transaction = Sentry.startTransaction("test-transaction-name", "test-transaction-operation")
+
+// Transactions can have child spans (and those spans can have child spans as well)
+val span = transaction.startChild("test-child-operation")
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+
+span.finish() // Mark the span as finished
+transaction.finish() // Mark the transaction as finished and send it to Sentry
+```
+
+Check out [the documentation](https://docs.sentry.io/platforms/android/performance/instrumentation/) to learn more about the API and automatic instrumentations.
 
 ### Next Steps
 

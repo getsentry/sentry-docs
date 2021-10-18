@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = false;
 const BANNER_TEXT =
-  "Upcoming Technical Workshop: Monitor your Mobile App Performance.";
+  "Live Workshop: How Nextdoor Finds the Right Person (at the Right Time) to Fix the Right Issue.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/mobile-performance-monitoring/?promo_name=docs";
+  "https://sentry.io/resources/how-nextdoor-finds-right-person-right-time-right-issue/?promo_name=docs";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 

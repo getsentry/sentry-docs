@@ -1,0 +1,36 @@
+## Add More Spans to the Transaction
+
+By default, transactions are not bound to the scope. Transaction has to be passed manually as a method parameter to enable attaching nested spans. When creating nested span, you can choose the value of `operation` and `description`.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
+
+try {
+  await processOrderBatch(transaction);
+} catch (exception) {
+  transaction.throwable = exception;
+  transaction.status = SpanStatus.internalError();
+} finally {
+  await transaction.finish();
+}
+
+Future<void> processOrderBatch(ISentrySpan span) async {
+  // span operation: task, span description: operation
+  final innerSpan = span.startChild('task', description: 'operation');
+
+  try {
+    // omitted code
+  } catch (exception) {
+    innerSpan.throwable = exception;
+    innerSpan.status = SpanStatus.notFound();
+  } finally {
+    await innerSpan.finish();
+  }
+}
+```
+
+Keep in mind that each individual span also needs to be manually finished;
+
+Spans are sent together with their parent transaction when the transaction is finished. Make sure to call `finish()` on transaction once all the child spans have finished.

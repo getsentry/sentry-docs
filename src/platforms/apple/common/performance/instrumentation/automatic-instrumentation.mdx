@@ -10,11 +10,20 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 </Note>
 
+<Alert level="info" title="Important">
+
+The HTTP instrumentation can lead to crashes due to a bug in the SDK, see [GitHub Issue](https://github.com/getsentry/sentry-cocoa/issues/1328). We recommend [disabling the feature](#http-instrumentation), while we are working on a bugfix.
+
+
+</Alert>
+
 ## UIViewController Instrumentation
 
 This feature is available for iOS, tvOS, and Mac Catalyst, and only works for UIViewControllers.
 
-The UIViewController Instrumentation, once enabled, captures transactions whenever your app loads a ViewController. The SDK sets the transaction name to the name of the ViewController, including the module; for example, `Your_App.MainViewController`, and the transaction operation to `ui.load`. The SDK creates spans to provide insight into the length of time each consumed by each of the following methods.
+The UIViewController Instrumentation, once enabled, captures transactions whenever your app loads a ViewController. The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
+
+The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
 
 ![UIViewController Transaction](ui-view-controller-transaction.png)
 
@@ -54,6 +63,26 @@ Slow and frozen frames are Mobile Vitals, which you can learn about in the [full
 ## HTTP Instrumentation
 
 The Sentry SDK adds spans for outgoing HTTP requests to ongoing transactions bound to the Scope. Currently, the SDK supports requests with [NSURLSession][NSURLSession], but not the legacy [NSURLConnection][NSURLConnection] yet. The SDK attaches auto-generated transactions automatically to the Scope if there is no other transaction bound. When starting a transaction, you can use `bindToScope` to indicate whether the SDK should bind the new transaction to the Scope or not.
+
+To disable the HTTP instrumentation:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableNetworkTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableNetworkTracking = NO;
+}];
+```
 
 [NSURLSession]: https://developer.apple.com/documentation/foundation/nsurlsession
 [NSURLConnection]: https://developer.apple.com/documentation/foundation/nsurlconnection
