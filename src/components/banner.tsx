@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop: How Nextdoor Finds the Right Person (at the Right Time) to Fix the Right Issue.";
+  "Live Workshop @ Vue.JS Live (10/19 @ 9am PT) on Vue web performance tips/tricks.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/how-nextdoor-finds-right-person-right-time-right-issue/?promo_name=docs";
+  "https://ti.to/gitnation/vuejs-conf-remote-only-2021/with/fmw0pknt-84?utm_medium=banner&utm_source=sentry&utm_campaign=event-vuejs-2021";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
