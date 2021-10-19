@@ -5,22 +5,33 @@ redirect_from:
   - /data-management/rollups/
   - /learn/rollups/
   - /data-management/event-grouping/
-description: "Learn about fingerprints, the grouping algorithm, grouping by stack trace, grouping by exceptions, and fallback grouping."
+  - /guides/grouping-and-fingerprints/
+  - /product/sentry-basics/guides/grouping-and-fingerprints/
+description: "Learn about fingerprints, the grouping algorithm, grouping by stack trace, grouping by exceptions, and fallback grouping. Learn more about how Sentry groups issues together as well as different approaches for updating how events group into issues"
 ---
 
-All events have a fingerprint. Events with the same fingerprint are grouped together into an issue.
+A fingerprint is a way to uniquely identify an error, and all events have one. Events with the same fingerprint are grouped together into an issue.
 
-By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as `stacktrace`, `exception`, and `message`. To extend the default grouping behavior or change it completely, you can use a combination of the following options:
+By default, Sentry will run one of our built-in grouping algorithms to generate an event fingerprint based on information available within the event, such as `stacktrace`, `exception`, and `message`.
 
-1. In your SDK, using [SDK Fingerprinting](/platform-redirect/?next=/usage/sdk-fingerprinting/). Note that is not supported in WebAssembly.
-2. In your project, using [Fingerprint Rules](./fingerprint-rules/)
-3. In your project, using [Stack Trace Rules](./stack-trace-rules/)
+If the way that Sentry is grouping issues for your organization is already ideal, you don't need to make any changes. However, if a set of issues looks similar but they aren't being automatically grouped, or you have other grouping needs, you can extend the default grouping behavior or change it completely. You can do this using a combination of the following options, listed from least to most complex:
+
+1. In your project, by [Merging Issues](/product/data-management-settings/event-grouping/merging-issues/)
+> Merges together similar issues that have already been created. No settings or configuration changes are required for this.
+1. In your project, using [Fingerprint Rules](./fingerprint-rules/)
+> Sets a new fingerprint for incoming events based on matchers. This doesn't affect already existing issues.
+1. In your project, using [Stack Trace Rules](./stack-trace-rules/)
+> Sets rules for how incoming events should be treated based on matchers. This doesn't affect already existing issues.
+1. In your SDK, using [SDK Fingerprinting](/platform-redirect/?next=/usage/sdk-fingerprinting/)
+> Sets a new fingerprint for incoming events based on matchers in the SDK. This doesn't affect already existing issues. Note that is not supported in WebAssembly.
 
 <Note>
 
 Stack trace rules can work as a combination of both SDK and project settings. As a result, we maintain the documentation in one location.
 
 </Note>
+
+You can see a fingerprint by opening an issue, clicking the JSON link, and finding the _fingerprint_ property in that file. If the default grouping was used, you'll see "default" written there. If a different grouping was used, you'll see the actual fingerprint value itself.
 
 ## Grouping Algorithms
 
@@ -49,6 +60,8 @@ This grouping usually works well, but two specific situations can throw it off:
 1. Minimized JavaScript source code will destroy the grouping in detrimental ways. To avoid this, ensure that Sentry can access your [Source Maps](/platforms/javascript/sourcemaps/).
 2. Modifying your stack trace by introducing a new level through decorators changes your stack trace, so the grouping will also change. To handle this, many SDKs support hiding irrelevant stack trace frames. For example, the Python SDK will skip all stack frames with a local variable called `__traceback_hide__` set to _True_.
 
+You can also see what events would group together if a larger or smaller amount of stack trace frames were taken into account using the updated [Grouping Breakdown](/product/data-management-settings/event-grouping/grouping-breakdown/) (Early Adopters only).
+
 ### Grouping By Exception
 
 If the stack trace is not available, but exception information is, then the grouping will consider the `type` and `value` of the exception if both pieces of data are present on the event. This grouping is a lot less reliable because of changing error messages.
@@ -57,4 +70,6 @@ If the stack trace is not available, but exception information is, then the grou
 
 Grouping falls back to messages if the stack trace, `type`, and `value` are not available. When this happens, the grouping algorithm will try to use the message without any parameters. If that is not available, the grouping algorithm will use the full message attribute.
 
-For more details, see [Grouping Issues Best Practices](/product/sentry-basics/guides/grouping-and-fingerprints/).
+## Learn More
+
+<PageGrid />

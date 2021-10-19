@@ -1,16 +1,21 @@
 ---
 title: "Fingerprint Rules"
-sidebar_order: 1
+sidebar_order: 20
 redirect_from:
   - ../server-side-fingerprinting/
 description: "Learn about fingerprint rules, matchers for fingerprinting, how to combine matchers, and using variables for fingerprinting."
 ---
 
-Fingerprint rules (previously known as server-side fingerprinting) are also configured with a config similar to [stack trace rules](../stack-trace-rules/), but the syntax is slightly different. The matchers are the same, but instead of flipping flags, a fingerprint is assigned and it overrides the default grouping entirely.
+Fingerprint rules (previously known as _server-side fingerprinting_) are also configured with a config similar to [stack trace rules](../stack-trace-rules/), but the syntax is slightly different. The matchers are the same, but instead of flipping flags, a fingerprint is assigned and it overrides the default grouping entirely.
 
-These rules can be configured on a per-project basis under **Settings > Projects > [project] > Issue Grouping > Fingerprint Rules**. Group Settings has input fields where you can write custom fingerprinting rules. The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, prefix the expression with an exclamation mark (`!`).
+These rules can be configured on a per-project basis in **[Project] > Settings > Issue Grouping > Fingerprint Rules**. This setting has input fields where you can write custom fingerprinting rules. To update a rule:
 
-All values are matched against, and in the case of stack traces, all frames are considered. If all matches in a line match, then the fingerprint is applied.
+1. Identify the match logic for grouping issues together.
+1. Set the match logic and the fingerprint for it.
+
+The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, prefix the expression with an exclamation mark (`!`).
+
+Sentry attempts to match against all values that are configured in the fingerprint. In the case of stack traces, all frames are considered. If the event data matches all the values in a line for a matcher and expression, then the fingerprint is applied:
 
 ```discover {tabTitle:Fingerprinting Config}
 # You can use comments to explain the rules.  Rules themselves follow the
@@ -27,6 +32,7 @@ error.type:ConnectionError -> system-down
 
 error.value:"connection error: *" -> connection-error, {{ transaction }}
 ```
+Now, all the events with the error type `DatabaseUnavailable` or `ConnectionError` will be grouped into an issue with the type `system-down`. In addition, all events with the error value `connection error` will be grouped by their transaction name. So, for example, if your transactions `/api/users/foo/` and `/api/events/foo/`—both with the value `connection error`—crash the same way, Sentry will create two issues, regardless of stack trace or any other default grouping method.
 
 ## Matchers
 
