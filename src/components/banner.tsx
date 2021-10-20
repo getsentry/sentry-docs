@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   "Live Workshop @ Vue.JS Live (10/19 @ 9am PT) on Vue web performance tips/tricks.";
 const BANNER_LINK_URL =
