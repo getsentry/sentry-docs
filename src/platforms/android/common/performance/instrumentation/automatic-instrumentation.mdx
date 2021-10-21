@@ -181,3 +181,27 @@ The span finishes once the request has been executed. The span `status` depends 
 When the HTTP request throws an `IOException`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
 For more information see our [OkHttp integration](/platforms/android/configuration/integrations/okhttp/).
+
+### SQLite and Room Instrumentation
+
+<Note>
+
+Supported in Sentry's Android SDK version `4.0.0` and above.
+
+Supported in Sentry Android Gradle Plugin version `3.0.0` and above.
+
+</Note>
+
+The [Sentry Android Gradle Plugin](/platforms/android/proguard/#gradle-configuration) does the tracing auto instrumentation via bytecode manipulation for `SQLite` and `Room` libraries.
+
+The Plugin injects a code snippet that starts a span out of the active span bound to the scope for each `CRUD` operation. The SDK sets the span `operation` to `db` and `description` to the SQL Query if available.
+
+The span finishes once the operation has been executed. The span `status` is set to `SpanStatus.OK` if successful or `SpanStatus.INTERNAL_ERROR` if there was any error.
+
+When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+
+<Note>
+
+It's recommended to use `androidx.room` version `2.0.0` or above, since it supports incremental builds.
+
+</Note>
