@@ -197,13 +197,7 @@ export const onCreateNode = async ({
       const bodyParameterSchema: RequestBodySchema = JSON.parse(
         bodyParameterSchemaString
       );
-      const bodyParameterRequired = (bodyParameterSchema.required || []).reduce(
-        (requiredMap, param) => {
-          requiredMap[param] = true;
-          return requiredMap;
-        },
-        {}
-      );
+      const bodyParameterRequired = new Set(bodyParameterSchema.required || []);
       Object.entries(bodyParameterSchema.properties || []).map(
         ([name, { type, description }], index) => {
           if (description) {
@@ -211,7 +205,7 @@ export const onCreateNode = async ({
               name,
               description,
               schema: { type, format: null, enum: null },
-              required: !!bodyParameterRequired[name],
+              required: bodyParameterRequired.has(name),
               in: "body",
               id: createNodeId(`openApiBodyParameter-${node.id}-${index}`),
               parent: node.id,
