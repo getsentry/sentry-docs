@@ -7,6 +7,12 @@ redirect_from:
 
 Sentry provides an integration with _ASP.NET Core_ through the [Sentry.AspNetCore NuGet package](https://www.nuget.org/packages/Sentry.AspNetCore).
 
+<Note>
+
+To enable tracing integration for ASP.NET Core, refer to <PlatformLink to="/performance/instrumentation/automatic-instrumentation">this guide</PlatformLink>.
+
+</Note>
+
 ## Overview of the features
 
 - Easy ASP.NET Core integration, single line: `UseSentry`
@@ -65,7 +71,7 @@ For example:
 ```json {filename:appsettings.json}
   "Sentry": {
     "Dsn": "___PUBLIC_DSN___",
-    "IncludeRequestPayload": true,
+    "MaxRequestBodySize": "Always",
     "SendDefaultPii": true,
     "MinimumBreadcrumbLevel": "Debug",
     "MinimumEventLevel": "Warning",
@@ -131,8 +137,6 @@ let CreateHostBuilder args =
             webBuilder.UseSentry() |> ignore
         )
 ```
-
-Your DSN would be location if it was defined in `appsettings.json` or any other form of configuration.
 
 Some of the settings require actual code. For those, like the `BeforeSend` callback you can simply:
 
@@ -226,9 +230,16 @@ Methods that take precedence over `IHostingEnvironment` are:
 - Environment variable _SENTRY_ENVIRONMENT_
 - Configuration system like `appsettings.json`
 
-### IncludeRequestPayload
+### MaxRequestBodySize
 
-Opt-in to send the request body to Sentry. By enabling this flag, all requests will have the `EnableRewind` method invoked. This is done so that the request data can be read at a later point in case an error happens while processing the request.
+This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
+
+- `never`: Request bodies are never sent.
+- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
+- `medium`: Medium and small requests will be captured (typically 10KB).
+- `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
+
+If the request bodies should be captured, all requests will have the `EnableRewind` method invoked. This is done so that the request data can be read later, in case an error happens while processing the request.
 
 ### IncludeActivityData
 

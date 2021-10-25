@@ -1,0 +1,12 @@
+The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
+
+```python
+from sentry_sdk import start_transaction
+
+while True:
+  item = get_from_queue()
+
+  with start_transaction(op="task", name=item.get_transaction_name()):
+      # process_item may create more spans internally (see next examples)
+      process_item(item)
+```

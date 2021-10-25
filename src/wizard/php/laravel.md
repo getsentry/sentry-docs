@@ -59,7 +59,7 @@ Route::get('/debug-sentry', function () {
 
 Visiting this route will trigger an exception that will be captured by Sentry.
 
-**Monitor Performane**
+**Monitor Performance**
 
 Set `traces_sample_rate` to a value greater than `0.0` (`config/sentry.php`) after that, Performance Monitoring will be enabled.
 

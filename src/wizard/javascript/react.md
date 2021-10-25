@@ -17,7 +17,7 @@ npm install --save @sentry/react @sentry/tracing
 
 Next, import and initialize the Sentry module as early as possible, before initializing React:
 
-```jsx
+```javascript
 import React from "react";
 import ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
@@ -26,12 +26,11 @@ import App from "./App";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing(),
-  ],
+  integrations: [new Integrations.BrowserTracing()],
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
@@ -47,7 +46,7 @@ After this step, Sentry will report any uncaught exceptions triggered by your ap
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
-```jsx
+```javascript
 return <button onClick={methodDoesNotExist}>Break the world</button>;
 ```
 

@@ -5,73 +5,46 @@ support_level: production
 type: framework
 ---
 
-Get the SDK from from [pub.dev](https://pub.dev/packages/sentry) by adding the following to your `pubspec.yaml`:
+Sentry captures data by using an SDK within your application’s runtime. Add the following to your `pubspec.yaml`:
 
-```yml
+```yml {filename:pubspec.yaml}
 dependencies:
-  sentry: ">=3.0.0 <4.0.0"
+  sentry_flutter: ^{{ packages.version('sentry.dart.flutter') }}
 ```
 
-Import `SentryClient` and initialize it:
+Import `sentry_flutter` and initialize it:
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+    },
+    appRunner: () => runApp(MyApp()),
+  );
+
+  // or define SENTRY_DSN via Dart environment variable (--dart-define)
+}  
+```
+
+Then create an intentional error, so you can test that everything is working:
 
 ```dart
 import 'package:sentry/sentry.dart';
 
-final sentry = SentryClient(dsn: "___PUBLIC_DSN___");
-```
-
-Run the whole app in a zone to capture all uncaught errors:
-
-```dart
-import 'dart:async'; 
-
-// Wrap your 'runApp(MyApp())' as follows:
-
-void main() async {
-  runZonedGuarded(
-    () => runApp(MyApp()),
-    (error, stackTrace) {
-      await sentry.captureException(
-        exception: error,
-        stackTrace: stackTrace,
-      );
-    },
-  );
-}
-```
-
-Catch Flutter specific errors by subscribing to `FlutterError.onError`:
-
-```dart
-FlutterError.onError = (details, {bool forceReport = false}) {
-  sentry.captureException(
-    exception: details.exception,
-    stackTrace: details.stack,
-  );
-};
-```
-
-Capture a test exception:
-
-```dart
-// Throw an exception and capture it with the Sentry client:
 try {
-  throw null;
-} catch (error, stackTrace) {
-  await sentry.captureException(
-    exception: error,
+  aMethodThatMightFail();
+} catch (exception, stackTrace) {
+  await Sentry.captureException(
+    exception,
     stackTrace: stackTrace,
   );
 }
 ```
 
-### Resources
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
-Flutter has extensive documentation, which includes a
-[cookbook on how to integrate with Sentry](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
-
-### Source code
-
-The Sentry SDK is part of the [Flutter organization on GitHub](https://github.com/flutter/sentry).
-Sentry is working on improving the Flutter integration on top of the core Dart SDK
-through [`sentry-flutter`](https://github.com/getsentry/sentry-flutter/).
+If you're an existing user and have disabled alerts, you won't receive this email.

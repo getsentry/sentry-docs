@@ -1,0 +1,44 @@
+## Add More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction. When using spans and transactions as context managers, they are automatically finished at the end of the `with` block.
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.get_current_scope.get_transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
+
+Alternatively, instead of adding to the top-level transaction, you can make a child span of the current span, if there is one. Use `Sentry.get_current_scope.get_span` in that case.
+
+You can choose the value of `op` and `description`.
+
+```ruby
+class OrdersController < ApplicationController
+  def create
+    order = Order.new
+    # get the root transaction, which is usually the request's transaction
+    transaction = Sentry.get_current_scope.get_transaction
+    # start a span under the root transaction
+    span = transaction.start_child(op: :process_items, description: "process order's items")
+    span.set_data(:key, "value")
+
+    order.process_items(params)
+
+    # finish the span to record its finished time
+    # keep in mind that finishing span doesn't send it to Sentry
+    # it will be sent with the root transaction when it's finished
+    span.finish
+  end
+end
+```
+
+Alternatively, you can use the `with_child_span` method:
+
+```ruby
+class OrdersController < ApplicationController
+  def create
+    order = Order.new
+    transaction = Sentry.get_current_scope.get_transaction
+    transaction.with_child_span(op: :process_items, description: "process order's items") do |span|
+      span.set_data(:key, "value")
+      order.process_items(params)
+    end # the child span ends with the block
+  end
+end
+```

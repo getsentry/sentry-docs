@@ -1,5 +1,5 @@
 ---
-name: GCP Cloud Functions (Node)
+name: Google Cloud Functions (Node)
 doc_link: https://docs.sentry.io/platforms/node/guides/gcp-functions/
 support_level: production
 type: framework
@@ -11,18 +11,22 @@ Add `@sentry/serverless` as a dependency to `package.json`:
   "@sentry/serverless": "^5.26.0"
 ```
 
-To set up Sentry for a GCP Cloud Function:
+To set up Sentry for a Google Cloud Function:
 
 ```javascript {tabTitle:http functions}
 const Sentry = require("@sentry/serverless");
 
 Sentry.GCPFunction.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
 exports.helloHttp = Sentry.GCPFunction.wrapHttpFunction((req, res) => {
-  throw new Error('oh, hello there!');
+  throw new Error("oh, hello there!");
 });
 ```
 
@@ -31,12 +35,18 @@ const Sentry = require("@sentry/serverless");
 
 Sentry.GCPFunction.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
-exports.helloEvents = Sentry.GCPFunction.wrapEventFunction((data, context, callback) => {
-  throw new Error('oh, hello there!');
-});
+exports.helloEvents = Sentry.GCPFunction.wrapEventFunction(
+  (data, context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
 ```
 
 ```javascript {tabTitle:cloudEvents}
@@ -44,10 +54,16 @@ const Sentry = require("@sentry/serverless");
 
 Sentry.GCPFunction.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
-exports.helloEvents = Sentry.GCPFunction.wrapCloudEventFunction((context, callback) => {
-  throw new Error('oh, hello there!');
-});
+exports.helloEvents = Sentry.GCPFunction.wrapCloudEventFunction(
+  (context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
 ```

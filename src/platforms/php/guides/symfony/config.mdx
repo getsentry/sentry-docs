@@ -5,55 +5,48 @@ description: "Learn about Symfony-specific configuration options."
 
 In addition to the [configuration available in the PHP SDK](../configuration/options/), there are some Symfony-specific options.
 
-All configuration for Symfony is done in `app/config/config.yml`.
+All configuration for Symfony is done in `config/packages/sentry.yaml`.
 
-N.B. The `register_error_listener` and `monolog` configuration options are available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0)
+N.B. The `register_error_listener` configuration option is available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0).
 
-```yaml {filename:app/config/config.yml}
+```yaml {filename:config/packages/sentry.yaml}
 sentry:
-  dsn: "___PUBLIC_DSN___"
-  register_error_listener: true
-  monolog:
-    error_handler:
-      enabled: false
-      level: DEBUG
-      bubble: true
-  options:
-    attach_stacktrace: true
-    before_breadcrumb: "@sentry.callback.before_breadcrumb"
-    before_send: "@sentry.callback.before_send"
-    capture_silenced_errors: false
-    context_lines: 5
-    default_integrations: true
-    enable_compression: true
-    environment: "%kernel.environment%"
-    error_types: "E_ALL & ~E_NOTICE"
-    http_proxy: "10.0.0.12:3456"
-    in_app_exclude:
-      - "%kernel.cache_dir%"
-      - "%kernel.project_dir%/vendor"
-    integrations:
-      - "@sentry.integration.my_custom_integration"
-    excluded_exceptions:
-      - 'My\Exceptions\IgnorableException'
-    logger: "php"
-    max_breadcrumbs: 50
-    max_value_length: 2048
-    prefixes:
-      - "/local_dir/"
-    project_root: "%kernel.project_dir%"
-    release: "abcde12345"
-    sample_rate: 1
-    send_attempts: 3
-    send_default_pii: true
-    server_name: "www.example.com"
-    tags:
-      tag1: "value1"
-      tag2: "value2"
-  listener_priorities:
-    request: 1
-    subrequest: 1
-    console: 1
+    dsn: "___PUBLIC_DSN___"
+    register_error_listener: true
+    options:
+        attach_stacktrace: true
+        before_breadcrumb: "@sentry.callback.before_breadcrumb"
+        before_send: "@sentry.callback.before_send"
+        capture_silenced_errors: false
+        context_lines: 5
+        default_integrations: true
+        enable_compression: true
+        environment: "%kernel.environment%"
+        error_types: "E_ALL & ~E_NOTICE"
+        http_proxy: "10.0.0.12:3456"
+        in_app_exclude:
+            - "%kernel.cache_dir%"
+            - "%kernel.project_dir%/vendor"
+        integrations:
+            - "@sentry.integration.my_custom_integration"
+        logger: "php"
+        max_breadcrumbs: 50
+        max_value_length: 2048
+        prefixes:
+            - "/local_dir/"
+        project_root: "%kernel.project_dir%"
+        release: "abcde12345"
+        sample_rate: 1
+        send_attempts: 3
+        send_default_pii: true
+        server_name: "www.example.com"
+        tags:
+            tag1: "value1"
+            tag2: "value2"
+    listener_priorities:
+        request: 1
+        subrequest: 1
+        console: 1
 ```
 
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's

@@ -1,0 +1,36 @@
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setTracesSampler(context -> {
+    if (/* make a decision based on `samplingContext` */) {
+      // Drop this transaction, by setting its sample rate to 0%
+      return 0.0;
+    } else if (/* ... */) {
+      // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+      return 0.1;
+    }
+    // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+    return null;
+  });
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.TracesSamplerCallback
+
+SentryAndroid.init(this, options ->
+  options.tracesSampler = TracesSamplerCallback { context ->
+    if (/* make a decision based on `samplingContext` */) {
+      // Drop this transaction, by setting its sample rate to 0%
+      return@TracesSamplerCallback 0.0
+    } else if (/* ... */) {
+      // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+      return@TracesSamplerCallback 0.1
+    }
+    // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+    return@TracesSamplerCallback null
+  }
+})
+```

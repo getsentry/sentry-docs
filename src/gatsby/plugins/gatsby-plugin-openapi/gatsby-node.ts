@@ -4,6 +4,7 @@ import {
   DeRefedOpenAPI,
   OpenApiPath,
   RequestBody,
+  RequestBodySchema,
 } from "./types";
 
 export const sourceNodes = async (
@@ -11,7 +12,6 @@ export const sourceNodes = async (
   pluginOptions
 ) => {
   const { createNode } = actions;
-
   let content = null;
   try {
     content = await pluginOptions.resolve();
@@ -33,14 +33,30 @@ export const sourceNodes = async (
 
     const parsedContent = parseContent();
 
-    var data: OpenApiPath[] =
+    parsedContent.tags.forEach(tag => {
+      if (tag["x-display-description"]) {
+        createNode({
+          name: tag.name,
+          id: createNodeId(`APIDescription-${tag.name}`),
+          children: [],
+          parent: null,
+          internal: {
+            type: "APIDescription",
+            content: tag.description,
+            mediaType: "text/markdown",
+            contentDigest: createContentDigest(tag.description),
+          },
+        });
+      }
+    });
+    const data: OpenApiPath[] =
       parsedContent.paths &&
       Object.keys(parsedContent.paths).reduce((acc, apiPath) => {
-        let result = Object.entries(parsedContent.paths[apiPath]).map(
+        const result = Object.entries(parsedContent.paths[apiPath]).map(
           ([method, rest]) => {
             const methodPath = parsedContent.paths[apiPath][method];
 
-            let readableUrl =
+            const readableUrl =
               `/api/` +
               `${methodPath["tags"][0]}/${methodPath["operationId"]}/`
                 .replace(/[^a-zA-Z0-9/ ]/g, "")
@@ -48,7 +64,7 @@ export const sourceNodes = async (
                 .replace(/\s/g, "-")
                 .toLowerCase();
 
-            let responses: Response[] =
+            const responses: Response[] =
               (methodPath["responses"] &&
                 Object.entries(methodPath["responses"]).map(
                   ([status_code, responses_rest]) => ({
@@ -71,7 +87,7 @@ export const sourceNodes = async (
                 )) ||
               null;
 
-            let requestBody =
+            const requestBody =
               (methodPath["requestBody"] && {
                 ...methodPath["requestBody"],
                 content:
@@ -106,10 +122,10 @@ export const sourceNodes = async (
       }, []);
 
     data.forEach(path => {
-      let nodeContent = { ...parsedContent, path };
+      const nodeContent = { ...parsedContent, path };
       delete nodeContent.paths;
 
-      let apiNode = {
+      const apiNode = {
         ...nodeContent,
         id: createNodeId(`openAPI-${path.method}-${path.apiPath}`),
         children: [],
@@ -169,6 +185,46 @@ export const onCreateNode = async ({
         parent: node,
         child: paramNode,
       });
-    })
+    });
+
+    // Optional chaining seems to affect the Vercel build process
+    const bodyParameterSchemaString =
+      !!node.path.requestBody &&
+      !!node.path.requestBody.content &&
+      node.path.requestBody.content.schema;
+
+    if (bodyParameterSchemaString) {
+      const bodyParameterSchema: RequestBodySchema = JSON.parse(
+        bodyParameterSchemaString
+      );
+      const bodyParameterRequired = new Set(bodyParameterSchema.required || []);
+      Object.entries(bodyParameterSchema.properties || []).map(
+        ([name, { type, description }], index) => {
+          if (description) {
+            const bodyParamNode = {
+              name,
+              description,
+              schema: { type, format: null, enum: null },
+              required: bodyParameterRequired.has(name),
+              in: "body",
+              id: createNodeId(`openApiBodyParameter-${node.id}-${index}`),
+              parent: node.id,
+              children: [],
+              internal: {
+                type: "openApiBodyParameter",
+                content: description,
+                mediaType: "text/markdown",
+                contentDigest: createContentDigest(description),
+              },
+            };
+            actions.createNode(bodyParamNode);
+            actions.createParentChildLink({
+              parent: node,
+              child: bodyParamNode,
+            });
+          }
+        }
+      );
+    }
   }
 };

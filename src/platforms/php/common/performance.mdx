@@ -4,6 +4,12 @@ sidebar_order: 2000
 description: "Configure our Performance Monitoring integration to suit the needs of your organization. You can use the Performance Monitoring homepage to search or browse for transaction data."
 ---
 
+<Note>
+
+If you’re adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service’s performance characteristics maintain expectations.
+
+</Note>
+
 ## Sample Specific Transactions
 
 `traces_sampler`
@@ -11,9 +17,9 @@ description: "Configure our Performance Monitoring integration to suit the needs
 : If you want to sample specific Transaction, use the `traces_sampler` option:
 
 ```php
-Sentry\init([
+\Sentry\init([
     'dsn' => '___PUBLIC_DSN___',
-    'traces_sampler' => static function (Sentry\Tracing\SamplingContext $context): float {
+    'traces_sampler' => static function (\Sentry\Tracing\SamplingContext $context): float {
         if (false !== strpos($context->getTransactionContext()->getName(), 'health')) {
             // Discard transactions that have 'health' in their name
             return 0.0;
@@ -24,7 +30,7 @@ Sentry\init([
 ]);
 ```
 
-You can also define `traces_sampler` as a callable that receives a `Sentry\Tracing\SamplingContext $context` which should return a `float` (for the sample rate):
+You can also define `traces_sampler` as a callable that receives a `\Sentry\Tracing\SamplingContext $context` which should return a `float` (for the sample rate):
 
 ```php
 'traces_sampler' => array('App\Helpers\General\TracesSampler', 'sample')
@@ -32,39 +38,36 @@ You can also define `traces_sampler` as a callable that receives a `Sentry\Traci
 
 ### Instrument HTTP Calls
 
-To instrument HTTP calls using GuzzleHttp, you'll need to add a [handler](http://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client, which we provide within our SDK. Here's an example of it use:
+To instrument HTTP calls using GuzzleHttp, you'll need to add a [handler](https://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client, which we provide within our SDK. Here's an example of it use:
 
 ```php
-use Sentry\Tracing\GuzzleTracingMiddleware;
-...
-
-$stack = HandlerStack::create();
+$stack = \GuzzleHttp\HandlerStack::create();
 
 // This is the important line
-$stack->push(GuzzleTracingMiddleware::trace());
+$stack->push(\Sentry\Tracing\GuzzleTracingMiddleware::trace());
 // ----
 
-$client = new Client([
+$client = new \GuzzleHttp\Client([
     'base_uri' => 'http://httpbin.org',
     'timeout'  => 2.0,
-    'handler' => $stack
+    'handler'  => $stack
 ]);
 $client->request('GET', '/get');
 ```
 
 After adding this handler, you will receive spans for every request from this client.
 
-### Manual Instrumentation
+### Custom Instrumentation
 
-To manually instrument certain regions of your code, you can create a transaction to capture them.
+To instrument certain regions of your code, you can create a transaction to capture them.
 
 ```php
-$transactionContext = new TransactionContext();
+$transactionContext = new \Sentry\Tracing\TransactionContext();
 $transactionContext->setName('External Call');
 $transactionContext->setOp('http.caller');
 $transaction = \Sentry\startTransaction($transactionContext);
 
-$spanContext = new SpanContext();
+$spanContext = new \Sentry\Tracing\SpanContext();
 $spanContext->setOp('functionX');
 $span1 = $transaction->startChild($spanContext);
 
@@ -77,10 +80,10 @@ $transaction->finish();
 
 ### Retrieving a Transaction
 
-If you want to attach Spans to an already ongoing Transaction, you can use `SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `Transaction` if there is a running Transaction on the scope, otherwise it returns `null`.
+If you want to attach Spans to an already ongoing Transaction, you can use `\Sentry\SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `\Sentry\Tracing\Transaction` if there is a running Transaction on the scope, otherwise it returns `null`.
 
 ```php
-$transaction = SentrySdk::getCurrentHub()->getTransaction();
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
 
 if ($transaction instanceof Transaction) {
     $transaction->setName($routeName);
@@ -91,12 +94,12 @@ if ($transaction instanceof Transaction) {
 }
 ```
 
-You can also use this to filter for specific conditions when you don't want to send a `Transaction`. This example illustrates how:
+You can also use this to filter for specific conditions when you don't want to send a `\Sentry\Tracing\Transaction`. This example illustrates how:
 
 ```php
-$transaction = SentrySdk::getCurrentHub()->getTransaction();
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
 
-if ($transaction instanceof Transaction) {
+if ($transaction instanceof \Sentry\Tracing\Transaction) {
     // $transaction->setSampled(false); // __DONT__ SEND TRANSACTION
     // $transaction->setSampled(true); // __DO__ SEND TRANSACTION
 }
@@ -115,21 +118,33 @@ Currently, we recommend using Relay in `managed` mode (which is the default). Th
 Don't forget to update your `DSN` to point to your running Relay instance.
 After you set up Relay, you should see a dramatic improvement to the impact on your server.
 
+## Connecting Services
+
+<PlatformSection notSupported={["php.laravel"]}>
+
+If you are also using Performance Monitoring for [JavaScript](/platforms/javascript/performance/), depending on where your request originates, you can connect traces:
+1. For requests that start in your backend, by [adding a meta tag](/platforms/javascript/performance/connect-services/#pageload) in your HTML template that contains tracing information.
+2. For requests that start in JavaScript, by the SDK [setting a header](/platforms/javascript/performance/connect-services/#navigation-and-other-xhr-requests) on requests to your backend.
+
+Otherwise, backend services with Performance Monitoring connect automatically.
+
+</PlatformSection>
+
 <PlatformSection supported={["php.laravel"]}>
 
-### Connect Your Frontend
-
-If you are using Performance Monitoring also for [JavaScript](/platforms/javascript/performance/) you can use a helper function to continue the trace started from your backend.
+If you are also using Performance Monitoring for [JavaScript](/platforms/javascript/performance/) you can use a helper function to continue the trace started from your backend in order to [connect services](/platforms/javascript/performance/connect-services/#navigation-and-other-xhr-requests).
 Add the following line to your blade template rendering the `<head/>` of your page.
 
 ```php {filename:app.blade.php}
 <head>
 ...
-{!! Sentry\Laravel\Integration::sentryTracingMeta() !!}
+{!! \Sentry\Laravel\Integration::sentryTracingMeta() !!}
 ...
 </head>
 ```
 
 This helper function will render a meta tag similar to this `<meta name="sentry-trace" content="49879feb76c84743ba5034bd2d3f1ca3-7cb5535c930d4666-1"/>` which our JS SDK will pick up and continue the trace. Therefore your frontend and your backend are connected via the same trace.
+
+Otherwise other backend services with Performance Monitoring will connect automatically.
 
 </PlatformSection>

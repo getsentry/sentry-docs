@@ -1,5 +1,5 @@
 ---
-name: GCP Cloud Functions (Python)
+name: Google Cloud Functions (Python)
 doc_link: https://docs.sentry.io/platforms/python/guides/gcp-functions/
 support_level: production
 type: framework
@@ -11,7 +11,7 @@ Install our Python SDK using `pip`:
 pip install --upgrade sentry-sdk
 ```
 
-You can use the GCP Functions integration for the Python SDK like this:
+You can use the Google Cloud Functions integration for the Python SDK like this:
 
 ```python
 import sentry_sdk
@@ -43,7 +43,7 @@ sentry_sdk.init(
 )
 ```
 
-The timeout warning is sent only if the timeout in the GCP Function configuration is set to a value greater than one second.
+The timeout warning is sent only if the timeout in the Cloud Function configuration is set to a value greater than one second.
 
-<div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">If you are using another web framework inside of GCP Functions, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.</div>
+<div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">If you are using a web framework in your Cloud Function, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.</div>
 </div>

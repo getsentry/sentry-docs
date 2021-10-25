@@ -1,6 +1,6 @@
 ---
 title: "Query Builder"
-sidebar_order: 5
+sidebar_order: 10
 redirect_from:
   - /workflow/discover2/query-builder/
   - /performance-monitoring/discover-queries/query-builder/
@@ -37,14 +37,16 @@ import standardFields from "./standard-fields.json";
 
 ### Syntax
 
-The Query Builder syntax is identical to [Sentry's Search syntax](/product/sentry-basics/search/). After you enter a key field from above or a custom tag, you can use any of the referenced syntax. For example, `count(id)` gives you the number of times an event occurs. This can be written in the following ways:
+The Query Builder syntax is identical to [Sentry's Search syntax](/product/sentry-basics/search/). After you enter a key field from above or a custom tag, you can use any of the referenced syntax. For example, `count()` gives you the number of times an event occurs. This can be written in the following ways:
 
-- Exact match (is equal to): `count(id):99`
-- Upper bounds (is less than or equal to): `count(id):<99` or `count(id):<=99`
-- Lower bounds (is more than or equal to): `count(id):>99` or `count(id):>=99`
-- Multiple bounds (is more and less than): `count(id):>10 count(id):<20`
+- Exact match (is equal to): `count():99`
+- Upper bounds (is less than or equal to): `count():<99` or `count():<=99`
+- Lower bounds (is more than or equal to): `count():>99` or `count():>=99`
+- Multiple bounds (is more and less than): `count():>10 count():<20`
 
 Use `OR` and `AND` search conditions between filters. However `OR` cannot be used between aggregate and non-aggregate filters. For more details about these conditions, see [Using `OR` and `AND`](/product/sentry-basics/search/#using-or-and-and).
+
+You can also search multiple values for the same key by putting the values in a list. For example, "x:[value1, value2]" will find the same results as "x:value1 `OR` x:value2". You can learn more in our content covering [Multiple Values on the Same Key](/product/sentry-basics/search/#multiple-values-on-the-same-key).
 
 ### Tag Summary Filters
 
@@ -63,9 +65,13 @@ Each query has a interactive graph that reflects the data presented in the table
 - Total Period
 - Previous Period
 - Release Markers
-- Top 5 Period
+- Top Period
 - Total Daily
-- Top 5 Daily
+- Top Daily
+
+### Limit Options
+
+When the "Display" selection is either "Top Period" or "Top Daily", an optional limit can be set. The setting defaults to five, showing the top five results in the graph.
 
 ### Y-Axis Options
 
@@ -90,34 +96,19 @@ Above the table, click "Columns" to open a modal. This will show you a list of a
 
 Each function will ask you to assign a parameter. Some are required while others are optional. Functions will stack events based on the same values. If no functions are applied, the events in your Query Results will remain individually listed. Once you are done editing the columns, click "Apply" and results will be reflected in the Query Results. Keep in mind, the table may horizontall scroll if too many columns are added.
 
-### Resizing Columns
-
-You can resize columns by hovering over the column boundary, and clicking & dragging the boundary to resize the column to the desired width.
-
-### Sorting Columns
-
-Click on the column header you would like to sort. A down arrow sorts the column in descending order and an up arrow sorts the column in ascending order. This may refresh the table.
-
-### Export CSV
-
-If you want to take the data elsewhere, click on "Export" for a CSV file.
-
-<Alert>
-  Depending on the amount of data, the wait times can vary. The results are
-  limited to 10 million rows or 1GB, whichever comes first.
-</Alert>
-
-For a large export, you'll receive an email with the download link once it's ready. This will require further verification on the Sentry Download page. This contains a `SHA1` checksum of the file, which you can use to verify its integrity with the following command:
-
-```bash
-echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
-```
-
 ### Cell Filters
 
 Each cell in the table will have an ellipsis appear on hover. This will open a context menu with additional filtering capabilities depending on the value type. For example, you can selectively target a transaction to the search conditions bar by clicking on "Add to filter".
 
 ![Menu showing additional options to add to filter or exclude from filter](./discover-table-cell.png)
+
+### Adding Equations
+
+You can also add equations to your query using the table columns as equation variables, and the results will be displayed in the query results table. Learn more in [Adding Query Equations](query-equations/).
+
+### Sorting Columns
+
+Click on the column header you would like to sort. A down arrow sorts the column in descending order and an up arrow sorts the column in ascending order. This may refresh the table.
 
 ## Additional Query Actions
 
@@ -131,7 +122,22 @@ To rename a saved query, click on the pencil icon by the header and enter the de
 
 Share your queries as often as you want. You can share URLs with other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email, chat, etc.
 
-### Deleting queries
+### Export CSV
+
+If you want to take the data elsewhere, click on "Export" for a CSV file.
+
+For a large export, you'll receive an email with the download link once it's ready. This will require further verification on the Sentry Download page. This contains a `SHA1` checksum of the file, which you can use to verify its integrity with the following command:
+
+```bash
+echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
+```
+
+<Alert>
+  Depending on the amount of data, the wait times can vary. The results are
+  limited to 10 million rows or 1GB, whichever comes first.
+</Alert>
+
+### Deleting Queries
 
 <Alert>Deleting a saved query is irreversible.</Alert>
 

@@ -6,6 +6,7 @@ import Layout from "./layout";
 import SmartLink from "./smartLink";
 import TableOfContents from "./tableOfContents";
 import * as Sentry from "@sentry/gatsby";
+import Banner from "./banner";
 
 type GitHubCTAProps = {
   sourceInstanceName: string;
@@ -18,19 +19,51 @@ const GitHubCTA = ({
 }: GitHubCTAProps): JSX.Element => (
   <div className="github-cta">
     <small>
-      You can{" "}
-      <SmartLink
+    Help improve this content
+    </small>
+    <br></br>
+    <small>
+    Our documentation is open source and available on GitHub. Your contributions are welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would be better").
+    <div className={"muted"}>
+     <SmartLink
         to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
       >
-        edit this page
+         Suggest an edit to this page
       </SmartLink>{" "}
-      on GitHub.
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <SmartLink
+        to={`https://docs.sentry.io/contributing/`}
+      >
+        Contribute to Docs
+      </SmartLink>{" "}
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <SmartLink
+        to={`https://github.com/getsentry/sentry-docs/issues/new/choose`}
+      >
+        Report a problem
+      </SmartLink>{" "}
+      </div>
     </small>
   </div>
 );
 
+export type PageContext = {
+  title?: string;
+  description?: string;
+  excerpt?: string;
+  noindex?: boolean;
+  notoc?: boolean;
+  platform?: {
+    name: string;
+  };
+};
+
+type WrappedTOCProps = {
+  pageContext: PageContext;
+};
+
 const WrappedTOC = React.forwardRef(
-  (props, ref: React.RefObject<HTMLDivElement>) => {
+  (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
     return <TableOfContents {...props} contentRef={ref} />;
   }
 );
@@ -109,9 +142,12 @@ export default ({
         {(hasToc || prependToc) && (
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
             <div className="page-nav">
+              <Banner isModule={true} />
               <React.Fragment>
                 {prependToc}
-                {hasToc && <WrappedTOC ref={contentRef} />}
+                {hasToc && (
+                  <WrappedTOC ref={contentRef} pageContext={pageContext} />
+                )}
               </React.Fragment>
             </div>
           </div>

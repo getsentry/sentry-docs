@@ -1,5 +1,5 @@
 import React from "react";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 import { Nav } from "react-bootstrap";
 
 import "../css/screen.scss";
@@ -8,10 +8,11 @@ import SEO from "../components/seo";
 import Search from "../components/search";
 import SmartLink from "../components/smartLink";
 import { usePlatformList } from "../components/hooks/usePlatform";
-import NavbarProductDropdown from "../components/navbarProductDropdown";
 import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
 
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
+
+import Banner from "../components/banner";
 
 const HIGHLIGHTED_PLATFORMS = [
   "javascript",
@@ -30,6 +31,8 @@ const HIGHLIGHTED_PLATFORMS = [
   "apple",
   "java.spring-boot",
   "ruby.rails",
+  "flutter",
+  "unity"
 ];
 
 const IndexPage = () => {
@@ -65,7 +68,6 @@ const IndexPage = () => {
               <img src={SentryWordmarkSVG} />
             </a>
             <Nav className="justify-content-end" style={{ flex: 1 }}>
-              <NavbarProductDropdown />
               <NavbarPlatformDropdown />
               <Nav.Item>
                 <SmartLink className="nav-link" to="/api/">
@@ -121,7 +123,8 @@ const IndexPage = () => {
           </div>
         </div>
       </div>
-      <div className="index-container">
+      <Banner />
+      <div className="index-container pad-top">
         <div className="flex-row card-row">
           <a className="hover-card-link" href="/product/">
             Product Guides
@@ -145,27 +148,23 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/performance/getting-started/">
+                <a href="/product/performance/">
                   Performance Monitoring
                 </a>
               </li>
               <li>
-                <a href="/product/performance/distributed-tracing/">
+                <a href="/product/sentry-basics/tracing/distributed-tracing/">
                   Distributed Tracing
                 </a>
               </li>
               <li>
-                <a href="/product/alerts-notifications/">
-                  Alerts & Notifications
-                </a>
+                <a href="/product/releases/health/">Release Health</a>
               </li>
               <li>
                 <a href="/product/releases/">Releases</a>
               </li>
               <li>
-                <a href="/product/sentry-basics/search/">
-                  Sentry Basics: Search
-                </a>
+                <a href="/product/cli/">Sentry-CLI</a>
               </li>
             </ul>
           </div>
@@ -206,10 +205,9 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/performance/metrics/">Performance Metrics</a>
-              </li>
-              <li>
-                <a href="/product/releases/health/">Monitor Release Health</a>
+                <a href="/product/alerts-notifications/">
+                  Alerts & Notifications
+                </a>
               </li>
             </ul>
           </div>

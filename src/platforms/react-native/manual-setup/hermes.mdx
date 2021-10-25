@@ -1,0 +1,55 @@
+---
+title: Hermes
+sidebar_order: 30
+description: "Learn about using the Hermes engine with our React Native SDK."
+redirect_from:
+  - /platforms/react-native/hermes/
+---
+
+Sentry added support for `react-native` builds that use the `hermes` engine, which required changes to the sentry SDK, `sentry-cli` as well as Sentry itself.
+
+Sentry customers using the SaaS product (sentry.io) will need to update the SDK, and `sentry-cli`.
+The minimum required version for the SDK is `@sentry/react-native` [SDK version `1.3.3`](https://github.com/getsentry/sentry-react-native/releases/tag/1.3.3),
+and `@sentry/cli` [version `1.51.1`](https://github.com/getsentry/sentry-cli/releases/tag/1.51.1).
+
+For Sentry open source, self-hosted users, the minimum version required is [f07352b](https://hub.docker.com/r/getsentry/sentry/tags?page=1&name=f07352b).
+
+Once you have the minimum version of the SDK, Sentry provides the standard integration as described in the [React Native Sentry documentation](/platforms/react-native/).
+
+## Source Maps
+
+If you do not need custom sourcemaps, the `sentry.gradle` build step fully supports Hermes source maps.
+
+## Custom Source Maps
+
+If you are manually bundling and building React Native apps for Android, follow this three-step process. For Hermes on iOS, follow the [normal source maps guide](/platforms/react-native/sourcemaps/).
+
+### Compile for Android
+
+1. Bundle/minify with `metro` (`react-native`) to get the packager source map (`.packager.map`):
+
+```bash {tabTitle:Android}
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map
+```
+
+2. Compile to bytecode using `hermes` to get the compiler source map (`.hbc.map`):
+
+ <Note>
+ 
+ `OS-BIN` is `osx-bin`, `win64-bin`, or `linux64-bin`, depending on which operating system you are using.
+ 
+ </Note>
+
+```bash {tabTitle:Android}
+node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=index.android.bundle.hbc index.android.bundle
+```
+
+3. Merge the two source maps using `compose-source-maps` to get the final source map (`.map`):
+
+```bash {tabTitle:Android}
+node node_modules/react-native/scripts/compose-source-maps.js index.android.bundle.packager.map index.android.bundle.hbc.map -o index.android.bundle.map
+```
+
+### Upload the Bundle and Source Maps
+
+Upload your source maps following [Step 3 on the normal source maps guide](/platforms/react-native/sourcemaps/#3-upload-the-bundle-and-source-maps).

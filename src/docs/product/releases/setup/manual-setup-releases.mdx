@@ -1,0 +1,127 @@
+---
+title: Manual Setup
+sidebar_order: 20
+description: "Learn how to provide release information to Sentry if you don’t want Sentry to connect to your repository."
+---
+
+If you don’t want [install a repository integration](/product/releases/setup/release-automation/) so Sentry can connect to your repository, or you’re using an unsupported repository provider or VCS (for example, Perforce), you can tell Sentry about your raw commit metadata via the CLI or the API.
+
+## Using the CLI
+
+```bash
+# Assumes you're in a git repository
+export SENTRY_AUTH_TOKEN=...
+export SENTRY_ORG=my-org
+VERSION=$(sentry-cli releases propose-version)
+
+# Create a release
+sentry-cli releases new -p project1 -p project2 $VERSION
+
+# Associate commits with the release
+sentry-cli releases set-commits --auto $VERSION
+```
+
+If you don't have a repo-based integration associated with your sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag.
+
+Alternatively, you can use the `--local` flag to enable this behavior by default.
+
+```bash
+sentry-cli releases set-commits --local $VERSION
+```
+
+## Using the API
+
+To tell Sentry about your commit metadata via the API use the [create release endpoint](/api/releases/create-a-new-release-for-an-organization/).
+
+In order for Sentry to use your commits, you must format your commits to match this form:
+
+```json
+{
+  "commits": [
+    {
+      "patch_set": [
+        { "path": "path/to/added-file.html", "type": "A" },
+        { "path": "path/to/modified-file.html", "type": "M" },
+        { "path": "path/to/deleted-file.html", "type": "D" }
+      ],
+      "repository": "owner-name/repo-name",
+      "author_name": "Author Name",
+      "author_email": "author_email@example.com",
+      "timestamp": "2018-09-20T11:50:22+03:00",
+      "message": "This is the commit message.",
+      "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+  ]
+}
+```
+
+`patch_set`
+
+: A list of the files that have been changed in the commit. Specifying the `patch_set` is necessary to power suspect commits and suggested assignees. It consists of two parts:
+
+    `path`
+    : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
+
+    `type`
+    : The types of changes that happend in that commit. The options are:
+        - `Add (A)`
+        - `Modify (M)`
+        - `Delete (D)`
+
+`repository`
+
+: The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
+
+`author_email`
+
+: The commit author's email is required to enable the suggested assignee feature.
+
+`author_name`
+
+: The commit author's name may also be included.
+
+`timestamp`
+
+: The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
+
+`message`
+
+: The commit message.
+
+`id`
+
+: The commit ID.
+
+### Create the Release with Patch Data
+
+This example is of a full request to create the release endpoint that includes commit metadata:
+
+```bash
+curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
+  -X POST \
+  -H 'Authorization: Bearer <Token>' \
+  -H 'Content-Type: application/json' \
+  -d '
+ {
+ "version": "2.0rc2",
+ "projects":["project-1","project-2"],
+ "commits":[
+     {
+        "patch_set": [
+            {"path": "path/to/added-file.html", "type": "A"},
+            {"path": "path/to/modified-file.html", "type": "M"},
+            {"path": "path/to/deleted-file.html", "type": "D"}
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
+        "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+ ]
+ }
+ '
+```
+
+For more information, see the [API reference](/api/releases/create-a-new-release-for-an-organization/).

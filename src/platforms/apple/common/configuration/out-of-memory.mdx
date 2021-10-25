@@ -1,0 +1,41 @@
+---
+title: Out Of Memory
+sidebar_order: 10
+description: "Learn how to turn off Out Of Memory"
+---
+
+This integration tracks out-of-memory (OOM) crashes based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst and works only if the application was in the foreground.
+
+When your application uses too much RAM, the operating system kills your app without a normal termination process. Your process doesn't receive a signal or any other type of information to ensure an OOM occurs. As a result, in the Apple SDK, we track out-of-memory crashes during the app start based on heuristics.
+When a user launches the app, the SDK checks the following statements and reports an OOM if all of them are true:
+
+* The app didn't crash on the previous run.
+* The app was in the foreground/active.
+* The user launched the app at least once. When your app produces an OOM during the first launch, the SDK can't detect it.
+* There was no debugger attached to the process of the app. If there was, our logic would falsely report OOMs whenever you restarted the app in development.
+* The OS did not update your app.
+* The user didn't update the OS of their device.
+* The user didn't terminate the app manually, and neither did the OS.
+
+If you're interested in the implementation details, you can check out [the code](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryOutOfMemoryLogic.m) to find out more.
+
+If you'd like to opt out of this feature, you can do so using options:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableOutOfMemoryTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableOutOfMemoryTracking = NO;
+}];
+
+```

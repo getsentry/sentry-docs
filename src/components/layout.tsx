@@ -15,6 +15,10 @@ type Props = {
       name?: string;
       [key: string]: any;
     };
+    guide?: {
+      name?: string;
+      [key: string]: any;
+    };
   };
 };
 
@@ -23,6 +27,11 @@ export default ({
   sidebar,
   pageContext = {},
 }: Props): JSX.Element => {
+  const searchPlatforms = [
+    pageContext.platform?.name,
+    pageContext.guide?.name,
+  ].filter(Boolean);
+
   return (
     <div className="document-wrapper">
       <div className="sidebar">
@@ -44,8 +53,8 @@ export default ({
         <div className="flex-grow-1">
           <div className="d-none d-md-block navbar-right-half">
             <Navbar
-              {...(pageContext.platform && {
-                platforms: [pageContext.platform.name],
+              {...(searchPlatforms.length > 0 && {
+                platforms: searchPlatforms,
               })}
             />
           </div>
@@ -54,6 +63,7 @@ export default ({
             <div className="pb-3">
               <Breadcrumbs />
             </div>
+
             {children}
           </section>
         </div>

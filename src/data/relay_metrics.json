@@ -1,45 +1,17 @@
 [
   {
     "type": "Counter",
-    "name": "connector.closed",
-    "description": "Number of upstream connections closed due to connection timeouts.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.errors",
-    "description": "Number of upstream connections that experienced errors.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.opened",
-    "description": "Number of upstream connections opened.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.reused",
-    "description": "Number of requests that reused an already open upstream connection.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.timeouts",
-    "description": "Number of upstream connections that experienced a timeout.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "connector.wait_queue",
-    "description": "The number of upstream requests queued up for a connection in the connection pool.\n\nRelay uses explicit queueing for most requests. This wait queue should almost always be\nempty, and a large number of queued requests indicates a severe bug.",
-    "features": []
-  },
-  {
-    "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.",
     "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.corrupted",
+    "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Timer",
@@ -92,7 +64,7 @@
   {
     "type": "Timer",
     "name": "event.wait_time",
-    "description": "Time spent between receiving a request in Relay (that is, beginning of request handling) and\nthe start of synchronous processing in the EventProcessor. This metric primarily indicates\nbacklog in event processing.",
+    "description": "Time spent between receiving a request in Relay (that is, beginning of request handling) and\nthe start of synchronous processing in the EnvelopeProcessor. This metric primarily\nindicates backlog in event processing.",
     "features": []
   },
   {
@@ -140,7 +112,7 @@
   {
     "type": "Counter",
     "name": "events.outcomes",
-    "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
+    "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n- `to`: Describes the destination of the outcome. Can be either 'kafka' (when in\nprocessing mode) or 'http' (when outcomes are enabled in an external relay).\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
     "features": [
       "processing"
     ]
@@ -149,6 +121,36 @@
     "type": "Histogram",
     "name": "http_queue.size",
     "description": "The number of upstream requests queued up for sending.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity. If all connections are busy, they are\nqueued, which is reflected in this metric.\n\nThis metric is tagged with:\n- `priority`: The queueing priority of the request, either `\"high\"` or `\"low\"`. The\npriority determines precedence in executing requests.\n\nThe number of concurrent connections can be configured with:\n- `limits.max_concurrent_requests` for the overall number of connections\n- `limits.max_concurrent_queries` for the number of concurrent high-priority requests",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "metrics.buckets",
+    "description": "The total number of metric buckets in Relay's metrics aggregator.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.flushed",
+    "description": "The total number of metric buckets flushed in a cycle across all projects.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.flushed_per_project",
+    "description": "The number of metric buckets flushed in a cycle for each project.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This histogram\nis logged for each project that is being flushed. The count of the histogram values is\nequivalent to the number of projects being flushed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.parsing_failed",
+    "description": "Number of times that parsing a metrics bucket item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "metrics.buckets.scan_duration",
+    "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.",
     "features": []
   },
   {
@@ -204,6 +206,12 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "project_state.no_cache",
+    "description": "Number of times a project config was requested with `.no-cache`.\n\nThis effectively counts the number of envelopes or events that have been sent with a\ncorresponding DSN. Actual queries to the upstream may still be deduplicated for these\nproject state requests.\n\nA maximum of 1 such requests per second is allowed per project key. This metric counts only\npermitted requests.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "project_state.pending",
     "description": "Number of projects in the in-memory project cache that are waiting for their state to be\nupdated.\n\nSee `project_cache.size` for more description of the project cache.",
@@ -246,6 +254,12 @@
     "features": []
   },
   {
+    "type": "Timer",
+    "name": "requests.timestamp_delay",
+    "description": "The delay between the timestamp stated in a payload and the receive time.\n\nSDKs cannot transmit payloads immediately in all cases. Sometimes, crashes require that\nevents are sent after restarting the application. Similarly, SDKs buffer events during\nnetwork downtimes for later transmission. This metric measures the delay between the time of\nthe event and the time it arrives in Relay. The delay is measured after clock drift\ncorrection is applied.\n\nOnly payloads with a delay of more than 1 minute are captured.\n\nThis metric is tagged with:\n\n- `category`: The data category of the payload. Can be one of: `event`, `transaction`,\n`security`, or `session`.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "responses.status_codes",
     "description": "Number of completed HTTP requests.\n\nThis metric is tagged with:\n\n- `status_code`: The HTTP status code number.\n- `method`: The HTTP method used in the request in uppercase.\n- `route`: Unique dashed identifier of the endpoint.",
@@ -273,6 +287,12 @@
     "type": "Set",
     "name": "unique_projects",
     "description": "Represents the number of active projects in the current slice of time",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "upstream.network_outage",
+    "description": "The state of Relay with respect to the upstream connection.\nPossible values are `0` for normal operations and `1` for a network outage.",
     "features": []
   },
   {

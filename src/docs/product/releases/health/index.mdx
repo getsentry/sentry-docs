@@ -1,0 +1,145 @@
+---
+title: Health
+sidebar_order: 40
+redirect_from:
+  - /workflow/releases/health/
+description: "Monitor the health of releases by observing user adoption, usage of the application, percentage of crashes, and session data."
+---
+
+Monitor the health of releases by observing user adoption, usage of the application, percentage of [crashes](#crash), and [session data](#session). Release health provides insight into the impact of crashes and bugs related to user experience and reveals trends with each new issue through the release details, graphs, and filters.
+
+## Enabling Release Health
+
+Many SDKs automatically manage the start and end of sessions when the SDK is initialized, but release health configuration is key to ensuring you are receiving useful data, so check our information on [which SDKs support release health](/product/releases/health/setup/) for links to configuring the SDK, as needed.
+
+## Release Health Data
+
+Once you configure your SDK, Sentry connects the data to the specific release of your application and the associated code.
+
+### Session
+
+The primary component Sentry uses to monitor health is a _session_, which represents the interaction between the user and the application.
+
+Sentry distinguishes between two kinds of sessions:
+
+- User-mode/application-mode sessions
+- Server-mode/request-mode sessions
+
+#### User-Mode/Application-Mode Sessions {#application-mode-sessions}
+
+<ul>
+
+<li style="list-style-type:none;">A user- or application-mode session begins with the start of the application. Or, it begins with bringing the already started application back from background to the foreground.</li>
+
+<br></br>
+
+<li style="list-style-type:none;">This type of session ends with the closing of the application or with the application being sent to the background. If the application is in the background for less than 30 seconds, we do not start the session again. Applications that are active even on the background (for example, a music player) should track the sessions manually for the background process.</li>
+
+</ul>
+
+#### Server-Mode/Request-Mode Sessions {#request-mode-sessions}
+
+<ul>
+
+<li style="list-style-type:none;">Server- or request-mode sessions roughly correspond to HTTP requests or RPC calls in a server setting. A session is started when the server receives a request, and terminates when the server sends a response.</li>
+
+<br></br>
+
+<li style="list-style-type:none;">These are typically high in volume since each session corresponds to a single request.</li>
+
+</ul>
+
+Sessions, whether application-mode or request-mode, are submitted to Sentry so you can track the usage and adoption of your application. When a user of your application experiences a crash, error, or abnormal exit, the session will be flagged accordingly, and Sentry calculates derived metrics. The metrics include data such as the number of users that didn't experience a crash in the specified time range.
+
+In terms of which mode a project runs in, Sentry is able to automatically detect if it is in a server setting and so should run in server-mode/request-mode or if it is in an application setting and so should run in user-mode/application-mode
+
+### Active Sessions/Users
+
+Active sessions are sessions that started in the application in the last 24 hours.
+
+Active users are users who started the application at least once in the last 24 hours.
+
+Depending on your "Display" selection, the sort options for the page change. To sort releases by active sessions, select "Sessions" in the "Display" dropdown, and to sort by active users, select "Users".
+
+![Sort By: Active Sessions dropdown](release_active_sessions.png)
+
+![Sort By: Active Users dropdown](release_active_users.png)
+
+### Crash
+
+The app had an explicit unhandled error or hard crash. You'll typically be able to view the corresponding issue in [sentry.io](https://sentry.io) that captures this event, and errors that did not cause the end of the application should not be included. To search for them in **Discover** or on the **Issues** page, filter by `error.unhandled:true `. The number of unhandled events is not expected to match the number of crashed sessions because sessions are not subject to [Inbound Filters](/product/data-management-settings/filtering/) or [Sampling](/platform-redirect/?next=/configuration/sampling/).
+
+### Crash Free Sessions/Users
+
+"Crash Free Sessions" is the percentage of sessions in the specified time range not ended by a crash of the application.
+
+"Crash Free Users" is the percentage of distinct users who did not experience a crash during the specified time period.
+
+Depending on your "Display" selection, the sort options for the page change. To sort releases by crash free sessions, select "Sessions" in the "Display" dropdown, and to sort by crash free users, select "Users".
+
+![Sort By: Crash Free Sessions dropdown](release_crash_free_sessions.png)
+
+![Sort By: Crash Free Users dropdown](release_crash_free_users.png)
+
+### Crashed Users
+
+Number of users that experienced a crash in the specified time range.
+
+### Release Adoption
+
+Depending on the selected display option, we show either:
+- Session adoption: the number of sessions of a specific release in the last 24 hours.
+- User based adoption: the number of users who started the application at least once during the last 24 hours of a specific release.
+
+Adoption progress bar is calculated as a percentage of sessions/users in this release vs all releases in the project, in the last 24 hours.
+
+### Release Adoption Chart
+
+<Note>
+
+This feature is applicable only if the project selected is available for mobile or desktop devices.
+
+</Note>
+
+If you select a project that has release health configured, and there are releases and user/session data in the selected time period, an adoption chart is displayed. The chart provides you with adoption percentages for each release in the project, over time.
+
+Each release is represented by a line in the chart, and you can navigate to the [Release Details](/product/releases/health/release-details/) by clicking it.
+
+![Release Adoption Chart](release_adoption_chart.png)
+
+The chart does not display if you don't select a project or if you select multiple projects.
+
+
+### Adoption Stages
+
+Adoption stage is a high-level overview of the usage your release is seeing relative to other releases. It is calculated every hour by processing your sessions over the last six hours.
+For each release, the release's percentage of sessions is calculated against all sessions in the same environment and project. It's then marked as being in one of three stages, based on a threshold of 10%. These stages are:
+- Adopted - The release's percentage of sessions compared to all sessions is above the threshold. That is, the release was seen in 10% or more of sessions over all releases in the last six hours.
+- Low Adoption - The release's percentage of sessions compared to all sessions that are below the threshold. That is, the release was seen in less than 10% of sessions over all the releases in the last six hours.
+- Replaced -  The release was previously tagged as "Adopted", but no longer meets the minimum threshold. "Replaced" releases that reach the threshold will once again be marked as "Adopted".
+
+<Note>
+
+Adoption Stage labels are only displayed when you filter down to a single environment.
+
+</Note>
+
+### Release Version
+
+A shorter version of the name = name without the package or short version of the hash.
+
+### Abnormal
+
+The application timed out, froze, or was forced to quit by the operating system. There is usually no corresponding Sentry issue, as this is a passive action.
+
+### Errored
+
+The app shut down normally, but the session experienced handled errors. Typically, you'll be able to view any issues/errors in sentry.io.
+
+### Healthy
+
+The session ends normally and no errors occurred during its lifetime.
+
+Learn more on these pages:
+
+<PageGrid />

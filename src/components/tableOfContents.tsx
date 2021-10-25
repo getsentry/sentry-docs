@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as Sentry from "@sentry/gatsby";
+import GuideGrid from "./guideGrid";
+import { PageContext } from "./basePage";
 
 type Item = {
   title?: string;
@@ -56,10 +58,12 @@ const getHeadings = (element: HTMLElement): Item[] => {
 
 type Props = {
   contentRef: React.RefObject<HTMLElement>;
+  pageContext?: PageContext;
 };
 
-export default ({ contentRef }: Props) => {
+export default ({ contentRef, pageContext }: Props) => {
   const [items, setItems] = useState<Item[]>(null);
+  const { platform } = pageContext;
 
   useEffect(() => {
     if (!items && contentRef.current) {
@@ -90,6 +94,14 @@ export default ({ contentRef }: Props) => {
         <h6>On this page</h6>
       </div>
       <ul className="section-nav">{recurse(items)}</ul>
+      {platform && (
+        <>
+          <div className="doc-toc-title">
+            <h6>Related Guides</h6>
+          </div>
+          <GuideGrid platform={platform.name} className="section-nav" />
+        </>
+      )}
     </div>
   );
 };

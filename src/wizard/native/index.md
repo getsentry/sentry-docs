@@ -22,7 +22,7 @@ int main(void) {
   /* ... */
 
   // make sure everything flushes
-  sentry_shutdown();
+  sentry_close();
 }
 ```
 
@@ -38,3 +38,7 @@ sentry_capture_event(sentry_value_new_message_event(
   /* message */ "It works!"
 ));
 ```
+
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.

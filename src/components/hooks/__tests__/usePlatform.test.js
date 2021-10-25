@@ -45,6 +45,25 @@ describe("usePlatform", () => {
     expect(result.current[0].key).toBe("javascript");
   });
 
+  it("allows explicitly requesting a platform", () => {
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{}}>{children}</PageContext.Provider>
+    );
+
+    useLocalStorage.mockReturnValue([null, jest.fn()]);
+    useLocation.mockReturnValue({
+      pathname: "/",
+    });
+    useStaticQuery.mockImplementation(() => ({
+      allPlatform: {
+        nodes: PLATFORMS,
+      },
+    }));
+
+    const { result } = renderHook(() => usePlatform("ruby"), { wrapper });
+    expect(result.current[0].key).toBe("ruby");
+  });
+
   it("identifies platform from route", () => {
     const wrapper = ({ children }) => (
       <PageContext.Provider value={{ platform: { name: "ruby" } }}>

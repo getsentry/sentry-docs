@@ -11,9 +11,10 @@ Framework](https://github.com/huge-success/sanic). We support the following vers
 - `0.8`
 - `18.12`
 - `19.12`
+- `20.12`
 - Any version of the form `x.12` (LTS versions).
 
-**We do not support the latest version of Sanic.** Versions between LTS releases [have introduced breaking changes in the past](https://github.com/huge-success/sanic/issues/1532) without prior notice, so we cannot support them as they are too fast of a moving target.
+**We do support all versions of Sanic.** However, Sanic versions between LTS releases should be considered Early Adopter. We may not support all the features in these non-LTS versions, since non-LTS versions change quickly and [have introduced breaking changes in the past](https://github.com/huge-success/sanic/issues/1532), without prior notice.
 
 A Python version of 3.6 or greater is also required.
 

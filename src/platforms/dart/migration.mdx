@@ -1,0 +1,37 @@
+---
+title: Migration Guide
+sidebar_order: 1000
+---
+
+## Migrating From `sentry` `5.1.x` to `sentry` `6.0.0`
+
+* `Sentry.currentHub` was removed. Please use the static methods on `Sentry`
+* `SentryOptions.cacheDirSize` was renamed to `SentryOptions.maxCacheItems`
+* `EventProcessor` was changed from a callback to an interface
+* The data type from the following options was changed from `int` to `Duration`. The old options are still present but deprecated and will be removed in a future version.
+  * `SentryOptions.autoSessionTrackingIntervalMillis` to `SentryOptions.autoSessionTrackingInterval`
+  * `SentryOptions.anrTimeoutIntervalMillis` to `SentryOptions.anrTimeoutInterval`
+* The `beforeSend` callback now accepts async code. The method signature changed from `SentryEvent? Function(SentryEvent event, {dynamic hint});` to `FutureOr<SentryEvent?> Function(SentryEvent event, {dynamic hint});`. While this is technically a breaking change, your code probably is still valid.
+* Sentry accepts multiple exceptions and multiple threads. If you haven't set exceptions, there's no need to do anything.
+
+### Sentry Self Hosted Compatibility
+
+* Starting with version `6.0.0` of the `sentry`, [Sentry's version >= v20.6.0](https://github.com/getsentry/onpremise/releases) is required. This only applies to on-premise Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+## Migrating From `sentry` `4.0.x` to `sentry` `5.0.0`
+
+* Sentry's Dart SDK version 5.0.0 and above requires Dart 1.12.0
+* Fix: Prefix classes with Sentry
+  * A couple of classes were often conflicting with user's code.
+    As a result, this change renames the following classes:
+    * `App` -> `SentryApp`
+    * `Browser` -> `SentryBrowser`
+    * `Device` -> `SentryDevice`
+    * `Gpu` -> `SentryGpu`
+    * `Integration` -> `SentryIntegration`
+    * `Message` -> `SentryMessage`
+    * `OperatingSystem` -> `SentryOperatingSystem`
+    * `Orientation` -> `SentryOrientation`
+    * `Request` -> `SentryRequest`
+    * `User` -> `SentryUser`
+* Return type of `Sentry.close()` changed from `void` to `Future<void>` and `Integration.close()` changed from `void` to `FutureOr<void>`

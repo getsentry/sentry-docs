@@ -1,0 +1,70 @@
+The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level, and a `SentryAppender` that logs to the Sentry server at the `ERROR` level.
+
+<Note>
+
+The `ConsoleAppender` is provided only as an example of a non-Sentry appender set to a different logging threshold, similar to what you may already have in your project.
+
+</Note>
+
+```xml
+<configuration>
+    <!-- Configure the Console appender -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
+    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+        <options>
+            <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+            <dsn>___PUBLIC_DSN___</dsn>
+        </options>
+    </appender>
+
+    <!-- Enable the Console and Sentry appenders, Console is provided as an example
+ of a non-Sentry logger that is set to a different logging threshold -->
+    <root level="INFO">
+        <appender-ref ref="Console" />
+        <appender-ref ref="Sentry" />
+    </root>
+</configuration>
+```
+
+### DSN Configuration
+
+Note that **you need to configure your DSN** (client key).
+
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+        <!-- NOTE: Replace the test DSN below with your DSN to see the events from this app in sentry.io -->
+        <dsn>___PUBLIC_DSN___</dsn>
+    </options>
+</appender>
+```
+
+If the DSN is not present in the `logback.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+
+### Minimum Log Level
+
+Two log levels are used to configure this integration:
+
+1. Configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry.
+2. Configure the lowest level a message has to be to become a breadcrumb (`minimumBreadcrumbLevel`).
+
+Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries to decide what to keep as breadcrumb or sent as event. Set the `SentryAppender` log level configuration to a value lower than what is set for the `minimumBreadcrumbLevel` and `minimumEventLevel` so that `SentryAppender` receives these log messages.
+
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+        <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+        <dsn>___PUBLIC_DSN___</dsn>
+    </options>
+    <!-- Optionally change minimum Event level. Default for Events is ERROR -->
+    <minimumEventLevel>WARN</minimumEventLevel>
+    <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
+    <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
+</appender>
+```

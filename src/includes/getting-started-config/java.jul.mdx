@@ -1,0 +1,58 @@
+The following example configures a `ConsoleHandler` that logs to standard out at the `INFO` level and a `SentryHandler` that logs to the Sentry server at the `WARN` level. The `ConsoleHandler` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+
+<Note>
+
+The `ConsoleHandler` is provided only as an example of a non-Sentry appender set to a different logging threshold, similar to what you may already have in your project.
+
+</Note>
+
+Example configuration using the `logging.properties` format:
+
+```properties {tabTitle:logging.properties}
+# Enable the Console and Sentry handlers
+handlers=java.util.logging.ConsoleHandler,io.sentry.jul.SentryHandler
+
+# Set the default log level to INFO
+.level=INFO
+
+# Override the Sentry handler log level to WARNING
+io.sentry.jul.SentryHandler.level=WARNING
+```
+
+When starting your application, add the `java.util.logging.config.file` to the system properties, with the full path to the `logging.properties` as its value:
+
+```bash
+java -Djava.util.logging.config.file=/path/to/app.properties MyClass
+```
+
+### DSN Configuration
+
+Sentry reads the DSN from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+
+```properties {tabTitle:sentry.properties}
+dsn=___PUBLIC_DSN___
+```
+
+### Minimum Log Level
+
+Two log levels are used to configure this integration:
+
+1. Configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry.
+2. Configure the lowest level a message has to be to become a breadcrumb (`minimumBreadcrumbLevel`).
+
+Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.config` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `config` or `warning` messages. For this to work, `SentryHandler` needs to receive **all** log entries to decide what to keep as breadcrumb or send as event. Set the `SentryHandler` log level configuration to a value lower than what is set for the `minimumBreadcrumbLevel` and `minimumEventLevel` so that `SentryHandler` receives these log messages.
+
+```properties {tabTitle:logging.properties}
+io.sentry.jul.SentryHandler.minimumEventLevel=INFO
+io.sentry.jul.SentryHandler.minimumBreadcrumbLevel=CONFIG
+io.sentry.jul.SentryHandler.level=CONFIG
+...
+```
+
+### String Formatting Style
+
+By default, [MessageFormat#format](https://docs.oracle.com/javase/8/docs/api/java/text/MessageFormat.html#format-java.lang.Object:A-java.lang.StringBuffer-java.text.FieldPosition-) method is used to render parameterized log messages. It can be changed to use [String#format](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html#format-java.lang.String-java.lang.Object...-) by setting `printfStyle` property to `true`:
+
+```properties {tabTitle:logging.properties}
+io.sentry.jul.SentryHandler.printfStyle=true
+```

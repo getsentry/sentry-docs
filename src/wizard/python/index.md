@@ -17,6 +17,10 @@ Import and initialize the Sentry SDK early in your application's setup:
 import sentry_sdk
 sentry_sdk.init(
     "___PUBLIC_DSN___",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
     traces_sample_rate=1.0
 )
 ```

@@ -1,0 +1,12 @@
+The following example creates a transaction span to time runs of an expensive operation on items from a channel. Timing for each operation is sent to Sentry and grouped by transaction name:
+
+```go
+ctx := context.Background()
+
+for item := range ch {
+	span := sentry.StartSpan(ctx, "doWork",
+		sentry.TransactionName(fmt.Sprintf("doWork: %s", item.Type)))
+	doWork(span.Context(), item) // doWork may create additional spans
+	span.Finish()
+}
+```

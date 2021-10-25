@@ -1,0 +1,46 @@
+```java
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+  options.setTracesSampler(context -> {
+    // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+    Boolean parentSampled = context.getTransactionContext().getParentSampled();
+    if (parentSampled != null) {
+      return parentSampled ? 1.0 : 0.0;
+    }
+    if (/* make a decision based on `samplingContext` */) {
+      // Drop this transaction, by setting its sample rate to 0%
+      return 0.0;
+    } else if (/* ... */) {
+      // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+      return 0.1;
+    }
+    // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+    return null;
+  });
+});
+```
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.SentryOptions.TracesSamplerCallback
+
+Sentry.init { options ->
+  options.tracesSampler = TracesSamplerCallback { context ->
+    // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+    val parentSampled = context.transactionContext.parentSampled
+    if (parentSampled != null) {
+      return@TracesSamplerCallback if (parentSampled) 1.0 else 0.0
+    }
+    if (/* make a decision based on `samplingContext` */) {
+      // Drop this transaction, by setting its sample rate to 0%
+      return@TracesSamplerCallback 0.0
+    } else if (/* ... */) {
+      // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+      return@TracesSamplerCallback 0.1
+    }
+    // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+    return@TracesSamplerCallback null
+  }
+}
+```

@@ -1,7 +1,7 @@
 ---
 title: Configuration
 sidebar_order: 10
-description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object."
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init method as an object."
 ---
 
 <Alert level="warning" title="Note">
@@ -37,6 +37,12 @@ In code:
 import io.sentry.Sentry;
 
 Sentry.init("___PUBLIC_DSN___");
+```
+
+```kotlin
+import io.sentry.Sentry
+
+Sentry.init("___PUBLIC_DSN___")
 ```
 
 ## Configuration methods {#configuration-methods}
@@ -83,6 +89,12 @@ import io.sentry.Sentry;
 Sentry.init("___PUBLIC_DSN___");
 ```
 
+```kotlin
+import io.sentry.Sentry
+
+Sentry.init("___PUBLIC_DSN___")
+```
+
 Sentry **will not** be able to do anything with events until this line is run, so this method of configuration is not recommended if you might have errors occur during startup. In addition, by passing a hardcoded DSN you are no longer able to override the DSN at runtime via Java System Properties or System Environment Variables.
 
 ### Configuration via the DSN
@@ -106,7 +118,7 @@ The following options can all be configured as described above: via a `sentry.pr
 To set the application version that will be sent with each event, use the `release` option:
 
 ```
-release=1.0.0
+release=my-project-name@2.3.12
 ```
 
 #### Distribution
@@ -114,7 +126,7 @@ release=1.0.0
 To set the application distribution that will be sent with each event, use the `dist` option:
 
 ```
-release=1.0.0
+release=my-project-name@2.3.12
 dist=x86
 ```
 
@@ -160,6 +172,16 @@ MDC.put("bar", "value2");
 
 // This sends an event where the 'foo' and 'bar' MDC values are set as additional tags
 logger.error("This is a test");
+```
+
+```kotlin
+import org.slf4j.MDC
+
+MDC.put("foo", "value1")
+MDC.put("bar", "value2")
+
+// This sends an event where the 'foo' and 'bar' MDC values are set as additional tags
+logger.error("This is a test")
 ```
 
 ### Extra Data
@@ -413,20 +435,37 @@ At times, you may require custom functionality that is not included in the Java 
 
 ```java
 public class MySentryClientFactory extends DefaultSentryClientFactory {
-    @Override
-    public SentryClient createSentryClient(Dsn dsn) {
-        SentryClient sentryClient = new SentryClient(createConnection(dsn), getContextManager(dsn));
+  @Override
+  public SentryClient createSentryClient(Dsn dsn) {
+    SentryClient sentryClient = new SentryClient(createConnection(dsn), getContextManager(dsn));
 
-        /*
-         Create and use the ForwardedAddressResolver, which will use the
-         X-FORWARDED-FOR header for the remote address if it exists.
-          */
-        ForwardedAddressResolver forwardedAddressResolver = new ForwardedAddressResolver();
-        sentryClient.addBuilderHelper(new HttpEventBuilderHelper(forwardedAddressResolver));
+    /*
+     Create and use the ForwardedAddressResolver, which will use the
+     X-FORWARDED-FOR header for the remote address if it exists.
+     */
+    ForwardedAddressResolver forwardedAddressResolver = new ForwardedAddressResolver();
+    sentryClient.addBuilderHelper(new HttpEventBuilderHelper(forwardedAddressResolver));
 
-        sentryClient.addBuilderHelper(new ContextBuilderHelper(sentryClient));
-        return configureSentryClient(sentryClient, dsn);
-    }
+    sentryClient.addBuilderHelper(new ContextBuilderHelper(sentryClient));
+    return configureSentryClient(sentryClient, dsn);
+  }
+}
+```
+
+```kotlin
+class MySentryClientFactory : DefaultSentryClientFactory() {
+  override fun createSentryClient(dsn: Dsn): SentryClient {
+    val sentryClient = SentryClient(createConnection(dsn), getContextManager(dsn))
+
+    /*
+     Create and use the ForwardedAddressResolver, which will use the
+     X-FORWARDED-FOR header for the remote address if it exists.
+     */
+    val forwardedAddressResolver = ForwardedAddressResolver()
+    sentryClient.addBuilderHelper(HttpEventBuilderHelper(forwardedAddressResolver))
+    sentryClient.addBuilderHelper(ContextBuilderHelper(sentryClient))
+    return configureSentryClient(sentryClient, dsn)
+  }
 }
 ```
 

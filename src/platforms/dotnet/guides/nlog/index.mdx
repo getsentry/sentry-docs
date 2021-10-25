@@ -42,6 +42,12 @@ This means that out of the box, any `Error` call will create an `Event` which wi
 
 ## Configuration
 
+<Alert level="" title="NLog Layouts">
+
+For more information on how to dynamically set event data via `NLog.config`, see NLog's [layout renderer documentation](https://nlog-project.org/config/?tab=layout-renderers).
+
+</Alert>
+
 You can configure the Sentry NLog target via code as follows:
 
 ```csharp
@@ -75,7 +81,7 @@ LogManager.Configuration
     .AddSentry(o =>
     {
         // The NLog integration will initialize the SDK if DSN is set:
-        o.Dsn = new Dsn("___PUBLIC_DSN___"));
+        o.Dsn = "___PUBLIC_DSN___";
     });
 ```
 
@@ -91,7 +97,7 @@ Two log levels are used to configure this integration (see options below). One w
 
 The SDK can also be configured via `NLog.config` XML file:
 
-```xml
+```xml {tabTitle:NLog.config}
 <?xml version="1.0" encoding="utf-8" ?>
 <nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -104,25 +110,27 @@ The SDK can also be configured via `NLog.config` XML file:
     <target xsi:type="Sentry" name="sentry"
             dsn="___PUBLIC_DSN___"
             layout="${message}"
-            debug="true"
+            environment="Development"
             breadcrumbLayout="${message}"
             minimumBreadcrumbLevel="Debug"
             minimumEventLevel="Error">
 
       <!-- Advanced options can be configured here-->
       <options
-          environment="Development"
-          attachStacktrace="true"
           sendDefaultPii="true"
+          attachStacktrace="false"
           shutdownTimeoutSeconds="5"
+          debug="false"
         >
         <!--Advanced options can be specified as attributes or elements-->
         <includeEventDataOnBreadcrumbs>true</includeEventDataOnBreadcrumbs>
       </options>
 
-      <!--Add any desired additional tags that will be sent with every message -->
-      <tag name="logger" layout="${logger}" />
-      <tag name="example" layout="sentry-nlog" />
+      <!--Optionally add any desired additional Tags that will be sent with every message -->
+      <tag name="exception" layout="${exception:format=shorttype}" includeEmptyValue="false" />
+
+      <!--Optionally add any desired additional Data that will be sent with every message -->
+      <contextproperty name="threadid" layout="${threadid}" includeEmptyValue="true" />
     </target>
   </targets>
 
@@ -174,6 +182,21 @@ Configured layout for the NLog logger.
 
 Any additional tags to apply to each logged message.
 
+#### User
+
+You can provide a `user` entry matching the following example user. See [Identify Users](enriching-events/identify-user/) for more information.
+
+```xml
+<user
+  id="sample_id"
+  username="sample_username"
+  email="sample@email.com"
+  ipAddress="127.0.0.1">
+ <other name="mood" layout="joyous"/>
+</user>
+```
+
 ### Samples
 
 - A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.NLog).
+- Example of [advanced configuration](configuration/advanced-configuration-example)

@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 
 import SmartLink from "./smartLink";
 import { usePlatformList } from "./hooks/usePlatform";
