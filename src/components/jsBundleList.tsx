@@ -37,8 +37,9 @@ export default (): JSX.Element => {
         </tr>
       </thead>
       <tbody>
-        {files.map(file => {
-          return (
+        {files
+          .filter(file => file.name.endsWith(".js"))
+          .map(file => (
             <tr key={file.name}>
               <td style={{ fontSize: "0.9em", verticalAlign: "middle" }}>
                 {file.name}
@@ -51,8 +52,7 @@ export default (): JSX.Element => {
                 </ChecksumValue>
               </td>
             </tr>
-          );
-        })}
+          ))}
       </tbody>
     </table>
   );
