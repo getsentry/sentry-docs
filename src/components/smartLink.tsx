@@ -44,7 +44,7 @@ export default ({
     // to do for those types of links.
     //
     // See https://github.com/getsentry/sentry-docs/issues/3152 for more info.
-    || props.target == "_blank"
+    || props.target === "_blank"
   ) {
     return (
       <a href={realTo} className={className} {...props}>
