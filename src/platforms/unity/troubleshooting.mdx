@@ -39,3 +39,19 @@ With this release, Sentry's SDK for Unity will have no dependencies to any exter
 ### Target Integrity - `Building for iOS Simulator, but the linked and embedded framework 'Sentry.framework' was built for iOS.`
 
 Our Unity SDK currently supports native iOS when building for device only. Support for the iOS simulators is planned.
+
+## Runtime issues
+
+### Library not loaded: @rpath/Sentry.framework/Sentry
+
+If you encounter the following error:
+
+```
+2021-10-29 15:21:40.011452-0400 MyApp[2180:186329] Error loading /var/containers/Bundle/Application/88CC4619-7C5D-4BB1-9F4B-5AAD7EC4BF9C/MyApp.app/Frameworks/UnityFramework.framework/UnityFramework:  dlopen(/var/containers/Bundle/Application/88CC4619-7C5D-4BB1-9F4B-5AAD7EC4BF9C/MyApp.app/Frameworks/UnityFramework.framework/UnityFramework, 265): Library not loaded: @rpath/Sentry.framework/Sentry
+  Referenced from: /private/var/containers/Bundle/Application/88CC4619-7C5D-4BB1-9F4B-5AAD7EC4BF9C/MyApp.app/Frameworks/UnityFramework.framework/UnityFramework
+  Reason: image not found
+```
+
+This can happen if you've copied some of the SDK files directly to the Assets folder and the `Sentry.Unity.Editor.iOS.dll` which runs when you build an iOS player wasn't able to copy the `Sentry.framework` to the final app. Enabling debug mode in the Sentry editor window would display more information in the Unity console.
+
+You can resolve this issue by installing the SDK with UPM.
