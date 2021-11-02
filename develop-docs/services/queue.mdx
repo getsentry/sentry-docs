@@ -23,11 +23,52 @@ def do_work(kind_of_work, **kwargs):
     # ...
 ```
 
-There's a few key differences we practice:
+There are a few important points:
 
 - The task name _must_ be declared.
+
+  The task name is how Celery identifies messages (requests) and which
+  function and worker needs to handle those messages.  If the tasks
+  are not named celery will derive a name from the module and function
+  names which makes the name tied to the location of the code and more
+  brittle for future code maintenance.
+
 - Tasks _must_ accept `\*\*kwargs`` to handle rolling compatibility.
+
+  This ensures tasks will accept any message which happens to be in
+  the queue rather than fail for unknown arguments.  It helps with
+  rolling changes back and forwards, deploys are not instant and
+  messages may be produced with multiple versions of arguments.
+
+  While this allows rolling forwards and backwards without complete
+  task failures, care must still be taken for workers to handle
+  messages with both old and new arguments when changing the
+  arguments.  This does reduce the number of required changes in such
+  a migration a little and gives some more operator flexibility, but
+  message loss because of unknown arguments is still not acceptable.
+
 - Tasks _should_ automatically retry on failure.
+
+- Tasks arguments _should_ be primitive types and small.
+
+  Task arguments are serialised into the message sent across the
+  brokers and the workers need to deserialise them again.  Doing this
+  with complex types is brittle and should be avoided.  E.g. prefer to
+  pass an ID to the task which can be used to load the data from cache
+  rather than the data itself.
+
+  Similarly, to keep the message brokers and workers running
+  efficiently serialising large values into the message results in
+  large messages, large queues and more (de)serialising overheads so
+  should be avoided.
+
+- The tasks' module _must_ be added to `CELERY_IMPORTS`.
+
+  Celery workers must find the task by name, they can only do so if
+  the worker has imported the module with the decorated task function
+  because this is what registers the task by name.  Thus every module
+  containing a task must be added to the `CELERY_IMPORTS` setting in
+  `src/sentry/conf/server.py`.
 
 ## Running a Worker
 
