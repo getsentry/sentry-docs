@@ -14,14 +14,38 @@ Native support requires configuration using the Sentry Unity Editor window. Supp
 
 Native support is `enabled` by default. The Unity SDK passes the options defined through the Sentry Unity Editor window during build time. For Android, it embeds the [Android SDK](/platforms/android/) inside the Gradle project created by Unity. The [iOS SDK](/platforms/apple/guides/ios/) is embedded inside the generated Xcode project. This means there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
 
-<Note>
-
-Our Unity SDK currently supports native iOS when building for device only. Support for the iOS simulators is planned.
-
-</Note>
-
 You can opt out of native support by unchecking `iOS Native Support` and `Android Native Support` in the configuration window.
 
 ## Debug Symbols
 
-Our Unity SDK does not yet support the automated upload of debug symbols, but since it's using other Sentry SDKs this can be set up manually. Check out our documentation for [iOS](/platforms/apple/guides/ios/dsym/) and [Android](/platforms/android/proguard/).
+Sentry requires [debugs information files](platforms/android/data-management/debug-files/) to symbolicate your crash logs. Our Unity SDK does not yet support the automated upload of debug symbols, but since it's using other Sentry SDKs this can be set up manually.
+
+After downloading and installing [sentry-cli](/product/cli/installation/) you can run:
+
+```bash
+sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dif --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
+```
+
+<Note>
+
+You can [create the Auth Token here](https://sentry.io/api/).
+
+</Note>
+
+### Android
+
+To upload debug symbols for Android all you have to do is to make sure `Create symbols.zip` is enabled in the build settings. Unity will generate them in the same directory as the build output and sentry-cli accepts .zip files. Check out our [Android documentation](/platforms/android/proguard/) for more details.
+
+### iOS
+
+Debug information files on the iOS platform are called dSYM and the way to optain them differs depending on whether `Enable Bitcode` is set to true in your Xcode project.
+
+With Bitcode disabled make sure the `Debug Information Format` is set to `DWARF with dSYM file`. When building the game Xcode will then place the dSYM folders together with the build output and you can run the sentry-cli command there.
+
+<Note>
+
+By default the output path will look similar to: _~/Library/Developer/Xcode/DerivedData/BUILD_ID/Build/Products/BUILD_TYPE/_
+
+</Note>
+
+With Bitcode enabled please refer to our [iOS documentation](/platforms/apple/guides/ios/dsym/).
