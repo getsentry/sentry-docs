@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop with Power Home Remodeling (11/18 @ 10am PT) on streamlining issue management and communication.";
+  "Live Workshop with Power Home Remodeling (Nov. 18 @ 10am PT) on streamlining issue management and communication.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/streamline-issue-management-with-powerhrg/?utm_medium=banner&utm_campaign=event-powerHRG-workshop-2021";
+  "https://sentry.io/resources/streamline-issue-management-with-powerhrg/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
