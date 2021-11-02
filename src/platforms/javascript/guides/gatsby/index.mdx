@@ -24,47 +24,86 @@ yarn add @sentry/gatsby
 
 ## Connecting the SDK to Sentry
 
-Register the plugin in your Gatsby configuration file (typically `gatsby-config.js`).
+You can configure the SDK in one of two ways discussed below - creating a configuration file, or defining the options along with the Gatsby configuration. If you define options in both places, the SDK will prioritize the init in the configuration file and ignore the options in the Gatsby configuration.
+
+### Sentry Configuration File
+
+<Note>
+
+The minimum version supporting the Sentry configuration file is `6.14.0`.
+
+</Note>
+
+Using a Sentry configuration file is the approach we recommend since it supports defining non-serializable options in the `init`. Note that you still need to include the plugin, even if you don't set any options.
 
 ```javascript {filename:gatsby-config.js}
 module.exports = {
-  // ...
   plugins: [
+    {
+      resolve: "@sentry/gatsby",
+    },
+  ]
+};
+```
+
+And configure your `Sentry.init`:
+
+```javascript {filename:sentry.config.js}
+import * as Sentry from '@sentry/gatsby';
+
+Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    sampleRate: 1.0, // Adjust this value in production
+    beforeSend(event) {
+      // Modify the event here
+      if (event.user) {
+        // Don't send user's email address
+        delete event.user.email;
+      }
+      return event;
+    },
+    // ...
+});
+```
+
+```typescript {filename:sentry.config.ts}
+import * as Sentry from '@sentry/gatsby';
+
+Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    sampleRate: 1.0, // Adjust this value in production
+    beforeSend(event) {
+      // Modify the event here
+      if (event.user) {
+        // Don't send user's email address
+        delete event.user.email;
+      }
+      return event;
+    },
+    // ...
+});
+```
+
+### Gatsby Plugin Configuration
+
+Another alternative is to define all the options in the Gatsby config. While it keeps the SDK options with the plugin definition, it doesn't support non-serializable options.
+
+```javascript {filename:gatsby-config.js}
+module.exports = {
     {
       resolve: "@sentry/gatsby",
       options: {
         dsn: "___PUBLIC_DSN___",
+        sampleRate: 1.0, // Adjust this value in production
+        // Cannot set `beforeSend`
       },
     },
-    // ...
-  ],
+
+  ]
 };
 ```
 
-## Options
-
-The options field in the plugin configuration is passed directly to `Sentry.init`. Check our configuration docs for a [full list of the available options](configuration/options/).
-
-For example, the configuration below adjusts the `sampleRate` and `maxBreadcrumbs` options.
-
-```javascript {filename:gatsby-config.js}
-module.exports = {
-  // ...
-  plugins: [
-    {
-      resolve: "@sentry/gatsby",
-      options: {
-        dsn: "___PUBLIC_DSN___",
-        maxBreadcrumbs: 80,
-        sampleRate: 0.7,
-      },
-    },
-    // ...
-  ],
-};
-```
-
-The Gatsby SDK will set certain options automatically based on environmental variables, but these can be overridden by setting custom options in the plugin configuration.
+In this approach, the SDK sets some options automatically based on environmental variables, but these can be overridden by setting custom options.
 
 `environment` (string)
 
