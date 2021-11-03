@@ -3,25 +3,40 @@ import usePlatform from "./hooks/usePlatform";
 
 type Props = {
     children: React.ReactNode;
-    scenario: string;
-    projectSlug: string;
-    errorType: string;
+    scenario?: string;
+    projectSlug?: string;
+    errorType?: string;
     platform?: string;
 }
 
+enum Scenario {
+    Performance = 'performance',
+    Releases = 'releases',
+    Alerts = 'alerts',
+    Discover = 'discover',
+    Dashboards = 'dashboards',
+    Projects = 'projects',
+    OneDiscoverQuery = 'oneDiscoverQuery',
+    OneIssue = 'oneIssue',
+    OneBreadcrumb = 'oneBreadcrumb',
+    OneStackTrace = 'oneStackTrace',
+    OneTransaction = 'oneTransaction',
+    OneWebVitals = 'oneWebVitals',
+    OneTransactionSummary = 'oneTransactionSummary',
+    OneRelease = 'oneRelease',
+}
+
 /**
- * 
- * @param param0.scenario: One of the scenarios. Available scenarios include:
- * performance, releases, alerts, discover, dashboards, projects,
- * oneDiscoverQuery, oneIssue, oneBreadcrumb, oneStackTrace, oneTransaction,
- * oneWebVitals, oneTransactionSummary, oneRelease
+ * Obtains the URL to the sandbox start endpoint.
+ * @param param0.scenario: One of the scenarios. Determins where in the sandbox 
+ * the user will be landed.
  * @param param0.projectSlug:
  * One of react, python, react-native, android, iOS
  * @param param0.errorType: A string matching the title of the error.
  * @returns URL to the sandbox start endpoint
  */
 export function getSandboxURL({ scenario, projectSlug, errorType }: {
-  scenario?: string,
+  scenario?: Scenario,
   projectSlug?: string,
   errorType?: string,
 } = {}) {
