@@ -1,27 +1,26 @@
 import React from "react";
 import usePlatform from "./hooks/usePlatform";
 
-
-export enum Scenario {
-    Performance = 'performance',
-    Releases = 'releases',
-    Alerts = 'alerts',
-    Discover = 'discover',
-    Dashboards = 'dashboards',
-    Projects = 'projects',
-    OneDiscoverQuery = 'oneDiscoverQuery',
-    OneIssue = 'oneIssue',
-    OneBreadcrumb = 'oneBreadcrumb',
-    OneStackTrace = 'oneStackTrace',
-    OneTransaction = 'oneTransaction',
-    OneWebVitals = 'oneWebVitals',
-    OneTransactionSummary = 'oneTransactionSummary',
-    OneRelease = 'oneRelease',
-}
+const scenarios = [
+    'performance',
+    'releases',
+    'alerts',
+    'discover',
+    'dashboards',
+    'projects',
+    'oneDiscoverQuery',
+    'oneIssue',
+    'oneBreadcrumb',
+    'oneStackTrace',
+    'oneTransaction',
+    'oneWebVitals',
+    'oneTransactionSummary',
+    'oneRelease',
+  ] as const;
 
 type Props = {
     children: React.ReactNode;
-    scenario?: Scenario;
+    scenario?: typeof scenarios[number];
     projectSlug?: string;
     errorType?: string;
     platform?: string;
@@ -37,7 +36,7 @@ type Props = {
  * @returns URL to the sandbox start endpoint
  */
 export function getSandboxURL({ scenario, projectSlug, errorType }: {
-  scenario?: Scenario,
+  scenario?: typeof scenarios[number],
   projectSlug?: string,
   errorType?: string,
 } = {}) {
@@ -55,13 +54,13 @@ export function getSandboxURL({ scenario, projectSlug, errorType }: {
 
 export const isSandboxHidden = () => process.env.GATSBY_HIDE_SANDBOX === '1';
 
-const SANDBOX_PLATFORMS: string[] = [
+const SANDBOX_PLATFORMS = [
     'react',
     'python',
     'react-native',
     'android',
     'ios',
-];
+] as const;
 
 const SANDBOX_PLATFORM_MAP: { [key: string]: string } = {
     apple: 'ios',
@@ -75,7 +74,7 @@ export default function SandboxLink({ children, platform, ...params }: Props) {
     }
     const [currentPlatform] = usePlatform(platform);
     if (!params.projectSlug) {
-        if (SANDBOX_PLATFORMS.includes(currentPlatform.key)) {
+        if ((SANDBOX_PLATFORMS as readonly string[]).includes(currentPlatform.key)) {
             params.projectSlug = currentPlatform.key;
         } else if (SANDBOX_PLATFORM_MAP[currentPlatform.key]) {
             params.projectSlug = SANDBOX_PLATFORM_MAP[currentPlatform.key];
