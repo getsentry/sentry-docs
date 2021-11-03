@@ -1,13 +1,6 @@
 import React from "react";
 import usePlatform from "./hooks/usePlatform";
 
-type Props = {
-    children: React.ReactNode;
-    scenario?: string;
-    projectSlug?: string;
-    errorType?: string;
-    platform?: string;
-}
 
 export enum Scenario {
     Performance = 'performance',
@@ -24,6 +17,14 @@ export enum Scenario {
     OneWebVitals = 'oneWebVitals',
     OneTransactionSummary = 'oneTransactionSummary',
     OneRelease = 'oneRelease',
+}
+
+type Props = {
+    children: React.ReactNode;
+    scenario?: Scenario;
+    projectSlug?: string;
+    errorType?: string;
+    platform?: string;
 }
 
 /**
