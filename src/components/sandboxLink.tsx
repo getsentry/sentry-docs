@@ -9,7 +9,7 @@ type Props = {
     platform?: string;
 }
 
-enum Scenario {
+export enum Scenario {
     Performance = 'performance',
     Releases = 'releases',
     Alerts = 'alerts',
