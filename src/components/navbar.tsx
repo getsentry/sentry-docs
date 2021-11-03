@@ -27,8 +27,8 @@ export default ({ platforms }: Props): JSX.Element => {
             </SmartLink>
           </Nav.Item>
           <Nav.Item>
-              <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
-              </Nav.Item>
+            <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
+          </Nav.Item>
           <Nav.Item>
             <Nav.Link href="https://sentry.io/">
               Sign In
