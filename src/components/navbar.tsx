@@ -6,6 +6,7 @@ import Search from "./search";
 import SmartLink from "./smartLink";
 
 import NavbarPlatformDropdown from "./navbarPlatformDropdown";
+import { getSandboxURL, SandboxOnly } from "./sandboxLink";
 
 type Props = {
   platforms?: string[];
@@ -25,6 +26,11 @@ export default ({ platforms }: Props): JSX.Element => {
               API
             </SmartLink>
           </Nav.Item>
+          <SandboxOnly>
+            <Nav.Item>
+              <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
+            </Nav.Item>
+          </SandboxOnly>
           <Nav.Item>
             <Nav.Link href="https://sentry.io/">
               Sign In

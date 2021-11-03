@@ -22,7 +22,7 @@ import PlatformLink from "./platformLink";
 import PlatformSection from "./platformSection";
 import PlatformIdentifier from "./platformIdentifier";
 import RelayMetrics from "./relayMetrics";
-import SandboxLink from "./sandboxLink";
+import SandboxLink, { SandboxOnly } from "./sandboxLink";
 import { VimeoEmbed, YouTubeEmbed } from "./video";
 
 const mdxComponents = {
@@ -48,6 +48,7 @@ const mdxComponents = {
   VimeoEmbed,
   YouTubeEmbed,
   SandboxLink,
+  SandboxOnly,
 };
 
 export default ({ value }) => {

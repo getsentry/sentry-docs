@@ -13,6 +13,7 @@ import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
 
 import Banner from "../components/banner";
+import { getSandboxURL, SandboxOnly } from "~src/components/sandboxLink";
 
 const HIGHLIGHTED_PLATFORMS = [
   "javascript",
@@ -74,6 +75,11 @@ const IndexPage = () => {
                   API
                 </SmartLink>
               </Nav.Item>
+              <SandboxOnly>
+                <Nav.Item>
+                  <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
+                </Nav.Item>
+              </SandboxOnly>
               <Nav.Item>
                 <Nav.Link href="https://sentry.io/">
                   Sign In
