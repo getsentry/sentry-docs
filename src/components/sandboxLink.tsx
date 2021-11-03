@@ -83,3 +83,11 @@ export default function SandboxLink({ children, platform, ...params }: Props) {
 
     return <a href={getSandboxURL(params).toString()}>{children}</a>;
 }
+
+export function SandboxOnly({children}) {
+  //kill switch for sandbox
+  if (isSandboxHidden()) {
+    return null;
+  }
+  return children;
+}
