@@ -6,9 +6,11 @@ You can do this with the help of the our Webpack plugin, which internally uses o
 2. Confirm you have `project:write` selected under "Scopes"
 3. Install `@sentry/webpack-plugin` using `npm`
 4. Create `.sentryclirc` file with necessary configuration, as documented on this page
-5. Update your `webpack.config.js`
+5. Update your Webpack config
 
-```javascript
+<PlatformSection notSupported={["javascript.gatsby"]}>
+
+```javascript {filename:webpack.config.js}
 const SentryPlugin = require("@sentry/webpack-plugin");
 
 module.exports = {
@@ -21,6 +23,28 @@ module.exports = {
   ],
 };
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.gatsby"]}>
+
+```javascript {filename:gatsby-node.js}
+const SentryPlugin = require('@sentry/webpack-plugin');
+
+exports.onCreateWebpackConfig = ({ actions }) => {
+  actions.setWebpackConfig({
+    plugins: [
+      new SentryPlugin({
+        include: 'public',
+        ignore: ['app-*', 'polyfill-*', 'framework-*', 'webpack-runtime-*'],
+      }),
+    ],
+  });
+};
+```
+
+</PlatformSection>
+
 
 Learn more about further configuration of the plugin using our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
 
