@@ -37,7 +37,7 @@ public class Function : IHttpFunction
 {
     public Task HandleAsync(HttpContext context)
     {
-        // Your function code here. 
+        // Your function code here.
     }
 }
 ```
@@ -50,8 +50,13 @@ Additionally, you'll need to set up your `Sentry` settings on `appsettings.json`
     "Dsn": "___PUBLIC_DSN___",
     // Sends Cookies, User Id when one is logged on and user IP address to sentry. It's turned off by default.
     "SendDefaultPii": true,
+    // When configuring for the first time, to see what the SDK is doing:
+    "Debug": true,
     // Opt-in for payload submission.
-    "MaxRequestBodySize": "Always"
+    "MaxRequestBodySize": "Always",
+    // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+    // We recommend adjusting this value in production.
+    "TracesSampleRate": 1
   }
 }
 ```

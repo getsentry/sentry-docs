@@ -40,6 +40,9 @@ Add your DSN to the manifest file.
 ```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+    <!-- Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+       We recommend adjusting this value in production. -->
+    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
 ```
 

@@ -43,6 +43,9 @@ import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0
 });
 ```
 
@@ -62,3 +65,49 @@ Sentry.nativeCrash();
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
 If you're an existing user and have disabled alerts, you won't receive this email.
+
+## Performance
+
+Sentry can measure the performance of your app automatically when instrumented with the following routers:
+
+- [React Navigation](https://docs.sentry.io/platforms/react-native/performance/instrumentation/automatic-instrumentation/#react-navigation)
+- [React Navigation V4 and prior](https://docs.sentry.io/platforms/react-native/performance/instrumentation/automatic-instrumentation/#react-navigation-v4)
+- [React Native Navigation](https://docs.sentry.io/platforms/react-native/performance/instrumentation/automatic-instrumentation/#react-native-navigation)
+
+Additionally, you can create transactions and spans programatically:
+
+For example:
+
+```javascript
+// Let's say this function is invoked when a user clicks on the checkout button of your shop
+shopCheckout() {
+  // This will create a new Transaction for you
+  const transaction = Sentry.startTransaction({ name: "shopCheckout" });
+  // Set transaction on scope to associate with errors and get included span instrumentation
+  // If there's currently an unfinished transaction, it may be dropped
+  Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
+
+  // Assume this function makes an xhr/fetch call
+  const result = validateShoppingCartOnServer();
+
+  const span = transaction.startChild({
+    data: {
+      result
+    },
+    op: 'task',
+    description: `processing shopping cart result`,
+  });
+  try {
+    processAndValidateShoppingCart(result);
+    span.setStatus(SpanStatus.Ok);
+  } catch (err) {
+    span.setStatus(SpanStatus.UnknownError);
+    throw err;
+  } finally {
+    span.finish();
+    transaction.finish();
+  }
+}
+```
+
+For more information, please refer to the [Sentry React Native documentation.](https://docs.sentry.io/platforms/react-native/performance/instrumentation/)
