@@ -162,6 +162,37 @@ WebHost.CreateDefaultBuilder(args).Configure(a =>
     })).Build().Run();
 ```
 
+```ruby
+require 'net/http'
+
+class HomeController < ApplicationController
+
+  SENTRY_HOST = "oXXXXXX.ingest.sentry.io"
+  SENTRY_PROJECT_IDS = ["123456"]
+
+  def tunnel
+    envelope = request.body.read
+    piece = envelope.split("\n").first
+    header = JSON.parse(piece)
+    dsn = URI.parse(header['dsn'])
+    project_id = dsn.path.tr('/', '')
+
+    raise "Invalid sentry hostname: #{dsn.hostname}" if dsn.hostname != SENTRY_HOST
+    raise "Invalid sentry project id: #{project_id}" unless SENTRY_PROJECT_IDS.include?(project_id)
+
+    upstream_sentry_url = "https://#{SENTRY_HOST}/api/#{project_id}/envelope/"
+    Net::HTP.post(URI(upstream_sentry_url), envelope)
+
+    head(:ok)
+  rescue => e
+    # handle exception in your preferred style,
+    # e.g. by logging or forwarding to server Sentry project
+    Rails.logger.error('error tunneling to sentry')
+  end
+
+end
+```
+
 Check out our [examples repository](https://github.com/getsentry/examples/tree/master/tunneling) to learn more about it.
 
 If your use-case is related to the SDK package itself being blocked, any of the following solutions will help you resolve this issue.
