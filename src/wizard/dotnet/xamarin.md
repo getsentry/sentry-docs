@@ -54,7 +54,9 @@ public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsAppli
         SentryXamarin.Init(options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
-            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.TracesSampleRate = 1.0;
             options.AddXamarinFormsIntegration();
@@ -74,7 +76,9 @@ sealed partial class App : Application
         SentryXamarin.Init(options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
-            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.TracesSampleRate = 1.0;
             options.AddXamarinFormsIntegration();
