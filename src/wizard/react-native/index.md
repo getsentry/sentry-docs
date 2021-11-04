@@ -36,7 +36,7 @@ The call to the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will
 - iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. However, if you are using bitcode, you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
 - Android Specifics: We hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry. If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build by setting `org.gradle.configureondemand=false` or remove it.
 
-Initialize the SDK:
+### Initialize the SDK
 
 ```javascript
 import * as Sentry from "@sentry/react-native";
@@ -50,6 +50,18 @@ Sentry.init({
 ```
 
 The `sentry-wizard` will try to add it to your `App.js`
+
+### Wrap your app
+
+Wrap your app with Sentry to automatically instrument it with [touch event tracking](/platforms/react-native/touchevents/) and [automatic performance monitoring](/platforms/react-native/performance/instrumentation/automatic-instrumentation/):
+
+```javascript {filename:App.js}
+export default Sentry.wrap(App);
+```
+
+You do not need to do this for Sentry to work or if your app does not have a single parent "App" component.
+
+### Verify
 
 Then create an intentional error, so you can test that everything is working:
 
