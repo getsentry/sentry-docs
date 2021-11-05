@@ -35,9 +35,10 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
             options.Dsn = "___PUBLIC_DSN___";
             // When configuring for the first time, to see what the SDK is doing:
             options.Debug = true;
-            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.TracesSampleRate = 1.0;
+            // If you installed Sentry.Xamarin.Forms:
             options.AddXamarinFormsIntegration();
         });
 ```
@@ -53,6 +54,11 @@ public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsAppli
         SentryXamarin.Init(options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
             options.AddXamarinFormsIntegration();
         });
 ```
@@ -63,15 +69,20 @@ Initialize the SDK on `App.xaml.cs`.
 NOTE: It's recommended to not setup the CacheDirectory for UWP.
 
 ```csharp
-    sealed partial class App : Application
+sealed partial class App : Application
+{
+    protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        SentryXamarin.Init(options =>
         {
-            SentryXamarin.Init(options =>
-            {
-                options.Dsn = "___PUBLIC_DSN___";
-                options.AddXamarinFormsIntegration();
-            });
+            options.Dsn = "___PUBLIC_DSN___";
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
+            options.AddXamarinFormsIntegration();
+        });
 ```
 
 ## Verify

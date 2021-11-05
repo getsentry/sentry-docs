@@ -6,7 +6,7 @@ type: language
 ---
 
 <Alert level="info">
-Sentry supports Kotlin for both JVM and Android. This wizard guides you through set up in the JVM scenario. 
+Sentry supports Kotlin for both JVM and Android. This wizard guides you through set up in the JVM scenario.
 
 If you're interested in <strong>Android</strong>, head over to the <a href="https://docs.sentry.io/platforms/android/">Getting Started</a> for that SDK instead. At its core, Sentry for Java provides a raw client for sending events to Sentry. If you use <strong>Spring Boot</strong>, <strong>Spring</strong>, <strong>Logback</strong>, <strong>JUL</strong>, or <strong>Log4j2</strong>, head over to our <a href="https://docs.sentry.io/platforms/java/">Getting Started for Sentry Java</a>.
 </Alert>
@@ -47,7 +47,7 @@ import io.sentry.Sentry
 
 Sentry.init { options ->
   options.dsn = "___PUBLIC_DSN___"
-  // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
   // We recommend adjusting this value in production.
   options.tracesSampleRate = 1.0
   // When first trying Sentry it's good to see what the SDK is doing:

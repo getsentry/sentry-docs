@@ -12,14 +12,14 @@ Install the Sentry Capacitor SDK alongside the sibling Sentry Angular SDK:
 npm install --save @sentry/capacitor @sentry/angular
 
 # yarn
-yarn add @sentry/capacitor @sentry/angular
+yarn add @sentry/capacitor @sentry/angular @sentry/tracing
 ```
 
 Or install the standalone Sentry Capacitor SDK if you don't use Ionic/Angular:
 
 ```bash
 # npm
-npm install --save @sentry/capacitor
+npm install --save @sentry/capacitor @sentry/tracing
 
 # yarn
 yarn add @sentry/capacitor
@@ -80,14 +80,26 @@ With Ionic/Angular:
 // app.module.ts
 import * as Sentry from "@sentry/capacitor";
 import * as SentryAngular from "@sentry/angular";
+// If taking advantage of automatic instrumentation (highly recommended)
+import { Integrations as TracingIntegrations } from "@sentry/tracing";
+// Or, if only manually tracing
+// import "@sentry/tracing";
+// Note: You MUST import the package in some way for tracing to work
 
 Sentry.init(
   {
-    dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
-
+    dsn: "___PUBLIC_DSN___",
     // To set your release and dist versions
     release: "my-project-name@" + process.env.npm_package_version,
-    dist: "1"
+    dist: "1",
+    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+    // We recommend adjusting this value in production.
+    tracesSampleRate: 1.0,
+    integrations: [
+      new TracingIntegrations.BrowserTracing({
+        tracingOrigins: ["localhost", "https://yourserver.io/api"],
+      }),
+    ]
   },
   // Forward the init method from @sentry/angular
   SentryAngular.init
