@@ -55,7 +55,7 @@ The `sentry-wizard` will try to add it to your `App.js`
 
 Wrap your app with Sentry to automatically instrument it with [touch event tracking](/platforms/react-native/touchevents/) and [automatic performance monitoring](/platforms/react-native/performance/instrumentation/automatic-instrumentation/):
 
-```javascript {filename:App.js}
+```javascript
 export default Sentry.wrap(App);
 ```
 
