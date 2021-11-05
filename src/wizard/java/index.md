@@ -51,7 +51,7 @@ import io.sentry.Sentry;
 
 Sentry.init(options -> {
   options.setDsn("___PUBLIC_DSN___");
-  // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
   // We recommend adjusting this value in production.
   options.setTracesSampleRate(1.0);
   // When first trying Sentry it's good to see what the SDK is doing:

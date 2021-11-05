@@ -83,7 +83,7 @@ import * as SentryAngular from "@sentry/angular";
 // If taking advantage of automatic instrumentation (highly recommended)
 import { Integrations as TracingIntegrations } from "@sentry/tracing";
 // Or, if only manually tracing
-// import * as _ from "@sentry/tracing"
+// import "@sentry/tracing";
 // Note: You MUST import the package in some way for tracing to work
 
 Sentry.init(
