@@ -11,6 +11,7 @@ export default ({ actions, schema }) => {
       title: String
       sidebar_order: Int
       sidebar_title: String
+      description: String
       draft: Boolean
       redirect_from: [String!]
 
