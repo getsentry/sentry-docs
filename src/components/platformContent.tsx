@@ -25,12 +25,6 @@ const includeQuery = graphql`
   }
 `;
 
-const slugMatches = (slug1: string, slug2: string): boolean => {
-  if (slug1 === "browser") slug1 = "javascript";
-  if (slug2 === "browser") slug2 = "javascript";
-  return slug1 === slug2;
-};
-
 type FileNode = {
   id: string;
   relativePath: string;
@@ -48,23 +42,30 @@ type Props = {
   notateUnsupported?: boolean;
 };
 
+type FileList = {[key: string]: FileNode};
+
 const getFileForPlatform = (
   includePath: string,
-  fileList: FileNode[],
+  fileList: FileList,
   platform: Platform
 ): FileNode | null => {
   const platformsToSearch = getPlatformsWithFallback(platform);
   platformsToSearch.push("_default");
 
-  const contentMatch = platformsToSearch
-    .map(name => name && fileList.find(m => slugMatches(m.name, name)))
-    .find(m => m);
-  if (!contentMatch) {
-    console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${platform.key}`
-    );
+  for(const name of platformsToSearch) {
+    if (name && fileList[name]) {
+      return fileList[name];
+    } else if (name == "browser" && fileList["javascript"]) {
+      return fileList['javascript'];
+    } else if (name == "javascript" && fileList["browser"]) {
+      return fileList['browser'];
+    }
   }
-  return contentMatch;
+
+  console.warn(
+    `Couldn't find content in ${includePath} for selected platform: ${platform.key}, size of fileList=${Object.keys(fileList).length}`
+  );
+  return null;
 };
 
 const MissingContent = styled.div`
@@ -89,17 +90,16 @@ export default ({
   const {
     allFile: { nodes: files },
   } = useStaticQuery(includeQuery);
+
+  const filesMap = Object.fromEntries(files.filter(node => node.relativePath.indexOf(includePath) === 0).map(node => [node.name, node]));
+
   const [dropdown, setDropdown] = React.useState(null);
   const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
 
-  const matches = files.filter(
-    node => node.relativePath.indexOf(includePath) === 0
-  );
-
   const contentMatch = getFileForPlatform(
     includePath,
-    matches,
+    filesMap,
     currentPlatform
   );
 
@@ -120,7 +120,7 @@ export default ({
               role="tablist"
               style={{ display: dropdown ? "block" : "none" }}
             >
-              {matches.map(node => {
+              {Object.values(filesMap).map(node => {
                 const platform = getPlatform(node.name);
                 if (!platform) {
                   console.warn(`Cannot find platform for ${node.name}`);
