@@ -33,7 +33,7 @@ type PageContext = {
   [key: string]: any;
 };
 
-type PageData = [FileNode, string, PageContext];
+type Pages = {[key: string]: [FileNode, PageContext]};
 
 const getPlatfromFromNode = (node: FileNode): string | null => {
   const match = node.relativePath.match(/^([^\/]+)\//);
@@ -64,10 +64,10 @@ const isGuideRoot = (node: FileNode): boolean => {
  * for example, if /performance/ is notSupported, there's no need to mark /performance/instrumentation/ or /performance/instrumentation/custom-instrumentation/
  * as notSupported.
  */
-const hasIndex = (pathRoot: string, pages: PageData[], pagePath: string) => {
+const hasIndex = (pathRoot: string, pages: Pages, pagePath: string) => {
   if (pathRoot === pagePath) return true;
   const prefix = path.dirname(pagePath) + "/";
-  return prefix === pathRoot || !!pages.find(p => p[1] === prefix);
+  return prefix === pathRoot || !!pages[prefix];
 };
 
 const buildPlatformPages = (nodes: FileNode[]) => {
@@ -261,7 +261,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     };
     const pathRoot = platform.url;
 
-    const pages: PageData[] = [];
+    const pages: Pages = {};
 
     // duplicate global common
     sharedCommon.forEach(node => {
@@ -271,14 +271,10 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         `/${platform.name}/`
       )}`;
       reporter.verbose(`${platform.key}: Creating global common - ${path}`);
-      pages.push([
-        node,
-        path,
-        {
-          ...platformPageContext,
-          title: path === pathRoot ? platform.title : undefined,
-        },
-      ]);
+      pages[path] = [node, {
+        ...platformPageContext,
+        title: path === pathRoot ? platform.title : undefined,
+      }];
     });
 
     // duplicate platform common
@@ -289,40 +285,33 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         `/${platform.name}/`
       )}`;
       reporter.verbose(`${platform.key}: Creating platform common - ${path}`);
-      pages.push([
+      pages[path] = [
         node,
-        path,
         {
           ...platformPageContext,
           title: path === pathRoot ? platform.title : undefined,
         },
-      ]);
+      ];
     });
 
     // create all direct children
     platformData.children.forEach(node => {
       const path = `/platforms${createFilePath({ node, getNode })}`;
       reporter.verbose(`${platform.key}: Creating child - ${path}`);
-      pages.push([node, path, platformPageContext]);
+      pages[path] = [node, platformPageContext];
     });
 
     // create platform root
     // TODO(dcramer): we'd like to create keywords based on aliases for the index page
     if (platformData.node) {
       reporter.verbose(`${platform.key}: Creating root - ${pathRoot}`);
-      pages.push([
-        platformData.node,
-        pathRoot,
-        {
-          ...platformPageContext,
-          title: platform.title,
-        },
-      ]);
+      pages[pathRoot] = [platformData.node, {
+        ...platformPageContext,
+        title: platform.title,
+      }];
     }
 
-    pages.sort((a, b) => a[1].localeCompare(b[1]));
-
-    pages.forEach(([node, path, context]) => {
+    Object.entries(pages).forEach(([path, [node, context]]) => {
       if (!hasIndex(pathRoot, pages, path)) {
         reporter.verbose(
           `${platform.key}: Hiding child due to missing parent - ${path}`
@@ -363,7 +352,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
     const pathRoot = guide.url;
 
-    const pages: PageData[] = [];
+    const pages: Pages = {};
 
     // duplicate global common
     sharedCommon.forEach(node => {
@@ -374,15 +363,14 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       )}`;
       reporter.verbose(`${guide.key}: Creating global common - ${path}`);
       // XXX: we dont add redirects for guide-common pages
-      pages.push([
+      pages[path] = [
         node,
-        path,
         {
           ...guidePageContext,
           title: path === pathRoot ? guide.title : undefined,
           redirect_from: [],
         },
-      ]);
+      ];
     });
 
     // duplicate platform common
@@ -394,15 +382,14 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       )}`;
       reporter.verbose(`${guide.key}: Creating common - ${path}`);
       // XXX: we dont add redirects for guide-common pages
-      pages.push([
+      pages[path] = [
         node,
-        path,
         {
           ...guidePageContext,
           title: path === pathRoot ? guide.title : undefined,
           redirect_from: [],
         },
-      ]);
+      ];
     });
 
     // create all direct children
@@ -410,7 +397,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       guideData.children.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode })}`;
         reporter.verbose(`${guide.key}: Creating child - ${path}`);
-        pages.push([node, path, guidePageContext]);
+        pages[path] = [node, guidePageContext];
       });
     }
 
@@ -418,19 +405,16 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     // TODO(dcramer): we'd like to create keywords based on aliases for the index page
     if (guideData && guideData.node) {
       reporter.verbose(`${guide.key}: Creating platform root - ${pathRoot}`);
-      pages.push([
+      pages[pathRoot] = [
         guideData.node,
-        pathRoot,
         {
           ...guidePageContext,
           title: guide.title,
         },
-      ]);
+      ];
     }
 
-    pages.sort((a, b) => a[1].localeCompare(b[1]));
-
-    pages.forEach(([node, path, context]) => {
+    Object.entries(pages).forEach(([path, [node, context]]) => {
       if (!hasIndex(pathRoot, pages, path)) {
         reporter.verbose(
           `${guide.key}: Hiding child due to missing parent - ${path}`
