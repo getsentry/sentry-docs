@@ -77,7 +77,7 @@ const IndexPage = () => {
               </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
-                  <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
+                  <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
                 </Nav.Item>
               </SandboxOnly>
               <Nav.Item>
