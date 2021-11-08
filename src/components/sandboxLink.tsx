@@ -24,6 +24,7 @@ type Props = {
     projectSlug?: string;
     errorType?: string;
     platform?: string;
+    target?: string;
 }
 
 /**
@@ -68,7 +69,7 @@ const SANDBOX_PLATFORM_MAP: { [key: string]: string } = {
     node: 'react',
 };
 
-export default function SandboxLink({ children, platform, ...params }: Props) {
+export default function SandboxLink({ children, platform, target, ...params }: Props) {
     if (isSandboxHidden()) {
         return children;
     }
@@ -81,7 +82,7 @@ export default function SandboxLink({ children, platform, ...params }: Props) {
         }
     }
 
-    return <a href={getSandboxURL(params).toString()}>{children}</a>;
+    return <a href={getSandboxURL(params).toString()} target={target || '_blank'}>{children}</a>;
 }
 
 export function SandboxOnly({children}) {
