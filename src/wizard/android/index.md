@@ -120,7 +120,7 @@ Check out [the documentation](https://docs.sentry.io/platforms/android/performan
 
 Living on the edge? Try out our beta [Room performance integration](https://docs.sentry.io/platforms/android/performance/instrumentation/automatic-instrumentation/#sqlite-and-room-instrumentation).
   
-This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/proguard/#gradle) - make sure to use version `3.0.0-beta.1`. The `tracingInstrumentation` option is enabled by default, so Sentry automatically measures performance of the database queries done with Room if you simply set a tracing sample rate. Features in Beta are still work-in-progress and may have bugs. We recognize the irony.
+This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/proguard/#gradle); you must use version `3.0.0-beta.1`. The `tracingInstrumentation` option is enabled by default, so Sentry automatically measures performance of the database queries done with Room if you set a tracing sample rate. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
 
 Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-android-gradle-plugin/issues).
 
