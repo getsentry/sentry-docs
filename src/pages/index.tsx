@@ -201,7 +201,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/sentry-basics/guides/migration/">
+                <a href="/product/sentry-basics/migration/">
                   Moving to Hosted Sentry
                 </a>
               </li>
