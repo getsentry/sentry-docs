@@ -80,6 +80,36 @@ exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
 });
 ```
 
+
+## Capture all errors when `Promise.allSettled` is returned by the handler
+_(New in version ??)_
+
+By default, sentry capture the error raised by your handler.
+It's possible that your handler returns a `Promise.allSettled` result.
+In this case even if one of the messages has failed, no exception will be captured by Sentry.
+
+The `captureAllSettledReasons` (default: `false`) option capture all promise rejected results.
+
+```javascript {tabTitle:promiseSettledDefault}
+exports.handler = Sentry.AWSLambda.wrapHandler(() => {
+  return Promise.allSettled([
+        Promise.rejected(new Error('first')),
+        Promise.rejected(new Error('second'))
+  ]);
+});
+// Nothing captured
+```
+
+```javascript {tabTitle:captureAllSettledReasons}
+exports.handler = Sentry.AWSLambda.wrapHandler(() => {
+  return Promise.allSettled([
+        Promise.rejected(new Error('first')),
+        Promise.rejected(new Error('second'))
+  ]);
+}, {captureAllSettledReasons: true});
+// `first` and `second` errors are captured
+```
+
 ## Behavior
 
 With the AWS Lambda integration enabled, the Node SDK will:
