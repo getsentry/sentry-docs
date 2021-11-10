@@ -1,4 +1,5 @@
 import React from "react";
+import ExternalLink from "./externalLink";
 import usePlatform from "./hooks/usePlatform";
 
 const scenarios = [
@@ -81,8 +82,10 @@ export default function SandboxLink({ children, platform, target, ...params }: P
             params.projectSlug = SANDBOX_PLATFORM_MAP[currentPlatform.key];
         }
     }
-
-    return <a href={getSandboxURL(params).toString()} target={target || '_blank'}>{children}</a>;
+    
+    return <ExternalLink href={getSandboxURL(params).toString()} target={target || '_blank'}>
+      {children}
+    </ExternalLink>;
 }
 
 export function SandboxOnly({children}) {
