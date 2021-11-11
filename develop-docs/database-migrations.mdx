@@ -80,7 +80,7 @@ for env in RangeQuerySetWrapperWithProgressBar(EnvironmentProject.objects.all())
 ```
 
 We generally prefer to avoid using `.filter` with `RangeQuerySetWrapperWithProgressBar`. Since it already orders by the id to iterate through the table,
-we can't take advantage of any indexes on the fields, and could potentially scan a large number of rows for each chunk. This will run slower, but we 
+we can't take advantage of any indexes on the fields, and could potentially scan a large number of rows for each chunk. This will run slower, but we
 generally prefer that, since it averages the load out over a longer period of time, and makes each query to fetch each chunk fairly cheap.
 
 ### Indexes
@@ -241,60 +241,93 @@ Creating foreign keys is mostly fine, but for some large/busy tables like `Proje
 ### Renaming Tables
 
 Renaming tables is dangerous and will result in downtime. The reason this occurs is that during the deploy a mix of old/new code will be running. So once we rename the table in Postgres, the old code will immediately start erroring if it attempts to access it. There are two ways to handle renaming a table:
- - Don't rename the table in Postgres. Instead, just rename the model in Django, and make sure `Meta.db_table` is set to the current tablename so that nothing breaks. This is the preferred method.
- - If you absolutely want to rename the table, then the steps would be:
-  - Create a table with the new name
-  - Start dual-writing to both the old and new table, ideally in a transaction.
-  - Backfill the old rows into the new table.
-  - Change the model to start reading from the new table.
-  - Stop writing to the old table and remove references from the code.
-  - Drop the old table.
-  - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
+
+- Don't rename the table in Postgres. Instead, just rename the model in Django, and make sure `Meta.db_table` is set to the current tablename so that nothing breaks. This is the preferred method.
+- If you absolutely want to rename the table, then the steps would be:
+- Create a table with the new name
+- Start dual-writing to both the old and new table, ideally in a transaction.
+- Backfill the old rows into the new table.
+- Change the model to start reading from the new table.
+- Stop writing to the old table and remove references from the code.
+- Drop the old table.
+- Generally, this is not worth doing and a lot of risk/effort compared to the reward.
 
 ### Adding Columns
 
 When creating new columns they should always be created as nullable. This is for two reasons:
- - If there are existing rows, adding a not null column requires a default to be set, and adding a default requires a full rewrite of the table. This is dangerous and will most likely result in downtime
- - During the deploy, a mix of old and new code is running. If old code attempts to insert a row to the table the insert will fail, since the old code doesn't know the new column exist, and so has no way to provide a value to the column.
+
+- If there are existing rows, adding a not null column requires a default to be set, and adding a default requires a full rewrite of the table. This is dangerous and will most likely result in downtime
+- During the deploy, a mix of old and new code is running. If old code attempts to insert a row to the table the insert will fail, since the old code doesn't know the new column exist, and so has no way to provide a value to the column.
 
 ### Adding Not Null To Columns
 
 It can be dangerous to add not null to columns, even if there is data in every row of the table for that column. This is because Postgres still needs to perform a not null check on all rows before it can add the constraint. On small tables this can be fine since
 the check will be quick, but on larger tables this can cause downtime. There are a few options here to make this safe:
- - `ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID; ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;`. First we create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
- - If the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
- - 
+
+- `ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID; ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;`. First we create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
+- If the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
+-
+
 ### Adding Columns With a Default
 
 Adding columns with a default to an exist table is dangerous. This requires Postgres to lock the table and rewrite it. Instead, the better option is to:
- - Add the column without a default in Postgres, but with a default in Django. This allows us to be sure that all new rows have the default.
- - Backfill the pre-existing rows with the default via a data migration.
+
+- Add the column without a default in Postgres, but with a default in Django. This allows us to be sure that all new rows have the default. This is done by modifying the migration file to include `migrations.SeperateDatabaseAndState`
+
+```python
+operations = [
+    migrations.SeparateDatabaseAndState(
+        database_operations=[
+            migrations.AddField(
+                model_name="mymodel",
+                name="new_field",
+                # Don't use a default in Postgres, a data migration can be used afterward to backfill
+                field=models.PositiveSmallIntegerField(null=True),
+            ),
+        ],
+        state_operations=[
+            migrations.AddField(
+                model_name="mymodel",
+                name="new_field",
+                # Use the default in Django, new rows will use the specified default
+                field=models.PositiveSmallIntegerField(null=True, default=1),
+            ),
+        ],
+    )
+    ]
+```
+
+- Backfill the pre-existing rows with the default via a data migration.
 
 ### Altering Column Types
 
 Altering the type of a column is usually dangerous, since it will require a whole table rewrite. There are some exceptions:
- - Altering a `varchar(<size>)` to a `varchar` with a larger size.
- - Altering any `varchar` to `text`
- - Altering a `numeric` to a `numeric` where the `precision` is higher but the `scale` is the same.
+
+- Altering a `varchar(<size>)` to a `varchar` with a larger size.
+- Altering any `varchar` to `text`
+- Altering a `numeric` to a `numeric` where the `precision` is higher but the `scale` is the same.
 
 For any other types, the best path forward is usually:
-   - Create a column with the new type
-   - Start dual-writing to both the old and new column.
-   - Backfill and convert the old column values into the new column.
-   - Change the code to use the new field.
-   - Stop writing to the old column and remove references from the code.
-   - Drop the old column from the database.
+
+- Create a column with the new type
+- Start dual-writing to both the old and new column.
+- Backfill and convert the old column values into the new column.
+- Change the code to use the new field.
+- Stop writing to the old column and remove references from the code.
+- Drop the old column from the database.
 
 Generally this can be worth a discussion in #discuss-backend.
 
 ### Renaming Columns
+
 Renaming columns is dangerous and will result in downtime. The reason this occurs is that during the deploy a mix of old/new code will be running. So once we rename the column in Postgres, the old code will immediately start erroring if it attempts to access it. There are two ways to handle renaming a column:
- - Don't rename the column in Postgres. Instead, just rename the field in Django, and use `db_column` in the definition to set it to the existing column name so that nothing breaks. This is the preferred method.
- - If you absolutely want to rename the column, then the steps would be:
-   - Create a column with the new name
-   - Start dual-writing to both the old and new column.
-   - Backfill the old column values into the new column.
-   - Change the field to start reading from the new column.
-   - Stop writing to the old column and remove references from the code.
-   - Drop the old column from the database.
-   - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
+
+- Don't rename the column in Postgres. Instead, just rename the field in Django, and use `db_column` in the definition to set it to the existing column name so that nothing breaks. This is the preferred method.
+- If you absolutely want to rename the column, then the steps would be:
+  - Create a column with the new name
+  - Start dual-writing to both the old and new column.
+  - Backfill the old column values into the new column.
+  - Change the field to start reading from the new column.
+  - Stop writing to the old column and remove references from the code.
+  - Drop the old column from the database.
+  - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
