@@ -89,12 +89,11 @@ plug Sentry.PlugContext
 
 This library comes with an extension to capture all error messages that the Plug handler might not.  This is based on [Logger.Backend](https://hexdocs.pm/logger/Logger.html#module-backends). You can add it as a backend when your application starts:
 
-```diff
+```elixir
 # lib/my_app/application.ex
 
-+   def start(_type, _args) do
-+     Logger.add_backend(Sentry.LoggerBackend)
-```
+def start(_type, _args) do
+  Logger.add_backend(Sentry.LoggerBackend)
 
 ## Capturing Errors
 
