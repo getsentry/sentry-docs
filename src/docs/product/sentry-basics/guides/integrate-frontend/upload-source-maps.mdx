@@ -1,51 +1,51 @@
 ---
-title: Enable Readable Stack Traces in your Errors
+title: Enable Readable Stack Traces in Your Errors
 sidebar_order: 4
 redirect_from:
   - /guides/integrate-frontend/upload-source-maps/
 description: "Learn more about enabling readable stack traces in your errors."
 ---
 
-A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features, including source mapping of minified JavaScript stack traces upon ingestion. For more information, see [Releases](/product/releases/).
-In this section, we will:
+A _release version_ is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features, including source mapping of minified JavaScript stack traces upon ingestion. Learn more in our [Releases documentation](/product/releases/).
+In this section, you will:
 
-1. Utilize the `Sentry CLI` **during the build process** to update your Sentry account by:
+1. Use the `Sentry CLI` **during the build process** to update your Sentry account by:
 
    - Creating a new release version
    - Uploading the project's latest source maps (and associate them with the new release version)
 
-2. Add the release version to the Sentry SDK configuration --- this will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's uploaded source maps to unminify the error's stack trace.
+2. Add the release version to the Sentry SDK configuration. This will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's uploaded source maps to unminify the error's stack trace.
 
 <Note>
 
-As part of the **CI/CD workflow** for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through `make` targets. If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command-line shell as part of your build process. For more information, see [Command Line Interface](/product/cli/).
+As part of the CI/CD workflow for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through `make` targets. If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command-line shell as part of your build process. Learn more in our [Command Line Interface documentation](/product/cli/).
 
 </Note>
 
 ## Step 1: Prepare the build environment
 
-We use the `Makefile` in the `frontend-monitoring` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
+We use the `Makefile` in the `frontend-monitoring` project to handle Sentry related tasks using the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
 
-1. Open the `Makefile`
+1. Open the `Makefile`.
 
-2. Uncomment the commented environment variables `SENTRY_AUTH_TOKEN` , `SENTRY_ORG`, and `SENTRY_PROJECT` (remove the leading **#**)
+2. Uncomment the commented environment variables `SENTRY_AUTH_TOKEN` , `SENTRY_ORG`, and `SENTRY_PROJECT` (remove the leading `#`).
 
    ![Initial Makefile](upload-source-maps-010.png)
 
-3. To find the SENTRY_ORG and SENTRY_PROJECT values
+3. To find the `SENTRY_ORG` and `SENTRY_PROJECT` values:
 
-   - Open your Sentry account and click `Settings > Projects`
-   - Your Organization ID is part of the browser URL (for example, https://sentry.io/settings/**SENTRY_ORG**/projects/)
-   - The SENTRY_PROJECT value is the name that appears in the project tile
+   - Open your Sentry account and click "Settings > Projects".
+   - Your organization ID, or the `SENTRY_ORG` value is part of the browser URL (for example, https://sentry.io/settings/**SENTRY_ORG**/projects/).
+   - The `SENTRY_PROJECT` value is the name that appears in the project tile.
 
      ![Sentry CLI variables](upload-source-maps-011.png)
 
-   - Copy the values and paste them in the Makefile
+   - Copy the values and paste them in the `Makefile`.
 
-4. To create a `SENTRY_AUTH_TOKEN`
+4. To create a `SENTRY_AUTH_TOKEN`:
 
-   - Click on the `Developer Settings` menu option name from the left side panel to create a new integration and org-level auth token
-   - Click on `New Internal Integration`
+   - Click "Developer Settings" in the left side panel to create a new integration and org-level auth token.
+   - Click on "New Internal Integration".
 
      ![Create Auth Token 1](upload-source-maps-04.png)
 
