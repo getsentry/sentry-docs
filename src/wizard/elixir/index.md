@@ -85,11 +85,15 @@ plug Sentry.PlugContext
 
 `Sentry.PlugContext` gathers the contextual information for errors, and `Sentry.PlugCapture` captures and sends any errors that occur in the Plug stack. `Sentry.PlugContext` should be below `Plug.Parsers` if you are using it.
 
-To capture crashed crashed process exceptions, add `Sentry.LoggerBackend` to your Logger backends:
+### Capture Crashed Process Exceptions
 
-```
-config :logger,
-  backends: [:console, Sentry.LoggerBackend]
+This library comes with an extension to capture all error messages that the Plug handler might not.  This is based on [Logger.Backend](https://hexdocs.pm/logger/Logger.html#module-backends). You can add it as a backend when your application starts:
+
+```elixir
+# lib/my_app/application.ex
+
+def start(_type, _args) do
+  Logger.add_backend(Sentry.LoggerBackend)
 ```
 
 ## Capturing Errors
