@@ -35,14 +35,26 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
 
 In case you receive the following error during Sentry initialization:
 
-`System.IO.FileNotFoundException: 'Could not load file or assembly 'System.Net.Http, Version=4.0.0.0`
+`System.IO.FileNotFoundException: Could not load file or assembly System.Net.Http, Version=4.0.0.0`
 
-You may have a misconfiguration on your Web.config.
-There are three ways of solving this.
+You may have a misconfiguration on your Web.config. You may fix it with one of the three solutions below:
 
-1) find the `assemblyIdentity` for `System.Net.Http` and remove the `bindingRedirect`.
-2) find the `assemblyIdentity` for `System.Net.Http` and lower the newVersion to `4.0.0.0`
-3) Install the NuGet `System.Net.Http` with the latest version available for your project.
+* Find the `assemblyIdentity` for `System.Net.Http` and remove the `bindingRedirect`.
+```xml
+<dependentAssembly>
+  <assemblyIdentity name="System.Net.Http" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+</dependentAssembly>
+```
+
+* Find the `assemblyIdentity` for `System.Net.Http` and lower the newVersion to `4.0.0.0`
+```xml
+<dependentAssembly>
+  <assemblyIdentity name="System.Net.Http" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+  <bindingRedirect oldVersion="0.0.0.0-4.2.0.0" newVersion="4.0.0.0" />
+</dependentAssembly>
+```
+
+* Install the latest package from `System.Net.Http` in NuGet into your project.
 
 More information about the problem can be found here: https://github.com/dotnet/runtime/issues/24382
 
