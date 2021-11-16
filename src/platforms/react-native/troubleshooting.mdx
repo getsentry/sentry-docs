@@ -4,6 +4,44 @@ description: "Troubleshoot and resolve common issues with the React Native SDK."
 sidebar_order: 1000
 ---
 
+## Unhandled Promise Rejections
+
+Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry. You will need to ensure that the version of `promise` that you use matches exactly with the version that React Native uses. If the versions do not match, our SDK might issue a warning:
+
+> WARN: Unhandled promise rejections might not be caught by Sentry. Read about how to fix this on our troubleshooting docs.
+
+### How to ensure the version matches
+
+1. Check the version of `promise` that your version of `react-native` uses. You can do this by going into `node_modules/react-native/package.json` and checking the version there, for example we find that it uses `^8.0.3`:
+
+```json {filename:node_modules/react-native/package.json}
+{
+  "dependencies": {
+    // ...
+    "promise": "^8.0.3"
+  }
+}
+```
+
+2. Add a package resolution with the same version as `react-native`'s' to **your** `package.json` file, this will force this version to be used. You will then need to run a fresh `yarn install` or `npm install` to use the package resolution you just added.
+
+```json {filename:package.json}
+{
+  "resolutions": {
+    "promise": "^8.0.3"
+  }
+}
+```
+
+<Note>
+
+Package resolutions are currently only supporred by `yarn`. If you use `npm`, you can use a third-party package called [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions) to achieve this.
+
+</Note>
+
+3. If the fix is successful, our SDK will no longer display the above warning. If you want to double check, you can put Sentry in debug mode with `debug: true`. If promise rejection handling is active, you will see the log below in your Javascript console:
+   > [Sentry] Unhandled promise rejections will be caught by Sentry.
+
 ## Source Maps
 
 When there is an issue with source maps on your event, there will usually be an error dialog at the top of the Issue Details page in [sentry.io](https://sentry.io):
