@@ -16,7 +16,7 @@ Supported in Sentry's Android SDK version `4.3.0` and above.
 
 ### Android's Activity Instrumentation
 
-The Activity's instrumentation, once enabled, captures transactions for each launch of an Activity. The SDK sets the Transaction name to the name of the Activity, for example, `MainActivity`, and Transaction operation to `navigation`.
+The Activity's instrumentation, once enabled, captures transactions for each launch of an Activity. The SDK sets the Transaction name to the name of the Activity, for example, `MainActivity`, and Transaction operation to `ui.load`.
 
 The transaction starts before each Activity's `onCreate` method is called.
 
@@ -130,6 +130,7 @@ The SDK differentiates between a cold and a warm start, but doesn't track hot st
 * __Cold start__: A cold start refers to an app’s starting from scratch: the system’s process has not, until this start, created the app’s process. Cold starts happen in cases such as your app’s being launched for the first time since the device booted, or since the system killed the app.
 * __Warm start__: A warm start encompasses some subset of the operations that take place during a cold start; at the same time, it represents more overhead than a hot start. For instance: The user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch via a call to `onCreate()`.
 
+The SDK sets the Span operation to `app.start.cold` for *Cold start_* and `app.start.warm` for *Warm start*.
 
 The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first `Activity#onResume` call as the end.
 
@@ -154,9 +155,9 @@ Slow and frozen frames are Mobile Vitals, which you can learn about in the [full
 
 ### AndroidX Support
 
-Sentry uses the AndroidX.Core library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
+Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
 
-We check for availability at runtime, so if you're not using AndroidX.Core, you can remove it from Sentry's transitive dependencies.
+We check for availability at runtime, so if you're not using `androidx.core`, you can remove it from Sentry's transitive dependencies.
 
 ```Groovy
 implementation ('io.sentry:sentry-android:{{ packages.version('sentry.java.android', '4.2.0') }}') {
