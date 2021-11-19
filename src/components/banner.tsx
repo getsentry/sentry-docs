@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop with Power Home Remodeling (Nov. 18 @ 10am PT) on streamlining issue management and communication.";
+  "Live Workshop on how Shift uses Sentry to surface the most important issues (Dec. 8 @ 10am PT).";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/streamline-issue-management-with-powerhrg/?promo_name=docs-banner";
+  "https://sentry.io/resources/code-observability-revolution-shift/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
