@@ -29,13 +29,67 @@ The Laravel integration will create [breadcrumbs](../../enriching-events/breadcr
 ],
 ```
 
-## Performance
+## Performance Monitoring
 
 To enable performance monitoring, set this to a value greater than `0.0`:
 
 ```php {filename:config/sentry.php}
 // Be sure to lower this in production to prevent quota issues
 'traces_sample_rate' => 1.0,
+```
+
+### Advanced sample rate
+
+If you want more control over which requests are monitored, you can use the `traces_sampler` option:
+
+```php {filename:config/sentry.php}
+'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
+    // We always sample if the front-end indicates it was sampled to have full traces front to back
+    if ($context->getParentSampled()) {
+        return 1.0;
+    }
+
+    if (some_condition()) {
+        // Drop this transaction, by setting its sample rate to 0
+        return 0.0;
+    }
+
+    // Default sample rate for all other transactions
+    return 0.25;
+},
+```
+
+<Note>
+
+Read about [closures and config caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
+
+</Note>
+
+### More configuration
+
+You can also configure what is being monitored automatically, these settings have no effect if `traces_sample_rate` is set to `0.0`:
+
+```php {filename:config/sentry.php}
+'tracing' => [
+    // Trace queue jobs as their own transactions
+    'queue_job_transactions' => env('SENTRY_TRACE_QUEUE_ENABLED', false),
+
+    // Capture queue jobs as spans when executed on the sync driver
+    'queue_jobs' => true,
+
+    // Capture SQL queries as spans
+    'sql_queries' => true,
+
+    // Try to find out where the SQL query originated from and add it to the query spans
+    'sql_origin' => true,
+
+    // Capture views as spans
+    'views' => true,
+
+    // Indicates if the tracing integrations supplied by Sentry should be loaded
+    // See all default integration: https://github.com/getsentry/sentry-laravel/tree/master/src/Sentry/Laravel/Tracing/Integrations
+    'default_integrations' => true,
+],
 ```
 
 ## Controller base namespace
@@ -48,4 +102,32 @@ In Laravel this is `App\Http\Controllers` by default but you can override this u
 
 ```php {filename:config/sentry.php}
 'controllers_base_namespace' => env('SENTRY_CONTROLLERS_BASE_NAMESPACE', 'App\\Http\\Controllers'),
+```
+
+## Closures and config caching
+
+Sometimes the SDK requires a closure as an option value. The causes problems when using `php artisan config:cache` resulting in the `Your configuration files are not serializable` error.closure
+
+We can work around that by providing a callable instead of a closure. In this example we are using the `traces_sampler` option but this can be used for any other option that accepts a closure:
+
+```php {filename:config/sentry.php}
+'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
+```
+
+This callable points to the `App\Exceptions\Sentry` class and the `tracesSampler` method:
+
+```php {filename:app/Exceptions/Sentry.php}
+<?php
+
+namespace App\Exceptions;
+
+use Sentry\Tracing\SamplingContext;
+
+class Sentry
+{
+    public static function tracesSampler(SamplingContext $context): float
+    {
+        // The code you would have placed in the closure...
+    }
+}
 ```
