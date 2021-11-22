@@ -11,7 +11,7 @@ Install the `sentry/sentry-laravel` package:
 composer require sentry/sentry-laravel
 ```
 
-If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
+If you're on Laravel 5.5 or higher, the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
 
 Add Sentry reporting to `App/Exceptions/Handler.php`.
 
