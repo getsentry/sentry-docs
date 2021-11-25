@@ -1,7 +1,10 @@
-In the Laravel config, a closure can be used to modify the event or return a completely new one. If you return `null`, the event will be discarded.
-
 ```php {filename:config/sentry.php}
 'before_send' => function (\Sentry\Event $event): ?\Sentry\Event {
+    // Ignore the event if the original exception is an instance of MyException
+    if ($hint !== null && $hint->exception instanceof MyException) {
+      return null;
+    }
+
     return $event;
 },
 ```
