@@ -30,7 +30,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "php.laravel",
   "android",
   "apple",
-  "java.spring-boot",
+  "javascript.nextjs",
   "ruby.rails",
   "flutter",
   "unity"
