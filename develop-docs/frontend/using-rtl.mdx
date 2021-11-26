@@ -146,3 +146,28 @@ expect(screen.getByText("Hello World")).toBeInTheDocument();
 mountWithTheme(<Example />);
 expect(screen.getByText(/hello world/i)).toBeInTheDocument();
 ```
+
+Use `userEvent` over `fireEvent` where possible.
+`userEvent` comes from the package `@testing-library/user-event` which is built on top of `fireEvent`, but it provides several methods that resemble the user interactions more closely.
+
+```javascript
+// ❌
+import {
+  mountWithTheme,
+  screen,
+  fireEvent,
+} from "sentry-test/reactTestingLibrary";
+mountWithTheme(<Example />);
+fireEvent.change(screen.getByLabelText("Search by name"), {
+  target: { value: "sentry" },
+});
+
+// ✅
+import {
+  mountWithTheme,
+  screen,
+  userEvent,
+} from "sentry-test/reactTestingLibrary";
+mountWithTheme(<Example />);
+userEvent.type(screen.getByLabelText("Search by name"), "sentry");
+```
