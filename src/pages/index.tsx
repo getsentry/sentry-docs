@@ -30,7 +30,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "php.laravel",
   "android",
   "apple",
-  "java.spring-boot",
+  "javascript.nextjs",
   "ruby.rails",
   "flutter",
   "unity"
@@ -177,7 +177,7 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/sentry-basics/guides/">Best Practices</a>
+                <a href="/product/sentry-basics/">Sentry Basics</a>
               </li>
               <li>
                 <a href="/product/sentry-basics/environments/">Environments</a>
