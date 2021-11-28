@@ -31,6 +31,33 @@ using System.Net;
 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
 ```
 
+### SentrSdk.Init With Error
+
+If you get the following error during Sentry initialization, you may have a misconfiguration on your Web.config:
+
+`System.IO.FileNotFoundException: Could not load file or assembly System.Net.Http, Version=4.0.0.0`
+
+You can fix it with one of the three solutions below:
+
+* Find the `assemblyIdentity` for `System.Net.Http` and remove the `bindingRedirect`.
+```xml
+<dependentAssembly>
+  <assemblyIdentity name="System.Net.Http" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+</dependentAssembly>
+```
+
+* Find the `assemblyIdentity` for `System.Net.Http` and lower the newVersion to `4.0.0.0`.
+```xml
+<dependentAssembly>
+  <assemblyIdentity name="System.Net.Http" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+  <bindingRedirect oldVersion="0.0.0.0-4.2.0.0" newVersion="4.0.0.0" />
+</dependentAssembly>
+```
+
+* Install the latest package from `System.Net.Http` in NuGet into your project.
+
+You can find more information about the problem [in this GitHub issue](https://github.com/dotnet/runtime/issues/24382).
+
 ### Tags Not Showing if Set on Application_Start
 
 This happens because the `scope` from `requests` will be different from the one executed during the execution of Application_Start.
