@@ -137,6 +137,9 @@ const getPlugins = () => {
       options: {
         name: `docs`,
         path: `${root}/src/docs`,
+         // The dynamic sampling example file will be temporarily ignored
+         // until we enable the error rules again
+        ignore: [`**/dynamic-sampling/example.mdx`],
       },
     },
     {
