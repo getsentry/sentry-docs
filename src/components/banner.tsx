@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop on how Shift uses Sentry to surface the most important issues (Dec. 8 @ 10am PT).";
+  "Is the future of open source sustainable? Learn more on Dec. 14 @ 9am PT with speakers from Sentry, GitHub, and more.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/code-observability-revolution-shift/?promo_name=docs-banner";
+  "https://sentry.io/resources/the-future-of-open-source-is-it-sustainable/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
