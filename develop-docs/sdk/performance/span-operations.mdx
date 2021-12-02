@@ -1,0 +1,137 @@
+---
+title: "Span Operations"
+---
+
+Span operations are a short code identifying the type of operation the span is measuring. Span operations are low cardinality attributes - they should be as general as possible while still being human readable and useful. They should avoid including high cardinality data like IDs and URLs.
+
+Operations are expected to follow [OpenTelemetry's semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/24de67b3827a4e3ab2515cd8ab62d5bcf837c586/specification/trace/semantic_conventions/README.md) as much as possible.
+
+It's important to keep categories consistent between SDKs and integrations as they are used by Sentry in the [Operations Breakdown](https://docs.sentry.io/product/sentry-basics/tracing/event-detail/#operations-breakdown) feature. For example, both `db.init` and `db.query` will be categorized as database operations (`db`). The default operations breakdown config can be seen [here](https://github.com/getsentry/sentry/blob/809b7fe54c6f06cc1e4c503cf83ded896472a011/src/sentry/projectoptions/defaults.py#L74).
+
+# List of Operations
+
+The following tables contain examples of operations used by the SDKs and Sentry product. The usage column in the table contains examples of using that operation category, but are not hard recommendations for operation usage. As long as categories stay consistent, SDK developers are free to choose actions and identifiers that best match the use case they are instrumenting.
+
+If a span operation is not provided, the value of `default` is used.
+
+## Browser
+
+| Category   | Usage           | Description                                                                                                         |
+| ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| pageload   |                 | A full page load of a web application                                                                               |
+| navigation |                 | Client-side browser history change in a web application                                                             |
+| resource   |                 | Resource as per [Performance Resource Timing](https://w3c.github.io/resource-timing/#sec-performanceresourcetiming) |
+|            | resource.script |                                                                                                                     |
+|            | resource.link   |                                                                                                                     |
+|            | resource.css    |                                                                                                                     |
+|            | resource.img    |                                                                                                                     |
+| browser    |                 | Usage of browser APIs or functionality                                                                              |
+|            | browser.paint   |                                                                                                                     |
+| mark       |                 | Usage of [performance.mark() API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)                |
+| measure    |                 | Usage of [performance.measure() API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)          |
+| ui         |                 |                                                                                                                     |
+|            | ui.animation    | An animation                                                                                                        |
+|            | ui.render       | Time it takes to render a UI element                                                                                |
+|            | ui.update       | Time it takes to update a UI element                                                                                |
+
+### JS Frameworks
+
+JS Frameworks should be prepended with the `ui` category for operations related to UI components.
+
+| Category   | Usage           | Description                                                 |
+| ---------- | --------------- | ----------------------------------------------------------- |
+| ui.react   |                 | Spans related to [React](https://reactjs.org/) components   |
+|            | ui.react.mount  |                                                             |
+|            | ui.react.render |                                                             |
+| ui.vue     |                 | Spans related to [Vue.js](https://vuejs.org/) components    |
+|            | ui.vue.mount    |                                                             |
+|            | ui.vue.update   |                                                             |
+| ui.angular |                 | Spans related to [Angular](https://angular.io/) components  |
+| ui.ember   |                 | Spans related to [EmberJS](https://emberjs.com/) components |
+
+## Web Server
+
+Web server related spans should aim to follow OpenTelemetry's [HTTP](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md) and [RPC](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md) semantic conventions when possible.
+
+| Category  | Usage           | Description                                                        |
+| --------- | --------------- | ------------------------------------------------------------------ |
+| http      |                 | Spans related to http operations                                   |
+|           | http.client     |                                                                    |
+|           | http.server     |                                                                    |
+| rpc       |                 | Spans related to remote procedure calls (RPC)                      |
+| grpc      |                 | Usage of the [gRPC framework](https://grpc.io/)                    |
+| template  |                 |                                                                    |
+|           | template.init   |                                                                    |
+|           | template.parse  |                                                                    |
+|           | template.render |                                                                    |
+| render    |                 | Rendering of a view                                                |
+| serialize |                 | Serialization of data                                              |
+| console   |                 | Accessing web servers through the command line (ex. Rails console) |
+
+## Web Frameworks
+
+| Category | Usage             | Description |
+| -------- | ----------------- | ----------- |
+| django   |                   |             |
+|          | django.middleware |             |
+|          | django.view       |             |
+| express  |                   |             |
+| rails    |                   |             |
+| rack     |                   |             |
+
+## Database
+
+Databased related spans are expected to follow OpenTelemetry's [Database](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md) semantic conventions when possible.
+
+| Category | Usage            | Description                |
+| -------- | ---------------- | -------------------------- |
+| db       |                  | An operation on a database |
+|          | db.connection    |                            |
+|          | db.transaction   |                            |
+|          | db.sql.query     |                            |
+|          | db.query         |                            |
+|          | db.query.compile |                            |
+
+## Serverless (FAAS)
+
+Serverless related spans are expected to follow OpenTelemetry's [FaaS](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/faas.md) semantic conventions when possible.
+
+| Category | Usage            | Description                          |
+| -------- | ---------------- | ------------------------------------ |
+| faas     |                  | Invocations of a serverless function |
+|          | faas.aws         |                                      |
+|          | faas.aws.lambda  |                                      |
+|          | faas.aws.request |                                      |
+|          | faas.gcp         |                                      |
+
+## Mobile
+
+| Category   | Usage          | Description                         |
+| ---------- | -------------- | ----------------------------------- |
+| app        |                | Data about the mobile app           |
+|            | app.start      |                                     |
+|            | app.start.warm |                                     |
+|            | app.start.cold |                                     |
+| ui         |                | An operation on a mobile/desktop UI |
+|            | ui.load        |                                     |
+|            | ui.action      |                                     |
+| navigation |                | Navigating to another screen        |
+| file       |                | Operations on the file system       |
+|            | file.read      |                                     |
+|            | file.write     |                                     |
+
+## Messages/Queues
+
+Messages/Queue spans are expected follow OpenTelemetry's [Messaging](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md) semantic conventions when possible.
+
+| Category | Usage         | Description |
+| -------- | ------------- | ----------- |
+| topic    |               |             |
+|          | topic.send    |             |
+|          | topic.recieve |             |
+|          | topic.process |             |
+| queue    |               |             |
+|          | queue.process |             |
+| job      |               |             |
+|          | job.exec      |             |
+| celery   |               |             |
