@@ -23,14 +23,14 @@ You should `init` the Sentry browser SDK as soon as possible during your applica
 import { enableProdMode } from "@angular/core";
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 import * as Sentry from "@sentry/angular";
-import { Integrations } from "@sentry/tracing";
+import { BrowserTracing } from "@sentry/tracing";
 
 import { AppModule } from "./app/app.module";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Integrations.BrowserTracing({
+    new BrowserTracing({
       tracingOrigins: ["localhost", "https://yourserver.io/api"],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
