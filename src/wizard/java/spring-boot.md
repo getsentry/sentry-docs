@@ -31,7 +31,7 @@ Open up `src/main/application.properties` (or `src/main/application.yml`) and co
 
 Modify `src/main/application.properties`:
 
-```
+```properties
 sentry.dsn=___PUBLIC_DSN___
 # Set traces-sample-rate to 1.0 to capture 100% of transactions for performance monitoring.
 # We recommend adjusting this value in production.
@@ -80,6 +80,7 @@ try {
   Sentry.captureException(e);
 }
 ```
+
 ### Kotlin
 
 ```kotlin
@@ -119,6 +120,7 @@ class PersonService {
 
 ### Kotlin
 
+```kotlin
 import org.springframework.stereotype.Component
 import io.sentry.spring.tracing.SentrySpan
 
@@ -130,5 +132,6 @@ class PersonService {
     ...
   }
 }
+```
 
 Check out [the documentation](https://docs.sentry.io/platforms/java/guides/spring-boot/performance/instrumentation/) to learn more about the API and integrated instrumentations.

@@ -16,7 +16,7 @@ Supported in Sentry's Android SDK version `4.3.0` and above.
 
 ### Android's Activity Instrumentation
 
-The Activity's instrumentation, once enabled, captures transactions for each launch of an Activity. The SDK sets the Transaction name to the name of the Activity, for example, `MainActivity`, and Transaction operation to `navigation`.
+The Activity's instrumentation, once enabled, captures transactions for each launch of an Activity. The SDK sets the Transaction name to the name of the Activity, for example, `MainActivity`, and Transaction operation to `ui.load`.
 
 The transaction starts before each Activity's `onCreate` method is called.
 
@@ -124,20 +124,21 @@ Learn more in our [Fragment documentation](/platforms/android/configuration/inte
 
 ### App Start Instrumentation
 
-<Note>
-
-This is a preview API, available in `5.1.0` and above. Features available in a preview API are still in progress and may have bugs. We recognize the irony. The API may be renamed, changed, or removed in a future version.
-
-</Note>
-
 The App Start Instrumentation provides insight into how long your application takes to launch. It adds a span from the application launch to the first auto-generated UI transaction.
 
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 * __Cold start__: A cold start refers to an app’s starting from scratch: the system’s process has not, until this start, created the app’s process. Cold starts happen in cases such as your app’s being launched for the first time since the device booted, or since the system killed the app.
 * __Warm start__: A warm start encompasses some subset of the operations that take place during a cold start; at the same time, it represents more overhead than a hot start. For instance: The user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch via a call to `onCreate()`.
 
+The SDK sets the Span operation to `app.start.cold` for *Cold start_* and `app.start.warm` for *Warm start*.
 
 The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first `Activity#onResume` call as the end.
+
+<Note>
+
+The app start is only measured if the process is of the importance [RunningAppProcessInfo.IMPORTANCE_FOREGROUND](https://developer.android.com/reference/android/app/ActivityManager.RunningAppProcessInfo#IMPORTANCE_FOREGROUND), which means the process is running the foreground UI.
+
+</Note>
 
 You can opt out of Android's Activity Instrumentation and App Start Instrumentation using options:
 
@@ -151,6 +152,12 @@ Cold and warm start are Mobile Vitals, which you can learn about in the [full do
 
 ### Slow and Frozen Frames
 
+<Note>
+
+Supported on Android OS version `7.0` and above.
+
+</Note>
+
 Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are *slow frames* and *frozen frames*. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the [Android's Activity](/platforms/android/performance/instrumentation/automatic-instrumentation/#androids-activity-instrumentation) transactions.
 
 - **Slow frames**: Slow frames are captured by the SDK when the app takes more than 16 ms to render a frame. Typically, a phone or tablet renders 60 frames per second (fps). At 60 fps, every frame has 16 ms to render; slower than that, and the app has slow frames.
@@ -160,9 +167,9 @@ Slow and frozen frames are Mobile Vitals, which you can learn about in the [full
 
 ### AndroidX Support
 
-Sentry uses the AndroidX.Core library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
+Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
 
-We check for availability at runtime, so if you're not using AndroidX.Core, you can remove it from Sentry's transitive dependencies.
+We check for availability at runtime, so if you're not using `androidx.core`, you can remove it from Sentry's transitive dependencies.
 
 ```Groovy
 implementation ('io.sentry:sentry-android:{{ packages.version('sentry.java.android', '4.2.0') }}') {
@@ -192,13 +199,19 @@ Supported in Sentry Android Gradle Plugin version `3.0.0` and above.
 
 </Note>
 
-The [Sentry Android Gradle Plugin](/platforms/android/proguard/#gradle-configuration) does the tracing auto instrumentation via bytecode manipulation for `SQLite` and `Room` libraries.
+The [Sentry Android Gradle Plugin](/platforms/android/proguard/#gradle-configuration) does the tracing auto instrumentation using bytecode manipulation for `androidx.sqlite` and `androidx.room` libraries.
 
 The Plugin injects a code snippet that starts a span out of the active span bound to the scope for each `CRUD` operation. The SDK sets the span `operation` to `db` and `description` to the SQL Query if available.
 
 The span finishes once the operation has been executed. The span `status` is set to `SpanStatus.OK` if successful or `SpanStatus.INTERNAL_ERROR` if there was any error.
 
 When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+
+<Note>
+
+At the moment, we only support standard `androidx.room` usage. That is, the SDK will not report SQL queries for any `SupportSQLiteOpenHelper.Factory` other than [androidx.sqlite](https://github.com/androidx/androidx/tree/androidx-main/sqlite). However, if you are using a different `SupportSQLiteOpenHelper.Factory`, please report any [issues on Github](https://github.com/getsentry/sentry-android-gradle-plugin/issues), so we are aware and can possibly work on them.
+
+</Note>
 
 <Note>
 

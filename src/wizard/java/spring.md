@@ -13,7 +13,7 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 
 ### Maven:
 
-```
+```xml {tabTitle:Maven}{filename:pom.xml}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
@@ -23,7 +23,7 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 
 ### Gradle:
 
-```
+```groovy {filename:build.gradle}
 implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java.spring', '4.0.0') }}'
 ```
 
@@ -39,7 +39,7 @@ The `sentry-spring` library provides `@EnableSentry` annotation that registers a
 
 ### Java
 
-```
+```java {tabTitle: Java}
 import io.sentry.spring.EnableSentry;
 
 @EnableSentry(dsn = "___PUBLIC_DSN___")
@@ -50,7 +50,7 @@ class SentryConfiguration {
 
 ### Kotlin
 
-```
+```kotlin
 import io.sentry.spring.EnableSentry
 import org.springframework.core.Ordered
 

@@ -40,6 +40,9 @@ Add your DSN to the manifest file.
 ```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+    <!-- Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+       We recommend adjusting this value in production. -->
+    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
 ```
 
@@ -112,6 +115,12 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 ```
 
 Check out [the documentation](https://docs.sentry.io/platforms/android/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+
+> Want to play with some new features? Try out our beta [Room performance integration](https://docs.sentry.io/platforms/android/performance/instrumentation/automatic-instrumentation/#sqlite-and-room-instrumentation).
+>  
+> This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/proguard/#gradle); you must use version `3.0.0-beta.1`. The `tracingInstrumentation` option is enabled by default, so Sentry automatically measures performance of the database queries done with Room if you set a tracing sample rate. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-android-gradle-plugin/issues).
 
 ### Next Steps
 

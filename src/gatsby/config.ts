@@ -12,6 +12,7 @@ const root = `${__dirname}/../..`;
 process.env.DISABLE_THUMBNAILS = process.env.DISABLE_THUMBNAILS || "0";
 if (process.env.DISABLE_THUMBNAILS === "1") {
   console.log("🐇 Thumbnail generation is disabled.");
+  console.log("WARN: DISABLE_THUMBNAILS should no longer yield significant build time boosts with `yarn develop`. Let @markus know if it does.");
 }
 
 const getPlugins = () => {

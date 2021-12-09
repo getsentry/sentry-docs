@@ -14,14 +14,30 @@ Native support requires configuration using the Sentry Unity Editor window. Supp
 
 Native support is `enabled` by default. The Unity SDK passes the options defined through the Sentry Unity Editor window during build time. For Android, it embeds the [Android SDK](/platforms/android/) inside the Gradle project created by Unity. The [iOS SDK](/platforms/apple/guides/ios/) is embedded inside the generated Xcode project. This means there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
 
-<Note>
-
-Our Unity SDK currently supports native iOS when building for device only. Support for the iOS simulators is planned.
-
-</Note>
-
 You can opt out of native support by unchecking `iOS Native Support` and `Android Native Support` in the configuration window.
 
 ## Debug Symbols
 
-Our Unity SDK does not yet support the automated upload of debug symbols, but since it's using other Sentry SDKs this can be set up manually. Check out our documentation for [iOS](/platforms/apple/guides/ios/dsym/) and [Android](/platforms/android/proguard/).
+Sentry requires [debug information files](/platforms/android/data-management/debug-files/) to symbolicate your crash logs. The Unity SDK provides an automated upload functionality for those symbol files that rely on the [sentry-cli](/product/cli/). We've included the executables for Windows, macOS, and Linux inside the Unity SDK package.
+
+The automated debug symbols upload is enabled by default but requires configuration. Go to **Tools > Sentry > Editor** to enter the [Auth Token](https://sentry.io/api/), Org Slug, and the Project Name. Note that the Unity SDK creates a file at `Assets/Plugins/Sentry/SentryCliOptions.asset` to store the configuration, that should not be made publicly available.
+
+### iOS - dSYM and Bitcode
+
+Debug information files on the iOS platform are called dSYM, and the way to obtain them differs depending on whether `Enable Bitcode` is set to `true` in your Xcode project.
+
+For Sentry to symbolicate your crash logs and with `bitcode` enabled, we need two types of files:
+1. `dSYM` files available only **after** App Store Connect finishes processing the build
+2. `BCSymbolMap` files that are created during the archiving process
+
+The automated symbol upload will take care of the `BCSymbolMap` files by processing them during the archiving process. To provide the dSYM files to Sentry, you can either set up the [App Store Connect Integration](/platforms/apple/guides/ios/dsym/#bitcode-appstore) so Sentry can fetch them for you or download and then upload them [manually using sentry-cli](/platforms/apple/guides/ios/dsym/#bitcode-sentrycli).
+
+With `bitcode` disabled, the automated symbols upload will pick up the `dSYM` files at the end of the build process without further action required.
+
+### Manual Upload Using sentry-cli
+
+You can either use the provided executables from within the package or follow the [sentry-cli documentation](/product/cli/installation/) to make it available globally. To upload debug symbols, run it with:
+
+```bash
+sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dif --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
+```

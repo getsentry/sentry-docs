@@ -66,7 +66,7 @@ stack.abs_path:**/project/**.c +app
 # matches on vendor/foo without sub folders
 stack.abs_path:**/vendor/foo/*.c -app
 
-# matches on `foo.c` as well as `foo/bar.c`.
+# matches on `foo.gen.c` as well as `foo/bar.gen.c`.
 stack.abs_path:**/*.gen.c -group
 ```
 
@@ -103,7 +103,7 @@ Matches on the current state of the in-app flag of a stack trace frame. `yes` me
 
 ### `category`
 
-Matches on a built-in [built-in](#built-in-categories) or a user-defined frame category.
+Matches on a [built-in](#built-in-categories) or a user-defined frame category.
 See [variable actions](#variable-actions) on how to set a category.
 
 ```discover {tabTitle:Category Match}
@@ -204,49 +204,7 @@ For instance, the following marks all frames that are below a specific C++ names
 stack.function:myapplication::* +app
 ```
 
-#### Considerations for `sentry-cocoa`
-
-The `sentry-cocoa` SDK always marks public frameworks such as UIKitCore, CoreFoundation, GraphicsServices, and so forth as `not inApp`. Before version 7.0.0, the sentry-cocoa SDK marks all private frameworks and the main executable inside the application bundle as `inApp`. Since version 7.0.0, the sentry-cocoa SDK sets the `inApp` flag only for frames originating from the main executable by using the [CFBundleExecutable]. For private frameworks, such as Sentry, dynamic and static frameworks differ. If you are not familiar with these terms, you can learn more:
-
-- [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable)
-- [Dynamic Library Programming Topics](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/000-Introduction/Introduction.html)
-
-##### Dynamic Frameworks
-
-If you use dynamic frameworks, such as, for example, Sentry, the SDK marks these as `not inApp`. In case you have a private framework that should be `inApp`, you can use [`inAppInclude`](/platforms/apple/configuration/options/#in-app-include) or [`inAppExclude`](/platforms/apple/configuration/options/#in-app-exclude) of the SentryOptions.
-
-```swift {tabTitle:Swift}
-import Sentry
-
-SentrySDK.start { options in
-    options.dsn = "___PUBLIC_DSN___"
-
-    // The SDK marks all frameworks starting with MyBusinessLogic as inApp
-    options.add(inAppInclude: "MyBusinessLogic")
-
-    // The SDK marks all frameworks starting with MyFramework as not inApp
-    options.add(inAppExclude: "MyFramework")
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-
-    // The SDK marks all frameworks starting with MyBusinessLogic as inApp
-    [options addInAppInclude:@"MyBusinessLogic"];
-
-    // The SDK marks all framework starting with MyFramework as not inApp
-    [options addInAppExclude:@"MyFramework"];
-}];
-```
-
-##### Static Frameworks
-
-When using static frameworks, the frameworks end up in the main executable. Therefore, the SDK currently can't detect if a frame of the main executable
-originates from your application or a private framework and marks all of them as `inApp`. To improve your experience, use the below explained stack trace rules on the server to tell Sentry which should be marked as `not inApp`.
+See [in-app frames for Apple](/platforms/apple/usage/in-app-frames) to find out how the `sentry-cocoa` SDK marks frames as in-app.
 
 #### Stack Trace Rules
 
@@ -284,8 +242,8 @@ In many cases, you want to remove the top or bottom of the stack trace. For inst
 For example, if you use Rust, you likely want to remove some frames that are related to panic handling:
 
 ```discover {tabTitle:Enhancement Rules}
-stack.function:std::panicking::begin_panic       ^-app -app ^-group
-stack.function:core::panicking::begin_panic      ^-app -app ^-group
+stack.function:std::panicking::begin_panic       ^-app -app ^-group -group
+stack.function:core::panicking::begin_panic      ^-app -app ^-group -group
 ```
 
 Here we tell the system that all frames from `begin-panic` to the crash location are not part of the application (including the panic frame itself). All frames above are, in all cases, irrelevant for grouping.
