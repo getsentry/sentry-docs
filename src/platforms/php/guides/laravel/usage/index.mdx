@@ -90,7 +90,7 @@ class SentryContext
 
 <Alert level="info" title="Note">
 
-If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above) exceptions might end up twice in Sentry.
+If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above), exceptions might show up in Sentry twice.
 
 </Alert>
 
@@ -120,15 +120,16 @@ After you configured the Sentry log channel, you can configure your app to both 
 ],
 ```
 
-Optionally, you can set the logging level and if events should bubble on the driver:
+Optionally, you can set the [logging level](https://laravel.com/docs/8.x/logging#log-levels) and if events should bubble on the driver:
 
 ```php {filename:config/logging.php}
 'channels' => [
     // ...
     'sentry' => [
         'driver' => 'sentry',
-        'level'  => null, // The minimum monolog logging level at which this handler will be triggered
-                          // For example: `\Monolog\Logger::ERROR`
+        // The minimum logging level at which this handler will be triggered
+        // Available levels: debug, info, notice, warning, error, critical, alert, emergency
+        'level' => env('LOG_LEVEL', 'error'), 
         'bubble' => true, // Whether the messages that are handled can bubble up the stack or not
     ],
 ],
@@ -136,7 +137,7 @@ Optionally, you can set the logging level and if events should bubble on the dri
 
 ### Queue Jobs
 
-When you have defined a `failed` method on your job class ([documentation](https://laravel.com/docs/6.x/queues#cleaning-up-after-failed-jobs)), that failed method acts as if your job runs inside a `try {} catch (\Exception $e) {}`. This will prevent reporting exception, causing the job to have failed to be reported to Sentry.
+When you have defined a `failed` method on your job class ([documentation](https://laravel.com/docs/8.x/queues#cleaning-up-after-failed-jobs)), that failed method acts as if your job runs inside a `try {} catch (\Exception $e) {}`. This will prevent reporting exception, causing the job to have failed to be reported to Sentry.
 
 This could be expected since your job sometimes fails due to an API that is not reachable or other expected failures. If you still want the exception to be reported to Sentry, you can implement the following in your `failed` method:
 
