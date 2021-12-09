@@ -66,6 +66,7 @@ Guidelines for how SDKs should determine the current rate limits:
 - Limits where **all** categories are unknown must be ignored since those limits apply to data the SDK cannot send. Do not apply unknown categories to a default category. Note that this is distinct from limits with no category, which implicitly apply to all categories (think of this as a special category).
 - Always keep the maximum rate limit if multiple rate limits reference the same category. If a new rate limit is shorter than an already stored rate limit, then keep the longer one.
 - `X-Sentry-Rate-Limits` returned in `200 OK` responses should be treated like on 429 responses. Sentry may choose to respond with `200 OK` regardless of a rate limit or may choose to inform a client proactively about a rate limit that is unrelated to the current request. This happens specifically for *reject-all quotas* to prevent clients from sending requests.
+- The SDK must support receiving HTTP status `429` without `X-Sentry-Rate-Limits` and `Retry-After` headers. In this case, use 60 seconds as a default value for `Retry-After`. See [Java](https://github.com/getsentry/sentry-java/blob/b182c6e4353dacd145a529298aa6f1ee41928d9f/sentry/src/main/java/io/sentry/transport/RateLimiter.java#L261-L270).
 
 ## Definitions
 
