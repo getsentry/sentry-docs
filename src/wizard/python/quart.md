@@ -6,9 +6,9 @@ type: framework
 ---
 
 The Quart integration adds support for the [Quart Web
-Framework](https://gitlab.com/pgjones/quart). We support Quart >= 0.16.1.
+Framework](https://gitlab.com/pgjones/quart). We support Quart versions 0.16.1 and higher.
 
-A Python version of 3.7 or greater is also required.
+A Python version of 3.7 or higher is also required.
 
 1. Install `sentry-sdk` from PyPI:
 
