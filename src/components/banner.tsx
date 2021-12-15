@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Is the future of open source sustainable? Learn more on Dec. 14 @ 9am PT with speakers from Sentry, GitHub, and more.";
+  "See what’s new in game development, why monitoring matters, and learn about Sentry’s new Unity SDK. Join us on Jan. 18, 2022 @ 10am PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/the-future-of-open-source-is-it-sustainable/?promo_name=docs-banner";
+  "https://sentry.io/resources/cheat-codes-for-game-development-with-sentry-and-unity/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
