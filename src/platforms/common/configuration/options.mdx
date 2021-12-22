@@ -59,19 +59,64 @@ Enabling `debug` mode makes the SDK generate as much diagnostic data as possible
 
 </ConfigKey>
 
+<PlatformSection supported={["dotnet"]}>
+
+For app models that don't have a console to print to, you can <PlatformLink to="/configuration/diagnostic-logger/">customize the SDK's diagnostic logger</PlatformLink> to write to a file or to Visual Studio's debug window.
+
+</PlatformSection>
+
 <ConfigKey name="release">
 
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/).
+Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+<PlatformSection notSupported={["unity"]}>
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if available).
+
+</PlatformSection>
+
+<PlatformSection supported={["unity"]}>
+
+By default the SDK will read from `Application.productName` and `Application.version` to create the release in the format `$"{Application.productName}@{Application.version}".`
+
+</PlatformSection>
 
 </ConfigKey>
 
 <ConfigKey name="environment">
 
+<PlatformSection notSupported={["unity", "dotnet"]}>
+
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["unity"]}>
+
+Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default, the SDK reports `editor` when running inside the Unity Editor. Otherwise, the default environment is `production`.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+
+Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default, the SDK reports `debug` when the debugger is attached. Otherwise, the default environment is `production`.
+
+Additionally, if you are running with the ASP.NET Core integration, you will also see the environment named as `staging`, if running in staging, or `development`, if running in development mode.
+
+</PlatformSection>
+
+</ConfigKey>
+
+<ConfigKey name="tunnel" supported={["javascript", "node"]}>
+
+Sets the URL that will be used to transport captured events, instead of using the DSN. This can be used to work around ad-blockers or to have more granular
+control over events sent to Sentry. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
 
 </ConfigKey>
 
@@ -120,7 +165,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust", "dart"]}>
+<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart"]}>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -141,22 +186,33 @@ will attempt to auto-discover this value.
 
 </ConfigKey>
 
-<ConfigKey name="deny-urls" supported={["javascript"]}>
+<ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
 
 A list of strings or regex patterns that match error URLs that should not be sent to Sentry. By default, all errors will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 
 </ConfigKey>
 
-<ConfigKey name="allow-urls" supported={["javascript"]}>
+<ConfigKey name="allow-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. By default, all errors
+A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. By default, all errors
 will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 
 </ConfigKey>
 
 <ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} >
 
-When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry.
+When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
+
+</ConfigKey>
+
+<ConfigKey name="consider-in-app-frames-by-default" supported={["dart"]}>
+
+Configures whether stack trace frames are considered as in app frames by default.
+You can use this to essentially make `inAppIncludes` or `inAppExcludes` an allow or deny list.
+This value is used only if Sentry can not find the origin of the frame.
+
+- If `considerInAppFramesByDefault` is set to `true`, you only need to maintain `inAppExcludes`.
+- Conversely, if `considerInAppFramesByDefault` is set to `false`, you only need to maintain `inAppIncludes`.
 
 </ConfigKey>
 
@@ -176,6 +232,12 @@ This option can be overridden using <PlatformIdentifier name="in-app-include" />
 
 </ConfigKey>
 
+<ConfigKey name="ignored-exceptions-for-type" supported={["java", "android"]}>
+
+A list of exception types that will be filtered out before sending to Sentry.
+
+</ConfigKey>
+
 <ConfigKey name="request-bodies" supported={["python"]}>
 
 This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
@@ -187,25 +249,14 @@ This parameter controls if integrations should capture HTTP request bodies. It c
 
 </ConfigKey>
 
-<ConfigKey name="max-request-body-size" supported={["php"]}>
+<ConfigKey name="max-request-body-size" supported={["php", "dotnet.aspnet", "dotnet.aspnetcore", "java"]}>
 
-This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
+This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
-- `none`: request bodies are never sent
-- `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
-- `medium`: medium and small requests will be captured (typically 10KB)
-- `always`: the SDK will always capture the request body for as long as Sentry can make sense of it
-
-</ConfigKey>
-
-<ConfigKey name="max-request-body-size" supported={["dotnet.aspnet", "dotnet.aspnetcore"]}>
-
-This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
-
-- `never`: request bodies are never sent
-- `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
-- `medium`: medium and small requests will be captured (typically 10KB)
-- `always`: the SDK will always capture the request body for as long as Sentry can make sense of it
+- `never`: Request bodies are never sent.
+- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
+- `medium`: Medium and small requests will be captured (typically 10KB).
+- `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
 </ConfigKey>
 
@@ -221,9 +272,53 @@ When enabled, local variables are sent along with stackframes. This can have a p
 
 </ConfigKey>
 
-<ConfigKey name="ca-certs" supported={["python"]}>
+<ConfigKey name="ca-certs" supported={["python", "node"]}>
 
 A path to an alternative CA bundle file in PEM-format.
+
+</ConfigKey>
+
+<ConfigKey name="frame-context-lines" supported={["node"]}>
+
+The number of context lines for each frame when loading a file.
+
+</ConfigKey>
+
+<ConfigKey name="initial-scope" supported={["javascript","node"]}>
+
+Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
+
+Object:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  debug: true,
+  initialScope: {
+    tags: {"my-tag": "my value"},
+    user: {id: 42, email: "john.doe@example.com"},
+  }
+});
+```
+
+Callback function:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  debug: true,
+  initialScope: scope => {
+    scope.setTags({ a: 'b' });
+    return scope;
+  },
+});
+```
+
+</ConfigKey>
+
+<ConfigKey name="max-value-length" supported={["javascript", "node"]}>
+
+Maximum number of characters a single value can have before it will be truncated (defaults to `250`).
 
 </ConfigKey>
 
@@ -292,15 +387,17 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 <ConfigKey name="cache-directory-path" supported={["dotnet", "android"]}>
 
-Specifies a local directory used for cacheing payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
+Specifies a local directory used for caching payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
 
 Default: not set (caching is disabled).
+
+Client SDKs built on top of the Sentry SDK for .NET, such Xamarin and Unity, have this feature enabled by default. For example in Unity, the default value is `Application.persistentDataPath`. You can disable offline caching by setting it to `null`.
 
 </ConfigKey>
 
 <ConfigKey name="init-cache-flush-timeout" supported={["dotnet"]}>
 
-When cacheing is enabled (that is, <PlatformIdentifier name="cache-directory-path" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
+When caching is enabled (that is, <PlatformIdentifier name="cache-directory-path" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
 
 The default is `1` (one) second.
 
@@ -327,6 +424,26 @@ A number between 0 and 1, controlling the percentage chance a given transaction 
 <ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
+
+</ConfigKey>
+
+</PlatformSection>
+
+<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
+
+## Hybrid SDK Options
+
+<ConfigKey name="enableNative">
+
+Set this boolean to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
+
+</ConfigKey>
+
+<ConfigKey name="autoInitializeNativeSdk" supported={["react-native"]}>
+
+Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer, but instead use [enableNative](#enableNative).
+
+You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
 
 </ConfigKey>
 

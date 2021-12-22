@@ -39,8 +39,13 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
             .UseSentry(o =>
             {
               o.Dsn = "___PUBLIC_DSN___";
+              // When configuring for the first time, to see what the SDK is doing:
+              o.Debug = true;
               // Required in Serverless environments
               o.FlushOnCompletedRequest = true;
+              // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+               // We recommend adjusting this value in production.
+              o.TracesSampleRate = 1.0;
             })
             .UseStartup<Startup>();
     }

@@ -18,4 +18,6 @@ if (
   process.env.ALGOLIA_INDEX = "1";
 }
 
+// Note: this will export the config as `{ default: ... }` due to ESM interop
+// introduced by `ts-node`. Gatsby automatically handles this output.
 module.exports = require("./src/gatsby/config");

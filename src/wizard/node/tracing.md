@@ -1,6 +1,6 @@
 ---
 name: Node.js
-doc_link: https://docs.sentry.io/performance-monitoring/getting-started/?platform=node
+doc_link: https://docs.sentry.io/platforms/node/performance/
 support_level: production
 type: framework
 ---

@@ -20,35 +20,11 @@ end
 
 `async`
 
-: When an error or message occurs, the notification is immediately sent to Sentry, synchronously. This means that returning a response to a user may be delayed.
+**This option has been deprecated and could be removed in the future.**
 
-We recommend creating a background job, using your background job processor, that will send Sentry notifications. The client will pass a JSON-compatible Hash representation of the Event into the callback.
+**For more information, please read [this issue](https://github.com/getsentry/sentry-ruby/issues/1522).**
 
-```ruby
-config.async = lambda do |event, hint|
-  SentryJob.perform_later(event, hint)
-end
-```
-
-```ruby
-class SentryJob < ActiveJob::Base
-  queue_as :default
-
-  def perform(event, hint)
-    Sentry.send_event(event, hint)
-  end
-end
-```
-
-Or if you also use `sentry-rails`, you can directly use the job we defined for you:
-
-```ruby
-config.async = lambda do |event, hint|
-  Sentry::SendEventJob.perform_later(event, hint)
-end
-```
-
-If the async callback raises an exception, Sentry will attempt to send synchronously.
+: By default, `sentry-ruby` sends events asynchronously with its own background worker. This option only exists for compatibility reasons, and it's not recommended to new Sentry users.
 
 `background_worker_threads`
 
@@ -82,17 +58,27 @@ end
 
 `breadcrumbs_logger`
 
-: Sentry supports two breadcrumbs loggers in the Ruby SDK:
-- `SentryLogger` - A general breadcrumbs logger for all Ruby applications.
-- `ActiveSupportLogger` - Built on top of Rails ActiveSupport's instrumentation and provides many Rails-specific information.
+: Sentry supports different breadcrumbs loggers in the Ruby SDK:
+- `:sentry_logger` - A general breadcrumbs logger for all Ruby applications.
+- `:active_support_logger` - Built on top of [ActiveSupport instrumentation](https://guides.rubyonrails.org/active_support_instrumentation.html) and provides many Rails-specific information.
+- `:monotonic_active_support_logger` - Similar to `:active_support_logger` but breadcrumbs will have monotonic time values. Only available with Rails 6.1+.
+- `:http_logger` - It captures requests made with the standard `net/http` library.
 
 And you can enable them with the `breadcrumbs_logger` option:
 
 ```ruby
-config.breadcrumbs_logger = :sentry_logger
-config.breadcrumbs_logger = :active_support_logger
-config.breadcrumbs_logger = [:sentry_logger, :active_support_logger]
+config.breadcrumbs_logger = [:active_support_logger]
+config.breadcrumbs_logger = [:active_support_logger, :http_logger]
 ```
+
+`capture_exception_frame_locals`
+
+: Whether to capture local variables from the raised exception's frame. Default is `false`.
+
+
+`debug`
+
+: Activation of debugging mode. When enabled, SDK errors will be logged with backtrace. Default is `false`.
 
 `enabled_environments`
 
@@ -127,7 +113,7 @@ You can find the list of exceptions that are excluded by default in `Sentry::Con
 : Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. Default value is `true`.
 
 ```ruby
-config.inspect_exception_causes_for_exclusion = false
+config.inspect_exception_causes_for_exclusion = true
 ```
 
 `logger`
@@ -146,6 +132,14 @@ Sentry respects logger levels.
 
 ```ruby
 config.max_breadcrumbs = 30
+```
+
+`propagate_traces`
+
+: By default, Sentry injects `sentry-trace` header to outgoing requests made with `Net::HTTP` to connect traces between services. You can disable this behavior with
+
+```ruby
+config.propagate_traces = false
 ```
 
 `release`
@@ -169,6 +163,18 @@ We guess the release intelligently in the following order of preference:
 config.sample_rate = 0.5
 ```
 
+`send_client_reports`
+
+: Attach diagnostic client reports about dropped events to an existing envelope max once every 30s. Default is `true`.
+
+This information will not be visible to users at the moment, but we're planning to add this information to user-facing UI.
+
+If you **do not** want to send this data, you can opt-out by setting
+
+```ruby
+config.send_client_reports = false
+```
+
 `send_default_pii`
 
 : When its value is `false` (default), sensitive information like
@@ -176,6 +182,7 @@ config.sample_rate = 0.5
 - user ip
 - user cookie
 - request body
+- query string in the url
 
 will not be sent to Sentry.
 
@@ -192,6 +199,10 @@ config.send_default_pii = true
 ```ruby
 config.send_modules = false # if you don't want to send all the dependency info
 ```
+
+`skip_rake_integration`
+
+: Determine whether to ignore exceptions caused by rake integrations. Default is `false`.
 
 `trusted_proxies`
 
@@ -216,7 +227,7 @@ config.trusted_proxies = ["2.2.2.2"]
 
 : You can gain more control on tracing event (transaction)'s sampling decision by providing a callable object (`Proc` or `Lambda`) as a `traces_sampler`:
 
-<PlatformContent includePath="performance/dynamic-sampling-function-intro" />
+<PlatformContent includePath="performance/traces-sampler-as-sampler" />
 
 ## Transport Options
 

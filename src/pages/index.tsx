@@ -13,6 +13,7 @@ import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
 
 import Banner from "../components/banner";
+import { getSandboxURL, SandboxOnly } from "~src/components/sandboxLink";
 
 const HIGHLIGHTED_PLATFORMS = [
   "javascript",
@@ -29,10 +30,10 @@ const HIGHLIGHTED_PLATFORMS = [
   "php.laravel",
   "android",
   "apple",
-  "java.spring-boot",
+  "javascript.nextjs",
   "ruby.rails",
   "flutter",
-  "native.qt"
+  "unity"
 ];
 
 const IndexPage = () => {
@@ -74,6 +75,11 @@ const IndexPage = () => {
                   API
                 </SmartLink>
               </Nav.Item>
+              <SandboxOnly>
+                <Nav.Item>
+                  <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
+                </Nav.Item>
+              </SandboxOnly>
               <Nav.Item>
                 <Nav.Link href="https://sentry.io/">
                   Sign In
@@ -148,12 +154,12 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/performance/getting-started/">
+                <a href="/product/performance/">
                   Performance Monitoring
                 </a>
               </li>
               <li>
-                <a href="/product/performance/distributed-tracing/">
+                <a href="/product/sentry-basics/tracing/distributed-tracing/">
                   Distributed Tracing
                 </a>
               </li>
@@ -171,7 +177,7 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/sentry-basics/guides/">Best Practices</a>
+                <a href="/product/sentry-basics/">Sentry Basics</a>
               </li>
               <li>
                 <a href="/product/sentry-basics/environments/">Environments</a>
@@ -195,7 +201,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/sentry-basics/guides/migration/">
+                <a href="/product/sentry-basics/migration/">
                   Moving to Hosted Sentry
                 </a>
               </li>

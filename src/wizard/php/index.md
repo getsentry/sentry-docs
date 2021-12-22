@@ -5,7 +5,7 @@ support_level: production
 type: language
 ---
 
-To install the SDK you will need to be using `composer` in your project. If you are not already using Composer please see the [Composer documentation](https://getcomposer.org/download/).
+To install the SDK, you will need to be using `composer` in your project. If you are not already using Composer, check out the [Composer documentation](https://getcomposer.org/download/).
 
 ```bash
 composer require sentry/sdk
@@ -14,7 +14,7 @@ composer require sentry/sdk
 To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
 
 ```php
-Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+\Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
 ```
 
 One way to verify your setup is by intentionally causing an error that breaks your application.

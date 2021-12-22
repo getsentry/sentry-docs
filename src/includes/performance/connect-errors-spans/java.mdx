@@ -12,14 +12,13 @@ We have dedicated performance features for our [Spring](/platforms/java/guides/s
 
 </PlatformSection>
 
-Errors reported to Sentry while transaction or span is running are linked automatically:
+Errors reported to Sentry while transaction or span **bound to the scope** is running are linked automatically:
 
 ```java {tabTitle:Java}
 import io.sentry.Sentry;
 import io.sentry.ISpan;
 
-ITransaction span = Sentry.startTransaction(item.getTransactionName(), "task");
-Sentry.configureScope(scope -> scope.setTransaction(span));
+ITransaction span = Sentry.startTransaction(item.getTransactionName(), "task", true);
 try {
   processItem();
 } catch (Exception e) {
@@ -32,8 +31,7 @@ try {
 ```kotlin {tabTitle:Kotlin}
 import io.sentry.Sentry
 
-val span = Sentry.startTransaction(item.getTransactionName(), "task")
-Sentry.configureScope { scope -> scope.setTransaction(span) }
+val span = Sentry.startTransaction(item.getTransactionName(), "task", true)
 try {
   processItem()
 } catch (e: Exception) {

@@ -11,7 +11,7 @@ Install the `sentry/sentry-laravel` package:
 composer require sentry/sentry-laravel
 ```
 
-If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
+If you're on Laravel 5.5 or higher, the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
 
 Add Sentry reporting to `App/Exceptions/Handler.php`.
 
@@ -59,7 +59,7 @@ Route::get('/debug-sentry', function () {
 
 Visiting this route will trigger an exception that will be captured by Sentry.
 
-**Monitor Performane**
+**Monitor Performance**
 
 Set `traces_sample_rate` to a value greater than `0.0` (`config/sentry.php`) after that, Performance Monitoring will be enabled.
 

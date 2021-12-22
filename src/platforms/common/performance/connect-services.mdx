@@ -1,25 +1,28 @@
 ---
 title: Connect Services
 sidebar_order: 40
-supported:
-  - javascript
-  - javascript.cordova
 description: "Learn how to connect backend and frontend transactions."
-redirect_from:
 ---
 
-To connect backend and frontend transactions into a single coherent trace, Sentry uses a `trace_id` value that is propagated between frontend and backend services. Depending on the circumstance, this ID is transmitted either in a request header or in an HTML `<meta>` tag. Linking transactions in this way makes it possible to navigate between them in [sentry.io](https://sentry.io) to better understand how the different parts of your system are affecting one another. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
+When tracing is enabled, the SDK will attach an outgoing header called `sentry-trace` to requests. This depends on the out of the box integrations we provide, but you can expect the header `sentry-trace` to be present. If it's not, you can manually add `sentry-trace` headers to any requests by learning more about [its structure](https://develop.sentry.dev/sdk/performance/#header-sentry-trace).
+
+SDKs with performance monitoring support listen to incoming requests and typically automatically pick up the incoming `sentry-trace` header to continue the trace (with the same `trace-id`) from there, connecting backend and frontend transactions into a single coherent trace using the `trace_id` value. Depending on the circumstance, this ID is transmitted either in a request header or in an HTML `<meta>` tag. All your transactions that have the same `trace-id` are connected. Linking transactions in this way makes it possible to navigate among them in [sentry.io](https://sentry.io) to better understand how the different parts of your system are affecting one another. You can learn more about this model in our [Distributed Tracing](/product/sentry-basics/tracing/distributed-tracing/) docs.
+
+If the instrumentation you are using doesn't automatically pick up the `sentry-trace` header, you can also continue a trace manually by using the `continueFromHeaders` function on a `Transaction`, which you can learn more about in our content for [the Transaction Interface](https://develop.sentry.dev/sdk/performance/#new-span-and-transaction-classes).
+
+<PlatformSection supported={["javascript"]} notSupported={["node"]} >
 
 ### Navigation and Other XHR Requests
 
-For traces that begin in JavaScript, any requests it makes (and any requests your backend makes as a result) are linked through a request header.
+For traces that begin in the front end, any requests made (and any requests your backend makes as a result) are linked through the request header `sentry-trace`.
 
-All of Sentry's tracing-related integrations (`BrowserTracing`, `Http`, and `Express`) either generate or pick up and propagate the trace header automatically as appropriate for all transactions and spans that they generate.
+All of Sentry's tracing-related integrations (`BrowserTracing`, `Http`, and `Express`), as well as the Next.JS SDK, either generate or pick up and propagate the trace header automatically as appropriate, for all transactions and spans that they generate.
 
-The JavaScript SDK will only attach the trace header to outgoing HTTP requests whose destination contains a string in or matches a regex in the <PlatformLink to="/performance/included-instrumentation/#tracingorigins">tracingOrigin</PlatformLink> list.
+The JavaScript SDK will only attach the trace header to outgoing HTTP requests whose destination is a substring or regex match to the <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#tracingorigins">tracingOrigins</PlatformLink> list.
 
-<!-- copied from included-instrumentation to emphasize this point -->
-You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the sentry-trace header. The configuration might look like "Access-Control-Allow-Headers: sentry-trace", but the configuration depends on your set up. If you do not allow the sentry-trace header, the request might be blocked.
+<!-- copied from automatic-instrumentation to emphasize this point -->
+
+You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 ### Pageload
 
@@ -28,14 +31,22 @@ For traces that begin in your backend, you can connect the automatically-generat
 ```html
 <html>
   <head>
-    <meta name="sentry-trace" content="{{ span.toTraceparent() }}" />
+    <meta name="sentry-trace" content="{{ span.toSentryTrace() }}" />
     <!-- ... -->
   </head>
 </html>
 ```
 
-The `name` attribute must be the string `"sentry-trace"` and the `content` attribute must be generated by your backend's Sentry SDK using `span.toTraceparent()` (or equivalent, depending on the backend platform). This guarantees that a new and unique value will be generated for each request.
+The `name` attribute must be the string `"sentry-trace"` and the `content` attribute must be generated by your backend's Sentry SDK using `span.toSentryTrace()` (or equivalent, depending on the backend platform). This guarantees that a new and unique value will be generated for each request.
+
+<Note>
+
+The `span.toSentryTrace()` was previously called `span.toTraceparent()`, so that's what you may find depending on the SDK and version.
+
+</Note>
 
 The `span` reference is either the transaction that serves the HTML, or any of its child spans. It defines the parent of the `pageload` transaction.
 
 Once the data is included in the `<meta>` tag, our `BrowserTracing` integration will pick it up automatically and link it to the transaction generated on pageload. (Note that it will not get linked to automatically-generated `navigation` transactions, that is, those which don't require a full page reload. Each of those will be the result of a different request transaction on the backend, and therefore should have a unique `trace_id`.)
+
+</PlatformSection>

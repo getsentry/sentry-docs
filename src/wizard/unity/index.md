@@ -7,30 +7,28 @@ type: framework
 
 ## Installation
 
-Get the SDK via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
-
-> Confirm there's no empty space at the end of the line. The Unity Package Manager will fail to find the package if an empty space is appended to the end of the URL.
+Install the package via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
 
 ```
-https://github.com/getsentry/sentry-unity-lite.git#1.0.3
+https://github.com/getsentry/unity.git#{{ packages.version('sentry.dotnet.unity', '0.1.0') }}
 ```
+Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
+
+Some Unity versions, such as `2019.4.24f1` and `2020.3.2f1`, have a bug on UPM and fail to install with the error `'HEAD': cannot update ref 'refs/heads/master'`. Unity has resolved this issue on newer releases. Learn more by checking the [Unity Issue Tracker](https://issuetracker.unity3d.com/issues/package-resolution-error-when-using-a-git-dependency-referencing-an-annotated-tag-in-its-git-url).
 
 ## Configuration
 
-Now you need to pass the DSN (a URL that uniquely identifies your project within Sentry) and the SDK will automatically capture errors.
+Access the Sentry configuration window by going to Unity's top menu: `Tools` > `Sentry` and enter the following DSN:
 
-You can attach Sentry to a Game Object and initialize it with the DSN programatically:
-
-```csharp
-var sentry = gameObject.AddComponent<SentrySdk>();
-sentry.Dsn = "___PUBLIC_DSN___";
+```
+___PUBLIC_DSN___
 ```
 
-And that's it! Now Sentry can capture errors in the application automatically.
+And that's it! Now Sentry can capture errors automatically.
 
-## Capture a test event
+## Verify
 
-Once the SDK is configured with the DSN, you can call from anywhere:
+Once it is configured with the DSN you can call the SDK from anywhere:
 
 ```csharp
 SentrySdk.CaptureMessage("Test event");

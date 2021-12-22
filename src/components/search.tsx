@@ -63,6 +63,36 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
     setShowOffsiteResults(false);
   });
 
+  const searchFor = (query, args = {}) => {
+    setQuery(query);
+
+    if (query.length >= 2) {
+      // Only search when we have more than two characters. Ideally we'd do three, but
+      // we want to make sure people can search for Go and RQ
+      search
+        .query(query, {
+          path,
+          platforms: platforms.map(platform => standardSDKSlug(platform).slug),
+          searchAllIndexes: showOffsiteResults,
+          ...args,
+        })
+        .then((results: Result[]) => {
+          if (loading) setLoading(false);
+
+          if (results.length === 1 && results[0].hits.length === 0) {
+            setShowOffsiteResults(true);
+            searchFor(query, { searchAllIndexes: true });
+          } else {
+            setResults(results);
+          }
+        });
+    } else if (query.length === 0) {
+      // If the user cleared the query, reset everything.
+      setShowOffsiteResults(false);
+      setResults([]);
+    }
+  };
+
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
   return (
@@ -73,41 +103,27 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
         aria-label="Search"
         className="form-control"
         onChange={({ target: { value: query } }) => {
-          setQuery(query);
-
-          search
-            .query(query, {
-              path,
-              platforms: platforms.map(
-                platform => standardSDKSlug(platform).slug
-              ),
-            })
-            .then((results: Result[]) => {
-              if (loading) setLoading(false);
-              setResults(results);
-            });
+          searchFor(query);
         }}
         value={query}
         onFocus={() => setFocus(true)}
       />
 
-      {query.length > 0 && focus && (
+      {query.length >= 2 && focus && (
         <div className="sgs-search-results">
           {loading && <Logo loading={true} />}
 
-          {!loading &&
-            (totalHits > 0 ? (
-              <>
-                <div className="sgs-search-results-scroll-container">
-                  {results.map((result, i) => {
-                    const expand = i === 0 || showOffsiteResults;
+          {!loading && totalHits > 0 && (
+            <>
+              <div className="sgs-search-results-scroll-container">
+                {results
+                  .filter(x => x.hits.length > 0)
+                  .map((result, i) => {
                     const hits = result.hits.slice(0, MAX_HITS);
-
-                    if (!expand) return null;
 
                     return (
                       <React.Fragment key={result.site}>
-                        {i !== 0 && (
+                        {showOffsiteResults && (
                           <h4 className="sgs-site-result-heading">
                             From {result.name}
                           </h4>
@@ -117,74 +133,71 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
                             i === 0 ? "" : "sgs-offsite"
                           }`}
                         >
-                          {hits.length > 0 ? (
-                            hits.map(hit => (
-                              <li key={hit.id} className="sgs-hit-item">
-                                <a href={hit.url}>
-                                  {hit.title && (
-                                    <h6>
-                                      <span
-                                        dangerouslySetInnerHTML={{
-                                          __html: DOMPurify.sanitize(
-                                            hit.title,
-                                            { ALLOWED_TAGS: ["mark"] }
-                                          ),
-                                        }}
-                                      ></span>
-                                    </h6>
-                                  )}
-                                  {hit.text && (
+                          {hits.map(hit => (
+                            <li key={hit.id} className="sgs-hit-item">
+                              <a href={hit.url}>
+                                {hit.title && (
+                                  <h6>
                                     <span
                                       dangerouslySetInnerHTML={{
-                                        __html: DOMPurify.sanitize(hit.text, {
+                                        __html: DOMPurify.sanitize(hit.title, {
                                           ALLOWED_TAGS: ["mark"],
                                         }),
                                       }}
-                                    />
-                                  )}
-                                  {hit.context && (
-                                    <div className="sgs-hit-context">
-                                      {hit.context.context1 && (
-                                        <div className="sgs-hit-context-left">
-                                          {hit.context.context1}
-                                        </div>
-                                      )}
-                                      {hit.context.context2 && (
-                                        <div className="sgs-hit-context-right">
-                                          {hit.context.context2}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </a>
-                              </li>
-                            ))
-                          ) : (
-                            <li className="sgs-hit-item sgs-hit-empty-state">
-                              No results for <em>{query}</em>
+                                    ></span>
+                                  </h6>
+                                )}
+                                {hit.text && (
+                                  <span
+                                    dangerouslySetInnerHTML={{
+                                      __html: DOMPurify.sanitize(hit.text, {
+                                        ALLOWED_TAGS: ["mark"],
+                                      }),
+                                    }}
+                                  />
+                                )}
+                                {hit.context && (
+                                  <div className="sgs-hit-context">
+                                    {hit.context.context1 && (
+                                      <div className="sgs-hit-context-left">
+                                        {hit.context.context1}
+                                      </div>
+                                    )}
+                                    {hit.context.context2 && (
+                                      <div className="sgs-hit-context-right">
+                                        {hit.context.context2}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </a>
                             </li>
-                          )}
+                          ))}
                         </ul>
                       </React.Fragment>
                     );
                   })}
-                </div>
-                {!showOffsiteResults && (
-                  <div className="sgs-expand-results">
-                    <button
-                      className="sgs-expand-results-button"
-                      onClick={() => setShowOffsiteResults(true)}
-                    >
-                      Search <em>{query}</em> across all Sentry sites
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="sgs-hit-empty-state">
-                No results for <em>{query}</em>
               </div>
-            ))}
+            </>
+          )}
+
+          {!loading && totalHits === 0 && (
+            <div className="sgs-hit-empty-state">
+              No results for <em>{query}</em>
+            </div>
+          )}
+
+          {!loading && !showOffsiteResults && (
+            <div className="sgs-expand-results">
+              <button
+                className="sgs-expand-results-button"
+                onClick={() => setShowOffsiteResults(true)}
+                onMouseOver={() => searchFor(query, { searchAllIndexes: true })}
+              >
+                Search <em>{query}</em> across all Sentry sites
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

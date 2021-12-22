@@ -13,18 +13,18 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 
 ### Maven:
 
-```
+```xml {tabTitle:Maven}{filename:pom.xml}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
-    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
+    <version>{{ packages.version('sentry.java.spring', '4.0.0') }}</version>
 </dependency>
 ```
 
 ### Gradle:
 
-```
-implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '4.0.0') }}'
+```groovy {filename:build.gradle}
+implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java.spring', '4.0.0') }}'
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-spring).
@@ -39,7 +39,7 @@ The `sentry-spring` library provides `@EnableSentry` annotation that registers a
 
 ### Java
 
-```
+```java {tabTitle: Java}
 import io.sentry.spring.EnableSentry;
 
 @EnableSentry(dsn = "___PUBLIC_DSN___")
@@ -50,7 +50,7 @@ class SentryConfiguration {
 
 ### Kotlin
 
-```
+```kotlin
 import io.sentry.spring.EnableSentry
 import org.springframework.core.Ordered
 
@@ -90,4 +90,8 @@ try {
 
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
-If you're an existing user and have disabled alerts, you won't receive this email.  
+If you're an existing user and have disabled alerts, you won't receive this email.
+
+### Measure Performance  
+
+Check out [the documentation](https://docs.sentry.io/platforms/java/guides/spring/performance/) to learn how to configure and use Sentry Performance Monitoring with Spring.

@@ -1,6 +1,6 @@
 ---
 title: "Quota Management"
-sidebar_order: 0
+sidebar_order: 50
 redirect_from:
   - /learn/quotas/
   - /product/quotas/
@@ -16,7 +16,7 @@ Sentry’s flexibility means you can exercise fine-grained control over which ev
 Let’s clarify a few terms to start:
 
 - Event - an event is one instance of you sending Sentry data. Generally, this data is an error. Every event has a set of characteristics, called its fingerprint.
-- Issue - an issue is a grouping of similar events, which all share the same fingerprint. For example, Sentry groups events together when they are triggered by the same part of your code. For more information, see [Grouping & Fingerprinting](/product/sentry-basics/guides/grouping-and-fingerprints/).
+- Issue - an issue is a grouping of similar events, which all share the same fingerprint. For example, Sentry groups events together when they are triggered by the same part of your code. Learn more in our full [Issue Grouping documentation](/product/data-management-settings/event-grouping/).
 - Attachment - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use the files only to create the event, and then drop the files.
 - Transaction - A transaction represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
 - Quota - your quota is the monthly number of events - errors, attachments, and transactions - you pay Sentry to track.
@@ -35,7 +35,7 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 3. **Quota availability**
 
-   Events that exceed your quota are not sent. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts-notifications/notifications/#quota) emails. To add to your quota or review what happens when you exceed it, see [Increasing Quotas](/product/accounts/quotas/#increasing-quotas).
+   Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. To add to your quota or review what happens when you exceed it, see [Increasing Quotas](/product/accounts/quotas/#increasing-quotas).
 
 4. **Event repetition**
 
@@ -140,9 +140,45 @@ After these checks are processed, the event counts toward your quota. It is acce
 
 ## Increasing Quotas
 
-Add to your quota at any time during your billing period, either by upgrading to a higher tier or by increasing your on-demand capacity. Once on-demand is activated, teammates with the "owner" organization permission level will receive a [notification](/product/alerts-notifications/notifications/#quota) email. Our available plans suit most individual and business needs, and Sentry is designed to handle large throughput. If your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales@sentry.io) to increase capacity.
+Add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
 
-If you’ve exceeded your quota threshold, the server will respond with a 429 HTTP status code. However, if this is your first time exceeding quota, you'll be entered into a one-time grace period. For more information, see this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/). In addition, you can specify a spending cap for on-demand capacity if you need additional events; for example, if you’re rolling out a new version and anticipate more events this month. For more information, see [On-Demand Spending Cap](/product/accounts/pricing/#on-demand-cap).
+If you’ve exceeded your quota threshold, the server will respond with a 429 HTTP status code. However, if this is your first time exceeding quota, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
+
+### On-Demand Capacity
+
+If you need to increase your event quota temporarily, we recommend that you add or increase on-demand capacity. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity, you enter a monthly maximum spending cap. Learn more about [on-demand capacity](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
+
+### Reserved Capacity
+
+If the number of events you need is steadily increasing, you may want to increase your reserved capacity. Reserved capacity is less expensive than on-demand capacity since you prepay for it. It also allows you to choose the number of events that you want to have available rather than just setting a maximum spending cap. Learn more about [reserved capacity](/product/accounts/pricing/#prepaid-reserved-capacity) in our pricing documentation.
+
+You shouldn't increase your reserved capacity if you think your need for more events is temporary, since [reducing your reserved capacity is tied to your billing cycle](#decreasing-quotas).
+
+### Plan Upgrade
+
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event capacity and purchase on-demand capacity, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+
+## Decreasing Quotas
+
+Plan downgrades and decreases in reserved capacity are processed at the end of your billing cycle, and remaining capacity cannot be refunded. For example, if you have a monthly billing cycle that starts on the 5th of the month, and you decrease your reserved capacity on June 20th, then this change will be processed on July 4th. Your billing cycle beginning on July 5th will reflect your new reserved capacity.
+
+<Alert level="warning">
+
+If you have an annual billing cycle, plan downgrades and decreases in reserved capacity go into effect at the beginning of your **next billing year.**
+
+</Alert>
+
+Changes to on-demand capacity typically go into effect immediately and are guaranteed to go into effect within 24 hours.
+
+To decrease your quota, go to **Settings > Subscription** and click "Manage Subscriptions". When you reach the "Review & Confirm" step, the date that these changes go into effect will be displayed:
+
+![The Review & Confirm step of a subscription update.](review-subscription.png)
+
+<Note>
+
+We strongly recommend that you make subscription changes before the last day of your billing cycle. Depending on your time zone, in some cases, changes made on the last day of the billing cycle will not go into effect until the next billing cycle.
+
+</Note>
 
 ## Limiting Events
 
@@ -204,21 +240,49 @@ You can view and restore previously discarded issues by navigating to **[Project
 
 ## Spike Protection
 
-A spike is both a **large** and **temporary** increase in error event volume **spike protection is not currently available for transactions**. Sentry's spike protection prevents huge overages from consuming your error event capacity. We use your historical error event volume to implement a dynamic rate limit which discards error events when you hit its threshold. This dynamic rate limit is designed to protect you from short-term spikes. The threshold will increase if your increased volume persists for many hours.
+<Alert level="info">
 
-When spike protection is activated, we limit the number of error events accepted in any minute to:
+Spike protection is not currently available for transactions nor attachments.
+
+</Alert>
+
+A spike is both a **large** and **temporary** increase in error event volume. Because Sentry bills based on monthly event volume, spikes can easily consume your capacity for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event capacity by dropping error events during the spike.
+
+Spike protection is an organization-level setting, so once it's triggered, it affects all the projects in the organization, regardless of which project triggered the spike.
+
+Spike protection is enabled for your organization by default, and when it's enabled, Sentry continually monitors for spikes. If you want to disable it, you can do so in **Settings > Subscription**.
+
+### How Does Spike Protection Work?
+
+We use your historical error event volume to implement a dynamic rate limit, and then discard error events when you hit its threshold. When spike protection is activated, we limit the number of error events accepted in any minute to:
 
 ```
 maximum(20, 6 x average error events per minute over the last 24 hours)
 ```
 
-_The 24 hour window ends at the beginning of the current hour, not at the current minute._
+<Note>
 
-What this means is that if you experience a spike, we will temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually increase until Sentry finally accepts all events.
+The 24-hour window ends at the beginning of the current hour, not at the current minute.
 
-### How Does Spike Protection Help?
+</Note>
 
-Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike, spike protection drops error events during the spike to try and conserve your capacity. We also send teammates with the "owner" organization permission level a [notification](/product/alerts-notifications/notifications/#quota) email.
+This means if you experience a spike, we'll temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually **increase until Sentry accepts all events**.
+
+For example, in the last 24 hours, your organization has been receiving, on average, 10 events per minute (after any inbound filters have been applied). That means your current per-minute limit is 6 * 10 or 60 events. There have been no spikes in that time, so spike control is "inactive". Something breaks, and in the next minute, your organization sends Sentry 100 events. When we see the 61st event, three things happen:
+
+1. Spike protection becomes "active".
+
+1. If your organization has used more than 25% of your monthly quota, Sentry sends the organization owner a [notification](/product/alerts/notifications/#quota-notifications) including which project the 61st event came from. This is likely, but not guaranteed to be, the project in which something broke.
+
+1. Events 61-100 are dropped.
+
+When the next minute begins, we again record up to 60 events, dropping the rest until the minute is up. It continues like this for the remainder of the hour. After an hour, we re-calculate your per-minute limit, and for the next hour use that limit to decide whether events get dropped each minute. We repeat this process every hour until Sentry eventually accepts all events.
+
+If, instead of a single big spike (or an overall, permanent, increase in traffic), you experience many small spikes, there may be many days in a row when at least a few events are dropped. In that scenario, spike protection remains active the entire time.
+
+### When Does Spike Protection Become "Inactive?"
+
+Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes "inactive" again. This means that it is no longer dropping events, but _it does not mean the system has stopped paying attention._ It does however mean that the next time events are dropped, with respect to alerts it will count as a "reactivation" of spike protection.
 
 ## Size Limits
 

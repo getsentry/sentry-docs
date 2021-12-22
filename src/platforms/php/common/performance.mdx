@@ -4,25 +4,19 @@ sidebar_order: 2000
 description: "Configure our Performance Monitoring integration to suit the needs of your organization. You can use the Performance Monitoring homepage to search or browse for transaction data."
 ---
 
+<Note>
+
+If you’re adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service’s performance characteristics maintain expectations.
+
+</Note>
+
 ## Sample Specific Transactions
 
 `traces_sampler`
 
 : If you want to sample specific Transaction, use the `traces_sampler` option:
 
-```php
-\Sentry\init([
-    'dsn' => '___PUBLIC_DSN___',
-    'traces_sampler' => static function (\Sentry\Tracing\SamplingContext $context): float {
-        if (false !== strpos($context->getTransactionContext()->getName(), 'health')) {
-            // Discard transactions that have 'health' in their name
-            return 0.0;
-        }
-        // Sample rate for all other transactions
-        return 1.0;
-    },
-]);
-```
+<PlatformContent includePath="performance/traces-sampler-as-filter" />
 
 You can also define `traces_sampler` as a callable that receives a `\Sentry\Tracing\SamplingContext $context` which should return a `float` (for the sample rate):
 
@@ -60,6 +54,9 @@ $transactionContext = new \Sentry\Tracing\TransactionContext();
 $transactionContext->setName('External Call');
 $transactionContext->setOp('http.caller');
 $transaction = \Sentry\startTransaction($transactionContext);
+
+// Setting the transaction to the current Hub allows you to retrieve it later
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
 
 $spanContext = new \Sentry\Tracing\SpanContext();
 $spanContext->setOp('functionX');

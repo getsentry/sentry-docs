@@ -1,0 +1,25 @@
+---
+title: Automatic Instrumentation
+sidebar_order: 10
+description: "Learn what transactions are captured after tracing is enabled."
+redirect_from:
+  - /performance/included-instrumentation/
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+Supported in Sentry's Dart SDK version `6.1.0-alpha.2` and above.
+
+</Note>
+
+### http.Client Library Instrumentation
+
+The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the `networkTracing` feature, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
+
+The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus`.
+
+When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+
+For more information see our [SentryHttpClient integration](/platforms/dart/usage/advanced-usage/#performance-monitoring-for-http-requests).

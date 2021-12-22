@@ -7,6 +7,16 @@ notSupported:
   - javascript.electron
 ---
 
+<PlatformSection supported={["unity"]}>
+
+<Note>
+
+The Crash Free Session Rate requires [native support](/platforms/unity/native-support/). On platforms that don't yet have native support, the SDK reports sessions that did not end gracefully as _Abnormal_, which leads to 100% crash free sessions being recorded. If you're building on a platform that doesn't have native support yet, you should monitor your app's _Abnormal_ rate.
+
+</Note>
+
+</PlatformSection>
+
 A release is a version of your code that is deployed to an environment. When you give Sentry information about your releases, you can:
 
 - Determine issues and regressions introduced in a new release
@@ -20,15 +30,23 @@ Additionally, releases are used for applying [source maps](/platforms/javascript
 
 </PlatformSection>
 
-### Bind the Version
+## Bind the Version
 
-Include a release ID (often called a "version") when you configure your client SDK. This ID is commonly a git SHA or a custom version number.
+Include a release ID (often called a "version") when you configure your client SDK.
 
 The release name cannot:
 
 - contain newlines, tabulator characters, forward slashes(`/`) or back slashes(`\`)
 - be (in their entirety) period (`.`), double period (`..`), or space (` `)
 - exceed 200 characters
+
+The value can be arbitrary, but we recommend either of these naming strategies:
+
+- **Semantic Versioning**: `package@version` or `package@version+build` (for example, `my.project.name@2.3.12+1234`)
+  - `package` is the unique identifier of the project/app (`CFBundleIdentifier` on iOS, `packageName` on Android)
+  - `version` is the semver-like structure `<major>.<minor?>.<patch?>.<revision?>-<prerelease?>` (`CFBundleShortVersionString` on iOS, `versionName` on Android)
+  - `build` is the number that identifies an iteration of your app (`CFBundleVersion` on iOS, `versionCode` on Android)
+- **Commit SHA**: If you use a DVCS, we recommend using the identifying hash (for example, the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let Sentry CLI automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
 
 <Note>
 
@@ -44,9 +62,20 @@ This tags each event with the release value. We recommend that you tell Sentry a
 
 After configuring your SDK, you can install a repository integration or manually supply Sentry with your own commit metadata. Read our documentation about [setting up releases](/product/releases/setup/) for further information about integrations, associating commits, and telling Sentry when deploying releases.
 
-<PlatformSection supported={["apple", "android", "javascript", "flutter", "native", "rust", "python", "react-native"]}>
+<PlatformSection supported={["apple", "android", "javascript", "flutter", "native", "rust", "python", "react-native", "dotnet", "unity"]}>
 
 ## Release Health
+  
+<PlatformSection supported={["dotnet"]}>
+
+<Note>
+
+Release health support for .NET is currently limited to single-instance **client** applications only. This means it can be used with WPF, Xamarin, WinForms and similar app models.
+Support for server frameworks such as ASP.NET is planned.
+
+</Note>
+
+</PlatformSection>
 
 Monitor the [health of releases](/product/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/product/releases/health/#crash), and [session data](/product/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 

@@ -37,9 +37,12 @@ After you’ve completed setting up a project in Sentry, Sentry will give you a 
 
 Add your DSN to the manifest file.
 
-```xml
+```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+    <!-- Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+       We recommend adjusting this value in production. -->
+    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
 ```
 
@@ -47,7 +50,14 @@ Add your DSN to the manifest file.
 
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
+In **Java**:
+
 ```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+import io.sentry.Sentry;
+
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -56,7 +66,14 @@ public class MyActivity extends AppCompatActivity {
 }
 ```
 
+In **Kotlin**:
+
 ```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+
+import io.sentry.Sentry
+
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -65,7 +82,47 @@ class MyActivity : AppCompatActivity() {
 }
 ```
 
-### Next steps
+### Performance Monitoring
+
+Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
+
+We recommend adjusting this value in production.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+</application>
+```
+
+You can measure the performance of your code by capturing transactions and spans.
+
+```kotlin
+import io.sentry.Sentry
+
+// Transaction can be started by providing, at minimum, the name and the operation
+val transaction = Sentry.startTransaction("test-transaction-name", "test-transaction-operation")
+
+// Transactions can have child spans (and those spans can have child spans as well)
+val span = transaction.startChild("test-child-operation")
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+
+span.finish() // Mark the span as finished
+transaction.finish() // Mark the transaction as finished and send it to Sentry
+```
+
+Check out [the documentation](https://docs.sentry.io/platforms/android/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+
+> Want to play with some new features? Try out our beta [Room performance integration](https://docs.sentry.io/platforms/android/performance/instrumentation/automatic-instrumentation/#sqlite-and-room-instrumentation).
+>  
+> This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/proguard/#gradle); you must use version `3.0.0-beta.1`. The `tracingInstrumentation` option is enabled by default, so Sentry automatically measures performance of the database queries done with Room if you set a tracing sample rate. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-android-gradle-plugin/issues).
+
+### Next Steps
 
 Using ProGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
 

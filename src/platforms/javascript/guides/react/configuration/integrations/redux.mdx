@@ -5,11 +5,11 @@ redirect_from:
   - /sdks/react/integrations/redux/
 ---
 
-_(New in version 5.20.0)_
+_(Available in version 5.20.0 and above)_
 
 Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Sentry to Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
 
-```js
+```javascript
 import { createStore, compose } from "redux";
 import * as Sentry from "@sentry/react";
 
@@ -26,7 +26,7 @@ const store = createStore(rootReducer, sentryReduxEnhancer);
 
 If you have other enhancers or middleware such as `thunk`:
 
-```js
+```javascript
 const store = createStore(
   rootReducer,
   compose(applyMiddleware(thunk), sentryReduxEnhancer)
@@ -43,7 +43,7 @@ Sentry uses a redux **enhancer**. Pass the enhancer, as indicated above. Don't p
 
 By default Sentry SDKs normalize any context to a depth of 3, which in the case of sending Redux state you probably will want to increase that. You do so by passing `normalizeDepth` to the `Sentry.init` call:
 
-```js
+```javascript
 Sentry.init({
   dsn: "___DSN___",
   normalizeDepth: 10, // Or however deep you want your state context to be.
@@ -64,7 +64,7 @@ We advise against sending sensitive information to Sentry, but if you do, we wil
 
 : Used to remove sensitive information from actions. The first parameter passed to the function is the Redux action. Return `null` to not send the action to Sentry. By default we send all actions.
 
-```js
+```javascript
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
   actionTransformer: action => {
     if (action.type === "GOVERNMENT_SECRETS") {
@@ -88,7 +88,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 
 : Used to remove sensitive information from state. The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you choose not to send state to Sentry, your errors might not have the latest version of the state attached. By default, we attach all state changes.
 
-```js
+```javascript
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
   stateTransformer: state => {
     if (state.topSecret.doNotSend) {
@@ -119,7 +119,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 
 : Called on every state update, configure the Sentry Scope with the Redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`, and the second parameter is the latest Redux state.
 
-```js
+```javascript
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
   configureScopeWithState: (scope, state) => {
     // Set tag if the user is using imperial units.

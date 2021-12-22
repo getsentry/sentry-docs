@@ -1,45 +1,17 @@
 [
   {
     "type": "Counter",
-    "name": "connector.closed",
-    "description": "Number of upstream connections closed due to connection timeouts.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.errors",
-    "description": "Number of upstream connections that experienced errors.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.opened",
-    "description": "Number of upstream connections opened.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.reused",
-    "description": "Number of requests that reused an already open upstream connection.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "connector.timeouts",
-    "description": "Number of upstream connections that experienced a timeout.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "connector.wait_queue",
-    "description": "The number of upstream requests queued up for a connection in the connection pool.\n\nRelay uses explicit queueing for most requests. This wait queue should almost always be\nempty, and a large number of queued requests indicates a severe bug.",
-    "features": []
-  },
-  {
-    "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.",
     "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.corrupted",
+    "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Timer",
@@ -141,9 +113,7 @@
     "type": "Counter",
     "name": "events.outcomes",
     "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n- `to`: Describes the destination of the outcome. Can be either 'kafka' (when in\nprocessing mode) or 'http' (when outcomes are enabled in an external relay).\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Histogram",
@@ -152,18 +122,64 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "internal.captured.event.endpoint",
-    "description": "An event has been preliminarily accepted in the store endpoint for one of the configured\n\"internal\" projects.",
+    "type": "Gauge",
+    "name": "metrics.buckets",
+    "description": "The total number of metric buckets in Relay's metrics aggregator.",
+    "features": []
+  },
+  {
+    "type": "Set",
+    "name": "metrics.buckets.created.unique",
+    "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.flushed",
+    "description": "The total number of metric buckets flushed in a cycle across all projects.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.flushed_per_project",
+    "description": "The number of metric buckets flushed in a cycle for each project.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This histogram\nis logged for each project that is being flushed. The count of the histogram values is\nequivalent to the number of projects being flushed.",
     "features": []
   },
   {
     "type": "Counter",
-    "name": "internal.captured.event.store_actor",
-    "description": "An event has been produced to Kafka for one of the configured \"internal\" projects.",
-    "features": [
-      "processing"
-    ]
+    "name": "metrics.buckets.merge.hit",
+    "description": "Incremented every time two buckets or two metrics are merged.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.merge.miss",
+    "description": "Incremented every time a bucket is created.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.parsing_failed",
+    "description": "Number of times that parsing a metrics bucket item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "metrics.buckets.scan_duration",
+    "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.insert",
+    "description": "Incremented for every metric that is inserted.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "outcomes.aggregator.flush_time",
+    "description": "The time it takes the outcome aggregator to flush aggregated outcomes.",
+    "features": []
   },
   {
     "type": "Counter",
