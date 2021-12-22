@@ -1,0 +1,49 @@
+---
+title: Dynamic Sampling and Other Sampling Methods
+sidebar_order: 25
+description: "Learn about the different methods for sampling and filtering data."
+---
+
+## Dynamic Sampling and SDK Sampling
+
+In Sentry, you can set up sampling in one of two ways:
+
+1. Client-side, in your SDK, by [configuring the transaction sample rate](/platform-redirect/?next=/configuration/sampling/) during SDK initialization.
+
+   This sampling approach is simple and works well in many scenarios. However, it can be difficult to change in
+   scenarios where the application is distributed and redeployment is either not an option or very difficult
+   (for example, in mobile applications).
+
+2. Server-side, with dynamic sampling in the Filters & Sampling settings for your Project in sentry.io. This approach offers several benefits:
+
+   - No need to create a new release or deployment. Update the sample rate in sentry.io, which applies immediately.
+   - Holistic sample of an entire trace, as every transaction associated with the trace will be captured - from frontend to backend.
+
+With dynamic sampling, you can add rules, sample by individual events or by entire traces. If you sample by traces, you
+can sample by specific cases: release, environment, and user. Learn how to
+[setup dynamic-sampling rules](/product/data-management-settings/dynamic-sampling/configuration/).
+
+You can use both types of sampling - configuring your SDK and setting a dynamic sampling rate - in your project. If you do so, we suggest the following:
+
+- For applications using our frontend SDKs, send all your data without configuring a sample rate on your SDK. Use dynamic sampling as your primary sampling control.
+- For applications using our backend SDKs, assess the impact of tracing on your operation and keep your client-side sample rate as high as possible.
+
+Compared with SDK sampling, dynamic sampling enables more sophisticated sampling decisions that span multiple transactions.
+
+## Dynamic Sampling and Inbound Filters
+
+Inbound filters are a related concept, with key differences from Dynamic Sampling.
+
+Inbound filters may be viewed as a coarse sampling technique, where only 0% and 100% sampling rates are available.
+The key difference between filters and sampling is that filters compose while sampling rules do not, the example
+provides an illustration:
+
+With two filters defined - one that removes all requests coming from Internet Explorer 9 or lower, and one that filters
+requests coming from an application with release 1.* - all  events coming either from Explorer 9 or from a client
+with release 1.* will be filtered out, effectively the two filters are ORed together.
+
+With two sampling rules defined - first on release 1.* at 10%, and the second sampling on "prod1" environment
+at 20% - the combined effect will not be  similar to the inbound filters case. A request coming for release 1.1 and
+prod1 will match the first rule and will be sampled at 10% , a request for release 1.1 & prod2 will still match the
+first rule and will be sampled at 10% while a request for release 2.1 and prod1 will match the second rule and will be
+sampled at 20%.
