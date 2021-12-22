@@ -1,0 +1,116 @@
+---
+title: Troubleshooting
+description: "Troubleshoot and resolve common issues with the React Native SDK."
+sidebar_order: 1000
+---
+
+## Unhandled Promise Rejections
+
+Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry. You will need to ensure that the version of `promise` that you use matches exactly with the version that React Native uses. If the versions do not match, our SDK might issue a warning:
+
+> WARN: Unhandled promise rejections might not be caught by Sentry. Read about how to fix this on our troubleshooting docs.
+
+### How to ensure the version matches
+
+1. Check the version of `promise` that your version of `react-native` uses. You can do this by going into `node_modules/react-native/package.json` and checking the version there, for example we find that it uses `^8.0.3`:
+
+```json {filename:node_modules/react-native/package.json}
+{
+  "dependencies": {
+    // ...
+    "promise": "^8.0.3"
+  }
+}
+```
+
+2. Add a package resolution with the same version as `react-native`'s' to **your** `package.json` file, this will force this version to be used. You will then need to run a fresh `yarn install` or `npm install` to use the package resolution you just added.
+
+```json {filename:package.json}
+{
+  "resolutions": {
+    "promise": "^8.0.3"
+  }
+}
+```
+
+<Note>
+
+Package resolutions are currently only supporred by `yarn`. If you use `npm`, you can use a third-party package called [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions) to achieve this.
+
+</Note>
+
+3. If the fix is successful, our SDK will no longer display the above warning. If you want to double check, you can put Sentry in debug mode with `debug: true`. If promise rejection handling is active, you will see the log below in your Javascript console:
+   > [Sentry] Unhandled promise rejections will be caught by Sentry.
+
+## Source Maps
+
+When there is an issue with source maps on your event, there will usually be an error dialog at the top of the Issue Details page in [sentry.io](https://sentry.io):
+
+> There was 1 problem processing this event: Source code was not found
+
+Common fixes to this issue include:
+
+- Checking that both the `release` and `dist` and are set on the event by [setting it in the call to `init`](/platforms/react-native/configuration/releases/#bind-the-version).
+- Checking that source maps are correctly uploaded with the exact same `release` and `dist` values as the event. They **must match** for source maps to upload correctly.
+- If you set a custom `release` and `dist`, confirming that you manually uploaded the sourcemaps since our automatic source map upload script will not detect the custom values.
+- Checking that you are not disabling the [`RewriteFrames`](/platforms/javascript/configuration/integrations/plugin/#rewriteframes) default integration by overwriting it, filtering it out, or setting `defaultIntegrations: false`.
+
+[For more details, please read the guide on React Native source maps.](/platforms/react-native/sourcemaps)
+
+### Source Maps With Hermes
+
+Although the build script should already handle this for you most of the time, you may need to perform some extra steps when using the source maps with the Hermes engine. [You can follow the guide here.](/platforms/react-native/manual-setup/hermes/#custom-source-maps). 
+
+### Different Bundles for Different Platforms
+
+Your app could have different bundles for each platform that it supports, such as iOS and Android. To associate the correct bundle and sourcemap to each platform, you will need a unique release/dist combination for each platform. An easy way to do this is to include the platform name in the `dist` value.
+
+## iOS Build Script Failed
+
+Try passing `--force-foreground` to the Sentry CLI command in the build script. This is possibly a bug with our CLI that [we are investigating](https://github.com/getsentry/sentry-react-native/issues/1424).
+
+```bash
+# ...
+../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
+  ../node_modules/react-native/scripts/react-native-xcode.sh --force-foreground
+```
+
+## Release Health
+
+- If your release health statistics are being attributed to the wrong release, confirm that you [pass the `release` and `dist` to the `init` call](/platforms/react-native/configuration/releases/#bind-the-version).
+- If you are using Code Push, check that you are not using `setRelease` and `setDist` as they will break release health. You can read more on the [CodePush guide](/platforms/react-native/manual-setup/codepush/).
+
+## Expo
+
+If you use the [sentry-expo](https://github.com/expo/sentry-expo) SDK, make sure that you do not manually upgrade the version of the `@sentry/react-native` SDK and instead rely on the version that the `sentry-expo` SDK depends on. Upgrading could cause a version mismatch that could lead to errors being unreported and other undefined behavior. This is due to the `sentry-expo` SDK not being officially maintained by Sentry but instead by the Expo team.
+
+## Minified Names in Production
+
+When bundling for production, React Native will minify class and function names to reduce the bundle size. This means that you won't get the full original component names in your Touch Event breadcrumbs or Profiler spans.
+
+A way to work around this is to set the `displayName` on all the components you want to track with touch events or to pass the `name` prop to the Profiler components. However, you can also configure Metro bundler to not minify function names by setting these options in `metro.config.js`:
+
+```javascript {filename:metro.config.js}
+module.exports = {
+  transformer: {
+    minifierConfig: {
+      keep_classnames: true, // Preserve class names
+      keep_fnames: true, // Preserve function names
+      mangle: {
+        keep_classnames: true, // Preserve class names
+        keep_fnames: true, // Preserve function names
+      },
+    },
+  },
+};
+```
+
+<Note>
+
+As this applies to **all** class and function names — not just React components — this could increase your JS bundle size.
+
+</Note>
+
+## Missing Context on Android NDK Events
+
+If the context is missing on Android NDK events such as breadcrumbs, user, and so on, you need to enable the [Scope Synchronization](/platforms/react-native/enriching-events/scopes/#scope-synchronization) feature.

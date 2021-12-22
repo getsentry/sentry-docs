@@ -1,0 +1,140 @@
+Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
+
+<Note>
+
+We recommend using Sentry's [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) to configure source maps and upload them automatically during the build.
+
+</Note>
+
+<Alert level="warning" title="source-map-support">
+
+To rely on Sentry's source map resolution, your code cannot use the [source-map-support](https://www.npmjs.com/package/source-map-support) package. That package overwrites the captured stack trace in a way that prevents our processors from correctly parsing it.
+
+</Alert>
+
+## Webpack
+
+Sentry provides a convenient [Webpack](https://webpack.js.org/) plugin that [configures source maps and automatically uploads them to Sentry](https://github.com/getsentry/sentry-webpack-plugin).
+
+To use the plugin, you first need to install it:
+
+```shell {tabTitle:npm}
+npm install --save-dev @sentry/webpack-plugin
+```
+
+```shell {tabTitle:yarn}
+yarn add --dev @sentry/webpack-plugin
+```
+
+Then, to configure it:
+
+```javascript {filename:webpack.config.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // other webpack configuration
+  devtool: 'source-map',
+  plugins: [
+    new SentryWebpackPlugin({
+      // sentry-cli configuration - can also be done directly through sentry-cli
+      // see https://docs.sentry.io/product/cli/configuration/ for details
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      release: process.env.SENTRY_RELEASE,
+
+      // other SentryWebpackPlugin configuration
+      include: ".",
+      ignore: ["node_modules", "webpack.config.js"],
+    }),
+  ],
+};
+```
+
+Additionally, the Webpack plugin will automatically set `window.SENTRY_RELEASE`, so your `Sentry.init` call does not need to include a `release` value.
+
+<PlatformSection supported={["javascript.vue"]}>
+
+In Vue 2.x, you should use `vue.config.js` instead of `webpack.config.js`, and use `include: "./dist"` instead of `include: "."`
+
+</PlatformSection>
+
+<Note>
+
+Set up the Webpack plugin as the last running plugin; otherwise, the source maps the plugin receives may not be the final ones.
+
+</Note>
+
+### Advanced Usage
+
+If you prefer to upload source maps manually, configure Webpack to output source maps:
+
+<PlatformContent includePath="configuration/sourcemaps/tools/webpack/advanced-usage" />
+
+If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
+
+
+## Rollup
+
+You can configure [Rollup](https://rollupjs.org/) to generate source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps):
+
+```javascript {filename:rollup.config.js}
+export default {
+  entry: "./src/app.js",
+  output: {
+    file: "bundle.js",
+    format: "cjs",
+    sourceMap: true,
+  },
+};
+```
+
+## SystemJS
+
+[SystemJS](https://github.com/systemjs/builder) can be configured to output source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps):
+
+```javascript
+builder.bundle("src/app.js", "dist/app.min.js", {
+  minify: true,
+  sourceMaps: true,
+  sourceMapContents: true,
+});
+```
+
+<Note>
+
+This example configuration will inline your original, un-transformed source code into the generated source map file. Sentry requires both source map(s) **and** your original source files to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry _in addition_ to your source maps (see below).
+
+</Note>
+
+## TypeScript
+
+The [TypeScript](https://www.typescriptlang.org/) compiler can output source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps). 
+
+Configure the `sourceRoot` property as `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
+
+```javascript {filename:tsconfig.json}
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "/"
+  }
+}
+```
+
+## UglifyJS
+
+<Note>
+
+We strongly encourage you to use a higher-level bundler (or transpiler), as UglifyJS configuration can get quite complicated, and it is difficult to achieve the desired results.
+
+</Note>
+
+[UglifyJS](https://github.com/mishoo/UglifyJS) can be configured to output source maps, which you can then [upload using `sentry-cli`](/product/cli/releases/#sentry-cli-sourcemaps):
+
+```bash
+uglifyjs app.js \
+  -o app.min.js.map \
+  --source-map url=app.min.js.map,includeSources
+```

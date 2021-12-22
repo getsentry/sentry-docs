@@ -6,17 +6,22 @@ description: "Learn how to set up the SDK manually."
 
 If you can’t (or prefer not to) run the [configuration step](/platforms/javascript/guides/nextjs/#configure), you can follow the instructions below to configure your application.
 
-## Set Initialization Config Files
+## Create Initialization Config Files
 
 Create two files in the root directory of your project, `sentry.client.config.js` and `sentry.server.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
 
-For the client configuration:
+For each configuration:
 
-```javascript {filename:sentry.client.config.js}
+```javascript {filename:sentry.server.config.js/sentry.client.config.js}
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
   // ...
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
@@ -24,25 +29,127 @@ Sentry.init({
 });
 ```
 
-And the server configuration:
-
-```javascript {filename:sentry.server.config.js}
+```typescript {filename:sentry.server.config.ts/sentry.client.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN: string =
+  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
   // ...
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
   // that it will also get attached to your source maps
 });
+```
+
+If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
+
+```javascript {filename:pages/api/*}
+import { withSentry } from "@sentry/nextjs";
+
+const handler = async (req, res) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next"
+import { withSentry } from "@sentry/nextjs";
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
 ```
 
 You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
-## Extend Default Webpack Usage for Source Maps
+## Create a Custom `_error` Page
 
-Extend the default Next.js usage of Webpack to generate source maps and upload them to Sentry. Include the following in `next.config.js`:
+In serverless deployment environments, including Vercel, the Next.js server runs in a "minimal" mode to reduce serverless function size. As a result, some of the auto-instrumentation done by `@sentry/nextjs` doesn't run, and therefore certain errors aren't caught. In addition, Next.js includes a custom error boundary which will catch certain errors before they bubble up to our handlers.
+
+To capture these errors in Sentry, you can use the Next.js [error page customization](https://nextjs.org/docs/advanced-features/custom-error-page#reusing-the-built-in-error-page) option. To do this, create `pages/_error.js`, and include the following:
+
+```javascript {filename:pages/_error.js}
+import NextErrorComponent from "next/error";
+
+import * as Sentry from "@sentry/nextjs";
+
+const MyError = ({ statusCode, hasGetInitialPropsRun, err }) => {
+  if (!hasGetInitialPropsRun && err) {
+    // getInitialProps is not called in case of
+    // https://github.com/vercel/next.js/issues/8592. As a workaround, we pass
+    // err via _app.js so it can be captured
+    Sentry.captureException(err);
+    // Flushing is not required in this case as it only happens on the client
+  }
+
+  return <NextErrorComponent statusCode={statusCode} />;
+};
+
+MyError.getInitialProps = async ({ res, err, asPath }) => {
+  const errorInitialProps = await NextErrorComponent.getInitialProps({
+    res,
+    err,
+  });
+
+  // Workaround for https://github.com/vercel/next.js/issues/8592, mark when
+  // getInitialProps has run
+  errorInitialProps.hasGetInitialPropsRun = true;
+
+  // Running on the server, the response object (`res`) is available.
+  //
+  // Next.js will pass an err on the server if a page's data fetching methods
+  // threw or returned a Promise that rejected
+  //
+  // Running on the client (browser), Next.js will provide an err if:
+  //
+  //  - a page's `getInitialProps` threw or returned a Promise that rejected
+  //  - an exception was thrown somewhere in the React lifecycle (render,
+  //    componentDidMount, etc) that was caught by Next.js's React Error
+  //    Boundary. Read more about what types of exceptions are caught by Error
+  //    Boundaries: https://reactjs.org/docs/error-boundaries.html
+
+  if (err) {
+    Sentry.captureException(err);
+
+    // Flushing before returning is necessary if deploying to Vercel, see
+    // https://vercel.com/docs/platform/limits#streaming-responses
+    await Sentry.flush(2000);
+
+    return errorInitialProps;
+  }
+
+  // If this point is reached, getInitialProps was called without any
+  // information about what the error might be. This is unexpected and may
+  // indicate a bug introduced in Next.js, so record it in Sentry
+  Sentry.captureException(
+    new Error(`_error.js getInitialProps missing data at path: ${asPath}`)
+  );
+  await Sentry.flush(2000);
+
+  return errorInitialProps;
+};
+
+export default MyError;
+```
+
+## Extend Next.js Configuration
+
+Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will do two things:
+
+- Automatically call the code in `sentry.server.config.js` and `sentry.client.config.js`, at server start up and client page load, respectively. Using `withSentryConfig` is the only way to guarantee that the SDK is initialized early enough to catch all errors and start performance monitoring.
+- Generate and upload source maps to Sentry, so that your stacktraces contain original, demangled code.
+
+Include the following in your `next.config.js`:
 
 ```javascript {filename:next.config.js}
 // This file sets a custom webpack configuration to use your Next.js app
@@ -62,6 +169,8 @@ const SentryWebpackPluginOptions = {
   // recommended:
   //   release, url, org, project, authToken, configFile, stripPrefix,
   //   urlPrefix, include, ignore
+
+  silent: true, // Suppresses all logs
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options.
 };
@@ -71,25 +180,70 @@ const SentryWebpackPluginOptions = {
 module.exports = withSentryConfig(moduleExports, SentryWebpackPluginOptions);
 ```
 
+<Alert level="warning" title="Serverless Environments">
+
+`@sentry/nextjs` does not support configurations with the `serverless` target. To use the SDK in serverless environments, switch to using the `experimental-serverless-trace` target, which is [recommended by the Next.js maintainers](https://github.com/vercel/next.js/issues/20487#issuecomment-753884085) for apps using Next.js 10 or Next.js 11.
+
+</Alert>
+
 Make sure to add the Sentry config last; otherwise, the source maps the plugin receives may not be final.
 
-## Configure sentry-cli
+## Configure Source Maps
 
-Under the hood, the `SentryWebpackPlugin` uses `sentry-cli`, which can be configured in one of two ways - using a properties file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](https://docs.sentry.io/product/cli/configuration/). (If you choose to combine the two approaches, the environment variables will take precedence over values set in the properties file.)
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), `sentry-cli` will automatically detect and upload your source files, source maps, and bundles to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), because otherwise the full upload process would reoccur on each file change.)
 
-### Properties File
+To configure the plugin, pass a `SentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
 
-You can create a `sentry.properties` file in the base directory of your project. (This is the approach taken by the wizard.) Here is an example:
+If you want or need to handle source map uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    disableServerWebpackPlugin: true,
+    disableClientWebpackPlugin: true,
+  },
+};
+```
+
+If you disable the plugin for both server and client builds, it's safe to omit the `SentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
+
+```javascript {filename:next.config.js}
+module.exports = withSentryConfig(moduleExports);
+```
+
+In that case you can also skip the `sentry-cli` configuration step below.
+
+## Configure `sentry-cli`
+
+The `SentryWebpackPlugin` uses `sentry-cli` to manage releases and source maps, which can be configured in one of two ways - using configuration files, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](/product/cli/configuration/).
+
+If you choose to combine the two approaches, the environment variables will take precedence over values set in the configuration files. One common approach is to set sensitive data (like tokens) in the environment and include everything else in the configuration files added to your VCS.
+
+The URL, organization, and project properties identify your organization and project, and the auth token authenticates your user account.
+
+### Use Configuration Files
+
+You should commit all the properties to your VCS, except the auth token. You can accomplish this by using two files: `sentry.properties` including the properties of your organization and project, and `.sentryclirc` including your auth token. This is the approach taken by the wizard and it allows you to commit the former while ignoring the latter in your VCS.
+
+Here is an example:
 
 ```properties {filename:sentry.properties}
 defaults.url=https://sentry.io/
 defaults.org=___ORG_SLUG___
 defaults.project=___PROJECT_SLUG___
-auth.token=___TOKEN___
 # cli.executable=../path/to/bin/sentry-cli
 ```
 
-### Environment Variables
+Add the token to `.sentryclirc`:
+
+```ini {filename:.sentryclirc}
+[auth]
+token=___TOKEN___
+```
+
+And don't forget to ignore `.sentryclirc` in your VCS.
+
+### Use Environment Variables
 
 Alternatively, the cli can be configured using environment variables.
 

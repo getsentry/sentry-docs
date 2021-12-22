@@ -11,7 +11,7 @@ The Sentry Integration Platform provides developers with the ability to define U
 
 The UI components are specified in the schema section of integration details. The required form of this schema is:
 
-```js
+```javascript
 {
     "elements": [
         // Each element is a specification for a component the developer wants to use.
@@ -26,13 +26,15 @@ The UI components are specified in the schema section of integration details. Th
 
 With issue linking, the developer can connect Sentry issues with a task in their project management system. This functionality provides a way to use any project management tool the developer uses or develops.
 
-The Issue Link component displays "Link &lt;Service&gt; Issue" in the Issue sidebar, which opens a modal allowing the user to create or link the issue to a task in the external service. For example, this is what our Clubhouse integration looks like.
+The Issue Link component displays "Link &lt;Service&gt; Issue" in the Issue sidebar, which opens a modal allowing the user to create or link the issue to a task in the external service. For example, this is what our Shortcut integration looks like.
 
-![Sentry modal that creates a Clubhouse Story that's linked to a Sentry issue.](../../clubhouse/clubhouse_create_story_with_issue.png)
+![Issue linking sidebar showing Shortcut icon.](issue-sidebar-icons.png)
+
+![Sentry modal that creates a Shortcut Story that's linked to a Sentry issue.](../../project-mgmt/shortcut/shortcut_create_story_with_issue.png)
 
 ### Schema
 
-```js
+```javascript
 {
     "type": "issue-link",
     "link": {
@@ -56,7 +58,7 @@ A `FormField` can be one of three types (which behave like their HTML equivalent
 
 ## Select
 
-```js
+```javascript
 {
     "type": "select",
     "label": <String>,
@@ -82,7 +84,7 @@ A `FormField` can be one of three types (which behave like their HTML equivalent
 
 The request sent to the `uri` to load options is a `GET` request. The parameters are encoded into the query parameters as such:
 
-```js
+```javascript
 {
     "installationId": <String>,
     "projectSlug": <String>,
@@ -100,7 +102,7 @@ The request sent to the `uri` to load options is a `GET` request. The parameters
 
 Response from `uri`, when specified, _must_ be in the following format:
 
-```js
+```javascript
 [
     {
         "label": <String>,
@@ -115,7 +117,7 @@ Response from `uri`, when specified, _must_ be in the following format:
 
 ### Schema
 
-```js
+```javascript
 {
     "type": "text",
     "label": <String>,
@@ -136,7 +138,7 @@ Response from `uri`, when specified, _must_ be in the following format:
 
 ### Schema
 
-```js
+```javascript
 {
     "type": "textarea",
     "label": <String>,
@@ -155,7 +157,7 @@ Response from `uri`, when specified, _must_ be in the following format:
 
 ### Example of a complete issue-link schema
 
-```js
+```javascript
 {
     "elements": [
         {
@@ -203,7 +205,7 @@ This feature allows the developer to insert a link within a stack trace frame. T
 
 ### Schema
 
-```js
+```javascript
 {
     "type": "stacktrace-link",
     "uri": <URI>,
@@ -220,7 +222,7 @@ This feature allows the developer to insert a link within a stack trace frame. T
 
 ### Example
 
-```js
+```javascript
 "elements": [
     {
         "type": "stacktrace-link",
@@ -233,6 +235,61 @@ Any time a component supports a `uri` attribute, Sentry will make a request to t
 
 For a more complete description of the grammar, see the [source code](https://github.com/getsentry/sentry/blob/master/src/sentry/api/validators/sentry_apps/schema.py).
 
+## Alert Rule Action
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony. If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+Let us know if you have feedback: [ecosystem-feedback@sentry.io](mailto:ecosystem-feedback@sentry.io).
+
+</Note>
+
+The Alert Rule Action component allows the developer to get parameters to define routing or configuration in alert rules for their service. When alert rules are triggered for a user, the configured service will receive [Issue Alert](/product/integrations/integration-platform/webhooks/#issue-alerts) and [Metric Alert](/product/integrations/integration-platform/webhooks/#metric-alerts) webhook events with the specified settings for that service to further route the alert.
+
+
+### Schema
+```javascript
+ {
+    "type": "alert-rule-action",
+    "title": <String>,
+    "settings": {
+        "type": "alert-rule-settings",
+        "uri": <URI>,
+        "required_fields": <Array<FormField>>,
+        "optional_fields": <Array<FormField>>
+    }
+}
+```
+
+### Attributes
+- `title` - (Required) The title shown in the UI component.
+- `uri` - (Required) Sentry will make a POST request to the URI when the User submits the form. If the services fails to process the request (status code >= 400), this component will bubble up the error to the User with the provided response text.
+- `required_fields` - (Required) List of `FormField` components the User is required to complete.
+- `optional fields` - List of optional `Form Field` components the User may complete.
+
+### Example
+```javascript
+
+"elements": [
+    {
+        "type": "alert-rule-action",
+        "title": "Send Alerts to",
+        "settings": {
+        "type": "alert-rule-settings",
+        "uri": "/sentry/alert-rule",
+            "required_fields": [
+                {
+                    "type": "text",
+                    "label": "Channel",
+                    "name": "channel"
+                }
+            ]
+        }
+    }
+]
+
+```
 # Create/Link Issue
 
 If you have a UI component for issue linking and a user attempts to create or link an issue, it will send a request to your service based on the `uri` you provide.
@@ -243,7 +300,7 @@ The request that is sent is a `POST` request, so all the information is stored i
 
 ### Schema
 
-```js
+```javascript
 {
     "fields": <Object>,
     "installationId": <String>,
@@ -273,7 +330,7 @@ When creating or linking an issue, the response format _must_ have the following
 
 ### Schema
 
-```js
+```javascript
 {
     "webUrl": <String>,
     "project": <String>,
@@ -289,7 +346,7 @@ When creating or linking an issue, the response format _must_ have the following
 
 When an external issue is created or linked in Sentry, Sentry shows a display name that links back to the service where it was either created or linked. The display name is composed of two pieces: the `project` and the `identifier`. A hash (#) connects each piece. Here's an example of what it looks like in Sentry:
 
-![Sentry's sidebar button illustrating that an issue is linked.](../../clubhouse/clubhouse_story_in_linked_issues_82.png)
+![Sentry's sidebar button illustrating that an issue is linked.](../../project-mgmt/shortcut/shortcut_story_in_linked_issues_82.png)
 
 # Supplementary Information
 

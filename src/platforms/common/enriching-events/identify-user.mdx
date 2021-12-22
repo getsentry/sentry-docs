@@ -6,15 +6,24 @@ notSupported:
   - native.crashpad
   - native.minidumps
   - native.wasm
-  - native.ue4
 description: "Learn how to configure the SDK to capture the user and gain critical pieces of information that construct a unique identity in Sentry."
 ---
 
 Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
+<PlatformSection notSupported={["apple"]}>
+
 `id`
 
 : Your internal identifier for the user.
+</PlatformSection>
+
+<PlatformSection supported={["apple"]}>
+
+`userId`
+
+: Your internal identifier for the user.
+</PlatformSection>
 
 `username`
 
@@ -26,7 +35,7 @@ Users consist of a few critical pieces of information that construct a unique id
 
 `ip_address`
 
-: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data, if available. Set to `"{{auto}}"` to let Sentry infer the IP address from the connection.
+: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data, if available. That might require <PlatformIdentifier name="send-default-pii" /> set to `true` in the SDK options. <PlatformSection notSupported={["php"]}> If set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server, which is useful for client-side applications such as JavaScript applications running on Web browsers, desktop applications, or mobile apps. </PlatformSection>
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
@@ -36,10 +45,18 @@ By default, we don't apply the user identification provided to the SDK via the A
 
 </PlatformSection>
 
+<PlatformSection supported={["javascript", "node"]}>
+
+You'll first need to import the SDK, as usual:
+
+<PlatformContent includePath="enriching-events/import" />
+
+</PlatformSection>
+
 To identify the user:
 
-<PlatformContent includePath="set-user" />
+<PlatformContent includePath="enriching-events/set-user" />
 
 You can also clear the currently set user:
 
-<PlatformContent includePath="unset-user" />
+<PlatformContent includePath="enriching-events/unset-user" />

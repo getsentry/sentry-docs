@@ -113,15 +113,26 @@ const tracingMiddleWare = async (ctx, next) => {
   });
 
   ctx.__sentry_transaction = transaction;
-  await next();
+  
+  // We put the transaction on the scope so users can attach children to it
+  Sentry.getCurrentHub().configureScope(scope => {
+    scope.setSpan(transaction);
+  });
 
-  // if using koa router, a nicer way to capture transaction using the matched route
-  if (ctx._matchedRoute) {
-    const mountPath = ctx.mountPath || "";
-    transaction.setName(`${reqMethod} ${mountPath}${ctx._matchedRoute}`);
-  }
-  transaction.setHttpStatus(ctx.status);
-  transaction.finish();
+  ctx.res.on("finish", () => {
+    // Push `transaction.finish` to the next event loop so open spans have a chance to finish before the transaction closes
+    setImmediate(() => {
+      // if using koa router, a nicer way to capture transaction using the matched route
+      if (ctx._matchedRoute) {
+        const mountPath = ctx.mountPath || "";
+        transaction.setName(`${reqMethod} ${mountPath}${ctx._matchedRoute}`);
+      }
+      transaction.setHttpStatus(ctx.status);
+      transaction.finish();
+    });
+  });
+
+  await next();
 };
 
 app.use(requestHandler);

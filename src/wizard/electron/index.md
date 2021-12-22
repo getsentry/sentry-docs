@@ -28,7 +28,7 @@ One way to verify your setup is by intentionally causing an error that breaks yo
 
 Calling an undefined function will throw an exception:
 
-```js
+```javascript
 myUndefinedFunction();
 ```
 

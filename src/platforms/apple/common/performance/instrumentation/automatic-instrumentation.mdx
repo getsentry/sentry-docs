@@ -1,0 +1,113 @@
+---
+title: Automatic Instrumentation
+sidebar_order: 10
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+<Alert level="info" title="Important">
+
+The HTTP instrumentation can lead to crashes due to a bug in the SDK (see [GitHub Issue](https://github.com/getsentry/sentry-cocoa/issues/1448)). We recommend updating to at least [7.5.3](https://github.com/getsentry/sentry-cocoa/releases/tag/7.5.3) or [disabling the feature](#http-instrumentation).
+
+</Alert>
+
+## UIViewController Instrumentation
+
+This feature is available for iOS, tvOS, and Mac Catalyst, and only works for UIViewControllers.
+
+The UIViewController Instrumentation, once enabled, captures transactions whenever your app loads a ViewController. The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
+
+The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
+
+![UIViewController Transaction](ui-view-controller-transaction.png)
+
+## App Start Instrumentation
+
+This feature is available for iOS, tvOS, and Mac Catalyst.
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
+To enable this feature enable `AutoUIPerformanceTracking`. The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+* __Cold start__: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
+* __Warm start__: App launched at least once, is partially in memory, and no process exists.
+
+The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][UIWindow] as the end. It creates the following spans:
+* __Pre Main__: From the process start time to the runtime init.
+* __UIKit and Application Init__: From the runtime init to the [`didFinishLaunchingNotification`][didFinishLaunching].
+* __Initial Frame Render__: From the [`didFinishLaunchingNotification`][didFinishLaunching] to [`UIWindowDidBecomeVisibleNotification`][UIWindow].
+
+![App Start Transaction](app-start-transaction.png)
+
+Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
+
+## Slow and Frozen Frames
+
+This feature is available for iOS, tvOS, and Mac Catalyst.
+
+Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are *slow frames* and *frozen frames*. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
+
+- **Slow frames**: Slow frames are captured by the SDK when the app takes more than 16.67 ms to render a frame. Typically, a phone or tablet renders with 60 frames per second (fps), though the frame rate can be higher, especially as 120 fps displays become popular. At 60 fps, every frame has 16.67 ms to render; slower than that, and the app has slow frames.
+- **Frozen frames**: Frozen frames are UI frames that take longer than 700 ms to render.
+
+The detail view of the transaction displays the slow, frozen, and total frames:
+
+![Slow and Frozen Frames](slow-frozen-frames.png)
+
+Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
+
+## HTTP Instrumentation
+
+The Sentry SDK adds spans for outgoing HTTP requests to ongoing transactions bound to the Scope. Currently, the SDK supports requests with [NSURLSession][NSURLSession], but not the legacy [NSURLConnection][NSURLConnection] yet. The SDK attaches auto-generated transactions automatically to the Scope if there is no other transaction bound. When starting a transaction, you can use `bindToScope` to indicate whether the SDK should bind the new transaction to the Scope or not.
+
+To disable the HTTP instrumentation:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableNetworkTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableNetworkTracking = NO;
+}];
+```
+
+[NSURLSession]: https://developer.apple.com/documentation/foundation/nsurlsession
+[NSURLConnection]: https://developer.apple.com/documentation/foundation/nsurlconnection
+
+
+## Opt Out
+
+You can opt out of UIViewController, App Start, Slow and Frozen Frames, and HTTP Instrumentation using options:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableAutoPerformanceTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAutoPerformanceTracking = NO;
+}];
+```
+
+[UIWindow]: https://developer.apple.com/documentation/uikit/uiwindowdidbecomevisiblenotification
+[didFinishLaunching]: https://developer.apple.com/documentation/uikit/uiapplication/1622971-didfinishlaunchingnotification
