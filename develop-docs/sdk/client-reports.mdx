@@ -5,7 +5,8 @@ sidebar_order: 20
 
 Client reports are a protocol feature that let clients send status reports
 about themselves to Sentry.  They are currently mainly used to emit outcomes
-for events that were never sent.
+for events that were never sent.  Chained relays are also able to emit these
+cient reports to inform the next relay in chain about _some_ outcomes.
 
 ## Basic Operation
 
@@ -71,7 +72,7 @@ will assume the current UTC timestamp. In the data model, this is called
 - `category`: The data category for which the discard reason applies.
 - `quantity`: The number of events which were lost
 
-The following discard reasons are currently defined:
+The following discard reasons are currently defined for `discarded_events`:
 
 - `queue_overflow`: a SDK internal queue (eg: transport queue) overflowed
 - `cache_overflow`: an SDK internal cache (eg: offline event cache) overflowed
@@ -85,6 +86,15 @@ that SDKs send these under normal operation:
 
 - `before_send`: an event was dropped in `before_send`
 - `event_processor`: an event was dropped by an event processor
+
+`rate_limited_events`, `filtered_events`, `filtered_sampling_events`
+
+: _List of outcome objects_ {`reason`, `category`, `quantity`}
+
+These function like `discarded_events` but identify events that were rate limited,
+filtered or filtered by by dynamic sampling _at a relay_. Client SDKs must never
+emit these _unless_ they are operating as a relay.  The reason codes for these
+need to match the reason codes that relay would emit directly to Sentry.
 
 ## SDK Side Recommendations
 
