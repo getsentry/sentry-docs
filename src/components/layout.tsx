@@ -51,7 +51,7 @@ export default ({
 
       <main role="main" className="px-0">
         <div className="flex-grow-1">
-          <div className="d-none d-md-block navbar-right-half">
+          <div className="d-block navbar-right-half">
             <Navbar
               {...(searchPlatforms.length > 0 && {
                 platforms: searchPlatforms,
