@@ -11,45 +11,41 @@ description: "Learn how to configure the SDK to capture the user and gain critic
 
 Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
+<DefinitionList>
+
 <PlatformSection notSupported={["apple"]}>
 
-`id`
+### `id`
 
-: Your internal identifier for the user.
+Your internal identifier for the user.
 </PlatformSection>
 
 <PlatformSection supported={["apple"]}>
 
-`userId`
+### `userId`
 
-: Your internal identifier for the user.
+Your internal identifier for the user.
 </PlatformSection>
 
-`username`
+### `username`
 
-: The username. Typically used as a better label than the internal id.
+The username. Typically used as a better label than the internal id.
 
-`email`
+### `email`
 
-: An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
 
-`ip_address`
+### `ip_address`
 
-: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data (`request.env.REMOTE_ADDR` field in JSON), if available. That might require <PlatformIdentifier name="send-default-pii" /> set to `true` in the SDK options.
+The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data (`request.env.REMOTE_ADDR` field in JSON), if available. That might require <PlatformIdentifier name="send-default-pii" /> set to `true` in the SDK options.
 
-If the user's `ip_address` is set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server. For certain SDKs, particularly iOS and frontend JavaScript, this is the default behavior and requires no further configuration. For most other SDKs the default is to not collect any IP address. If you find that you're missing the user's IP address, setting this value to `"{{auto}}"` explicitly might help.
+If the user's `ip_address` is set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server.
 
-<!--
-SDK devs who read this and wonder why their SDK does not behave like the JS
-SDK: Relay changes the default value from `null` to `{{auto}}` for the
-platforms javascript, cocoa, objc. If you want to collect IP addresses by
-default because you're building a frontend/desktop SDK, just send {{auto}} by
-default. We don't really want to special-case more platforms.
-
-See https://github.com/getsentry/relay/blob/54fc479259c5c8a70c48ad1994d5e8eb8629ba32/relay-general/src/store/normalize.rs#L380-L383
--->
+If the field is omitted, the default value is `null`. However, due to backwards compatibility concerns, certain platforms (in particular JavaScript) have a different default value of `"{{auto}}"`. SDKs and other clients are strongly discouraged from relying on this behavior and should set IP-addresses or `"{{auto}}"` explicitly.
 
 To opt-out of collecting users' IP addresses, you can use Sentry's [server-side data](/product/data-management-settings/scrubbing/) scrubbing to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+
+</DefinitionList>
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
