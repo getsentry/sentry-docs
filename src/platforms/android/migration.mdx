@@ -10,7 +10,45 @@ description: "Migrating between versions of Sentry's SDK for Android."
 
 The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0.0](https://developer.android.com/studio/releases/gradle-plugin#7-0-0).
 
-The `tracingInstrumentation` feature requires the Sentry's Android SDK version `4.0.0` and above, otherwise it throws a `NoClassDefFoundError` exception.
+### includeProguardMapping
+
+The `autoUpload` flag has been deprecated in favor of 2 new options:
+* `includeProguardMapping` - Disables/enables Proguard mapping functionality. When enabled, generates a UUID and attempts to upload a Proguard mapping associated with that UUID to Sentry.  When `autoUploadProguardMapping` is disabled, the plugin will only generate a `sentry-debug-meta.properties` file containg UUID, which later can be used to manually upload the mapping, for example, using [sentry-cli](/product/cli/dif/#proguard-mapping-upload).  
+* `autoUploadProguardMapping` - Defines whether the gradle plugin should attempt to auto-upload the mapping file to Sentry.
+When `includeProguardMapping` is disabled, this flag has not effect.
+
+_Old_:
+
+```groovy
+sentry {
+    autoUpload true
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(true)
+}
+```
+
+_New_:
+
+```groovy
+sentry {
+  includeProguardMapping = true
+  autoUploadProguardMapping = true
+}
+```
+
+```kotlin
+sentry {
+  includeProguardMapping.set(true)
+  autoUploadProguardMapping.set(true)
+}
+```
+ 
+
+### tracingInstrumentation
 
 The `io.sentry.android.gradle` enables the tracing instrumentation (via bytecode manipulation) for `androidx.sqlite` and `androidx.room` libraries by default, to disable it, see the code snippet bellow.
 
