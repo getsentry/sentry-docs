@@ -1,0 +1,244 @@
+---
+title: Gradle
+sidebar_order: 100
+description: "Learn about using the Sentry Android Gradle Plugin."
+---
+
+The [Sentry Android Gradle Plugin](https://github.com/getsentry/sentry-android-gradle-plugin) is an addition to the main Android and Hybrid SDKs (like React Native and Flutter) and offers
+seamless integration with the Gradle build system. It supports the upload of ProGuard/R8 mappings and of Native debug symbols and sources, as well as
+auto-instrumentation tracing through bytecode manipulation.
+
+## Setup
+
+### Install
+
+Using Gradle (Android Studio) in your `app/build.gradle` add:
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '2.0.0') }}"
+}
+```
+
+```kotlin
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '2.0.0') }}"
+}
+```
+<Note>
+
+The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0.0](https://developer.android.com/studio/releases/gradle-plugin#7-0-0).
+
+</Note>
+
+### Configure
+
+We expose the following configuration values directly in your `app/build.gradle`:
+
+```groovy
+import io.sentry.android.gradle.InstrumentationFeature
+
+sentry {
+    // Disables or enables the handling of Proguard mapping for Sentry.
+    // If enabled the plugin will generate a UUID and will take care of
+    // uploading the mapping to Sentry. If disabled, all the logic
+    // related to proguard mapping will be excluded.
+    // Default is enabled.
+    includeProguardMapping = true
+
+    // Whether the plugin should attempt to auto-upload the mapping file to Sentry or not.
+    // If disabled the plugin will run a dry-run and just generate a UUID.
+    // The mapping file has to be uploaded manually via sentry-cli in this case.
+    // Default is enabled.
+    autoUploadProguardMapping = true
+
+    // Disables or enables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols = false
+
+    // Does or doesn't include the source code of native code for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    includeNativeSources = false
+
+    // Enable or disable the tracing instrumentation.
+    // Does auto instrumentation for specified features through bytecode manipulation.
+    // Default is enabled.
+    // Only available v3.0.0 and above.
+    tracingInstrumentation {
+      enabled = true
+
+      // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
+      // Defaults to all available values of InstrumentationFeature enum class.
+      features = [InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO]
+    }
+}
+```
+
+```kotlin
+import io.sentry.android.gradle.InstrumentationFeature
+
+sentry {
+    // Disables or enables the handling of Proguard mapping for Sentry.
+    // If enabled the plugin will generate a UUID and will take care of
+    // uploading the mapping to Sentry. If disabled, all the logic
+    // related to proguard mapping will be excluded.
+    // Default is enabled.
+    includeProguardMapping.set(true)
+    
+    // Whether the plugin should attempt to auto-upload the mapping file to Sentry or not.
+    // If disabled the plugin will run a dry-run and just generate a UUID.
+    // The mapping file has to be uploaded manually via sentry-cli in this case.
+    // Default is enabled.
+    autoUploadProguardMapping.set(true)
+
+    // Disables or enables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols.set(false)
+
+    // Does or doesn't include the source code of native code for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    includeNativeSources.set(false)
+
+    // Enable or disable the tracing instrumentation.
+    // Does auto instrumentation for specified features through bytecode manipulation.
+    // Default is enabled.
+    // Only available v3.0.0 and above.
+    tracingInstrumentation {
+      enabled.set(true)
+      
+      // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
+      // Defaults to all available values of InstrumentationFeature enum class.
+      features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO))
+    }
+}
+```
+
+Now when you build your app, the plugin will upload the ProGuard/R8 mappings, source bundle, and native symbols as you configured them to Sentry.
+
+### Variant Filtering
+
+You can specify which variant/flavor/build-type should be ignored by Sentry in your `app/build.gradle` file:
+
+```groovy
+sentry {
+    // List the build types that should be ignored (e.g. "release").
+    ignoredBuildTypes = ["release"]
+
+    // List the build flavors that should be ignored (e.g. "production").
+    ignoredFlavors = ["production"]
+
+    // List the build variant that should be ignored (e.g. "productionRelease").
+    ignoredVariants = ["productionRelease"]
+}
+```
+
+```kotlin
+sentry {
+    // List the build types that should be ignored (e.g. "release").
+    ignoredBuildTypes.set(setOf("release"))
+
+    // List the build flavors that should be ignored (e.g. "production").
+    ignoredFlavors.set(setOf("production"))
+
+    // List the build variant that should be ignored (e.g. "productionRelease").
+    ignoredVariants.set(setOf("productionRelease"))
+}
+```
+
+## ProGuard/R8
+
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded through environment variables or from a `sentry.properties` file in your project root.
+
+Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+At the very minimum, you will need something similar to:
+
+```bash
+defaults.project=your-project
+defaults.org=your-org
+auth.token=YOUR_AUTH_TOKEN
+```
+<Note>
+
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, check out the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+</Note>
+
+## Native Debug Symbols and Sources
+
+The plugin will automatically discover and upload Native debug symbols and sources when you run `gradle assemble{BuildVariant}`. The `{BuildVariant}` must be a non-debuggable build type, for example `Release`. The credentials for the upload step are loaded via environment variables or from a `sentry.properties` file in your project root.
+
+Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+At the very minimum, you will need something similar to:
+
+```bash
+defaults.project=your-project
+defaults.org=your-org
+auth.token=YOUR_AUTH_TOKEN
+```
+<Note>
+
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, check out the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+</Note>
+
+## Tracing Auto-instrumentation
+
+The plugin uses the [bytecode manipulation](https://www.infoq.com/articles/Living-Matrix-Bytecode-Manipulation/) framework to inject a code snippet 
+that starts and finishes a [span](/product/sentry-basics/tracing/event-detail/#span-view) for common operations that can cause performance bottlenecks.
+This way potentially heavy operations are automatically measured without the need to manually instrument them.
+
+<Note>
+
+For this data to be captured, you must enable performance monitoring.
+
+</Note>
+
+The plugin supports the following features for auto-instrumentation:
+
+```kotlin
+enum class InstrumentationFeature {
+    /**
+     * When enabled the SDK will create spans for any CRUD operation performed by 'androidx.sqlite'
+     * and 'androidx.room'. This feature uses bytecode manipulation.
+     */
+    DATABASE,
+
+    /**
+     * When enabled the SDK will create spans for [java.io.FileInputStream],
+     * [java.io.FileOutputStream], [java.io.FileReader], [java.io.FileWriter].
+     * This feature uses bytecode manipulation and replaces the above
+     * mentioned classes with Sentry-specific implementations.
+     */
+    FILE_IO
+}
+```
+
+Check [Integrations](/platforms/android/configuration/integrations/) page for more detailed explanation of each instrumentation feature.
+
+<Note>
+
+To learn more about the internals of auto-instrumentation, check out this [blog post](https://blog.sentry.io/2021/12/14/bytecode-transformations-the-android-gradle-plugin).
+
+</Note>
