@@ -228,3 +228,19 @@ At the moment, we only support standard `androidx.room` usage. That is, the SDK 
 It's recommended to use `androidx.room` version `2.0.0` or above, since it supports incremental builds.
 
 </Note>
+
+### File I/O Instrumentation
+
+The [Sentry Android Gradle Plugin](/platforms/android/gradle/) does the tracing auto instrumentation using bytecode manipulation for `java.io.FileInputStream`, `java.io.FileOutputStream`, `java.io.FileReader` and `java.io.FileWriter`.
+
+The plugin replaces the aforementioned classes with custom Sentry-specific implementations.
+
+The Sentry-specific File I/O implementation starts a span out of the active span bound to the scope for each File I/O operation. The SDK sets the span `operation` to `file.write`/`file.read` and `description` to the SQL Query if available.
+
+In addition, the span contains other useful information such as `file.size` (raw number of bytes) and `file.path` (an absolute path to the file) as part of the `data` payload.
+
+The span finishes once the operation has been executed. The span `status` is set to `SpanStatus.OK` if successful or `SpanStatus.INTERNAL_ERROR` if there was any error.
+
+When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+
+For more information see our [File I/O integration](/platforms/android/configuration/integrations/file-io/).
