@@ -1,0 +1,105 @@
+To instrument `FileInputStream`/`FileOutputStream` the SDK provides drop-in replacements such as `SentryFileInputStream`/`SentryFileOutputStream`.
+
+_Old_:
+```java
+  File file1 = new File("file1.txt");
+  File file2 = new File("file2.txt");
+  try (FileInputStream fis = new FileInputStream(file1)) {
+    byte[] buffer = new byte[1024];
+    try (FileOutputStream fos = FileOutputStream(file2)) {
+      int read;
+      while (true) {
+        read = fis.read(buffer);
+        if (read == -1) {
+          break;
+        }
+        fos.write(buffer, 0, read);
+      }
+    }
+  }
+```
+
+```kotlin
+  val file1 = File("file1.txt")
+  val file2 = File("file2.txt")
+  FileInputStream(file1).use { FileOutputStream(file2).write(it.readBytes()) }
+```
+
+_New_:
+```java
+  File file1 = new File("file1.txt");
+  File file2 = new File("file2.txt");
+  try (FileInputStream fis = new SentryFileInputStream(file1)) {
+    byte[] buffer = new byte[1024];
+    try (FileOutputStream fos = SentryFileOutputStream(file2)) {
+      int read;
+      while (true) {
+        read = fis.read(buffer);
+        if (read == -1) {
+          break;
+        }
+        fos.write(buffer, 0, read);
+      }
+    }
+  }
+```
+
+```kotlin
+  val file1 = File("file1.txt")
+  val file2 = File("file2.txt")
+  SentryFileInputStream(file1).use { SentryFileOutputStream(file2).write(it.readBytes()) }
+```
+
+Similarly, `FileReader`/`FileWriter` can be instrumented through `SentryFileReader`/`SentryFileWriter`:
+
+_Old_:
+```java
+  File file1 = new File("file1.txt");
+  File file2 = new File("file2.txt");
+  try (FileReader reader = new FileReader(file1)) {
+    char[] buffer = new char[1024];
+    try (FileWriter writer = FileWriter(file2, true)) {
+      int read;
+      while (true) {
+        read = reader.read(buffer, 0, buffer.length);
+        if (read == -1) {
+          break;
+        }
+        writer.write(buffer, 0, buffer.length);
+      }
+      writer.flush();
+    }
+  }
+```
+
+```kotlin
+  val file1 = File("file1.txt")
+  val file2 = File("file2.txt")
+  FileReader(file1).use { FileWriter(file2).write(it.readText()) }
+```
+
+_New_:
+```java
+  File file1 = new File("file1.txt");
+  File file2 = new File("file2.txt");
+  try (FileReader reader = new SentryFileReader(file1)) {
+    char[] buffer = new char[1024];
+    try (FileWriter writer = SentryFileWriter(file2, true)) {
+      int read;
+      while (true) {
+        read = reader.read(buffer, 0, buffer.length);
+        if (read == -1) {
+          break;
+        }
+        writer.write(buffer, 0, buffer.length);
+      }
+      writer.flush();
+    }
+  }
+```
+
+```kotlin
+  val file1 = File("file1.txt")
+  val file2 = File("file2.txt")
+  SentryFileReader(file1).use { SentryFileWriter(file2).write(it.readText()) }
+```
