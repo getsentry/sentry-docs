@@ -118,7 +118,7 @@ Check out [the documentation](https://docs.sentry.io/platforms/android/performan
 
 > Want to play with some new features? Try out our beta [Room](https://docs.sentry.io/platforms/android/configuration/integrations/room-and-sqlite/) and [File I/O](https://docs.sentry.io/platforms/android/configuration/integrations/file-io/) performance integrations.
 >  
-> This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/gradle); you must use version `3.0.0-beta.3`. The `tracingInstrumentation` option is enabled by default, so Sentry automatically measures performance of the database queries done with Room as well as File I/O operations if you set a tracing sample rate. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
+> This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/gradle); you must use version `3.0.0-beta.3`. The `tracingInstrumentation` option is enabled by default, so Sentry automatically measures the performance of the database queries done with Room as well as file I/O operations if you set a tracing sample rate. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
 >
 > Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-android-gradle-plugin/issues).
 
