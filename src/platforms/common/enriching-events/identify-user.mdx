@@ -11,37 +11,41 @@ description: "Learn how to configure the SDK to capture the user and gain critic
 
 Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
+<DefinitionList>
+
 <PlatformSection notSupported={["apple"]}>
 
-`id`
+### `id`
 
-: Your internal identifier for the user.
+Your internal identifier for the user.
 </PlatformSection>
 
 <PlatformSection supported={["apple"]}>
 
-`userId`
+### `userId`
 
-: Your internal identifier for the user.
+Your internal identifier for the user.
 </PlatformSection>
 
-`username`
+### `username`
 
-: The username. Typically used as a better label than the internal id.
+The username. Typically used as a better label than the internal id.
 
-`email`
+### `email`
 
-: An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
 
-`ip_address`
+### `ip_address`
 
-: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data, if available. That might require <PlatformIdentifier name="send-default-pii" /> set to `true` in the SDK options. <PlatformSection notSupported={["php"]}> If set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server, which is useful for client-side applications such as JavaScript applications running on Web browsers, desktop applications, or mobile apps. </PlatformSection>
+The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data (`request.env.REMOTE_ADDR` field in JSON), if available. That might require <PlatformIdentifier name="send-default-pii" /> set to `true` in the SDK options.
 
-<PlatformSection supported={["apple"]}>
+If the user's `ip_address` is set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server.
 
-Events from the SDK for Apple already consider the incoming connection as the user's IP address. To opt-out from this, you can use Sentry's [server-side data](/product/data-management-settings/scrubbing/) scrubbing to remove `$user.ip_address`.
+If the field is omitted, the default value is `null`. However, due to backwards compatibility concerns, certain platforms (in particular JavaScript) have a different default value for `"{{auto}}"`. SDKs and other clients should not rely on this behavior and should set IP addresses or `"{{auto}}"` explicitly.
 
-</PlatformSection>
+To opt out of collecting users' IP addresses, you can use Sentry's [server-side data](/product/data-management-settings/scrubbing/) scrubbing to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+
+</DefinitionList>
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
