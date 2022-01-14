@@ -69,6 +69,7 @@ export type DeRefedOpenAPI = {
 export type ResponseContent = {
   content_type: string;
   example: string;
+  examples: string;
   schema: string;
 };
 
