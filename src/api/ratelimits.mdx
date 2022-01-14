@@ -3,46 +3,26 @@ title: Rate Limits
 sidebar_order: 5
 ---
 
-Every API request is
+Sentry rate limits every API request made to prevent abuse and resource overuse. The limit is applied to each caller per endpoint.
 
-```bash
-curl -i https://sentry.io/api/0/projects/1/groups/
-```
+The rate limit follows a fixed window approach. Requests are counted into time buckets, determined by the window size. If the number of requests from a caller exceeds the number of allowed requests within a window, then that request will be rejected.
 
-```http
-HTTP/1.0 200 OK
-Date: Sat, 14 Feb 2015 18:47:20 GMT
-Content-Type: application/json
-Content-Language: en
-Allow: GET, HEAD, OPTIONS
-Link: <https://sentry.io/api/0/projects/1/groups/?&cursor=1420837590:0:1>;
-  rel="previous"; results="false",
-  <https://sentry.io/api/0/projects/1/groups/?&cursor=1420837533:0:0>;
-  rel="next"; results="true"
-```
+While there is a default value, each endpoint can have their own maximum number of requests and window size. You can track your rate limit usage by looking at special headers in the response
 
-When supported, cursors will **always** be returned for both a previous and a next page, even if there are no results on these pages. This allows you to make a query against the API for yet-undiscovered results. An example where this would be used is when you’re implementing polling behavior and you want to see if there is any new data. We return a `results="[true|false]"` indicator to determine if you actually need to paginate.
+## Headers
 
-## Pagination Example
+Every API request response will include the following headers:
 
-Here is a pagination example using this API endpoint:
+- `X-Sentry-Rate-Limit-Limit`
+  - The maximum number of requests allowed within the window
+- `X-Sentry-Rate-Limit-Remaining`
+  - The number of requests this caller has left on this endpoint within the current window
+- `X-Sentry-Rate-Limit-Reset`
+  - The time when the next rate limit window begins and the count resets
+  - Measured in UTC seconds from epoch
 
-https://docs.sentry.io/api/events/list-an-issues-events/
+## Additional Information
 
-The HTTP request in this example returns 100 events for the issue and has the following link header in the response:
-```discover {tabTitle:Http}
-<https://sentry.io/api/0/issues/123456/events/?&cursor=0:0:1>; rel="previous"; results="false"; cursor="0:0:1", <https://sentry.io/api/0/issues/123456/events/?&cursor=0:100:0>; rel="next"; results="true"; cursor="0:100:0"
-```
+The rate limiter looks at the caller's identity instead of the bearer token or cookie. As such, the rate limit cannot be bypassed by generating multiple tokens.
 
-One of the URLs in the link response has `rel=next`, which indicates the next results page. It also has `results=true`, which means that there are more results.
-
-Based on this, the next request is `GET <https://sentry.io/api/0/issues/123456/events/?&cursor=0:100:0>`.
-
-This request will return the next 100 events for that issue, again, with the following link header:
-```discover {tabTitle:Http}
-<https://sentry.io/api/0/issues/123456/events/?&cursor=0:0:1>; rel="previous"; results="true"; cursor="0:0:1", <https://sentry.io/api/0/issues/123456/events/?&cursor=0:200:0>; rel="next"; results="true"; cursor="0:200:0"
-```
-
-The process is repeated until the URL with `rel=next` has the flag `results=false` to indicate the last page.
-
-The three values from cursor are: cursor identifier (integer, usually 0), row offset, and is_prev (1 or 0).
+Rate limits for internal integrations may differ from other rate limits, and tend be higher. We reccomend using internal integration bearer tokens if you anticipate needing to make a large volume of calls.
