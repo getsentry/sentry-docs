@@ -40,28 +40,31 @@ This will guide you through the installation and configuration process and sugge
 
 Start by configuring the SDK as described in the above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the `main` process and all `renderer` processes to also catch errors during startup.
 
-If you change the `userData` directory used by your application, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
+If you are using preload scripts, have `contextIsolation` enabled and want to capture errors from the isolated preload context, you should call `init` early in that context too.
+
+### App `userData` Directory
+
+If you change the `userData` directory used by your app, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
 
 ```javascript
 import { app } from "electron";
 import * as Sentry from "@sentry/electron";
 
 app.setPath("userData", "~/.config/my-app");
-
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
 
-## Bunder Configuration
+## Bundler Configuration
 
-The SDK makes an effort to ensure JavaScript bundlers pick up the correct entry point for the Electron process type, but it's not foolproof. If the incorrect entry point is selected, your bundler may throw an error or failing that, an error will be thrown at runtime. If this occurs you can use relative imports to ensure that the correct code is bundled for the process.
+The SDK attempts to ensure JavaScript bundlers pick up the correct entry point for the Electron process type, but this is not foolproof. If the incorrect entry point is selected, your bundler may throw an error or an error will be thrown at runtime. If this occurs you can use relative imports to ensure that the correct code is bundled for the process.
 
-For the main process:
+In the main process:
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
 ```
 
-For the renderer process:
+In the renderer process:
 
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
@@ -69,9 +72,9 @@ import * as Sentry from "@sentry/electron/renderer";
 
 ## Iter-Process Communication
 
-To give detailed information for all events, the Electron SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
+To give detailed information for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
 
-By default, the SDK attempts to establish communication from `renderer` to `main` process via Electron's IPC APIs and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` which can be one of `Classic`, `Protocol` or `Both`.
+By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
 
 ```javascript
 const { init, IPCMode } = require("@sentry/electron");
@@ -85,7 +88,7 @@ init({
 
 ### Preload Injection
 
-The SDK attempts to inject a preload script via the Electron [`session.setPreloads(preloads)` API](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads) and by default only does this for the `defaultSession`. If you are using other sessions, you can pass custom sessions via the `getSessions` option in the `main` process:
+The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads) and by default only does this for the `defaultSession`. If you are using other sessions, you can pass custom sessions via the `getSessions` option in the `main` process:
 
 ```javascript
 import { session } from "electron";
@@ -93,23 +96,26 @@ import * as Sentry from "@sentry/electron";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  getSessions: () => [session.fromPartition("persist:my-session")],
+  getSessions: () => [
+    session.defaultSession,
+    session.fromPartition("persist:my-session"),
+  ],
 });
 ```
 
-If you bundle the `main` process JavaScript, the SDK cannot automatically inject preload scripts because the file will be missing from the packaged application. In this case, the SDK will send events and scope updates via a custom HTTP protocol and `window.fetch`.
+If your app bundles the `main` process JavaScript, the SDK cannot automatically inject preload scripts because the script will be missing from the packaged app. In this case, the SDK will send events and scope updates via a custom HTTP protocol and `window.fetch`.
 
 ### Manual Preload
 
-If you would like to manually bundle and configure the preload script, you should import the SDK preload into your own preload script:
+If you would like to manually bundle and configure the preload script, you should import the SDK preload code into your own preload script:
 
 ```javascript
 import "@sentry/electron/preload";
 ```
 
-This script exposes IPC via Electrons `contextBridge` API.
+This script exposes IPC to the isolated renderer via Electrons `contextBridge` API.
 
-See the [example apps](https://github.com/getsentry/sentry-electron/tree/master/examples) for how to do this.
+Check out the [example apps](https://github.com/getsentry/sentry-electron/tree/master/examples) for how to do this.
 
 ## Uploading Debug Information
 
