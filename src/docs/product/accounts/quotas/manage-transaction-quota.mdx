@@ -1,21 +1,78 @@
 ---
-title: Manage Your Event Stream, a Guide
-sidebar_order: 10
-redirect_from:
-  - /guides/manage-event-stream/
-description: "Helps you use the tools Sentry provides to control the _type_ and _amount_ of errors that are monitored."
+title: Manage Your Transaction Quota
+sidebar_order: 20
+description: "Learn how to use the tools Sentry provides to control the _type_ and _amount_ of transactions that are monitored."
 ---
 
-Sending all application errors to Sentry ensures you'll be notified in real-time when errors occur in your code. However, with just the basic setup, you might quickly realize that your applications generate many errors, and those might trigger many notifications. Sentry provides tools to control the _type_ and _amount_ of errors that are monitored. These will allow you to:
-
-1. Shape your event stream to make it actionable and meaningful.
-2. Reserve those real-time notifications for errors that actually break your code.
-3. Manage your quotas if you're on an event-quota based plan.
+In most cases, sending all transactions to Sentry would generate more data than you could use and would use up your events quota too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have transaction data that's actionable and meaningful and to manage your quotas if you're on an event-quota based plan.
 
 ## 1. SDK Filtering: beforeSend
 
-All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so developers can use that to modify the event's data or drop it completely (by returning `null`) based on their custom logic and the data available on the event like _tags_, _environment_, _release version_, _error attributes_, and so forth. For more information see [Filtering Events](/platform-redirect/?next=/configuration/filtering/)
+All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so you can use that to modify the event's data or drop it completely (by returning `null`) based on your custom logic and the data available on the event like _tags_, _environment_, _release version_, and so on. For more information see [Filtering Events](/platform-redirect/?next=/configuration/filtering/)
 
-## 2. SDK Configuration
+## 2. SDK Configuration: Tracing Options
 
-The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our docs under [Platforms](/platforms/) and [Configuration](/platform-redirect/?next=/configuration/). Here are some examples:
+When you configure your the SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/option/#tracing-options). You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for performance monitoring so you can capture certain types of transactions.
+
+## Common Workflows for Managing Your Event Stream
+
+Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process. Sentry provides several tools to increase your visibility into the events and issues aggregating in your streams. Let's see how they can be leveraged to manage your streams.
+
+### > **How to set proper rate limits?**
+
+A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Let's look at an example:
+
+![Calculating rate limits](manage-event-stream-14.png)
+
+- Open the project DSN key configuration under `[Project Settings] > Client Keys > [Configure]`
+- Take a look at the `KEY USAGE IN THE LAST 30 DAYS` graph. Max daily rate in the last month is < 326K
+- Based on that, we can define a ceiling **daily** max value of ~330K, which is ~13,750 events an **hour**, or ~230 events a **minute**.
+- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using a minute based rate to avoid situations where a random event spike might exhaust your daily or hourly set quota and leave you blind for a long while.
+- You can always go back, check the graph to see the number of events dropped due to rate limiting and revisit your settings.
+
+![Revisit rate limits](manage-event-stream-15.png)
+
+### > **How can I see a breakdown of incoming events?**
+
+[Usage Stats](/product/stats/#usage-stats) displays details about the total number of events Sentry has received across your entire organization for up to 90 days. The report breaks down the events by project into three categories:
+
+- **Accepted**: Events processed and displayed in your event stream.
+- **Dropped**: Events that were discarded due to a limit being hit.
+- **Filtered**: Events that were blocked based on your inbound filter rules.
+
+![Overview of Usage Stats page](../../stats/usage-stats.png)
+
+Clicking on the settings icon next to the project name will open the project's settings page where you can manage its Inbound Filters and Rate Limits.
+
+You can also download monthly reports with a similar breakdown of all your previous billing periods under **Settings > Subscription** in the "Usage History" tab.
+
+### > **What are my busiest projects?**
+
+Our billing system provides a report on usage that you can export as a .csv file. That file lists the quota consumed by each project in your organization.
+
+### > **What issues are consuming my quota?**
+
+The Sentry workflow starts with a real-time alert notifying you about an error in your code. If you want to take a more proactive approach to resolve your busiest issues, you can set up a query in **Discover**. When you're building the query, set the columns as shown below:
+
+![Busiest Projects](manage-event-stream-02.png)
+
+Once the changes are applied, the "Results" table displays your busiest issues:
+
+![Busiest Issues](manage-event-stream-10.png)
+
+### > **Spike Protection was activated -- what should I do?**
+
+You received an email notifying you that Spike Protection was triggered and applied to your account.
+
+![Spike Protection Email](spike-email.jpg)
+
+Many times an unexpected spike is caused by a new error (or errors) introduced into your code with a new release version. We understand that errors can come in spikes and service interruptions can be challenging, so we include a one time grace period for all paid accounts.
+
+If an account depletes its event capacity and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10K events per hour. If you choose not to increase your capacity, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your capacity, events accepted during the grace period will be counted as consumed capacity.
+
+Once you've used your grace period, we recommend using our on-demand spending caps to ensure you have time to adjust your capacity in the event of a spike in errors.
+
+Also, consider doing the following:
+
+- Set better rate limits on the DSN keys associated with the spike related projects.
+- If it's a specific release version that has gone bad, add the version identifier to the project's Inbound filters to avoid accepting events from that release.
