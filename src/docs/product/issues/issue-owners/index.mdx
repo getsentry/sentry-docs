@@ -82,10 +82,9 @@ To quickly setup a code mapping for a project:
  ![Link Stack Trace](link-stack-trace.png)
  2. When you click the link, a modal will open. Enter the source code URL from GitHub/GitLab corresponding to stack trace filename and we'll automatically create the code mapping and set up stack trace linking for the project.
 
-Now that we have Code Mappings, we are able to transform the paths in your CODEOWNERS file to your expected build output. For example, you may build your program in a `dist/` folder, but that will not be in your CODEOWNERS. However the `dist/` prefix is captured in the stacktrace's file paths. Code Mappings allows Sentry to figure out how to normalize the file paths between your build output and the CODEOWNERS paths.
+Now that we have code mappings, we are able to transform the paths in your CODEOWNERS file to your expected build output. For example, you may build your program in a `dist/` folder, but that will not be in your CODEOWNERS. However the `dist/` prefix is captured in the stack trace's file paths. Code mappings allow Sentry to figure out how to normalize the file paths between your build output and the CODEOWNERS paths.
 
-
-You can import and incrementally add the mappings between your source control teams/users to Sentry Teams/Users using [External Team/User Mappings](/product/issues/issue-owners/#external-teamuser-mappings). Sentry uses the External Team/User Mappings to convert the owners in your CODEOWNERS file into their equivalents in Sentry. Sentry will automatically ignore rules that are missing team/user mappings.
+You can import and incrementally add the mappings between your source control teams/users to Sentry Teams/Users using [external team/user mappings](/product/issues/issue-owners/#external-teamuser-mappings). Sentry uses the external team/user mappings to convert the owners in your CODEOWNERS file into their equivalents in Sentry. Sentry will automatically ignore rules that are missing team/user mappings.
 
 This feature supports GitHub and GitLab CODEOWNERS file syntax with the following exceptions:
  - Escaping a pattern starting with `#` using ``\`` so it is treated as a pattern and not a comment
@@ -96,7 +95,7 @@ This feature supports GitHub and GitLab CODEOWNERS file syntax with the followin
 
 <Alert level="info">
 
-Ownership Rules take precedence over the information provided by your CODEOWNERS file when Sentry assigns issues.
+Ownership rules take precedence over the information provided by your CODEOWNERS file when Sentry assigns issues.
 
 </Alert>
 
@@ -141,10 +140,12 @@ If no ownership rules match the event, the alert will either be sent to nobody o
 Alerts sent to issue owners obey the user or team's notification preferences.
 
 ## Evaluation Flow
-If you have both Ownership Rules and Code Owners, Sentry evaluates an event against the rules in the following order:
-1. Code Owners: top-to-bottom
-2. Ownership Rules: top-to-bottom
-And the last rule matching returns the assignment.
+If you have both ownership rules and code owners, Sentry evaluates an event against the rules in the following order:
+
+1. Code owners, top-to-bottom
+2. Ownership rules, top-to-bottom
+
+After evaluation, the last rule matching returns the assignment.
 
 ### Example
 
@@ -160,7 +161,8 @@ path:dist/frontend/components/*               #frontend
 codeowners:*.js                    #ecosystem
 ```
 
-When Sentry recieves an event with a stacktrace filepath: `dist/frontend/components/sidebar.js`.
+When Sentry recieves an event with a stacktrace filepath: `dist/frontend/components/sidebar.js`, we:
+
 1. Evaluate against the code owners top-to-bottom; we get one match.
 2. Evaluate against the ownership rules top-to-bottom; we get two matches.
 
