@@ -12,6 +12,8 @@ Sending all application errors to Sentry ensures you'll be notified in real-time
 2. Reserve real-time notifications for errors that actually break your code.
 3. Manage your quotas if you're on an event-quota based plan.
 
+Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your error events.
+
 ## 1. SDK Filtering: beforeSend
 
 All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so developers can use that to modify the event's data or drop it completely (by returning `null`) based on their custom logic and the data available on the event like _tags_, _environment_, _release version_, _error attributes_, and so forth. For more information see [Filtering Events](/platform-redirect/?next=/configuration/filtering/)
@@ -96,26 +98,13 @@ Discarded issues are listed under `[Project Settings] > Inbound Filters > Discar
 
 ## 6. Rate Limiting
 
+<!-- TO DO: EDIT THIS SECTION -->
+
 Rate limiting allows you to limit the amount of events Sentry accepts per-project for a defined time span. While this is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, **subsequent events will be dropped**. Therefore, your rate limit shouldn't be constantly hit, but rather defined as a ceiling intended to protect you from unexpected spikes.
 
 Under `[Project Settings] » Client Keys » Configure`, you can create multiple DSN keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, and so forth.
 
 ![Per DSN Key rate limits](manage-event-stream-11.png)
-
-For more information see [What Counts Toward My Quota](/product/accounts/quotas/#what-counts-toward-my-quota-table-view)
-
-## 7. Spike Protection
-
-Sentry also applies a dynamic rate limit to your account designed to protect you from short-term spikes. However, we would recommend applying all of the previously mentioned methods. For more information see:
-
-- [Spike Protection](/product/accounts/quotas/#spike-protection)
-- [Protect Yourself Against Spikes in Events with Spike Protection](https://blog.sentry.io/2018/05/08/event-spike-protection#what-counts-as-a-spike)
-
-## Common Workflows for Managing Your Event Stream
-
-Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process. Sentry provides several tools to increase your visibility into the events and issues aggregating in your streams. Let's see how they can be leveraged to manage your streams.
-
-### > **How to set proper rate limits?**
 
 A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Let's look at an example:
 
@@ -128,6 +117,45 @@ A good way to set a project rate limit is by figuring out the expected event vol
 - You can always go back, check the graph to see the number of events dropped due to rate limiting and revisit your settings.
 
 ![Revisit rate limits](manage-event-stream-15.png)
+
+For more information see [What Counts Toward My Quota](/product/accounts/quotas/#what-counts-toward-my-quota-table-view)
+
+## 7. Spike Protection
+
+<!-- TO DO: EDIT THIS SECTION -->
+
+Sentry also applies a dynamic rate limit to your account designed to protect you from short-term spikes. However, we would recommend applying all of the previously mentioned methods.
+
+You received an email notifying you that Spike Protection was triggered and applied to your account.
+
+![Spike Protection Email](spike-email.jpg)
+
+Many times an unexpected spike is caused by a new error (or errors) introduced into your code with a new release version. We understand that errors can come in spikes and service interruptions can be challenging, so we include a one time grace period for all paid accounts.
+
+If an account depletes its event capacity and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10K events per hour. If you choose not to increase your capacity, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your capacity, events accepted during the grace period will be counted as consumed capacity.
+
+Once you've used your grace period, we recommend using our on-demand spending caps to ensure you have time to adjust your capacity in the event of a spike in errors.
+
+Also, consider doing the following:
+
+- Set better rate limits on the DSN keys associated with the spike related projects.
+- If it's a specific release version that has gone bad, add the version identifier to the project's Inbound filters to avoid accepting events from that release.
+
+
+For more information see:
+
+- [Spike Protection](/product/accounts/quotas/#spike-protection)
+- [Protect Yourself Against Spikes in Events with Spike Protection](https://blog.sentry.io/2018/05/08/event-spike-protection#what-counts-as-a-spike)
+
+## 6. Events Stats {#common-workflows-for-managing-your-event-stream}
+
+Once you've completed the steps above, you can look at your events in aggregate in the Stats > Usage Stats page to answer some key questions like:
+
+What's the breakdowndown of my incoming events?
+Which projects are consuming my quota?
+Which issues are consuming my quota?
+
+The answers to these questions can help you figure out where you need to do further fine-tuning of your filters, limits, or SDK configuration.
 
 ### > **How can I see a breakdown of incoming events?**
 
@@ -156,20 +184,3 @@ The Sentry workflow starts with a real-time alert notifying you about an error i
 Once the changes are applied, the "Results" table displays your busiest issues:
 
 ![Busiest Issues](manage-event-stream-10.png)
-
-### > **Spike Protection was activated -- what should I do?**
-
-You received an email notifying you that Spike Protection was triggered and applied to your account.
-
-![Spike Protection Email](spike-email.jpg)
-
-Many times an unexpected spike is caused by a new error (or errors) introduced into your code with a new release version. We understand that errors can come in spikes and service interruptions can be challenging, so we include a one time grace period for all paid accounts.
-
-If an account depletes its event capacity and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10K events per hour. If you choose not to increase your capacity, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your capacity, events accepted during the grace period will be counted as consumed capacity.
-
-Once you've used your grace period, we recommend using our on-demand spending caps to ensure you have time to adjust your capacity in the event of a spike in errors.
-
-Also, consider doing the following:
-
-- Set better rate limits on the DSN keys associated with the spike related projects.
-- If it's a specific release version that has gone bad, add the version identifier to the project's Inbound filters to avoid accepting events from that release.
