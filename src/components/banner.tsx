@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "See how Sentry's new data source for Grafana helps teams visualize their software health in a single view on Jan. 13, 2022 @ 9:30am PT.";
+  "Learn \"A Different Vue into Web Performance.\" at Vue.JS Nation for free on January 27 @ 11:05 AM PT.";
 const BANNER_LINK_URL =
-  "https://grafana.com/go/webinar/code-observability-with-sentry-plugin/?src=partner-sentry-docs-banner?promo_name=docs-banner";
+  "https://vuejsnation.com/?utm_source=sentry&utm_medium=banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
