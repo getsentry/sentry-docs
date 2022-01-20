@@ -50,8 +50,9 @@ SDKs are expected to honor 429 responses and rate limits communicated from Sentr
 To detect rate limits in a response from Sentry, apply the following steps:
 
 1. On every response, look for `X-Sentry-Rate-Limits`. If present, parse it and immediately go to Stage 2.
-2. On `429` responses, look for `Retry-After`. If present, treat it like `categories=[]` and go to Stage 2. It is allowed but not required to do this on other status codes.
-3. Otherwise, there are no rate limits communicated by Sentry.
+2. On `429` responses, check for `Retry-After`. Treat it like `categories=[]` and go to Stage 2. It is allowed but not required to do this on other status codes.
+3. On `429` responses without the above headers, assume a _60s_ rate limit for all categories and go to Stage 2. See the [Java implementation](https://github.com/getsentry/sentry-java/blob/b182c6e4353dacd145a529298aa6f1ee41928d9f/sentry/src/main/java/io/sentry/transport/RateLimiter.java#L261-L270) for reference.
+4. Otherwise, there are no rate limits communicated by Sentry.
 
 ### Stage 2: Determine Rate Limits
 
@@ -66,7 +67,6 @@ Guidelines for how SDKs should determine the current rate limits:
 - Limits where **all** categories are unknown must be ignored since those limits apply to data the SDK cannot send. Do not apply unknown categories to a default category. Note that this is distinct from limits with no category, which implicitly apply to all categories (think of this as a special category).
 - Always keep the maximum rate limit if multiple rate limits reference the same category. If a new rate limit is shorter than an already stored rate limit, then keep the longer one.
 - `X-Sentry-Rate-Limits` returned in `200 OK` responses should be treated like on 429 responses. Sentry may choose to respond with `200 OK` regardless of a rate limit or may choose to inform a client proactively about a rate limit that is unrelated to the current request. This happens specifically for *reject-all quotas* to prevent clients from sending requests.
-- The SDK must support receiving HTTP status `429` without `X-Sentry-Rate-Limits` and `Retry-After` headers. In this case, use 60 seconds as a default value for `Retry-After`. See [Java](https://github.com/getsentry/sentry-java/blob/b182c6e4353dacd145a529298aa6f1ee41928d9f/sentry/src/main/java/io/sentry/transport/RateLimiter.java#L261-L270).
 
 ## Definitions
 
