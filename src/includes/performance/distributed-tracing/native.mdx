@@ -10,7 +10,7 @@ the transaction context will contain everything needed to continue the trace.
 
 To obtain headers from a transaction so it can be continued from a downstream 
 service, define a function which merges the headers into some aggregate object. 
-Use the function in `sentry_transaction_iter_headers` as a callback.
+Use the function in `sentry_transaction_iter_headers()` as a callback.
 The following example uses `sentry_value_t` as the aggregate object:
 ```c
 static void
@@ -23,9 +23,11 @@ copy_headers_to(const char *key, const char *value, void *userdata)
 
 int main(int argc, char **argv) {
   ...
-	// transaction to continue off of
-	sentry_transaction_context_t *tx_ctx
-        = sentry_transaction_context_new("honk", NULL);
+	// Transaction to continue off of
+	sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
+        "honk", 
+        NULL,
+    );
     sentry_transaction_t *tx = sentry_transaction_start(tx_ctx);
 
 	sentry_value_t *headers = sentry_value_new_object();
@@ -37,9 +39,14 @@ To create a transaction as a continuation of a trace retrieved from an upstream
 service, pass an iterator of the incoming headers to the transaction context:
 
 ```c
-	sentry_transaction_context_t *tx_ctx
-        = sentry_transaction_context_new("honk", NULL);
-    sentry_transaction_context_update_from_header(tx_ctx, "sentry-trace", 
-        "atraceid-aspanid-issampled");
+	sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
+        "honk", 
+        NULL,
+    );
+    sentry_transaction_context_update_from_header(
+        tx_ctx, 
+        "sentry-trace", 
+        "atraceid-aspanid-issampled",
+    );
 
 ```
