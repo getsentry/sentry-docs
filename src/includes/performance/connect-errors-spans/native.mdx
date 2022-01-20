@@ -9,18 +9,20 @@ sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
     "checkout",
     "perform-checkout",
 );
-sentry_transaction_t *transaction = sentry_transaction_start(tx_ctx);
+sentry_transaction_t *tx = sentry_transaction_start(tx_ctx);
 
 // Bind the transaction / span to the scope:
-sentry_set_span(transaction);
+sentry_set_span(tx);
 
 // Errors captured after line 15 will be linked to the transaction
 sentry_value_t exc = sentry_value_new_exception(
-    "ParseIntError", "invalid digit found in string");
+    "ParseIntError", 
+    "invalid digit found in string",
+);
 
 sentry_value_t event = sentry_value_new_event();
 sentry_event_add_exception(event, exc);
 sentry_capture_event(event);
 
-transaction.finish();
+sentry_transaction_finish(tx);
 ```
