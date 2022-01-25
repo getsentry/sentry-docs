@@ -1,14 +1,10 @@
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     options:
-        # Specify a fixed sample rate:
-        traces_sample_rate: 1.0
-        # Or provide a custom sampler:
-        traces_sampler: 'sentry_tracer_sampler'
+        traces_sampler: 'sentry_traces_sampler'
 
-# Only needed when using the `traces_sampler`
 services:
-    sentry_tracer_sampler:
+    sentry_traces_sampler:
         factory: ['@\App\Service\Sentry', 'getTracesSampler']
 ```
 
@@ -23,8 +19,13 @@ class Sentry
 {
     public function getTracesSampler(): callable
     {
-        return function(\Sentry\Tracing\SamplingContext $context): float {
-            // return a number between 0 and 1
+        return function (\Sentry\Tracing\SamplingContext $context): float {
+            // always inherit
+            if ($context->getParentSampled()) {
+                return 1.0;
+            }
+
+            // the rest of sampling logic
         };
     }
 }

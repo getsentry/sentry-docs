@@ -1,0 +1,32 @@
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        before_send: 'sentry_before_send'
+
+services:
+    sentry_before_send:
+        factory: ['@\App\Service\Sentry', 'getBeforeSend']
+```
+
+The service need for the `before_send` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public function getBeforeSend(): callable
+    {
+        return function (\Sentry\Event $event): ?\Sentry\Event {
+            // Ignore the event if the original exception is an instance of MyException
+            if ($hint !== null && $hint->exception instanceof MyException) {
+              return null;
+            }
+
+            return $event;
+        };
+    }
+}
+```
