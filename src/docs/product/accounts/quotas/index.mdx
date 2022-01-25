@@ -142,7 +142,9 @@ After these checks are processed, the event counts toward your quota. It is acce
 
 Add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
 
-If you’ve exceeded your quota threshold, the server will respond with a 429 HTTP status code. However, if this is your first time exceeding quota, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
+If you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
+
+If this is your first time exceeding quota, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
 
 ### On-Demand Capacity
 
