@@ -39,3 +39,44 @@ SentrySDK.start { options in
 }];
 
 ```
+
+If you want to <PlatformLink to="/configuration/sampling/">sample</PlatformLink> some of your OOM crashes, you can do so in `beforeSend`:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSend = { event in
+        if ((event.exceptions?.first?.type.contains("OutOfMemory")) != nil) {
+            // Send only 10% to Sentry
+            if (0.1 >= Double.random(in: 0.0..<1.0)) {
+                return event
+            } else {
+                return nil
+            }
+        }
+        return event
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryEvent *_Nullable(SentryEvent *_Nonnull event) {
+        if ([event.exceptions[0].type containsString:@"OutOfMemory"]) {
+            // Send only 10% to Sentry
+            if (0.1 >= ((double)arc4random() / 0x100000000)) {
+                return event;
+            } else {
+                return nil;
+            }
+        }
+        return event;
+    };
+}];
+
+```
