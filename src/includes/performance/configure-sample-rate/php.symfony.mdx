@@ -1,0 +1,37 @@
+```yaml {filename:sentry.yml}
+sentry:
+    options:
+        # Specify a fixed sample rate:
+        traces_sample_rate: 1.0
+        # Or provide a custom sampler:
+        traces_sampler: 'my_sentry_tracer_sampler_service'
+```
+
+For the custom `traces_sampler` option you can use the following example service configuration:
+
+```yaml {filename:services.yml}
+services:
+    my_sentry_tracer_sampler:
+        factory: ['@\App\Service\MyTracesSampler', 'getTracesSampler']
+```
+
+The service can be implemented as follows:
+
+```php {filename:src/Service/MyTracesSampler.php}
+<?php
+
+namespace App\Service;
+
+use Sentry\Tracing\SamplingContext;
+use Symfony\Component\HttpFoundation\RequestStack;
+
+class MyTracesSampler
+{
+    public function getTracesSampler(): callable
+    {
+        return function(SamplingContext $context): float {
+            // return a number between 0 and 1
+        }
+    }
+}
+```
