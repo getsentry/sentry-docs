@@ -15,11 +15,11 @@ Sentry’s flexibility means you can exercise fine-grained control over which ev
 
 Let’s clarify a few terms to start:
 
-- Event - an event is one instance of you sending Sentry data. Generally, this data is an error. Every event has a set of characteristics, called its fingerprint.
-- Issue - an issue is a grouping of similar events, which all share the same fingerprint. For example, Sentry groups events together when they are triggered by the same part of your code. Learn more in our full [Issue Grouping documentation](/product/data-management-settings/event-grouping/).
-- Attachment - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use the files only to create the event, and then drop the files.
-- Transaction - A transaction represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
-- Quota - your quota is the monthly number of events - errors, attachments, and transactions - you pay Sentry to track.
+- **Event** - An event is one instance of you sending data to Sentry. Generally, this data is an error or a transaction.
+- **Issue** - An issue is a grouping of similar error events. Every error event has a set of characteristics called its fingerprint, which is what Sentry uses for grouping. For example, Sentry groups events together when they are triggered by the same part of your code. Learn more in our full [Issue Grouping documentation](/product/data-management-settings/event-grouping/).
+- **Attachment** - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use these files only to create an event, and then drop them.
+- **Transaction** - A transaction represents a single instance of a service being called to support an operation you want to measure or track, like a page load. Transaction events are grouped by the transaction name.
+- **Quota** - Your quota is the monthly number of events — errors, attachments, and transactions — that you pay Sentry to track.
 
 ## What Counts Toward My Quota, an Overview
 
@@ -35,27 +35,29 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 3. **Quota availability**
 
-   Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. To add to your quota or review what happens when you exceed it, see [Increasing Quotas](/product/accounts/quotas/#increasing-quotas).
+   Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. Learn about adding to your quota and what happens when you exceed it in [Increasing Quotas](#increasing-quotas).
 
 4. **Event repetition**
 
-- If you have intervened to Delete and Discard an issue, then _future_ events with the same fingerprint do not count toward your quota.
-- If the previous event was resolved, this event counts toward your quota because it may represent a regression in your code.
-- If you have intervened to ignore alerts about events with the same fingerprint, this event counts toward your quota because the event is still occurring. For more information, see [Inbound Filters](/product/accounts/quotas/#inbound-data-filters).
+    Event repetition only applies to error events, not transactions or attachments. The following rules apply for event repetition and your quota:
+
+    - If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota.
+    - If you previously resolved an issue, a new error event counts toward your quota because it may represent a regression in your code.
+    - If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring. Learn more in [Inbound Filters](#inbound-data-filters).
 
 5. **Spike protection**
 
-   Sentry’s spike protection prevents huge overages from consuming your event capacity; spike protection is not currently available for transactions. For more information, see [Spike Protection](/product/accounts/quotas/#spike-protection).
+   Sentry’s spike protection prevents huge overages in error events from consuming your event capacity. Spike protection is not currently available for transactions. Learn more in [Spike Protection](#spike-protection).
 
 In addition, depending on your project’s configuration and the plan you subscribe to, Sentry may also check:
 
 6. **Rate limit for the project**
 
-   If the error event rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream](/product/accounts/quotas/manage-event-stream-guide/#6-rate-limiting) or [Error Event Limits](/product/accounts/quotas/#error-event-limits).
+   If the error event rate limit for a project has been exceeded, and your subscription allows, the event will not be counted. Learn more in [Rate Limiting](/product/accounts/quotas/manage-event-stream-guide/#6-rate-limiting) or in [Error Event Limits](/product/accounts/quotas/#error-event-limits). This does not apply to transactions or attachments.
 
 7. **Inbound filters**
 
-   If any inbound filter is set for this type of error event, and your subscription allows, the event will not be counted. For more information, see [Inbound Filters in our guide to Manage Your Event Stream](/product/accounts/quotas/manage-event-stream-guide/#3-inbound-data-filters) or [Inbound Data Filter](/product/accounts/quotas/#inbound-data-filters).
+   If any inbound filter is set for a type of error event, and your subscription allows, the event will not be counted. Learn more in the [Inbound Filters section of our error quota management guide](/product/accounts/quotas/manage-event-stream-guide/#3-inbound-data-filters) or in [Inbound Data Filter](#inbound-data-filters). This does not apply to transactions or attachments.
 
 After these checks are processed, the event counts toward your quota. It is accepted into Sentry, where it persists and is stored.
 
@@ -103,17 +105,17 @@ After these checks are processed, the event counts toward your quota. It is acce
       <td> </td>
     </tr>
     <tr>
-      <td>Is this repeated event resolved?</td>
+      <td>Is this a repeated error event for a previously resolved issue?</td>
       <td>Yes, this may be a regression in your code</td>
       <td> </td>
     </tr>
     <tr>
-      <td>Is this repeated event set to Ignore Alert?</td>
+      <td>Is this repeated error event set to Ignore Alert?</td>
       <td>Yes, it is still occurring</td>
       <td> </td>
     </tr>
     <tr>
-      <td>Has spike protection been triggered?</td>
+      <td>Has spike protection (errors only) been triggered?</td>
       <td>No</td>
       <td>Yes</td>
     </tr>
@@ -127,7 +129,7 @@ After these checks are processed, the event counts toward your quota. It is acce
       </td>
     </tr>
     <tr>
-      <td>Inbound Filters</td>
+      <td>Inbound filters (errors only)</td>
       <td>Not set</td>
       <td>Set for this error event</td>
     </tr>
@@ -184,6 +186,8 @@ We strongly recommend that you make subscription changes before the last day of 
 
 ## Limiting Events
 
+You can add limits for error events and attachments in [sentry.io](https://sentry.io). This does not apply to transaction events.
+
 ### Error Event Limits
 
 Per-key rate limits allow you to set the maximum volume of error events a key will accept during a period of time.
@@ -200,7 +204,9 @@ If you have enabled the storage of crash reports, you may set limits for the max
 
 ## Inbound Filters {#inbound-data-filters}
 
-In some cases, the data you’re receiving in Sentry is hard to filter, or you don’t have the ability to update the SDK’s configuration to apply the filters. Sentry provides several methods to filter data server-side, which apply before checking for potential rate limits. Inbound filters include:
+In some cases, the data you’re receiving in Sentry is hard to filter, or you don’t have the ability to update the SDK’s configuration to apply the filters. Sentry provides several methods to filter error events server-side, which apply before checking for potential rate limits. This does not apply to transaction events or attachments.
+
+Inbound filters include:
 
 - Common browser extension errors
 - Events coming from localhost
