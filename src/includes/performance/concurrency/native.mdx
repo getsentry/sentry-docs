@@ -34,17 +34,3 @@ Following up on that warning, `sentry_transaction_context_set_name()`, which ope
  */
 
 ```
-
-While you can use scopes to work with concurrency on other platforms, this isn't the case for the native SDK. This, as well as the what you can expect if you add manual instrumentation to your app using the native, is discussed in the following two sections.
-
-### Single Scope, Multiple Transactions
-
-The native SDK makes a major compromise in an attempt to follow a server-like model despite having a single scope: A user may create multiple concurrent transactions and multiple concurrent spans, at the cost of making it their responsibility to manage the transactions and spans. It is on them to ensure that no unsafe mutations are being made to transactions while they are being used. In comparison, other SDKs either follow a single (hidden) scope, single transaction model where all spans across multiple threads are collapsed into one single transaction.
-
-Currently, the SDK doesn't support associating events with specific spans or transactions in a multi-threaded environment. All events will be linked to the single span or transaction that is set through `sentry_set_span` or `sentry_set_transaction_object`.
-
-### Spans on the Scope
-
-Unlike the Python SDK, if a transaction or a span is on the scope, any new child spans spun off of that will **not** update the scope to point to the newly created span.
-
-You must manually set spans on the scope if you're are interested in associating events (errors, messages) with a specific span. To fully mimic the Python SDK’s behaviour, you need to manually set spans, and re-set parent spans and/or transactions on the scope when a child span finishes. Note that since there is a single global scope in the native SDK, there is a possibility that an event may be associated with the wrong span in a multi-threaded environment.
