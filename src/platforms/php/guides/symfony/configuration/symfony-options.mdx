@@ -10,8 +10,6 @@ In addition to the [configuration available in the PHP SDK](../options/), there 
 
 All configuration for Symfony is done in `config/packages/sentry.yaml`.
 
-N.B. The `register_error_listener` configuration option is available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0).
-
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     dsn: "___PUBLIC_DSN___"
@@ -28,6 +26,7 @@ sentry:
         error_types: "E_ALL & ~E_NOTICE"
         http_proxy: "10.0.0.12:3456"
         in_app_exclude:
+            - "%kernel.build_dir%"
             - "%kernel.cache_dir%"
             - "%kernel.project_dir%/vendor"
         integrations:
@@ -37,19 +36,16 @@ sentry:
         max_value_length: 2048
         prefixes:
             - "/local_dir/"
-        project_root: "%kernel.project_dir%"
         release: "abcde12345"
         sample_rate: 1
+        traces_sample_rate: 0
+        traces_sampler: "@sentry.callback.traces_sampler"
         send_attempts: 3
-        send_default_pii: true
+        send_default_pii: false
         server_name: "www.example.com"
         tags:
             tag1: "value1"
             tag2: "value2"
-    listener_priorities:
-        request: 1
-        subrequest: 1
-        console: 1
 ```
 
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
@@ -62,28 +58,20 @@ you can read more about those in the [general configuration docs](../options/).
 Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
 values that you can use in some cases.
 
-## `before_breadcrumb` and `before_send`
+## `before_breadcrumb`, `before_send` and `traces_sampler`
 
-The `before_breadcrumb` and `before_send` options both accept a `callable`; thus, you cannot provide it directly through
+The `before_breadcrumb`, `before_send` and `traces_sampler` options accept a `callable`; thus, you cannot provide it directly through
 a YAML file; the bundle accepts a service reference (starting with `@`), which you can build in your DIC container.
 
 ## `environment`
 
-The `environment` option defaults to the same environment of your Symfony application (For example,`dev`, `test`, `prod`...).
+The `environment` option defaults to the same environment of your Symfony application.
 
 ## `in_app_exclude`
 
 The `in_app_exclude` option is used to mark files as non belonging to your app's source code in events' stack traces.
-In this bundle it has two default values:
+In this bundle it has three default values:
 
+- `%kernel.build_dir%`, to exclude Symfony's build dir
 - `%kernel.cache_dir%`, to exclude Symfony's cache dir
 - `%kernel.project_dir%/vendor`, to exclude Composer's dependencies
-
-## `project_root`
-
-The `project_root` options defaults to `%kernel.project_dir%`.
-
-## `listener_priorities`
-
-The `listener_priorities` options are used to change the priority at which the bundle's listener is called. They all default
-to `1`, so they are called just before the default priority of `0`, at which you can easily add your custom listeners.
