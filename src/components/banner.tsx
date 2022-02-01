@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "See how Sentry's new data source for Grafana helps teams visualize their software health in a single view on Jan. 13, 2022 @ 9:30am PT.";
+  "Learn alerts and issue grouping best practices in our live workshop on Feb. 17 @ 10:00 AM PT.";
 const BANNER_LINK_URL =
-  "https://grafana.com/go/webinar/code-observability-with-sentry-plugin/?src=partner-sentry-docs-banner?promo_name=docs-banner";
+  "https://sentry.io/resources/alerts-workshop-best-practices/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 

@@ -1,0 +1,27 @@
+---
+title: Rate Limits
+sidebar_order: 3
+---
+
+Sentry rate limits every API request made to prevent abuse and resource overuse. The limit is applied to each unique combination of caller and endpoint.
+
+The rate limit follows a fixed window approach. Requests are counted into time buckets, determined by the window size. If the number of requests from a caller exceeds the number of allowed requests within a window, then that request will be rejected.
+
+While there is a default value, each endpoint can have their own maximum number of requests and window size. You can track your rate limit usage by looking at special headers in the response.
+
+## Headers
+
+Every API request response includes the following headers:
+
+- `X-Sentry-Rate-Limit-Limit`
+  - The maximum number of requests allowed within the window
+- `X-Sentry-Rate-Limit-Remaining`
+  - The number of requests this caller has left on this endpoint within the current window
+- `X-Sentry-Rate-Limit-Reset`
+  - The time when the next rate limit window begins and the count resets, measured in UTC seconds from epoch
+
+## Additional Information
+
+The rate limiter looks at the caller's identity instead of the bearer token or cookie. As such, the rate limit cannot be bypassed by generating multiple tokens.
+
+Rate limits for internal integrations may differ from other rate limits, and tend to be higher. We recommend using internal integration bearer tokens if you anticipate needing to make a large volume of calls.

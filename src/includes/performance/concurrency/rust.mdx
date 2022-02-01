@@ -1,0 +1,31 @@
+## Transactions for Async Tasks
+
+Special care must be taken when spawning operations as independent threads or asynchronous tasks.
+
+In situations where the computation can run longer than the calling context, you should always start a new transaction.
+The SDK offers the `TransactionContext::continue_from_span` method to make that more convenient.
+
+```rust
+let parent_span = sentry::configure_scope(|scope| scope.get_span());
+// Create a new transaction as an independent continuation
+let ctx = sentry::TransactionContext::continue_from_span(
+    "A long-running spawned task",
+    "spawned_task",
+    parent_span,
+);
+
+let task = async move {
+  let transaction = sentry::start_transaction(ctx);
+  // Set the newly created transaction as the *current span*
+  sentry::configure_scope(|scope| scope.set_span(Some(transaction.clone().into())));
+
+  // Do the actual computation
+  // ...
+
+  // Finish the span and send it to sentry
+  transaction.finish();
+  // The task gets a
+}.bind_hub(Hub::new_from_top(Hub::current()));
+
+task::spawn(task);
+```
