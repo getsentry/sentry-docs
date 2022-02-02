@@ -31,5 +31,7 @@ And that's it! Now Sentry can capture errors automatically.
 Once it is configured with the DSN you can call the SDK from anywhere:
 
 ```csharp
+using Sentry; // On the top of the script
+
 SentrySdk.CaptureMessage("Test event");
 ```

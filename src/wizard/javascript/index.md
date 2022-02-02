@@ -20,11 +20,11 @@ We also support alternate [installation methods](/platforms/javascript/install/)
 
 ```javascript
 import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
+import { BrowserTracing } from "@sentry/tracing";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Integrations.BrowserTracing()],
+  integrations: [new BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
