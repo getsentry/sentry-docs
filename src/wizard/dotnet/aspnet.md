@@ -60,8 +60,7 @@ public class MvcApplication : HttpApplication
 
     protected void Application_Error()
     {
-        var exception = Server.GetLastError();
-        SentrySdk.CaptureException(exception);
+        Server.CaptureLastError();
     }
 
     protected void Application_BeginRequest()
