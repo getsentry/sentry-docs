@@ -41,10 +41,13 @@ if err := sentry.Init(sentry.ClientOptions{
 }
 
 // Then create your app
-app := gin.Default()
+app := gin.New()
 
-// Once it's done, you can attach the handler as one of your middleware
+// Once it's done, you can attach the handler as one of your middleware. Should go before the Recovery middleware.
 app.Use(sentrygin.New(sentrygin.Options{}))
+
+// Should be the last middleware
+app.Use(gin.Recovery())
 
 // Set up routes
 app.GET("/", func(ctx *gin.Context) {
@@ -82,8 +85,9 @@ And it should be used instead of the global `sentry.CaptureMessage`, `sentry.Cap
 **Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentrygin`!**
 
 ```go
-app := gin.Default()
+app := gin.New()
 
+// Should go before the Recovery middleware
 app.Use(sentrygin.New(sentrygin.Options{
 	Repanic: true,
 }))
@@ -94,6 +98,9 @@ app.Use(func(ctx *gin.Context) {
 	}
 	ctx.Next()
 })
+
+// Should be the last middleware
+app.Use(gin.Recovery())
 
 app.GET("/", func(ctx *gin.Context) {
 	if hub := sentrygin.GetHubFromContext(ctx); hub != nil {
