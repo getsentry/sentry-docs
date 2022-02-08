@@ -15,7 +15,7 @@ yarn add @sentry/electron
 npm install --save @sentry/electron
 ```
 
-You need to call `init` in your `main` and every `renderer` process you spawn.
+You need to call `init` in the `main` process and every `renderer` process you spawn.
 For more details about Electron [click here](/platforms/electron/)
 
 ```javascript
