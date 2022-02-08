@@ -20,7 +20,7 @@ Learn more about setting transaction names in our [SDK documentation](/platform-
 
 </Note>
 
-For a more in-depth explanation of what’s in a transaction as it relates to traces, check out our [full tracing documentation](/product/sentry-basics/tracing/).
+Learn about how to control the type and amount of transactions you send to Sentry, in [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/). For a more in-depth explanation of what’s in a transaction as it relates to traces, check out our [full tracing documentation](/product/sentry-basics/tracing/).
 
 ## Overview
 
@@ -59,6 +59,17 @@ Currently, only transaction data — the transaction name and any attributes the
 
 </Note>
 
+### Suspect Spans
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+The transaction summary includes a list of suspect spans that correspond to where most of the time in a transaction is spent. By default, we sort spans by the total exclusive time. When you click the "Example Transaction" event, it takes you directly to the span in question.
+
 ### Suspect Tags
 
 The transaction summary includes a list of suspect tags that often correspond to slower transactions. By default, we sort tags by the total time lost. The list includes additional information:
@@ -93,6 +104,42 @@ The **Tags** tab displays a list of suspect tag keys that often correspond to sl
 ## All Events
 
 The table in **All Events** tab offers a full list of transactions broken down similar to the abbreviated table in the overview. Filters are carried across from other views. You can also narrow the events down by percentile.
+
+## Spans
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+The "Spans" tab displays a list of suspect spans that correspond to where most of the time in a transaction is being spent, and it can help you find spans where performance problems lie.
+
+Choose from one of several [metrics](#metrics) to sort spans and identify different types of problems. Filter spans to only see the span operation type you're interested in.
+
+Clicking on a span will give you more details about the specific span [group](#grouping). You can see the performance of the span over time and see a list of transaction events that contain the span.
+
+### Exclusive Time
+Suspect spans are determined using a span's exclusive time rather than its duration. To calculate a span's exclusive time, take the interval of the span and subtract the intervals of any child spans. The duration of the remaining interval is the span's exclusive time.
+
+In the example below, the exclusive time of each span is highlighted by the darker areas. For example, the `http.server` has an exclusive time of 10ms + 15ms = 25ms.
+
+![Span Exclusive Time](./exclusive-time.png)
+
+### Metrics
+
+- **Total Exclusive Time**: The sum of the [exclusive time](#exclusive-time) for a span. This metric is useful to identify the span where the majority of the time is being spent.
+- **Average Count**: The average number of times a span appears in a transaction. This metric is useful to identify redundant work being done within a transaction. It is often indicative of an n + 1 problem.
+- **Total Count**: The total number of times a span appears across all transactions. This metric is useful to identify spans that appear most frequently.
+- **p50 Exclusive Time**: The 50th percentile of the [exclusive time](#exclusive-time) for a span. This metric is useful to identify spans that take a long time individually.
+- **p75 Exclusive Time**: The 75th percentile of the [exclusive time](#exclusive-time) for a span. This metric is useful to identify spans that take a long time individually.
+- **p95 Exclusive Time**: The 95th percentile of the [exclusive time](#exclusive-time) for a span. This metric is useful to identify spans that take a long time individually.
+- **p99 Exclusive Time**: The 99th percentile of the [exclusive time](#exclusive-time) for a span. This metric is useful to identify spans that take a long time individually.
+
+### Grouping
+
+Spans with the same operation and description are grouped together into a single span group. Some processing is done to group similar spans together. If you find that the span grouping is not ideal, you can change this by making sure the spans you want grouped together have the same operation and description.
 
 ## Additional Actions
 

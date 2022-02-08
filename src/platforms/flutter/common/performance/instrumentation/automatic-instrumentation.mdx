@@ -23,3 +23,68 @@ The span finishes once the request has been executed. The span `status` depends 
 When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
 For more information see our [SentryHttpClient integration](/platforms/dart/usage/advanced-usage/#performance-monitoring-for-http-requests).
+
+### Routing Instumentation
+
+<Note>
+
+Supported in Sentry's Dart SDK version `6.3.0-beta.3` and above.
+
+</Note>
+
+Automatic routing instrumentation can be enabled by adding an instance of `SentryNavigationObserver` to your application's `navigatorObservers`. Transactions are started automatically when routing to new pages in your application.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+return MaterialApp(
+  title: 'Home',
+  home: HomeScreen(),
+  navigatorObservers: [
+    SentryNavigatorObserver()
+  ],
+);
+```
+
+The main route of your application will have the name `root "/"`. In order for transactions to be created automatically when navigation changes, you need to provide route names through your routes setttings parameter.
+
+```dart
+import 'package:flutter/material.dart';
+
+MaterialPageRoute(
+  builder: (BuildContext context) => Settings(),
+  settings: RouteSettings(name: 'Settings'),
+)
+```
+
+The SDK sets the span `operation` to `navigation` and the `name` to the one provided in `RouteSettings`.
+
+Transactions will be bound to the scope if no other transaction is currently bound to it.
+
+The started transactions will idle for a fixed amount of time, for which the default is `three seconds`. You can also change this by setting `autoFinishAfter` in the navigators constuctor.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Change how long navigation transactions idle before being finished
+SentryNavigatorObserver(
+  autoFinishAfter: Duration(seconds: 5)
+)
+```
+
+Child spans started will be attached to the transaction. If they run longer than the idle time, the transaction will be extended and finished when all its children are complete.
+
+If children are finished before the idle timeout, the transaction end will be trimmed, and its end time will be set to the last child end time.
+
+You can also opt out of this behaviour by setting `enableAutoTransactions` to false in the `SentryNavigatorObserver` constructor. You might do this when you only want to use navigation breadcrumbs, which can be enabled by setting the constructor parameter `setRouteNameAsTransaction` to `true`.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Only track navigation breadcrums
+SentryNavigatorObserver(
+  enableAutoTransactions: false,
+  setRouteNameAsTransaction: true
+)
+```

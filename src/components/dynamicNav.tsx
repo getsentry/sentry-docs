@@ -146,13 +146,13 @@ export default ({
   const isActive =
     location && location.pathname.indexOf(withPrefix(`/${root}/`)) === 0;
 
-  const headerClassName = "sidebar-title d-flex align-items-center mb-0";
+  const headerClassName = "sidebar-title d-flex align-items-center";
   const header =
     parentNode && !noHeadingLink ? (
       <SmartLink
         to={`/${root}/`}
         className={headerClassName}
-        activeClassName=""
+        activeClassName="active"
         data-sidebar-link
       >
         <h6>{title}</h6>

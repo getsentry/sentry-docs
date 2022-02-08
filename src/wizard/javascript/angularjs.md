@@ -22,14 +22,14 @@ npm install --save @sentry/browser @sentry/integrations
 ```javascript
 import angular from "angular";
 import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
+import { BrowserTracing } from "@sentry/tracing";
 import { Angular as AngularIntegration } from "@sentry/integrations";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new AngularIntegration(),
-    new Integrations.BrowserTracing({
+    new BrowserTracing({
       tracingOrigins: ["localhost", "https://yourserver.io/api"],
     }),
   ],
