@@ -56,7 +56,7 @@ You **can** add attributes to a public endpoint.
 
 ## When to make an API public?
 
-Making an API public offers considerable benefits. A public API allows our customers to incorporate Sentry into their workflows. It also gives Sentry more visibility in our customers' organizations ("Woah that's cool data, where'd it come from?"..."Sentry!"). Remember, however, making an API public means that once an endpoint is public, you can only add to it: You cannot make *any* breaking changes.
+Making an API public offers considerable benefits. A public API allows our customers to incorporate Sentry into their workflows. It also gives Sentry more visibility in our customers' organizations ("Woah that's cool data, where'd it come from?"..."Sentry!"). Remember, however, making an API public means that once an endpoint is public, you can only add to it: You cannot make _any_ breaking changes.
 
 As a guide, use these questions:
 
@@ -67,36 +67,82 @@ If your answers are Yes and No, you're in business - make the endpoint public. H
 
 ## How to make an endpoint public?
 
-We use [Open API Spec 3](https://swagger.io/docs/specification/about/) to write our API documentation.
-You can find that content here: [https://github.com/getsentry/sentry/tree/master/api-docs.](https://github.com/getsentry/sentry/tree/master/api-docs)
+We use [Open API Spec 3](https://swagger.io/docs/specification/about/) and the [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/readme.html) library to document our APIs.
 You can find the tests here: [https://github.com/getsentry/sentry/tree/master/tests/apidocs](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
 
 ### Local development
+
 **To add documentation for a new endpoint**:
+API Documentation consists of a few items:
 
-1. Create a new file for your schema under the appropriate folder [here](https://github.com/getsentry/sentry/tree/master/api-docs/paths). Document the schema for the relevant requests.
-2. Add the new path to [this file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json).
-3. Write a test [here](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
+- URL and query parameters
+- Request Schema (None if no body)
+- Response Schema
+- Examples
 
+Below we'll describe how to document these for an endpoint. You can familiarize yourself with some examples on the API docs website. We'll be making heavy use of `extend_schema` in order to do so.
+
+Declare the endpoint public using the `@declare_public` decorator, specifying the methods on the view which should be public.
+
+```python
+from sentry.apidocs.decorators import declare_public
+
+@declare_public(methods={"GET"})
+class OrganizationSCIMMemberDetails(...):
+```
+
+Tag the endpoint view if needed (you can also tag parent classes), this is how the endpoint makes it into a particular sidebar grouping.
+
+```python
+from drf_spectacular.utils import extend_schema
+
+@extend_schema(tags=["SCIM"])
+class SCIMEndpoint(OrganizationEndpoint)...
+```
+
+Examples can be directly inserted using `OpenApiExample`, and multiple can be provided.
+
+Specify an `operation_id` (this is what is shown as the title under the sidebar).
+
+- You can see the current list of tags or add tags [here](https://github.com/getsentry/sentry/blob/bc0c4f23104cc63f632fa3f6773451545720f2ec/src/sentry/apidocs/build.py#L15).
+
+Specify the parameters using a list, and a serializer if needed.
+
+- DRF serializers work very well for query parameters, try to use them where possible.
+
+Specify the request and response serializers.
+
+- Request serializers, since they use DRF serializers, can generally just be the serializer itself. There is plenty of customization and if needed can be overriden with `inline_serializer`. These will be passed to the `request` parameter in `extend_schema`.
+- For our response serializers, you must type the `serialize` function's return with a `TypedDict` and pass the serializer as a parameter in `extend_schema`.
+- If the response is a wrapper or you need more customization, you can use the `inline_sentry_response_serializer` function.
+- Note that you can instead provide OpenAPI JSON, so you can fall back to this if you are running into issues.
+
+See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/scim/endpoints/members.py) for an example of an endpoint documented using drf-spectacular, and the [drf-spectacular docs here](https://drf-spectacular.readthedocs.io/en/latest/) to learn more.
+
+**Note that if the endpoint you're modifying previously had JSON documentation, you will need to delete the old documentation found in [this file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json)**
+
+Write a test [here](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
 
 **Tips**:
+
 - `make test-api-docs` runs all API docs tests. This command also builds the derefed JSON. This runs in CI but can be useful for local development to make sure everything passes.
 - `yarn run build-derefed-docs` builds the derefed JSON. This is useful in the case where you're only running one test locally, making a change to the schema, and then re-running the test. Since the tests run against the derefed version, you'll need to rebuild it.
-
 
 **To see your changes in the docs locally**:
 
 In `sentry`:
+
 1. Run `yarn run watch-api-docs`. This command will watch API docs files and continuously build an intermediate asset `tests/apidocs/openapi-derefed.json`.
 2. Copy the full path to `tests/apidocs/openapi-derefed.json`.
 
 In `sentry-docs`:
+
 1. Run `OPENAPI_LOCAL_PATH=COPIED_FULL_PATH DISABLE_THUMBNAILS=1 yarn start` and substitute `COPIED_FULL_PATH` with the copied path to your local openapi-derefed.json
 
 When you open the pull request, please add a screenshot of the page or pages you're adding.
 
-
 ### Build process
+
 The openapi-diff test will fail when CI runs on your pull request, this is expected and meant to highlight the diff. It is not required to merge.
 
 Once you make changes to an endpoint and merge the change into Sentry, a series of GitHub Actions will be triggered to make your changes automatically go live:
