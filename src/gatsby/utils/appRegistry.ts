@@ -33,7 +33,6 @@ export default class AppRegistry {
         const result = await axios({
           url: `${BASE_REGISTRY_URL}/apps`,
         });
-        console.log(result.data);
         this.indexCache = result.data;
       } catch (err) {
         console.error(`Unable to fetch index for app registry: ${err.message}`);
