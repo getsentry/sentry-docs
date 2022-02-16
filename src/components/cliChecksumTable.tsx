@@ -17,10 +17,8 @@ const query = graphql`
 `;
 
 const ChecksumValue = styled.code`
-  font-size: 0.8em;
+  font-size: 0.75em;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 export default (): JSX.Element => {
@@ -50,7 +48,7 @@ export default (): JSX.Element => {
               >
                 {file.name}
               </td>
-              <td style={{ verticalAlign: "middle" }}>
+              <td style={{ verticalAlign: "middle", width: "100%" }}>
                 <ChecksumValue>
                   {`sha384-${
                     file.checksums.find(c => c.name === "sha256-hex").value
