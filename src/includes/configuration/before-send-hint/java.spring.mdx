@@ -1,4 +1,4 @@
-`beforeSend` callback can be registered by creating a Spring bean implementing the `BeforeSendCallback`.
+A `BiFunction<SentryEvent, Object, SentryEvent>` can be used to mutate, discard (return null), or return a completely new event.
 
 ```java
 import io.sentry.SentryEvent;
@@ -9,9 +9,11 @@ import org.springframework.stereotype.Component;
 public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
   @Override
   public SentryEvent execute(SentryEvent event, Object hint) {
-    // Example: Never send server name in events
-    event.setServerName(null);
-    return event;
+    if (hint instanceof MyHint) {
+      return null;
+    } else {
+      return event;
+    }
   }
 }
 ```
@@ -24,9 +26,11 @@ import org.springframework.stereotype.Component
 @Component
 class CustomBeforeSendCallback : SentryOptions.BeforeSendCallback {
   override fun execute(event: SentryEvent, hint: Any?): SentryEvent? {
-    // Example: Never send server name in events
-    event.serverName = null
-    return event
+    if (hint is MyHint) {
+      null
+    } else {
+      event
+    }
   }
 }
 ```

@@ -1,5 +1,3 @@
-`beforeSend` callback can be registered by creating a Spring bean implementing the `BeforeSendCallback`.
-
 ```java
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions;
@@ -9,8 +7,9 @@ import org.springframework.stereotype.Component;
 public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
   @Override
   public SentryEvent execute(SentryEvent event, Object hint) {
-    // Example: Never send server name in events
-    event.setServerName(null);
+    if (event.getThrowable() instanceof SQLException) {
+      event.setFingerprints(Arrays.asList("database-connection-error"));
+    }
     return event;
   }
 }
@@ -24,9 +23,10 @@ import org.springframework.stereotype.Component
 @Component
 class CustomBeforeSendCallback : SentryOptions.BeforeSendCallback {
   override fun execute(event: SentryEvent, hint: Any?): SentryEvent? {
-    // Example: Never send server name in events
-    event.serverName = null
-    return event
+    if (event.throwable is SQLException) {
+      event.fingerprints = listOf("database-connection-error")
+    }
+    event
   }
 }
 ```
