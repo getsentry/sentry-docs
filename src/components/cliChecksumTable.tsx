@@ -3,8 +3,8 @@ import { graphql, useStaticQuery } from "gatsby";
 import styled from "@emotion/styled";
 
 const query = graphql`
-  query JsBundleList {
-    package(id: { eq: "sentry.javascript.browser" }) {
+  query CliExecutableChecksums {
+    app(id: { eq: "sentry-cli" }) {
       files {
         name
         checksums {
@@ -23,7 +23,7 @@ const ChecksumValue = styled.code`
 
 export default (): JSX.Element => {
   const {
-    package: { files },
+    app: { files },
   } = useStaticQuery(query);
 
   return (
@@ -36,7 +36,7 @@ export default (): JSX.Element => {
       </thead>
       <tbody>
         {files
-          .filter(file => file.name.endsWith(".js"))
+          .filter(file => !file.name.endsWith(".tgz"))
           .map(file => (
             <tr key={file.name}>
               <td
@@ -51,7 +51,7 @@ export default (): JSX.Element => {
               <td style={{ verticalAlign: "middle", width: "100%" }}>
                 <ChecksumValue>
                   {`sha384-${
-                    file.checksums.find(c => c.name === "sha384-base64").value
+                    file.checksums.find(c => c.name === "sha256-hex").value
                   }`}
                 </ChecksumValue>
               </td>
