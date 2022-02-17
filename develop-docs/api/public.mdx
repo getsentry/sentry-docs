@@ -80,31 +80,50 @@ API Documentation consists of a few items:
 - Response Schema
 - Examples
 
-Below we'll describe how to document these for an endpoint. You can familiarize yourself with some examples on the API docs website. We'll be making heavy use of `extend_schema` in order to do so.
+Below we'll describe how to document these for an endpoint.
 
 Declare the endpoint public using the `@declare_public` decorator, specifying the methods on the view which should be public.
 
 ```python
 from sentry.apidocs.decorators import declare_public
 
-@declare_public(methods={"GET"})
+@public(methods={"GET"})
 class OrganizationSCIMMemberDetails(...):
 ```
 
-Tag the endpoint view if needed (you can also tag parent classes), this is how the endpoint makes it into a particular sidebar grouping.
+Tag the endpoint view if needed (a parent class may already be tagged), this is how the endpoint makes it into a particular [sidebar endpoint grouping](https://docs.sentry.io/api/). You can see the current list of tags or add tags [here](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/build.py).
 
 ```python
 from drf_spectacular.utils import extend_schema
+from sentry.apidocs.decorators import public
 
+@public(methods={"GET"})
 @extend_schema(tags=["SCIM"])
-class SCIMEndpoint(OrganizationEndpoint)...
+class SCIMEndpoint(...):
+```
+
+For the rest of the documentation, we'll use `@extend_schema` on the various endpoint methods, for example:
+
+```python
+@extend_schema(
+  operation_id="Retrieve an Organization's details", # What goes in the doc sidebar for the name of the API page
+  parameters=[GLOBAL_PARAMS.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
+  request=None # this will usually be a DRF Serializer if this endpoint takes a body
+  responses={
+            200: OrganizationSerializer, # The Sentry response serializer
+            401: RESPONSE_UNAUTHORIZED,
+            403: RESPONSE_FORBIDDEN,
+            404: RESPONSE_NOTFOUND,
+        }
+  examples=[OpenAPIExample...], # see the link to an existing documented endpoint below for how to define an example
+)
+def get(self,request, organization):
+  pass
 ```
 
 Examples can be directly inserted using `OpenApiExample`, and multiple can be provided.
 
-Specify an `operation_id` (this is what is shown as the title under the sidebar).
-
-- You can see the current list of tags or add tags [here](https://github.com/getsentry/sentry/blob/bc0c4f23104cc63f632fa3f6773451545720f2ec/src/sentry/apidocs/build.py#L15).
+Specify an `operation_id` (this is what is shown as the title under the docs site sidebar).
 
 Specify the parameters using a list, and a serializer if needed.
 
@@ -113,8 +132,21 @@ Specify the parameters using a list, and a serializer if needed.
 Specify the request and response serializers.
 
 - Request serializers, since they use DRF serializers, can generally just be the serializer itself. There is plenty of customization and if needed can be overriden with `inline_serializer`. These will be passed to the `request` parameter in `extend_schema`.
-- For our response serializers, you must type the `serialize` function's return with a `TypedDict` and pass the serializer as a parameter in `extend_schema`.
+- For our response serializers, you must type the `serialize` function's return with a `TypedDict` and pass the serializer as a parameter in `extend_schema`. See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/models/organization_member.py) for an example of this.
 - If the response is a wrapper or you need more customization, you can use the `inline_sentry_response_serializer` function.
+
+```python
+from sentry.apidocs.utils import inline_sentry_response_serializer
+
+@extend_schema(
+  responses={
+    200: inline_response_serializer(
+      "OrganizationList",
+      List[OrganizationSerializerResponse])
+      # A common use case is to return a list of serialized items
+  }
+```
+
 - Note that you can instead provide OpenAPI JSON, so you can fall back to this if you are running into issues.
 
 See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/scim/endpoints/members.py) for an example of an endpoint documented using drf-spectacular, and the [drf-spectacular docs here](https://drf-spectacular.readthedocs.io/en/latest/) to learn more.
@@ -125,19 +157,21 @@ Write a test [here](https://github.com/getsentry/sentry/tree/master/tests/apidoc
 
 **Tips**:
 
-- `make test-api-docs` runs all API docs tests. This command also builds the derefed JSON. This runs in CI but can be useful for local development to make sure everything passes.
-- `yarn run build-derefed-docs` builds the derefed JSON. This is useful in the case where you're only running one test locally, making a change to the schema, and then re-running the test. Since the tests run against the derefed version, you'll need to rebuild it.
+- `make test-api-docs` builds the OpenAPI JSON and runs all API docs tests.
+- To only build the docs, run `make build-api-docs`. The build will fail if there are any warnings.
 
 **To see your changes in the docs locally**:
 
 In `sentry`:
 
-1. Run `yarn run watch-api-docs`. This command will watch API docs files and continuously build an intermediate asset `tests/apidocs/openapi-derefed.json`.
+1. Run `make watch-api-docs`. This command will watch API docs files and continuously build an intermediate asset `tests/apidocs/openapi-derefed.json`.
 2. Copy the full path to `tests/apidocs/openapi-derefed.json`.
 
 In `sentry-docs`:
 
 1. Run `OPENAPI_LOCAL_PATH=COPIED_FULL_PATH DISABLE_THUMBNAILS=1 yarn start` and substitute `COPIED_FULL_PATH` with the copied path to your local openapi-derefed.json
+
+See [here](https://docs.sentry.io/contributing/environment/) for detailed doc build instructions.
 
 When you open the pull request, please add a screenshot of the page or pages you're adding.
 
