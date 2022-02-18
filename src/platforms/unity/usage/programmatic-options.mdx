@@ -1,0 +1,22 @@
+---
+title: Programmatic Configuration
+description: "Learn how to modify Sentry Unity Options programmatically."
+sidebar_order: 100
+---
+
+The Unity SDK contains multiple other SDKs under the hood, to provide native support. By default, we initialize those before the Unity game itself starts to collect errors that occur during startup and would get missed otherwise. The setup for those SDKs happens during build time which is the reason why we rely on the options being set in the editor configuration window and saved to `Assets/Resources/Sentry/SentryOptions.asset`. To provide a way to modify options programmatically we've added `ScriptableOptionsConfiguration` to the `Option Config` tab. Note that all changes to the options here are made in the C# layer during runtime, after the native SDKs already initialized and will not affect native crashes. The native SDKs only take options defined in the editor configuration window.
+
+```csharp
+using Sentry.Unity;
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "Assets/Resources/Sentry/SentryOptionsConfiguration", menuName = "Sentry/SentryOptionsConfiguration", order = 999)]
+public class SentryOptionsConfiguration : ScriptableOptionsConfiguration
+{
+    public override void Configure(SentryUnityOptions options)
+    {
+    }
+}
+```
+
+The method `Configure` gets called right before the .NET SDK gets initialized and provides you with a place to i.e. implement your own filtering of events via the [BeforeSend](/platforms/unity/configuration/filtering/#using-platformidentifier-namebefore-send-) callback.
