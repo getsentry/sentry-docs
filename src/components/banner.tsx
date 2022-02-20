@@ -10,7 +10,6 @@ const BANNER_TEXT =
   "Learn how to track errors and slowdowns in Javascript in a free, live workshop at DevOps.JS Conf on Mar. 21 @ 11:00 AM PT.";
 const BANNER_LINK_URL =
   "https://www.devopsjsconf.com/workshops-3h#:~:text=ADD%20TO-,CALENDAR,-Elena%20Vilchik",
-    linkText: 'Register here";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
