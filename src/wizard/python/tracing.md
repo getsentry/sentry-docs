@@ -28,7 +28,7 @@ In cases where you want to attach Spans to an already ongoing Transaction you ca
 
 Alternatively, instead of adding to the top-level transaction, you can make a child span of the current span, if there is one. Use `Hub.current.scope.span` in that case.
 
-You can choose the value of `op` and `description`.
+You can choose the values of `op` and `description`.
 
 ```python
 from sentry_sdk import Hub

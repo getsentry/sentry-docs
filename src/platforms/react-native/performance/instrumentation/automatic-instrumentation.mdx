@@ -22,6 +22,12 @@ export default Sentry.wrap(App);
 
 ### Enable Routing Instrumentation
 
+<Note>
+
+When no routing instrumentation is used, a transaction for `App Start` is automatically captured. However, that transaction stops being sent when one of the routing integrations below is added. Instead, the `App Start` information is included as a span in a transaction captured by the routing instrumentation.
+
+</Note>
+
 We currently provide three routing instrumentations out of the box to instrument route changes for:
 
 - [React Navigation](#react-navigation)
@@ -220,7 +226,7 @@ How long the instrumentation will wait for the route to mount after a change has
 
 If you use another routing library that we don't yet support, or have a custom routing solution, you can use the basic `RoutingInstrumentation` we provide, or extend it to create your own instrumentation.
 
-Every routing instrumentation revoles around one method:
+Every routing instrumentation revolves around one method:
 
 `onRouteWillChange` (context: TransactionContext): Transaction | undefined
 
@@ -428,6 +434,12 @@ You will need to configure your web server CORS to allow the `sentry-trace` head
 This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
 
 <PlatformContent includePath="performance/filter-span-example" />
+
+### maxTransactionDuration
+
+The maximum duration of a transaction, measured in seconds, before it will be marked as "deadline_exceeded". If you never want transactions marked that way, set `maxTransactionDuration` to 0.
+
+The default is `600`.
 
 ## Recipes
 

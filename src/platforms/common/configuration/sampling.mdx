@@ -1,7 +1,7 @@
 ---
 title: Sampling
 sidebar_title: Sampling
-sidebar_order: 20
+sidebar_order: 50
 description: "Learn how to configure the volume of error and transaction events sent to Sentry."
 supported:
   - javascript
@@ -19,6 +19,8 @@ supported:
   - unity
   - dart
   - flutter
+  - rust
+  - native
 redirect_from:
   - /performance/sampling/
 ---
@@ -37,7 +39,7 @@ Changing the error sample rate requires re-deployment. In addition, setting an S
 
 </Note>
 
-<PlatformSection notSupported={["elixir", "javascript.electron", "native", "perl", "rust"]}>
+<PlatformSection notSupported={["elixir", "javascript.electron", "perl"]}>
 
 ## Sampling Transaction Events
 
@@ -46,7 +48,7 @@ We recommend sampling your transactions for two reasons:
 1. Capturing a single trace involves minimal overhead, but capturing traces for _every_ page load or _every_ API request may add an undesirable load to your system.
 2. Enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs.
 
-Choose a sampling rate with the goal of finding a balance between performance and volume concerns with data accuracy. You don't want to collect *too* much data, but you want to collect sufficient data from which to draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume.
+Choose a sampling rate with the goal of finding a balance between performance and volume concerns with data accuracy. You don't want to collect _too_ much data, but you want to collect sufficient data from which to draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume.
 
 ## Configuring the Transaction Sample Rate
 
@@ -62,10 +64,22 @@ The Sentry SDKs have two configuration options to control the volume of transact
    - <PlatformLink to="/configuration/filtering/">Filters</PlatformLink> out some transactions entirely
    - Modifies default [precedence](#precedence) and [inheritance](#inheritance) behavior
 
+<PlatformSection supported={["rust", "native"]}>
+
+<Alert level="info">
+
+Sampling functions (<PlatformIdentifier name="traces-sampler" />) are currently not supported by this platform.
+
+</Alert>
+
+</PlatformSection>
+
 ### Setting a Uniform Sample Rate
 
 <!-- TODO: once PlatformInline is a thing, the text from this include can move back here (the only difference is `Sentry`.init()`) -->
 <PlatformContent includePath="performance/uniform-sample-rate" />
+
+<PlatformSection notSupported={["rust", "native"]}>
 
 ### Setting a Sampling Function
 
@@ -86,6 +100,8 @@ When using custom instrumentation to create a transaction, you can add data to t
 
 <PlatformContent includePath="performance/custom-sampling-context" />
 
+</PlatformSection>
+
 ## Inheritance
 
 <!-- TODO: the link in the paragraph below is intentionally hard-coded to point at JS, since for now that's where the information lives -->
@@ -100,11 +116,15 @@ In some SDKs, for convenience, the <PlatformIdentifier name="traces-sampler" /> 
 
 If you're using a <PlatformIdentifier name="traces-sample-rate" /> rather than a <PlatformIdentifier name="traces-sampler" />, the decision will always be inherited.
 
+<PlatformSection notSupported={["rust", "native"]}>
+
 ## Forcing a Sampling Decision
 
 If you know at transaction creation time whether or not you want the transaction sent to Sentry, you also have the option of passing a sampling decision directly to the transaction constructor (note, not in the <PlatformIdentifier name="custom-sampling-context" /> object). If you do that, the transaction won't be subject to the <PlatformIdentifier name="traces-sample-rate" />, nor will <PlatformIdentifier name="traces-sampler" /> be run, so you can count on the decision that's passed not to be overwritten.
 
 <PlatformContent includePath="performance/force-sampling-decision" />
+
+</PlatformSection>
 
 ## Precedence
 
@@ -118,9 +138,19 @@ There are multiple ways for a transaction to end up with a sampling decision.
 
 When there's the potential for more than one of these to come into play, the following precedence rules apply:
 
-1. If a sampling decision is passed to <PlatformIdentifier name="start-transaction" /> (see [Forcing a Sampling Decision](#forcing-a-sampling-decision) above), that decision will be used, regardlesss of anything else
-2. If <PlatformIdentifier name="traces-sampler" /> is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
-3. If <PlatformIdentifier name="traces-sampler" /> is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
-4. If <PlatformIdentifier name="traces-sampler" /> is not defined and there's no parent sampling decision, <PlatformIdentifier name="traces-sample-rate" /> will be used.
+1. If a sampling decision is passed to <PlatformIdentifier name="start-transaction" />, that decision will be used, overriding everything else.
+1. If <PlatformIdentifier name="traces-sampler" /> is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
+1. If <PlatformIdentifier name="traces-sampler" /> is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
+1. If <PlatformIdentifier name="traces-sampler" /> is not defined and there's no parent sampling decision, <PlatformIdentifier name="traces-sample-rate" /> will be used.
+
+<PlatformSection supported={["rust", "native"]}>
+
+<Alert level="info">
+
+Forcing a sampling decision by passing it into <PlatformIdentifier name="start-transaction" /> is currently not supported by this platform.
+
+</Alert>
+
+</PlatformSection>
 
 </PlatformSection>

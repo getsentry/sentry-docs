@@ -5,7 +5,7 @@ support_level: production
 type: language
 ---
 
-We recommend installing the SDK with CocoaPods. To integrate Sentry into your Xcode project, specify it in your _Podfile_:
+We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
 
 ```ruby
 platform :ios, '9.0'
@@ -17,8 +17,6 @@ end
 ```
 
 Afterwards run `pod install`.
-
-For other installation methods, please see our [documentation](/platforms/apple/install/).
 
 ## Configuration
 
@@ -42,6 +40,26 @@ func application(_ application: UIApplication,
     }
 
     return true
+}
+```
+
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+
+```swift
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Enabled debug when first installing is always helpful
+
+            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.tracesSampleRate = 1.0
+        }
+    }
 }
 ```
 

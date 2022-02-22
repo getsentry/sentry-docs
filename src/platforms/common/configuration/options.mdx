@@ -69,9 +69,15 @@ For app models that don't have a console to print to, you can <PlatformLink to="
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-<PlatformSection notSupported={["unity"]}>
+<PlatformSection notSupported={["unity", "javascript.electron"]}>
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if available).
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+By default the SDK will read properties from the Electron `app` module to create the release in the format `appName@version`.
 
 </PlatformSection>
 
@@ -85,11 +91,17 @@ By default the SDK will read from `Application.productName` and `Application.ver
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["unity", "dotnet"]}>
+<PlatformSection notSupported={["unity", "dotnet", "javascript.electron"]}>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+Sets the environment. Defaults to `development` or `production` depending on whether the application is packaged.
 
 </PlatformSection>
 
@@ -140,7 +152,7 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </ConfigKey>
 
-<ConfigKey name="max-cache-items" supported={[ "dotnet" ]} >
+<ConfigKey name="max-cache-items" supported={[ "android", "apple", "flutter", "java", "dotnet" ]} >
 
 The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
@@ -199,9 +211,15 @@ will be sent. This is a "contains" match to the entire file URL. As a result, if
 
 </ConfigKey>
 
-<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} >
+<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} notSupported={["javascript.electron"]}>
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
+
+</ConfigKey>
+
+<ConfigKey name="auto-session-tracking" supported={["javascript.electron"]} >
+
+When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
 
 </ConfigKey>
 
@@ -278,6 +296,12 @@ A path to an alternative CA bundle file in PEM-format.
 
 </ConfigKey>
 
+<ConfigKey name="context-lines" supported={["php"]}>
+
+The number of context lines for each frame in the stacktrace when loading a file.
+
+</ConfigKey>
+
 <ConfigKey name="frame-context-lines" supported={["node"]}>
 
 The number of context lines for each frame when loading a file.
@@ -295,9 +319,9 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   debug: true,
   initialScope: {
-    tags: {"my-tag": "my value"},
-    user: {id: 42, email: "john.doe@example.com"},
-  }
+    tags: { "my-tag": "my value" },
+    user: { id: 42, email: "john.doe@example.com" },
+  },
 });
 ```
 
@@ -308,7 +332,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   debug: true,
   initialScope: scope => {
-    scope.setTags({ a: 'b' });
+    scope.setTags({ a: "b" });
     return scope;
   },
 });
@@ -327,6 +351,34 @@ Maximum number of characters a single value can have before it will be truncated
 Sentry SDKs normalize any contextual data to a given depth. Any keys containing data with a structure deeper than this will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed `3` levels deep.
 
 </ConfigKey>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+<ConfigKey name="ipcMode" />
+
+Inter-process communication mode to receive event and scope updates from renderer processes.
+
+Available options are:
+
+- `IPCMode.Classic` - Configures Electron IPC modules
+- `IPCMode.Protocol` - Configures a custom protocol and `fetch`
+- `IPCMode.Both` (default) - Configures both modes for maximum compatibility
+
+<ConfigKey name="getSessions" />
+
+A function that returns an array of Electron `session` objects. These sessions are used to configure communication between the Electron main and renderer processes.
+
+Defaults to `() => [session.defaultSession]`
+
+<ConfigKey name="getRendererName" />
+
+Callback function that allows custom naming of renderer processes.
+
+`(contents: WebContents) => string | undefined`
+
+If the callback is not set, or it returns `undefined`, the default naming scheme is used.
+
+</PlatformSection>
 
 <PlatformSection supported={["javascript", "python", "node", "flutter"]}>
 
@@ -367,19 +419,19 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "flutter"]}>
+<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "flutter", "rust"]}>
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
 </ConfigKey>
 
-<ConfigKey name="http-proxy" supported={["node", "php", "python", "java", "dotnet"]}>
+<ConfigKey name="http-proxy" supported={["node", "php", "python", "java", "dotnet", "rust"]}>
 
 When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
 
 </ConfigKey>
 
-<ConfigKey name="https-proxy" supported={["python", "node"]}>
+<ConfigKey name="https-proxy" supported={["python", "node", "rust"]}>
 
 Configures a separate proxy for outgoing HTTPS requests. This value might not be supported by all SDKs. When not supported the `http-proxy` value is also used for HTTPS requests at all times.
 
@@ -403,25 +455,31 @@ The default is `1` (one) second.
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet"]}>
+<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet", "rust"]}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
 </ConfigKey>
 
+<ConfigKey name="send-attempts" supported={["php"]}>
+
+Controls how many times the SDK will attempt to resend an event to Sentry. The default is `3`.
+
+</ConfigKey>
+
 </PlatformSection>
 
-<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
+<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
+<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
-<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
+<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]} notSupported={["native"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 

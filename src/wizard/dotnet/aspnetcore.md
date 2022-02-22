@@ -69,7 +69,8 @@ public class Startup
         app.UseRouting();
 
         // Enable automatic tracing integration.
-        // Make sure to put this middleware right after `UseRouting()`.
+        // If running with .NET 5 or below, make sure to put this middleware
+        // right after `UseRouting()`.
         app.UseSentryTracing();
 
         app.UseEndpoints(endpoints =>
