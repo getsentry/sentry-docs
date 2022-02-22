@@ -4,7 +4,11 @@ description: "Learn how to modify Sentry Unity options programmatically."
 sidebar_order: 100
 ---
 
-The Unity SDK contains multiple other SDKs under the hood, to provide native support. By default, we initialize those before the Unity game itself starts to collect errors that occur during startup and would get missed otherwise. The setup for those SDKs happens during build time which is the reason why we rely on the options being set in the editor configuration window and saved to `Assets/Resources/Sentry/SentryOptions.asset`. To provide a way to modify options programmatically we've added `ScriptableOptionsConfiguration` to the `Option Config` tab. Note that all changes to the options here are made in the C# layer during runtime, after the native SDKs already initialized and will not affect native crashes. The native SDKs only take options defined in the editor configuration window.
+In order to provide native crash support, the Sentry SDK for Unity include platform-specific (aka Native) SDKs, such as the [Android](/platforms/android/), [Apple](/platforms/apple/guides/ios/) and [Native](/platforms/native/). 
+
+By default, we initialize the native SDKs before Unity itself runs. This allows us to capture bugs/crashes of the engine itself, any native plugin and also anything written in C#. The setup for the native SDKs happens during build time, which is the reason we rely on the options being set in the Sentry editor configuration window and saved to `Assets/Resources/Sentry/SentryOptions.asset`. To provide a way to modify options programmatically, we've added `ScriptableOptionsConfiguration` to the `Option Config`.
+
+Note that all changes to the options object done through `ScriptableOptionsConfiguration` will not affect events coming from the native layer. That also means that a `BeforeSend` callback will only modify events coming from C# scripts. The native SDKs only take options defined in the Sentry editor configuration window.
 
 ```csharp
 using Sentry.Unity;
