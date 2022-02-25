@@ -10,7 +10,7 @@ Use version `1.5.0` or later to track touch events with Sentry's React Native SD
 
 At the root of your app, usually `App.js`, wrap the app component with `Sentry.TouchEventBoundary`:
 
-```javascript
+```jsx
 import * as Sentry from "@sentry/react-native";
 
 const App = () => {
@@ -28,7 +28,7 @@ export default AppRegistry.registerComponent("Your Amazing App", () => App);
 
 At the root of your app, usually `App.js`, wrap the app component with `Sentry.withTouchEventBoundary`:
 
-```javascript
+```jsx
 import * as Sentry from "@sentry/react-native";
 
 const App = () => {
@@ -52,32 +52,31 @@ Each touch event is automatically logged as a breadcrumb and displays on the das
 
 ## Tracking Specific Components
 
-You can let Sentry know which components to track specifically by setting the `displayName` property for them. If Sentry detects a component with a `displayName` within a touch's component tree, it will be logged on the dashboard as having occurred in that component.
+You can let Sentry know which components to track specifically by passing the `sentry-label` prop to them. If Sentry detects a component with a `sentry-label` within a touch's component tree, it will be logged on the dashboard as having occurred in that component. If we cannot find a component with the label, we will fall back to the `accessibilityLabel` prop.
 
-```javascript
-class YourCoolComponent extends React.Component {
-  static displayName = "CoolComponent";
-  render() {
-    return <View>{/* ... */}</View>;
-  }
-}
-```
-
-or
-
-```javascript
+```jsx
 const YourCoolComponent = props => {
-  return <View>{/* ... */}</View>;
+  return (
+    <View sentry-label="CardContainer">
+      <Text sentry-label="CoolText">
+        You are cool
+      </Text>
+    </View>
+  );
 };
-
-YourCoolComponent.displayName = "CoolComponent";
 ```
+
+<Note>
+
+You do not have to worry about Typescript errors when passing the `sentry-label` prop. [Typescript will not throw an error on props with the '-' character](https://www.typescriptlang.org/docs/handbook/jsx.html#attribute-type-checking).
+
+</Note>
 
 ## Options
 
 You can pass specific options to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` higher-order component (HOC).
 
-```javascript
+```jsx{tabTitle:Default}
 <Sentry.TouchEventBoundary
   ignoreNames={["BadComponent", /^Connect\(/, /^LibraryComponent$/]}
 >
@@ -85,7 +84,7 @@ You can pass specific options to configure the boundary either as props to the `
 </Sentry.TouchEventBoundary>
 ```
 
-```javascript
+```jsx{tabTitle:HOC}
 Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15 });
 ```
 
@@ -103,7 +102,7 @@ Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15 });
 
 `ignoreNames`
 
-: _Array<string | RegExp>, Accepts strings and regular expressions_. (New in version 1.7.0) Component names to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in.
+: _Array<string | RegExp>, Accepts strings and regular expressions_. Component names to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in.
 
 ## Minified Names in Production
 
