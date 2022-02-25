@@ -82,10 +82,10 @@ API Documentation consists of a few items:
 
 Below we'll describe how to document these for an endpoint.
 
-Declare the endpoint public using the `@declare_public` decorator, specifying the methods on the view which should be public.
+Declare the endpoint public using the `@public` decorator, specifying the methods on the view which should be public.
 
 ```python
-from sentry.apidocs.decorators import declare_public
+from sentry.apidocs.decorators import public
 
 @public(methods={"GET"})
 class OrganizationSCIMMemberDetails(...):
@@ -108,13 +108,13 @@ For the rest of the documentation, we'll use `@extend_schema` on the various end
 @extend_schema(
   operation_id="Retrieve an Organization's details", # What goes in the doc sidebar for the name of the API page
   parameters=[GLOBAL_PARAMS.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
-  request=None # this will usually be a DRF Serializer if this endpoint takes a body
+  request=None, # this will usually be a DRF Serializer if the endpoint takes a body
   responses={
             200: OrganizationSerializer, # The Sentry response serializer
             401: RESPONSE_UNAUTHORIZED,
             403: RESPONSE_FORBIDDEN,
             404: RESPONSE_NOTFOUND,
-        }
+        },
   examples=[OpenAPIExample...], # see the link to an existing documented endpoint below for how to define an example
 )
 def get(self,request, organization):
