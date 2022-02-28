@@ -155,9 +155,35 @@ Include a list of loaded libraries (and versions) when sending an event.
 
 ## Buffer to Disk
 
-Write events to disk before attempting to send, so that they can be retried in the event of a temporary network failure. Needs to implement a cap on the number of stored events.
+This feature is also known as 'Offline Caching'.
 
-This is mostly useful on mobile clients where connectivity is often not available.
+Write events to disk before attempting to send, so that they can be retried in the event of a temporary network failure. Needs to implement a cap on the number of stored events. This is mostly useful on mobile and desktop(e.g: laptop) apps, where stable connectivity is often not available.
+
+#### Dealing with failures
+
+It's important to note that retry is only considered in the event of a network failure. For example:
+
+* Connection timeout
+* DSN resolution failure
+* Connection reset by peer
+
+Other failures, like those caused by processing the file in the SDK itself, the payload should be discarded since those are likely to end up on an endless retry.
+If the event reached Sentry and a HTTP response status code was received, even in the event of a `500` response, the event should be discarded.
+
+#### Additional capabilities
+
+Consider having the SDK retry sending events once the device is back online, when such notification exists in the platform.
+
+Once the device is back online, the SDK is likely going to empty its disk queue in a quick burst of requests. This can trigger different abuse filters in Sentry. To account for that, it's considered to add a small delay between cached event captures. A recommended value is 100 milliseconds.
+
+If the SDK is being [rate-limited](/sdk/rate-limiting/), which causes the SDK to drop any event that reaches its HTTP transport, cosider stop consuming the disk cache until the `Retry-After` timeout is reached or the app restarts.
+
+#### Example implementations
+
+- [C#](https://github.com/getsentry/sentry-dotnet/blob/main/src/Sentry/Internal/Http/CachingTransport.cs)
+- [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/cache/EnvelopeCache.java)
+- [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryHttpTransport.m)
+- [TypeScript](https://github.com/getsentry/sentry-electron/blob/master/src/main/transports/electron-offline-net.ts)
 
 ## HTTP Proxy
 
