@@ -78,20 +78,21 @@ Import your CODEOWNERS file and use it alongside your ownership rules to assign 
 
 To quickly setup a code mapping for a project:
 
- 1. Go to an issue in your project. You should see the following option to link to your source code in the stack trace:
- ![Link Stack Trace](link-stack-trace.png)
- 2. When you click the link, a modal will open. Enter the source code URL from GitHub/GitLab corresponding to stack trace filename and we'll automatically create the code mapping and set up stack trace linking for the project.
+1.  Go to an issue in your project. You should see the following option to link to your source code in the stack trace:
+    ![Link Stack Trace](link-stack-trace.png)
+2.  When you click the link, a modal will open. Enter the source code URL from GitHub/GitLab corresponding to stack trace filename and we'll automatically create the code mapping and set up stack trace linking for the project.
 
 Now that we have code mappings, we are able to transform the paths in your CODEOWNERS file to your expected build output. For example, you may build your program in a `dist/` folder, but that will not be in your CODEOWNERS. However the `dist/` prefix is captured in the stack trace's file paths. Code mappings allow Sentry to figure out how to normalize the file paths between your build output and the CODEOWNERS paths.
 
 You can import and incrementally add the mappings between your source control teams/users to Sentry Teams/Users using [external team/user mappings](/product/issues/issue-owners/#external-teamuser-mappings). Sentry uses the external team/user mappings to convert the owners in your CODEOWNERS file into their equivalents in Sentry. Sentry will automatically ignore rules that are missing team/user mappings.
 
 This feature supports GitHub and GitLab CODEOWNERS file syntax with the following exceptions:
- - Escaping a pattern starting with `#` using ``\`` so it is treated as a pattern and not a comment
- - Using `!` to negate a pattern
- - Using `[ ]` to define a character range
- - [GitLab Premium syntax](https://docs.gitlab.com/ee/user/project/code_owners.html#code-owners-sections)
- - [GitHub CODEOWNERS syntax exceptions](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-on-github/about-code-owners#syntax-exceptions)
+
+- Escaping a pattern starting with `#` using `\` so it is treated as a pattern and not a comment
+- Using `!` to negate a pattern
+- Using `[ ]` to define a character range
+- [GitLab Premium syntax](https://docs.gitlab.com/ee/user/project/code_owners.html#code-owners-sections)
+- [GitHub CODEOWNERS syntax exceptions](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-on-github/about-code-owners#syntax-exceptions)
 
 <Alert level="info">
 
@@ -140,6 +141,7 @@ If no ownership rules match the event, the alert will either be sent to nobody o
 Alerts sent to issue owners obey the user or team's notification preferences.
 
 ## Evaluation Flow
+
 If you have both ownership rules and code owners, Sentry evaluates an event against the rules in the following order:
 
 1. Code owners, top-to-bottom
@@ -149,16 +151,19 @@ After evaluation, the last rule matching returns the assignment.
 
 ### Example
 
+**Code Owners:**
+
+```
+codeowners:*.js                    #ecosystem
+```
+
 **Ownership Rules:**
+
 ```
 path:*.js                          #ecosystem
 path:sentry/api/*                  #api
 url:*subscription*                 #billing
 path:dist/frontend/components/*               #frontend
-```
-**Code Owners:**
-```
-codeowners:*.js                    #ecosystem
 ```
 
 When Sentry recieves an event with a stacktrace filepath: `dist/frontend/components/sidebar.js`, we:
@@ -167,6 +172,7 @@ When Sentry recieves an event with a stacktrace filepath: `dist/frontend/compone
 2. Evaluate against the ownership rules top-to-bottom; we get two matches.
 
 The matches, in order, are:
+
 ```
 [
   "codeowners:*.js                    #ecosystem",
@@ -174,7 +180,8 @@ The matches, in order, are:
   "path:dist/frontend/components/*               #frontend"
 ]
 ```
-Sentry will return the last matching rule, which in this case is `path:dist/frontend/components/*               #frontend`
+
+Sentry will return the last matching rule, which in this case is `path:dist/frontend/components/* #frontend`
 
 ## Troubleshooting
 
