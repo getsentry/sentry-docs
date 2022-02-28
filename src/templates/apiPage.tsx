@@ -192,7 +192,8 @@ export default props => {
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
-                <code>{"<auth_token>"}</code> requires the following scopes:
+                <code>{"<auth_token>"}</code> requires one of the following
+                scopes:
               </div>
 
               <ul>
