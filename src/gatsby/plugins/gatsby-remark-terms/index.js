@@ -10,24 +10,26 @@
 const visit = require("unist-util-visit");
 
 const TERMS = {
-  "DSN": "Data Source Name: Credentials used in SDK to send data to Sentry."
+  DSN: "Data Source Name: Credentials used in SDK to send data to Sentry.",
 };
 
-function escapeRegExp (str) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') // eslint-disable-line no-useless-escape
+function escapeRegExp(str) {
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"); // eslint-disable-line no-useless-escape
 }
 
-const PATTERN = Object.keys(TERMS).map(escapeRegExp).join('|');
+const PATTERN = Object.keys(TERMS)
+  .map(escapeRegExp)
+  .join("|");
 const REGEX = new RegExp(`(\\b|\\W)(${PATTERN})(\\b|\\W)`);
 
-function replace (node) {
+function replace(node) {
   if (Object.keys(TERMS).length === 0) return;
-  if (!node.children) return
+  if (!node.children) return;
 
   // If a text node is present in child nodes, check if an abbreviation is present
   for (let c = 0; c < node.children.length; c++) {
     const child = node.children[c];
-    if (child.type !== 'text') continue;
+    if (child.type !== "text") continue;
     if (!REGEX.test(child.value)) continue;
 
     // Transform node
@@ -39,25 +41,23 @@ function replace (node) {
     // Replace abbreviations
     for (let i = 0; i < newTexts.length; i++) {
       const content = newTexts[i];
-      node.children.splice(c + i, 0,
-        TERMS[content] ? 
-        {
-          type: 'html',
-          value: `<abbr title="${definition}">${content}</abbr>`
-        } : 
-        {
-          type: 'text',
-          value: content,
-        }
+      node.children.splice(
+        c + i,
+        0,
+        TERMS[content]
+          ? {
+              type: "html",
+              value: `<abbr title="${TERMS[content]}">${content}</abbr>`,
+            }
+          : {
+              type: "text",
+              value: content,
+            }
       );
     }
   }
 }
 
 module.exports = async ({ markdownAST }) => {
-  visit(
-    markdownAST,
-    () => true,
-    replace,
-  );
-}
+  visit(markdownAST, () => true, replace);
+};
