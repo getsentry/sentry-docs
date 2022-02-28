@@ -23,7 +23,10 @@ const PATTERN = Object.keys(TERMS)
 const REGEX = new RegExp(`(\\b|\\W)(${PATTERN})(\\b|\\W)`);
 
 function replace(node) {
+  // If this is an empty node there's nothing to consider.
   if (!node.children) return;
+
+  // Do not replace abbreviations in headings because that appears to break the heading anchors.
   if (node.type == "heading") return;
 
   // If a text node is present in child nodes, check if an abbreviation is present
