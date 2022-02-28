@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
@@ -23,11 +23,23 @@ const Params = ({ params }) => (
             <code data-index>{param.name}</code>
             {!!param.schema?.type && <em> ({param.schema.type})</em>}
           </div>
-
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
+
         {!!param.description && (
           <dd>
+            {param.schema?.enum && (
+              <Fragment>
+                <b>choices</b>:
+                <ul>
+                  <code>
+                    {param.schema?.enum.map(e => {
+                      return <li key={e}>{e}</li>;
+                    })}
+                  </code>
+                </ul>
+              </Fragment>
+            )}
             <Content file={param} />
           </dd>
         )}
