@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Learn how to track errors and slowdowns in JavaScript in a free, live workshop at DevOps.JS Conf on Mar. 21 @ 11:00 AM PT.";
+  "Live Workshop: See how Monday.com accelerates time to triage with code observability on Mar. 16 @ 9:00 AM PT.";
 const BANNER_LINK_URL =
-  "https://www.devopsjsconf.com/workshops-3h#:~:text=ADD%20TO-,CALENDAR,-Elena%20Vilchik";
+  "https://sentry.io/resources/how-monday-accelerates-time-to-triage/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
