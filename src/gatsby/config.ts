@@ -18,6 +18,9 @@ if (process.env.DISABLE_THUMBNAILS === "1") {
 const getPlugins = () => {
   const remarkPlugins = [
     {
+      resolve: require.resolve("./plugins/gatsby-remark-terms"),
+    },
+    {
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
