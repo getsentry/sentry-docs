@@ -1,0 +1,67 @@
+---
+title: Logging Integration
+caseStyle: canonical
+supportLevel: production
+sidebar_order: 3
+---
+
+The `sentry_logging` library provides [Logging](https://pub.dev/packages/logging) support for Sentry via [onRecord property](https://pub.dev/documentation/logging/latest/logging/Logger/onRecord.html) that sends events and breadcrumbs to Sentry. Once this integration is configured you can use Logging’s public API.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/logging/lib/src).
+
+## Install
+
+To add the Logging integration, add the `sentry-android-sentry_logging` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^6.3.0
+  sentry_logging: ^6.3.0
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+```dart
+import 'package:sentry_logging/sentry_logging.dart';
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.addIntegration(LoggingIntegration());
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+```
+
+## Verify
+
+This snippet captures an intentional error, so you can test that everything is working as soon as you set it up:
+
+```dart
+import 'package:logging/logging.dart';
+
+void main() async {
+  final log = Logger('MyAwesomeLogger');
+
+  log.info('a breadcrumb!');
+
+  try {
+    throw Exception();
+  } catch (error, stackTrace) {
+    log.severe('an error!', error, stackTrace);
+  }
+}
+```
+
+<Note>
+
+Learn more about manually capturing an error or message, in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
