@@ -40,6 +40,18 @@ const Params = ({ params }) => (
                 </ul>
               </Fragment>
             )}
+            {param.schema?.items?.enum && (
+              <Fragment>
+                <b>choices</b>:
+                <ul>
+                  <code>
+                    {param.schema?.items?.enum.map(e => {
+                      return <li key={e}>{e}</li>;
+                    })}
+                  </code>
+                </ul>
+              </Fragment>
+            )}
             <Content file={param} />
           </dd>
         )}
@@ -291,6 +303,10 @@ export const pageQuery = graphql`
           enum
           format
           type
+          items {
+            enum
+            type
+          }
         }
         name
         in
@@ -325,6 +341,10 @@ export const pageQuery = graphql`
             type
             format
             enum
+            items {
+              enum
+              type
+            }
           }
           name
           in
