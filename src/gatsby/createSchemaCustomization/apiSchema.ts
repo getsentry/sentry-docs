@@ -23,11 +23,17 @@ export const getApiTypeDefs = () => {
         query_parameters: [ApiParam]
         warning: String
       }
+      
+      type ApiParamItems {
+        enum: [String]
+        type: String
+      }
 
       type ApiParameterSchema {
         enum: [String]
         format: String
         type: String
+        items: ApiParamItems
       }
 
       type openApiPathDescription implements Node @childOf(types: ["openAPI"], ) {
