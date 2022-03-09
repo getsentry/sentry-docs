@@ -86,6 +86,7 @@ Common fixes to this issue include:
 - Checking that both the `release` and `dist` and are set on the event by [setting it in the call to `init`](/platforms/react-native/configuration/releases/#bind-the-version).
 - Checking that source maps are correctly uploaded with the exact same `release` and `dist` values as the event. They **must match** for source maps to upload correctly.
 - If you set a custom `release` and `dist`, confirming that you manually uploaded the sourcemaps since our automatic source map upload script will not detect the custom values.
+- Make sure that the name of the bundle in the stack trace matches exactly with the name in the source map. For example, if your stack frames say `app:///index.bundle`, the artifacts must be named `index.bundle` and `index.bundle.map` respectively.
 - Checking that you are not disabling the [`RewriteFrames`](/platforms/javascript/configuration/integrations/plugin/#rewriteframes) default integration by overwriting it, filtering it out, or setting `defaultIntegrations: false`.
 
 [For more details, please read the guide on React Native source maps.](/platforms/react-native/sourcemaps)
@@ -147,3 +148,15 @@ As this applies to **all** class and function names — not just React component
 ## Missing Context on Android NDK Events
 
 If the context is missing on Android NDK events such as breadcrumbs, user, and so on, you need to enable the [Scope Synchronization](/platforms/react-native/enriching-events/scopes/#scope-synchronization) feature.
+
+## Using node with nvm or Volta
+
+If you are using nvm or notion, Xcode has trouble locating the default node binary, which can look similar to this example:
+
+```bash
+dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicui18n.62.dylib
+  Referenced from: /usr/local/bin/node
+  Reason: image not found
+```
+
+In this case, type `ln -s $(which node) /usr/local/bin/node`, which tells your env to use your node binary.

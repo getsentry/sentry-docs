@@ -3,6 +3,12 @@ title: "Adding Query Equations"
 sidebar_order: 10
 ---
 
+<Note>
+
+This feature is available only if your organization is on either a Business or Trial Plan.
+
+</Note>
+
 In **Discover**, you can add equations based on your query columns. Each column acts like a variable since it represents the numeric result of the query, and this number is used in the equation.
 
 For example, let's take an equation that calculates the ratio of a transaction's first contentful paint (`measurements.fcp`) to the transaction's largest contentful paint (`measurements.lcp`):
@@ -56,28 +62,28 @@ Equations will follow expected order of operations, resolving brackets first, di
 Equations can only operate on numeric columns and functions, which includes:
 
 - Functions:
-    - count
-    - count_unique
-    - count_if
-    - failure_count
-    - avg
-    - sum
-    - percentiles (p50, p75 etc.)
-    - apdex
-    - user_misery
-    - eps() and epm()
+  - count
+  - count_unique
+  - count_if
+  - failure_count
+  - avg
+  - sum
+  - percentiles (p50, p75 etc.)
+  - apdex
+  - user_misery
+  - eps() and epm()
 - Fields
-    - transaction.duration
-    - measurements.fp
-    - measurements.fcp
-    - measurements.lcp
-    - measurements.fid
-    - measurements.cls
-    - measurements.ttfb
-    - spans.browser
-    - spans.http
-    - spans.db
-    - spans.resource
+  - transaction.duration
+  - measurements.fp
+  - measurements.fcp
+  - measurements.lcp
+  - measurements.fid
+  - measurements.cls
+  - measurements.ttfb
+  - spans.browser
+  - spans.http
+  - spans.db
+  - spans.resource
 
 ## Example Equations
 
@@ -86,50 +92,50 @@ Equations can only operate on numeric columns and functions, which includes:
 Get the percentage of transactions that completed within a threshold
 
 1. Create a new query with the following three columns:
-    - Column 1:
-        - Function  `count_if`
-        - Field `transaction.duration`
-        - Condition `is less than or equal to`
-        - Set final parameter to a threshold (like 300)
-    - Column 2:
-        - Function `count`
-    - Column 3:
-        - Field `transaction`
-2. Add an equation and enter  `count_if(transaction.duration,lessOrEquals,300) / count() * 100` in the equation field.
+   - Column 1:
+     - Function `count_if`
+     - Field `transaction.duration`
+     - Condition `is less than or equal to`
+     - Set final parameter to a threshold (like 300)
+   - Column 2:
+     - Function `count`
+   - Column 3:
+     - Field `transaction`
+2. Add an equation and enter `count_if(transaction.duration,lessOrEquals,300) / count() * 100` in the equation field.
 
 ### Calculate a custom Apdex
 
 [Apdex](/product/performance/metrics/#apdex) is defined as `(satisfied + tolerable*0.5 + frustrated*0)/total`. If you wanted to change the the weight of tolerable to 0.2, you would create the following query and equation.
 
 1. Create a new query with the following four columns:
-    - Column 1:
-        - Function `count_if`
-        - Field  `transaction.duration`
-        - Condition `is less than or equal to`
-        - Set the final parameter to a Satisfied threshold (like 300)
-    - Column 2:
-        - Function `count_if`
-        - Field `transaction.duration`
-        - Condition `is less than or equal to`
-        - Set the final parameter to a Tolerable threshold (like 1200)
-    - Column 3:
-        - Function `Count()`
-    - Column 4:
-        - Field  `transaction`
+   - Column 1:
+     - Function `count_if`
+     - Field `transaction.duration`
+     - Condition `is less than or equal to`
+     - Set the final parameter to a Satisfied threshold (like 300)
+   - Column 2:
+     - Function `count_if`
+     - Field `transaction.duration`
+     - Condition `is less than or equal to`
+     - Set the final parameter to a Tolerable threshold (like 1200)
+   - Column 3:
+     - Function `Count()`
+   - Column 4:
+     - Field `transaction`
 2. Add an equation and enter the following in the equation field:
 
-    `(count_if(transaction.duration,lessOrEquals,300) + (count_if(transaction.duration,lessOrEquals,1200) - count_if(transaction.duration,lessOrEquals,300)) * 0.2)/count()`
+   `(count_if(transaction.duration,lessOrEquals,300) + (count_if(transaction.duration,lessOrEquals,1200) - count_if(transaction.duration,lessOrEquals,300)) * 0.2)/count()`
 
 ### Find largest average non-database times
 
 Find the transactions that have the largest time that weren't from database calls.
 
 1. Create a new query with the following two columns:
-    - Column 1:
-        - Function `avg`
-        - Field `transaction.duration`
-    - Column 2:
-        - Function  `avg`
-        - Field  `spans.db`
+   - Column 1:
+     - Function `avg`
+     - Field `transaction.duration`
+   - Column 2:
+     - Function `avg`
+     - Field `spans.db`
 2. Add an equation and enter `avg(transaction.duration) - avg(spans.db)` in the equation field.
 3. Sort by this new equation.

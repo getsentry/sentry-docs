@@ -29,6 +29,12 @@ Unity has resolved this issue on newer releases. Learn more by checking the [Uni
 This issue was resolved in the release 0.7.0 of the Sentry SDK for Unity.
 If you're still encountering this issue on a version later than 0.7.0, please let us know [with an issue report](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=&template=BUG_REPORT.md).
 
+## Editor Issues
+
+### Sentry.Unity.Editor.iOS - System.Reflection.ReflectionTypeLoadException
+
+The `Sentry.Unity.Editor.iOS.dll` is responsible for adding native support to your iOS builds. For that, it relies on editor functionality that Unity provides in the form of their iOS module. If you don't have the iOS module installed and, for example, `Assembly.GetTypes()` gets called, this leads to a `ReflectionTypeLoadException`. To resolve this, you can install the iOS module using the Unity Hub or, if you don't intend to build for iOS, you can [embed](https://docs.unity3d.com/Manual/upm-embed.html) the Sentry SDK package and safely remove the `Sentry.Unity.Editor.iOS.dll`.
+
 ## Build Issues
 
 ### Failed to locate the Sentry package
@@ -51,8 +57,12 @@ This can happen if you've copied some of the SDK files directly to the Assets fo
 
 You can resolve this issue by installing the SDK with UPM.
 
-## Events Not Sent
+## Events
 
-### Universal Windows Platform
+### Unhandled Excpetions - Debug.LogException
+
+Currenty, it is not possible for the SDK to distiguish between the user calling `Debug.LogException` and the SDK capturing an unhandled excpetion through the Unity logging integration. To capture an exception and mark it as handled you can call `SentrySDK.CaptureException` instead.
+
+### Universal Windows Platform - Events Not Sent
 
 In order to send events to Sentry, you will need to activate the InternetClient Capability in your Player Settings.
