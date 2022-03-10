@@ -10,16 +10,22 @@ jobs:
   enforce-license-compliance:
     runs-on: ubuntu-latest
     steps:
+      - name: "Fetch FOSSA_API_KEY"
+        id: fetch_key
+        run: |
+          curl -O https://raw.githubusercontent.com/getsentry/.github/main/.github/workflows/FOSSA_API_KEY
+          echo "::set-output name=FOSSA_API_KEY::$(cat FOSSA_API_KEY)"
+
       - name: "Checkout Code"
         uses: actions/checkout@v2
 
       - name: "Run FOSSA Scan"
         uses: fossas/fossa-action@v1.1.0
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: ${{ steps.fetch_key.outputs.FOSSA_API_KEY }}
 
       - name: "Run FOSSA Test"
         uses: fossas/fossa-action@v1.1.0
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: ${{ steps.fetch_key.outputs.FOSSA_API_KEY }}
           run-tests: true

@@ -11,6 +11,7 @@ export type Parameter = {
     type: string;
     format: string;
     enum: string[];
+    items?: {[key: string]: {}};
   };
   name: string;
   in: string;
