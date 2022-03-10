@@ -122,6 +122,14 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "kafka.message_size",
+    "description": "Size of emitted kafka message in bytes, tagged by message type.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
     "type": "Gauge",
     "name": "metrics.buckets",
     "description": "The total number of metric buckets in Relay's metrics aggregator.",
@@ -131,6 +139,18 @@
     "type": "Set",
     "name": "metrics.buckets.created.unique",
     "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.delay",
+    "description": "The reporting delay at which a bucket arrives in Relay.\n\nA positive delay indicates the bucket arrives after its stated timestamp. Large delays\nindicate backdating, particularly all delays larger than `bucket_interval + initial_delay`.\nNegative delays indicate that the bucket is dated into the future, likely due to clock drift\non the client.\n\nThis metric is tagged with:\n- `backdated`: A flag indicating whether the metric was reported within the `initial_delay`\ntime period (`false`) or after the initial delay has expired (`true`).",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.dropped",
+    "description": "Incremented every time a bucket is dropped.\n\nThis should only happen when a project state is invalid during graceful shutdown.",
     "features": []
   },
   {
@@ -161,6 +181,12 @@
     "type": "Counter",
     "name": "metrics.buckets.parsing_failed",
     "description": "Number of times that parsing a metrics bucket item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.relative_bucket_size",
+    "description": "The number of metric elements in the bucket.\n\nBucketRelativeSize measures how many distinct values are in a bucket and therefore\nBucketRelativeSize gives you a measurement of the bucket size and complexity.",
     "features": []
   },
   {
@@ -326,9 +352,21 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "upstream.envelope.body_size",
+    "description": "Size of queries (projectconfig queries, i.e. the request payload, not the response) sent by\nRelay over HTTP in bytes.",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "upstream.network_outage",
     "description": "The state of Relay with respect to the upstream connection.\nPossible values are `0` for normal operations and `1` for a network outage.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "upstream.query.body_size",
+    "description": "Size of envelopes sent over HTTP in bytes.",
     "features": []
   },
   {

@@ -11,6 +11,7 @@ export type Parameter = {
     type: string;
     format: string;
     enum: string[];
+    items?: {[key: string]: {}};
   };
   name: string;
   in: string;
@@ -69,6 +70,7 @@ export type DeRefedOpenAPI = {
 export type ResponseContent = {
   content_type: string;
   example: string;
+  examples: string;
   schema: string;
 };
 

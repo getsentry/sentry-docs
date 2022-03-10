@@ -11,7 +11,7 @@ redirect_from:
 description: "Learn how to use Sentry with Electron."
 ---
 
-`@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
+`@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the `main` and `renderer` processes, as well as collect native crash reports (Minidumps).
 
 ## Install
 
@@ -21,49 +21,9 @@ description: "Learn how to use Sentry with Electron."
 
 <PlatformContent includePath="getting-started-config" />
 
-Once this is done, all unhandled exceptions are automatically captured by Sentry.
+Once configured, all unhandled exceptions and native crashes are automatically captured by Sentry.
 
 **Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
-
-## Webpack Configuration
-
-If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
-
-```javascript
-const { init } =
-  process.type === "browser"
-    ? require("@sentry/electron/dist/main")
-    : require("@sentry/electron/dist/renderer");
-```
-
-And use the Webpack's `DefinePlugin` plugin to specify the process type:
-
-```javascript
-plugins: [
-  // main process
-  new webpack.DefinePlugin({
-    "process.type": '"browser"',
-  }),
-
-  // renderer process
-  new webpack.DefinePlugin({
-    "process.type": '"renderer"',
-  }),
-];
-```
-
-With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
-
-```javascript
-const { init } =
-  "browser" === "browser"
-    ? require("@sentry/electron/dist/main")
-    : require("@sentry/electron/dist/renderer");
-
-// becomes >
-
-const { init } = true ? require("@sentry/electron/dist/main") : undefined;
-```
 
 ## Wizard
 
@@ -78,65 +38,84 @@ This will guide you through the installation and configuration process and sugge
 
 ## Configuring the Client
 
-Start by configuring the SDK as described in the above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
+Start by configuring the SDK as described above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the `main` process and all `renderer` processes to also catch errors during startup.
 
-## Browser integration
+If you are using preload scripts, have `contextIsolation` enabled and want to capture errors from the isolated preload context, you should call `init` early in that context too.
 
-We recommend to put the initialization in a separate JavaScript module, to keep configuration options consistent. This also allows to use it as preload script when creating new `BrowserWindow` instances:
+### App `userData` Directory
+
+If you change the `userData` directory used by your app, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
 
 ```javascript
-mainWindow = new BrowserWindow({
-  width: 800,
-  height: 600,
-  webPreferences: {
-    preload: path.join(__dirname, "sentry.js"),
-  },
+import { app } from "electron";
+import * as Sentry from "@sentry/electron";
+
+app.setPath("userData", "~/.config/my-app");
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
+```
+
+## Bundler Configuration
+
+The SDK attempts to ensure JavaScript bundlers pick up the correct entry point for the Electron process type, but this is not foolproof. If the incorrect entry point is selected, your bundler may throw an error or an error will be thrown at runtime. If this occurs you can use relative imports to ensure that the correct code is bundled for the process.
+
+In the main process:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+```
+
+In the renderer processes:
+
+```javascript
+import * as Sentry from "@sentry/electron/renderer";
+```
+
+## Inter-Process Communication
+
+To give detailed information for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
+
+By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
+
+```javascript
+const { init, IPCMode } = require("@sentry/electron");
+
+init({
+  dsn: "___PUBLIC_DSN___",
+  debug: true,
+  ipcMode: IPCMode.Protocol,
 });
 ```
 
-After this, the SDK is ready to capture any uncaught exception and native crashes that occur in those processes.
+### Preload Injection
 
-## Node Integration
-
-The SDK requires some NodeJS APIs to operate properly. When creating windows without Node integration, the SDK must be loaded in a preload script, as described above. Doing so also ensures that the SDK is loaded as early as possible.
+The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads) and by default only does this for the `defaultSession`. If you are using other sessions, you can pass custom sessions via the `getSessions` option in the `main` process:
 
 ```javascript
-mainWindow = new BrowserWindow({
-  width: 800,
-  height: 600,
-  webPreferences: {
-    nodeIntegration: false,
-    preload: path.join(__dirname, "sentry.js"),
-  },
+import { session } from "electron";
+import * as Sentry from "@sentry/electron";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  getSessions: () => [
+    session.defaultSession,
+    session.fromPartition("persist:my-session"),
+  ],
 });
 ```
 
-## Sandbox Mode
+If your app bundles the `main` process JavaScript, the SDK cannot automatically inject preload scripts because the script will be missing from the packaged app. In this case, the SDK will send events and scope updates via a custom HTTP protocol and `window.fetch`.
 
-[Sandbox mode](https://electronjs.org/docs/api/sandbox-option) fully isolates the renderer processes from the operating system using OS-specific methods. Since most node APIs require system access, they are not available in sandbox mode, most notably `require()`. See the linked documentation for a detailed description of sandbox restrictions.
+### Manual Preload
 
-The Electron SDK can still be used from within a preload script. However, it needs to be bundled into a single file using bundlers like Webpack or Rollup due to the missing `require()` function. Please refer to the respective documentation your chosen tool for all possible configuration options.
-
-The SDK is written in a way that prevents bundlers from processing any code that is only meant to be executed in the main process. The only remaining external dependency is `electron`, which must be explicitly excluded from inlining. For Webpack, this would be:
+If you would like to manually bundle and configure the preload script, you should import the SDK preload code into your own preload script:
 
 ```javascript
-module.exports = {
-  externals: {
-    electron: "commonjs electron",
-  },
-  // ...
-};
+import "@sentry/electron/preload";
 ```
 
-Or for Rollup:
+This script exposes IPC to the isolated renderer via Electrons `contextBridge` API.
 
-```javascript
-export default {
-  external: ["electron"],
-  plugins: [commonjs()],
-  // ...
-};
-```
+Check out the [example apps](https://github.com/getsentry/sentry-electron/tree/master/examples) for how to do this.
 
 ## Uploading Debug Information
 
@@ -162,7 +141,7 @@ The Electron SDK supports [Source Maps](https://www.html5rocks.com/en/tutorials/
 
 Sentry can process Minidumps created when the Electron process or one of its renderers crashes. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
 
-Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled, regardless of the `enableNative` setting.
+Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
 
 <Alert level="warning" title="A Word on Data Privacy">
 
@@ -191,7 +170,7 @@ Information_](/product/cli/dif/) for the upload process.
 
 The SDK relies on the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) to generate the crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](#electron-native-manual)).
 
-An exception to this is _macOS_, where the crash reporter only needs to be started in the main process and watches all its child processes. The SDK already takes care of this difference, so there is no need to manually disable `enableNative`.
+An exception to this is _macOS_, where the crash reporter only needs to be started in the `main` process and watches all its child processes. The SDK already takes care of this difference, so there is no need to manually disable `enableNative`.
 
 For custom child processes, especially ones not written in JavaScript, you need to integrate a library that can generate Minidumps. These are most notably [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/) and [Breakpad](https://chromium.googlesource.com/breakpad/breakpad). Please refer to their respective documentation on how to build and integrate them. Configure them with the following upload URL:
 

@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-Get the SDK from [pub.dev](https://pub.dev/packages/sentry) by adding the following to your `pubspec.yaml`:
+Sentry captures data by using an SDK within your application’s runtime. Add the following to your `pubspec.yaml`:
 
 ```yml {filename:pubspec.yaml}
 dependencies:
@@ -27,7 +27,7 @@ Future<void> main() async {
 }
 ```
 
-Capture a test exception:
+Then create an intentional error, so you can test that everything is working:
 
 ```dart
 import 'package:sentry/sentry.dart';
