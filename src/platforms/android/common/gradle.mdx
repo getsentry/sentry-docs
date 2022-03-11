@@ -48,7 +48,7 @@ The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0
 We expose the following configuration values directly in your `app/build.gradle`:
 
 ```groovy
-import io.sentry.android.gradle.InstrumentationFeature
+import io.sentry.android.gradle.InstrumentationFeature // Only available v3.0.0 and above.
 
 sentry {
     // Enables or disables the automatic upload of mapping files
@@ -94,13 +94,31 @@ sentry {
 
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
       // Defaults to all available values of InstrumentationFeature enum class.
-      features = [InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO]
+      features = [InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP]
+    }
+    
+    // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
+    // Default is enabled.
+    // Only available v3.1.0 and above.
+    autoInstallation {
+      enabled = true
+      
+      // Specifies a version of the sentry-android SDK and fragment, timber and okhttp integrations.
+      // 
+      // This is also useful, when you have the sentry-android SDK already included into a transitive dependency/module and want to 
+      // align integration versions with it (if it's a direct dependency, the version will be inferred).
+      //
+      // NOTE: if you have a higher version of the sentry-android SDK or integrations on the classpath, this setting will have no effect
+      // as Gradle will resolve it to the latest version.
+      //
+      // Defaults to the latest published sentry version.
+      sentryVersion = '5.6.1'
     }
 }
 ```
 
 ```kotlin
-import io.sentry.android.gradle.InstrumentationFeature
+import io.sentry.android.gradle.InstrumentationFeature // Only available v3.0.0 and above.
 
 sentry {
     // Enables or disables the automatic upload of mapping files
@@ -146,7 +164,25 @@ sentry {
       
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
       // Defaults to all available values of InstrumentationFeature enum class.
-      features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO))
+      features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP))
+    }
+    
+    // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
+    // Default is enabled.
+    // Only available v3.1.0 and above.
+    autoInstallation {
+      enabled.set(true)
+      
+      // Specifies a version of the sentry-android SDK and fragment, timber and okhttp integrations.
+      // 
+      // This is also useful, when you have the sentry-android SDK already included into a transitive dependency/module and want to 
+      // align integration versions with it (if it's a direct dependency, the version will be inferred).
+      //
+      // NOTE: if you have a higher version of the sentry-android SDK or integrations on the classpath, this setting will have no effect
+      // as Gradle will resolve it to the latest version.
+      //
+      // Defaults to the latest published sentry version.
+      sentryVersion.set("5.6.1")
     }
 }
 ```
@@ -253,7 +289,18 @@ enum class InstrumentationFeature {
      *
      * Requires sentry-android SDK version 5.5.0 and above
      */
-    FILE_IO
+    FILE_IO,
+    
+    /**
+     * When enabled the SDK will create spans for outgoing network requests and attach
+     * sentry-trace-header for distributed tracing.
+     * This feature uses bytecode manipulation and attaches SentryOkHttpInterceptor to all OkHttp
+     * clients in the project.
+     *
+     * Requires sentry-android SDK version 5.0.0 and above.
+     * Only available v3.1.0 and above of the Gradle plugin.
+     */
+    OKHTTP
 }
 ```
 
@@ -264,3 +311,17 @@ Check [Integrations](/platforms/android/configuration/integrations/) page for mo
 To learn more about the internals of auto-instrumentation, check out this [blog post](https://blog.sentry.io/2021/12/14/bytecode-transformations-the-android-gradle-plugin).
 
 </Note>
+
+## Auto installation
+
+The plugin offers automated installation feature of the Sentry Android SDK and [Fragment](/platforms/android/configuration/integrations/fragment/), [Timber](/platforms/android/configuration/integrations/timber/) and [OkHttp](/platforms/android/configuration/integrations/okhttp/) integrations. With thatб you don't need to add any dependencies, but just use the Sentry Gradle plugin as the feature is enabled by default from version 3.1.0.
+
+The plugin uses the following algorithm when defining depndency versions:
+
+1. Check if the module/app has a direct dependency to the Sentry Android SDK
+    a. if yes, then use the version of the direct dependency
+    b. if no, then automatically add sentry-android dependency with the specified `sentryVersion` from the plugin configuration (defaults to the latest published SDK version)
+2. Check if the module/app has a direct dependency to any of the integrations (fragment, timber or okhttp)
+    a. if yes, then keep the current version of the direct dependency
+    b. if no, then automatically add integration dependency with the version of the Sentry Android SDK inferred from above
+3. If there are transitive dependencies to any of the integrations or the Sentry Android SDK, then their versions are not considered. However, if the versions are higher than those bundled with the Sentry Gradle plugin, Gradle will pick them instead.
