@@ -217,7 +217,6 @@ In that case you can also skip the `sentry-cli` configuration step below.
 
 ### Use `hidden-source-map`
 
-
 _(New in version 6.17.1)_
 
 If you would like to use `hidden-source-map` rather than `source-map` as your webpack `devtool`, so that your built files do not contain a `sourceMappingURL` comment, add a `sentry` object to `moduleExports` above, and set the `hideSourceMaps` option to `true`:
@@ -231,6 +230,22 @@ const moduleExports = {
 ```
 
 Note that this only applies to client-side builds, and requires the `SentryWebpackPlugin` to be enabled.
+
+### Widen the Upload Scope
+
+_(New in version 6.18.3)_
+
+If you find that there are in-app frames in your client-side stacktraces which aren't getting sourcemapped even when most others are, it is likely because they are from files in `static/chunks/` rather than `static/chunks/pages/`. By default, such files aren't uploaded because the majority of the files in `static/chunks/` only contain nextjs or third-party code, and are named in such a way that it's hard to tell relevant files (ones containing your code) apart from irrelevant ones.
+
+To upload all of the files in `static/chunks/` anyway, add a `sentry` object to `moduleExports` above, and set the `widenClientFileUpload` option to `true`:
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    widenClientFileUpload: true,
+  },
+};
+```
 
 ## Configure `sentry-cli`
 
