@@ -85,9 +85,6 @@ Below we'll describe how to document these for an endpoint.
 Declare the endpoint public by setting the `public` attribute with the appropriate HTTP verbs.
 
 ```python
-from sentry.apidocs.decorators import public
-
-
 class OrganizationSCIMMemberDetails(...):
   public = {"GET"}
 ```
@@ -96,7 +93,6 @@ Tag the endpoint view if needed (a parent class may already be tagged), this is 
 
 ```python
 from drf_spectacular.utils import extend_schema
-from sentry.apidocs.decorators import public
 
 @extend_schema(tags=["SCIM"])
 class SCIMEndpoint(...):
@@ -116,7 +112,7 @@ For the rest of the documentation, we'll use `@extend_schema` on the various end
             403: RESPONSE_FORBIDDEN,
             404: RESPONSE_NOTFOUND,
         },
-  examples=[OpenAPIExample...], # see the link to an existing documented endpoint below for how to define an example
+  examples=[OpenApiExample()], # see the link to an existing documented endpoint below for how to define an example
 )
 def get(self,request, organization):
   pass
@@ -133,7 +129,7 @@ Specify the parameters using a list, and a serializer if needed.
 Specify the request and response serializers.
 
 - Request serializers, since they use DRF serializers, can generally just be the serializer itself. There is plenty of customization and if needed can be overriden with `inline_serializer`. These will be passed to the `request` parameter in `extend_schema`.
-- For our response serializers, you must type the `serialize` function's return with a `TypedDict` and pass the serializer as a parameter in `extend_schema`. See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/models/organization_member.py) for an example of this.
+- For our response serializers, you must type the `serialize` function's return with a `TypedDict` and pass the serializer as a parameter in `extend_schema`. See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/models/organization_member/scim.py) for an example of this.
 - If the response is a wrapper or you need more customization, you can use the `inline_sentry_response_serializer` function.
 
 ```python
