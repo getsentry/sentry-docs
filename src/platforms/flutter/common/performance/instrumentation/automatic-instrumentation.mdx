@@ -10,8 +10,6 @@ redirect_from:
 
 Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
 
-Supported in Sentry's Dart SDK version `6.1.0-alpha.2` and above.
-
 </Note>
 
 ### http.Client Library Instrumentation
@@ -81,4 +79,53 @@ SentryNavigatorObserver(
   enableAutoTransactions: false,
   setRouteNameAsTransaction: true
 )
+```
+
+### App Start Instrumentation
+
+<Note>
+
+This feature is available on Sentry Flutter SDK `6.4.0-beta.4` and above. Features available in Beta are still in-progress and may have bugs. We recognize the irony.
+
+</Note>
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It tracks the length of time from the **earliest native process initialization** until the very first [PostFrameCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addPostFrameCallback.html) is triggered.
+
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+
+To start getting the Mobile Vitals data, you have to set up the [Routing instrumentation](platforms/flutter/performance/instrumentation/automatic-instrumentation/#routing-instumentation).
+
+In case you do not initialize the SDK early in the App's lifecycle, you can also customize the ending of the App start, you have to disable the `autoAppStart` flag and call the `SentryFlutter.setAppStartEnd` function.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+// Run my App and do my things first
+
+// Initialize the Flutter SDK
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.autoAppStart = false,
+  );
+}
+
+// End the App start
+SentryFlutter.setAppStartEnd(DateTime.now().toUtc());
+```
+
+In case you want to opt-out, you can flip the `enableAutoPerformanceTracking` flag:
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.enableAutoPerformanceTracking = false,
+    appRunner: () => runApp(MyApp()),
+  );
+}
+
+Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
 ```
