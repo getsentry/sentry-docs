@@ -9,7 +9,7 @@ type: framework
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
 
-### Automatically with the Sentry Android Gradle plugin
+### Auto-Installation With the Sentry Android Gradle Plugin
 
 To install the plugin, please update your build.gradle file as follows:
 
