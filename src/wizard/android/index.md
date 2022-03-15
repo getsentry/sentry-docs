@@ -9,6 +9,36 @@ type: framework
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
 
+### Automatically with the Sentry Android Gradle plugin
+
+To install the plugin, please update your build.gradle file as follows:
+
+```groovy
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+plugins {
+  id "io.sentry.android.gradle" version "3.1.0-alpha.1"
+}
+```
+
+```kotlin
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+plugins {
+  id("io.sentry.android.gradle") version "3.1.0-alpha.1"
+}
+```
+
+The plugin will automatically add the latest version of the Android SDK as a dependency.
+
+### Manually 
+
 To install the Android SDK, please update your build.gradle file as follows:
 
 ```groovy
@@ -31,7 +61,7 @@ dependencies {
 }
 ```
 
-### Connecting the SDK to Sentry
+## Connecting the SDK to Sentry
 
 After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
@@ -46,7 +76,7 @@ Add your DSN to the manifest file.
 </application>
 ```
 
-### Verifying Your Setup
+## Verifying Your Setup
 
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
@@ -82,7 +112,7 @@ class MyActivity : AppCompatActivity() {
 }
 ```
 
-### Performance Monitoring
+## Performance Monitoring
 
 Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
 
