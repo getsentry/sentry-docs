@@ -37,7 +37,7 @@ plugins {
 
 The plugin will automatically add the latest version of the Android SDK as a dependency.
 
-### Manually 
+### Manual Installation
 
 To install the Android SDK, please update your build.gradle file as follows:
 
