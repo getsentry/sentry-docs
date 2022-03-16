@@ -6,7 +6,7 @@ description: "Learn how Sentry supports loading its JavaScript SDK via a CDN."
 
 import JsBundleList from "~src/components/jsBundleList";
 
-Sentry supports loading its JavaScript SDK via a CDN. Generally we suggest using our npm package (`@sentry/browser`) as utilizing a CDN create scenarios where Sentry is unable to load due to networking issues or common extensions like ad blockers. If you _must_ use a CDN, take a look at [loading Sentry lazily with our JS loader](../lazy-load-sentry/).
+Sentry supports loading the JavaScript SDK via a CDN. Generally we suggest using our npm package (`@sentry/browser`) instead, as using the CDN can create scenarios where Sentry is unable to load due to networking issues or common extensions like ad blockers. If you _must_ use a CDN, take a look at [loading Sentry lazily with our JS loader](../lazy-load-sentry/), which provides a deferred version of our minified ES5 browser bundle. To see what other bundles are available, see [Available Bundles](#available-bundles) below.
 
 ```html {tabTitle: CDN}
 <script
@@ -18,7 +18,7 @@ Sentry supports loading its JavaScript SDK via a CDN. Generally we suggest using
 
 ## Performance Bundle
 
-To use Sentry's performance tracing an alternative bundle is needed. This allows us to keep the filesize down for users who only need error monitoring.
+To use Sentry's performance tracing, an alternative bundle is needed. This allows us to keep the filesize down for users who only need error monitoring.
 
 ```html {tabTitle: CDN}
 <script
@@ -34,12 +34,12 @@ You only need to load `bundle.tracing.min.js`, which provides both error and per
 
 </Note>
 
-The most important thing to note here is that `Sentry.Integrations` has been made available, and can be referenced in your call to `Sentry.init`:
+Once you've included the Sentry SDK bundle in your page, you can use Sentry in your own bundle:
 
 ```javascript {tabTitle: CDN}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // this assumes your build process sets "npm_package_version" in the env
+  // this assumes your build process replaces `process.env.npm_package_version` with a value
   release: "my-project-name@" + process.env.npm_package_version,
   integrations: [new Sentry.BrowserTracing()],
 
