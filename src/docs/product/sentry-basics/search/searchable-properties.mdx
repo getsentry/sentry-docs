@@ -12,6 +12,9 @@ Sentry's Search provides you with reserved keywords, like `is`, `user`, `server`
 
 Below is a list of issue-level keys and tokens reserved and known to Sentry:
 
+<!-- prettier-ignore-start -->
+<!-- markdown-table - START -->
+
 | Key/Token                    | Description |
 |--------------------------|-------------|
 | age | Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command. Supported suffixes: `m -> minutes`, `h -> hours`, `d -> days` `w -> weeks` |
@@ -33,7 +36,8 @@ Below is a list of issue-level keys and tokens reserved and known to Sentry:
 | lastSeen:-2d | Return issues last seen within the last two days. |
 | timesSeen | Restrict results to issues that have been seen exactly, at least, or at most some number of times.<br /><br /> An exact match token: `timesSeen:10`.<br /><br /> Upper or lower bounds tokens: `timesSeen:>10`, `timesSeen:>=10`, `timesSeen:<10`, `timesSeen:<=10` |
 
-
+<!-- markdown-table - END -->
+<!-- prettier-ignore-end -->
 
 ### Event Properties
 
@@ -42,6 +46,9 @@ Events are the underlying event data captured using Sentry SDKs (read: errors an
 When searching on event properties within the **Issues** page, the search will return any issue that has _one or more events_ matching the supplied event filters.
 
 Below is a list of event-level keys and tokens reserved and known to Sentry:
+
+<!-- prettier-ignore-start -->
+<!-- markdown-table - START -->
 
 | Key/Token                     | Description |
 |---------------------------| ----------- |
@@ -61,6 +68,9 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | stack.abs_path<br /> stack.filename<br /> stack.function<br /> stack.module<br /> stack.package<br /> stack.stack_level<br /> stack.lineno | Restrict results to events with a matching stack property.<br /><br /> For Native SDK users, `stack.package` is the Native equivalent for `stack.module`. For more details about enhancing search, see the full documentation on [adding context and customizing tags](/platforms/native/enriching-events/). |
 | error.type<br /> error.value<br /> error.mechanism<br /> error.handled | Restrict results to events with a matching error property. |
 
+<!-- markdown-table - END -->
+<!-- prettier-ignore-end -->
+
 ### Custom Tags
 
 Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
@@ -72,3 +82,36 @@ Several common uses for tags include:
 - The hostname of the server
 - The version of your platform (for example, iOS 5.0)
 - The user’s language
+
+<!-- prettier-ignore-start -->
+<!-- markdown-table - START -->
+
+| Key / Token | Description | Feature | Type |
+| ----------- | ----------- | ---------- | ---- |
+| any()       | Returns the first available value, uses the min function to return a consistent view | Discover | n/a |
+| apdex() | Returns transactions with the [Apdex score](/product/performance/metrics/#apdex) that was passed in (the word Apdex would be linked) | Discover | number |
+| avg() | Average the numeric/duration values for a column | Discover | duration | <!-- not search -->
+| count() | Returns table rows that match the result of the count value and operator. | Discover | number | <!-- does this make sense? -->
+| count_if(column,operator,value) | The count of events that satisfy the condition passed to the parameters | Discover | number | <!-- Updated this one -->
+| count_miserable() | Count of unique users that fall above the miserable threshold | Discover | number |
+| count_unique() | Count of the unique number of occurances of the field passed in | Discover | number | <!-- can this be value instead of field-->
+| culprit | Deprecated. Won't be sent by newer SDKs | Discover | string |
+| device.arch | CPU architecture | Discover, Issues | string |
+| device.battery_level | If the device has a battery, this can be a floating point value defining the battery level (in the range 0-100). | Discover | string |
+| device.brand | Brand of the device | Discover, Issues |  |
+|  |  |  |  |
+| timesSeen | Returns table rows that match the result of the count value and operator. | Issues | number | <!-- does this make sense? -->
+
+
+
+
+<!-- markdown-table - END -->
+<!-- prettier-ignore-end -->
+
+Things to know:
+Search terms should auto-complete, and when they don't that means you have an invalid data set. If you complete the term and hit enter, an error message is displayed. For example, in Discover, you cannot search using a grouping function if you don't already have a grouping function in your Results table columns.
+Default parameters in search functions can be updated.
+_ Discover, Performance = events
+_ Issues = issues
+_ Releases = it’s own beast
+_ Dashboards within the widget builder = issues & events & releases
