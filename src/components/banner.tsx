@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop: See how Monday.com accelerates time to triage with code observability on Mar. 16 @ 9:00 AM PT.";
+  "Live Workshop: Learn how Causal set up distributed tracing to quickly solve their performance bottlenecks on Mar. 30 @ 10:00 AM PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/how-monday-accelerates-time-to-triage/?promo_name=docs-banner";
+  "https://sentry.io/resources/performance-workshop-causal-app/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
