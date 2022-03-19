@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
@@ -7,7 +7,10 @@ import BasePage from "~src/components/basePage";
 import Content from "~src/components/content";
 import SmartLink from "~src/components/smartLink";
 
-import { OpenAPI } from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
+import {
+  OpenAPI,
+  OpenApiPath,
+} from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
 
 import "prismjs/components/prism-json";
 
@@ -20,11 +23,35 @@ const Params = ({ params }) => (
             <code data-index>{param.name}</code>
             {!!param.schema?.type && <em> ({param.schema.type})</em>}
           </div>
-
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
+
         {!!param.description && (
           <dd>
+            {param.schema?.enum && (
+              <Fragment>
+                <b>choices</b>:
+                <ul>
+                  <code>
+                    {param.schema?.enum.map(e => {
+                      return <li key={e}>{e}</li>;
+                    })}
+                  </code>
+                </ul>
+              </Fragment>
+            )}
+            {param.schema?.items?.enum && (
+              <Fragment>
+                <b>choices</b>:
+                <ul>
+                  <code>
+                    {param.schema?.items?.enum.map(e => {
+                      return <li key={e}>{e}</li>;
+                    })}
+                  </code>
+                </ul>
+              </Fragment>
+            )}
             <Content file={param} />
           </dd>
         )}
@@ -32,6 +59,54 @@ const Params = ({ params }) => (
     ))}
   </dl>
 );
+
+const Example = props => {
+  const selectedTabView: number = props.selectedTabView;
+  const data: OpenApiPath = props.data;
+  const selectedResponse: number = props.selectedResponse;
+
+  let exampleJson;
+  if (data.responses[selectedResponse].content?.examples) {
+    exampleJson = JSON.stringify(
+      Object.values(
+        JSON.parse(data.responses[selectedResponse].content?.examples)
+      )[0]["value"],
+      null,
+      2
+    );
+  } else if (data.responses[selectedResponse].content?.example) {
+    exampleJson = data.responses[selectedResponse].content?.example;
+  }
+  return (
+    <pre className="api-block-example response">
+      {selectedTabView === 0 &&
+        (exampleJson ? (
+          <code
+            dangerouslySetInnerHTML={{
+              __html: Prism.highlight(
+                exampleJson,
+                Prism.languages.json,
+                "json"
+              ),
+            }}
+          />
+        ) : (
+          strFormat(data.responses[selectedResponse].description)
+        ))}
+      {selectedTabView === 1 && (
+        <code
+          dangerouslySetInnerHTML={{
+            __html: Prism.highlight(
+              data.responses[selectedResponse].content.schema,
+              Prism.languages.json,
+              "json"
+            ),
+          }}
+        />
+      )}
+    </pre>
+  );
+};
 
 const getScopes = (data, securityScheme) => {
   const obj = data.security.find(e => e[securityScheme]);
@@ -141,7 +216,8 @@ export default props => {
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
-                <code>{"<auth_token>"}</code> requires the following scopes:
+                <code>{"<auth_token>"}</code> requires one of the following
+                scopes:
               </div>
 
               <ul>
@@ -198,33 +274,11 @@ export default props => {
                 )}
               </div>
             </div>
-            <pre className="api-block-example response">
-              {selectedTabView === 0 &&
-                (data.responses[selectedResponse].content?.example ? (
-                  <code
-                    dangerouslySetInnerHTML={{
-                      __html: Prism.highlight(
-                        data.responses[selectedResponse].content.example,
-                        Prism.languages.json,
-                        "json"
-                      ),
-                    }}
-                  />
-                ) : (
-                  strFormat(data.responses[selectedResponse].description)
-                ))}
-              {selectedTabView === 1 && (
-                <code
-                  dangerouslySetInnerHTML={{
-                    __html: Prism.highlight(
-                      data.responses[selectedResponse].content.schema,
-                      Prism.languages.json,
-                      "json"
-                    ),
-                  }}
-                />
-              )}
-            </pre>
+            <Example
+              data={data}
+              selectedTabView={selectedTabView}
+              selectedResponse={selectedResponse}
+            ></Example>
           </div>
         </div>
       </div>
@@ -250,6 +304,10 @@ export const pageQuery = graphql`
           enum
           format
           type
+          items {
+            enum
+            type
+          }
         }
         name
         in
@@ -284,6 +342,10 @@ export const pageQuery = graphql`
             type
             format
             enum
+            items {
+              enum
+              type
+            }
           }
           name
           in
@@ -294,6 +356,7 @@ export const pageQuery = graphql`
           content {
             content_type
             example
+            examples
             schema
           }
           description

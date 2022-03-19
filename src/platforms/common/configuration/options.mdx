@@ -70,9 +70,15 @@ For app models that don't have a console to print to, you can <PlatformLink to="
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-<PlatformSection notSupported={["unity"]}>
+<PlatformSection notSupported={["unity", "javascript.electron"]}>
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if available).
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+By default the SDK will read properties from the Electron `app` module to create the release in the format `appName@version`.
 
 </PlatformSection>
 
@@ -86,11 +92,17 @@ By default the SDK will read from `Application.productName` and `Application.ver
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["unity", "dotnet"]}>
+<PlatformSection notSupported={["unity", "dotnet", "javascript.electron"]}>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+Sets the environment. Defaults to `development` or `production` depending on whether the application is packaged.
 
 </PlatformSection>
 
@@ -166,7 +178,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart"]}>
+<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart", "react-native"]}>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -200,9 +212,15 @@ will be sent. This is a "contains" match to the entire file URL. As a result, if
 
 </ConfigKey>
 
-<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} >
+<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} notSupported={["javascript.electron"]}>
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
+
+</ConfigKey>
+
+<ConfigKey name="auto-session-tracking" supported={["javascript.electron"]} >
+
+When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
 
 </ConfigKey>
 
@@ -289,6 +307,10 @@ The number of context lines for each frame in the stacktrace when loading a file
 
 The number of context lines for each frame when loading a file.
 
+#### Deprecated
+
+`frameContextLines` has moved to the <PlatformLink to="/configuration/integrations/default-integrations/#contextlines">`ContextLines` integration</PlatformLink>.
+
 </ConfigKey>
 
 <ConfigKey name="initial-scope" supported={["javascript","node"]}>
@@ -334,6 +356,34 @@ Maximum number of characters a single value can have before it will be truncated
 Sentry SDKs normalize any contextual data to a given depth. Any keys containing data with a structure deeper than this will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed `3` levels deep.
 
 </ConfigKey>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+<ConfigKey name="ipcMode" />
+
+Inter-process communication mode to receive event and scope updates from renderer processes.
+
+Available options are:
+
+- `IPCMode.Classic` - Configures Electron IPC modules
+- `IPCMode.Protocol` - Configures a custom protocol and `fetch`
+- `IPCMode.Both` (default) - Configures both modes for maximum compatibility
+
+<ConfigKey name="getSessions" />
+
+A function that returns an array of Electron `session` objects. These sessions are used to configure communication between the Electron main and renderer processes.
+
+Defaults to `() => [session.defaultSession]`
+
+<ConfigKey name="getRendererName" />
+
+Callback function that allows custom naming of renderer processes.
+
+`(contents: WebContents) => string | undefined`
+
+If the callback is not set, or it returns `undefined`, the default naming scheme is used.
+
+</PlatformSection>
 
 <PlatformSection supported={["javascript", "python", "node", "flutter"]}>
 
@@ -410,7 +460,7 @@ The default is `1` (one) second.
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet", "rust"]}>
+<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet", "rust", "react-native", "javascript.capacitor"]}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
@@ -457,6 +507,60 @@ Set this boolean to `false` to disable the native SDK. This will disable all nat
 Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer, but instead use [enableNative](#enableNative).
 
 You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
+
+</ConfigKey>
+
+<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor"]}>
+
+Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
+
+</ConfigKey>
+
+<ConfigKey name="enableNativeNagger" supported={["react-native", "javascript.capacitor"]}>
+
+Set this boolean to `false` to disable the native nagger alert being shown.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoSessionTracking">
+
+Set this boolean to `false` to disable the [release health](/product/releases/health/) feature.
+
+</ConfigKey>
+
+<ConfigKey name="sessionTrackingIntervalMillis">
+
+Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
+
+</ConfigKey>
+
+<ConfigKey name="enableNdkScopeSync">
+
+Set this boolean to `false` to disable the scope sync from Java to NDK on Android.
+
+</ConfigKey>
+
+<ConfigKey name="attachThreads">
+
+Set this boolean to `true` to automatically attach all threads to all logged events on Android.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
+
+Set this boolean to `false` to disable auto [performance monitoring](/product/performance/) tracking.
+
+</ConfigKey>
+
+<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native"]}>
+
+Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
+
+</ConfigKey>
+
+<ConfigKey name="onReady" supported={["react-native"]}>
+
+Set this callback, which is called after the Sentry React Native SDK initializes its Native SDKs (Android and iOS).
 
 </ConfigKey>
 
