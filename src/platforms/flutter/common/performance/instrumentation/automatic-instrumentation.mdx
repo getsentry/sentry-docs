@@ -22,6 +22,16 @@ When the HTTP request throws an `Exception`, Sentry's SDK associates this except
 
 For more information see our [SentryHttpClient integration](/platforms/dart/configuration/integrations/http-integration/#performance-monitoring-for-http-requests).
 
+### Dio Library Instrumentation
+
+The Dio instrumentation, once added the Dio integration feature, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
+
+The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus`.
+
+When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+
+For more information see our [Dio integration](/platforms/dart/configuration/integrations/dio-integration/#performance-monitoring-for-http-requests).
+
 ### Routing Instumentation
 
 Automatic routing instrumentation can be enabled by adding an instance of `SentryNavigationObserver` to your application's `navigatorObservers`. Transactions are started automatically when routing to new pages in your application.
