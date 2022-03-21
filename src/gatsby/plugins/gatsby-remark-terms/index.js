@@ -32,6 +32,14 @@ function replace(node) {
   // Do not replace abbreviations in headings because that appears to break the heading anchors.
   if (node.type == "heading") return;
 
+  // Do not replace abbreviations in links because that's two interactive
+  // nested elements nested in each other, and we decided we don't want to
+  // style that either.
+  //
+  // This currently doesn't handle nesting of e.g.
+  // <a><strong><abbr>... but we don't have that in docs.
+  if (node.type == "link") return;
+
   // If a text node is present in child nodes, check if an abbreviation is present
   for (let c = 0; c < node.children.length; c++) {
     const child = node.children[c];
