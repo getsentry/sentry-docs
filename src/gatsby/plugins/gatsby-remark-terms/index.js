@@ -51,7 +51,7 @@ function replace(node) {
 
     // While iterating through children, keep track of whether we're in a
     // custom link component or not. MDX components have their own AST type,
-    // which is indirectly documented my the remark-mdx plugin:
+    // which is indirectly documented by the remark-mdx plugin:
     //
     // * https://www.npmjs.com/package/remark-mdx
     // * ...links to: https://github.com/syntax-tree/mdast-util-mdx-jsx#nodes
