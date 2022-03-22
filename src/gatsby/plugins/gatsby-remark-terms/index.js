@@ -24,8 +24,8 @@ const PATTERN = Object.keys(TERMS)
   .map(escapeRegExp)
   .join("|");
 const REGEX = new RegExp(`(\\b|\\W)(${PATTERN})(\\b|\\W)`);
-const CUSTOM_LINK_START = new RegExp('^<([a-zA-Z]+Link|a) ');
-const CUSTOM_LINK_END = new RegExp('^</([a-zA-Z]+Link|a)>');
+const CUSTOM_LINK_START = new RegExp("^<([a-zA-Z]+Link|a) ");
+const CUSTOM_LINK_END = new RegExp("^</([a-zA-Z]+Link|a)>");
 
 function replace(node) {
   // If this is an empty node there's nothing to consider.
@@ -81,7 +81,7 @@ function replace(node) {
     // So in short, MDX defines an AST layout, remark-mdx defines an AST
     // layout, both packages are part of our dependency tree, and somehow in
     // our build process we end up with neither format.
-    if (child.type == 'jsx' && child.value) {
+    if (child.type == "jsx" && child.value) {
       if (CUSTOM_LINK_START.test(child.value)) {
         insideCustomLink = true;
       } else if (CUSTOM_LINK_END.test(child.value)) {
