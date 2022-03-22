@@ -29,6 +29,7 @@ const CUSTOM_LINK_END = new RegExp("^</([a-zA-Z]+Link|a)>");
 
 function replace(node) {
   // If this is an empty node there's nothing to consider.
+  if (!node.children) return;
 
   // Do not replace abbreviations in headings because that appears to break the heading anchors.
   if (node.type == "heading") return;
@@ -40,8 +41,6 @@ function replace(node) {
   // This currently doesn't handle nesting of e.g.
   // <a><strong><abbr>... but we don't have that in docs.
   if (node.type == "link") return;
-
-  if (!node.children) return;
 
   let insideCustomLink = false;
 
