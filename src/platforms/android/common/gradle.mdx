@@ -22,7 +22,7 @@ buildscript {
 }
 
 plugins {
-    id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '2.0.0') }}"
+    id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
 }
 ```
 
@@ -34,12 +34,12 @@ buildscript {
 }
 
 plugins {
-    id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '2.0.0') }}"
+    id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
 }
 ```
 <Note>
 
-The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0.0](https://developer.android.com/studio/releases/gradle-plugin#7-0-0).
+The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0.0](https://developer.android.com/studio/releases/gradle-plugin#7-0-0). For older versions of the Android Gradle Plugin, use `io.sentry.android.gradle:2.+`.
 
 </Note>
 
@@ -51,27 +51,23 @@ We expose the following configuration values directly in your `app/build.gradle`
 import io.sentry.android.gradle.InstrumentationFeature
 
 sentry {
-    // Enables or disables the automatic upload of mapping files
-    // during a build. If you disable this, you'll need to manually
-    // upload the mapping files with sentry-cli when you do a release.
-    // Default is enabled.
-    // Deprecated in v3.0.0 and above
-    autoUpload = true
-    
     // Disables or enables the handling of Proguard mapping for Sentry.
     // If enabled the plugin will generate a UUID and will take care of
     // uploading the mapping to Sentry. If disabled, all the logic
     // related to proguard mapping will be excluded.
     // Default is enabled.
-    // Only available v3.0.0 and above.    
     includeProguardMapping = true
 
     // Whether the plugin should attempt to auto-upload the mapping file to Sentry or not.
     // If disabled the plugin will run a dry-run and just generate a UUID.
     // The mapping file has to be uploaded manually via sentry-cli in this case.
     // Default is enabled.
-    // Only available v3.0.0 and above.    
     autoUploadProguardMapping = true
+
+    // Experimental flag to turn on support for GuardSquare's tools integration (Dexguard and External Proguard).
+    // If enabled, the plugin will try to consume and upload the mapping file produced by Dexguard and External Proguard.
+    // Default is disabled.
+    experimentalGuardsquareSupport = false
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
@@ -88,7 +84,6 @@ sentry {
     // Enable or disable the tracing instrumentation.
     // Does auto instrumentation for specified features through bytecode manipulation.
     // Default is enabled.
-    // Only available v3.0.0 and above.
     tracingInstrumentation {
       enabled = true
 
@@ -103,27 +98,23 @@ sentry {
 import io.sentry.android.gradle.InstrumentationFeature
 
 sentry {
-    // Enables or disables the automatic upload of mapping files
-    // during a build. If you disable this, you'll need to manually
-    // upload the mapping files with sentry-cli when you do a release.
-    // Default is enabled.
-    // Deprecated in v3.0.0 and above
-    autoUpload.set(true)
-    
     // Disables or enables the handling of Proguard mapping for Sentry.
     // If enabled the plugin will generate a UUID and will take care of
     // uploading the mapping to Sentry. If disabled, all the logic
     // related to proguard mapping will be excluded.
     // Default is enabled.
-    // Only available v3.0.0 and above.       
     includeProguardMapping.set(true)
-    
+
     // Whether the plugin should attempt to auto-upload the mapping file to Sentry or not.
     // If disabled the plugin will run a dry-run and just generate a UUID.
     // The mapping file has to be uploaded manually via sentry-cli in this case.
     // Default is enabled.
-    // Only available v3.0.0 and above.       
     autoUploadProguardMapping.set(true)
+
+    // Experimental flag to turn on support for GuardSquare's tools integration (Dexguard and External Proguard).
+    // If enabled, the plugin will try to consume and upload the mapping file produced by Dexguard and External Proguard.
+    // Default is disabled.
+    experimentalGuardsquareSupport.set(false)
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
@@ -140,10 +131,9 @@ sentry {
     // Enable or disable the tracing instrumentation.
     // Does auto instrumentation for specified features through bytecode manipulation.
     // Default is enabled.
-    // Only available v3.0.0 and above.
     tracingInstrumentation {
       enabled.set(true)
-      
+
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
       // Defaults to all available values of InstrumentationFeature enum class.
       features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO))
@@ -183,9 +173,11 @@ sentry {
 }
 ```
 
-## ProGuard/R8
+## ProGuard/R8 & DexGuard
 
 The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded through environment variables or from a `sentry.properties` file in your project root.
+
+If you are using the Guardsquare's ProGuard or DexGuard tooling, you have to enable the `experimentalGuardsquareSupport` flag.
 
 Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
 
@@ -223,7 +215,7 @@ You can find your authentication token [on the Sentry API page](https://sentry.i
 
 ## Tracing Auto-instrumentation
 
-The plugin uses the [bytecode manipulation](https://www.infoq.com/articles/Living-Matrix-Bytecode-Manipulation/) framework to inject a code snippet 
+The plugin uses the [bytecode manipulation](https://www.infoq.com/articles/Living-Matrix-Bytecode-Manipulation/) framework to inject a code snippet
 that starts and finishes a [span](/product/sentry-basics/tracing/event-detail/#span-view) for common operations that can cause performance bottlenecks.
 This way potentially heavy operations are automatically measured without the need to manually instrument them.
 
