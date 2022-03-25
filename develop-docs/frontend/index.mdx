@@ -15,7 +15,7 @@ The frontend codebase is currently located under `src/sentry/static/sentry/app` 
 - Name a file meaningfully, based on the how the module's functions, or classes are used or the application section they are used in.
 - Unless necessary, don't use prefixes or suffixes (ie. `dataScrubbingEditModal`, `dataScrubbingAddModal`) instead favor names like `dataScrubbing/editModal`.
 
-### Using `index.(j|t)?(sx)`
+### Using `index.(j|t)sx?$`
 
 > Having an `index` file in a folder provides a way to implicitly import the main file without specifying it
 
@@ -23,7 +23,7 @@ The use of an index file should comply with the following rules:
 
 - If the folder is created to group components that are used together, and there is an entrypoint component, that uses the components within the grouping (examples, avatar, idBadge). The entrypoint component should be the index file.
 
-- *Don't* use an `index.(j|t)?(sx)` file if the folder contains components used in other parts of the app regardless of the entrypoint file. (ie, actionCreators, panels)
+- *Don't* use an `index.(j|t)sx?$` file if the folder contains components used in other parts of the app regardless of the entrypoint file. (ie, actionCreators, panels)
 
 - *Don't* use an index file just to re-export. Prefer importing individual components instead.
 
@@ -70,7 +70,7 @@ Both the `app/components/` and `app/views` folders contain React components.
 
 Components should have an associated `.stories.js` file that documents how it should be used.
 
-Run Storybook locally with `yarn storybook` or view the hosted version at `https://storybook.getsentry.net/`
+Run Storybook locally with `yarn storybook` or view the hosted version at `https://storybook.sentry.dev/`
 
 ### PropTypes
 
@@ -87,7 +87,7 @@ PropTypes.shape({
 })
 ```
 
-If you’re re-using a custom prop-type or passing around a common shared shape like an organization, project, or user, then be sure to import a proptype from our useful collection of custom ones! [https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/sentryTypes.jsx](https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/sentryTypes.jsx)
+If you’re re-using a custom prop-type or passing around a common shared shape like an organization, project, or user, then be sure to import a proptype from our useful collection of custom ones! [https://github.com/getsentry/sentry/blob/master/static/app/sentryTypes.tsx](https://github.com/getsentry/sentry/blob/master/static/app/sentryTypes.tsx)
 
 ### Event handlers
 
@@ -128,8 +128,6 @@ const SomeComponent = styled('div')`
 export default SomeComponent;
 ```
 
-* Note that `reflexbox` (e.g. `Flex` and `Box`) is being deprecated, avoid using in new code.
-
 ### `stylelint` Errors
 
 #### "No duplicate selectors"
@@ -150,7 +148,7 @@ See https://styled-components.com/docs/tooling#interpolation-tagging for other t
 
 We currently use [Reflux](https://github.com/reflux/refluxjs) for managing global state.
 
-Reflux implements the unidirectional data flow pattern outlined by [Flux](https://facebook.github.io/flux/docs/overview.html). Stores are registered under `app/stores` and are used to store various pieces of data used by the application. Actions need to be registered under `app/actions`. We use action creator functions (under `app/actionCreators`) to dispatch actions. Reflux stores listen to actions and update themselves accordingly.
+Reflux implements the unidirectional data flow pattern outlined by [Flux](https://facebook.github.io/flux/). Stores are registered under `app/stores` and are used to store various pieces of data used by the application. Actions need to be registered under `app/actions`. We use action creator functions (under `app/actionCreators`) to dispatch actions. Reflux stores listen to actions and update themselves accordingly.
 
 We are currently exploring alternatives to the `Reflux` library for future use.
 
@@ -162,9 +160,9 @@ We are currently exploring alternatives to the `Reflux` library for future use.
 
 Note: Your filename needs to be .spec.jsx or jest won’t run it!
 
-We have useful fixtures defined in [setup.js](https://github.com/getsentry/sentry/blob/master/tests/js/setup.js) Use these! If you are defining mock data in a repetitive way, it’s probably worth adding this this file. routerContext is a particularly useful one for providing the context object that most view are written to rely on.
+We have useful fixtures defined in [setup.ts](https://github.com/getsentry/sentry/blob/master/tests/js/setup.ts) Use these! If you are defining mock data in a repetitive way, it’s probably worth adding this this file. routerContext is a particularly useful one for providing the context object that most view are written to rely on.
 
-Client.addMockResponse is the best way to mock API requests. it’s [our code](https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/__mocks__/api.jsx) so if it’s confusing you, just put `console.log()` statements into its logic!
+Client.addMockResponse is the best way to mock API requests. it’s [our code](https://github.com/getsentry/sentry/blob/master/static/app/__mocks__/api.tsx) so if it’s confusing you, just put `console.log()` statements into its logic!
 
 An important gotcha in our testing environment is the way that enzyme modifies many aspects of the react lifecycle to evaluate synchronously (even when they’re usually async). This can lull you into a false sense of security when you trigger some logic and don’t find it reflected immediately afterwards in your assert logic.
 
