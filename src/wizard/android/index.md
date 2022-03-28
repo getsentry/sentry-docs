@@ -116,12 +116,6 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 
 Check out [the documentation](https://docs.sentry.io/platforms/android/performance/instrumentation/) to learn more about the API and automatic instrumentations.
 
-> Want to play with some new features? Try out our alpha [Auto-Installation](https://docs.sentry.io/platforms/android/gradle/#auto-installation) feature.
->  
-> This feature is available in the Alpha release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/gradle); you must use version `3.1.0-alpha.1`. The `autoInstallation` option is enabled by default, so Sentry automatically installs the Sentry Android SDK dependency and [Timber](https://docs.sentry.io/platforms/android/configuration/integrations/timber/), [OkHttp](https://docs.sentry.io/platforms/android/configuration/integrations/okhttp/) and [Fragment](https://docs.sentry.io/platforms/android/configuration/integrations/fragment/) integrations. Features in Alpha are still a work-in-progress and may have bugs. We recognize the irony.
->
-> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-android-gradle-plugin/issues).
-
 ### Next Steps
 
 Using ProGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
