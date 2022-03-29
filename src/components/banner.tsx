@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop: Learn how Causal set up distributed tracing to quickly solve their performance bottlenecks on Mar. 30 @ 10:00 AM PT.";
+  "Live Workshop: See how Forethought used Discover and Dashboards to increase developer autonomy and workflow efficiency on Apr. 6 @ 10:00 AM PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/performance-workshop-causal-app/?promo_name=docs-banner";
+  "https://sentry.io/resources/growing-with-sentry-engineering-manager-tips/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
