@@ -55,15 +55,17 @@ import hashlib
 import hmac
 import json
 
-expected = request.headers['sentry-hook-signature']
+expected_digest = request.headers['sentry-hook-signature']
 body = json.dumps(request.body)
+
 digest = hmac.new(
     key=client_secret.encode('utf-8'),
     msg=body,
     digestmod=hashlib.sha256,
 ).hexdigest()
 
-if digest != expected:
+
+if digest != expected_digest:
     raise UnauthorizedError
 ```
 
