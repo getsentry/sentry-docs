@@ -110,6 +110,26 @@ def test_success(self):
         # Run you logic with a feature off.
 ```
 
+### Notes on Database Tests
+
+For the love of god please stop writing tests using the Django test case.  However
+if for whatever reason you are extending on of them and you do not feel motivated
+enough to convert them into function style tests be extra careful about using it
+for non database related functionality.
+
+The django `TestCase` class incurs an incredibly high cost due to database management
+and we have some tests that do not require the database.  To check if your new tests
+are unnecessarily using the database export the `SENTRY_DETECT_TESTCASE_MISUSE`
+environment variable and set it to `1`:
+
+```
+SENTRY_DETECT_TESTCASE_MISUSE=1 pytest my_new_test.py
+```
+
+If the test runner detects that you used the Django `TestCase` class but you did not
+end up needing it, it will yell at you.  This is protects you against other
+developers yelling at you later for slowing down CI.
+
 ### External Services
 
 Use the `responses` library to add stub responses for an outbound API requests your code is making.
