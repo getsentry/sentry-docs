@@ -67,6 +67,37 @@ export default async ({ graphql }) => {
   await writeJson(output, nodes, platformRegistry);
 };
 
+const parsePathSlug = (slug: string) => {
+  if (slug.includes("performance-onboarding")) {
+    const pathMatch = slug.match(
+      /^\/(?<platform>[^/]+)\/performance-onboarding\/(?<sub_platform>[^/]+)\/(?<step>[^/]+)\/$/
+    );
+    const { platform, sub_platform } = pathMatch.groups;
+    let step = pathMatch.groups.step;
+    step = String(step).replace(/\./g, "-");
+    let sub = `performance-onboarding-${sub_platform}-${step}`;
+
+    if (platform === pathMatch.groups.sub_platform) {
+      sub = `performance-onboarding-${step}`;
+    }
+
+    return {
+      platform,
+      sub,
+    };
+  }
+
+  const pathMatch = slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
+  if (!pathMatch) throw new Error("cant identify language");
+
+  const [, main, sub] = pathMatch;
+
+  return {
+    platform: main,
+    sub: sub,
+  };
+};
+
 const writeJson = async (
   path: string,
   nodes,
@@ -75,10 +106,8 @@ const writeJson = async (
   const platforms = [];
   const indexJson = {};
   nodes.forEach(node => {
-    const pathMatch = node.fields.slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
-    if (!pathMatch) throw new Error("cant identify language");
-    // eslint-disable-next-line no-unused-vars
-    const [, main, sub] = pathMatch;
+    const { platform: main, sub } = parsePathSlug(node.fields.slug);
+
     if (!indexJson[main]) indexJson[main] = {};
     if (!node.frontmatter.doc_link) {
       throw new Error(
