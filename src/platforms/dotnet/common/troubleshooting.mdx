@@ -11,4 +11,55 @@ so that it's aware of it](https://docs.microsoft.com/aspnet/core/host-and-deploy
 
 See [this GitHub issue] (https://github.com/getsentry/sentry-dotnet/issues/258) for more context.
 
+## Unhandled exceptions are not captured when using an async `Main` method
+
+Starting with C# 7.1, a program's [`Main` method](https://docs.microsoft.com/dotnet/csharp/fundamentals/program-structure/main-command-line) can be declared either synchronously or asynchronously.  Unfortunately, the asynchronous approach is not fully compatible with the Sentry SDK.  If your application uses an async `Main` method, the Sentry SDK will be disposed before an unhandled exception could possibly be captured.
+
+In other words, this is insufficient:
+
+```csharp
+static async Task Main()
+{
+    using var _ = SentrySdk.Init(o => { /* your options */ });
+    await DoSomethingAsync(); // an unhandled exception here will not be captured by Sentry
+}
+```
+
+There are two different ways to work around this issue:
+
+- You can avoid unhandled exceptions by wrapping your code in a try/catch block:
+  ```csharp
+  static async Task Main()
+  {
+      using var _ = SentrySdk.Init(o => { /* your options */ });
+      try
+      {
+          await DoSomethingAsync();
+      }
+      catch (Exception ex)
+      {
+          SentrySdk.CaptureException(ex);
+      }
+  }
+  ```
+
+- You can use a synchronous `Main` method to ensure the Sentry SDK isn't disposed prematurely.
+
+  ```csharp
+  static void Main()
+  {
+      using var _ = SentrySdk.Init(o => { /* your options */ });
+      MainAsync().GetAwaiter().GetResult();
+  }
+
+  static async Task MainAsync()
+  {
+      await DoSomethingAsync();
+  }
+  ```
+
+  Note that with this approach, it is not advised to use `.Wait()` or `.Result`, as that would wrap unhandled exceptions in an `AggregateException`
+
+See [this GitHub issue] (https://github.com/getsentry/sentry-dotnet/issues/321) for more context.
+
 <PlatformContent includePath="troubleshooting" />
