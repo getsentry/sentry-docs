@@ -403,3 +403,50 @@ document.body.addEventListener(
 ```
 
 Remember to pass in `true` as the second parameter to `addEventListener()`. Without it, the event handler won't be called, since it's being added to the event target's ancestor rather than the event target itself, and unlike JavaScript runtime errors, `error` events resulting from load failures don't bubble, and therefore must be captured during the `capture` phase. For more information, see [the W3C spec](https://www.w3.org/TR/2003/NOTE-DOM-Level-3-Events-20031107/events.html#Events-phases).
+
+## Reducing Bundle Size
+
+Sentry ships with code that enables you to <PlatformLink to="/configuration/options/#debug">debug your Sentry configuration</PlatformLink>. While this code can be very useful in development environments, it is usually not necessary to include it in your production bundles where it takes up precious bytes. The JavaScript SDK uses special flags in its CommonJS and ESM distributions to facilitate tree-shaking of code sections that are used for debugging. Tree shaking is a way to remove unused code in your application during the build process.
+
+To mark any debug code as unused, we must replace debug flags in the sentry SDK with `false`. We outlined examples of how to do this in popular toolchains below.
+
+### Tree-shaking Debug Code with webpack
+
+To tree-shake Sentry debug code in your webpack bundles, we recommend using webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/). Use it to replace all occurrences of the `__SENTRY_DEBUG__` flag with `false`:
+
+```javascript {filename:webpack.config.js}
+const webpack = require("webpack");
+
+module.exports = {
+  // ... other options
+  plugins: [
+    new webpack.DefinePlugin({
+      __SENTRY_DEBUG__: false,
+    }),
+    // ... other plugins
+  ],
+};
+```
+
+### Tree-shaking Debug Code with rollup.js
+
+If you are using rollup.js, we recommend [rollup's replace plugin](https://www.npmjs.com/package/@rollup/plugin-replace) to replace all occurrences of `__SENTRY_DEBUG__` with `false`:
+
+```javascript {filename:rollup.config.js}
+import replace from "@rollup/plugin-replace";
+import { terser } from "rollup-plugin-terser";
+
+export default {
+  // ... other options
+  treeshake: "smallest", // recommended for best tree shaking results
+  plugins: [
+    replace({
+      preventAssignment: false,
+      values: {
+        __SENTRY_DEBUG__: false,
+      },
+    }),
+    // ... other plugins (best placed after)
+  ],
+};
+```
