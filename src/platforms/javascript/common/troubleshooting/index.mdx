@@ -441,7 +441,7 @@ export default {
   treeshake: "smallest", // recommended for best tree shaking results
   plugins: [
     replace({
-      preventAssignment: false,
+      preventAssignment: false, // not necessary because flags are not assigned to
       values: {
         __SENTRY_DEBUG__: false,
       },
@@ -450,3 +450,28 @@ export default {
   ],
 };
 ```
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+### Tree-shaking Debug Code with Next.js
+
+To tree-shake Sentry debug code in Next.js projects, you can use webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/). The following Next.js configuration will replace all occurrences of `__SENTRY_DEBUG__` in your bundles with `false`:
+
+```javascript {filename:next.config.js}
+const nextConfig = {
+  webpack: (config, { webpack }) => {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        __SENTRY_DEBUG__: false,
+      })
+    );
+
+    // return the modified config
+    return config;
+  },
+};
+```
+
+For more information on custom webpack configurations in Next.js see [Custom Webpack Config](https://nextjs.org/docs/api-reference/next.config.js/custom-webpack-config) in the Next.js docs.
+
+</PlatformSection>
