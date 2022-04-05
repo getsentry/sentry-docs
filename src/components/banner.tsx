@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Live Workshop: See how Forethought used Discover and Dashboards to increase developer autonomy and workflow efficiency on Apr. 6 @ 10:00 AM PT.";
+  "Atlassian scaled their developer efficiency in just a few days - see how in our live workshop on Apr. 13 @ 2:00 PM PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/growing-with-sentry-engineering-manager-tips/?promo_name=docs-banner";
+  "https://sentry.io/resources/upgrading-vs-migrating-atlassian-workshop/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
