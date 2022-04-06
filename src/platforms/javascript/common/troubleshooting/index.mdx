@@ -406,17 +406,17 @@ Remember to pass in `true` as the second parameter to `addEventListener()`. With
 
 ## Reducing Bundle Size
 
-Sentry ships with code that enables you to <PlatformLink to="/configuration/options/#debug">debug your Sentry configuration</PlatformLink>. While this code can be very useful in development environments, it's not typically necessary to include it in your production bundles where it takes up valuable space. The JavaScript SDK uses special flags in its CommonJS and ESM distributions to facilitate tree shaking of code sections that are used for debugging. Tree shaking is a way to remove unused code in your application during the build process.
+Sentry ships with code that enables you to debug your Sentry configuration, primarily through logging. While this code can be very useful in development environments, it's not typically necessary to include it in your production bundles where it takes up valuable space. The JavaScript SDK includes a special flag in its CommonJS and ESM distributions which can be used to facilitate [tree shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) (removal) of such code during the build process.
 
 <PlatformSection notSupported={["javascript.nextjs"]}>
-To mark any debug code as unused, you must replace debug flags in the Sentry SDK with `false`. We've outlined examples of how to do this in popular toolchains below.
+To make debugging code eligible for tree shaking, you must replace the `__SENTRY_DEBUG__` flag in the Sentry SDK with `false`. We've outlined examples of how to do this in popular toolchains below.
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript.nextjs"]}>
 
-### Tree Shaking Debug Code With webpack
+### Tree Shaking Debug Code With Webpack
 
-To tree shake Sentry debug code in your webpack bundles, we recommend using webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/). Use it to replace all occurrences of the `__SENTRY_DEBUG__` flag with `false`:
+To tree shake Sentry debug code in your webpack bundles, we recommend using webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/).
 
 ```javascript {filename:webpack.config.js}
 const webpack = require("webpack");
@@ -436,9 +436,9 @@ module.exports = {
 
 <PlatformSection notSupported={["javascript.nextjs"]}>
 
-### Tree Shaking Debug Code With rollup.js
+### Tree Shaking Debug Code With Rollup
 
-If you're using rollup.js, we recommend [rollup's replace plugin](https://www.npmjs.com/package/@rollup/plugin-replace) to replace all occurrences of `__SENTRY_DEBUG__` with `false`:
+If you're using `rollup.js`, we recommend using [Rollup's `replace` plugin](https://github.com/rollup/plugins/tree/master/packages/replace).
 
 ```javascript {filename:rollup.config.js}
 import replace from "@rollup/plugin-replace";
@@ -449,10 +449,7 @@ export default {
   treeshake: "smallest", // recommended for best tree shaking results
   plugins: [
     replace({
-      preventAssignment: false, // not necessary because flags are not assigned to
-      values: {
-        __SENTRY_DEBUG__: false,
-      },
+       __SENTRY_DEBUG__: false,
     }),
     // ... other plugins (best placed after)
   ],
@@ -465,7 +462,7 @@ export default {
 
 ### Tree Shaking Debug Code With Next.js
 
-To tree shake Sentry debug code in Next.js projects, you can use webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/). The following Next.js configuration will replace all occurrences of `__SENTRY_DEBUG__` in your bundles with `false`:
+To tree shake Sentry debug code in Next.js projects, you can use webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/) in your Next.js configuration.
 
 ```javascript {filename:next.config.js}
 const nextConfig = {
