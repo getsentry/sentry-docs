@@ -10,9 +10,6 @@
 const visit = require("unist-util-visit");
 
 const TERMS = {
-  DSN: "Data Source Name: Credentials used in SDK to send data to Sentry.",
-  transaction:
-    "A single instance of an activity you want to measure or track, like a page load.",
   quota: "The monthly number of events that you pay Sentry to track.",
 };
 
