@@ -24,7 +24,7 @@ type Props = {
 
 export default ({
   children,
-  sidebar,
+  sidebar = <Sidebar />,
   pageContext = {},
 }: Props): JSX.Element => {
   const searchPlatforms = [
@@ -42,9 +42,7 @@ export default ({
           id="sidebar"
         >
           <div className="toc">
-            <div className="text-white p-3">
-              {sidebar ? sidebar : <Sidebar />}
-            </div>
+            <div className="text-white p-3">{sidebar}</div>
           </div>
         </div>
       </div>
