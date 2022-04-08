@@ -1,0 +1,55 @@
+---
+title: Migration Guide
+description: "Learn about how to migrate between major versions of the JavaScript SDKs."
+sidebar_order: 2000
+---
+
+This page will outline how to migrate your applications between major versions of the Sentry SDK from version 6 onwards.
+
+## From 6.x to 7.x
+
+The main goal of version 7 is to reduce bundle size. This version is breaking because we removed deprecated APIs, upgraded our build tooling, and restructured npm package contents.
+Below we will outline all the breaking changes you should consider when upgrading.
+
+### Moving To ES6 For CommonJS Files
+
+The JavaScript world is moving forward, and so are we. From version 7 onwards the CommonJS files in Sentry JavaScript SDK packages will use ES6.
+
+If you need to support Internet Explorer 11 or old Node.js versions, we recommend using a preprocessing tool like [Babel](https://babeljs.io/) to convert Sentry packages to ES5.
+
+### Dropping Support for Node.js v6
+
+Node.js version 6 has reached end of life in April 2019. For Sentry JavaScript SDK version 7, we will no longer be supporting version 6 of Node.js.
+
+As far as SDK development goes, dropping support means no longer running integration tests for Node.js version 6, and also no longer handling edge cases specific to version 6.
+Running the new SDK version on Node.js v6 is therefore highly discouraged.
+
+### Removal Of Old Platform Integrations From `@sentry/integrations` Package
+
+The following classes will be removed from the `@sentry/integrations` package and can no longer be used:
+
+- `Angular`
+- `Ember`
+- `Vue`
+
+These classes have been superseded and were moved into their own packages, `@sentry/angular`, `@sentry/ember`, and `@sentry/vue` in a previous version.
+Refer to those packages if you want to integrate Sentry into your Angular, Ember, or Vue application.
+
+### Restructuring Of Package Content
+
+Up until now, we have published our packages on npm with the following structure:
+
+- `build` folder contained CDN bundles
+- `dist` folder contained CommonJS files and TypeScript declarations
+- `esm` folder contained ESM files and TypeScript declarations
+
+Moving forward the JavaScript SDK packages will generally have the following structure:
+
+- `cjs` folder contains CommonJS files
+- `esm` folder contains ESM files
+- `types` folder contains TypeScript declarations
+
+**CDN bundles of version 7 or higher will no longer be distributed through our npm package.**
+This means that most third-party CDNs like [unpkg](https://unpkg.com/) or [jsDelivr](https://www.jsdelivr.com/) will also not provide them.
+
+If you depend on any specific files in a Sentry JavaScript npm package, you will most likely need to update their references.
