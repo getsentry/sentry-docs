@@ -88,8 +88,9 @@ Several common uses for tags include:
 
 | Key / Token | Description | Feature | Type |
 | ----------- | ----------- | ---------- | ---- |
-| any()       | Returns the first available value, uses the min function to return a consistent view | Discover | n/a |
+| any() | Returns the first available value, uses the min function to return a consistent view | Discover | n/a |
 | apdex() | Returns transactions with the [Apdex score](/product/performance/metrics/#apdex) that was passed in | Discover | number | <!-- review -->
+| assigned | Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`. | Issues | team or org user | issues |
 | avg() | Average the numeric/duration values for a column | Discover | duration |
 | count() | Returns table rows that match the result of the count value and operator. | Discover | number | <!-- does this make sense? -->
 | count_if(column,operator,value) | The count of events that satisfy the condition passed to the parameters | Discover | number |
@@ -103,6 +104,7 @@ Several common uses for tags include:
 | device.charging | Whether the device was charging or not. Not a Boolean. | Discover | string |
 | device.family | Family of the device. Typically, the common part of a model name across generations. For example, iPhone, Samsung Galaxy. | Discover, Issues | string |
 | device.locale | Deprecated | Discover, Issues | string | <!-- question -->
+| device.model_id | Internal hardware revision to identify the device exactly | Issues | n/a | device context |
 | device.name | Details of the device | Discover | string | <!-- review -->
 | device.online | Whether the device was online or not. Not a Boolean. | Discover | string |
 | device.orientation | Can be either "portrait" or "landscape" and describes the orientation of the device | Discover, Issues | string |
@@ -113,6 +115,60 @@ Several common uses for tags include:
 | epm() | Events per minute. Count of events divided by the duration of the window. | Discover | number | <!-- question -->
 | eps() | Events per second. Count of events divided by the duration of the window. | Discover | number | <!-- question -->
 | error.handled | Optional flag indicating whether the user has handled the excpetion, for example, using try...catch. Values are `1/0` or `true/false` | Discover, Issues | Boolean |
+| error.mechanism | An optional object describing the mechanism that created this exception | Discover, Issues | array |
+| error.type | The type of exception. For example, ValueError. | Discover, Issues | array |
+| error.unhandled | The inversion of `error.handled`. An error is considered unhandled if at least one stack trace failed to handle the error. | Discover, Issues | boolean |
+| error.value | Original value of a fiel that causes or exhibits the error | Discover, Issues | array |
+| event.type | Type of the event (transaction, error, default, csp, and so on). Transaction is unvailable in **Issues**. | Discover, Issues | string |
+| failure_count() | Count of events with a `transaction.status` value that's in the list of failing ones. That is: `ok`, `cancelled`, `unknown`. | Discover | number |
+| failure_rate() | Count of failing transactions (see `failure_count`) divided by the total number of transactions for that row | Discover | number |
+| geo.city | Full name of the City | Discover, Issues | string |
+| geo.country_code | The ISO 3166-1 country code | Discover, Issues | string |
+| geo.region | Full name of the country | Discover, Issues | string |
+| handled | The same as `error.handled` but values are `yes/no` | Issues | error | <!--question-->
+| http.method | HTTP method of the [request](https://develop.sentry.dev/sdk/event-payloads/request/) that created this event | Discover, Issues | string |
+| http.status_code | Sent as a tag | Discover, Issues | string | <!-- we shoudl clarify this-->
+| http.url | Full URL of the request that caused the error, but without any parameters | Discover, Issues | string |
+| id | The event id. In **Issues** use only the ID value without the `id` key. | Discover | uuid |
+| issue | Errors in issues | Issues | string | error |
+| last_seen() | Datetime when the event was last ween. Equivalent to max(timestamp) | Discover | datetime | function | <!-- review -->
+| lastSeen | Datetime when the event was last seen. Equivalent to max(timestamp) | Issues | datetime | function | <!-- review -->
+| location | Location where the error happened | Discover, Issues | string | error |
+| max() | Returns the highest numeric/duration for a column | Discover | _depends_ | function | <!--let's clarify this-->
+| measurements.app_start_cold | A [cold start](/product/performance/mobile-vitals/#app-start) refers to when the app launches for the first time, after a reboot or update. The app is not in memory and no process exists. Returns cold starts matching the duration you define. | Discover | duration | measurements |
+| measurements.app_start_warm | A [warm start](/product/performance/mobile-vitals/#app-start) refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch. Returns warm starts matching the duration you define. | Discover | duration | measurements |
+| measurements.cls | [Cumulative Layout Shift (CLS)](/product/performance/web-vitals/#cumulative-layout-shift-cls) is the sum of individual layout shift scores for every unexpected element shift during the rendering process. Returns matching CLS scores. | Discover | number | measurements |
+| measurements.fcp | [First Contentful Paint (FCP)](/product/performance/web-vitals/#first-contentful-paint-fcp) measures the time for the first content to render in the viewport. Returns matching FCP durations. | Discover | duration | measurements |
+| measurements.fid | [First Input Delay (FID)](/product/performance/web-vitals/#first-input-delay-fid) measures the response time when the user tries to interact with the viewport. Returns matching FID durations. | Discover | duration | measurements |
+| measurements.fp | [First Paint (FP)](/product/performance/web-vitals/#first-paint-fp) measures the amount of time the first pixel takes to appear in the viewport, rendering any visual change from what was previously displayed. Returns matching FP durations. | Discover | duration | measurements |
+| measurements.frames_frozen | [Slow and frozen frames](/product/performance/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app. Returns events with the matching number of frozen frames. | Discover | number | measurements |
+| measurements.frames_frozen_rate | Returns the number of frozen frames compared to the number of total frames | Discover | number | measurements |
+| measurements.slow | [Slow and frozen frames](/product/performance/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app. Returns events with the matching number of slow frames. | Discover | number | measurements |
+| measurements.frames_slow_rate | Returns the number of slow frames compared to the number of total frames | Discover | number | measurements |
+| measurements.frames_total | Returns the total number of frames | Discover | number | measurements |
+| measurements.lcp | [Largest Contentful Paint (LCP)](/product/performance/web-vitals/#largest-contentful-paint-lcp) measures the render time for the largest content to appear in the viewport. Returns matching LCP durations. | Discover | duration | measurements |
+| measurements.stall_count | A [stall](/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking) is when the JavaScript event loop takes longer than expected to complete. Returns transaction events with a matching total stall count. Only applies to React Native. | Discover | number | measurements |
+| measurements.stall_longest_time | Returns transaction events with matching [longest stall time]((/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking)): the time, in milliseconds, of the longest event loop stall. Only applies to React Native. | Discover | duration | measurements |
+| measurements.stall_percentage | Stall percentage is equal to the `stall_total_time` value divided by the `transaction.duration` value. Returns transaction events with matching percentages. Only applies to React Native. | Discover | number | measurements |
+| measurements.stall_total_time | Returns transaction events with matching [total stall time](/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking): the total combined time, in milliseconds, of all stalls. Only applies to React Native.| Discover | duration | measurements |
+| measurements.ttfb | [Time To First Byte (TTFB)](/product/performance/web-vitals/#time-to-first-byte-ttfb) measures the time that it takes for a user's browser to receive the first byte of page content. Returns transaction events with matching TTFB durations. | Discover | duration | measurements |
+| measurements.ttfb.requesttime | The time between start of the request and start of the response (see [diagram](https://web.dev/ttfb/#what-is-ttfb)). Returns transaction events with matching TTFB request time durations. | Discover | duration | measurements |
+| message | Returns errors with the matching message or transactions with matching transaction name. Also matches on any message containing the supplied value. Searching `message:undefined` will match an event with a message of undefined is not an object. Raw text searches (searches without the message key) are also checked against this field. For errors, the message can be a concatenatenation of elements, so searches might include unexpected results. | Discover, Issues | string | error | <!--rview this esp group -->
+| min() | Returns the lowest numberic/duration value for a column | Discover | depends | function |  <!--review-->
+| measurements.fcp |  | Discover |  | measurements |
+| measurements.fcp |  | Discover |  | measurements |
+| measurements.fcp |  | Discover |  | measurements |
+
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
 |  |  |  |  |
 | timesSeen | Returns table rows that match the result of the count value and operator. | Issues | number | <!-- does this make sense? -->
 
