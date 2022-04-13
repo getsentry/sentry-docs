@@ -14,6 +14,10 @@ The release search properties are the only ones that matter in Releases.
 
 <!-- add para above on main search page as well? -->
 
+When filtering based on functions, if the function takes a parameter, that's part of the key/token and the filter still requires a value to work.
+
+Comparison operator - make sure this is defined somewhere
+
 ### Issue Properties
 
 [Issues](/product/issues/) are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
@@ -85,16 +89,16 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | Key / Token | Description | Feature | Type | Group |
 | ----------- | ----------- | ------- | ---- | ----- |
 | age | Returns issues created since the value defined. The syntax is similar to the Unix find command. Supported suffixes: `m -> minutes`, `h -> hours`, `d -> days`, `w -> weeks`. | Issues | relative time | issues |
-| any() | Returns the first available value. You must pass in a field. | Discover | depends | function | <!-- we said n/a instead of depends -->
-| apdex() | Returns transactions with the [Apdex score](/product/performance/metrics/#apdex) that was passed in | Discover | number | function | <!-- review -->
+| any(field) | Returns the first available value for the field that you've defined. Results are effectively random and may not be meaningful.  | Discover | matches field | function |
+| apdex(threshold) | Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Typically used with a comparison operator. | Discover | number | function |
 | assigned | Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`. | Issues | team or org user | issues |
 | assigned_or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`. | Issues | team or org user | issues |
-| avg() | Average the numeric/duration values for a column | Discover | duration | function |
+| avg(field) | Returns results with matching averages numeric/duration value for the field entered. Typically used with a comparison operator. | Discover | matches field | function |
 | bookmarks | Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or `me` for yourself. | Issues | team or org user | issues |
-| count() | Returns table rows that match the result of the count value and operator. | Discover | number | function | <!-- does this make sense? -->
-| count_if(column,operator,value) | The count of events that satisfy the condition passed to the parameters | Discover | number | function |
-| count_miserable() | Count of unique users that fall above the miserable threshold | Discover | number | function |
-| count_unique(field) | Count of the unique number of occurances of the value passed in | Discover | number | function | <!-- review -->
+| count() | Returns results with a matching count. (Same as `timesSeen`.) | Discover | number | function |
+| count_if(column,operator,value) | Returns results with a matching count that satisfy the condition passed to the parameters of the function. | Discover | number | function |
+| count_miserable(field,threshold) | Returns results with a matching count of unique instances of the field that fall above the miserable threshold | Discover | number | function |
+| count_unique(field) | Returns results with a matching count of the unique instances of the field entered. | Discover | number | function |
 | culprit | Deprecated. Won't be sent by newer SDKs | Discover | string | n/a |
 | device | Details of the device | Issues | string | device context | <!-- review -->
 | device.arch | CPU architecture | Discover, Issues | string | n/a |
@@ -111,8 +115,8 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | device.uuid | <!-- TO DO --> | Discover, Issues | uuid | device context |
 | dist | Used to distinguish build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build. | Discover, Issues | string | release |
 | environment | Sentry-supported tag intended to refer to your code deployment' naming convention. For example, development, testing, staging. [Learn more.](/product/sentry-basics/environments/) | Discover | string | environment |
-| epm() | Events per minute. Count of events divided by the duration of the window. | Discover | number | function | <!-- question -->
-| eps() | Events per second. Count of events divided by the duration of the window. | Discover | number | function | <!-- question -->
+| epm() | Returns results with a matching events-per-minute count. | Discover | number | function |
+| eps() | Returns results with a matching events-per-second count. | Discover | number | function |
 | error.handled | Optional flag indicating whether the user has handled the excpetion, for example, using try...catch. Values are `1/0` or `true/false` | Discover, Issues | boolean | error |
 | error.mechanism | An optional object describing the mechanism that created this exception | Discover, Issues | array | error |
 | error.type | The type of exception. For example, ValueError. | Discover, Issues | array | error |
@@ -120,8 +124,8 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | error.value | Original value of a fiel that causes or exhibits the error | Discover, Issues | array | error |
 | event.timestamp | Returns issues with matching datetime. | Issues | datetime | n/a | <!-- review-->
 | event.type | Type of the event (transaction, error, default, csp, and so on). Transaction is unvailable in **Issues**. | Discover, Issues | string | error |
-| failure_count() | Count of events with a `transaction.status` value that's in the list of failing ones. That is: `ok`, `cancelled`, `unknown`. | Discover | number | function |
-| failure_rate() | Count of failing transactions (see `failure_count`) divided by the total number of transactions for that row | Discover | number | function |
+| failure_count() | Returns results with a matching count of events with a `transaction.status` value that's in the list of failing ones. That is: `ok`, `cancelled`, `unknown`. | Discover | number | function |
+| failure_rate() | Returns results with a matching count of failing transactions (see `failure_count`) divided by the total count (`count()`). | Discover | number | function |
 | firstRelease | Returns issues first seen within a given release. Exact match on the version of a release, or `first-release:latest` to pick the most recent release. | Issues | datetime | issues |
 | firstSeen | Returns issues with a matching first time seen. Syntax is the same as `age`. | Issues | datetime | issues | <!-- review -->
 | geo.city | Full name of the City | Discover, Issues | string | n/a |
@@ -137,7 +141,7 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | last_seen() | Datetime when the event was last ween. Equivalent to max(timestamp) | Discover | datetime | function | <!-- review -->
 | lastSeen | Datetime when the event was last seen. Equivalent to max(timestamp) | Issues | datetime | function | <!-- review -->
 | location | Location where the error happened | Discover, Issues | string | error |
-| max() | Returns the highest numeric/duration for a column | Discover | _depends_ | function | <!--let's clarify this-->
+| max(numeric field) | Returns the highest numeric/duration for a column | Discover | _depends_ | function | <!--let's clarify this-->
 | measurements.app_start_cold | A [cold start](/product/performance/mobile-vitals/#app-start) refers to when the app launches for the first time, after a reboot or update. The app is not in memory and no process exists. Returns cold starts matching the duration you define. | Discover | duration | measurements |
 | measurements.app_start_warm | A [warm start](/product/performance/mobile-vitals/#app-start) refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch. Returns warm starts matching the duration you define. | Discover | duration | measurements |
 | measurements.cls | [Cumulative Layout Shift (CLS)](/product/performance/web-vitals/#cumulative-layout-shift-cls) is the sum of individual layout shift scores for every unexpected element shift during the rendering process. Returns matching CLS scores. | Discover | number | measurements |
@@ -157,14 +161,14 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | measurements.ttfb | [Time To First Byte (TTFB)](/product/performance/web-vitals/#time-to-first-byte-ttfb) measures the time that it takes for a user's browser to receive the first byte of page content. Returns transaction events with matching TTFB durations. | Discover | duration | measurements |
 | measurements.ttfb.requesttime | The time between start of the request and start of the response (see [diagram](https://web.dev/ttfb/#what-is-ttfb)). Returns transaction events with matching TTFB request time durations. | Discover | duration | measurements |
 | message | Returns errors with the matching message or transactions with matching transaction name. Also matches on any message containing the supplied value. Searching `message:undefined` will match an event with a message of undefined is not an object. Raw text searches (searches without the message key) are also checked against this field. For errors, the message can be a concatenatenation of elements, so searches might include unexpected results. | Discover, Issues | string | error | <!--review + clarify this esp group -->
-| min() | Returns the lowest numberic/duration value for a column | Discover | depends | function |  <!--review-->
+| min(numeric field) | Returns the lowest numberic/duration value for a column | Discover | depends | function |  <!--review-->
 | os.build | An optional tag indicating the internal build revision of the operating system | Discover, Issues | string | device context | <!--review -->
 | os.kernel_version | An optional tag indicating the independent kernel version string. This is typically the entire output of the `uname` syscall. | Discover, Issues | string | device context | <!-- review >
 | percentile(column,level) | Computes an approximate percentile of the first parameter (a) to the second parameter (b) level. | Discover | number | function | <!-- clarify this -->
 | platform | Name of the platform | Discover | string | n/a |
 | platform.name | Name of the platform | Issues | string | n/a |
 | project | The name of the project. In **Issues** you can only search by project ID. | Discover, Issues | string | environment | <!-- review -->
-| pXY() | Several aliases to common percentile functions (for example, p50, p75 and so on). | Discover | number | function | <!--clarify-->
+| pXY(duration field) | Several aliases to common percentile functions (for example, p50, p75 and so on). | Discover | number | function | <!--clarify-->
 | release | A release is a version of your code deployed to an environment. | Discover, Issues | string | release |
 | release.build | The number that identifies an iteration of your app. For example, `CFBundleVersion` on iOS or `versionCode` on Android. | Discover, Issues | number | release | <!--review -->
 | release.package | The unique identifier of the project/app. For example,`CFBundleIdentifier` on iOS or `packageName` on Android. | Discover, Issues | string | release | <!--review -->
@@ -185,8 +189,8 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | stack.module | Platform-specific module path. For example, `sentry.interfaces.Stacktrace.` In **Discover**, this is an array. In errors, this is a single value. | Discover, Issues | array, single value | n/a |
 | stack.package | The "package" the frame was contained in. Depending on the platform, this can be different things. For C#, it can be the name of the assembly. For native code, it can be the path of the dynamic library, etc. In **Discover**, this is an array. In errors, this is a single value. | Discover, Issues | array, single value | error | <!--what does etc mean here-->
 | stack.stack_level | <!--to do--> | Discover, Issues | array | error |
-| sum() | Adds all the numeric/duration values for a column. | Discover | depends | function | <!-- clarify->
-| timesSeen | Returns table rows that match the result of the count value and operator. | Issues | number | function | <!-- does this make sense? -->
+| sum(numeric field) | Adds all the numeric/duration values for a column. | Discover | depends | function | <!-- clarify->
+| timesSeen | Returns results with a matching count. (Same as `count()`.) | Issues | number | function | <!-- does this make sense? -->
 | timestamp | The finish timestamp of the transaction. Returns events with matching datetime. | Discover | datetime | n/a | <!--review event.timestamp-->
 | timestamp.to_day | Timestamp rounded down to the nearest day. | Discover | datetime | n/a |
 | timestamp.to_hour | Timestamp rounded down to the nearest hour. | Discover | datetime | n/a |
@@ -203,7 +207,7 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | user.id | Application-specific internal identifier for the user. | Discover, Issues | string | n/a |
 | user.ip | User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. | Discover, Issues | string | n/a |
 | user.username | Username, which is typically a better label than the `user.id`. | Discover, Issues | string | n/a |
-| user_misery() | User Misery is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (ms). It highlights transactions that have the highest impact on users. Returns transactions with the defined user misery value. | Discover | number | function | <!--review-->
+| user_misery(number) | User Misery is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (ms). It highlights transactions that have the highest impact on users. Returns transactions with the defined user misery value. | Discover | number | function | <!--review-->
 
 <!-- markdown-table - END -->
 <!-- prettier-ignore-end -->
