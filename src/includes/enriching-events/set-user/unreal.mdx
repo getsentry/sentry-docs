@@ -1,11 +1,17 @@
 ```cpp
-TSharedPtr<FJsonObject> user = MakeShareable(new FJsonObject);
-user->SetStringField("ip_address", "{{auto}}");
-user->SetStringField("email", "jane.doe@example.com");
+USentrySubsystem* SentrySubsystem = ...;
 
-TSharedPtr<FJsonObject> config = MakeShareable(new FJsonObject);
-config->SetObjectField("user", user);
-}
+TMap<FString, FString> AdditionalData;
+AdditionalData.Add("DogName", "Spot");
+
+USentryUser* User = NewObject<USentryUser>();
+User->SetEmail("user@sentry.io");
+User->SetId("123");
+User->SetUsername("AwesomeUser99");
+User->SetIpAddress("127.0.0.1");
+User->SetData(AdditionalData);
+
+SentrySubsystem->SetUser(User);
 ```
 
-Provide this configuration to the crash reporter [during initialization](/platforms/unreal/advanced-config/).
+Alternatively, this configuration cab be provided to the crash reporter [during initialization](/platforms/unreal/setup-crashreport/#configure-attributes).
