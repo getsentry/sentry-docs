@@ -41,855 +41,988 @@ When searching on event properties within the **Issues** page, the search will r
 Below is a list of event-level keys and tokens reserved and known to Sentry:
 
 <!-- prettier-ignore-start -->
-<table>
-    <tr>
-        <td style="width: 10%;">Key / Token</td>
-        <td style="width: 75%;">Description</td>
-        <td style="width: 2.5%;">E</td>
-        <td style="width: 2.5%;">I</td>
-        <td style="width: 10%;">Type</td>
-    </tr>
-    <tr>
-        <td>age</td>
-        <td>Returns issues created since the value defined. The syntax is similar to the Unix find command. Supported suffixes: `m -&amp;gt; minutes`, `h -&amp;gt; hours`, `d -&amp;gt; days`, `w -&amp;gt; weeks`.</td>
-        <td></td>
-        <td>x</td>
-        <td>relative time</td>
-    </tr>
-    <tr>
-        <td>any(field)</td>
-        <td>Returns the first available value for the field that you've defined. Results are effectively random and may not be meaningful.</td>
-        <td></td>
-        <td></td>
-        <td>matches field</td>
-    </tr>
-    <tr>
-        <td>apdex(threshold)</td>
-        <td>Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Typically used with a comparison operator.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>assigned</td>
-        <td>Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`.</td>
-        <td></td>
-        <td>x</td>
-        <td>team or org user</td>
-    </tr>
-    <tr>
-        <td>assigned_or_suggested</td>
-        <td>Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`.</td>
-        <td></td>
-        <td>x</td>
-        <td>team or org user</td>
-    </tr>
-    <tr>
-        <td>avg(field)</td>
-        <td>Returns results with matching averages numeric/duration value for the field entered. Typically used with a comparison operator.</td>
-        <td>x</td>
-        <td></td>
-        <td>matches field</td>
-    </tr>
-    <tr>
-        <td>bookmarks</td>
-        <td>Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or `me` for yourself.</td>
-        <td></td>
-        <td>x</td>
-        <td>team or org user</td>
-    </tr>
-    <tr>
-        <td>count()</td>
-        <td>Returns results with a matching count. (Same as `timesSeen`.)</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>count_if(column,operator,value)</td>
-        <td>Returns results with a matching count that satisfy the condition passed to the parameters of the function.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>count_miserable(field,threshold)</td>
-        <td>Returns results with a matching count of unique instances of the field that fall above the miserable threshold</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>count_unique(field)</td>
-        <td>Returns results with a matching count of the unique instances of the field entered.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>culprit</td>
-        <td>Deprecated. Won't be sent by newer SDKs</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device</td>
-        <td>Details of the device</td>
-        <td></td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.arch</td>
-        <td>CPU architecture</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.battery_level</td>
-        <td>If the device has a battery, this can be a floating point value defining the battery level (in the range 0-100).</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.brand</td>
-        <td>Brand of the device</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.charging</td>
-        <td>Whether the device was charging or not. Not a Boolean.</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.family</td>
-        <td>Family of the device. Typically, the common part of a model name across generations. For example, iPhone, Samsung Galaxy.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.locale</td>
-        <td>Deprecated</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.model_id</td>
-        <td>Internal hardware revision to identify the device exactly</td>
-        <td></td>
-        <td>x</td>
-        <td>n/a</td>
-    </tr>
-    <tr>
-        <td>device.name</td>
-        <td>Details of the device</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.online</td>
-        <td>Whether the device was online or not. Not a Boolean.</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.orientation</td>
-        <td>Can be either "portrait" or "landscape" and describes the orientation of the device</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.simulator</td>
-        <td>Indicates whether this device is a simulator or a real device. Can either be the string "True" or "False".</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>device.uuid</td>
-        <td>&amp;lt;!-- TO DO --&amp;gt;</td>
-        <td>x</td>
-        <td>x</td>
-        <td>uuid</td>
-    </tr>
-    <tr>
-        <td>dist</td>
-        <td>Used to distinguish build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>environment</td>
-        <td>Sentry-supported tag intended to refer to your code deployment' naming convention. For example, development, testing, staging. [Learn more.](/product/sentry-basics/environments/)</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>epm()</td>
-        <td>Returns results with a matching events-per-minute count.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>eps()</td>
-        <td>Returns results with a matching events-per-second count.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>error.handled</td>
-        <td>Optional flag indicating whether the user has handled the excpetion, for example, using try...catch. Values are `1/0` or `true/false`</td>
-        <td>x</td>
-        <td>x</td>
-        <td>boolean</td>
-    </tr>
-    <tr>
-        <td>error.mechanism</td>
-        <td>An optional object describing the mechanism that created this exception</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>error.type</td>
-        <td>The type of exception. For example, ValueError.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>error.unhandled</td>
-        <td>The inversion of `error.handled`. An error is considered unhandled if at least one stack trace failed to handle the error.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>boolean</td>
-    </tr>
-    <tr>
-        <td>error.value</td>
-        <td>Original value of a fiel that causes or exhibits the error</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>event.timestamp</td>
-        <td>Returns issues with matching datetime.</td>
-        <td></td>
-        <td>x</td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>event.type</td>
-        <td>Type of the event (transaction, error, default, csp, and so on). Transaction is unvailable in **Issues**.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>failure_count()</td>
-        <td>Returns results with a matching count of events with a `transaction.status` value that's in the list of failing ones. That is: `ok`, `cancelled`, `unknown`.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>failure_rate()</td>
-        <td>Returns results with a matching count of failing transactions (see `failure_count`) divided by the total count (`count()`).</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>firstRelease</td>
-        <td>Returns issues first seen within a given release. Exact match on the version of a release, or `first-release:latest` to pick the most recent release.</td>
-        <td></td>
-        <td>x</td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>firstSeen</td>
-        <td>Returns issues with a matching first time seen. Syntax is the same as `age`.</td>
-        <td></td>
-        <td>x</td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>geo.city</td>
-        <td>Full name of the City</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>geo.country_code</td>
-        <td>The ISO 3166-1 country code</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>geo.region</td>
-        <td>Full name of the country</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>handled</td>
-        <td>The same as `error.handled` but values are `yes/no`</td>
-        <td></td>
-        <td>x</td>
-        <td>error</td>
-    </tr>
-    <tr>
-        <td>http.method</td>
-        <td>HTTP method of the [request](https://develop.sentry.dev/sdk/event-payloads/request/) that created this event</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>http.status_code</td>
-        <td>Sent as a tag</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>http.url</td>
-        <td>Full URL of the request that caused the error, but without any parameters</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>id</td>
-        <td>The event id. In **Issues** use only the ID value without the `id` key.</td>
-        <td>x</td>
-        <td></td>
-        <td>uuid</td>
-    </tr>
-    <tr>
-        <td>is</td>
-        <td>Filters on various properties of an issue</td>
-        <td></td>
-        <td>x</td>
-        <td>status</td>
-    </tr>
-    <tr>
-        <td>issue</td>
-        <td>Errors in issues</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>last_seen()</td>
-        <td>Datetime when the event was last ween. Equivalent to max(timestamp)</td>
-        <td>x</td>
-        <td></td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>lastSeen</td>
-        <td>Datetime when the event was last seen. Equivalent to max(timestamp)</td>
-        <td></td>
-        <td>x</td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>location</td>
-        <td>Location where the error happened</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>max(numeric field)</td>
-        <td>Returns the highest numeric/duration for a column</td>
-        <td>x</td>
-        <td></td>
-        <td>matches field</td>
-    </tr>
-    <tr>
-        <td>measurements.app_start_cold</td>
-        <td>A [cold start](/product/performance/mobile-vitals/#app-start) refers to when the app launches for the first time, after a reboot or update. The app is not in memory and no process exists. Returns cold starts matching the duration you define.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.app_start_warm</td>
-        <td>A [warm start](/product/performance/mobile-vitals/#app-start) refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch. Returns warm starts matching the duration you define.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.cls</td>
-        <td>[Cumulative Layout Shift (CLS)](/product/performance/web-vitals/#cumulative-layout-shift-cls) is the sum of individual layout shift scores for every unexpected element shift during the rendering process. Returns matching CLS scores.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.fcp</td>
-        <td>[First Contentful Paint (FCP)](/product/performance/web-vitals/#first-contentful-paint-fcp) measures the time for the first content to render in the viewport. Returns matching FCP durations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.fid</td>
-        <td>[First Input Delay (FID)](/product/performance/web-vitals/#first-input-delay-fid) measures the response time when the user tries to interact with the viewport. Returns matching FID durations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.fp</td>
-        <td>[First Paint (FP)](/product/performance/web-vitals/#first-paint-fp) measures the amount of time the first pixel takes to appear in the viewport, rendering any visual change from what was previously displayed. Returns matching FP durations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.frames_frozen</td>
-        <td>[Slow and frozen frames](/product/performance/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app. Returns events with the matching number of frozen frames.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.frames_frozen_rate</td>
-        <td>Returns the number of frozen frames compared to the number of total frames</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.slow</td>
-        <td>[Slow and frozen frames](/product/performance/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app. Returns events with the matching number of slow frames.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.frames_slow_rate</td>
-        <td>Returns the number of slow frames compared to the number of total frames</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.frames_total</td>
-        <td>Returns the total number of frames</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.lcp</td>
-        <td>[Largest Contentful Paint (LCP)](/product/performance/web-vitals/#largest-contentful-paint-lcp) measures the render time for the largest content to appear in the viewport. Returns matching LCP durations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.stall_count</td>
-        <td>A [stall](/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking) is when the JavaScript event loop takes longer than expected to complete. Returns transaction events with a matching total stall count. Only applies to React Native.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.stall_longest_time</td>
-        <td>Returns transaction events with matching [longest stall time](platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking): the time, in milliseconds, of the longest event loop stall. Only applies to React Native.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.stall_percentage</td>
-        <td>Stall percentage is equal to the `stall_total_time` value divided by the `transaction.duration` value. Returns transaction events with matching percentages. Only applies to React Native.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>measurements.stall_total_time</td>
-        <td>Returns transaction events with matching [total stall time](/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking): the total combined time, in milliseconds, of all stalls. Only applies to React Native.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.ttfb</td>
-        <td>[Time To First Byte (TTFB)](/product/performance/web-vitals/#time-to-first-byte-ttfb) measures the time that it takes for a user's browser to receive the first byte of page content. Returns transaction events with matching TTFB durations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>measurements.ttfb.requesttime</td>
-        <td>The time between start of the request and start of the response (see [diagram](https://web.dev/ttfb/#what-is-ttfb)). Returns transaction events with matching TTFB request time durations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>message</td>
-        <td>Returns errors with the matching message or transactions with matching transaction name. Also matches on any message containing the supplied value. Searching `message:` will match an event with a message of undefined is not an object. Raw text searches (searches without the message key) are also checked against this field. For errors, the message can be a concatenatenation of elements, so searches might include unexpected results.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>min(numeric field)</td>
-        <td>Returns the lowest numberic/duration value for a column</td>
-        <td>x</td>
-        <td></td>
-        <td>matches field</td>
-    </tr>
-    <tr>
-        <td>os.build</td>
-        <td>An optional tag indicating the internal build revision of the operating system</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>os.kernel_version</td>
-        <td>An optional tag indicating the independent kernel version string. This is typically the entire output of the `uname` syscall.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>percentile(column,level)</td>
-        <td>Computes an approximate percentile of the first parameter (a) to the second parameter (b) level.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>platform</td>
-        <td>Name of the platform</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>platform.name</td>
-        <td>Name of the platform</td>
-        <td></td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>project</td>
-        <td>The name of the project. In **Issues** you can only search by project ID.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>pXY(duration field)</td>
-        <td>Several aliases to common percentile functions (for example, p50, p75 and so on).</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>release</td>
-        <td>A release is a version of your code deployed to an environment.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>release.build</td>
-        <td>The number that identifies an iteration of your app. For example, `CFBundleVersion` on iOS or `versionCode` on Android.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>release.package</td>
-        <td>The unique identifier of the project/app. For example,`CFBundleIdentifier` on iOS or `packageName` on Android.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>release.stage</td>
-        <td>The usage your release is seeing relative to other releases. Values can be `adopted`, `low`, or `replaced`. [Learn more.](/product/releases/health/#adoption-stages).</td>
-        <td>x</td>
-        <td>x</td>
-        <td>enumeration</td>
-    </tr>
-    <tr>
-        <td>release.version</td>
-        <td>A shorter version of the name; name without the package or short version of the hash.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>sdk.name</td>
-        <td>Name of the Sentry SDK that sent the event.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>sdk.version</td>
-        <td>Version of the Sentry SDK that sent the event.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>spans.browser</td>
-        <td>Cumulative browser time for a transaction, based on the span operations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>spans.db</td>
-        <td>Cumulative db time for a transaction, based on span operations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>spans.http</td>
-        <td>Cumulative http time for a transaction, based on span operations.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>spans.resource</td>
-        <td>Cumulative resource time for a transaction, based on span operations.</td>
-        <td>Discoverx</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>stack.abs_path</td>
-        <td>Absolute path to the source file. In **Discover**, this is an array; in Errors, this is a single value.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array, single value</td>
-    </tr>
-    <tr>
-        <td>stack.colno</td>
-        <td>Column number of the call, starting at 1.</td>
-        <td>x</td>
-        <td></td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>stack.filename</td>
-        <td>Path toe the source file relative to the projet root directory. In **Discover**, this is an array. In errors, this is a single value.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array, single value</td>
-    </tr>
-    <tr>
-        <td>stack.function</td>
-        <td>Name of the function being called. In **Discover**, this is an array. In errors, this is a single value.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>stack.in_app</td>
-        <td>Signals whether this frame is related to the execution of the relevant code in this stack trace. For example, the frames that might power the framework’s web server of your app are probably not relevant. However, calls to the framework’s library once you start handling code likely are relevant.</td>
-        <td>x</td>
-        <td></td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>stack.lineno</td>
-        <td>Line number of the call, starting at 1.</td>
-        <td>x</td>
-        <td></td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>stack.module</td>
-        <td>Platform-specific module path. For example, `sentry.interfaces.Stacktrace.` In **Discover**, this is an array. In errors, this is a single value.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array, single value</td>
-    </tr>
-    <tr>
-        <td>stack.package</td>
-        <td>The "package" the frame was contained in. Depending on the platform, this can be different things. For C#, it can be the name of the assembly. For native code, it can be the path of the dynamic library, etc. In **Discover**, this is an array. In errors, this is a single value.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array, single value</td>
-    </tr>
-    <tr>
-        <td>stack.stack_level</td>
-        <td>&amp;lt;!--to do--&amp;gt;</td>
-        <td>x</td>
-        <td>x</td>
-        <td>array</td>
-    </tr>
-    <tr>
-        <td>sum(numeric field)</td>
-        <td>Adds all the numeric/duration values for a column.</td>
-        <td>x</td>
-        <td></td>
-        <td>matches field</td>
-    </tr>
-    <tr>
-        <td>timesSeen</td>
-        <td>Returns results with a matching count. (Same as `count()`.)</td>
-        <td></td>
-        <td>x</td>
-        <td>number</td>
-    </tr>
-    <tr>
-        <td>timestamp</td>
-        <td>The finish timestamp of the transaction. Returns events with matching datetime.</td>
-        <td>x</td>
-        <td></td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>timestamp.to_day</td>
-        <td>Timestamp rounded down to the nearest day.</td>
-        <td>x</td>
-        <td></td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>timestamp.to_hour</td>
-        <td>Timestamp rounded down to the nearest hour.</td>
-        <td>x</td>
-        <td></td>
-        <td>datetime</td>
-    </tr>
-    <tr>
-        <td>title</td>
-        <td>Title of the error or the transaction name.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>trace</td>
-        <td>Returns events with matching trace values.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>uuid</td>
-    </tr>
-    <tr>
-        <td>trace.parent_span</td>
-        <td>Span ID of the parent to the current transaction. This is null if the transaction is root.</td>
-        <td>x</td>
-        <td></td>
-        <td>uuid</td>
-    </tr>
-    <tr>
-        <td>trace.span</td>
-        <td>Span ID of the root span of the root transaction in the event.</td>
-        <td>x</td>
-        <td></td>
-        <td>uuid</td>
-    </tr>
-    <tr>
-        <td>transaction</td>
-        <td>For transactions, the name of the transaction. For errors, the name of the associated transaction.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>transaction.duration</td>
-        <td>Duration, in milliseconds, of the transaction.</td>
-        <td>x</td>
-        <td></td>
-        <td>duration</td>
-    </tr>
-    <tr>
-        <td>transaction.op</td>
-        <td>Short code identifying the [type of operation the span](https://develop.sentry.dev/sdk/performance/span-operations/) is measuring.</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>transaction.status</td>
-        <td>Describes the status of the span/transaction. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/event-payloads/transaction/) for all possible statuses.</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>user.display</td>
-        <td>In order, the first available user field available: email, then username, then IP address.</td>
-        <td>x</td>
-        <td></td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>user.email</td>
-        <td>An alternative, or addition, to the username. Sentry is aware of email addresses and can therefore display things such as Gravatars and unlock messaging capabilities.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>user.id</td>
-        <td>Application-specific internal identifier for the user.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>user.ip</td>
-        <td>User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>user.username</td>
-        <td>Username, which is typically a better label than the `user.id`.</td>
-        <td>x</td>
-        <td>x</td>
-        <td>string</td>
-    </tr>
-    <tr>
-        <td>user_misery(number)</td>
-        <td>User Misery is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (ms). It highlights transactions that have the highest impact on users. Returns transactions with the defined user misery value.</td>
-        <td>x</td>
-        <td></td>
-        <td>number</td>
-    </tr>
+
+<table style="width: 100%;">
+    <tbody>
+        <tr>
+            <td style="width: 10%;">Key / Token</td>
+            <td style="width: 75%;">Description</td>
+            <td style="width: 2.5%;">E</td>
+            <td style="width: 2.5%;">I</td>
+            <td style="width: 10%;">Type</td>
+        </tr>
+        <tr>
+            <td>age</td>
+            <td>Returns issues created since the value defined. The syntax is similar to the Unix find command. Supported suffixes: <code>m - minutes</code>, <code>h - hours</code>, <code>d - days</code>, <code>w - weeks</code>.
+            </td>
+            <td></td>
+            <td>x</td>
+            <td>relative time</td>
+        </tr>
+        <tr>
+            <td>any(field)</td>
+            <td>Returns the first available value for the field that you've defined. Results are effectively random and may not be meaningful.</td>
+            <td>x</td>
+            <td></td>
+            <td>matches field</td>
+        </tr>
+        <tr>
+            <td>apdex(threshold)</td>
+            <td>Returns results with the <a href="/product/performance/metrics/#apdex">Apdex score</a> that you entered. Values must be between `0` and `1`. Typically used with a comparison operator.
+            </td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>assigned</td>
+            <td>Returns issues assigned to the defined user. Values can be a user ID (your email address), <code>me</code> for yourself, <code>me_or_none</code> for yourself or no assignee, or <code>#team-name</code>.</td>
+            <td></td>
+            <td>x</td>
+            <td>team or org user</td>
+        </tr>
+        <tr>
+            <td>assigned_or_suggested</td>
+            <td>Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching <a href="/product/error-monitoring/issue-owners/">ownership rules</a> and <a href="/product/releases/suspect-commits/">suspect commits]</a>. Values can be a user ID (your email address), <code>me</code> for yourself, <code>me_or_none</code> for yourself or no assignee/suggestions, or <code>#team-name</code>`.</td>
+            <td></td>
+            <td>x</td>
+            <td>team or org user</td>
+        </tr>
+        <tr>
+            <td>avg(field)</td>
+            <td>Returns results with matching averages numeric/duration value for the field entered. Typically used with a comparison operator.</td>
+            <td>x</td>
+            <td></td>
+            <td>matches field</td>
+        </tr>
+        <tr>
+            <td>bookmarks</td>
+            <td>Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or <code>me</code> for yourself.</td>
+            <td></td>
+            <td>x</td>
+            <td>team or org user</td>
+        </tr>
+        <tr>
+            <td>count()</td>
+            <td>Returns results with a matching count. (Same as <code>timesSeen</code>.) No parameter.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>count_if(column,operator,value)</td>
+            <td>Returns results with a matching count that satisfy the condition passed to the parameters of the function.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>count_miserable(field,threshold)</td>
+            <td>Returns results with a matching count of unique instances of the field that fall above the miserable threshold</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>count_unique(field)</td>
+            <td>Returns results with a matching count of the unique instances of the field entered.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>culprit</td>
+            <td>Deprecated. Not sent by newer SDKs</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device</td>
+            <td>Details of the device</td>
+            <td></td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.arch</td>
+            <td>CPU architecture</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.battery_level</td>
+            <td>If the device has a battery, this can be a floating point value defining the battery level (in the range 0-100).</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.brand</td>
+            <td>Brand of the device</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.charging</td>
+            <td>Whether the device was charging or not. Not a Boolean.</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.family</td>
+            <td>Family of the device. Typically, the common part of a model name across generations. For example, iPhone, Samsung Galaxy.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.locale</td>
+            <td>Deprecated</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.model_id</td>
+            <td>Internal hardware revision to identify the device exactly</td>
+            <td></td>
+            <td>x</td>
+            <td>n/a</td>
+        </tr>
+        <tr>
+            <td>device.name</td>
+            <td>Details of the device</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.online</td>
+            <td>Whether the device was online or not. Not a Boolean.</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.orientation</td>
+            <td>Can be either "portrait" or "landscape" and describes the orientation of the device</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.simulator</td>
+            <td>Indicates whether this device is a simulator or a real device. Can either be the string "True" or "False".</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>device.uuid</td>
+            <td>&amp;lt;!-- TO DO --&amp;gt;</td>
+            <td>x</td>
+            <td>x</td>
+            <td>uuid</td>
+        </tr>
+        <tr>
+            <td>dist</td>
+            <td>Used to distinguish build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>environment</td>
+            <td>Sentry-supported tag intended to refer to your code deployment' naming convention. For example, development, testing, staging. <a href="/product/sentry-basics/environments/">Learn more.</a></td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>epm()</td>
+            <td>Returns results with a matching events-per-minute count.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>eps()</td>
+            <td>Returns results with a matching events-per-second count.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>error.handled</td>
+            <td>Optional flag indicating whether the user has handled the excpetion, for example, using try...catch. Values are <code>1/0</code> or <code>true/false</code></td>
+            <td>x</td>
+            <td>x</td>
+            <td>boolean</td>
+        </tr>
+        <tr>
+            <td>error.mechanism</td>
+            <td>An optional object describing the mechanism that created this exception</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>error.type</td>
+            <td>The type of exception. For example, ValueError.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>error.unhandled</td>
+            <td>The inversion of <code>error.handled</code>. An error is considered unhandled if at least one stack trace failed to handle the error.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>boolean</td>
+        </tr>
+        <tr>
+            <td>error.value</td>
+            <td>Original value of a fiel that causes or exhibits the error</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>event.timestamp</td>
+            <td>Returns issues with matching datetime.</td>
+            <td></td>
+            <td>x</td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>event.type</td>
+            <td>Type of the event (transaction, error, default, csp, and so on). Transaction is unvailable in <b>Issues</b>.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>failure_count()</td>
+            <td>Returns results with a matching count of events with a <code>transaction.status</code> value that's in the list of failing ones. That is: <code>ok</code>, <code>cancelled</code>, <code>unknown</code>.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>failure_rate()</td>
+            <td>Returns results with a matching count of failing transactions (see <code>failure_count</code>) divided by the total count (<code>count()</code>).</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>firstRelease</td>
+            <td>Returns issues first seen within a given release. Exact match on the version of a release, or <code>first-release:latest</code> to pick the most recent release.</td>
+            <td></td>
+            <td>x</td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>firstSeen</td>
+            <td>Returns issues with a matching first time seen. Syntax is the same as <code>age</code>.</td>
+            <td></td>
+            <td>x</td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>geo.city</td>
+            <td>Full name of the City</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>geo.country_code</td>
+            <td>The ISO 3166-1 country code</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>geo.region</td>
+            <td>Full name of the country</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>handled</td>
+            <td>The same as <code>error.handled</code> but values are <code>yes/no</code></td>
+            <td></td>
+            <td>x</td>
+            <td>error</td>
+        </tr>
+        <tr>
+            <td>http.method</td>
+            <td>HTTP method of the <a href="https://develop.sentry.dev/sdk/event-payloads/request/">request</a> that created this event</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>http.status_code</td>
+            <td>Sent as a tag</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>http.url</td>
+            <td>Full URL of the request that caused the error, but without any parameters</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>id</td>
+            <td>The event id. In <strong>Issues</strong>, use only the ID value without the <code>id</code> key.</td>
+            <td>x</td>
+            <td></td>
+            <td>uuid</td>
+        </tr>
+        <tr>
+            <td>is</td>
+            <td>Filters on various properties of an issue</td>
+            <td></td>
+            <td>x</td>
+            <td>status</td>
+        </tr>
+        <tr>
+            <td>issue</td>
+            <td>Errors in issues</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>last_seen()</td>
+            <td>Datetime when the event was last ween. Equivalent to max(timestamp)</td>
+            <td>x</td>
+            <td></td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>lastSeen</td>
+            <td>Datetime when the event was last seen. Equivalent to max(timestamp)</td>
+            <td></td>
+            <td>x</td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>location</td>
+            <td>Location where the error happened</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>max(numeric field)</td>
+            <td>Returns the highest numeric/duration for a column</td>
+            <td>x</td>
+            <td></td>
+            <td>matches field</td>
+        </tr>
+        <tr>
+            <td>measurements.app_start_cold</td>
+            <td>A <a href="/product/performance/mobile-vitals/#app-start">cold start</a> refers to when the app launches for the first time, after a reboot or update. The app is not in memory and no process exists. Returns cold starts matching the duration you define.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.app_start_warm</td>
+            <td>A <a href="/product/performance/mobile-vitals/#app-start">warm start</a> refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch. Returns warm starts matching the duration you define.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.cls</td>
+            <td><a href="/product/performance/web-vitals/#cumulative-layout-shift-cls">Cumulative Layout Shift (CLS)</a> is the sum of individual layout shift scores for every unexpected element shift during the rendering process. Returns matching CLS scores.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.fcp</td>
+            <td><a href="/product/performance/web-vitals/#first-contentful-paint-fcps">First Contentful Paint (FCP)</a> measures the time for the first content to render in the viewport. Returns matching FCP durations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.fid</td>
+            <td><a href="/product/performance/web-vitals/#first-input-delay-fid">First Input Delay (FID)</a> measures the response time when the user tries to interact with the viewport. Returns matching FID durations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.fp</td>
+            <td><a href="/product/performance/web-vitals/#first-paint-fp">First Paint (FP)</a> measures the amount of time the first pixel takes to appear in the viewport, rendering any visual change from what was previously displayed. Returns matching FP durations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.frames_frozen</td>
+            <td><a href="/product/performance/mobile-vitals/#slow-and-frozen-frames">Slow and frozen frames</a> measure the responsiveness of your app. Returns events with the matching number of frozen frames.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.frames_frozen_rate</td>
+            <td>Returns the number of frozen frames compared to the number of total frames</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.slow</td>
+            <td><a href="/product/performance/mobile-vitals/#slow-and-frozen-frames">Slow and frozen frames</a> measure the responsiveness of your app. Returns events with the matching number of slow frames.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.frames_slow_rate</td>
+            <td>Returns the number of slow frames compared to the number of total frames</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.frames_total</td>
+            <td>Returns the total number of frames</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.lcp</td>
+            <td><a href="/product/performance/web-vitals/#largest-contentful-paint-lcp">Largest Contentful Paint (LCP)</a> measures the render time for the largest content to appear in the viewport. Returns matching LCP durations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.stall_count</td>
+            <td>A <a href="/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking">stall</a> is when the JavaScript event loop takes longer than expected to complete. Returns transaction events with a matching total stall count. Only applies to React Native.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.stall_longest_time</td>
+            <td>Returns transaction events with matching <a href="/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking">longest stall time</a>: the time, in milliseconds, of the longest event loop stall. Only applies to React Native.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.stall_percentage</td>
+            <td>Stall percentage is equal to the <code>stall_total_time</code> value divided by the <code>transaction.duration</code> value. Returns transaction events with matching percentages. Only applies to React Native.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>measurements.stall_total_time</td>
+            <td>Returns transaction events with matching <a href="/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking">total stall time</a>: the total combined time, in milliseconds, of all stalls. Only applies to React Native.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.ttfb</td>
+            <td><a href="/product/performance/web-vitals/#time-to-first-byte-ttfb">Time To First Byte (TTFB)</a> measures the time that it takes for a user's browser to receive the first byte of page content. Returns transaction events with matching TTFB durations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>measurements.ttfb.requesttime</td>
+            <td>The time between start of the request and start of the response (see <a href="https://web.dev/ttfb/#what-is-ttfb">diagram</a>). Returns transaction events with matching TTFB request time durations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>message</td>
+            <td>Returns errors with the matching message or transactions with matching transaction name. Also matches on any message containing the supplied value. Searching <code>message:</code> will match an event with a message of undefined is not an object. Raw text searches (searches without the message key) are also checked against this field. For errors, the message can be a concatenatenation of elements, so searches might include unexpected results.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>min(numeric field)</td>
+            <td>Returns the lowest numberic/duration value for a column</td>
+            <td>x</td>
+            <td></td>
+            <td>matches field</td>
+        </tr>
+        <tr>
+            <td>os.build</td>
+            <td>An optional tag indicating the internal build revision of the operating system</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>os.kernel_version</td>
+            <td>An optional tag indicating the independent kernel version string. This is typically the entire output of the <code>uname</code> syscall.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>percentile(column,level)</td>
+            <td>Computes an approximate percentile of the first parameter (a) to the second parameter (b) level.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>platform</td>
+            <td>Name of the platform</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>platform.name</td>
+            <td>Name of the platform</td>
+            <td></td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>project</td>
+            <td>The name of the project. In <strong>Issues</strong> you can only search by project ID.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>pXY(duration field)</td>
+            <td>Several aliases to common percentile functions (for example, p50, p75 and so on).</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>release</td>
+            <td>A release is a version of your code deployed to an environment.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>release.build</td>
+            <td>The number that identifies an iteration of your app. For example, <code>CFBundleVersion</code> on iOS or <code>versionCode</code> on Android.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>release.package</td>
+            <td>The unique identifier of the project/app. For example,<code>CFBundleIdentifier</code> on iOS or <code>packageName</code> on Android.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>release.stage</td>
+            <td>The usage your release is seeing relative to other releases. Values can be <code>adopted</code>, <code>low</code>, or <code>replaced</code>. <a href="/product/releases/health/#adoption-stages">Learn more.</a></td>
+            <td>x</td>
+            <td>x</td>
+            <td>enumeration</td>
+        </tr>
+        <tr>
+            <td>release.version</td>
+            <td>A shorter version of the name; name without the package or short version of the hash.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>sdk.name</td>
+            <td>Name of the Sentry SDK that sent the event.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>sdk.version</td>
+            <td>Version of the Sentry SDK that sent the event.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>spans.browser</td>
+            <td>Cumulative browser time for a transaction, based on the span operations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>spans.db</td>
+            <td>Cumulative db time for a transaction, based on span operations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>spans.http</td>
+            <td>Cumulative http time for a transaction, based on span operations.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>spans.resource</td>
+            <td>Cumulative resource time for a transaction, based on span operations.</td>
+            <td>Discoverx</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>stack.abs_path</td>
+            <td>Absolute path to the source file. In <strong>Discover</strong>, this is an array; in Errors, this is a single value.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array, single value</td>
+        </tr>
+        <tr>
+            <td>stack.colno</td>
+            <td>Column number of the call, starting at 1.</td>
+            <td>x</td>
+            <td></td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>stack.filename</td>
+            <td>Path toe the source file relative to the projet root directory. In <strong>Discover</strong>, this is an array. In errors, this is a single value.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array, single value</td>
+        </tr>
+        <tr>
+            <td>stack.function</td>
+            <td>Name of the function being called. In <strong>Discover</strong>, this is an array. In errors, this is a single value.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>stack.in_app</td>
+            <td>Signals whether this frame is related to the execution of the relevant code in this stack trace. For example, the frames that might power the framework’s web server of your app are probably not relevant. However, calls to the framework’s library once you start handling code likely are relevant.</td>
+            <td>x</td>
+            <td></td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>stack.lineno</td>
+            <td>Line number of the call, starting at 1.</td>
+            <td>x</td>
+            <td></td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>stack.module</td>
+            <td>Platform-specific module path. For example, <code>sentry.interfaces.Stacktrace</code>. In <strong>Discover</strong>, this is an array. In errors, this is a single value.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array, single value</td>
+        </tr>
+        <tr>
+            <td>stack.package</td>
+            <td>The "package" the frame was contained in. Depending on the platform, this can be different things. For C#, it can be the name of the assembly. For native code, it can be the path of the dynamic library, etc. In <strong>Discover</strong>, this is an array. In errors, this is a single value.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array, single value</td>
+        </tr>
+        <tr>
+            <td>stack.stack_level</td>
+            <td>&amp;lt;!--to do--&amp;gt;</td>
+            <td>x</td>
+            <td>x</td>
+            <td>array</td>
+        </tr>
+        <tr>
+            <td>sum(numeric field)</td>
+            <td>Adds all the numeric/duration values for a column.</td>
+            <td>x</td>
+            <td></td>
+            <td>matches field</td>
+        </tr>
+        <tr>
+            <td>timesSeen</td>
+            <td>Returns results with a matching count. (Same as <code>count()</code>.)</td>
+            <td></td>
+            <td>x</td>
+            <td>number</td>
+        </tr>
+        <tr>
+            <td>timestamp</td>
+            <td>The finish timestamp of the transaction. Returns events with matching datetime.</td>
+            <td>x</td>
+            <td></td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>timestamp.to_day</td>
+            <td>Timestamp rounded down to the nearest day.</td>
+            <td>x</td>
+            <td></td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>timestamp.to_hour</td>
+            <td>Timestamp rounded down to the nearest hour.</td>
+            <td>x</td>
+            <td></td>
+            <td>datetime</td>
+        </tr>
+        <tr>
+            <td>title</td>
+            <td>Title of the error or the transaction name.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>trace</td>
+            <td>Returns events with matching trace values.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>uuid</td>
+        </tr>
+        <tr>
+            <td>trace.parent_span</td>
+            <td>Span ID of the parent to the current transaction. This is null if the transaction is root.</td>
+            <td>x</td>
+            <td></td>
+            <td>uuid</td>
+        </tr>
+        <tr>
+            <td>trace.span</td>
+            <td>Span ID of the root span of the root transaction in the event.</td>
+            <td>x</td>
+            <td></td>
+            <td>uuid</td>
+        </tr>
+        <tr>
+            <td>transaction</td>
+            <td>For transactions, the name of the transaction. For errors, the name of the associated transaction.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>transaction.duration</td>
+            <td>Duration, in milliseconds, of the transaction.</td>
+            <td>x</td>
+            <td></td>
+            <td>duration</td>
+        </tr>
+        <tr>
+            <td>transaction.op</td>
+            <td>Short code identifying the <a href="https://develop.sentry.dev/sdk/performance/span-operations/">type of operation the span</a> is measuring.</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>transaction.status</td>
+            <td>Describes the status of the span/transaction. Check out our <a href="https://develop.sentry.dev/sdk/event-payloads/transaction/">Transaction Payloads documentation</a> for all possible statuses.</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>user.display</td>
+            <td>In order, the first available user field available: email, then username, then IP address.</td>
+            <td>x</td>
+            <td></td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>user.email</td>
+            <td>An alternative, or addition, to the username. Sentry is aware of email addresses and can therefore display things such as Gravatars and unlock messaging capabilities.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>user.id</td>
+            <td>Application-specific internal identifier for the user.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>user.ip</td>
+            <td>User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>user.username</td>
+            <td>Username, which is typically a better label than the <code>user.id</code>.</td>
+            <td>x</td>
+            <td>x</td>
+            <td>string</td>
+        </tr>
+        <tr>
+            <td>user_misery(number)</td>
+            <td>User Misery is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (ms). It highlights transactions that have the highest impact on users. Returns transactions with the defined user misery value.</td>
+            <td>x</td>
+            <td></td>
+            <td>number</td>
+        </tr>
+    </tbody>
 </table>
+
+<!-- prettier-ignore-end -->
+
+<!-- prettier-ignore-start -->
+<!--
+| Key / Token | Description | E | I | Type |
+|---|---|---|---|---|
+| age | Returns issues created since the value defined. The syntax is similar to the Unix find command. Supported suffixes: `m -&gt; minutes`, `h -&gt; hours`, `d -&gt; days`, `w -&gt; weeks`. |  | x | relative time |
+| any(field) | Returns the first available value for the field that you've defined. Results are effectively random and may not be meaningful. | x |  | matches field |
+| apdex(threshold) | Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Typically used with a comparison operator. | x |  | number |
+| assigned | Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`. |  | x | team or org user |
+| assigned_or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`. |  | x | team or org user |
+| avg(field) | Returns results with matching averages numeric/duration value for the field entered. Typically used with a comparison operator. | x |  | matches field |
+| bookmarks | Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or `me` for yourself. |  | x | team or org user |
+| count() | Returns results with a matching count. (Same as `timesSeen`.) | x |  | number |
+| count_if(column,operator,value) | Returns results with a matching count that satisfy the condition passed to the parameters of the function. | x |  | number |
+| count_miserable(field,threshold) | Returns results with a matching count of unique instances of the field that fall above the miserable threshold | x |  | number |
+| count_unique(field) | Returns results with a matching count of the unique instances of the field entered. | x |  | number |
+| culprit | Deprecated. Won't be sent by newer SDKs | x |  | string |
+| device | Details of the device |  | x | string |
+| device.arch | CPU architecture | x | x | string |
+| device.battery_level | If the device has a battery, this can be a floating point value defining the battery level (in the range 0-100). | x |  | string |
+| device.brand | Brand of the device | x | x | string |
+| device.charging | Whether the device was charging or not. Not a Boolean. | x |  | string |
+| device.family | Family of the device. Typically, the common part of a model name across generations. For example, iPhone, Samsung Galaxy. | x | x | string |
+| device.locale | Deprecated | x | x | string |
+| device.model_id | Internal hardware revision to identify the device exactly |  | x | n/a |
+| device.name | Details of the device | x |  | string |
+| device.online | Whether the device was online or not. Not a Boolean. | x |  | string |
+| device.orientation | Can be either "portrait" or "landscape" and describes the orientation of the device | x | x | string |
+| device.simulator | Indicates whether this device is a simulator or a real device. Can either be the string "True" or "False". | x |  | string |
+| device.uuid | &lt;!-- TO DO --&gt; | x | x | uuid |
+| dist | Used to distinguish build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build. | x | x | string |
+| environment | Sentry-supported tag intended to refer to your code deployment' naming convention. For example, development, testing, staging. [Learn more.](/product/sentry-basics/environments/) | x |  | string |
+| epm() | Returns results with a matching events-per-minute count. | x |  | number |
+| eps() | Returns results with a matching events-per-second count. | x |  | number |
+| error.handled | Optional flag indicating whether the user has handled the excpetion, for example, using try...catch. Values are `1/0` or `true/false` | x | x | boolean |
+| error.mechanism | An optional object describing the mechanism that created this exception | x | x | array |
+| error.type | The type of exception. For example, ValueError. | x | x | array |
+| error.unhandled | The inversion of `error.handled`. An error is considered unhandled if at least one stack trace failed to handle the error. | x | x | boolean |
+| error.value | Original value of a fiel that causes or exhibits the error | x | x | array |
+| event.timestamp | Returns issues with matching datetime. |  | x | datetime |
+| event.type | Type of the event (transaction, error, default, csp, and so on). Transaction is unvailable in **Issues**. | x | x | string |
+| failure_count() | Returns results with a matching count of events with a `transaction.status` value that's in the list of failing ones. That is: `ok`, `cancelled`, `unknown`. | x |  | number |
+| failure_rate() | Returns results with a matching count of failing transactions (see `failure_count`) divided by the total count (`count()`). | x |  | number |
+| firstRelease | Returns issues first seen within a given release. Exact match on the version of a release, or `first-release:latest` to pick the most recent release. |  | x | datetime |
+| firstSeen | Returns issues with a matching first time seen. Syntax is the same as `age`. |  | x | datetime |
+| geo.city | Full name of the City | x | x | string |
+| geo.country_code | The ISO 3166-1 country code | x | x | string |
+| geo.region | Full name of the country | x | x | string |
+| handled | The same as `error.handled` but values are `yes/no` |  | x | error |
+| http.method | HTTP method of the [request](https://develop.sentry.dev/sdk/event-payloads/request/) that created this event | x | x | string |
+| http.status_code | Sent as a tag | x | x | string |
+| http.url | Full URL of the request that caused the error, but without any parameters | x | x | string |
+| id | The event id. In **Issues** use only the ID value without the `id` key. | x |  | uuid |
+| is | Filters on various properties of an issue |  | x | status |
+| issue | Errors in issues | x |  | string |
+| last_seen() | Datetime when the event was last ween. Equivalent to max(timestamp) | x |  | datetime |
+| lastSeen | Datetime when the event was last seen. Equivalent to max(timestamp) |  | x | datetime |
+| location | Location where the error happened | x | x | string |
+| max(numeric field) | Returns the highest numeric/duration for a column | x |  | matches field |
+| measurements.app_start_cold | A [cold start](/product/performance/mobile-vitals/#app-start) refers to when the app launches for the first time, after a reboot or update. The app is not in memory and no process exists. Returns cold starts matching the duration you define. | x |  | duration |
+| measurements.app_start_warm | A [warm start](/product/performance/mobile-vitals/#app-start) refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch. Returns warm starts matching the duration you define. | x |  | duration |
+| measurements.cls | [Cumulative Layout Shift (CLS)](/product/performance/web-vitals/#cumulative-layout-shift-cls) is the sum of individual layout shift scores for every unexpected element shift during the rendering process. Returns matching CLS scores. | x |  | number |
+| measurements.fcp | [First Contentful Paint (FCP)](/product/performance/web-vitals/#first-contentful-paint-fcp) measures the time for the first content to render in the viewport. Returns matching FCP durations. | x |  | duration |
+| measurements.fid | [First Input Delay (FID)](/product/performance/web-vitals/#first-input-delay-fid) measures the response time when the user tries to interact with the viewport. Returns matching FID durations. | x |  | duration |
+| measurements.fp | [First Paint (FP)](/product/performance/web-vitals/#first-paint-fp) measures the amount of time the first pixel takes to appear in the viewport, rendering any visual change from what was previously displayed. Returns matching FP durations. | x |  | duration |
+| measurements.frames_frozen | [Slow and frozen frames](/product/performance/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app. Returns events with the matching number of frozen frames. | x |  | number |
+| measurements.frames_frozen_rate | Returns the number of frozen frames compared to the number of total frames | x |  | number |
+| measurements.slow | [Slow and frozen frames](/product/performance/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app. Returns events with the matching number of slow frames. | x |  | number |
+| measurements.frames_slow_rate | Returns the number of slow frames compared to the number of total frames | x |  | number |
+| measurements.frames_total | Returns the total number of frames | x |  | number |
+| measurements.lcp | [Largest Contentful Paint (LCP)](/product/performance/web-vitals/#largest-contentful-paint-lcp) measures the render time for the largest content to appear in the viewport. Returns matching LCP durations. | x |  | duration |
+| measurements.stall_count | A [stall](/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking) is when the JavaScript event loop takes longer than expected to complete. Returns transaction events with a matching total stall count. Only applies to React Native. | x |  | number |
+| measurements.stall_longest_time | Returns transaction events with matching [longest stall time](platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking): the time, in milliseconds, of the longest event loop stall. Only applies to React Native. | x |  | duration |
+| measurements.stall_percentage | Stall percentage is equal to the `stall_total_time` value divided by the `transaction.duration` value. Returns transaction events with matching percentages. Only applies to React Native. | x |  | number |
+| measurements.stall_total_time | Returns transaction events with matching [total stall time](/platforms/react-native/performance/instrumentation/automatic-instrumentation/#stall-tracking): the total combined time, in milliseconds, of all stalls. Only applies to React Native. | x |  | duration |
+| measurements.ttfb | [Time To First Byte (TTFB)](/product/performance/web-vitals/#time-to-first-byte-ttfb) measures the time that it takes for a user's browser to receive the first byte of page content. Returns transaction events with matching TTFB durations. | x |  | duration |
+| measurements.ttfb.requesttime | The time between start of the request and start of the response (see [diagram](https://web.dev/ttfb/#what-is-ttfb)). Returns transaction events with matching TTFB request time durations. | x |  | duration |
+| message | Returns errors with the matching message or transactions with matching transaction name. Also matches on any message containing the supplied value. Searching `message:` will match an event with a message of undefined is not an object. Raw text searches (searches without the message key) are also checked against this field. For errors, the message can be a concatenatenation of elements, so searches might include unexpected results. | x | x | string |
+| min(numeric field) | Returns the lowest numberic/duration value for a column | x |  | matches field |
+| os.build | An optional tag indicating the internal build revision of the operating system | x | x | string |
+| os.kernel_version | An optional tag indicating the independent kernel version string. This is typically the entire output of the `uname` syscall. | x | x | string |
+| percentile(column,level) | Computes an approximate percentile of the first parameter (a) to the second parameter (b) level. | x |  | number |
+| platform | Name of the platform | x |  | string |
+| platform.name | Name of the platform |  | x | string |
+| project | The name of the project. In **Issues** you can only search by project ID. | x | x | string |
+| pXY(duration field) | Several aliases to common percentile functions (for example, p50, p75 and so on). | x |  | number |
+| release | A release is a version of your code deployed to an environment. | x | x | string |
+| release.build | The number that identifies an iteration of your app. For example, `CFBundleVersion` on iOS or `versionCode` on Android. | x | x | number |
+| release.package | The unique identifier of the project/app. For example,`CFBundleIdentifier` on iOS or `packageName` on Android. | x | x | string |
+| release.stage | The usage your release is seeing relative to other releases. Values can be `adopted`, `low`, or `replaced`. [Learn more.](/product/releases/health/#adoption-stages). | x | x | enumeration |
+| release.version | A shorter version of the name; name without the package or short version of the hash. | x | x | string |
+| sdk.name | Name of the Sentry SDK that sent the event. | x | x | string |
+| sdk.version | Version of the Sentry SDK that sent the event. | x | x | string |
+| spans.browser | Cumulative browser time for a transaction, based on the span operations. | x |  | duration |
+| spans.db | Cumulative db time for a transaction, based on span operations. | x |  | duration |
+| spans.http | Cumulative http time for a transaction, based on span operations. | x |  | duration |
+| spans.resource | Cumulative resource time for a transaction, based on span operations. | Discoverx |  | duration |
+| stack.abs_path | Absolute path to the source file. In **Discover**, this is an array; in Errors, this is a single value. | x | x | array, single value |
+| stack.colno | Column number of the call, starting at 1. | x |  | array |
+| stack.filename | Path toe the source file relative to the projet root directory. In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
+| stack.function | Name of the function being called. In **Discover**, this is an array. In errors, this is a single value. | x | x | array |
+| stack.in_app | Signals whether this frame is related to the execution of the relevant code in this stack trace. For example, the frames that might power the framework’s web server of your app are probably not relevant. However, calls to the framework’s library once you start handling code likely are relevant. | x |  | array |
+| stack.lineno | Line number of the call, starting at 1. | x |  | array |
+| stack.module | Platform-specific module path. For example, `sentry.interfaces.Stacktrace.` In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
+| stack.package | The "package" the frame was contained in. Depending on the platform, this can be different things. For C#, it can be the name of the assembly. For native code, it can be the path of the dynamic library, etc. In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
+| stack.stack_level | &lt;!--to do--&gt; | x | x | array |
+| sum(numeric field) | Adds all the numeric/duration values for a column. | x |  | matches field |
+| timesSeen | Returns results with a matching count. (Same as `count()`.) |  | x | number |
+| timestamp | The finish timestamp of the transaction. Returns events with matching datetime. | x |  | datetime |
+| timestamp.to_day | Timestamp rounded down to the nearest day. | x |  | datetime |
+| timestamp.to_hour | Timestamp rounded down to the nearest hour. | x |  | datetime |
+| title | Title of the error or the transaction name. | x | x | string |
+| trace | Returns events with matching trace values. | x | x | uuid |
+| trace.parent_span | Span ID of the parent to the current transaction. This is null if the transaction is root. | x |  | uuid |
+| trace.span | Span ID of the root span of the root transaction in the event. | x |  | uuid |
+| transaction | For transactions, the name of the transaction. For errors, the name of the associated transaction. | x | x | string |
+| transaction.duration | Duration, in milliseconds, of the transaction. | x |  | duration |
+| transaction.op | Short code identifying the [type of operation the span](https://develop.sentry.dev/sdk/performance/span-operations/) is measuring. | x |  | string |
+| transaction.status | Describes the status of the span/transaction. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/event-payloads/transaction/) for all possible statuses. | x |  | string |
+| user.display | In order, the first available user field available: email, then username, then IP address. | x |  | string |
+| user.email | An alternative, or addition, to the username. Sentry is aware of email addresses and can therefore display things such as Gravatars and unlock messaging capabilities. | x | x | string |
+| user.id | Application-specific internal identifier for the user. | x | x | string |
+| user.ip | User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. | x | x | string |
+| user.username | Username, which is typically a better label than the `user.id`. | x | x | string |
+| user_misery(number) | User Misery is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (ms). It highlights transactions that have the highest impact on users. Returns transactions with the defined user misery value. | x |  | number |
+-->
 
 <!-- prettier-ignore-end -->
 
