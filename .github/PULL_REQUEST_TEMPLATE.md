@@ -8,7 +8,7 @@
 <!--
 
   The following applies to third-party contributors.
-  Sentry employs and contractors can delete or ignore.
+  Sentry employees and contractors can delete or ignore.
 
 -->
 
