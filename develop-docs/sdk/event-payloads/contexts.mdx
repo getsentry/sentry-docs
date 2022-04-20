@@ -196,11 +196,44 @@ The `type` and default key is `"device"`.
 
 ## OS Context
 
-OS context describes the operating system on which the event was created. In web
-contexts, this is the operating system of the browser (generally pulled from the
-User-Agent string).
+OS context under the default key `"os"` describes the operating system on which
+the crash happened/the event was created.
 
-The `type` and default key is `"os"`.
+The `type` and default key is `"os"`. However, since contexts can be set
+multiple times under different keys, there has historically been a lot of
+confusion about which OS context represents what. So here's some examples:
+
+* In events reported from a Python/ASP.NET/Rails web backend, the OS context
+  under the default key `"os"` is the server's operating system, and is set by
+  the SDK (if at all).
+
+  Additionally, the Sentry server will attempt to parse the `User-Agent` header
+  from the event's [Request Interface](/sdk/event-payloads/request/) and create a _secondary_ OS
+  context under the non-default key `"client_os"`.
+
+* In events reported from a JS web frontend, the SDK typically reports no OS
+  context.
+
+  The server however knows by looking at the platform (`"javascript"`) that the
+  incoming User-Agent can only come from the crashing device, and creates the
+  User-Agent based OS context under the default key `"os"`.
+
+To summarize:
+
+* `"os"` key for the device generating the event.
+* `"client_os"` key for an adjacent client device's OS (that is _not_ the
+  device creating the event) if it's important. The Sentry server sets this as part of
+  User-Agent parsing, but SDKs can set this directly too.
+* If in doubt, just send `"os"`. Any other keys are not searchable in the
+  product and will not be visually pronounced using icons, so using something
+  like `"server_os"` to clarify what you meant is probably going to
+  backfire with regards to the overall product experience.
+
+  Under the existing mental model, a hypothetical `"server_os"` key would
+  actually mean you're reporting the operating system of an adjacent "upstream"
+  device that the crashing device is talking to.
+
+  As Kurt Tucholsky said: "The opposite of good is not evil, but good intentions"
 
 `name`
 
