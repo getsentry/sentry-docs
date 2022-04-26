@@ -74,11 +74,7 @@ const parsePathSlug = (slug: string) => {
     );
     const { platform, sub_platform } = pathMatch.groups;
     const step = String(pathMatch.groups.step).replace(/\./g, "-");
-    let sub = `performance-onboarding-${sub_platform}-${step}`;
-
-    if (platform === pathMatch.groups.sub_platform) {
-      sub = `performance-onboarding-${step}`;
-    }
+    const sub = platform === sub_platform ? `performance-onboarding-${step}` : `performance-onboarding-${sub_platform}-${step}`;
 
     return {
       platform,
