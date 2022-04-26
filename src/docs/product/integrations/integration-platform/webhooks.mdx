@@ -51,15 +51,22 @@ function verifySignature(request, secret = "") {
 ```
 
 ```python
-    body = json.dumps(request.body)
-    expected = hmac.new(
-        key=client_secret.encode('utf-8'),
-        msg=body,
-        digestmod=sha256,
-    ).hexdigest()
+import hashlib
+import hmac
+import json
 
-    if expected != request.headers['Sentry-Hook-Signature']:
-            raise UnauthorizedError
+expected_digest = request.headers['sentry-hook-signature']
+body = json.dumps(request.body)
+
+digest = hmac.new(
+    key=client_secret.encode('utf-8'),
+    msg=body,
+    digestmod=hashlib.sha256,
+).hexdigest()
+
+
+if digest != expected_digest:
+    raise UnauthorizedError
 ```
 
 ## Request Structure
@@ -83,31 +90,28 @@ actor
 : The actor is who, if anyone, triggered the webhook. If a user in Sentry triggered the action, then the actor is the user. If the Sentry App itself triggers the action, then the actor is the Application. And if the action is triggered automatically somehow within Sentry, then the actor is ‘Sentry.’
 
 ```python
-    # Samples cases:
+# Samples cases:
 
-    # user installs sentry app
+# User installs sentry app
+"actor": {
+    "type": "user",
+    "id": <user-id>,
+    "name": <user-name>,
+}
 
-    "actor": {
-      'type': 'user',
-      'id': <user-id>,
-      'name': <user-name>,
-    }
+# Sentry app makes request assign an issue
+"actor": {
+    "type": "application",
+    "id": <sentry-app-uuid>,
+    "name": <sentry-app-name>,
+}
 
-    # sentry app makes request assign an issue
-
-    "actor": {
-      'type': 'application',
-      'id': <sentry-app-uuid>,
-      'name': <sentry-app-name>,
-    },
-
-    # sentry (sentry.io) auto resolves an issue
-
-    "actor": {
-      'type': 'application',
-      'id': 'sentry',
-      'name': 'Sentry',
-    },
+# Sentry (sentry.io) auto resolves an issue
+"actor": {
+    "type": "application",
+    "id": "sentry",
+    "name": "Sentry",
+}
 ```
 
 <Note>
@@ -658,6 +662,63 @@ Note: The webhook payload stack frame order lists the oldest frame to the most r
   }
 }
 ```
+
+### Comments
+
+`'Sentry-Hook-Resource': 'comment'`
+
+#### Attributes
+
+##### action
+
+- type: string
+- description: can be `created`, `updated`, or `deleted`
+
+##### data["comment"]
+
+- type: string
+- description: the content of the issue's comment
+
+##### data["project slug"]
+
+- type: string
+- description: the slug of the project the comment's issue belongs to
+
+
+##### data["comment_id"]
+
+- type: int
+- description: the id of the comment
+
+##### data["issue_id"]
+
+- type: int
+- description: the id of the issue
+
+
+##### data["timestamp"]
+
+- type: datetime
+- description: when the comment was created, updated, or deleted
+
+
+#### Payload
+
+```json
+{
+  "action": "created",
+  "data": {
+      "comment": "adding a comment",
+      "project_slug": "sentry",
+      "comment_id": 1234,
+      "issue_id": 100,
+      "timestamp": "2022-03-02T21:51:44.118160Z"
+  },
+  "installation": {"uuid": "eac5a0ae-60ec-418f-9318-46dc5e7e52ec"},
+  "actor": {"type": "user", "id": 1, "name": "colleen"}
+}
+```
+
 
 ### Error
 

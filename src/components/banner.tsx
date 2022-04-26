@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Learn alerts and issue grouping best practices in our live workshop on Feb. 17 @ 10:00 AM PT.";
+  "Sentry will be at Pycon US 2022 - join our live workshop, 'Elasticsearch and Python, a Match Made in Heaven' on Apr. 28 @ 9:00 AM MDT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/alerts-workshop-best-practices/?promo_name=docs-banner";
+  "https://us.pycon.org/2022/schedule/presentation/168/";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 

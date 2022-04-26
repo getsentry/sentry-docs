@@ -65,7 +65,13 @@ For app models that don't have a console to print to, you can <PlatformLink to="
 
 </PlatformSection>
 
-<ConfigKey name="release">
+<ConfigKey name="releaseName" supported={["apple"]}>
+
+Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+</ConfigKey>
+
+<ConfigKey name="release" notSupported={["apple"]}>
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
@@ -177,7 +183,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart"]}>
+<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart", "react-native"]}>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -191,7 +197,7 @@ If possible, we recommended turning on this feature to send all such data by def
 
 </ConfigKey>
 
-<ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java", "dart", "dotnet"]}>
+<ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java", "dart", "dotnet"]} notSupported={["android"]}>
 
 This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server. Most SDKs
 will attempt to auto-discover this value.
@@ -306,9 +312,13 @@ The number of context lines for each frame in the stacktrace when loading a file
 
 The number of context lines for each frame when loading a file.
 
+#### Deprecated
+
+`frameContextLines` has moved to the <PlatformLink to="/configuration/integrations/default-integrations/#contextlines">`ContextLines` integration</PlatformLink>.
+
 </ConfigKey>
 
-<ConfigKey name="initial-scope" supported={["javascript","node"]}>
+<ConfigKey name="initial-scope" supported={["javascript","node"]} notSupported={["react-native"]}>
 
 Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
 
@@ -348,7 +358,23 @@ Maximum number of characters a single value can have before it will be truncated
 
 <ConfigKey name="normalize-depth" supported={["javascript", "node"]}>
 
-Sentry SDKs normalize any contextual data to a given depth. Any keys containing data with a structure deeper than this will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed `3` levels deep.
+Sentry SDKs normalize any contextual data to a given depth. Any data beyond this depth will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed three levels deep.
+
+</ConfigKey>
+
+<ConfigKey name="normalize-max-breadth" supported={["javascript", "node"]} notSupported={["electron"]}>
+
+_(New in version 6.19.1)_
+
+This is the maximum number of properties or entries that will be included in any given object or array when the SDK is normalizing contextual data. Any data beyond this depth will be dropped. (defaults to 1000)
+
+</ConfigKey>
+
+<ConfigKey name="attach-screenshot" supported={["android"]}>
+
+Takes a screenshot of the application when an error happens and includes it as an attachment.
+
+_(New in version 6.0.0)_
 
 </ConfigKey>
 
@@ -380,7 +406,7 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript", "python", "node", "flutter"]}>
+<PlatformSection supported={["javascript", "python", "node", "dart", "java", "apple"]}>
 
 ## Integration Configuration
 
@@ -390,7 +416,7 @@ For many platform SDKs integrations can be configured alongside it. On some plat
 
 In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
 
-<ConfigKey name="default-integrations" />
+<ConfigKey name="default-integrations" notSupported={["java", "dart"]}/>
 
 This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
 
@@ -399,6 +425,13 @@ This can be used to disable integrations that are added by default. When set to 
 ## Hooks
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
+
+<PlatformSection supported={["unity"]}>
+
+The callbacks you set as hooks will be called on the thread where the event happened. So you can only use
+thread-safe APIs and only use Unity-specific APIs after you've checked that you're on the UI thread.
+
+</PlatformSection>
 
 <ConfigKey name="before-send">
 
@@ -455,7 +488,7 @@ The default is `1` (one) second.
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet", "rust"]}>
+<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet", "rust", "react-native", "javascript.capacitor"]}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
@@ -485,6 +518,12 @@ A function responsible for determining the percentage chance a given transaction
 
 </ConfigKey>
 
+<ConfigKey name="tracing-origins" supported={["java"]}>
+
+An optional property that configures which downstream services receive the `sentry-trace` header attached to HTTP requests. It contains a list of URLs or regex against which URLs are matched. If not set, the `sentry-trace` header is attached to every request executed from an instrumented client.
+
+</ConfigKey>
+
 </PlatformSection>
 
 <PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
@@ -502,6 +541,60 @@ Set this boolean to `false` to disable the native SDK. This will disable all nat
 Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer, but instead use [enableNative](#enableNative).
 
 You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
+
+</ConfigKey>
+
+<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor"]}>
+
+Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
+
+</ConfigKey>
+
+<ConfigKey name="enableNativeNagger" supported={["react-native", "javascript.capacitor"]}>
+
+Set this boolean to `false` to disable the native nagger alert being shown.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoSessionTracking">
+
+Set this boolean to `false` to disable the [release health](/product/releases/health/) feature.
+
+</ConfigKey>
+
+<ConfigKey name="sessionTrackingIntervalMillis">
+
+Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
+
+</ConfigKey>
+
+<ConfigKey name="enableNdkScopeSync">
+
+Set this boolean to `false` to disable the scope sync from Java to NDK on Android.
+
+</ConfigKey>
+
+<ConfigKey name="attachThreads">
+
+Set this boolean to `true` to automatically attach all threads to all logged events on Android.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
+
+Set this boolean to `false` to disable auto [performance monitoring](/product/performance/) tracking.
+
+</ConfigKey>
+
+<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native"]}>
+
+Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
+
+</ConfigKey>
+
+<ConfigKey name="onReady" supported={["react-native"]}>
+
+Set this callback, which is called after the Sentry React Native SDK initializes its Native SDKs (Android and iOS).
 
 </ConfigKey>
 

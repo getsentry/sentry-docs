@@ -6,13 +6,15 @@ description: "Learn how to turn off Out Of Memory"
 
 <Alert level="info" title="Important">
 
-The SDK might falsely report out-of-memory crashes when an app hangs, and the user kills it manually. You can follow [this GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/1645) for more information.
+We recommend updating to at least [7.11.0](https://github.com/getsentry/sentry-cocoa/releases/tag/7.11.0), because the SDK might falsely report out-of-memory crashes when an app hangs, and the user kills it manually.
 
 </Alert>
 
-This integration tracks out-of-memory (OOM) crashes based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst and works only if the application was in the foreground.
+This integration tracks out-of-memory (OOM) crashes based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst, works only if the application was in the foreground, and doesn't track OOMs for unit tests.
 
-When your application uses too much RAM, the operating system kills your app without a normal termination process. Your process doesn't receive a signal or any other type of information to ensure an OOM occurs. As a result, in the Apple SDK, we track out-of-memory crashes during the app start based on heuristics.
+When a typical unhandled error occurs, the Apple SDK writes a report to disk with the current state of your application, with details like the stack trace, tags, breadcrumbs, and so on, before the app terminates. With OOM crashes, the operating system can kill your app without further notice, which means the SDK can't write a report to disk.
+As a result, in the Apple SDK, we track OOM crashes during the app start based on heuristics, but getting the state of the app when an OOM occurs is challenging. To provide the same state as we do for a typical crash, we would periodically need to store the app state to disk. This would cause a lot of I/O, which in turn could negatively affect the application's performance. To avoid this, OOM events have less context than typical unhandled errors.
+
 When a user launches the app, the SDK checks the following statements and reports an OOM if all of them are true:
 
 * The app didn't crash on the previous run.
