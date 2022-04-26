@@ -41,7 +41,7 @@ dependencies {
 }
 ```
 
-### Auto-Installation With the Sentry Android Gradle Plugin
+### Auto-Installation With the Sentry Android Gradle Plugin (Beta)
 
 To install the plugin, please update your app's `build.gradle` file as follows:
 
