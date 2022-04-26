@@ -72,6 +72,11 @@ const parsePathSlug = (slug: string) => {
     const pathMatch = slug.match(
       /^\/(?<platform>[^/]+)\/performance-onboarding\/(?<sub_platform>[^/]+)\/(?<step>[^/]+)\/$/
     );
+    
+    if(!pathMatch) {
+      throw new Error(`Unable to parse performance onboarding from slug: ${slug}`);
+    }
+    
     const { platform, sub_platform } = pathMatch.groups;
     const step = String(pathMatch.groups.step).replace(/\./g, "-");
     const sub = platform === sub_platform ? `performance-onboarding-${step}` : `performance-onboarding-${sub_platform}-${step}`;
