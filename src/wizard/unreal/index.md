@@ -5,5 +5,5 @@ support_level: production
 type: framework
 ---
 
-## Gettings Started
+## Getting Started
 TODO: write some stuff out
