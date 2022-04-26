@@ -505,3 +505,21 @@ Sessions are never tracked nor sent individually, instead they are aggregated an
 As an implementation hint to the point above, when a "Client" is closed or flushed the associated  "Session Flusher" shall also be flushed and submit the current aggregates the the transport, before the transport is flushed/closed.
 Make sure this works reasonably for Serverless — there we shall not use "request mode" and SessionFlusher because we cannot have any work that happens outside of the request-response flow.
 Provide an easy way to integrate with existing Node frameworks (Express, Next.js, Koa).
+
+### Session update filtering
+
+Events may be dropped by our filtering mechanisms (sample rate, beforeSend, event processors or ignored exception types). Only events dropped due to sampling should update the session despite being dropped as we assume the event was dropped to save quota but would have been something the developer cares about. Events dropped due to other reasons should not update the session as we assume they are more likely to be dropped because the developer chooses to ignore them.
+
+#### Filter order
+
+The python SDK shall serve as a reference here. The order for filtering error events is:
+1. Check for ignored exception types (a.k.a `ignore_errors`)
+3. Apply scoped `event_processor` (a.k.a `error_processor`)
+4. Apply global `event_processor`
+2. Apply `before_send`
+5. Update the session if an event made it this far
+6. Apply sampling rate
+
+#### Sending the session update
+
+If the event has been dropped and the session updated, the session update should be sent to the server without the event in case the session changed from healthy to errored or from any state to crashed for user attended sessions.
