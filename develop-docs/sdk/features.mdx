@@ -143,15 +143,17 @@ useful because attachments could quickly eat up the users' disk space. Furthermo
 
 ## Screenshots
 
-When the user opts-in, if technically possible, take a screenshot of the application and include as an [attachment](#attachments) to the [envelope](/sdk/envelopes/) with the event.
+When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/envelopes/) with the event.
 
 This feature only applies to SDKs with a user interface, such as Mobile and Desktop. 
 In some environments such as native iOS, taking a screenshot requires the UI thread and in the event of a crash, that might not be available. So inherently this feature will be a best effort solution.
+Also, some environments don`t allow access to the UI or some features during a hard crash, iOS, for example, doesn't allow running Objective-C code after a signal break, therefore no hard crash screenshot capture will be possible.
 It's advised to provide this feature through a single option called `attachScreenshot`. That's the preferred way but in platforms such as Flutter, a wrapping widget is required so documentation can point users to that instead of the suggested option name.
 
 The feature is achieved by adding an attachment with:
 
-* File name `screenshot.jpg` or `screenshot.png`
+* File name `screenshot.jpg` or `screenshot.png` 
+  * Subsequent screenshots in the same event should be named `screenshot-n`, where n is the screenshot number starting with 2
 * Image size, if possible should stay below 2 MB but quality/size could be configurable
 * `ContentType: image/jpg` or `ContentType: image/png`
 
