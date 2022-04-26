@@ -73,8 +73,7 @@ const parsePathSlug = (slug: string) => {
       /^\/(?<platform>[^/]+)\/performance-onboarding\/(?<sub_platform>[^/]+)\/(?<step>[^/]+)\/$/
     );
     const { platform, sub_platform } = pathMatch.groups;
-    let step = pathMatch.groups.step;
-    step = String(step).replace(/\./g, "-");
+    const step = String(pathMatch.groups.step).replace(/\./g, "-");
     let sub = `performance-onboarding-${sub_platform}-${step}`;
 
     if (platform === pathMatch.groups.sub_platform) {
