@@ -5,9 +5,19 @@ support_level: production
 type: framework
 ---
 
+> Want to play with some new features? Try out our beta [Auto-Installation](#auto-installation-with-the-sentry-android-gradle-plugin) feature.
+>  
+> This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/gradle/); you must use version `3.1.0-beta.1`. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
+>
+> If you don't want to use our Gradle plugin, please proceed with the manual installation steps below.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-android-gradle-plugin/issues/).
+
 ## Integrating the SDK
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
+
+### Manual Installation
 
 To install the Android SDK, please update your build.gradle file as follows:
 
@@ -31,7 +41,24 @@ dependencies {
 }
 ```
 
-### Connecting the SDK to Sentry
+### Auto-Installation With the Sentry Android Gradle Plugin
+
+To install the plugin, please update your app's `build.gradle` file as follows:
+
+```groovy
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+plugins {
+  id "io.sentry.android.gradle" version "3.1.0-beta.1"
+}
+```
+
+The plugin will automatically add the latest version of the Android SDK as a dependency.
+
+## Connecting the SDK to Sentry
 
 After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
@@ -46,7 +73,7 @@ Add your DSN to the manifest file.
 </application>
 ```
 
-### Verifying Your Setup
+## Verifying Your Setup
 
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
@@ -82,7 +109,7 @@ class MyActivity : AppCompatActivity() {
 }
 ```
 
-### Performance Monitoring
+## Performance Monitoring
 
 Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
 
