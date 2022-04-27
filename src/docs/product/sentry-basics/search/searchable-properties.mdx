@@ -47,11 +47,10 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | Key/Token | Description | E   | I   | Type |
 | --------- | ----------- | --- | --- | ---- |
 | age | Returns issues created since the time defined by the value. The syntax is similar to the Unix find command. Supported suffixes: `m - minutes`, `h - hours`, `d - days`, `w - weeks`. For example, `age:-24h` returns isssues that are new in the last 24 hours, while `age:+12h` returns ones that are older than 12 hours. Entering `age:+12h age:-24h` would return issues created between 12 and 24 hours ago. |  | x |  relative time |
-| any(field) TO DO!!!! | Returns the first available value for the field that you've defined. Results are effectively random and may not be meaningful. | x |  | matches field |
 | apdex(threshold) | Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Higher apdex values indicate higher user satisfaction. | x |  | number |
 | assigned | Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or # followed by the team name, that is `#team-name`. |  | x | team or org user |
 | assigned_<br></br>or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or # followed by the team name, that is `#team-name`. |  | x | team or org user |
-| avg(field) | Returns results with matching averages of numeric/duration value for the field entered. Typically used with a comparison operator. | x |  | matches field |
+| avg(field) | Returns results with matching averages for the field selected. The field can be either a number or a duration. Typically used with a comparison operator. | x |  | matches field |
 | bookmarks | Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or `me` for yourself. |  | x | team or org user |
 | count() | Returns results with a matching count. (Same as `timesSeen` in issue search.) Doesn't take a parameter. | x |  | number |
 | count_if<br></br>(column,operator,value) | Returns results with a matching count that satisfy the condition passed to the parameters of the function. | x |  | number |
@@ -69,7 +68,7 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | device.online | Whether the device was online or not. A string that is either `True` or `False`. | x |  | string |
 | device.orientation | Describes the orientation of the device and can be either `portrait` or `landscape`. | x | x | string |
 | device.simulator | Indicates whether this device is a simulator or a real device. A string that is either `True` or `False`. | x |  | string |
-| device.uuid | TO DO | x | x | uuid |
+| device.uuid | Deprecated | x | x | uuid |
 | dist | Distinguishes build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build. | x | x | string |
 | environment | Refers to your code deployment naming convention. For example, *development*, *testing*, *staging* and so on. [Learn more](/product/sentry-basics/environments/). | x |  | string |
 | epm() | Returns results with a matching events-per-minute count. Doesn't take a parameter. | x |  | number |
@@ -89,9 +88,9 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | geo.country_code | ISO 3166-1 country code | x | x | string |
 | geo.region | Full name of the country | x | x | string |
 | handled | The same as `error.handled`, but values are `yes/no`. |  | x | error |
-| has | Returns issues with any value for a tag. |  | x | error |
+| has | Returns results with the defined tag or field, but not the value of that tag or field. For example, entering `has:user` would find events with the `user` tag.  | x | x | error |
 | http.method | HTTP method of the [request](https://develop.sentry.dev/sdk/event-payloads/request/) that created the event. | x | x | string |
-| http.referrer |  | x | x | string |
+| http.referer | Identifies the web page from which the resource was requested. | x | x | string |
 | http.status_code | HTTP status code, which indicates whether a response was successful. For example, `200` or `404`. | x | x | string |
 | http.url | Full URL of the request that caused the error, but without any parameters | x | x | string |
 | id | The event id. In **Issues**, use only the ID value without the `id` key. | x | x | uuid |
@@ -139,15 +138,14 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | spans.db | Cumulative db time for a transaction, based on span operations. | x |  | duration |
 | spans.http | Cumulative http time for a transaction, based on span operations. | x |  | duration |
 | spans.resource | Cumulative resource time for a transaction, based on span operations. | x |  | duration |
-| stack.abs_path | The absolute path to the source file. In **Discover**, this is an array; in Errors, this is a single value. | x | x | array, single value |
+| stack.abs_path | The absolute path to the source file. In **Discover**, this is an array; in **Issues**, this is a single value. | x | x | array, single value |
 | stack.colno | Column number of the call, starting at 1. | x |  | array |
-| stack.filename | The path to the source file relative to the project root directory. In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
-| stack.function | Name of the function being called. In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
+| stack.filename | The path to the source file relative to the project root directory. In **Discover**, this is an array. In **Issues**, this is a single value. | x | x | array, single value |
+| stack.function | Name of the function being called. In **Discover**, this is an array. In **Issues**, this is a single value. | x | x | array, single value |
 | stack.in_app | Indicates whether a frame is related to the execution of the relevant code in the stack trace. For example, the frames that might power the framework’s web server of your app are probably not relevant. However, calls to the framework’s library once you start handling code likely are relevant. Values can be `1` (true) or `0` (false). | x |  | array |
 | stack.lineno | Line number of the call, starting at 1. | x |  | array |
-| stack.module | Platform-specific module path. For example, `sentry.interfaces.Stacktrace`. In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
-| stack.package | The "package" the frame was contained in. Depending on the platform, this can be different things. For C#, it can be the name of the assembly. For native code, it can be the path of the dynamic library or something else. In **Discover**, this is an array. In errors, this is a single value. | x | x | array, single value |
-| stack.stack_level | | x | x | array, single value |
+| stack.module | Platform-specific module path. For example, `sentry.interfaces.Stacktrace`. In **Discover**, this is an array. In **Issues**, this is a single value. | x | x | array, single value |
+| stack.package | The "package" the frame was contained in. Depending on the platform, this can be different things. For C#, it can be the name of the assembly. For native code, it can be the path of the dynamic library or something else. In **Discover**, this is an array. In **Issues**, this is a single value. | x | x | array, single value |
 | sum(numeric field) | Returns results with a matching total value for the the field entered. | x |  | matches field |
 | timesSeen | Returns results with a matching count. (Same as `count()` in **Discover**.) |  | x | number |
 | timestamp | The finish timestamp of the transaction. Returns events with matching datetime. | x |  | datetime |
@@ -157,11 +155,11 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | trace | A trace represents the record of the entire operation you want to measure or track — like page load, searched using the uuid generated by Sentry’s SDK. | x | x | uuid |
 | trace.parent_span | Span ID of the parent to the current transaction. This is null if the transaction is root. | x |  | uuid |
 | trace.span | Span ID of the root span of the root transaction in the event. | x |  | uuid |
-| transaction | For transactions, the name of the transaction. For errors, the name of the associated transaction. | x | x | string |
+| transaction | For [transactions](/product/performance/transaction-summary/#what-is-a-transaction), the name of the transaction. For errors, the name of the associated transaction. | x | x | string |
 | transaction.duration | Duration, in milliseconds, of the transaction. | x |  | duration |
 | transaction.op | Short code identifying the [type of operation](https://develop.sentry.dev/sdk/performance/span-operations/) the span is measuring. | x |  | string |
 | transaction.status | Describes the status of the span/transaction. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/event-payloads/transaction/) for all possible statuses. | x |  | string |
-| user.display | In order, the first available user field available: email, then username, then IP address. | x |  | string |
+| user.display | In order, the first available user field available: email, then username, ID, and then IP address. | x |  | string |
 | user.email | An alternative, or addition, to the username. Sentry is aware of email addresses and can therefore display things such as Gravatars and unlock messaging capabilities. | x | x | string |
 | user.id | Application-specific internal identifier for the user. | x | x | string |
 | user.ip | User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. | x | x | string |
