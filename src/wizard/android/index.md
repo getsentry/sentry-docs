@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-> Want to play with some new features? Try out our beta [Auto-Installation](#auto-installation-with-the-sentry-android-gradle-plugin) feature.
+> Want to play with some new features? Try out our beta Auto-Installation feature documented below.
 >  
 > This feature is available in the Beta release of the [Sentry Android Gradle plugin](https://docs.sentry.io/platforms/android/gradle/); you must use version `3.1.0-beta.1`. Features in Beta are still a work-in-progress and may have bugs. We recognize the irony.
 >
