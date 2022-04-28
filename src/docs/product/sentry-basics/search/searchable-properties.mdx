@@ -4,43 +4,43 @@ sidebar_order: 10
 description: "Learn more about searchable issue and event properties."
 ---
 
-Sentry's Search provides you with reserved keywords, like `is`, `user`, `server`, and `browser`, that you can use to search on the properties of issues and events. You can also create [custom tags](#custom-tags) on which to search. Below are canonical lists of all available issue and event search terms.
+Sentry's search provides you with reserved keywords, like `is`, `user`, `server`, and `browser`, that you can use to search on the properties of issues and events (as well as the special case of releases). You can also create [custom tags](#custom-tags) on which to search. This page includes [a canonical list of all available issue and event search terms](#properties-table) as well as some guidance for how Sentry search works.
 
-## How to Search Where
+## Issue Properties
 
-Issues are aggregated error events, while events can represent errors or transactions. You can search by issue properties in the Issues pages. You can search by event properties in Issues (just the ones indicated), Discover and Performance, in Alerts when creating a metric alert and Dashboards, depending on your data set selection (you can either search using issues or events properties.
+[Issues](/product/issues/) are an aggregate of one or more events. Searchable properties include status, assignment, aggregate counts, and age. You can search by issue properties in the **Issues** page and in **Dashboards** in the widget builder, depending on your dataset selection.
 
-The release search properties are the only ones that matter in Releases.
-
-<!-- add para above on main search page as well? -->
-
-When filtering based on functions, if the function takes a parameter, that's part of the key/token and the filter still requires a value to work.
-
-Comparison operator - make sure this is defined somewhere
-
-Things to know:
-Search terms should auto-complete, and when they don't that means you have an invalid data set. If you complete the term and hit enter, an error message is displayed. For example, in Discover, you cannot search using a grouping function if you don't already have a grouping function in your Results table columns.
-Default parameters in search functions can be updated.
-
-- Discover, Performance = events
-- Issues = issues
-- Releases = it’s own beast
-- Dashboards within the widget builder = issues & events & releases
-- Projects and Environment are sometimes dropdown filters
-
-For search properties that are duration or number types, these are typically used with a comparison operator rather than an exact match, as an exact match would be unlikely to exist. Properties with the notation "Doesn't take a parameter" still take a value, but don't use a paramter inside the parentheses. For example, `epm():>12`.
-
-[Issues](/product/issues/) are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
-
-Below is a list of issue-level keys and tokens reserved and known to Sentry.
+### Event Properties
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and transactions).
 
-When searching on event properties within the **Issues** page, the search will return any issue that has _one or more events_ matching the supplied event filters.
+When searching on event properties within the **Issues** page, the search will return any issue that has _one or more events_ matching the supplied event filters. You can search by event properties in the following [sentry.io](https://sentry.io) pages:
 
-Below is a list of event-level keys and tokens reserved and known to Sentry:
+- Discover
+- Dashboards - within the widget builder, depending on dataset selection
+- Performance
+- Issues - where indicated
+- Alerts - when creating a metric alert
+
+### Release Properties
+
+You can only search by release properties in **Releases**, but these properties are also searchable in the other pages of [sentry.io](https://sentry.io) listed above (under Event Properties).
+
+## Searchable Properties Tips
+
+Search terms should auto-complete, and when they don't that means you have an invalid data set. If you enter an invalid search term and tap Return or Enter, an error message is displayed. For example, in **Discover**, you cannot search using a grouping function (properties with a parentheses in them, for example `epm()`) if you don't already have a grouping function in your "Results" table columns.
+
+When searching using a property that's a function (properties with a parentheses in them, for example `epm()`), if the function takes a parameter, that's part of the key/token and you still need to add a value for the search to work. For example, the function count_unique(field) takes whichever field you choose as the parameter and then you add a number as your value. So a typical search might look like: `count_unique(add a field)=>20`.
+
+Other things to note:
+
+- Search properties that are duration or number types are typically used with a [comparison operator](/product/sentry-basics/search/#comparison-operators) rather than an exact match, as an exact match would be unlikely to exist.
+- Properties with the notation "Doesn't take a parameter" still take a value, but don't take a paramter inside the parentheses. For example, `epm():>12`.
+- Default parameters in search functions can be updated. For example, the default parameters of column, operator, and value can be updated for count_if(column,operator,value).
 
 ## Properties Table
+
+Below is a list of issue-level and event-level keys and tokens reserved and known to Sentry.
 
 <!-- prettier-ignore-start -->
 
@@ -70,7 +70,7 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | device.simulator | Indicates whether this device is a simulator or a real device. A string that is either `True` or `False`. | x |  | string |
 | device.uuid | Deprecated | x | x | uuid |
 | dist | Distinguishes build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build. | x | x | string |
-| environment | Refers to your code deployment naming convention. For example, *development*, *testing*, *staging* and so on. [Learn more](/product/sentry-basics/environments/). | x |  | string |
+| environment | Refers to your code deployment naming convention. For example, *development*, *testing*, *staging* and so on. [Learn more](/product/sentry-basics/environments/).<br></br><br></br>In some pages of [sentry.io|(https://sentry.io), you filter on environment using a dropdown. | x |  | string |
 | epm() | Returns results with a matching events-per-minute count. Doesn't take a parameter. | x |  | number |
 | eps() | Returns results with a matching events-per-second count. Doesn't take a parameter. | x |  | number |
 | error.handled | Indicates whether the user has handled the exception — for example, using try...catch. Values are `1/0` or `true/false` | x | x | boolean |
@@ -125,7 +125,7 @@ Below is a list of event-level keys and tokens reserved and known to Sentry:
 | percentile(field,level) | Returns results with an approximate percentile of the field to the level. The level can be between `0` and `1`. For example, if you wanted to find the 50th percentile of transaction durations, you would enter `percentile(transaction.duration, 0.5)`. | x |  | number |
 | platform | Name of the platform | x |  | string |
 | platform.name | Name of the platform |  | x | string |
-| project | The name of the project. In **Issues** you can only search by project ID. | x | x | string |
+| project | The name of the project. In **Issues** you can only search by project ID.<br></br><br></br>In some pages of [sentry.io|(https://sentry.io), you filter on project using a dropdown.  | x | x | string |
 | pXY(duration field) | Returns results with an approximate percentile of the field. Replace "XY" with 50, 75, 95, 99, or 100. For example, if you wanted to find the 50th percentile of transaction durations, you would enter `p50(transaction.duration)`. | x |  | number |
 | release | A release is a version of your code deployed to an environment. You can create a token with an exact match on the version of a release, or `release:latest` to pick the most recent release. | x | x | string |
 | release.build | The number that identifies an iteration of your app. For example, `CFBundleVersion` on iOS or `versionCode` on Android. [Learn more](/product/releases/usage/sorting-filtering/). | x | x | number |
