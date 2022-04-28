@@ -5,6 +5,7 @@ import styled from "@emotion/styled";
 const query = graphql`
   query CliExecutableChecksums {
     app(id: { eq: "sentry-cli" }) {
+      version,
       files {
         name
         checksums {
@@ -23,14 +24,14 @@ const ChecksumValue = styled.code`
 
 export default (): JSX.Element => {
   const {
-    app: { files },
+    app: { files, version },
   } = useStaticQuery(query);
 
   return (
     <table style={{ display: "block", overflow: "scroll" }}>
       <thead>
         <tr>
-          <th>File</th>
+          <th>Filename (v{version})</th>
           <th>Integrity Checksum</th>
         </tr>
       </thead>

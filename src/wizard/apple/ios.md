@@ -72,7 +72,9 @@ Before capturing crashes, you need to provide debug information to Sentry. Debug
 
 ## Performance Monitoring
 
-You can measure the performance of your code by capturing transactions and spans.
+After [setting up performance monitoring](/platforms/apple/guides/ios/performance), the Cocoa SDK [automatically instruments](/platforms/apple/performance/instrumentation/automatic-instrumentation/) UIViewControllers, HTTP requests, app start, and slow and frozen frames.
+
+You can manually measure the performance of your code by capturing transactions and spans.
 
 ```swift {tabTitle:Swift}
 import Sentry // Make sure you import Sentry
@@ -91,3 +93,7 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 ```
 
 Check out [the documentation](https://docs.sentry.io/platforms/apple/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+
+> Want to play with some new features? Try out our experimental auto instrumentation for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation) and [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
