@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   "Sentry will be at Pycon US 2022 - join our live workshop, 'Elasticsearch and Python, a Match Made in Heaven' on Apr. 28 @ 9:00 AM MDT.";
 const BANNER_LINK_URL =
