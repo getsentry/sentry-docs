@@ -1,0 +1,109 @@
+---
+title: FormField Components
+sidebar_order: 4
+description: "Learn about FormField components."
+---
+
+The issue linking and alert rule action UI components can utilize `FormField` components to display attributes in their respective modals. A `FormField` can be one of three types (which behave like their HTML equivalents) — `Text`, `TextArea,` and `Select`.
+
+## Text
+
+### Schema
+
+```javascript
+{
+    "type": "text",
+    "label": <String>,
+    "name": <String>,
+    (optional) default: <String>,
+}
+```
+
+### Attributes
+
+- `label` - (Required) Label text to be rendered for the form field
+- `name` - (Required) Value to use in `name` attribute of the field
+- `default` - default to pre-populate with. Options include `issue.title` and `issue.description`
+  - `issue.title` - title of the Sentry issue
+  - `issue.description` - description of the Sentry issue
+
+## Textarea
+
+### Schema
+
+```javascript
+{
+    "type": "textarea",
+    "label": <String>,
+    "name": <String>,
+    (optional) default: <String>,
+}
+```
+
+### Attributes
+
+- `label` - (Required) Label text to be rendered for the form field
+- `name` - (Required) Value to use in `name` attribute of the field
+- `default` - default to pre-populate with options include `issue.title` and `issue.description`
+  - `issue.title` - title of the Sentry issue
+  - `issue.description` - description of the Sentry issue
+
+## Select
+
+### Schema
+
+```javascript
+{
+    "type": "select",
+    "label": <String>,
+    "name": <String>,
+    "uri": <URI>,
+    "async": <Bool>,
+    "options": <Array<String, String>>,
+    "depends_on": <Array<String>> (optional)
+    "skip_load_on_open": <Array<String>> (optional)
+}
+```
+
+### Attributes
+
+- `label` - (Required) Label text to be rendered for the form field
+- `name` - (Required) Value to use in `name` attribute of the field
+- `uri` - (Required if developer doesn't provide `options`) URI to retrieve values from.
+- `async` - (Optional) Used only if `uri` is present. If true (default), will query the URI as the user types, for autocomplete suggestions (see response format below). If false, will query the URI once initially to retrieve all possible options. This request _must_ succeed, and the response _must_ return data in the format Sentry expects, otherwise the entire component won't render.
+- `options` - (Required if developer doesn't provide `uri`) Static list of options in the format of [value, label]
+- `depends_on` - (Optional) If a field value depends on the value of another field, a request will be made to load those options when the dependent field is set.
+- `skip_load_on_open` (Optional) If true, this field will not load options when the page loads. Instead, it will wait for the user to start typing before fetching options.
+
+### URI Request Format
+
+The request sent to the `uri` to load options is a `GET` request. The parameters are encoded into the query parameters as such:
+
+```javascript
+{
+    "installationId": <String>,
+    "projectSlug": <String>,
+    "query": <String>,
+    "dependentData": <String> (optional),
+}
+```
+
+- `installationId` - The ID of the installation associated with the request
+- `projectSlug` - The slug of the project in Sentry
+- `query` - The search term the user is typing
+- `dependentData` - A JSON encoded string of the dependent data if that field has `depends_on` set
+
+### URI Response Format
+
+Response from `uri`, when specified, _must_ be in the following format:
+
+```javascript
+[
+    {
+        "label": <String>,
+        "value": <String>,
+        "default": <Bool>, (optional)
+    },
+    ...
+]
+```
