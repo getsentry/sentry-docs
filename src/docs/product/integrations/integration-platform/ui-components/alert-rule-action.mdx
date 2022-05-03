@@ -4,11 +4,13 @@ sidebar_order: 3
 description: "Learn about the alert rule action UI component."
 ---
 
-## Alert Rule Action
-
 The Alert Rule Action component allows the developer to get parameters to define routing or configuration in alert rules for their service. When alert rules are triggered for a user, the configured service will receive [Issue Alert](/product/integrations/integration-platform/webhooks/#issue-alerts) and [Metric Alert](/product/integrations/integration-platform/webhooks/#metric-alerts) webhook events with the specified settings for that service to further route the alert.
 
-### Schema
+![Example of an alert rule UI component.](alert-rule-component-action-example.png)
+
+![Example of an alert rule settings modal.](alert-rule-component-modal-example.png)
+
+## Schema
 
 ```javascript
  {
@@ -24,7 +26,7 @@ The Alert Rule Action component allows the developer to get parameters to define
 }
 ```
 
-### Attributes
+## Attributes
 
 - `title` - (Required) The title shown in the UI component.
 - `uri` - (Required) Sentry will make a POST request to the URI when the User submits the form. If the services fails to process the request (status code >= 400), this component will bubble up the error to the User with the provided response text.
@@ -32,7 +34,7 @@ The Alert Rule Action component allows the developer to get parameters to define
 - `optional_fields` - (Optional) List of [FormField](/product/integrations/integration-platform/ui-components/formfield) components the User may complete.
 - `description` - (Optional) Text that will be displayed above the form. Limited to 140 characters.
 
-### Example
+## Example
 
 ```javascript
 
@@ -53,10 +55,81 @@ The Alert Rule Action component allows the developer to get parameters to define
         }
     }
 ]
-
 ```
 
-### Error Handling
+
+## Issue Alert Request Format
+
+When an issue alert fires, your service will need to read the settings from the alert payload. The `settings` are in `data.issue_alert.settings`. See the full [Issue Alert webhook documentation](/product/integrations/integration-platform/webhooks/#issue-alerts) for more information.
+
+### Payload
+
+```
+{
+    ...
+    "data": {
+        ...
+        "issue_alert": {
+            ...
+            "settings": [
+                {
+                    "name": "title",
+                    "value": "Ticket Title"
+                },
+                {
+                    "name": "description",
+                    "value": "Ticket Description"
+                }
+            ]
+        }
+    }
+}
+```
+
+## Metric Alert Request Format
+
+When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` in this example are nested in `data.metric_alert.alert_rule.triggers[1].actions[0].settings`. There may be multiple `actions` and the index may not be 0 in your case. See the full [Metric Alert webhook documentation](/product/integrations/integration-platform/webhooks/#metric-alerts) for more information.
+
+### Payload
+
+
+```json
+{
+    “data”: {
+        ...
+        “metric_alert”: {
+            ...
+            “alert_rule”: {
+                ...
+                “triggers”: [
+                    ...
+                    {
+                        ...
+                        “actions”: [
+                            {
+                                ...
+                                “settings”: [
+                                    {
+                                        “name”: “title”,
+                                        “value”: “Critical Trigger”
+                                    },
+                                    {
+                                        “name”: “description”,
+                                        “value”: “Critical Description”
+                                    }
+                                ],
+
+                            }
+                        ]
+                    },
+                ],
+
+        },
+    },
+}
+```
+
+### Alert Rule Creation Error Handling
 
 When surfacing errors, we need to receive a JSON response with this shape:
 
