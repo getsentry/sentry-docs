@@ -8,19 +8,25 @@ redirect_from:
 
 Currently, the Unity SDK offers native support for Android, iOS, and Windows. The support is set to `enabled` by default and you can opt out for each platform individually in the configuration window.
 
-## Android & iOS
-
 <Note>
 
 The setup for the iOS and Android native SDKs happens during build time, with the options defined in the Sentry editor configuration window. Changes to the options object done through [ScriptableOptionsConfiguration](/platforms/unity/configuration/options/) will not affect events from the native layer.
 
 </Note>
 
-The Unity SDK passes the options defined through the Sentry Unity Editor window during build time. For Android, it embeds the [Android SDK](/platforms/android/) inside the Gradle project created by Unity. The [iOS SDK](/platforms/apple/guides/ios/) is embedded inside the generated Xcode project. This means there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
+## Android
+
+When chosing Android as a build target, Unity creates a Gradle project. During the Unity build process, the SDK embeds the [Android SDK](/platforms/android/), as well as the provided options, by adding it to the generated project's Android Manifest.
+
+## iOS
+
+When building your game for iOS, Unity exports it as an Xcode project. By modifying that generated project, the SDK adds the [iOS SDK](/platforms/apple/guides/ios/) to provide native support. It adds the initialization code to the `main.m` and generates the options provided by the editor configuration window as `SentryOptions.m`. The SDK also copies the `SentryNativeBridge` that enables the C# layer to communicate with the iOS SDK. This means that there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
+
+The [iOS SDK](/platforms/apple/guides/ios/) supports capturing Objective-C exceptions which are disabled in the generated Xcode project by default. Consider enabling them in the "Build Settings" tab by setting `GCC_ENABLE_OBJC_EXCEPTIONS` to true.
 
 ## Windows
 
-Windows native crashes are automatically captured through minidumps. Minidump capture is configured and enabled once the C# scripting layer runs, as early as possibly after Unity engine starts. This is slightly different than the Android and iOS support where we inject native initialization code that runs before Unity engine runs.
+Windows native crashes are automatically captured through minidumps. The Native Support is configured and enabled as early as possible by the C# layer, right after the Unity engine starts. This is slightly different than the Android and iOS support where we inject native initialization code that runs before Unity engine runs.
 
 ## Debug Symbols
 
