@@ -88,7 +88,7 @@ When an issue alert fires, your service will need to read the settings from the 
 
 ## Metric Alert Request Format
 
-When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` in this example are nested in `data.metric_alert.alert_rule.triggers[1].actions[0].settings`. There may be multiple `actions` and the index may not be 0 in your case. See the full [Metric Alert webhook documentation](/product/integrations/integration-platform/webhooks/#metric-alerts) for more information.
+When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` in this example are nested in `data.metric_alert.alert_rule.triggers[1].actions[0].settings`. You will have to identify which trigger and action contains your settings based on the webhook type, so `triggers[1]` and `actions[0]` may not be accurate in your case. See the full [Metric Alert webhook documentation](/product/integrations/integration-platform/webhooks/#metric-alerts) for more information.
 
 ### Payload
 
@@ -131,10 +131,10 @@ When a metric alert fires, your service will need to read the settings from the 
 
 ### Alert Rule Creation Error Handling
 
-When surfacing errors, we need to receive a JSON response with this shape:
+If a user setting up an alert rule action with your app tries to save an incorrect or malformed configuration, you can surface the errors to them directly in Sentry by responding to the POST request with a JSON response in this shape:
 
 ```json
 {message: string}
 ```
 
-If data is not received as expected, nothing will be shown.
+Alternately, if an error code (40x, 50x) is returned, we will show a generic error message.
