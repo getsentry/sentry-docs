@@ -123,7 +123,7 @@ Standalone:
 import * as Sentry from "@sentry/capacitor";
 
 Sentry.init({
-  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  dsn: "___PUBLIC_DSN___",
 
   // Set your release version, such as "getsentry@1.0.0"
   release: "my-project-name@<release-name>",
