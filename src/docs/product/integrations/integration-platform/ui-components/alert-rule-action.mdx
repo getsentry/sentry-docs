@@ -1,10 +1,10 @@
 ---
 title: Alert Rule Action
-sidebar_order: 3
+sidebar_order: 2
 description: "Learn about the alert rule action UI component."
 ---
 
-The Alert Rule Action component allows the developer to get parameters to define routing or configuration in alert rules for their service. When alert rules are triggered for a user, the configured service will receive [Issue Alert](/product/integrations/integration-platform/webhooks/#issue-alerts) and [Metric Alert](/product/integrations/integration-platform/webhooks/#metric-alerts) webhook events with the specified settings for that service to further route the alert.
+The alert rule action component allows you to get parameters to define routing or configuration in alert rules for your service. When alert rules are triggered for a user, the configured service will receive [issue alert](/product/integrations/integration-platform/webhooks/#issue-alerts) and [metric alert](/product/integrations/integration-platform/webhooks/#metric-alerts) webhook events, with the specified settings for that service, to further route the alert.
 
 ![Example of an alert rule UI component.](alert-rule-component-action-example.png)
 
@@ -12,17 +12,21 @@ The Alert Rule Action component allows the developer to get parameters to define
 
 ## Schema
 
-```json
+```json {filename:schema.json}
 {
-  "type": "alert-rule-action",
-  "title": <String>,
-  "settings": {
-    "type": "alert-rule-settings",
-    "uri": <URI>,
-    "required_fields": <Array<FormField>>,
-    "optional_fields": <Array<FormField>>,
-    "description": <String>
-  }
+  "elements": [
+    {
+      "type": "alert-rule-action",
+      "title": <String>,
+      "settings": {
+        "type": "alert-rule-settings",
+        "uri": <URI>,
+        "required_fields": <Array<FormField>>,
+        "optional_fields": <Array<FormField>>,
+        "description": <String>
+      }
+    }
+  ]
 }
 ```
 
@@ -36,31 +40,39 @@ The Alert Rule Action component allows the developer to get parameters to define
 
 ## Example
 
-```json
-
-"elements": [
-  {
-    "type": "alert-rule-action",
-    "title": "Send Alerts to",
-    "settings": {
-      "type": "alert-rule-settings",
-      "uri": "/sentry/alert-rule",
-      "required_fields": [
-        {
-          "type": "text",
-          "label": "Channel",
-          "name": "channel"
-        }
-      ]
+```json {filename:schema.json}
+{
+  "elements": [
+    {
+      "type": "alert-rule-action",
+      "title": "Create a Rekall Inc task",
+      "settings": {
+        "type": "alert-rule-settings",
+        "uri": "/sentry/alert-rule",
+        "required_fields": [
+          {
+            "type": "select",
+            "label": "Project",
+            "name": "project",
+            "options": [["1", "cornflakes"]]
+          },
+          {
+            "type": "select",
+            "label": "Assignee",
+            "name": "assignee",
+            "url": "/sentry/alert-rule/options/users/"
+          }
+        ]
+      }
     }
-  }
-]
+  ]
+}
 ```
 
 
 ## Issue Alert Request Format
 
-When an issue alert fires, your service will need to read the settings from the alert payload. The `settings` are in `data.issue_alert.settings`. See the full [Issue Alert webhook documentation](/product/integrations/integration-platform/webhooks/#issue-alerts) for more information.
+When an issue alert fires, your service will need to read the settings from the alert payload. The `settings` are in `data.issue_alert.settings`. Check out the full [Issue Alert webhook documentation](/product/integrations/integration-platform/webhooks/#issue-alerts) for more information.
 
 ### Payload
 
@@ -88,7 +100,7 @@ When an issue alert fires, your service will need to read the settings from the 
 
 ## Metric Alert Request Format
 
-When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` in this example are nested in `data.metric_alert.alert_rule.triggers[1].actions[0].settings`. You will have to identify which trigger and action contains your settings based on the webhook type, so `triggers[1]` and `actions[0]` may not be accurate in your case. See the full [Metric Alert webhook documentation](/product/integrations/integration-platform/webhooks/#metric-alerts) for more information.
+When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` in this example are nested in `data.metric_alert.alert_rule.triggers[1].actions[0].settings`. You will have to identify which trigger and action contains your settings based on the webhook type, so `triggers[1]` and `actions[0]` may not be accurate in your case. Check out the full [Metric Alert webhook documentation](/product/integrations/integration-platform/webhooks/#metric-alerts) for more information.
 
 ### Payload
 
@@ -131,7 +143,7 @@ When a metric alert fires, your service will need to read the settings from the 
 
 ### Alert Rule Creation Error Handling
 
-If a user setting up an alert rule action with your app tries to save an incorrect or malformed configuration, you can surface the errors to them directly in Sentry by responding to the POST request with a JSON response in this shape:
+If a user setting up an alert rule action with your app tries to save an incorrect or malformed configuration, you can surface the errors to them directly in [sentry.io](https://sentry.io) by responding to the POST request with a JSON response in this shape:
 
 ```json
 {message: string}
