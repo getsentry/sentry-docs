@@ -8,7 +8,9 @@ redirect_from:
 
 To use Sentry together with CodePush, pass `release` and `dist` to `Sentry.init`. Our suggestion is to store them in an `app.json`, or you can just use the `package.json`. These values need to be unique to each version of your codebase and match the version on the source maps exactly, or they might not be symbolicated.
 
-For more information on the 'release' and 'dist' parameters, see the section on [Source Maps](/platforms/react-native/sourcemaps/).
+When you set a custom `release` and `dist`, or manually upload source maps, you will need to disable the automatic source map upload script. Learn more in the [Disable the automatic source maps upload script](/platforms/react-native/sourcemaps/#2-disable-the-automatic-source-maps-upload-script) documentation.
+
+For more information on the `release` and `dist` parameters, check out the section on [Source Maps](/platforms/react-native/sourcemaps/).
 
 We recommend using the format `${BUNDLE_ID}@${APP_VERSION}+codepush:${DIST}` for release names.
 
@@ -38,6 +40,7 @@ codePush.getUpdateMetadata().then(update => {
     Sentry.init({
       // ...
       release: `${update.appVersion}+codepush:${update.label}`,
+      dist: update.label,
     });
   }
 });
@@ -64,6 +67,18 @@ If you use custom deployment names in CodePush, you will need to use `--deployme
 
 ```bash
 sentry-cli react-native appcenter {APP} ios ./build/CodePush --deployment {DEPLOYMENT} --dist {DIST}
+```
+
+For non-macOS devices building for iOS, you will need to pass extra parameters that can't be computed automatically (`--bundle-id` and `--version-name`).
+
+```bash
+sentry-cli react-native appcenter {APP} ios ./build/CodePush --deployment {DEPLOYMENT} --dist {DIST} --bundle-id {BUNDLE_ID} --version-name {VERSION_NAME}
+```
+
+If you don't want to use the automatically computed release format, you will need to pass the `--release-name` parameter.
+
+```bash
+sentry-cli react-native appcenter {APP} ios ./build/CodePush --deployment {DEPLOYMENT} --dist {DIST} --release-name {RELEASE_NAME}
 ```
 
 If you still have issues with CodePush source maps, you can refer to [Source Maps for Other Platforms](/platforms/react-native/sourcemaps/) to manually bundle and upload source maps to Sentry.

@@ -4,6 +4,8 @@ sidebar_order: 0
 description: "Learn about the different methods available to install `sentry-cli`."
 ---
 
+import CliChecksumTable from "~src/components/cliChecksumTable";
+
 Depending on your platform, there are different methods available to install `sentry-cli`.
 
 ## Manual Download
@@ -18,7 +20,14 @@ If you are on OS X or Linux, you can use the automated downloader which will fet
 curl -sL https://sentry.io/get-cli/ | bash
 ```
 
-This will automatically download the correct version of `sentry-cli` for your operating system and install it. If necessarily, it will prompt for your admin password for `sudo`.
+We do however, encourage you to pin the specific version of the CLI, so your builds are always reproducible.
+To do that, you can use the exact same method, with an additional version specifier:
+
+```bash
+curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="{{ apps.version('sentry-cli') }}" bash }}
+```
+
+This will automatically download the correct version of `sentry-cli` for your operating system and install it. If necessary, it will prompt for your admin password for `sudo`. For a different installation location or for systems without `sudo` (like Windows), you can `export INSTALL_DIR=/custom/installation/path` before running this command.
 
 To verify it’s installed correctly you can bring up the help:
 
@@ -72,6 +81,34 @@ Another option is to use the environment variable `SENTRYCLI_CDNURL`.
 SENTRYCLI_CDNURL=https://mymirror.local/path npm install @sentry/cli
 ```
 
+### Available Installation Options
+
+Options listed below control how `sentry-cli` install script behaves, when installed through `npm`.
+
+`SENTRYCLI_CDNURL`:
+
+: If set, the script will use given URL for fetching the binary. Defaults to `https://downloads.sentry-cdn.com/sentry-cli`.
+
+`SENTRYCLI_USE_LOCAL`:
+
+: If set to `1`, `sentry-cli` binary will be discovered from your `$PATH` and copied locally instead of being downloaded from external servers. It will still verify the version number, which has to match.
+
+`SENTRYCLI_SKIP_DOWNLOAD`:
+
+: If set to `1`, the script will skip downloading the binary completely.
+
+`SENTRYCLI_SKIP_CHECKSUM_VALIDATION`:
+
+: If set to `1`, the script will skip the checksum validation phase. You can manually verify the checksums by visiting [Build Checksums](/product/cli/installation/#build-checksums) page.
+
+`SENTRYCLI_NO_PROGRESS_BAR`:
+
+: If set to `1`, the script will not display download progress bars. This is a default behavior for CI environments.
+
+`SENTRYCLI_LOG_STREAM`:
+
+: If set, the script will change where it writes its output. Possible values are `stdout` and `stderr`. Defaults to `stdout`.
+
 ## Installation via Homebrew
 
 If you are on OS X, you can install `sentry-cli` via homebrew:
@@ -100,3 +137,14 @@ docker run --rm -v $(pwd):/work getsentry/sentry-cli --help
 ## Updating and Uninstalling
 
 You can use `sentry-cli update` and `sentry-cli uninstall` to update or uninstall the `sentry-cli` binary. These commands may be unavailable in certain situations, generally when `sentry-cli` has been installed by a tool like homebrew or yarn, either directly or as a dependency of another package. In those cases, the same tool will need to be used for updating and removal. If you find that `sentry-cli update` and `sentry-cli uninstall` aren't working and you don't know how the package was installed, running `which sentry-cli` will often provide a clue as to which tool to use.
+
+## Build Checksums
+
+When downloading an executable from a remote server, it's often a good practice to verify, that what has been downloaded, is in fact what we expect it to be. To make sure that this is the case, we can use checksum validation. A checksum is the value calculated from the contents of a file, in a form of hash, in our case SHA256, and it acts as the data integrity check, as it's always producing the same output, for a given input.
+
+Below is the table of SHA256 checksums for all available build targets that our CLI supports. To calculate the hash of a downloaded file, you can use `sha256sum` utility, which is preinstalled in OSX and most Linux distributions.
+
+<CliChecksumTable />
+
+If you would like to verify checksums for historic versions of the `sentry-cli`, please refer to our release registry directly, which can be found at [https://release-registry.services.sentry.io/apps/sentry-cli/{version}](https://release-registry.services.sentry.io/apps/sentry-cli/latest).
+For example, [https://release-registry.services.sentry.io/apps/sentry-cli/1.74.4](https://release-registry.services.sentry.io/apps/sentry-cli/1.74.4).

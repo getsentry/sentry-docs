@@ -5,7 +5,7 @@ support_level: production
 type: language
 ---
 
-We recommend installing the SDK with CocoaPods. To integrate Sentry into your Xcode project, specify it in your _Podfile_:
+We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
 
 ```ruby
 platform :ios, '9.0'
@@ -17,8 +17,6 @@ end
 ```
 
 Afterwards run `pod install`.
-
-For other installation methods, please see our [documentation](/platforms/apple/install/).
 
 ## Configuration
 
@@ -45,6 +43,26 @@ func application(_ application: UIApplication,
 }
 ```
 
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+
+```swift
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Enabled debug when first installing is always helpful
+
+            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.tracesSampleRate = 1.0
+        }
+    }
+}
+```
+
 ## Debug Symbols
 
 Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
@@ -54,7 +72,9 @@ Before capturing crashes, you need to provide debug information to Sentry. Debug
 
 ## Performance Monitoring
 
-You can measure the performance of your code by capturing transactions and spans.
+After [setting up performance monitoring](/platforms/apple/guides/ios/performance), the Cocoa SDK [automatically instruments](/platforms/apple/performance/instrumentation/automatic-instrumentation/) UIViewControllers, HTTP requests, app start, and slow and frozen frames.
+
+You can manually measure the performance of your code by capturing transactions and spans.
 
 ```swift {tabTitle:Swift}
 import Sentry // Make sure you import Sentry
@@ -73,3 +93,7 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 ```
 
 Check out [the documentation](https://docs.sentry.io/platforms/apple/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+
+> Want to play with some new features? Try out our experimental auto instrumentation for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation) and [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).

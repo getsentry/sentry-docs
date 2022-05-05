@@ -81,7 +81,7 @@ With Ionic/Angular:
 import * as Sentry from "@sentry/capacitor";
 import * as SentryAngular from "@sentry/angular";
 // If taking advantage of automatic instrumentation (highly recommended)
-import { Integrations as TracingIntegrations } from "@sentry/tracing";
+import { BrowserTracing } from "@sentry/tracing";
 // Or, if only manually tracing
 // import "@sentry/tracing";
 // Note: You MUST import the package in some way for tracing to work
@@ -96,7 +96,7 @@ Sentry.init(
     // We recommend adjusting this value in production.
     tracesSampleRate: 1.0,
     integrations: [
-      new TracingIntegrations.BrowserTracing({
+      new BrowserTracing({
         tracingOrigins: ["localhost", "https://yourserver.io/api"],
       }),
     ]
@@ -123,12 +123,12 @@ Standalone:
 import * as Sentry from "@sentry/capacitor";
 
 Sentry.init({
-  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  dsn: "___PUBLIC_DSN___",
 
   // Set your release version, such as "getsentry@1.0.0"
   release: "my-project-name@<release-name>",
   // Set your dist version, such as "1"
-  dist: "<dist>"
+  dist: "<dist>",
 });
 ```
 

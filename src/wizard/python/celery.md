@@ -5,7 +5,7 @@ support_level: production
 type: library
 ---
 
-The celery integration adds support for the [Celery Task Queue System](https://www.celeryproject.org/).
+The celery integration adds support for the [Celery Task Queue System](https://docs.celeryq.dev/).
 
 Just add `CeleryIntegration()` to your `integrations` list:
 

@@ -40,11 +40,11 @@ routes or controllers.
 ## How the Scope and Hub Work
 
 As you start using an SDK, a scope and hub are automatically created for you out
-of the box. You are unlikely to be interacting with the hub directly unless you
-are writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can at any point in time call
-`configure-scope` to modify data stored on the scope. This is for instance
-used to [modify the context](../context/).
+of the box. It's unlikely that you'll interact with the hub directly unless you're
+writing an integration or you want to create or destroy scopes. Scopes, on the
+other hand are more user facing. You can call `configure-scope` at any point in
+time to to modify data stored on the scope. This is useful for doing things like
+[modifying the context](../context/).
 
 <Alert>
 If you are very curious about how thread locality works: On platforms such as .NET
@@ -80,26 +80,44 @@ You can also apply this configuration when unsetting a user at logout:
 
 <PlatformContent includePath="enriching-events/unset-user" />
 
+<PlatformSection supported={["android"]}>
+
+<PlatformContent includePath="enriching-events/scopes/scope-synchronization" />
+
+</PlatformSection>
+
 To learn what useful information can be associated with scopes see
 [the context documentation](../context/).
 
+<PlatformSection notSupported={["android"]}>
+
 ## Local Scopes
 
-We also have support for pushing and configuring a scope in one go. This is typically called `with-scope` or `push-scope` which is also very helpful if you only want to send data with one specific event. In the following example we are using that function to attach a `level` and a `tag` to only one specific error:
+We also support pushing and configuring a scope within a single call. This is typically
+called `with-scope` or `push-scope` depending on the SDK, and is very helpful if
+you only want to send data for one specific event. In the following example we use
+`with-scope` to attach a `level` and a `tag` to only one specific error:
 
 <PlatformContent includePath="enriching-events/scopes/with-scope" />
 
-While this example looks similar to `configure-scope`, it's very different, in the sense that `configure-scope` actually changes the current active scope, all successive calls to `configure-scope`
-will keep the changes.
+While this example looks similar to `configure-scope`, it is actually very different.
+Calls to `configure-scope` change the current active scope; all successive calls
+to `configure-scope` will maintain previously set changes unless they are explicitly
+unset.
 
-While on the other hand using `with-scope` creates a clone of the current scope
-and will stay isolated until the function call is completed. So you can either
-set context information in there that you don't want to be somewhere else or not
-attach any context information at all by calling `clear` on the scope, while the
-"global" scope remains unchanged.
+On the other hand, `with-scope` creates a clone of the current scope, and the changes
+made will stay isolated within the `with-scope` callback function. This allows you to
+more easily isolate pieces of context information to specific locations in your code or
+even call `clear` to briefly remove all context information.
 
-Keep in mind that `with-scope` will not capture any exceptions that happen inside its callback function,
-and every error that happens there will be silently ignored and *not* reported.
+<Alert level="info" title="Important">
+
+Any exceptions that occur within the callback function for `with-scope` will not be
+caught, and all errors that occur will be silently ignored and **not** reported.
+
+</Alert>
+
+</PlatformSection>
 
 <PlatformSection supported={["java"]} notSupported={["android"]}>
 
@@ -140,4 +158,5 @@ launch(SentryContext()) {
   }
 }
 ```
+
 </PlatformSection>

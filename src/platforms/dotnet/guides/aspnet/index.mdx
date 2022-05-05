@@ -41,7 +41,6 @@ public class MvcApplication : HttpApplication
         // Initialize Sentry to capture AppDomain unhandled exceptions and more.
         _sentry = SentrySdk.Init(o =>
         {
-            o.AddAspNet();
             o.Dsn = "___PUBLIC_DSN___";
             // When configuring for the first time, to see what the SDK is doing:
             o.Debug = true;
@@ -51,14 +50,12 @@ public class MvcApplication : HttpApplication
             o.TracesSampleRate = 1.0;
             // if you also installed the Sentry.EntityFramework package
             o.AddEntityFramework();
+            o.AddAspNet();
         });
     }
 
-    protected void Application_Error()
-    {
-        var exception = Server.GetLastError();
-        SentrySdk.CaptureException(exception);
-    }
+    // Global error catcher
+    protected void Application_Error() => Server.CaptureLastError();
 
     protected void Application_BeginRequest()
     {

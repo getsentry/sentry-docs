@@ -1,4 +1,5 @@
 import React from "react";
+import ExternalLink from "./externalLink";
 import usePlatform from "./hooks/usePlatform";
 
 const scenarios = [
@@ -24,6 +25,7 @@ type Props = {
     projectSlug?: string;
     errorType?: string;
     platform?: string;
+    target?: string;
 }
 
 /**
@@ -68,7 +70,7 @@ const SANDBOX_PLATFORM_MAP: { [key: string]: string } = {
     node: 'react',
 };
 
-export default function SandboxLink({ children, platform, ...params }: Props) {
+export default function SandboxLink({ children, platform, target, ...params }: Props) {
     if (isSandboxHidden()) {
         return children;
     }
@@ -80,8 +82,10 @@ export default function SandboxLink({ children, platform, ...params }: Props) {
             params.projectSlug = SANDBOX_PLATFORM_MAP[currentPlatform.key];
         }
     }
-
-    return <a href={getSandboxURL(params).toString()}>{children}</a>;
+    
+    return <ExternalLink href={getSandboxURL(params).toString()} target={target || '_blank'}>
+      {children}
+    </ExternalLink>;
 }
 
 export function SandboxOnly({children}) {

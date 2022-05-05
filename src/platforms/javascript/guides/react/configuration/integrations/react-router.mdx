@@ -19,44 +19,7 @@ We support integrations for React Router 3, 4 and 5.
 
 ## React Router v4/v5
 
-To use the router integration, import and set a custom routing instrumentation using a custom history. Make sure you use a `Router` component combined with `createBrowserHistory` (or equivalent).
-
-```javascript
-import { Router } from 'react-router-dom';
-import { createBrowserHistory } from 'history';
-
-import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/tracing';
-
-const history = createBrowserHistory();
-
-Sentry.init({
-  integrations: [
-    new Integrations.BrowserTracing({
-      // Can also use reactRouterV3Instrumentation or reactRouterV4Instrumentation
-      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-
-// ...
-
-// In your App render:
-render() {
-  return (
-    // Use custom history with a Router component
-    <Router history={history}>
-      <Components />
-    </Router>
-  );
-}
-```
-
-Now you should be generating `pageload`/`navigation` transactions from the `BrowserTracing` integration using react router instrumentation.
+The React router instrumentation uses the React router library to create `pageload/navigation` transactions and paramaterize transaction names. Make sure you use a `Router` component combined with `createBrowserHistory` (or equivalent).
 
 ### Parameterized transaction names
 
@@ -71,7 +34,7 @@ import { Route, Router, Switch, matchPath } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
 import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/tracing';
+import { BrowserTracing } from '@sentry/tracing';
 
 const history = createBrowserHistory();
 
@@ -81,7 +44,7 @@ const routes = [{ path: '/users/:userid' }, { path: '/users' }, { path: '/' }];
 
 Sentry.init({
   integrations: [
-    new Integrations.BrowserTracing({
+    new BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV5Instrumentation(history, routes, matchPath),
     }),
   ],
@@ -114,7 +77,7 @@ import {Route, Router, Switch } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
 import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/tracing';
+import { BrowserTracing } from '@sentry/tracing';
 
 // Create Custom Sentry Route component
 const SentryRoute = Sentry.withSentryRouting(Route);
@@ -123,7 +86,7 @@ const history = createBrowserHistory();
 
 Sentry.init({
   integrations: [
-    new Integrations.BrowserTracing({
+    new BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
     }),
   ],
@@ -154,7 +117,7 @@ To use the router integration, import and set a custom routing instrumentation a
 import * as Router from "react-router";
 
 import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { BrowserTracing } from "@sentry/tracing";
 
 // Routes looks like this:
 const routes = (
@@ -168,7 +131,7 @@ const routes = (
 
 Sentry.init({
   integrations: [
-    new Integrations.BrowserTracing({
+    new BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV3Instrumentation(
         Router.browserHistory,
         // Must be Plain Routes.

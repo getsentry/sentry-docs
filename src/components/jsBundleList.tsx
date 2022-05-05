@@ -17,10 +17,8 @@ const query = graphql`
 `;
 
 const ChecksumValue = styled.code`
-  font-size: 0.8em;
+  font-size: 0.75em;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 export default (): JSX.Element => {
@@ -29,7 +27,7 @@ export default (): JSX.Element => {
   } = useStaticQuery(query);
 
   return (
-    <table>
+    <table style={{ display: "block", overflow: "scroll" }}>
       <thead>
         <tr>
           <th>File</th>
@@ -41,10 +39,16 @@ export default (): JSX.Element => {
           .filter(file => file.name.endsWith(".js"))
           .map(file => (
             <tr key={file.name}>
-              <td style={{ fontSize: "0.9em", verticalAlign: "middle" }}>
+              <td
+                style={{
+                  fontSize: "0.9em",
+                  verticalAlign: "middle",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {file.name}
               </td>
-              <td style={{ verticalAlign: "middle" }}>
+              <td style={{ verticalAlign: "middle", width: "100%" }}>
                 <ChecksumValue>
                   {`sha384-${
                     file.checksums.find(c => c.name === "sha384-base64").value

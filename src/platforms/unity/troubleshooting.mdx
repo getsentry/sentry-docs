@@ -8,7 +8,16 @@ description: "Learn more about how to troubleshoot common issues with the Unity 
 
 ### Package Manager - `Cannot perform upm operation: Unable to add package`
 
-Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
+If you encounter the following error:
+
+```
+[Package Manager Window] Unable to add package [https://github.com/getsentry/unity.git#0.9.1 ]:
+  Error when executing git command. fatal: invalid refspec '0.9.1 '
+```
+
+Confirm the URL doesn't have a trailing whitespace or spaces in the URL. The Unity Package Manager will fail to find the package if whitespace is appended.
+
+![URL link with an additional space](unity-git-extra-line.jpg)
 
 ### Package Manager - `'HEAD': cannot update ref 'refs/heads/master'`
 
@@ -17,28 +26,24 @@ Unity has resolved this issue on newer releases. Learn more by checking the [Uni
 
 ### PrecompiledAssemblyException: `Multiple precompiled assemblies with the same name`
 
-The Sentry UPM package includes multiple DLLs within it. One or more of those DLLs might have already been provided by other packages. [Unity's package manager does not resolve](https://forum.unity.com/threads/dll-conflicts-in-two-upm-package.1084307/#post-7038340) those dependency conflicts which means it has to be resolved manually:
+This issue was resolved in the release 0.7.0 of the Sentry SDK for Unity.
+If you're still encountering this issue on a version later than 0.7.0, please let us know [with an issue report](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=&template=BUG_REPORT.md).
 
-1. Choose which DLL you want to remove.
-2. [Embed the package](https://docs.unity3d.com/Manual/upm-embed.html#embed-create) so you can modify it. This means you copy the package from Unity's global cache into your project's package directory and it should be version controlled.
-3. Remove the conflicting DLL.
+## Editor Issues
 
-The name of the conflicting DLL is provided through the `PrecompiledAssemblyException` entry in the editor console.
+### Sentry.Unity.Editor.iOS - System.Reflection.ReflectionTypeLoadException
 
-#### Background information
-
-Sentry SDK for Unity targets [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard#net-implementation-support). It's based on the Sentry SDK for [.NET which supports many versions of .NET and Mono](/platforms/dotnet/compatibility/). Starting from **.NET 5.0** the .NET SDK has no dependencies.
-[Unity has announced its intention to support .NET 6](https://forum.unity.com/threads/unity-future-net-development-status.1092205/):
-> We would like to have something out in a preview in the fall of 2021 to coincide with .NET 6 release from Microsoft.
-
-With this release, Sentry's SDK for Unity will have no dependencies to any external DLLs and such DLL conflict issues that UPM is unable to handle will no longer be something you need to deal with when using Sentry for Unity.
-
+The `Sentry.Unity.Editor.iOS.dll` is responsible for adding native support to your iOS builds. For that, it relies on editor functionality that Unity provides in the form of their iOS module. If you don't have the iOS module installed and, for example, `Assembly.GetTypes()` gets called, this leads to a `ReflectionTypeLoadException`. To resolve this, you can install the iOS module using the Unity Hub or, if you don't intend to build for iOS, you can [embed](https://docs.unity3d.com/Manual/upm-embed.html) the Sentry SDK package and safely remove the `Sentry.Unity.Editor.iOS.dll`.
 
 ## Build Issues
 
-### Target Integrity - `Building for iOS Simulator, but the linked and embedded framework 'Sentry.framework' was built for iOS.`
+### Build input file cannot be found: '**/Libraries/io.sentry.unity/Plugins/iOS/SentryNativeBridge.m'
 
-Our Unity SDK currently supports native iOS when building for device only. Support for the iOS simulators is planned.
+You can resolve this issue by creating a clean build or chosing "Replace" when prompted. Alternatively, you can remove the unused `SentryNativeBridge.m`from the **UnityFramework Target > Compile Sources** in the project settings. Instead of relying on Unity to copy the `SentryNativeBridge.m` over to the generated Xcode project, starting with 0.12.0, the SDK copies it manually to `**/Libraries/io.sentry.unity/SentryNativeBridge.m`.
+
+### Failed to locate the Sentry package
+
+This happens if you've copied some of the SDK files directly to the Assets folder. You can resolve this issue by installing the SDK with UPM.
 
 ## Runtime issues
 
@@ -55,3 +60,13 @@ If you encounter the following error:
 This can happen if you've copied some of the SDK files directly to the Assets folder and the `Sentry.Unity.Editor.iOS.dll` which runs when you build an iOS player wasn't able to copy the `Sentry.framework` to the final app. Enabling debug mode in the Sentry editor window would display more information in the Unity console.
 
 You can resolve this issue by installing the SDK with UPM.
+
+## Events
+
+### Unhandled Excpetions - Debug.LogException
+
+Currenty, it is not possible for the SDK to distiguish between the user calling `Debug.LogException` and the SDK capturing an unhandled excpetion through the Unity logging integration. To capture an exception and mark it as handled you can call `SentrySDK.CaptureException` instead.
+
+### Universal Windows Platform - Events Not Sent
+
+In order to send events to Sentry, you will need to activate the InternetClient Capability in your Player Settings.

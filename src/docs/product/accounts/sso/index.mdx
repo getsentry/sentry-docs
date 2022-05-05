@@ -4,10 +4,10 @@ sidebar_order: 20
 redirect_from:
   - /learn/sso/
   - /product/sso/
-description: "Learn about Single Sign-On (SSO) and how it helps manage your organization."
+description: "Learn about single sign-on (SSO) and how it helps manage your organization."
 ---
 
-Single Sign-On (or SSO) allows you to manage your organization’s entire membership via a third-party provider.
+Single sign-on (or SSO) allows you to manage your organization’s entire membership via a third-party provider.
 
 ## Preface
 
@@ -25,9 +25,9 @@ Every member who creates a new account via SSO will be given global organization
 
 ## Security
 
-Our SSO implementation prioritizes security. We aggressively monitor linked accounts and will disable them within any reasonable sign that the account’s access may have been revoked. Generally this will be transparent to you, but if the provider is functioning in an unexpected way you may experience more frequent re-authorization requests.
+Our SSO implementation prioritizes security. We aggressively monitor linked accounts and will disable them if there's any reasonable sign that the account’s access may have been revoked. Generally this will be transparent to you, but if the provider is functioning in an unexpected way you may experience more frequent re-authorization requests.
 
-Sessions last for [Django's default session length](https://docs.djangoproject.com/en/1.11/topics/http/sessions/#using-cookie-based-sessions), which is 2 weeks. We do not support customizing the session length.
+Sessions last for [Django's default session length](https://docs.djangoproject.com/en/1.11/topics/http/sessions/#using-cookie-based-sessions), which is two weeks. For individual organizations with single sign-on, we expire organization access after one day (20 hours).
 
 ## Providers
 
@@ -72,6 +72,7 @@ Sentry provides [SAML2 based authentication](https://en.wikipedia.org/wiki/SAML_
 - [Okta](/product/accounts/sso/#okta)
 - [OneLogin](/product/accounts/sso/#onelogin)
 - [Rippling](/product/accounts/sso/#rippling)
+- [Jumpcloud](/product/accounts/sso/#jumpcloud)
 
 Sentry supports the following SAML services:
 
@@ -147,6 +148,27 @@ In your Rippling admin dashboard, locate the Sentry app in the list of suggested
 
 When prompted with the Rippling Metadata URL, copy this into the Sentry Rippling provider configuration. You will have to complete the Rippling application configuration before completing the sentry provider configuration.
 
+#### Jumpcloud
+
+In your Jumploud Admin portal:
+
+1. Navigate to **User Authentication > SSO**.
+1. Add a new SSO application and search for Sentry.
+1. Click "Configure".
+1. Under the SSO menu, update the SP Entity ID and ACS URLs for your tenant. They should be in the format as described [here](https://docs.sentry.io/product/accounts/sso/saml2/#register-sentry-with-idp).
+1. Click "save".
+
+Be sure that you have assigned yourself to the Sentry app in Jumpcloud before attempting these next steps.
+
+1. In [sentry.io](https://sentry.io), navigate to **Settings > Auth** in your organization.
+1. Click "Configure" on the Jumpcloud provider.
+1. Go to the "XML" within the register page.
+1. Download your Jumpcloud metadata under the "SSO" tab in your Jumpcloud Sentry SSO app by clicking "Export Metadata".
+1. Paste your XML metadata into the text field and click "Parse Metadata".
+1. On the "Map Identity Provider" page, fill in 'uniqueID', 'email', 'firstname', and 'lastname' if you have left your Jumpcloud attributes as the defaults for the Sentry app.
+
+Now, Sentry should be configured for Jumpcloud SSO.
+
 #### Custom SAML2 Integration
 
 For other SAML2 SSO providers not listed above, Sentry provides generic connectors for [SAML2 based authentication](/product/accounts/sso/saml2/), which may be configured manually.
@@ -160,5 +182,7 @@ This feature is only available if your organization is on a Business or Enterpri
 </Note>
 
 System for Cross-Domain Identity Management ([SCIM](http://www.simplecloud.info/)) is a standard implemented by Identity Providers and applications to facilitate automated identity management. Sentry supports a subset of the specification for provisioning organization members and teams. See the relevant documentation for your use case:
+
 - [Okta SCIM Setup](/product/accounts/sso/okta-sso/okta-scim/)
 - [Azure AD SCIM Setup](/product/accounts/sso/azure-sso/#scim-integration)
+- If your Provider is not listed here, SCIM may be supported as it is a common standard. If you are having issues please contact our support team.

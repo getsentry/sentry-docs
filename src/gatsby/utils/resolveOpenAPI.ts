@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = "913d9d16e8b4be5022682ce387abdf7038ea4d41"
+const SENTRY_API_SCHEMA_SHA = "0c0594cc6ce2bf9b4e16c637ce5c852a2dbb715a"
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
@@ -12,7 +12,7 @@ export default async () => {
   if (activeEnv === "development" && process.env.OPENAPI_LOCAL_PATH) {
     try {
       console.log(`Fetching from ${process.env.OPENAPI_LOCAL_PATH}`);
-      let data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, "utf8");
+      const data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, "utf8");
       return data;
     } catch (error) {
       console.log(

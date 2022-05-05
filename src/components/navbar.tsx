@@ -16,9 +16,9 @@ export default ({ platforms }: Props): JSX.Element => {
   const location = useLocation();
 
   return (
-    <div className="navbar navbar-expand-md navbar-light global-header">
+    <div className="navbar navbar-expand-sm navbar-light global-header">
+      <Search path={location.pathname} platforms={platforms} />
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
-        <Search path={location.pathname} platforms={platforms} />
         <Nav className="justify-content-end" style={{ flex: 1 }}>
           <NavbarPlatformDropdown />
           <Nav.Item>
@@ -28,7 +28,7 @@ export default ({ platforms }: Props): JSX.Element => {
           </Nav.Item>
           <SandboxOnly>
             <Nav.Item>
-              <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
+              <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
             </Nav.Item>
           </SandboxOnly>
           <Nav.Item>

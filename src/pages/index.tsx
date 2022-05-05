@@ -30,7 +30,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "php.laravel",
   "android",
   "apple",
-  "java.spring-boot",
+  "javascript.nextjs",
   "ruby.rails",
   "flutter",
   "unity"
@@ -77,7 +77,7 @@ const IndexPage = () => {
               </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
-                  <Nav.Link className="text-primary" href={getSandboxURL().toString()}>Demo</Nav.Link>
+                  <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
                 </Nav.Item>
               </SandboxOnly>
               <Nav.Item>
@@ -177,7 +177,7 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/sentry-basics/guides/">Best Practices</a>
+                <a href="/product/sentry-basics/">Sentry Basics</a>
               </li>
               <li>
                 <a href="/product/sentry-basics/environments/">Environments</a>
@@ -201,7 +201,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/sentry-basics/guides/migration/">
+                <a href="/product/sentry-basics/migration/">
                   Moving to Hosted Sentry
                 </a>
               </li>

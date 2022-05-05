@@ -113,9 +113,7 @@
     "type": "Counter",
     "name": "events.outcomes",
     "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n- `to`: Describes the destination of the outcome. Can be either 'kafka' (when in\nprocessing mode) or 'http' (when outcomes are enabled in an external relay).\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Histogram",
@@ -124,9 +122,35 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "kafka.message_size",
+    "description": "Size of emitted kafka message in bytes, tagged by message type.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
     "type": "Gauge",
     "name": "metrics.buckets",
     "description": "The total number of metric buckets in Relay's metrics aggregator.",
+    "features": []
+  },
+  {
+    "type": "Set",
+    "name": "metrics.buckets.created.unique",
+    "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.delay",
+    "description": "The reporting delay at which a bucket arrives in Relay.\n\nA positive delay indicates the bucket arrives after its stated timestamp. Large delays\nindicate backdating, particularly all delays larger than `bucket_interval + initial_delay`.\nNegative delays indicate that the bucket is dated into the future, likely due to clock drift\non the client.\n\nThis metric is tagged with:\n- `backdated`: A flag indicating whether the metric was reported within the `initial_delay`\ntime period (`false`) or after the initial delay has expired (`true`).",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.dropped",
+    "description": "Incremented every time a bucket is dropped.\n\nThis should only happen when a project state is invalid during graceful shutdown.",
     "features": []
   },
   {
@@ -143,14 +167,52 @@
   },
   {
     "type": "Counter",
+    "name": "metrics.buckets.merge.hit",
+    "description": "Incremented every time two buckets or two metrics are merged.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.merge.miss",
+    "description": "Incremented every time a bucket is created.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "metrics.buckets.parsing_failed",
     "description": "Number of times that parsing a metrics bucket item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.relative_bucket_size",
+    "description": "The number of metric elements in the bucket.\n\nBucketRelativeSize measures how many distinct values are in a bucket and therefore\nBucketRelativeSize gives you a measurement of the bucket size and complexity.",
     "features": []
   },
   {
     "type": "Timer",
     "name": "metrics.buckets.scan_duration",
     "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "metrics.extraction.transactions",
+    "description": "Time in milliseconds spent on converting a transaction event into a metric.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.insert",
+    "description": "Incremented for every metric that is inserted.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "outcomes.aggregator.flush_time",
+    "description": "The time it takes the outcome aggregator to flush aggregated outcomes.",
     "features": []
   },
   {
@@ -290,9 +352,21 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "upstream.envelope.body_size",
+    "description": "Size of queries (projectconfig queries, i.e. the request payload, not the response) sent by\nRelay over HTTP in bytes.",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "upstream.network_outage",
     "description": "The state of Relay with respect to the upstream connection.\nPossible values are `0` for normal operations and `1` for a network outage.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "upstream.query.body_size",
+    "description": "Size of envelopes sent over HTTP in bytes.",
     "features": []
   },
   {
