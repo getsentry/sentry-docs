@@ -6,11 +6,11 @@ redirect_from:
 description: "Learn more about Sentry’s Integration Platform and how it provides a way for external services to interact with Sentry using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for public and internal use-cases."
 ---
 
-Sentry’s Integration Platform provides a way for external services to interact with Sentry using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for [public](#public-integrations) as well as [internal](#internal-integrations) use cases.
+Sentry’s Integration Platform provides a way for external services to interact with Sentry using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry.
 
 ## Creating an Integration
 
-In Sentry, navigate to Organization Settings > Developer Settings. From here, you can choose to create a New Internal Integration or New Public Integration.
+In Sentry, navigate to **Organization Settings > Developer Settings**. From here, you can choose to create an [internal](#internal-integrations) or [public](#public-integrations) integration. Internal integrations can only be used by your organization, whereas public integrations can be published and available for all Sentry users.
 
 ![Settings page that allows developer to choose between public or internal integrations.](dev-settings.png)
 
@@ -24,31 +24,57 @@ You cannot create an integration or change an existing integration to have permi
 
 ### Using Auth Tokens
 
-Auth Tokens are passed using an auth header, and are used to authenticate as a user account with the API. The [Public Integration](#public-integrations) requires an OAuth flow for tokens. The [Internal Integration](#internal-integrations) automatically generates tokens after installation. For more information, see the [full documentation on Authentication](/api/auth/).
+Auth Tokens are passed using an auth header, and are used to authenticate as a user account with the API. The [Public Integration](#public-integrations) requires an OAuth flow for tokens. The [Internal Integration](#internal-integrations) automatically generates tokens after installation. For more information, check out the [full documentation on Authentication](/api/auth/).
 
 ### Integration Webhooks
 
-Webhooks allow your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
+Webhooks allow your service to get requests about specific resources, depending on your selection. For more information, check out the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
+
+### Alerts
+
+You can make any integration available as an action in [Issue Alerts](/product/integrations/integration-platform/webhooks/#issue-alerts) and [Metric Alerts](/product/integrations/integration-platform/webhooks/#metric-alerts) by enabling the "Alert Rule Action" toggle. It will then show
+up as a service in the action section when creating or updating an alert rule.
+
+![Dropdown menu of actions for an alert rule.](alert-rules.png)
+
+You can also add [UI components](#ui-components) to these [Alert Rule Actions](#link-when-other-pr-is-merged).
+
+For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, check out the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
+
+
+### Image Requirements
+
+Published integrations require a logo image to be uploaded. The requirements for those are:
+* Logo size must be between 256 &times; 256px and 1024 &times; 1024px
+* The file format must be PNG
+* The background must be transparent (unless the logo takes up the entire space)
+
+If the integration has a [UI component](#ui-components), you must also upload an icon that follows these requirements:
+* Icon size must be between 256x256 px and 1024x1024px
+* The file must be a PNG in RGBA format
+* All pixels must be black or transparent
+
+Internal integrations can have logos and icons uploaded, but they are not required.
 
 ## Public Integrations
 
-Sentry built public integrations for the 'general public' of Sentry users. Public integrations start in an unpublished state for development purposes and can later be submitted for approval to publish. For more information, see the [section on Publishing](#published-state).
+Public integrations are for the 'general public' of Sentry users. These start in an unpublished state for development purposes and can later be submitted for approval to publish. For more information, check out the [section on Publishing](#published-state).
 
 The code examples in the sections below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to Pushover as a generator of desktop/mobile notifications.
 
 ### Installation
 
-Users will have the option to install your integrations on the Integrations Page in Sentry. If your integration is still in an unpublished state, the only Sentry organization that will be able to install that integration will be the organization that created the integration. Clicking "Install" will allow users to see a description of your integration and the permissions that will be granted should the user choose to install.
+Users will have the option to install your integrations on the Integrations Page in Sentry. If your integration is still in an unpublished state, the only Sentry organization that will be able to install that integration will be the organization that created the integration. Clicking the name of the integration will allow users to see a description of your integration and the permissions that will be granted should the user choose to install.
 
-![A list of integrations that a user can install.](integrations.png)
+![A list of integrations that a user can install.](integration-directory.png)
 
-#### OAuth Process
+### OAuth Process
 
 After installation, if your user has approved of all permissions, Sentry will generate a grant code and an installation ID. This information, the grant code, and the installation ID are sent via the `installation.created` webhook to the Webhook URL specified in your configuration.
 
 However, if your integration has a Redirect URL configured, the integration redirects the user’s browser to the configured URL with the grant code and installation ID in the query params.
 
-Start your build by implementing the Redirect URL endpoint, /setup — typically where you exchange the grant code for a token that allows you to make API calls to Sentry.
+Start building your integration by implementing the Redirect URL endpoint, `/setup` — typically where you exchange the grant code for a token that allows you to make API calls to Sentry.
 
 ```python
 import requests
@@ -79,11 +105,7 @@ def setup():
     return redirect('https://sentry.io/settings/')
 ```
 
-#### Auth Tokens
-
-Auth Tokens are what the Integration Platform calls tokens. Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API. In the case of the Integration Platform, these tokens are used to authenticate as an application (with access to a specific organization) instead of a user.
-
-#### Token Exchange
+### Token Exchange
 
 Upon the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret.
 
@@ -129,26 +151,20 @@ The data you can expect back for both the initial grant code exchange and subseq
 }
 ```
 
-#### How to use for requests
+### Auth Tokens
+
+Auth Tokens are what the Integration Platform calls tokens. Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API. In the case of the Integration Platform, these tokens are used to authenticate as an application (with access to a specific organization) instead of a user.
+
+
+### How to use tokens for requests
 
 When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests](/api/auth/). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration.
 
-#### Expiration
+### Token Expiration
 
 Tokens expire every eight hours.
 
-#### Verifying Installations (optional)
-
-Typically if you have the Redirect URL configured, there is work happening on your end to 'finalize' the installation. If this is the case, we recommend enabling the Verify Install option for your integration. Once enabled, you will need to send a request marking the installation as officially 'installed.'
-
-```python
-requests.put(
-    u'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
-    json={'status': 'installed'},
-)
-```
-
-#### Refreshing Tokens
+### Refreshing Tokens
 
 The Tokens you receive from Sentry expire after eight hours. To retrieve a new token, you’ll make a request to the same Authorization endpoint used in the /setup endpoint above, but with a slightly different request body.
 
@@ -178,6 +194,18 @@ def refresh_token(install_id):
 
 Instead of keeping track of times and passively refreshing at the time a token expires, one painless way you can handle refreshing tokens is to actively capture exceptions raised by requests that receive a 401 Unauthorized response from Sentry, refresh the token, and remake the request.
 
+### Verifying Installations (optional)
+
+Typically if you have the Redirect URL configured, there is work happening on your end to 'finalize' the installation. If this is the case, we recommend enabling the Verify Install option for your integration. Once enabled, you will need to send a request marking the installation as officially 'installed.'
+
+```python
+requests.put(
+    u'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
+    json={'status': 'installed'},
+)
+```
+
+
 ### Uninstallation
 
 When a user uninstalls your integration, you will receive a webhook request to your Webhook URL.
@@ -186,7 +214,7 @@ When a user uninstalls your integration, you will receive a webhook request to y
 
 In addition to the [un]installation webhook requests, all of the webhooks that you selected when configuring your integration will be routed to your Webhook URL.
 
-Continuing from our example, here we're implementing the Webhook URL endpoint, /webhook. In this case, that includes when an issue is created. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
+Continuing from our example, here we're implementing the Webhook URL endpoint, `/webhook`. In this case, that includes when an issue is created. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
 
 ```python
 @app.route('/webhook', methods=['POST'])
@@ -227,19 +255,7 @@ def get_sentry_issue(install_id, issue_id):
     return resp.json()
 ```
 
-For more information, see the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
-
-### Alerts
-
-You can make any integration available as an action in issue alert rules and
-metric alert rules by enabling the "Alert Rule Action" toggle. It will then show
-up as a service in the action section when creating or updating an alert rule.
-For more information, see the
-[full documentation on Alerts](/product/alerts/).
-
-![Dropdown menu of actions for an alert rule.](alert-rules.png)
-
-For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
+For more information, check out the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
 
 ### Published State
 
@@ -247,19 +263,6 @@ When you're ready for the publication process, click "Publish" next to the integ
 
 ![Buttons providing the options to publish or delete.](publish-button.png)
 
-## Image Requirements
-
-Published integrations require a logo image to be uploaded. The requirements for those are:
-* Logo size must be between 256 &times; 256px and 1024 &times; 1024px
-* The file format must be PNG
-* The background must be transparent (unless the logo takes up the entire space)
-
-If the integration has a [UI component](#ui-components), you must also upload an icon that follows these requirements:
-* Icon size must be between 256x256 px and 1024x1024px
-* The file must be a PNG in RGBA format
-* All pixels must be black or transparent
-
-Internal integrations can have logos and icons uploaded, but they are not required.
 
 ## Internal Integrations
 
@@ -275,31 +278,24 @@ For an example of how to build an internal integration, see [our Round Robin Iss
 
 Creating an internal integration will automatically install it on your organization.
 
-#### Auth Tokens
+### Auth Tokens
 
 Auth Tokens are what the Integration Platform calls tokens. Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API. In the case of the Integration Platform, these tokens are used to authenticate as an application (with access to a specific organization) instead of a user.
 
-When you create an Internal Integration, a token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
+When you create an Internal Integration, a token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your **Developer Settings > Your Internal Integration** and do so.
 
 You can have up to 20 tokens at a time for any given internal integration.
 
-#### How to use for requests
+### How to use tokens for requests
 
 When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests](/api/auth/). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed).
 
-#### Expiration
+### Expiration
 
 Tokens never expire, but you can manually revoke them.
 
 ![Image showing the ability to copy tokens, create new tokens, revoke tokens, and when they were created in UTC.](tokens.png)
 
-### Webhooks and Alerts
-
-Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts](/product/integrations/integration-platform/webhooks/#issue-alerts) for more detail on the request and payload.
-
-### Integration Webhooks
-
-Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks](/product/integrations/integration-platform/webhooks/).
 
 ## UI Components
 
@@ -317,23 +313,13 @@ It is possible to use Auth Tokens from the browser if you allow the origins of t
 
 ## FAQ
 
-#### How are Sentry Integrations different from Plugins?
-
-Plugins (aka Legacy Integrations) are extensions of Sentry packaged as Python libraries. Plugins have been contributed both internally (for example, sentry-plugins) and externally by outside developers (for example, sentry-trello). Plugins are configured separately for each project.
-
-<Note>
-
-Going forward, writing a Sentry Integration is the preferred method of integrating with Sentry."
-
-</Note>
-
-#### How is the Sentry Integration different from OAuth Apps?
+#### How is a Sentry Integration different from OAuth Apps?
 
 OAuth Applications allow an external developer to create an application which can authenticate as a Sentry user and take actions as the user within Sentry.
 
 Sentry Integration apps are similar to OAuth apps, except Sentry Integration apps act as an independent entity. There is currently no way for Sentry Integration apps to act on behalf of a user.
 
-#### How is the Sentry Integration different from personal Auth Tokens?
+#### How is a Sentry Integration different from personal Auth Tokens?
 
 Personal Auth Tokens are tokens a user can use to invoke APIs directly and have access to all the resources tied to that user. Sentry Integration Apps do not represent a single user, but rather make requests as "itself."
 
@@ -369,11 +355,3 @@ Sentry Integration apps expose a richer set of events that are not available usi
 * Comment Deleted
 
 In the future, we’ll add more types of webhooks to Sentry Integration apps.
-
-**Custom UI Components**
-
-Sentry Integration apps will be able to augment Sentry’s UI in meaningful and feature-rich ways. For example, on the issue page, you could have a button that creates a task in your task-management tool, or open a line in the stack trace in another tool.
-
-#### How can I build an Integration with Sentry?
-
-If you are a Manager or Owner for your organization you can visit Organization Settings > Developer Settings.
