@@ -5,31 +5,18 @@ support_level: production
 type: framework
 ---
 
-Install the Sentry Capacitor SDK alongside the sibling Sentry SDK:
+Install the Sentry Capacitor SDK alongside the sibling Sentry SDK.
+The supported siblings are: Angular `@sentry/angular`, React `@sentry/react` and Vue `@sentry/vue`.
 
-```angular {tabTitle: Ionic + Angular}
-# npm
+Heres an example of installing Sentry Capacitor along with Sentry Angular:
+```
 npm install --save @sentry/capacitor @sentry/angular
-
-# yarn
-yarn add @sentry/capacitor @sentry/angular @sentry/tracing
 ```
-
-```react {tabTitle: Ionic + React}
-# npm
-npm install --save @sentry/capacitor @sentry/react 
-
-# yarn
-yarn add @sentry/capacitor @sentry/react  @sentry/tracing
+or
 ```
-
-```vue {tabTitle: Ionic + Vue}
-# npm
-npm install --save @sentry/capacitor @sentry/vue 
-
-# yarn
-yarn add @sentry/capacitor @sentry/vue  @sentry/tracing
+yarn add @sentry/capacitor @sentry/angular
 ```
+The same installation process applies to the other siblings, all you need to do is to replace `@sentry/angular` by the desired sibling.
 
 ## Android Installation
 
@@ -80,15 +67,12 @@ class MainActivity : BridgeActivity() {
 
 You must initialize the Sentry SDK as early as you can:
 
-```angular {tabTitle: Angular}
-// app.module.ts
+```javascript
 import * as Sentry from "@sentry/capacitor";
-import * as SentryAngular from "@sentry/angular";
-// If taking advantage of automatic instrumentation (highly recommended)
+// The example is using Angular, Import "@sentry/vue" or "@sentry/react" when using a Sibling different than Angular.
+import * as SentrySibling from "@sentry/angular";
+// For automatic instrumentation (highly recommended)
 import { BrowserTracing } from "@sentry/tracing";
-// Or, if only manually tracing
-// import "@sentry/tracing";
-// Note: You MUST import the package in some way for tracing to work
 
 Sentry.init(
   {
@@ -105,90 +89,23 @@ Sentry.init(
       }),
     ]
   },
-  // Forward the init method from @sentry/angular
-  SentryAngular.init
+  // Forward the init method to the sibling Framework.
+  SentrySibling.init
 );
+```
 
+Additionally for Angular, you will also need to alter NgModule (same code doesn't apply to other siblings)
+
+```javascript
 @NgModule({
   providers: [
     {
       provide: ErrorHandler,
       // Attach the Sentry ErrorHandler
-      useValue: SentryAngular.createErrorHandler(),
+      useValue: SentrySibling.createErrorHandler(),
     },
   ],
 })
-```
-
-```react {tabTitle: React}
-import * as Sentry from "@sentry/capacitor";
-import * as SentryReact from "@sentry/react";
-// If taking advantage of automatic instrumentation (highly recommended)
-import { BrowserTracing } from "@sentry/tracing";
-// Or, if only manually tracing
-// import "@sentry/tracing";
-// Note: You MUST import the package in some way for tracing to work
-
-setupIonicReact();
-
-Sentry.init(
-  {
-    dsn: "___PUBLIC_DSN___",
-    // To set your release and dist versions
-    release: "my-project-name@" + process.env.npm_package_version,
-    dist: "1",
-    debug: true,
-    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-    // We recommend adjusting this value in production.
-    tracesSampleRate: 1.0,
-    integrations: [
-      new BrowserTracing({
-        tracingOrigins: ["localhost", "https://yourserver.io/api"],
-      }),
-    ]
-  },
-  // Forward the init method from @sentry/react
-  SentryReact.init
-);
-```
-
-```vue {tabTitle: Vue}
-import * as Sentry from "@sentry/capacitor";
-import * as SentryVue from "@sentry/vue";
-// If taking advantage of automatic instrumentation (highly recommended)
-import { BrowserTracing } from "@sentry/tracing";
-// Or, if only manually tracing
-// import "@sentry/tracing";
-// Note: You MUST import the package in some way for tracing to work
-
-const app = createApp(App)
-  .use(IonicVue)
-  ...
-  .use(router);
-
-Sentry.init(
-  {
-    dsn: "___PUBLIC_DSN___",
-    // To set your release and dist versions
-    release: "my-project-name@" + process.env.npm_package_version,
-    dist: "1",
-    debug: true,
-    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-    // We recommend adjusting this value in production.
-    tracesSampleRate: 1.0,
-    integrations: [
-      new BrowserTracing({
-        tracingOrigins: ["localhost", "https://yourserver.io/api"],
-      }),
-    ]
-  },
-  // Forward the init method from @sentry/vue
-  SentryVue.init
-);
-
-router.isReady().then(() => {
-  ...
-});
 ```
 
 ## Verify
