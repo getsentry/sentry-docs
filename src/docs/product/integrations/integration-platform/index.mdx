@@ -10,13 +10,13 @@ Sentry’s Integration Platform provides a way for external services to interact
 
 ## Creating an Integration
 
-In [sentry.io](https://sentry.io), navigate to **Settings > Developer Settings**. From here, you can choose to create an [internal](#internal-integrations) or [public](#public-integrations) integration. Internal integrations can only be used by your organization, whereas public integrations can be published and available for all Sentry users.
+In [sentry.io](https://sentry.io), navigate to **Settings > Developer Settings**. From here, you can choose to create an [internal](#internal-integrations) or [public](#public-integrations) integration. Internal integrations can only be used by your organization, whereas public integrations can be published and are available for all Sentry users.
 
 ![Settings page that allows developer to choose between public or internal integrations.](dev-settings.png)
 
 ## Alert Rule Action
 
-You can make any integration available as an action in [issue alerts](/product/integrations/integration-platform/webhooks/#issue-alerts) and [metric alerts](/product/integrations/integration-platform/webhooks/#metric-alerts) by enabling the "Alert Rule Action" toggle. It will then show
+You can make any integration available as an action in [issue alerts](/product/integrations/integration-platform/webhooks/#issue-alerts) and [metric alerts](/product/integrations/integration-platform/webhooks/#metric-alerts) by enabling the "Alert Rule Action" toggle. The integration will then show
 up as a service in the action section when creating or updating an alert rule.
 
 ![Dropdown menu of actions for an alert rule.](alert-rules.png)
@@ -27,11 +27,11 @@ For your service to receive webhooks for alert rules, users must add to existing
 
 The Sentry Integration Platform provides the ability to add rich UI components to [sentry.io](https://sentry.io) itself through a  simple, declarative syntax.
 
-For more information, see the [full documentation on UI Components](/product/integrations/integration-platform/ui-components/).
+For more information, check out the [full documentation on UI Components](/product/integrations/integration-platform/ui-components/).
 
 ## Authorized Origins
 
-It's possible to use auth tokens from the browser if you allow the origins of the pages making the requests. In the "Authorized JavaScript Origins" field, add each origin (for example, docs.sentry.io) separated by a newline. You don't need to include the protocol in the origin (http or https). Currently, you can't use any wildcard characters (for example, `*.sentry.io`), so if you have multiple subdomains, you'll need to add them individually.
+It's possible to use auth tokens from the browser if you allow the origins of the pages making the requests. In the "Authorized JavaScript Origins" field, add each origin (for example, docs.sentry.io) separated by a newline. You don't need to include the protocol (http or https) in the origin. Currently, you can't use any wildcard characters (for example, `*.sentry.io`), so if you have multiple subdomains, you'll need to add them individually.
 
 ## Image Requirements
 
@@ -53,7 +53,7 @@ Permissions specify what level of access your service requires of Sentry resourc
 
 ![Form that allows developer to set what permissions they'll need from their user.](permissions.png)
 
-You cannot create an integration or change an existing integration to have permissions greater than your own user settings. Permissions are scoped to the organization, so adding scopes for issues and events, projects, or teams will enable access to issues and events, projects, or teams across the organization.
+You can't create an integration or change an existing integration to have permissions greater than your own user settings. Permissions are scoped to the organization, so adding scopes for issues and events, projects, or teams will enable access to issues and events, projects, or teams across the organization.
 
 ## Integration Webhooks
 
@@ -65,19 +65,19 @@ Auth tokens are passed using an auth header, and are used to authenticate as a u
 
 ## Public Integrations
 
-Public integrations are for the "general public" of Sentry users. These start in an unpublished state for development purposes and can later be submitted for approval to publish. For more information, check out the [section on Publishing](#published-state).
+Public integrations are for the "general public" of Sentry users. These start in an unpublished state for development purposes and can be submitted later for approval to publish. For more information, check out the [section on Publishing](#published-state).
 
 The code examples in the sections below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to Pushover as a generator of desktop/mobile notifications.
 
 ### Installation
 
-Users will have the option to install your integrations on the "Integrations" page in [sentry.io](https://sentry.io). If your integration is still in an unpublished state, the only Sentry organization that will be able to install it will be the organization that created the integration. Clicking the name of the integration will allow users to see a description of your integration and the permissions that will be granted if the user chooses to install.
+Users will have the option to install your integrations on the **Integrations** page in [sentry.io](https://sentry.io). If your integration is still in an unpublished state, the only Sentry organization that will be able to install it will be the organization that created the integration. Clicking the name of the integration will allow users to see a description of your integration and the permissions that will be granted if the user chooses to install.
 
 ![A list of integrations that a user can install.](integration-directory.png)
 
 ### OAuth Process
 
-After installation, if your user has approved of all permissions, Sentry will generate a grant code and an installation ID. This information is sent by way of the `installation.created` webhook to the webhook URL specified in your configuration.
+After installation, if your user has approved all permissions, Sentry will generate a grant code and an installation ID. This information is sent by way of the `installation.created` webhook to the webhook URL specified in your configuration.
 
 However, if your integration has a redirect URL configured, the integration redirects the user’s browser to the configured URL with the grant code and installation ID in the query params.
 
@@ -165,7 +165,7 @@ Auth Tokens are referred to as _tokens_ in the Integration Platform. Auth tokens
 
 ### Using Tokens for Requests
 
-When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests](/api/auth/). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration.
+When making requests to the Sentry API, you use the token just like you would when you're making typical [API requests](/api/auth/). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration.
 
 ### Token Expiration
 
@@ -199,11 +199,11 @@ def refresh_token(install_id):
     return new_token
 ```
 
-Instead of keeping track of times and passively refreshing at the time a token expires, one painless way you can handle refreshing tokens is to actively capture exceptions raised by requests that receive a 401 Unauthorized response from Sentry, refresh the token, and remake the request.
+Instead of keeping track of times and passively refreshing when a token expires, one painless way you can handle refreshing tokens is to actively capture exceptions raised by requests that receive a 401 unauthorized response from Sentry, refresh the token, and remake the request.
 
 ### Verifying Installations (optional)
 
-Typically, if you have the redirect URL configured, there is work happening on your end to "finalize" the installation. If this is the case, we recommend enabling the "Verify Install" option for your integration. Once enabled, you'll need to send a request marking the installation as officially "installed".
+Typically, if you have the redirect URL configured, there is work happening on your end to "finalize" the installation. If this is the case, we recommend enabling the "Verify Install" option for your integration. Once enabled, you'll need to send a request marking the installation as officially "installed":
 
 ```python
 requests.put(
@@ -289,9 +289,9 @@ Creating an internal integration will automatically install it on your organizat
 
 Auth Tokens are referred to as _tokens_ in the Integration Platform. Auth tokens are passed using an auth header and are used to authenticate as a user account with the API. In the case of the Integration Platform, these tokens are used to authenticate as an application (with access to a specific organization) instead of a user.
 
-When you create an internal integration, a token is automatically generated. Should you need multiple tokens, or you need to get a new one, you can go into your **Settings > Developer Settings > [Your Internal Integration]** and do so.
+When you create an internal integration, a token is automatically generated. Should you need multiple tokens, or you need to get a new one, you can go to **Settings > Developer Settings > [Your Internal Integration]** and do so.
 
-You can have up to 20 tokens at a time for any given internal integration.
+You can have up to 20 tokens at a time for each internal integration.
 
 ### Using Tokens for Requests
 
@@ -310,15 +310,15 @@ Tokens never expire, but you can manually revoke them.
 
 OAuth applications allow an external developer to create an application which can authenticate as a Sentry user and take actions as the user within Sentry.
 
-Sentry integrations are similar to OAuth apps, except Sentry Integrations act as an independent entity. There is currently no way for Sentry integrations to act on behalf of a user.
+Sentry integrations are similar to OAuth apps, except Sentry integrations act as an independent entity. There is currently no way for a Sentry integration to act on behalf of a user.
 
 ### How is a Sentry integration different from personal auth tokens?
 
-Personal auth tokens are tokens a user can use to invoke APIs directly and have access to all the resources tied to that user. A Sentry integration doesn't represent a single user, but rather makes requests as "itself".
+Personal auth tokens are tokens that can be used to invoke APIs directly and have access to all the resources tied to that user. A Sentry integration doesn't represent a single user, but rather makes requests as "itself".
 
 ### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
 
-If you're looking for any of the new features below, we recommend you switch to Sentry Integrations and build an [internal integration](#internal-integrations).
+If you're looking for any of the new features below, we recommend you switch to using Sentry integrations and build an [internal integration](#internal-integrations).
 
 **Permissions**
 OAuth apps and auth tokens allow you to access Sentry as a specific user in your Sentry organization. This means:
