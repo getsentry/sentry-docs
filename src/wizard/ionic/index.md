@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-Install the Sentry Capacitor SDK alongside the sibling Sentry SDK.
+To use Sentry in your Ionic app, install the Sentry Capacitor SDK alongside the sibling Sentry SDK related to the Web framework you're using with Ionic.
 The supported siblings are: Angular `@sentry/angular`, React `@sentry/react` and Vue `@sentry/vue`.
 
 Heres an example of installing Sentry Capacitor along with Sentry Angular:
