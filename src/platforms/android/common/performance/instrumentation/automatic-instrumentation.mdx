@@ -223,3 +223,103 @@ The span finishes once the operation has been executed. The span `status` is set
 When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
 For more information see our [file I/O integration](/platforms/android/configuration/integrations/file-io/).
+
+### User Interaction Instrumentation
+
+_(New in version 6.0.0)_
+
+The UI instrumentation, once enabled, captures transactions for a set of different user interactions, which include clicks, scrolls and swipes. The SDK composes the transaction name out of the host `Activity` and the `id` of the view, which captured the user interaction; for example, `LoginActivity.login_button`. The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll` or `swipe`).
+
+<Note>
+
+If the view doesn't have the `id` assigned, the transaction won't be captured because it can't be uniquely identified otherwise.
+
+</Note>
+
+The UI instrumentation is disabled by default, but you can enable it by setting:
+
+```xml {filename:AndroidManifest.xml}
+<manifest>
+    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+</manifest>
+```
+
+The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds). You can also disable the idle timeout by setting it to `null`, but the transaction must be finished manually in this case.
+
+<Note>
+
+If the UI transaction has idled, but didn't have any child spans added, it will be dropped.
+
+</Note>
+
+To finish the transaction manually, you can:
+
+```java
+import io.sentry.Sentry;
+
+ISpan span = Sentry.getSpan();
+if (span != null) {
+  span.finish();
+}
+```
+
+```kotlin
+import io.sentry.Sentry
+
+val span = Sentry.getSpan()
+span?.finish()
+```
+
+If the host `Activity` transitions into a non-interactive state (for example, `onPause`), the UI transaction will be scheduled to finish automatically (as soon as all of its child spans are finished).
+
+Transactions are always bound to the `Scope` automatically if there's none set. Because of that, you can create spans using manual instrumentation, and those spans will be automatically associated with the running UI transaction.
+
+```java
+import java.lang.Exception;
+
+import io.sentry.ISpan;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+void loadUserDataOnClick() {
+  ISpan span = Sentry.getSpan();
+  if (span != null) {
+    ISpan innerSpan = span.startChild("loadUserData");
+    try {
+      // omitted code
+    } catch (Exception e) {
+      innerSpan.setThrowable(e);
+      innerSpan.setStatus(SpanStatus.NOT_FOUND);
+      throw e;
+    } finally {
+      innerSpan.finish();
+    }
+  }
+}
+```
+
+```kotlin
+import java.lang.Exception
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+fun loadUserDataOnClick() {
+  val span = Sentry.getSpan()
+  span?.let {
+    val innerSpan = it.startChild("displayUloadUserDataserData")
+
+    try {
+      // omitted code
+    } catch (e: Exception) {
+      innerSpan.throwable = e
+      innerSpan.status = SpanStatus.NOT_FOUND
+      throw e
+    } finally {
+      innerSpan.finish()
+    }
+  }
+}
+```
+
+When the UI transaction is not finished yet, but the user makes a new interaction, the SDK automatically finishes the previous UI transaction. This is because only one transaction can be bound to the scope at a time. However, if the same view has been interacted with (for example, a `RecyclerView` was scrolled again within the `idleTimeout` window), the idle timer will be reset and the transaction duration will be extended with the `idleTimeout` value.
