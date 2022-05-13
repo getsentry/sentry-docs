@@ -2,34 +2,23 @@
 title: "Slack Integration"
 ---
 
-Updated version of this [post](https://forum.sentry.io/t/how-to-configure-slack-in-your-on-prem-sentry/3463)
-
 ## Create a Slack App
 
-To use Sentry’s new Slack integration you’ll need to create an app in Slack bot app. Navigate to __Your Apps__ and click __Create new App__.
+To use Sentry’s Slack integration you’ll need to create a Slack app. Navigate to [Your Apps](https://api.slack.com/apps/) and click __Create New App__.
 
 ![Create](./create.png)
 
 After naming your app and connecting your workspace, navigate to __Basic Information__. Here you’ll find your Client ID, Client Secret, and Verification token that lets your app access the Slack API.
 
 Here’s where you’ll connect your self-hosted Sentry instance to your newly created Slack app.
-<dl>
-<dt><code>system.admin-email</code></dt>
-Declared in <code>config.yml</code>.
 
-<dd>
-<markdown>
-Copy your Client ID, Client Secret, and Signing Secret.
+Copy your Client ID, Client Secret, and Signing Secret and paste them into <code>config.yml</code>. 
 
 ```yaml
 slack.client-id: <client id>
 slack.client-secret: <client secret>
 slack.signing-secret: <signing secret>
 ```
-
-</markdown>
-</dd>
-</dl>
 
 After you update the <code>config.yml</code> you need to restart your Sentry server to continue configuring the Slack app.
 
@@ -79,17 +68,19 @@ Add the following scopes to __User Scopes__:
 * `users:read`
 * `users:read.email`
 
-Click __Save Changes__.
+<Alert level="info">
+You have the option to set 'Restrict API Token Usage' on this page if you want to limit use of your app’s OAuth tokens to a list of IP addresses and ranges you provide.
+</Alert>
 
-_Note: You have the option to set Restrict API Token Usage on this page if you want to ensure your Slack is the only one talking to your Sentry instance._
-
-Navigate to __Event Subscription__ and toggle “On”. Here you will enter another Request URL: `{YOUR_DOMAIN}/extensions/slack/event/`
+Navigate to __Event Subscriptions__ and toggle “On”. Here you will enter another Request URL: `{YOUR_DOMAIN}/extensions/slack/event/`
 
 You’ll see “Verified” when you’ve entered the correct URL.
 
 ![Events](./events.png)
 
-_Note: When you enter the Request URL, Slack tries to verify it. The request will fail if you didn’t configure the client keys/secret and restarted Sentry to ensure those config changes were picked up. If it fails to validate, first make sure your Sentry instance is running and Slack can talk to it (Slack [doesn’t have an ip range](https://twitter.com/slackapi/status/567110311476350976?lang=en))_
+<Alert level="info">
+When you enter the 'Request URL', Slack tries to verify it. The request will fail if you didn’t configure the client keys/secret and restart Sentry to ensure those config changes were picked up. If it fails to validate, first make sure your Sentry instance is running and Slack can talk to it (Slack <Link to="https://twitter.com/slackapi/status/567110311476350976?lang=en">doesn’t have an IP range</Link>).
+</Alert>
 
 Still on the __Event Subscription__ page, go to __Subscribe to bot events__ and add the following bot user events:
 
@@ -104,7 +95,7 @@ Lastly, still on that page, go to __App Unfurl Domains__, click __Add Domain__ t
 
 At the bottom of the page, click __Save Changes__.
 
-Navigate to __App Home__, the first section under __Features__. Here is where you can edit your bot display name (this is the name that will be displayed when alerts are triggered)
+Navigate to __App Home__, under __Features__. Here is where you can edit your bot's display name (this is the name that will be displayed when alerts are triggered).
 
 ![Bot](./bot.png)
 
@@ -119,4 +110,4 @@ Navigate to __Slash Commands__ under __Features__. Click __Create New Command__ 
 
 At the bottom of the page, click __Save__.
 
-Now you can use Slack with Sentry! See our [documentation on configuring the Slack integration for your projects](https://docs.sentry.io/workflow/integrations/global-integrations/#slack) to take advantage of multi-channel Alert routing with the new integration.
+Now you can use Slack with Sentry! See our [documentation on installing and configuring the Slack integration for your projects](https://docs.sentry.io/product/integrations/notification-incidents/slack/) to take advantage of multi-channel Alert routing.
