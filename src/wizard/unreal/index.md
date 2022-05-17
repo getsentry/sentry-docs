@@ -27,7 +27,7 @@ ___PUBLIC_DSN___
 
 ## Crash Report Client
 
-For Windows and Mac [Crash Report Client](/platforms/unreal/setup-crashreport/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
+For Windows and Mac, [Crash Report Client](/platforms/unreal/setup-crashreport/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
 
 ### Include the UE4 Crash Reporter
 
@@ -36,12 +36,12 @@ You can add the _Crash Report Client_ to your game in your _Project Settings_.
 The option is located under _Project > Packaging_ menu, then select _show advanced_ followed by
 checking the box for: `Include Crash Reporter`.
 
-### Debug information
+### Debug Information
 
-To get the most out of Sentry, crash reports are required to include debug information.
+To get the most out of Sentry, crash reports must include debug information.
 In order for Sentry to be able to process the crash report and translate
 memory addresses to meaningful information like function names, module names
-and line numbers, the crash itself must include debug information and also, symbols need
+and line numbers, the crash itself must include debug information and symbols need
 to be uploaded to Sentry.
 
 The option is also located under _Project > Packaging_ menu, then select _show advanced_ followed by
