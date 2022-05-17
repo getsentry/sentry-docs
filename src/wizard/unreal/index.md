@@ -41,8 +41,8 @@ checking the box for: `Include Crash Reporter`.
 To get the most out of Sentry, crash reports are required to include debug information.
 In order for Sentry to be able to process the crash report and translate
 memory addresses to meaningful information like function names, module names
-and line numbers, the crash itself must include debug information and also, [symbols need
-to be uploaded to Sentry](#upload-debug-symbols).
+and line numbers, the crash itself must include debug information and also, symbols need
+to be uploaded to Sentry.
 
 The option is also located under _Project > Packaging_ menu, then select _show advanced_ followed by
 checking the box for: `Include Debug Files`.
@@ -69,7 +69,7 @@ DataRouterUrl="___UNREAL_URL___"
 If a `[CrashReportClient]` section already exists, simply changing the value of `DataRouterUrl`
 is enough.
 
-### Upload Debug Symbols {#upload-debug-symbols}
+### Upload Debug Symbols
 
 To allow Sentry to fully process native crashes and provide you with
 symbolicated stack traces, you need to upload _Debug Information Files_
