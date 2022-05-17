@@ -14,15 +14,25 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 ### http.Client Library Instrumentation
 
-The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the `networkTracing` feature, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
+The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the `networkTracing` feature, starts a span out of the active transaction bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
 
 The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus`.
 
-When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in sentry.io.
 
 For more information see our [SentryHttpClient integration](/platforms/dart/configuration/integrations/http-integration/#performance-monitoring-for-http-requests).
 
-### Routing Instumentation
+### Dio HTTP Library Instrumentation
+
+The Dio instrumentation starts a span out of the active transaction bound to the scope for each HTTP request. The SDK sets the span `operation` to `http.client` and the `description` to request `$method $URL`. For example, `GET https://sentry.io`.
+
+The span finishes once the request has been executed. The span `status` depends on either the HTTP response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus` options.
+
+When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in [sentry.io](https://sentry.io).
+
+Learn more in our [Dio integration documentation](/platforms/dart/configuration/integrations/dio/#performance-monitoring-for-http-requests).
+
+### Routing Instrumentation
 
 Automatic routing instrumentation can be enabled by adding an instance of `SentryNavigationObserver` to your application's `navigatorObservers`. Transactions are started automatically when routing to new pages in your application.
 
@@ -81,13 +91,23 @@ SentryNavigatorObserver(
 )
 ```
 
+### GoRouter Instrumentation
+
+When using the [go_router](https://pub.dev/packages/go_router) library, the automatic routing instrumentation can be enabled by adding an instance of `SentryNavigationObserver` to your application's `GoRouter.observers`:
+
+```dart
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final router = GoRouter(
+  routes: ...,
+  observers: [SentryNavigatorObserver()],
+);
+```
+
+Everything else follows the [routing instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#routing-instrumentation) setup.
+
 ### App Start Instrumentation
-
-<Note>
-
-This feature is available on Sentry Flutter SDK `6.5.0-alpha.1` and above. Features available in Beta are still in-progress and may have bugs. We recognize the irony.
-
-</Note>
 
 The App Start Instrumentation provides insight into how long your application takes to launch. It tracks the length of time from the **earliest native process initialization** until the very first [PostFrameCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addPostFrameCallback.html) is triggered.
 
@@ -96,7 +116,6 @@ The SDK differentiates between a cold and a warm start, but doesn't track hot st
 If you don't initialize the SDK early in the app's lifecycle, you can also customize the ending of the app start by disabling the `autoAppStart` flag and calling the `SentryFlutter.setAppStartEnd` function.
 
 ```dart
-import 'package:flutter/widgets.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 // Run my App and do my things first
@@ -130,15 +149,9 @@ Cold and warm start are Mobile Vitals, which you can learn about in the [full do
 
 ### Slow and Frozen Frames
 
-<Note>
-
-This feature is available on Sentry Flutter SDK `6.5.0-alpha.1` and above. Features available in Beta are still in-progress and may have bugs. We recognize the irony.
-
-</Note>
-
 Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are slow frames and frozen frames. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
 
-To start getting the Mobile Vitals data, you have to set up the [routing instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#routing-instumentation).
+To start getting the Mobile Vitals data, you have to set up the [routing instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#routing-instrumentation) or the [GoRouter instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#gorouter-instrumentation).
 
 If you want to opt out, you can flip the `enableAutoPerformanceTracking` flag:
 
@@ -155,3 +168,42 @@ Future<void> main() async {
 ```
 
 Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
+
+### AssetBundle Instrumentation
+
+The [AssetBundle](https://api.flutter.dev/flutter/services/AssetBundle-class.html) instrumentation provides insight into how long your app takes to load its assets, such as files. It can be enabled by wrapping the `runApp` method with a `DefaultAssetBundle` and `SentryAssetBundle`.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.dsn = '___PUBLIC_DSN___',
+    appRunner: () => runApp(
+      DefaultAssetBundle(
+        bundle: SentryAssetBundle(),
+        child: MyApp(),
+      ),
+    ),
+  );
+}
+```
+
+The `SentryAssetBundle` instrumentation starts a span out of the active transaction bound to the scope for each `load` and `loadString` call. The SDK sets the span `operation` to `file.read`.
+
+You can also enable the instrumentation for the `loadStructuredData` method by providing the `enableStructuredDataTracing` flag.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryAssetBundle(enableStructuredDataTracing: true)
+```
+
+The `SentryAssetBundle` instrumentation starts a span out of the active transaction bound to the scope for each `loadStructuredData` call. The SDK sets the span `operation` to `serialize`.
+
+<Note>
+
+The `enableStructuredDataTracing` feature is available in Beta. Beta features are still in-progress and may have bugs. We recognize the irony.
+
+</Note>

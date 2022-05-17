@@ -14,11 +14,34 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 This feature is available for iOS, tvOS, and Mac Catalyst, and only works for UIViewControllers.
 
-The UIViewController Instrumentation, once enabled, captures transactions whenever your app loads an in-app UIViewController, meaning it doesn't capture transactions of UIKits UIViewControllers, other third-party libraries, or SwiftUI. The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
+The UIViewController Instrumentation, once enabled, captures transactions when your app loads an in-app [UIViewController][UIViewController]. However, the SDK doesn't capture transactions for UIViewControllers of third-party libraries or SwiftUI.
+The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
 
 The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
 
 ![UIViewController Transaction](ui-view-controller-transaction.png)
+
+To disable the UIViewController Instrumentation:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableUIViewControllerTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUIViewControllerTracking = NO;
+}];
+```
+
+[UIViewController]: https://developer.apple.com/documentation/uikit/uiviewcontroller
 
 ## App Start Instrumentation
 
@@ -111,6 +134,35 @@ SentrySDK.start { options in
 [NSFileManager]: https://developer.apple.com/documentation/foundation/nsfilemanager
 [NSString]: https://developer.apple.com/documentation/foundation/nsstring
 [NSBundle]: https://developer.apple.com/documentation/foundation/nsbundle
+
+## Core Data Instrumentation
+
+<Alert level="info" title="Important">
+
+This is an experimental feature and requires an opt-in. Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+
+</Alert>
+
+The Sentry SDK adds spans for Core Data operations to ongoing transactions bound to the scope. Currently, the SDK supports fetch and save operations with [NSManagedObjectContext](https://developer.apple.com/documentation/coredata/nsmanagedobjectcontext).
+To enable core data instrumentation:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableCoreDataTracking = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableCoreDataTracking = YES;
+}];
+```
 
 ## Opt Out
 

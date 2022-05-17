@@ -6,9 +6,69 @@ redirect_from:
 description: "Migrating between versions of Sentry's SDK for Android."
 ---
 
+## Migrating from `io.sentry:sentry-android 5.x` to `io.sentry:sentry-android 6.0.0`
+
+* Kotlin plugin is upgraded to `1.5`.
+* Kotlin `languageVersion` is upgraded to `1.4`.
+* `Gson` is removed as a transitive dependency and vendored in the SDK.
+  * Protocol classes now implement the `JsonSerializable` and `JsonDeserializer` interfaces.
+* `SentryOptions#shutdownTimeout` is renamed to `shutdownTimeoutMillis`.
+* Removed `@Deprecated` and `@ApiStatus.ScheduledForRemoval` methods
+  * `ITransaction#setRequest`
+  * `ITransaction#getRequest`
+  * `ITransaction#getContexts`
+  * `SentryBaseEvent#getOriginThrowable`
+  * `SentryOptions#getCacheDirSize`
+  * `SentryOptions#setCacheDirSize`
+  * `SentryOptions#isEnableSessionTracking`
+  * `SentryOptions#setEnableSessionTracking`
+* Removed unnecessary abstractions
+  * `IBuildInfoProvider` is now `BuildInfoProvider` only.
+  * `IHandler` is now `MainLooperHandler` only.
+* `ISpan` now has higher precision using the `System#nanoTime` instead of milliseconds.
+
+* Hints changed its type from `Object` to `Map<String, Object>`
+
+_Old_:
+
+```kotlin
+Sentry.captureException(RuntimeException("exception"), "myStringHint")
+```
+
+_New_:
+
+```kotlin
+val hints = mutableMapOf<String, Any>("myHint" to "myStringHint")
+Sentry.captureException(RuntimeException("exception"), hints)
+```
+
+* `SentryOptions#enableScopeSync` is now enabled by default, to disable it, see the code snippet bellow.
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.ndk.scope-sync.enable" android:value="false" />
+```
+
+* `SentryOptions#sendClientReports` is now enabled by default. To disable it, use the code snippet below:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.send-client-reports" android:value="false" />
+```
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `6.0.0` of `sentry`, [Sentry's version >= v21.9.0](https://github.com/getsentry/self-hosted/releases) is required or you have to manually disable sending client reports via the `sendClientReports` option. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+There are more changes and refactors, but they are not user breaking changes.
+
 ## Migrating to `io.sentry:sentry-android-timber 5.6.2`
 
 Starting from version `5.6.2`, the `Timber.tag` usage is no longer supported by our SDK (the tag will not be captured and reflected on Sentry). Please, vote on this [GitHub issue](https://github.com/getsentry/sentry-java/issues/1900) to let us know if we should provide support for that.
+
+<Note>
+
+Support for `Timber.tag` has been brought back in version `5.7.2`.
+
+</Note>
 
 ## Migrating from `io.sentry:sentry-android-gradle-plugin 2.x` to `io.sentry:sentry-android-gradle-plugin 3.0.0`
 
@@ -18,7 +78,7 @@ The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0
 
 The `autoUpload` flag has been deprecated in favor of two new options:
 
-* `includeProguardMapping` - Disables/enables Proguard mapping functionality. When enabled, generates a UUID and attempts to upload a Proguard mapping associated with that UUID to Sentry.  When `autoUploadProguardMapping` is disabled, the plugin will only generate a `sentry-debug-meta.properties` file containg UUID, which later can be used to manually upload the mapping, for example, using [sentry-cli](/product/cli/dif/#proguard-mapping-upload).  
+* `includeProguardMapping` - Disables/enables Proguard mapping functionality. When enabled, generates a UUID and attempts to upload a Proguard mapping associated with that UUID to Sentry.  When `autoUploadProguardMapping` is disabled, the plugin will only generate a `sentry-debug-meta.properties` file containg UUID, which can later be used to manually upload the mapping using, for example [sentry-cli](/product/cli/dif/#proguard-mapping-upload).
 * `autoUploadProguardMapping` - Defines whether the gradle plugin should attempt to auto-upload the mapping file to Sentry.
 When `includeProguardMapping` is disabled, this flag has no effect.
 
@@ -51,7 +111,7 @@ sentry {
   autoUploadProguardMapping.set(false)
 }
 ```
- 
+
 
 ### tracingInstrumentation
 
@@ -86,6 +146,8 @@ sentry {
 ## Migrating from `io.sentry:sentry-android-gradle-plugin 1.x` to `io.sentry:sentry-android-gradle-plugin 2.0.0`
 
 The `io.sentry.android.gradle` >= `2.0.0` requires [Android Gradle Plugin >= 4.0.0](https://developer.android.com/studio/releases/gradle-plugin#4-0-0).
+
+The `io.sentry.android.gradle` >= `2.0.0` must be applied to the `app/build.gradle` module (or the module that has `com.android.application` plugin applied).
 
 The `io.sentry.android.gradle` >= `2.0.0` publishes the Gradle Plugin Marker to Maven Central. As a result, you no longer need to set the `classpath`.
 

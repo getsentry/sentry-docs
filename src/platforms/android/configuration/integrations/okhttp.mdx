@@ -20,7 +20,76 @@ The minimum supported version of `okhttp` is `3.13.0` due to its [incompatibilit
 
 </Note>
 
-## Install
+## Auto-Installation With the Sentry Android Gradle Plugin
+
+Starting from version `3.1.0`, the Sentry Android Gradle plugin will automatically add the `sentry-android-okhttp` dependency and instrument all of your `OkHttpClient` instances through bytecode manipulation. The plugin will only add the `sentry-android-okhttp` dependency if an `okhttp` dependency was discovered on the classpath.
+
+### Install
+
+Add the Sentry Android Gradle plugin in `build.gradle`:
+
+```groovy
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id "io.sentry.android.gradle" version "3.1.0-beta.1"
+}
+```
+
+```kotlin
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id("io.sentry.android.gradle") version "3.1.0-beta.1"
+}
+```
+
+Then, initialize the [Android SDK](/platforms/android/#configure).
+
+### Disable
+
+If you would like to disable the OkHttp instrumentation feature, we expose a configuration option for that:
+
+```groovy
+import io.sentry.android.gradle.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.OKHTTP
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.OKHTTP)
+  }
+}
+```
+
+<Note>
+
+Learn more about the Sentry Android Gradle plugin in our [Gradle](/platforms/android/gradle/) documentation.
+
+</Note>
+
+## Manual Installation
+
+### Install
 
 Sentry captures data by adding an `OkHttp Interceptor`. To add the OkHttp integration, initialize the [Android SDK](/platforms/android/), then add the `sentry-android-okhttp` dependency. Using Gradle:
 
@@ -29,7 +98,7 @@ implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.androi
 implementation 'io.sentry:sentry-android-okhttp:{{ packages.version('sentry.java.android.okhttp', '5.0.0') }}'
 ```
 
-## Configure
+### Configure
 
 Configuration should happen once you create your `OkHttpClient` instance.
 
