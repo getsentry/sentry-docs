@@ -51,7 +51,7 @@ checking the box for: `Include Debug Files`.
 
 Now that the _Crash Reporter_ and _Debug Files_ are included, UE4 needs to know where to send the
 crash. For that, we add the Sentry _Unreal Engine Endpoint_ from the _Client Keys_ settings page to game's configuration file. This will
-include which project within Sentry you want to see the crashes arriving in real time.
+include which project in Sentry you want to see crashes displayed in.
 That's accomplished by configuring the `CrashReportClient` in the _DefaultEngine.ini_ file. Changing the engine is necessary for this to work.
 
 Edit the file:
