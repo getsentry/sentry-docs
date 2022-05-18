@@ -4,7 +4,13 @@ sidebar_order: 2
 description: "Learn how to associate commits to a release to track suspect commits."
 ---
 
-In your release process, add a step to create a release in Sentry and associate it with commits from your linked repository. We recommend using Sentry’s [Command Line Interface](/product/cli/releases/) or [our API](/product/releases/setup/manual-setup-releases/#using-the-api) to add this step in your release process, especially if you're using [Release Automation](/product/releases/setup/release-automation/).
+In your release process, add a step to create a release in Sentry and associate it with commits from your linked repository.
+
+After this step, suspect commits and suggested assignees will display on the Issues page.
+
+![](suspect-commits-highlighted.png)
+
+We recommend using Sentry’s [Command Line Interface](/product/cli/releases/) or [our API](/product/releases/setup/manual-setup-releases/#using-the-api) to add this step in your release process, especially if you're using [Release Automation](/product/releases/setup/release-automation/).
 
 After this, we can tie together the commits in the release, including:
 
@@ -21,6 +27,7 @@ This process assumes:
 ## Using the CLI
 
 In this CLI example:
+
 - Environment variables configure the CLI (see [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) for alternatives)
 - The `propose-version` sub-command determines a release ID automatically
 - A release tagged `VERSION` is created for the organization `my-org` for projects (`project1` and `project2`)
@@ -55,26 +62,7 @@ sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION
 
 For more information, see our [CLI docs](/product/cli/releases/).
 
-After this step, suspect commits and suggested assignees will display on the Issues page.
-
-![](suspect-commits-highlighted.png)
-
-Additionally, you will be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the Issue Details page, next to the assignee dropdown. For example, a commit message might look like this:
-
-```bash
-Prevent empty queries on users
-
-Fixes SENTRY-317
-```
-
-When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry we’ll mark the issue as resolved in that release.
-
-<Note>
-
-If you’re using GitHub, you may have a privacy setting enabled that prevents Sentry from identifying the user’s actual email address. To use the suggested owners feature, uncheck “Keep my email address private” in GitHub’s [account settings](https://github.com/settings/emails).
-
-</Note>
-
+<!--
 ### Finalize the Release
 
 By default, a release is created as “unreleased”. Finalizing a release means that we populate a second timestamp on the release record, which is prioritized over `date_created` when sorting releases in sentry.io. Release finalization (and the timestamp) also affects:
@@ -93,6 +81,8 @@ sentry-cli releases new "$VERSION"
 # once you are done, finalize
 sentry-cli releases finalize "$VERSION"
 ```
+-->
+
 ## Using the API
 
 <Note>
@@ -159,5 +149,23 @@ For more information, see the [API reference](/api/releases/create-a-new-release
 <Note>
 
 If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).
+
+</Note>
+
+## Resolving by Commit
+
+Additionally, you will be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the Issue Details page, next to the assignee dropdown. For example, a commit message might look like this:
+
+```bash
+Prevent empty queries on users
+
+Fixes SENTRY-317
+```
+
+When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry we’ll mark the issue as resolved in that release.
+
+<Note>
+
+If you’re using GitHub, you may have a privacy setting enabled that prevents Sentry from identifying the user’s actual email address. To use the suggested owners feature, uncheck “Keep my email address private” in GitHub’s [account settings](https://github.com/settings/emails).
 
 </Note>
