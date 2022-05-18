@@ -31,26 +31,26 @@ For Windows and Mac, [Crash Report Client](/platforms/unreal/setup-crashreport/)
 
 ### Include the UE4 Crash Reporter
 
-You can add the _Crash Report Client_ to your game in your _Project Settings_.
+You can add the crash report client to your game in **Project Settings**.
 
-The option is located under _Project > Packaging_ menu, then select _show advanced_ followed by
-checking the box for: `Include Crash Reporter`.
+The option is located under **Project > Packaging**; select "show advanced" followed by
+checking the box for "Include Crash Reporter".
 
 ### Debug Information
 
 To get the most out of Sentry, crash reports must include debug information.
 In order for Sentry to be able to process the crash report and translate
-memory addresses to meaningful information like function names, module names
-and line numbers, the crash itself must include debug information and symbols need
+memory addresses to meaningful information like function names, module names,
+and line numbers, the crash itself must include debug information. In addition, symbols need
 to be uploaded to Sentry.
 
-The option is also located under _Project > Packaging_ menu, then select _show advanced_ followed by
-checking the box for: `Include Debug Files`.
+The option is also located under **Project > Packaging**; select "show advanced" followed by
+checking the box for "Include Debug Files".
 
 ### Configure the Crash Reporter Endpoint
 
-Now that the _Crash Reporter_ and _Debug Files_ are included, UE4 needs to know where to send the
-crash. For that, we add the Sentry _Unreal Engine Endpoint_ from the _Client Keys_ settings page to game's configuration file. This will
+Now that the crash reporter and debug files are included, UE4 needs to know where to send the
+crash. For that, add the Sentry "Unreal Engine Endpoint" from the "Client Keys" settings page to the game's configuration file. This will
 include which project in Sentry you want to see crashes displayed in.
 That's accomplished by configuring the `CrashReportClient` in the _DefaultEngine.ini_ file. Changing the engine is necessary for this to work.
 
@@ -72,22 +72,22 @@ is enough.
 ### Upload Debug Symbols
 
 To allow Sentry to fully process native crashes and provide you with
-symbolicated stack traces, you need to upload _Debug Information Files_
-(sometimes also referred to as _Debug Symbols_ or just _Symbols_). We recommend
+symbolicated stack traces, you need to upload _debug information files_
+(sometimes also referred to as _debug symbols_ or just _symbols_). We recommend
 uploading debug information during your build or release process.
 
 For all libraries where you'd like to receive symbolication, **you need
 to provide debug information**. This includes dependencies and operating system
 libraries.
 
-In addition to Debug Information Files, Sentry needs _Call Frame Information_
+In addition to debug information files, Sentry needs _call frame information_
 (CFI) to extract accurate stack traces from minidumps of optimized release
 builds. CFI is usually part of the executables and not copied to debug symbols.
 Unless you are uploading Breakpad symbols, be sure to also include the binaries
 when uploading files to Sentry.
 
 For more information on uploading debug information and their supported formats,
-see [Debug Information Files](/workflow/debug-files/).
+check out our [Debug Information Files documentation](/workflow/debug-files/).
 
 ## Verify
 
