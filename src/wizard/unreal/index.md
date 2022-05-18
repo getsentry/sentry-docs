@@ -7,9 +7,9 @@ type: framework
 
 ## Installation
 
-Download the latest plugin sources from the [Releases page](https://github.com/getsentry/sentry-unreal/releases) and place it in the project's `Plugins` directory. On the next project launch, UE will prompt to build Sentry module.
+Download the latest plugin sources from the [Releases page](https://github.com/getsentry/sentry-unreal/releases) and place it in the project's "Plugins" directory. On the next project launch, UE will prompt to build Sentry module.
 
-After the successful build, in the editor navigate to the Settings > Plugins > Code Plugins menu and check whether the Sentry plugin is enabled.
+After the successful build, in the editor navigate to the **Project Settings > Plugins > Code Plugins** menu and check whether the Sentry plugin is enabled.
 
 To access the plugin API from within C++, add Sentry support to the build script (MyProject.build.cs):
 
@@ -19,7 +19,7 @@ PublicDependencyModuleNames.AddRange(new string[] { ..., "Sentry" });
 
 ## Configuration
 
-Access the Sentry configuration window by going to editor's menu: `Project Settings` > `Plugins` > `Sentry` and enter the following DSN:
+Access the Sentry configuration window by going to editor's menu: **Project Settings > Plugins > Sentry** and enter the following DSN:
 
 ```
 ___PUBLIC_DSN___
