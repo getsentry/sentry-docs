@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "We've built a reference demo app to make on the Integration Platform easier! Check it out for useful code examples in Python and TypeScript.";
+  "We've built a reference app to make it easier to build on the integration platform! Check it out for useful code examples in Python and TypeScript.";
 
 const BANNER_LINK_URL =
   "/product/integrations/integration-platform/#quick-start";
