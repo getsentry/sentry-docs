@@ -6,7 +6,16 @@ description: "Troubleshooting for source maps."
 sidebar_order: 8
 ---
 
-Source maps can sometimes be tricky to get going. If you’re having trouble:
+Source maps can sometimes be tricky to get going. If you are having trouble, you can try using our verification tool inside `sentry-cli`, or go through the steps listed below yourself. Please keep in mind, that the tool mentioned above is in it’s early stage, and we are actively working to improve it.
+
+To use the automated process, [install and configure](/product/cli/) `sentry-cli`. Once completed, use the `sourcemaps explain` command, by calling it with the event ID that can be found at the top header of the issue page, eg. `Event fdfd1337e3964cd6a4d11f35357a4c43 | JSON (42.0 KiB)`.
+
+```shell
+sentry-cli sourcemaps explain fdfd1337e3964cd6a4d11f35357a4c43
+```
+
+This should provide you with some useful hints about what exactly went wrong with the source maps setup process.
+If that is not the case, let us know, so that we can make it better.
 
 <PlatformSection notSupported={["javascript.electron"]}>
 
@@ -14,7 +23,7 @@ Source maps can sometimes be tricky to get going. If you’re having trouble:
 
 For uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct artifacts uploaded with it), and the name of that newly-created release needs to be specified in your SDK configuration.
 
-To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors](../../configuration/releases/). If this is properly set up you'll see "Release: my_example_release".
+To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you will need to go back and [tag your errors](../../configuration/releases/). If this is properly set up you will see "Release: my_example_release".
 
 </PlatformSection>
 
@@ -45,7 +54,7 @@ To verify that the distribution has been set correctly in the SDK, open an issue
 
 ## Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
+If you have uploaded source maps and they are not applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we are attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
 If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformLink to="/configuration/integrations/plugin/#rewriteframes">`rewriteFrames` integration</PlatformLink> to change your `abs_path` values.
 
@@ -58,7 +67,7 @@ If your `sourceMappingURL` comment is similar to:
 //# sourceMappingURL=script.min.js.map
 ```
 
-An example `sentry-cli` command to upload these files correctly would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
+An example `sentry-cli` command to upload these files correctly would look like this (assuming you are in the `/scripts` directory, running your web server from one directory higher, which is why we are using the `--url-prefix` option):
 
 ```shell
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
@@ -158,7 +167,7 @@ First, install `source-map` globally as an npm module:
 npm install -g source-map
 ```
 
-Then, write a script that reads your source map file and tests a mapping. Here’s an example:
+Then, write a script that reads your source map file and tests a mapping. Here is an example:
 
 ```javascript
 var fs = require("fs"),
@@ -194,7 +203,7 @@ Often users hit this limit because they are transmitting source files at an inte
 
 The Sentry API currently only works with source maps and source files that are uploaded as plain text (UTF-8 encoded). If the files are uploaded in a compressed format (for example, gzip), they will be not be interpreted correctly.
 
-This sometimes occurs with build scripts and plugins that produce pre-compressed minified files. For example, Webpack’s [compression plugin](https://github.com/webpack/compression-webpack-plugin). You’ll need to disable such plugins and perform the compression _after_ the generated source maps/source files have been uploaded to Sentry.
+This sometimes occurs with build scripts and plugins that produce pre-compressed minified files. For example, Webpack’s [compression plugin](https://github.com/webpack/compression-webpack-plugin). You will need to disable such plugins and perform the compression _after_ the generated source maps/source files have been uploaded to Sentry.
 
 ## Verify workers are sharing the same volume as web (if running self-hosted Sentry via Docker)
 
