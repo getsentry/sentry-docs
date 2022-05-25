@@ -1,6 +1,5 @@
 To add an attachment, you can either add it to the scope, pass it to any of the `capture` methods, or manipulate the list of attachments in an `EventProcessor` or `beforeSend`.
 
-
 ### Passing Attachments to Capture
 
 You may pass attachments to any of the `capture` methods, for example, when capturing an exception:
@@ -21,7 +20,6 @@ import io.sentry.Sentry;
 Sentry.captureException(IllegalStateException(), Hint.withAttachment("/path/to/file.txt"))
 ```
 
-
 ### Adding Attachments in `EventProcessor`
 
 You may also manipulate attachments in `EventProcessor`:
@@ -32,27 +30,20 @@ import io.sentry.EventProcessor;
 import io.sentry.Hint;
 import io.sentry.Sentry;
 import io.sentry.SentryEvent;
-import io.sentry.protocol.Message;
 
-public class MyClass {
-  public void myMethod() {
-    // Add an `EventProcessor` to the current scope. Note that
-    // this helper will process *all* future events in this scope.
-    Sentry.configureScope(scope -> {
-      scope.addEventProcessor(new EventProcessor() {
-        @Override
-        public SentryEvent process(SentryEvent event, Hint hint) {
-          hint.addAttachment(new Attachment("/path/to/file.txt"))
-          return event;
-        }
-      });
-    });
-
-    // Send an event to Sentry. During construction of the event
-    // the attachment will be added by the event processor.
-    Sentry.captureMessage("Hello, world!");
+class AttachmentManipulationEventProcessor implements EventProcessor {
+  @Override
+  public SentryEvent process(SentryEvent event, Hint hint) {
+    hint.addAttachment(new Attachment("/path/to/file.txt"))
+    return event;
   }
 }
+
+// Register the AttachmentManipulationEventProcessor using SentryOptions#addEventProcessor or Scope#addEventProcessor
+
+// Send an event to Sentry. During construction of the event
+// the attachment will be added by the event processor.
+Sentry.captureMessage("Hello, world!");
 ```
 
 ```kotlin
@@ -63,26 +54,25 @@ import io.sentry.Sentry
 import io.sentry.SentryEvent;
 import io.sentry.protocol.Message
 
-class MyClass {
-  fun myMethod() {
-    // Add an `EventProcessor` to the current scope. Note that
-    // this helper will process *all* future events in this scope.
-    Sentry.configureScope { scope ->
-      scope.addEventProcessor(object: EventProcessor {
-        override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
-          hint.addAttachment(Attachment("/path/to/file.txt"))
-          return event
-        }
-      })
-    }
-
-    // Send an event to Sentry. During construction of the event
-    // the attachment will be added by the event processor.
-    Sentry.captureMessage("Hello, world!")
+class AttachmentManipulationEventProcessor: EventProcessor {
+  override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
+    hint.addAttachment(Attachment("/path/to/file.txt"))
+    return event
   }
 }
+
+// Register the AttachmentManipulationEventProcessor using SentryOptions#addEventProcessor or Scope#addEventProcessor
+
+// Send an event to Sentry. During construction of the event
+// the attachment will be added by the event processor.
+Sentry.captureMessage("Hello, world!")
 ```
 
+<Note>
+
+Instead of adding attachments, you can also remove them, by setting a different (or empty) list of attachments using `Hint#setAttachments()`.
+
+</Note>
 
 ### Adding Attachments in `beforeSend`
 
@@ -93,11 +83,9 @@ import io.sentry.Attachment;
 import io.sentry.Hint;
 import io.sentry.Sentry;
 
-Sentry.init(options -> {
-  options.setBeforeSend((event, hint) -> {
-    hint.addAttachment(new Attachment("/path/to/file.txt"))
-    return event;
-  });
+options.setBeforeSend((event, hint) -> {
+  hint.addAttachment(new Attachment("/path/to/file.txt"))
+  return event;
 });
 ```
 
@@ -107,13 +95,16 @@ import io.sentry.Hint;
 import io.sentry.Sentry;
 import io.sentry.SentryOptions.BeforeSendCallback
 
-Sentry.init { options ->
-  options.beforeSend = BeforeSendCallback { event, hint ->
-    hint.addAttachment(Attachment("/path/to/file.txt"))
-    event
-  }
+options.beforeSend = BeforeSendCallback { event, hint ->
+  hint.addAttachment(Attachment("/path/to/file.txt"))
+  event
 }
 ```
 
+<Note>
+
+Instead of adding attachments, you can also remove them, by setting a different (or empty) list of attachments using `Hint#setAttachments()`.
+
+</Note>
 
 ### Adding Attachments to the Scope
