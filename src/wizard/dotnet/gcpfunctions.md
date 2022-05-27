@@ -1,5 +1,5 @@
 ---
-name: Google Cloud Functions
+name: Google Cloud Functions (.NET)
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/google-cloud-functions/
 support_level: production
 type: framework

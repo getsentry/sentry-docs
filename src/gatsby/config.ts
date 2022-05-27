@@ -1,8 +1,10 @@
 import queries from "./utils/algolia";
+import AppRegistry from "./utils/appRegistry";
 import PackageRegistry from "./utils/packageRegistry";
 import resolveOpenAPI from "./utils/resolveOpenAPI";
 
 const packages = new PackageRegistry();
+const apps = new AppRegistry();
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
@@ -12,7 +14,9 @@ const root = `${__dirname}/../..`;
 process.env.DISABLE_THUMBNAILS = process.env.DISABLE_THUMBNAILS || "0";
 if (process.env.DISABLE_THUMBNAILS === "1") {
   console.log("🐇 Thumbnail generation is disabled.");
-  console.log("WARN: DISABLE_THUMBNAILS should no longer yield significant build time boosts with `yarn develop`. Let @markus know if it does.");
+  console.log(
+    "WARN: DISABLE_THUMBNAILS should no longer yield significant build time boosts with `yarn develop`. Let @markus know if it does."
+  );
 }
 
 const getPlugins = () => {
@@ -25,6 +29,7 @@ const getPlugins = () => {
       options: {
         scope: {
           packages,
+          apps,
         },
         excludeExpr: ["default"],
       },
