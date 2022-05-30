@@ -36,9 +36,13 @@ public class MainActivity extends BridgeActivity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     // Initializes the Bridge
-    this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
-      add(SentryCapacitor.class);
-    }});
+    // Capacitor 3
+    registerPlugin(SentryCapacitor.class);
+
+    // Capacitor 2
+    // this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
+    //   add(SentryCapacitor.class);
+    // }});
   }
 }
 ```
@@ -52,13 +56,17 @@ import com.getcapacitor.Plugin
 import io.sentry.capacitor.SentryCapacitor
 
 class MainActivity : BridgeActivity() {
-  fun onCreate(savedInstanceState: Bundle?) {
+  override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // Initializes the Bridge
-    this.init(
-      savedInstanceState,
-      listOf<Class<out Plugin>>(SentryCapacitor::class.java)
-    )
+    // Capacitor 3
+    registerPlugin(SentryCapacitor::class.java)
+    
+    // Capacitor 2
+    // this.init(
+    //   savedInstanceState,
+    //   listOf<Class<out Plugin>>(SentryCapacitor::class.java)
+    // )
   }
 }
 ```
@@ -68,24 +76,24 @@ class MainActivity : BridgeActivity() {
 You must initialize the Sentry SDK as early as you can:
 
 ```javascript
-import * as Sentry from "@sentry/capacitor";
-// The example is using Angular, Import "@sentry/vue" or "@sentry/react" when using a Sibling different than Angular.
-import * as SentrySibling from "@sentry/angular";
+import * as Sentry from '@sentry/capacitor';
+// The example is using Angular, Import '@sentry/vue' or '@sentry/react' when using a Sibling different than Angular.
+import * as SentrySibling from '@sentry/angular';
 // For automatic instrumentation (highly recommended)
-import { BrowserTracing } from "@sentry/tracing";
+import { BrowserTracing } from '@sentry/tracing';
 
 Sentry.init(
   {
-    dsn: "___PUBLIC_DSN___",
+    dsn: '___PUBLIC_DSN___',
     // To set your release and dist versions
-    release: "my-project-name@" + process.env.npm_package_version,
-    dist: "1",
+    release: 'my-project-name@' + process.env.npm_package_version,
+    dist: '1',
     // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
     // We recommend adjusting this value in production.
     tracesSampleRate: 1.0,
     integrations: [
       new BrowserTracing({
-        tracingOrigins: ["localhost", "https://yourserver.io/api"],
+        tracingOrigins: ['localhost', 'https://yourserver.io/api'],
       }),
     ]
   },
@@ -113,22 +121,22 @@ Additionally for Angular, you will also need to alter NgModule (same code doesn'
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
 ```javascript
-import * as Sentry from "@sentry/capacitor";
+import * as Sentry from '@sentry/capacitor';
 
-Sentry.captureException("Test Captured Exception");
+Sentry.captureException('Test Captured Exception');
 ```
 
 You can also throw an error anywhere in your application:
 
 ```javascript
 // Must be thrown after Sentry.init is called to be captured.
-throw new Error(`Test Thrown Error`);
+throw new Error('Test Thrown Error');
 ```
 
 Or trigger a native crash:
 
 ```javascript
-import * as Sentry from "@sentry/capacitor";
+import * as Sentry from '@sentry/capacitor';
 
 Sentry.nativeCrash();
 ```
