@@ -15,7 +15,14 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from myapp import asgi_app
 
-sentry_sdk.init(dsn="___PUBLIC_DSN___")
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
+)
 
 asgi_app = SentryAsgiMiddleware(asgi_app)
 ```
