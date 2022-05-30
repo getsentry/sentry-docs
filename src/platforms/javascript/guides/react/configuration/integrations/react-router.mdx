@@ -15,7 +15,63 @@ The React Router integration is designed to work with our Tracing SDK, `@sentry/
 
 </Alert>
 
-We support integrations for React Router 3, 4 and 5.
+We support integrations for React Router 3, 4, 5, and 6.
+
+## React Router v6
+_(Available in version 7 and above)_
+
+To use React Router v6 with Sentry:
+
+1. Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation and provide the functions it needs to enable performance tracing:
+
+    - `useEffect` hook from `react`
+    - `useLocation` and `useNavigationType` hooks from `react-router-dom`
+    - `createRoutesFromChildren` and `matchRoutes` functions from `react-router-dom` or `react-router` packages.
+    
+2. Wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing` to create a higher order component, which will enable Sentry to reach your router context, as in the example below:
+
+```javascript
+import React from 'react';
+import ReactDOM from "react-dom";
+import {
+    Routes,
+    BrowserRouter,
+    useLocation,
+    useNavigationType,
+    createRoutesFromChildren,
+    matchRoutes,
+} from "react-router-dom";
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
+
+Sentry.init({
+    integrations: [
+        new BrowserTracing({
+            routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+                React.useEffect,
+                useLocation,
+                useNavigationType,
+                createRoutesFromChildren,
+                matchRoutes,
+            ),
+        }),
+    ],
+    tracesSampleRate: 1.0,
+});
+
+const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes)
+
+ReactDOM.render(
+    <BrowserRouter>
+        <SentryRoutes>
+            <Route path="/" element={<div>Home</div>} />
+        </SentryRoutes>
+    </BrowserRouter>,
+);
+```
+
+Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, /teams/:teamid/user/:userid), where applicable.
+
 
 ## React Router v4/v5
 
