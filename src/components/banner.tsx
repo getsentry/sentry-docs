@@ -10,7 +10,7 @@ const BANNER_TEXT =
   "We've built a reference app to make it easier to build on the integration platform! Check it out for useful code examples in Python and TypeScript.";
 
 const BANNER_LINK_URL =
-  "/product/integrations/integration-platform/#quick-start";
+  "/product/integrations/integration-platform/#example-app";
 const BANNER_LINK_TEXT = "Get started here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
