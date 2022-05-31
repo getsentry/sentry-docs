@@ -7,11 +7,10 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "We've built an example app to make it easier to build on the integration platform. Check it out for useful code examples in Python and TypeScript.";
-
+  "See how Calixa protected their developers' time by building a custom integration on Sentry in our live workshop on June 7 @ 10am PT.";
 const BANNER_LINK_URL =
-  "/product/integrations/integration-platform/#example-app";
-const BANNER_LINK_TEXT = "Get started here.";
+  "https://sentry.io/resources/calixa-sentry-workshop/?promo_name=docs-banner";
+const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
