@@ -6,13 +6,13 @@ redirect_from:
 description: "Learn about setting up your SDK to enable Releases and to monitor release health."
 ---
 
-Setting up releases fully is a multi-step process, and is adaptable to your organization's needs.
+Setting up your application to send Sentry releases data fully is a multi-step process, and is adaptable to your organization's needs.
 
-If you're using one of our [release automation](/product/releases/setup/release-automation/) options, it will x (EXPLAIN THIS FURTHER). Then you just need to coplete the SDK configuration and the rest of the steps are completed for you. If you're doing this manually, then you should follow the steps below.
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, it will automate the last two steps of this process. You just need to ensure that the SDK is configured and that you've uploaded source maps. If you're managing your releases manually, then you should follow all of the steps below.
 
-## Configure Your SDK
+## 1. Configure Your SDK {#configure-your-sdk}
 
-With your [SDK configured](/platform-redirect/?next=/configuration/releases/) to provide a release identifer and enable session tracking, you can monitor both [releases](/product/releases/) and [release health](/product/releases/health/).
+With your SDK configured to provide a release identifer and enable session tracking, you can monitor both [releases](/product/releases/) and [release health](/product/releases/health/). Check out the documentation for your specific platform to [configure the SDK](/platform-redirect/?next=/configuration/releases/).
 
 <Note>
 
@@ -35,28 +35,38 @@ Release health is supported for the following SDKs:
 - [.NET](/platforms/dotnet/configuration/releases/#release-health)
 - [Unity](/platforms/unity/configuration/releases/#release-health)
 
-## Upload Source Maps
+## 2. Upload Source Maps
 
-Releases are required to apply source maps, which lets you view source code context obtained from stack traces in their original untransformed form. This is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (such as TypeScript and ES6). In turn, source maps are required in order to enable [suspect commits](#enable-suspect-commits).
+Releases are required to apply source maps (or your platform-specific files for mapping), which let you view source code context obtained from stack traces in their original untransformed form. This is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (such as TypeScript and ES6). In turn, source maps are required in order to enable [suspect commits](#enable-suspect-commits). Check out our SDK documentation to find source maps-type information for your specific platform if it's not in the list below:
 
-<!-- link to somethig here -->
+- [Android](/platforms/android/using-ndk/#symbolicate-stack-traces)
+- [Flutter](/platforms/flutter/upload-debug/)
+- [iOS](/platforms/apple/guides/ios/dsym/)
+- [JavaScript](/platforms/javascript/sourcemaps/)
+- [Node.js](/platforms/node/sourcemaps/)
 
-## Enable Suspect Commits
+## 3. Enable Suspect Commits
 
-With an additional repository integration or manual commits, you can also track suspect commits.
+With an additional repository integration enabled or manual commits, you can also track suspect commits. This is a two-step process:
 
 1. [Installing a repository integration](/product/releases/setup/release-automation/) (this step is optional, but highly recommended)
 2. [Associating commits to a release](/product/releases/suspect-commits/) by adding to your release management script when you build a release.
 
-## Notify Sentry
+Learn more about the benefits of tracking commits in [Suspect Commits](/product/releases/suspect-commits/).
 
-If you're not using on of our [release automation](/product/releases/setup/release-automation/) options, let Sentry know you’ve deployed by sending an additional request after creating a release:
+## 4. Notify Sentry {#notify-sentry}
+
+If you're not using one of our [release automation](/product/releases/setup/release-automation/) options, let Sentry know you’ve deployed by sending an additional request after creating a release:
 
 ```bash
 sentry-cli releases --org ORGANIZATION_SLUG deploys VERSION new -e ENVIRONMENT
 ```
 
-NOTE: Make sure you have a [token](/product/cli/configuration/) properly configured.
+<Not>
+
+Make sure you have a [token](/product/cli/configuration/) properly configured.
+
+</Note>
 
 You can also use our [API](/api/releases/create-a-new-deploy-for-an-organization/) to create a deploy.
 
