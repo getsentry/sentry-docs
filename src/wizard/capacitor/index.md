@@ -25,7 +25,11 @@ npm install --save @sentry/capacitor @sentry/tracing
 yarn add @sentry/capacitor
 ```
 
-## Android Installation
+## Capacitor 2 - Android Installation
+
+<Note>
+ This step is not needed if you are using Capacitor 3
+</Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.
 
@@ -43,13 +47,9 @@ public class MainActivity extends BridgeActivity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     // Initializes the Bridge
-    // Capacitor 3
-    registerPlugin(SentryCapacitor.class);
-
-    // Capacitor 2
-    // this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
-    //   add(SentryCapacitor.class);
-    // }});
+    this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
+      add(SentryCapacitor.class);
+    }});
   }
 }
 ```
@@ -66,14 +66,10 @@ class MainActivity : BridgeActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // Initializes the Bridge
-    // Capacitor 3
-    registerPlugin(SentryCapacitor::class.java)
-    
-    // Capacitor 2
-    // this.init(
-    //   savedInstanceState,
-    //   listOf<Class<out Plugin>>(SentryCapacitor::class.java)
-    // )
+    this.init(
+      savedInstanceState,
+      listOf<Class<out Plugin>>(SentryCapacitor::class.java)
+    )
   }
 }
 ```
