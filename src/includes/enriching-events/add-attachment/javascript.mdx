@@ -1,40 +1,50 @@
-To add an attachment, create an event processor that uploads files to the
-attachment endpoint in a multipart form data request. This requires associating
-the attachment with the event using its ID:
+Attachments live on the `Scope` and will be sent with all events.
 
 ```javascript
-public attachmentUrlFromDsn(dsn: Dsn, eventId: string) {
-  const { host, path, projectId, port, protocol, user } = dsn;
-  return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
-    path !== '' ? `/${path}` : ''
-  }/api/${projectId}/events/${eventId}/attachments/?sentry_key=${user}&sentry_version=7&sentry_client=custom-javascript`;
-}
+// Add an attachment
+Sentry.configureScope(scope => {
+  scope.addAttachment({ filename: "attachment.txt", data: "Some content" });
+});
 
-Sentry.addGlobalEventProcessor((event: Event) => {
-  try {
-    const client = Sentry.getCurrentHub().getClient();
-    const endpoint = attachmentUrlFromDsn(
-      client.getDsn(),
-      event.event_id
-    );
-    const formData = new FormData();
-    formData.append(
-      'my-attachment',
-      new Blob([JSON.stringify({ logEntries: ["my log"] })], {
-        type: 'application/json',
-      }),
-      'logs.json'
-    );
-    fetch(endpoint, {
-      method: 'POST',
-      body: formData,
-    }).catch((ex) => {
-      // we have to catch this otherwise it throws an infinite loop in Sentry
-      console.error(ex);
-    });
+// Clear attachments
+Sentry.configureScope(scope => {
+  scope.clearAttachments();
+});
+```
+
+An attachment has the following fields:
+
+`filename`
+
+: The filename is required and will be displayed in [sentry.io](https://sentry.io).
+
+`data`
+
+: The content of the attachment is required and is either a `string` or `Uint8Array`.
+
+`contentType`
+
+: The type of content stored in this attachment. Any [MIME
+type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be
+used; the default is `application/octet-stream`.
+
+## Add or Modify Attachments Before Sending
+
+It's possible to add, remove, or modify attachments before an event is sent by way of
+the <PlatformLink to="/configuration/options/#before-send"><PlatformIdentifier name="before-send" /></PlatformLink>
+hook or a global event processor.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  beforeSend: (event, hint) => {
+    hint.attachments = [{ filename: "screenshot.png", data: captureScreen() }];
     return event;
-  } catch (ex) {
-    console.error(ex);
-  }
+  },
+});
+
+Sentry.addGlobalEventProcessor((event, hint) => {
+  hint.attachments = [{ filename: "log.txt", data: readLogFile() }];
+  return event;
 });
 ```

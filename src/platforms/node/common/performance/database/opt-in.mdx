@@ -1,0 +1,29 @@
+---
+title: Opt-in
+---
+
+## Prisma ORM Integration
+
+_(Available from `7.0.0`)_
+
+Sentry supports tracing [Prisma ORM](https://www.prisma.io/) fetchers with Prisma integration. This integration is an opt-in feature and requires that a `PrismaClient` instance is provided.
+
+Prisma integration creates a `db.prisma` span for each query and reports to Sentry with relevant details inside `description` if available.
+
+For example:
+
+```javascript
+import { PrismaClient } from '@prisma/client';
+import * as Sentry from '@sentry/node';
+import * as Tracing from '@sentry/tracing';
+import { randomBytes } from 'crypto';
+
+const client = new PrismaClient();
+
+Sentry.init({
+  dsn: ___PUBLIC_DSN___,
+  release: '1.0',
+  tracesSampleRate: 1.0,
+  integrations: [new Tracing.Integrations.Prisma({ client })],
+});
+```
