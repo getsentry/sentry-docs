@@ -27,3 +27,28 @@ Then update your iOS settings:
 ```bash
 npx cap sync
 ```
+
+## Capacitor on Android
+
+### No events sent
+
+Check if you added SentryCapacitor to the bridge, this step is required for Capacitor 2 and optional on Capacitor 3 (It's only required if you are initializing other plugins using the old method, if so, prefer to use registerPlugin instead of the deprecated code for initializing plugins.)
+
+```Java
+import io.sentry.capacitor.SentryCapacitor;
+
+public class MainActivity extends BridgeActivity {
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // Capacitor 3
+    registerPlugin(SentryCapacitor.class);
+
+    // Capacitor 2
+    this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
+      add(SentryCapacitor.class);
+    }});
+  }
+}
+```
