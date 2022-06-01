@@ -1,30 +1,59 @@
 ---
-title: Enable Suspect Commits
+title: Suspect Commits
 sidebar_order: 2
-description: "Learn how to associate commits to a release to track suspect commits."
+description: "Learn how associating commits to a release allows you to track suspect commits."
 ---
 
-In your release process, add a step to create a release in Sentry and associate it with commits from your linked repository. We recommend using Sentry’s [Command Line Interface](/product/cli/releases/) or [our API](/product/releases/setup/manual-setup-releases/#using-the-api) to add this step in your release process, especially if you're using [Release Automation](/product/releases/setup/release-automation/).
+In your release process, you can add a step to create a release in Sentry and associate it with commits from your linked repository. When you've done this, you'll be able to see suspect commits and suggested assignees in issues, as well as resolve issues by commit, as described below.
 
-After this, we can tie together the commits in the release, including:
+
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options or our [manual setup](/product/releases/setup/manual-setup-releases/) instructions, suspect commits should already be enabled. However, we've included directions for enabling suspect commits using the [Sentry CLI](#using-the-cli) and [our API](#using-the-api) at the end of this page, just in case you need them. 
+
+## Suspect Commits & Suggested Assignees
+
+When you've enabled suspect commits, we can tie together the commits in the release, including:
 
 - Files touched by those commits
 - Files observed in the stack trace
 - Authors of those files
 - The issue number in a commit message
 
+Suspect commits and suggested assignees will then display on the **Issue Details** page in [sentry.io](https://sentry.io):
+
+![The suspect commits and suggested assignees for an issue](suspect-commits-highlighted.png)
+
+## Resolve Issues by Commit
+
+Additionally, when you've enabled suspect commits, you'll be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the **Issue Details** page, next to the assignee dropdown. 
+
+A commit message might look like this, for example:
+
+```bash
+Prevent empty queries on users
+
+Fixes SENTRY-317
+```
+
+When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry, we’ll mark the issue as resolved in that release.
+
+<Note>
+
+If you’re using GitHub, you may have a privacy setting enabled that prevents Sentry from identifying the user’s actual email address. To use the suggested owners feature, uncheck “Keep my email address private” in GitHub’s [account settings](https://github.com/settings/emails).
+
+</Note>
+
+## Enable Suspect Commits
+
+We recommend using Sentry’s [Command Line Interface](/product/cli/releases/) or [our API](/product/releases/setup/manual-setup-releases/#using-the-api) to add this step in your release process, whether you're doing this manually or using release automation. If you're using one of our [release automation](/product/releases/setup/release-automation/) options or our [manual setup](/product/releases/setup/manual-setup-releases/) instructions, this step should already be included, but we've included the relevant code below just in case.
+
 This process assumes:
 
-- the SDK is [configured to provide a release identifier](/platform-redirect/?next=/configuration/releases/)
-- [Source maps](/platforms/javascript/sourcemaps/) have been uploaded
+- The SDK is [configured to provide a release identifier](/platform-redirect/?next=/configuration/releases/)
+- Source maps — or your platform-specific files for mapping transformed source code to the original source — have been uploaded (check out the docs for your [specific platform](/platforms/))
 
-## Using the CLI
+### Using the CLI
 
-In this CLI example:
-- Environment variables configure the CLI (see [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) for alternatives)
-- The `propose-version` sub-command determines a release ID automatically
-- A release tagged `VERSION` is created for the organization `my-org` for projects (`project1` and `project2`)
-- The `--auto` flag determines the repository name automatically, and associates commits between the previous release’s commit and the current head commit with the release.
+In this CLI example, the `--auto` flag determines the repository name automatically, and associates commits between the previous release’s commit and the current head commit with the release.
 
 <Note>
 
@@ -53,47 +82,7 @@ The following example associates commits (or refs) between `from` and `to` with 
 sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION
 ```
 
-For more information, see our [CLI docs](/product/cli/releases/).
-
-After this step, suspect commits and suggested assignees will display on the Issues page.
-
-![](suspect-commits-highlighted.png)
-
-Additionally, you will be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the Issue Details page, next to the assignee dropdown. For example, a commit message might look like this:
-
-```bash
-Prevent empty queries on users
-
-Fixes SENTRY-317
-```
-
-When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry we’ll mark the issue as resolved in that release.
-
-<Note>
-
-If you’re using GitHub, you may have a privacy setting enabled that prevents Sentry from identifying the user’s actual email address. To use the suggested owners feature, uncheck “Keep my email address private” in GitHub’s [account settings](https://github.com/settings/emails).
-
-</Note>
-
-### Finalize the Release
-
-By default, a release is created as “unreleased”. Finalizing a release means that we populate a second timestamp on the release record, which is prioritized over `date_created` when sorting releases in sentry.io. Release finalization (and the timestamp) also affects:
-- What counts as "the next release" for resolving issues
-- Which release is used as the base for associating commits if you use `--auto`
-- Creates an entry in the Activity stream
-
-You can change this by passing either `--finalize` to the `new` command, which will immediately finalize the release, or by separately calling `sentry-cli releases finalize VERSION` later on, which is useful if you are managing releases as part of a build process.
-
-You can also choose to finalize the release when you've made the release live (such as when you've deployed to your machines or enabled in the App store).
-
-```bash
-#!/bin/sh
-sentry-cli releases new "$VERSION"
-# do your build steps here
-# once you are done, finalize
-sentry-cli releases finalize "$VERSION"
-```
-## Using the API
+### Using the API
 
 <Note>
 
