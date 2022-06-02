@@ -21,7 +21,9 @@ The same installation process applies to the other siblings, all you need to do 
 ## Capacitor 2 - Android Installation
 
 <Note>
+
  This step is not needed if you are using Capacitor 3
+ 
 </Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.
