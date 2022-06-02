@@ -53,7 +53,7 @@ function replace(node) {
         TERMS[content]
           ? {
               type: "html",
-              value: `<abbr title="${TERMS[content]}">${content}</abbr>`,
+              value: `<div class="term-wrapper"><span class="term">${content}</span><span class="description" role="tooltip">${TERMS[content]}</span></div>`,
             }
           : {
               type: "text",
