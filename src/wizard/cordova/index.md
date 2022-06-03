@@ -15,7 +15,7 @@ You should `init` the SDK in the `deviceReady` function, to make sure the native
 
 ```javascript
 onDeviceReady: function() {
-  var Sentry = cordova.require("sentry-cordova.Sentry");
+  var Sentry = cordova.require('sentry-cordova.Sentry');
   Sentry.init({ dsn: '___PUBLIC_DSN___' });
 }
 ```
