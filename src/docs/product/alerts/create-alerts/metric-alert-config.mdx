@@ -8,34 +8,25 @@ description: "Learn more about the options for configuring a metric alert."
 
 Sentry provides several configuration options to create a metric alert based on your organization's needs.
 
-## Filters
+## Metric (Type + Function + Time Interval)
 
-The following set of filters translates into a [Discover query](/product/discover-queries/) that is displayed in the chart at the top of the alert configuration page.
+To create a metric alert you first need to choose a metric type. For some alert types the function is built into the alert and for others you can choose functions and parameters to apply to it. For example, if you select “Users Experiencing Errors”, that translates to the function, `count_unique(user.id)`. Since editing this function would change the nature of the alert, it is not editable and thus hidden. On the other hand, if you select “Largest Contentful Paint” the measurement used is `measurement.lcp`, you also need to choose a function, e.g. `p75()`, for a combined metric function of `p75(measurement.lcp)`.
 
-### Environment
+### Metrics Types for Alerting
 
-Specify which <PlatformLink to="/configuration/environments/">environment(s)</PlatformLink> will use this particular alert rule. This control filters on the `environment` tag in your events. This filter is helpful because the urgency and workflows you apply to production alerts might differ from those you apply to alerts originating from your QA environment, for example.
+- Number of Errors
+- Users Experiencing Errors
+- Crash Free Session Rate
+- Crash Free User Rate
+- Throughput
+- Transaction Duration
+- Apdex
+- Failure Rate
+- Largest Contentful Paint
+- First Input Delay
+- Cumulative Layout Shift
 
-The “Env:” dropdown list here has the same environments that are available for the selected project in the common “Environment” filter dropdown (this does not include hidden environments). Selecting "All" is equivalent to having no environment filter.
-
-### Event Type
-
-For some metric alerts, you can set the event type that you want to be alerted about in the “Events” dropdown:
-
-- `event.type:error` OR `event.type:default`
-- `event.type:default`
-- `event.type:error`
-- `event.type:transaction`
-
-### Tags & Attributes
-
-Add filters in the field provided to narrow down what you'll be alerted about, such as URL, tags, or other event properties.
-
-## Metric (Function + Time Interval)
-
-Depending on the type of alert you’ve selected, you may be able to choose functions and parameters to apply to it. In other cases, the function is built into the alert and the settings aren't displayed. For example, if you select “Number of Users Affected”, that translates to the function, `count_unique(user.id)`. Since editing this function would change the nature of the alert, it is not editable and thus hidden.
-
-### Functions for Alerting
+### Functions for Metric Types
 
 - `count()`
 - `count_unique(...)`
@@ -59,11 +50,38 @@ Choose the time period over which to evaluate your metric. Your choices range be
 - At 3:02pm: 2:02pm - 3:02pm
 - ...
 
+## Filters
+
+The following set of filters translates into a [Discover query](/product/discover-queries/) that is displayed in the chart at the top of the alert configuration page.
+
+### Project
+
+Specify which project will use this particular alert rule. Created alert rule will only process events from this project.
+
+### Environment
+
+Specify which <PlatformLink to="/configuration/environments/">environment(s)</PlatformLink> will use this particular alert rule. This control filters on the `environment` tag in your events. This filter is helpful because the urgency and workflows you apply to production alerts might differ from those you apply to alerts originating from your QA environment, for example.
+
+The “Environment” dropdown list here has the same environments that are available for the selected project in the common “Environment” filter dropdown (this does not include hidden environments). Selecting "All Environments" is equivalent to having no environment filter.
+
+### Event Type
+
+For some metric alerts, you can set the event type that you want to be alerted about in the “Events” dropdown:
+
+- `event.type:error` OR `event.type:default`
+- `event.type:default`
+- `event.type:error`
+- `event.type:transaction`
+
+### Tags & Attributes
+
+Add filters in the field provided to narrow down what you'll be alerted about, such as URL, tags, or other event properties.
+
 ## Thresholds
 
 There are two threshold types:
 
-- **Count**: A fixed threshold, such as when there are 100 errors in a period of time.
+- **Static**: A fixed threshold, such as when there are 100 errors in a period of time.
 - **Percent change**: A dynamic threshold, such as when there are 10% more errors in a time period compared to a previous period. These are also referred to as [Change Alerts](#change-alerts-percent-change).
 
 By default, metric alerts use a fixed threshold.
@@ -76,7 +94,7 @@ This feature is available only if your organization is on either a Business or T
 
 </Note>
 
-Change alerts, or alerts that use a percent change threshold, are useful when you want to know if a metric is significantly different from normal. To do this, you’ll need to set the time period to compare to. One example would be comparing the number of errors in the last hour to the same time period one week ago. If errors are 25% higher in the last hour than they were in the same period a week ago, then an alert will trigger.
+Change alerts, or alerts that use a percent change threshold, are useful when you want to know if a metric is significantly different from normal. To do this, you’ll need to pick a metric interval (when you're selecting your metric type) and a time against which to compare. One example would be comparing the number of errors in the last hour to the same time period one week ago. If errors are 25% higher in the last hour than they were in the same period a week ago, then an alert will trigger.
 
 ![When the percent change option is selected.](percent-change.png)
 
