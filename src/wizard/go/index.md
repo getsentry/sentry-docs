@@ -25,7 +25,7 @@ import (
 func main() {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
-		// Set traces_sample_rate to 1.0 to capture 100%
+		// Set TracesSampleRate to 1.0 to capture 100%
 		// of transactions for performance monitoring.
 		// We recommend adjusting this value in production,
 		TracesSampleRate: 1.0,
@@ -51,7 +51,7 @@ import (
 func main() {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
-		// Set traces_sample_rate to 1.0 to capture 100%
+		// Set TracesSampleRate to 1.0 to capture 100%
 		// of transactions for performance monitoring.
 		// We recommend adjusting this value in production,
 		TracesSampleRate: 1.0,
