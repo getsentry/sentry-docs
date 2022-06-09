@@ -21,7 +21,7 @@ const Params = ({ params }) => (
         <dt>
           <div>
             <code data-index>{param.name}</code>
-            {!!param.schema?.type && <em> ({param.schema.type})</em>}
+            {!!param.schema?.type && <em> ({param.schema.type}{param.schema.items && `(${param.schema.items.type})`})</em>}
           </div>
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
