@@ -1,25 +1,96 @@
+<PlatformSection supported={["android"]}>
+
 ```java {tabTitle: Java}
 import io.sentry.Sentry;
 import io.sentry.SentryLevel;
 
-Sentry.withScope(scope -> {
-  scope.setLevel(SentryLevel.FATAL);
-  scope.setTransaction("main");
-
-  // This message includes the dataset to the scope in this block:
-  Sentry.captureMessage("Fatal message!");
+// will be tagged with my-tag="my value"
+Sentry.captureException(new Exception("my error"), scope -> {
+  scope.setTag("my-tag", "my value");
+  scope.setLevel(SentryLevel.WARNING);
 });
+
+// will not be tagged with my-tag
+Sentry.captureException(new Exception("my error"));
 ```
 
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 import io.sentry.SentryLevel
 
-Sentry.withScope { scope ->
-  scope.level = SentryLevel.FATAL
-  scope.setTransaction("main")
-
-  // This message includes the dataset to the scope in this block:
-  Sentry.captureMessage("Fatal message!")
+// will be tagged with my-tag="my value"
+Sentry.captureException(Exception("my error")) { scope ->
+  scope.setTag("my-tag", "my value")
+  scope.level = SentryLevel.WARNING
 }
+
+// will not be tagged with my-tag
+Sentry.captureException(Exception("my error"))
 ```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["android"]}>
+
+The JavaSDK provides two alternative ways of configuring a local scope.
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
+
+// will be tagged with my-tag="my value"
+Sentry.captureException(new Exception("my error"), scope -> {
+  scope.setTag("my-tag", "my value");
+  scope.setLevel(SentryLevel.WARNING);
+});
+
+// will not be tagged with my-tag
+Sentry.captureException(new Exception("my error"));
+```
+
+```java {tabTitle: Java-Alternative}
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
+
+Sentry.withScope(scope -> {
+  scope.setTag("my-tag", "my value");
+  scope.setLevel(SentryLevel.WARNING);
+
+  // will be tagged with my-tag="my value"
+  Sentry.captureException(new Exception("my error"));
+});
+
+// will not be tagged with my-tag
+Sentry.captureException(new Exception("my error"));
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryLevel
+
+// will be tagged with my-tag="my value"
+Sentry.captureException(Exception("my error")) { scope ->
+  scope.setTag("my-tag", "my value")
+  scope.level = SentryLevel.WARNING
+}
+
+// will not be tagged with my-tag
+Sentry.captureException(Exception("my error"))
+```
+
+```kotlin {tabTitle: Kotlin-Alternative}
+import io.sentry.Sentry
+import io.sentry.SentryLevel
+
+Sentry.withScope { scope ->
+  scope.setTag("my-tag", "my value")
+  scope.level = SentryLevel.WARNING
+
+  // will be tagged with my-tag="my value"
+  Sentry.captureException(Exception("my error"))
+}
+
+// will not be tagged with my-tag
+Sentry.captureException(Exception("my error"))
+```
+</PlatformSection>
