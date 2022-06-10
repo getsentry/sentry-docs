@@ -7,9 +7,37 @@ description: "Learn how to use the tools Sentry provides to control the type and
 
 In most cases, sending all [transaction](/product/performance/transaction-summary/#what-is-a-transaction) events to Sentry would generate more performance data than you might find useful and might use up your transactions quota too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have transaction data that's actionable and meaningful, and to manage your quota. Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction events.
 
-## 1. SDK Configuration: Tracing Options {#2-sdk-configuration-tracing-options}
+## 1. Event Usage Stats
 
-When you configure your the SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options). You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for performance monitoring to capture certain types of transactions.
+Once you've completed the steps above, you can look at your events in aggregate in the "Usage Stats" tab of **Stats**. This information will help you answer key questions about the breakdown of your incoming events or which projects are consuming your quota. The answers to these questions can help you figure out where you need to do further fine-tuning of your SDK filters and configuration.
+
+### How can I see a breakdown of incoming events?
+
+The [Usage Stats](/product/stats/#usage-stats) tab displays details about the total number of events Sentry has received across your entire organization for up to 90 days. The page breaks down the events, by project, into three categories:
+
+- **Accepted**: Events processed and displayed in the issues or transactions views in [sentry.io](https://sentry.io).
+- **Dropped**: Events that were discarded due to a limit being hit.
+- **Filtered**: Events that were blocked based on your inbound filter rules.
+
+![Overview of Usage Stats page](../../stats/usage-stats.png)
+
+You can also download monthly reports with a similar breakdown of all your previous billing periods under **Settings > Subscription** in the "Usage History" tab.
+
+### What are my busiest projects?
+
+The "Project" table in the "Usage Stats" tab of **Stats** breaks down your events by project so you can see which ones are consuming your quota. Clicking on the settings icon next to a project name in the table will open the project's settings, where you can manage its inbound filters and rate limits
+
+You can also download monthly reports that provide a breakdown of events by project under **Settings > Subscription** in the "Usage History" tab.
+
+### Which transactions are consuming my quota?
+
+You can set up a query in **Discover** to see which transactions you're receiving the most and if you want to adjust that. When you're building the query, search for `event.type:transaction` and then set the columns to `title`, `project`, and `count`, as shown below:
+
+![Busiest Projects](manage-trans-quota-01.png)
+
+Once the changes are applied, sort the "Results" table by the "COUNT" column to display your busiest transactions:
+
+![Busiest Issues](manage-trans-quota-02.png)
 
 ## 2. Increasing Quotas
 
@@ -55,7 +83,7 @@ We strongly recommend that you make subscription changes before the last day of 
 
 </Note>
 
-## 2. Inbound Data Filters
+## 3. Inbound Data Filters
 
 While SDK configuration requires changes to your source code and depends on your next deployment, server-side filters can be easily configured per project in the "Data Filters" section of **[Project] > Settings > Inbound Filters**. Learn more in [Inbound Filters](/product/accounts/quotas/#inbound-data-filters).
 
@@ -117,34 +145,10 @@ When you are unable to take immediate action on an issue, but it continues to oc
 
 You can view and restore previously discarded issues by navigating to the "Discarded Issues" tab of **[Project] > Settings > Inbound Filters**.
 
-## 3. Event Usage Stats
+## 4. SDK Sample Rate
 
-Once you've completed the steps above, you can look at your events in aggregate in the "Usage Stats" tab of **Stats**. This information will help you answer key questions about the breakdown of your incoming events or which projects are consuming your quota. The answers to these questions can help you figure out where you need to do further fine-tuning of your SDK filters and configuration.
+blah blah
 
-### How can I see a breakdown of incoming events?
+## 5. SDK Configuration: Tracing Options {#2-sdk-configuration-tracing-options}
 
-The [Usage Stats](/product/stats/#usage-stats) tab displays details about the total number of events Sentry has received across your entire organization for up to 90 days. The page breaks down the events, by project, into three categories:
-
-- **Accepted**: Events processed and displayed in the issues or transactions views in [sentry.io](https://sentry.io).
-- **Dropped**: Events that were discarded due to a limit being hit.
-- **Filtered**: Events that were blocked based on your inbound filter rules.
-
-![Overview of Usage Stats page](../../stats/usage-stats.png)
-
-You can also download monthly reports with a similar breakdown of all your previous billing periods under **Settings > Subscription** in the "Usage History" tab.
-
-### What are my busiest projects?
-
-The "Project" table in the "Usage Stats" tab of **Stats** breaks down your events by project so you can see which ones are consuming your quota. Clicking on the settings icon next to a project name in the table will open the project's settings, where you can manage its inbound filters and rate limits
-
-You can also download monthly reports that provide a breakdown of events by project under **Settings > Subscription** in the "Usage History" tab.
-
-### Which transactions are consuming my quota?
-
-You can set up a query in **Discover** to see which transactions you're receiving the most and if you want to adjust that. When you're building the query, search for `event.type:transaction` and then set the columns to `title`, `project`, and `count`, as shown below:
-
-![Busiest Projects](manage-trans-quota-01.png)
-
-Once the changes are applied, sort the "Results" table by the "COUNT" column to display your busiest transactions:
-
-![Busiest Issues](manage-trans-quota-02.png)
+When you configure your the SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options). You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for performance monitoring to capture certain types of transactions.
