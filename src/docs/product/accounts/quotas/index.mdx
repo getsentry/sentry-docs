@@ -23,24 +23,24 @@ Let’s clarify a few terms to start:
 - **Transaction** - A [transaction](/product/performance/transaction-summary/#what-is-a-transaction) represents a single instance of a service being called to support an operation you want to measure or track, like a page load. Transaction events are grouped by the transaction name.
 - **Quota** - Your quota is the monthly number of events — errors, attachments, and transactions — that you pay Sentry to track.
 
-## Managing Your Quota
+## Manage Your Quota - Quick Guide
 
-This list of things to do to manage your quota is arranged from the fastest and least involved thing you can do to the most. Each of these items is linked to a longer explanation if you need it and the table indicates whether the action will affect, errors, transactions, or attachments or a combination of those.
+This list of things to do to manage your quota is arranged from the fastest and least involved thing you can do to the most. Each of these items is linked to a longer explanation if you need it and the table indicates whether the action can affect, errors, transactions, or attachments or a combination of those.
 
 <!-- prettier-ignore-start -->
 
 | Action | Errors | Transactions | Attachments |
 | ------ | ------ | ------------ | ----------- |
-1. [Check your spike protection is enabled](#1-spike-protection) | Y | N | N |
-1. [Review your event usage to see which projects are using up your quota](#common-workflows-for-managing-your-event-stream) | Y | Y | Y |
-1. [Adjust your quota](#3-quota-availbility) | Y | Y | Y |
-1. [Limit your events](#4-rate-limits) | Y | N | Y |
-1. [Delete and discard issues](#5-delete--discard-issues) | Y | N | N* |
-1. [Filter your events](#6-inbound-filters) | Y | Y | Y |
-1. [Check your issue grouping (some of this is in the SDK)](#7-event-grouping) | Y | N | N|
-1. [Update your SDK sample rate](#8-sdk-sample-rate) | Y | Y | N |
-1. [SDK filtering](#9-sdk-filtering-beforesend) | Y | N | N |
-1. [SDK configuration](#10-sdk-configuration) | Y | Y | Y |
+| 1. [Check your spike protection is enabled](#spike-protection) | Y | N | N |
+| 2. [Review your event usage to see which projects are using up your quota](#common-workflows-for-managing-your-event-stream) | Y | Y | Y |
+| 3. [Adjust your quota](#quota-availbility) | Y | Y | Y |
+| 4. [Limit your events](#rate-limits) | Y | N | Y |
+| 5. [Delete and discard issues](#delete--discard-issues) | Y | N | N* |
+| 6. [Filter your events](#inbound-filters) | Y | Y | Y |
+| 7. [Check your issue grouping (some of this is in the SDK)](#event-grouping) | Y | N | N|
+| 8. [Update your SDK sample rate](#sdk-sample-rate) | Y | Y | N |
+| 9. [SDK filtering](#sdk-filtering-beforesend) | Y | N | N |
+| 10. [SDK configuration](#sdk-configuration) | Y | Y | Y |
 
 <!-- prettier-ignore-end -->
 
@@ -68,29 +68,25 @@ the event will be rejected.
 
 </Alert>
 
-## What Counts Towards my Quota (Quick Guide)
+### Does It Count Towards My Quota? (Quick Guide)
 
 <!-- prettier-ignore-start -->
 
-| Strategy (think about this name)                                    | Yes, this event counts                  | No, this event does not count |
-| ------------------------------------------------------------------- | --------------------------------------- | ----------------------------- |
-| [SDK filtering](#1-sdk-filtering-beforesend)                        |                                         |                               |
-| [SDK configuration](#2-sdk-configuration)                           | Not set                                 | Set to filter this event      |
-| [SDK sample rate](#3-sdk-sample-rate)                               | Not set                                 | Set                           |
-| [Event grouping](#4-event-grouping)                                 |                                         |                               |
-| [Quota availability](#5-quota-availability)                         | Not reached                             | Exceeded                      |
-| [Has spike protection (errors only) been triggered?](#6-spike-protection) | No                                | Yes                           |
-| [Are future error events that repeat set to Delete & Discard?](#delete--discard)    | No                      |                               |
-| [Is this a repeated error event for a previously resolved issue?](#resolve) | Yes, this may be a regression in your code |                    |
-| [Is this repeated error event set to Ignore Alert?](#event-repetition) | Yes, it is still occurring           |                               |
-| [Rate limit for error events for the project](#8-rate-limits)          | Not set or not reached               | Set and exceeded              |
-| [Inbound filters (errors only)](#9-inbound-filters)                 | Not set                                 | Set for this error event      |
-| [Something about event usage](#common-workflows-for-managing-your-event-stream) |                            |       |
-| [Something about size limits](#size-limits) |                            |       |
+There are a few rules of thumb you can use to determine if an event will count or not
+
+| Something here | Doesn't count | Counts |
+| -------------- | ------------ | --------|
+| Filtering of any kind applied including: <br></br> SDK filtering, SDK configuration, SDK sample rate setting, event/issue grouping, inbound filters, deleting and discarding issues | x | |
+| Rate limited | x | |
+| Exceeds size limits | x | |
+| Quota exceeded | x | until quota is reached |
+| Spike protection triggered (temporarily) | x | see Spike Protection for details |
+| New events on resolved issues | | x |
+| New events on ignored issues | | x |
 
 <!-- prettier-ignore-end -->
 
-## 1. Spike Protection
+## Spike Protection
 
 Sentry’s spike protection prevents huge overages in error events from consuming your event capacity. Spike protection is not currently available for transactions. Learn more in [Spike Protection](#spike-protection).
 
@@ -161,7 +157,7 @@ If, instead of a single big spike (or an overall, permanent, increase in traffic
 
 Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes "inactive" again. This means that it is no longer dropping events, but _it does not mean the system has stopped paying attention._ It does however mean that the next time events are dropped, with respect to alerts it will count as a "reactivation" of spike protection.
 
-## 2. Event Usage Stats {#common-workflows-for-managing-your-event-stream}
+## Event Usage Stats {#common-workflows-for-managing-your-event-stream}
 
 Once you've completed the steps above, you can look at your events in aggregate in the "Usage Stats" tab of **Stats**. This information will help you answer some key questions like:
 
@@ -171,7 +167,7 @@ Once you've completed the steps above, you can look at your events in aggregate 
 
 The answers to these questions can help you figure out where you need to do further fine-tuning of your filters, limits, or SDK configuration.
 
-### How can I see a breakdown of incoming events? {#-how-can-i-see-a-breakdown-of-incoming-events}
+### Breakdown of Incoming Events {#-how-can-i-see-a-breakdown-of-incoming-events}
 
 The [Usage Stats](/product/stats/#usage-stats) tab displays details about the total number of events Sentry has received across your entire organization for up to 90 days. The page breaks down the events (by project) into three categories:
 
@@ -183,13 +179,13 @@ The [Usage Stats](/product/stats/#usage-stats) tab displays details about the to
 
 You can also download monthly reports with a similar breakdown of all your previous billing periods under **Settings > Subscription** in the "Usage History" tab.
 
-### What are my busiest projects? {#-what-are-my-busiest-projects}
+### Busiest Projects {#-what-are-my-busiest-projects}
 
 The "Project" table in the "Usage Stats" tab of **Stats** breaks down your events by project, so you can see which ones are consuming your quota.Clicking on the settings icon next to a project name in the table will open the project's settings page where you can manage its inbound filters and rate limits
 
 You can also download monthly reports that provide a breakdown of events by project under **Settings > Subscription** in the "Usage History" tab.
 
-### Which issues are consuming my quota? {#-what-issues-are-consuming-my-quota}
+### Issues Consuming Quota {#-what-issues-are-consuming-my-quota}
 
 The Sentry workflow starts with a real-time alert notifying you about an error in your code. If you want to take a more proactive approach to resolving your busiest issues, you can set up a query in **Discover**. When you're building the query, search for `event.type:error` and then set the columns `issue`, `title`, `project`, and `count()`, as shown below:
 
@@ -199,7 +195,7 @@ Once the changes are applied, sort the "Results" table by the "COUNT" column to 
 
 ![Busiest Issues](manage-event-stream-10.png)
 
-## 3. Quota Availability
+## Quota Availability
 
 Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. Learn about adding to your quota and what happens when you exceed it in [Increasing Quotas](#increasing-quotas).
 
@@ -247,7 +243,7 @@ We strongly recommend that you make subscription changes before the last day of 
 
 </Note>
 
-## 4. Rate Limits
+## Rate Limits
 
 If the error event rate limit for a project has been exceeded, and your subscription allows, the event will not be counted. Learn more in [Rate Limiting](/product/accounts/quotas/manage-event-stream-guide/#6-rate-limiting) or in [Error Event Limits](/product/accounts/quotas/#error-event-limits). This does not apply to transactions or attachments.
 
@@ -292,7 +288,7 @@ This feature is available only if your organization is on a Business plan.
 
 If you have enabled the storage of crash reports, you may set limits for the maximum number of crash reports that will be stored per issue. To set up these limits, use the slider in the "Store Native Crash Reports" option in your organization's "Security & Privacy" settings.
 
-## 5. Delete & Discard Issues
+## Delete & Discard Issues
 
 <Note>
 
@@ -330,7 +326,7 @@ You've been alerted on a new error in your code? Go to the **[Issue Details](/pr
 
 -->
 
-## 6. Inbound Filters
+## Inbound Filters
 
 If any inbound filter is set for a type of event or attachment, and your subscription allows, the event or attachment won't be counted. Learn more in [Inbound Data Filters](#inbound-data-filters).
 
@@ -388,7 +384,7 @@ When you are unable to take immediate action on an issue, but it continues to oc
 
 You can view and restore previously discarded issues by navigating to the "Discarded Issues" tab of **[Project] > Settings > Inbound Filters**.
 
-## 7. Event Grouping
+## Event Grouping
 
 Proper event grouping is essential to maintaining a meaningful set of issues and reducing redundant notifications. Sentry groups similar error events into unique _[issues](/product/issues/)_ based on their _fingerprint_. An event's fingerprint relies firstly on its _stack trace_.
 
@@ -400,15 +396,15 @@ With JavaScript errors, minified source code might result in a nondeterministic 
 
 For more information on the fingerprint algorithm and customizing event grouping, check out our [Issue Grouping docs](/product/data-management-settings/event-grouping/).
 
-## 8. SDK Sample Rate
+## SDK Sample Rate
 
 If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is documented for each SDK. The SDK sample rate is not dynamic; changing it requires re-deployment. In addition, setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
 
-## 9. SDK Filtering: beforeSend
+## SDK Filtering: beforeSend
 
 All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so you can use that to modify the event's data or drop it completely (by returning `null`) based on your custom logic and the data available on the event, like _tags_, _environment_, _release version_, _error attributes_, and so on. Learn more in [Filtering Events](/platform-redirect/?next=/configuration/filtering/).
 
-## 10. SDK Configuration
+## SDK Configuration
 
 The SDK configuration either allows the event or filters the event out. Learn more in [errors](/product/accounts/quotas/manage-event-stream-guide/) and [transactions](/product/accounts/quotas/manage-transaction-quota/) quota management docs or in the [filtering docs for your specific SDK](/platform-redirect/?next=/configuration/filtering/).
 
