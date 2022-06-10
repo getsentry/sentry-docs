@@ -8,9 +8,9 @@ description: "Learn how associating commits to a release allows you to track sus
 
 In your release process, you can add a step to create a release in Sentry and associate it with commits from your linked repository. When you've done this, you'll be able to see suspect commits and suggested assignees in issues, as well as resolve issues by commit, as described below.
 
-If you're using one of our [release automation](/product/releases/setup/release-automation/), suspect commits should already be enabled and this step is automated for you.
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, suspect commits should already be enabled and this step should be done automatically.
 
-However, if you don't have a repository integration installed, you can tell Sentry about your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
+However, if you don't have a repository integration installed, you can send Sentry your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
 
 ## Suspect Commits & Suggested Assignees
 
@@ -47,7 +47,7 @@ If you’re using GitHub, you may have a privacy setting enabled that prevents S
 
 ## Enable Suspect Commits
 
-If you're using one of our [release automation](/product/releases/setup/release-automation/) options, suspect commits should already be enabled. However, if you don’t want to install a repository integration so Sentry can connect to your repository, or you’re using an unsupported repository provider or VCS (for example, Perforce), you can tell Sentry about your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, suspect commits should already be enabled. However, if you don’t want to install a repository integration so Sentry can connect to your repository, or you’re using an unsupported repository provider or VCS (for example, Perforce), you can send Sentry your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
 
 This process assumes:
 
@@ -60,8 +60,8 @@ In this CLI example:
 
 - Environment variables configure the CLI (see [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) for alternatives)
 - The `propose-version` sub-command determines a release ID automatically
-- A release tagged `VERSION` is created for the organization `my-org` for projects (`project1` and `project2`)
-- The `--auto` flag determines the repository name automatically, and associates commits between the previous release’s commit and the current head commit with the release.
+- A release tagged `VERSION` is created for the organization `my-org` for projects `project1` and `project2`
+- Because of the `--auto` flag, the repository name is determined automatically, and commits between the previous release’s head commit and the current head commit are associated with the release.
 
 ```bash
 # Assumes you're in a git repository
@@ -76,7 +76,7 @@ sentry-cli releases new -p project1 -p project2 $VERSION
 sentry-cli releases set-commits --auto $VERSION
 ```
 
-If you don't have a repo-based integration associated with your Sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag.
+If you don't have a repo-based integration associated with your Sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's head commit and the current head commit with the release. If this is the first release, Sentry will use the latest 10 - 20 commits, depending on the integration. This behavior is configurable with the `--initial-depth` flag.
 
 For more control over which commits to associate, or if you're unable to execute the command inside the repository, you can manually specify a repository and range.
 
@@ -94,9 +94,9 @@ sentry-cli releases set-commits --local $VERSION
 
 ### Using the API
 
-To tell Sentry about your commit metadata using the API use the [create release endpoint](/api/releases/create-a-new-release-for-an-organization/).
+To send Sentry your commit metadata using the API, use the [create release endpoint](/api/releases/create-a-new-release-for-an-organization/).
 
-In order for Sentry to use your commits, you must format your commits to match this form:
+Use the following format for your commits:
 
 ```json
 {
@@ -157,7 +157,7 @@ In order for Sentry to use your commits, you must format your commits to match t
 
 #### Create the Release with Patch Data
 
-This example is of a full request to create the release endpoint that includes commit metadata:
+Here is an example of a request using patch data:
 
 <Note>
 
