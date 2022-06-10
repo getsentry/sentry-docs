@@ -40,7 +40,8 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 | [Is this repeated error event set to Ignore Alert?](#event-repetition) | Yes, it is still occurring           |                               |
 | [Rate limit for error events for the project](#8-rate-limits)          | Not set or not reached               | Set and exceeded              |
 | [Inbound filters (errors only)](#9-inbound-filters)                 | Not set                                 | Set for this error event      |
-| [Something about event usage](##common-workflows-for-managing-your-event-stream) |                            |       |
+| [Something about event usage](#common-workflows-for-managing-your-event-stream) |                            |       |
+| [Something about size limits](#size-limits) |                            |       |
 
 <!-- prettier-ignore-end -->
 
@@ -224,7 +225,13 @@ If, instead of a single big spike (or an overall, permanent, increase in traffic
 
 Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes "inactive" again. This means that it is no longer dropping events, but _it does not mean the system has stopped paying attention._ It does however mean that the next time events are dropped, with respect to alerts it will count as a "reactivation" of spike protection.
 
-## 7. Resolve or Delete Issues
+## 7. Resolve, Delete, or Ignore Issues
+
+Event repetition only applies to error events, not transactions or attachments. The following rules apply for event repetition and your quota:
+
+- If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota.
+- If you previously resolved an issue, a new error event counts toward your quota because it may represent a regression in your code.
+- If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring. Learn more in [Inbound Filters](#inbound-data-filters).
 
 ### Resolve
 
@@ -251,6 +258,10 @@ You can find a list of these issues in the "Discarded Issues" tab in **[Project]
 Once you've identified a set of discarded issues, it might make sense to go back to your SDK configuration and add the related errors into your `before-send` client-side filtering.
 
 </Note>
+
+### Ignore Issues
+
+blah blah blah
 
 ## 8. Rate Limits
 
@@ -393,19 +404,7 @@ Once the changes are applied, sort the "Results" table by the "COUNT" column to 
 
 ![Busiest Issues](manage-event-stream-10.png)
 
-## Other Factors
-
-### Event Repetition
-
-<!-- rethink this section -->
-
-Event repetition only applies to error events, not transactions or attachments. The following rules apply for event repetition and your quota:
-
-- If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota.
-- If you previously resolved an issue, a new error event counts toward your quota because it may represent a regression in your code.
-- If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring. Learn more in [Inbound Filters](#inbound-data-filters).
-
-### Size Limits
+## A Note About Size Limits
 
 Sentry imposes limits on various fields within an event, as well as the size of full events and the requests they are sent in:
 
