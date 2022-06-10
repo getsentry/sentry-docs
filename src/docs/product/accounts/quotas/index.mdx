@@ -25,16 +25,30 @@ Let’s clarify a few terms to start:
 
 Sentry completes a thorough evaluation of each event to determine if it counts toward your quota, as outlined in this overview. Detailed documentation for each evaluation is linked throughout. Before completing any of these evaluations, Sentry confirms that each event includes a valid DSN and project as well as whether the event can be parsed. In addition, for error events, Sentry validates that the event contains valid fingerprint information. If any of these items are missing or incorrect, the event is rejected.
 
-- [SDK filtering]()
-- [SDK configuration]()
-- [SDK sample rate]()
-- [Event grouping]()
-- [Quota availability]()
-- [Spike protection]()
-- [Resolve or delete issues]()
-- [Rate limits]()
-- [Inbound filters]()
-- [Event usage stats]()
+<!-- prettier-ignore-start -->
+
+| Strategy                                                            | Yes, this event counts                  | No, this event does not count |
+| ------------------------------------------------------------------- | --------------------------------------- | ----------------------------- |
+| [SDK filtering](#1-sdk-filtering-beforesend)                        |                                         |                               |
+| [SDK configuration](#2-sdk-configuration)                           | Not set                                 | Set to filter this event      |
+| [SDK sample rate](#3-sdk-sample-rate)                               | Not set                                 | Set                           |
+| [Event grouping](#4-event-grouping)                                 |                                         |                               |
+| [Quota availability](#5-quota-availability)                         | Not reached                             | Exceeded                      |
+| [Has spike protection (errors only) been triggered?](#6-spike-protection) | No                                | Yes                           |
+| [Are future error events that repeat set to Delete & Discard?](#delete--discard)    | No                      |                               |
+| [Is this a repeated error event for a previously resolved issue?](#resolve) | Yes, this may be a regression in your code |                    |
+| [Is this repeated error event set to Ignore Alert?](#event-repetition) | Yes, it is still occurring           |                               |
+| [Rate limit for error events for the project](#8-rate-limits)          | Not set or not reached               | Set and exceeded              |
+| [Inbound filters (errors only)](#9-inbound-filters)                 | Not set                                 | Set for this error event      |
+| [Something about event usage](##common-workflows-for-managing-your-event-stream) |                            |       |
+
+<!-- prettier-ignore-end -->
+
+<Alert>
+
+Delete and discard and per-project rate limits are available only for Business plans.
+
+</Alert>
 
 ## 1. SDK Filtering: beforeSend
 
@@ -383,6 +397,8 @@ Once the changes are applied, sort the "Results" table by the "COUNT" column to 
 
 ### Event Repetition
 
+<!-- rethink this section -->
+
 Event repetition only applies to error events, not transactions or attachments. The following rules apply for event repetition and your quota:
 
 - If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota.
@@ -410,29 +426,5 @@ The precise limits may change over time. For more information, please refer to t
 If the event exceeds 200KB compressed or 1MB decompressed for events and 20MB
 compressed or 100MB decompressed for minidump uploads (all files combined),
 the event will be rejected.
-
-</Alert>
-
-<!-- ignore prettier start -->
-
-## What Counts Toward my Quota Table
-
-| Strategy                                                        | Yes, this event counts                     | No, this event does not count |
-| --------------------------------------------------------------- | ------------------------------------------ | ----------------------------- |
-| SDK configuration                                               | Not set                                    | Set to filter this event      |
-| SDK sample rate                                                 | Not set                                    | Set                           |
-| Quota                                                           | Not reached                                | Exceeded                      |
-| Are future error events that repeat set to Delete & Discard?    | No                                         |                               |
-| Is this a repeated error event for a previously resolved issue? | Yes, this may be a regression in your code |                               |
-| Is this repeated error event set to Ignore Alert?               | Yes, it is still occurring                 |                               |
-| Has spike protection (errors only) been triggered?              | No                                         | Yes                           |
-| Rate limit for error events for the project                     | Not set or not reached                     | Set and exceeded              |
-| Inbound filters (errors only)                                   | Not set                                    | Set for this error event      |
-
-<!-- ignore prettier end -->
-
-<Alert>
-
-Delete and discard and per-project rate limits are available only for Business plans.
 
 </Alert>
