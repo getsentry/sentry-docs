@@ -1,0 +1,71 @@
+---
+title: Signal Handlers
+---
+
+Some Sentry SDKs have to work with signal handlers to trap processes before they
+crash.  This applies to mobile SDKs as well as the native SDK.  As signal handlers
+are notoriously difficult to work with and the restrictions placed on us are
+quite limiting we have to partially bend the rules of what is acceptable.
+
+# General Risks
+
+The general risks with signal handlers stem from the interruptive nature:
+
+* they are interrupting already running code which means that the state of the
+  environment around is not safe.
+* they need a bit of stack space to operate, yet they might be invoked when we
+  are running out of stack.
+* other code might also hang on that signal handler and we likely want to invoke
+  those too.
+
+On POSIX, the signal handlers are thus very restricted in what is acceptable.  In
+theory you can only call [async safe functions](https://man7.org/linux/man-pages/man7/signal-safety.7.html)
+which unfortunately put a lot of limitations in place.  In particular not even
+allocations are possible, let alone most threading functions.
+
+# Basic Recommendations
+
+We want to optimize our outcomes for getting good crash reports and getting
+crash reports altogether.  We do not necessarily optimize for not crashing if
+we crash after we have managed to record a crash report.  What this means is
+that we consider it acceptable if our crash handling code crashes after it has
+successfully created a crash report to disk, yet we want to avoid doing so
+unnecessarily.
+
+Thus the bigger risk is actually creating a locking situation where we prevent
+the application from properly shutting down but hanging on the crash.  This is
+less of a concern for mobile where the operating system will terminate a hung
+application, but it's a concern for other situations such as desktop or server
+setups.
+
+Crash reports should generally be persisted on disk and at a later point be
+uploaded.  This can either happen from an already running thread such as we are
+attempting on Android or upon restart of the application.
+
+This means that the async handler should optimize for dumping crash data to
+disk in reducing priority.  If for instance we can only collect auxiliary
+information with the risk of crashing in the crash handler, that one should be
+extracted and dumped after the stack trace has been created.
+
+# Memory Allocation
+
+The recommendation is for libraries to use custom allocation functions which
+under normal circumstances use `malloc` but after once have entered a crashing
+situation in the signal handler switch over to a bump allocator.  This is
+necessary as malloc can (and will!) hold a lock when entering into a signal
+handler which can cause us to either dead lock or crash.
+
+# Locks and Signal Handler Marking
+
+Another issues is that we cannot generally use locks properly once in signal
+handlers.  The way the native SDK is dealing with this situation is to
+use a spinlock and to mark when we are in the signal handler.  That way
+generic code that might be wanting to wait for a real lock can either
+additionally block on the spinlock or silently pass if it's in the same
+thread as the signal handler.
+
+# Writing Files
+
+For writing files the `fwrite` family of functions must not be used as they
+are not async safe.  Instead, the underlying `write` and `open` functions
+should be used.
