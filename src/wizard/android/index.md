@@ -64,6 +64,8 @@ Add your DSN to the manifest file.
     <!-- Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
        We recommend adjusting this value in production. -->
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+    <!-- Enable user interaction tracing to capture transactions for various UI events (such as clicks or scrolls). -->
+    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
 </application>
 ```
 
@@ -139,6 +141,6 @@ Check out [the documentation](https://docs.sentry.io/platforms/android/performan
 
 ### Next Steps
 
-Using ProGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
+Using ProGuard/DexGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
 
 [The documentation](https://docs.sentry.io/platforms/android/configuration/) has more information about the many configurations and API available in Sentry's SDK.
