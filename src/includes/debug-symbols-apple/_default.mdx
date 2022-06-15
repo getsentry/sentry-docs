@@ -165,9 +165,9 @@ Your project’s dSYM can be upload during the build phase as a “Run Script”
 You need to have an Auth Token for this to work. You can [create an Auth Token here](https://sentry.io/api/).
 
 1.  Download and install [sentry-cli](/product/cli/installation/)
-2.  You will need to copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_
+2.  You will need to copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_ (depending on your needs, you may want to emit warnings or errors to the Xcode build log to either let the build pass, or to fail it, like in a CI deployment)
 
-```bash
+```bash {tabTitle:Warn on failures - nonblocking}
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
@@ -178,6 +178,20 @@ echo "warning: sentry-cli - $ERROR"
 fi
 else
 echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+fi
+```
+
+```bash {tabTitle:Error on failures - blocking}
+if which sentry-cli >/dev/null; then
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
+ERROR=$(sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+if [ ! $? -eq 0 ]; then
+echo "error: sentry-cli - $ERROR"
+fi
+else
+echo "error: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
 fi
 ```
 
