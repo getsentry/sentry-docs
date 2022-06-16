@@ -1,10 +1,10 @@
 name: Bump API Schema SHA
 on:
 
-  # This could be run manually, but general expectation is that this fires from GHA in 
-  # getsentry/sentry-api-schema on changes there. See:
+  # This could be run manually, but the general expectation is that this fires
+  # from GHA in getsentry/sentry-api-schema on changes there. See:
   #
-  #  https://develop.sentry.dev/api/public/#build-process
+  #   https://develop.sentry.dev/api/public/#build-process
 
   workflow_dispatch:
 jobs:
@@ -20,7 +20,9 @@ jobs:
         run: |
           filepath="src/gatsby/utils/resolveOpenAPI.ts"
           sha="$(curl -sSL 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main' | awk 'BEGIN { RS=",|:{\n"; FS="\""; } $2 == "sha" { print $4 }')"
-          sed -i -e 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "'$SHA'"|g' "$filepath"
+          sed -i -e 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "'$sha'"|g' "$filepath"
+          git config user.email "bot@getsentry.com"
+          git config user.name "openapi-getsentry-bot"
           git add "$filepath"
-          git commit -m "Bump API schema to $sha"
+          git commit -m "Bump API schema to ${sha:0:8}"
           git push
