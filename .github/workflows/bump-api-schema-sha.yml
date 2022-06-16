@@ -25,10 +25,11 @@ jobs:
           sha="$(curl -sSL 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main' | awk 'BEGIN { RS=",|:{\n"; FS="\""; } $2 == "sha" { print $4 }')"
           sed -i -e 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "'$sha'"|g' "$filepath"
 
-          git checkout -b "bot/bump-api-schema-to-${sha:0:8}"
+          branch="bot/bump-api-schema-to-${sha:0:8}"
+          git checkout -b "$branch"
           git add "$filepath"
           git commit -m "Bump API schema to ${sha:0:8}"
-          git push
+          git push --set-upstream origin "$branch"
 
           gh pr create --fill
           gh pr merge --squash
