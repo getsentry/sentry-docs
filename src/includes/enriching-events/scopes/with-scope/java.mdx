@@ -1,54 +1,6 @@
-<PlatformSection supported={["android"]}>
-
-```java {tabTitle: Java}
-import io.sentry.Sentry;
-import io.sentry.SentryLevel;
-
-// will be tagged with my-tag="my value"
-Sentry.captureException(new Exception("my error"), scope -> {
-  scope.setTag("my-tag", "my value");
-  scope.setLevel(SentryLevel.WARNING);
-});
-
-// will not be tagged with my-tag
-Sentry.captureException(new Exception("my error"));
-```
-
-```kotlin {tabTitle: Kotlin}
-import io.sentry.Sentry
-import io.sentry.SentryLevel
-
-// will be tagged with my-tag="my value"
-Sentry.captureException(Exception("my error")) { scope ->
-  scope.setTag("my-tag", "my value")
-  scope.level = SentryLevel.WARNING
-}
-
-// will not be tagged with my-tag
-Sentry.captureException(Exception("my error"))
-```
-
-</PlatformSection>
-
 <PlatformSection notSupported={["android"]}>
 
-The JavaSDK provides two alternative ways of configuring a local scope.
-
 ```java {tabTitle: Java}
-import io.sentry.Sentry;
-import io.sentry.SentryLevel;
-
-// will be tagged with my-tag="my value"
-Sentry.captureException(new Exception("my error"), scope -> {
-  scope.setTag("my-tag", "my value");
-  scope.setLevel(SentryLevel.WARNING);
-});
-
-// will not be tagged with my-tag
-Sentry.captureException(new Exception("my error"));
-```
-
-```java {tabTitle: Java-Alternative}
 import io.sentry.Sentry;
 import io.sentry.SentryLevel;
 
@@ -68,20 +20,6 @@ Sentry.captureException(new Exception("my error"));
 import io.sentry.Sentry
 import io.sentry.SentryLevel
 
-// will be tagged with my-tag="my value"
-Sentry.captureException(Exception("my error")) { scope ->
-  scope.setTag("my-tag", "my value")
-  scope.level = SentryLevel.WARNING
-}
-
-// will not be tagged with my-tag
-Sentry.captureException(Exception("my error"))
-```
-
-```kotlin {tabTitle: Kotlin-Alternative}
-import io.sentry.Sentry
-import io.sentry.SentryLevel
-
 Sentry.withScope { scope ->
   scope.setTag("my-tag", "my value")
   scope.level = SentryLevel.WARNING
@@ -93,4 +31,11 @@ Sentry.withScope { scope ->
 // will not be tagged with my-tag
 Sentry.captureException(Exception("my error"))
 ```
+
+<Alert level="info" title="Important">
+
+In the Java SDK `with-scope` does **not** work reliably in `globalHubMode` as the `scope` gets pushed on the stack global to the hub. In `globalHubMode` use the callback parameter of the capture methods detailed below.
+
+</Alert>
+
 </PlatformSection>
