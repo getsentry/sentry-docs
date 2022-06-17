@@ -16,18 +16,41 @@ Sentry’s flexibility means you can exercise fine-grained control over which ev
 Let’s clarify a few terms to start:
 
 - **Event** - An event is one instance of you sending data to Sentry. Generally, this data is an error or a transaction.
-- **Issue** - An issue is a grouping of similar error events. Every error event has a set of characteristics called its fingerprint, which is what Sentry uses for grouping. For example, Sentry groups events together when they are triggered by the same part of your code. Learn more in our full [Issue Grouping documentation](/product/data-management-settings/event-grouping/).
-- **Attachment** - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use these files only to create an event, and then drop them.
+- **Error** - An error is.... A grouping of similar errors makes [an issue]().
 - **Transaction** - A [transaction](/product/performance/transaction-summary/#what-is-a-transaction) represents a single instance of a service being called to support an operation you want to measure or track, like a page load. Transaction events are grouped by the transaction name.
-- **Quota** - Your quota is the monthly number of events — errors, attachments, and transactions — that you pay Sentry to track.
+- **Attachment** - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use these files only to create an event, and then drop them.
+- **Quota** - Your quota is the monthly number of data units — errors, attachments, and transactions — that you pay Sentry to track.
 
-## Managing My Quota, an Overview
+## Manage Your Quota - Quick Guide
+
+This list of things to do to manage your quota is arranged from the fastest and least involved thing you can do to the most. Each of these items is linked to a longer explanation if you need it and the table indicates whether the action can affect, errors, transactions, or attachments or a combination of those.
+
+<!-- prettier-ignore-start -->
+
+| Action | Errors | Transactions | Attachments |
+| ------ | ------ | ------------ | ----------- |
+| 1. [Check your spike protection is enabled](#spike-protection) | Y | N | N |
+| 2. [Review your event usage to see which projects are using up your quota](#common-workflows-for-managing-your-event-stream) | Y | Y | Y |
+| 3. [Adjust your quota](#quota-availbility) | Y | Y | Y |
+| 4. [Limit your events](#rate-limits) | Y | N | Y |
+| 5. [Delete and discard issues](#delete--discard-issues) | Y | N | N* |
+| 6. [Filter your events](#inbound-filters) | Y | Y | Y |
+| 7. [Check your issue grouping (some of this is in the SDK)](#event-grouping) | Y | N | N|
+| 8. [Update your SDK sample rate](#sdk-sample-rate) | Y | Y | N |
+| 9. [SDK filtering](#sdk-filtering-beforesend) | Y | N | N |
+| 10. [SDK configuration](#sdk-configuration) | Y | Y | Y |
+
+<!-- prettier-ignore-end -->
+
+ <!-- ## Managing My Quota, an Overview -->
+
+## Some Other Heading
 
 Sentry completes a thorough evaluation of each event to determine if it counts toward your quota, as outlined in this overview. Detailed documentation for each evaluation is linked throughout. Before completing any of these evaluations, Sentry confirms that each event includes a valid DSN and project as well as whether the event can be parsed. In addition, for error events, Sentry validates that the event contains valid fingerprint information. If any of these items are missing or incorrect, the event is rejected.
 
 ### 1. Spike Protection
 
-Sentry’s spike protection prevents huge overages in error events from consuming your event capacity. Spike protection is not currently available for transactions. Learn more in the Spike Protection section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#1-spike-protection). 
+Sentry’s spike protection prevents huge overages in error events from consuming your event capacity. Spike protection is not currently available for transactions. Learn more in the Spike Protection section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#1-spike-protection).
 
 ### 2. Event Usage Stats
 
@@ -37,7 +60,7 @@ Learn more in the Event Usage Stats section of [Manage Your Error Quota](/produc
 
 ### 3. Quota Availability
 
-Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. Learn about adding to your quota and what happens when you exceed it in the Increasing Quotas section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#3-increasing-quotas) and [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/#2-increasing-quotas). 
+Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. Learn about adding to your quota and what happens when you exceed it in the Increasing Quotas section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#3-increasing-quotas) and [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/#2-increasing-quotas).
 
 ### 4. Rate Limits
 
@@ -53,7 +76,7 @@ Event repetition only applies to error events, not transactions or attachments. 
 
 - If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota. Learn more in the Delete & Discard section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#5-applying-workflows).
 - If you previously resolved an issue, a new error event counts toward your quota because it may represent a regression in your code.
-- If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring. Learn more in the Inbound Filters section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#6-inbound-data-filters). 
+- If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring. Learn more in the Inbound Filters section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#6-inbound-data-filters).
 
 ### 7. Inbound Filters
 
@@ -92,80 +115,48 @@ The precise limits may change over time. For more information, please refer to t
 - [Variable Size Limits](https://develop.sentry.dev/sdk/data-handling/#variable-size)
 
 <Alert>
-  If the event exceeds 200KB compressed or 1MB decompressed for events and 20MB
-  compressed or 100MB decompressed for minidump uploads (all files combined),
-  the event will be rejected.
+
+If the event exceeds 200KB compressed or 1MB decompressed for events and 20MB
+compressed or 100MB decompressed for minidump uploads (all files combined),
+the event will be rejected.
+
 </Alert>
 
 ## What Counts Toward my Quota, Table View
 
-<table>
-  <tbody>
-    <tr>
-      <td>
-        <strong> </strong>
-      </td>
-      <td>
-        <strong>Yes, this event counts</strong>
-      </td>
-      <td>
-        <strong>No, this event does not count</strong>
-      </td>
-    </tr>
-    <tr>
-      <td>SDK configuration</td>
-      <td>Not set</td>
-      <td>Set to filter this event</td>
-    </tr>
-    <tr>
-      <td>SDK sample rate</td>
-      <td>Not set</td>
-      <td>Set</td>
-    </tr>
-    <tr>
-      <td>Quota</td>
-      <td>Not reached</td>
-      <td>Exceeded</td>
-    </tr>
-    <tr>
-      <td>
-        Are <i>future</i> error events that repeat set to Delete & Discard?
-      </td>
-      <td>No</td>
-      <td> </td>
-    </tr>
-    <tr>
-      <td>Is this a repeated error event for a previously resolved issue?</td>
-      <td>Yes, this may be a regression in your code</td>
-      <td> </td>
-    </tr>
-    <tr>
-      <td>Is this repeated error event set to Ignore Alert?</td>
-      <td>Yes, it is still occurring</td>
-      <td> </td>
-    </tr>
-    <tr>
-      <td>Has spike protection (errors only) been triggered?</td>
-      <td>No</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>Rate limit for error events for the project</td>
-      <td>
-        Not set <i>or</i> not reached
-      </td>
-      <td>
-        Set <i>and</i> exceeded
-      </td>
-    </tr>
-    <tr>
-      <td>Inbound filters (errors only)</td>
-      <td>Not set</td>
-      <td>Set for this error event</td>
-    </tr>
-  </tbody>
-</table>
+<!-- make this table binary, use checkmarks? -->
+
+|                                                                 | Yes, this event counts                     | No, this event does not count |
+| --------------------------------------------------------------- | ------------------------------------------ | ----------------------------- |
+| SDK configuration                                               | Not set                                    | Set to filter this event      |
+| SDK sample rate                                                 | Not set                                    | Set                           |
+| Quota                                                           | Not reached                                | Exceeded                      |
+| Are future error events that repeat set to Delete & Discard?    | No                                         |                               |
+| Is this a repeated error event for a previously resolved issue? | Yes, this may be a regression in your code |                               |
+| Is this repeated error event set to Ignore Alert?               | Yes, it is still occurring                 |                               |
+| Has spike protection (errors only) been triggered?              | No                                         | Yes                           |
+| Rate limit for error events for the project                     | Not set or not reached                     | Set and exceeded              |
+| Inbound filters (errors only)                                   | Not set                                    | Set for this error event      |
+
 <Alert>
   Delete and discard and per-project rate limits are available only for Business
   plans.
 </Alert>
+
+Table v2
+
+There are a few rules of thumb you can use to determine if an event will count or not
+
+<!-- prettier-ignore-start -->
+
+| Something here | Doesn't count | Counts |
+| -------------- | ------------ | --------|
+| Filtering of any kind applied including: <br></br> SDK filtering, SDK configuration, SDK sample rate setting, event/issue grouping, inbound filters, deleting and discarding issues | x | |
+| Rate limited | x | |
+| Exceeds size limits | x | |
+| Quota exceeded | x | until quota is reached |
+| Spike protection triggered (temporarily) | x | see Spike Protection for details |
+| New events on resolved issues | | x |
+| New events on ignored issues | | x |
+
+<!-- prettier-ignore-end -->
