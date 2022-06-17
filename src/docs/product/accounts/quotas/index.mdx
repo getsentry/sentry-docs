@@ -16,9 +16,9 @@ Sentry’s flexibility means you can exercise fine-grained control over which ev
 Let’s clarify a few terms to start:
 
 - **Event** - An event is one instance of you sending data to Sentry. Generally, this data is an error or a transaction.
-- **Error** - An error is.... A grouping of similar errors makes [an issue]().
+- **Error** - An error is.... A grouping of similar errors makes [an issue](/product/issues/).
 - **Transaction** - A [transaction](/product/performance/transaction-summary/#what-is-a-transaction) represents a single instance of a service being called to support an operation you want to measure or track, like a page load. Transaction events are grouped by the transaction name.
-- **Attachment** - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use these files only to create an event, and then drop them.
+- **Attachment** - Attachments are uploaded files associated with an error event, such as log files. Unless the option to store crash reports is enabled, Sentry will use these files only to create an event, and then drop them.
 - **Quota** - Your quota is the monthly number of data units — errors, attachments, and transactions — that you pay Sentry to track.
 
 ## Manage Your Quota - Quick Guide
@@ -29,20 +29,22 @@ This list of things to do to manage your quota is arranged from the fastest and 
 
 | Action | Errors | Transactions | Attachments |
 | ------ | ------ | ------------ | ----------- |
-| 1. [Check your spike protection is enabled](#spike-protection) | Y | N | N |
-| 2. [Review your event usage to see which projects are using up your quota](#common-workflows-for-managing-your-event-stream) | Y | Y | Y |
-| 3. [Adjust your quota](#quota-availbility) | Y | Y | Y |
-| 4. [Limit your events](#rate-limits) | Y | N | Y |
-| 5. [Delete and discard issues](#delete--discard-issues) | Y | N | N* |
-| 6. [Filter your events](#inbound-filters) | Y | Y | Y |
-| 7. [Check your issue grouping (some of this is in the SDK)](#event-grouping) | Y | N | N|
-| 8. [Update your SDK sample rate](#sdk-sample-rate) | Y | Y | N |
-| 9. [SDK filtering](#sdk-filtering-beforesend) | Y | N | N |
-| 10. [SDK configuration](#sdk-configuration) | Y | Y | Y |
+| 1. [Check your spike protection is enabled](#1-spike-protection) | &check; |  |  |
+| 2. [Review your event usage to see which projects are using up your quota](#common-workflows-for-managing-your-event-stream) | &check; | &check; | &check; |
+| 3. [Adjust your quota](#3-quota-availbility) | &check; | &check; | &check; |
+| 4. [Limit your events](#4-rate-limits) | &check; |  | &check; |
+| 5. [Delete and discard issues](#6-event-repetition) | &check; |  | * |
+| 6. [Filter your events](#7-inbound-filters) | &check; | &check; | &check; |
+| 7. [Check your issue grouping (some of this is in the SDK)](#event-grouping) | &check; |  | |
+| 8. [Update your SDK sample rate](#8-sdk-sample-rate) | &check; | &check; |  |
+| 9. [SDK filtering](#9-sdk-filtering-beforesend) | &check; |  |  |
+| 10. [SDK configuration](#10-sdk-configuration) | &check; | &check; | &check; |
 
 <!-- prettier-ignore-end -->
 
- <!-- ## Managing My Quota, an Overview -->
+<!-- event grouping isn't in table above
+
+## Managing My Quota, an Overview -->
 
 ## Some Other Heading
 
@@ -122,21 +124,27 @@ the event will be rejected.
 
 </Alert>
 
-## What Counts Toward my Quota, Table View
+## What Counts Toward my Quota
 
 <!-- make this table binary, use checkmarks? -->
 
+<!-- prettier-ignore-start -->
+
 |                                                                 | Yes, this event counts                     | No, this event does not count |
 | --------------------------------------------------------------- | ------------------------------------------ | ----------------------------- |
-| SDK configuration                                               | Not set                                    | Set to filter this event      |
-| SDK sample rate                                                 | Not set                                    | Set                           |
+| Has spike protection (errors only) been triggered?              | No                                         | Yes                           |
+| Check projects                                                  | No                                         | Yes                           |
 | Quota                                                           | Not reached                                | Exceeded                      |
+| Rate limit for error events for the project                     | Not set or not reached                     | Set and exceeded              |
 | Are future error events that repeat set to Delete & Discard?    | No                                         |                               |
 | Is this a repeated error event for a previously resolved issue? | Yes, this may be a regression in your code |                               |
 | Is this repeated error event set to Ignore Alert?               | Yes, it is still occurring                 |                               |
-| Has spike protection (errors only) been triggered?              | No                                         | Yes                           |
-| Rate limit for error events for the project                     | Not set or not reached                     | Set and exceeded              |
-| Inbound filters (errors only)                                   | Not set                                    | Set for this error event      |
+| Inbound filters                                                 | Not set                                    | Set for this error event      |
+| Event grouping                                                  |                                    |       |
+| SDK sample rate                                                 | Not set                                    | Set                           |
+| SDK configuration                                               | Not set                                    | Set to filter this event      |
+
+<!-- prettier-ignore-end -->
 
 <Alert>
   Delete and discard and per-project rate limits are available only for Business
@@ -151,12 +159,12 @@ There are a few rules of thumb you can use to determine if an event will count o
 
 | Something here | Doesn't count | Counts |
 | -------------- | ------------ | --------|
-| Filtering of any kind applied including: <br></br> SDK filtering, SDK configuration, SDK sample rate setting, event/issue grouping, inbound filters, deleting and discarding issues | x | |
-| Rate limited | x | |
-| Exceeds size limits | x | |
-| Quota exceeded | x | until quota is reached |
-| Spike protection triggered (temporarily) | x | see Spike Protection for details |
-| New events on resolved issues | | x |
-| New events on ignored issues | | x |
+| Filtering of any kind applied including: <br></br> SDK filtering, SDK configuration, SDK sample rate setting, event/issue grouping, inbound filters, deleting and discarding issues | &check; | |
+| Rate limited | &check; | |
+| Exceeds size limits | &check; | |
+| Quota exceeded | &check; | until quota is reached |
+| Spike protection triggered (temporarily) | &check; | see Spike Protection for details |
+| New events on resolved issues | | &check; |
+| New events on ignored issues | | &check; |
 
 <!-- prettier-ignore-end -->
