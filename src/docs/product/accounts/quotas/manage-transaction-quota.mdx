@@ -7,19 +7,7 @@ description: "Learn how to use the tools Sentry provides to control the type and
 
 In most cases, sending all [transaction](/product/performance/transaction-summary/#what-is-a-transaction) events to Sentry would generate more performance data than you might find useful and might use up your transactions quota too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have transaction data that's actionable and meaningful, and to manage your quota. Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction events.
 
-## 1. SDK Configuration: Tracing Options {#2-sdk-configuration-tracing-options}
-
-When you configure your the SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options). You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for performance monitoring to capture certain types of transactions.
-
-## 2. Inbound Data Filters
-
-While SDK configuration requires changes to your source code and depends on your next deployment, server-side filters can be easily configured per project in the "Data Filters" section of **[Project] > Settings > Inbound Filters**. Learn more in [Inbound Filters](/product/accounts/quotas/#inbound-data-filters).
-
-Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the "Inbound Filters" page.
-
-![Built-in Inbound Filters](manage-event-stream-03.png)
-
-## 3. Event Usage Stats
+## 1. Event Usage Stats
 
 Once you've completed the steps above, you can look at your events in aggregate in the "Usage Stats" tab of **Stats**. This information will help you answer key questions about the breakdown of your incoming events or which projects are consuming your quota. The answers to these questions can help you figure out where you need to do further fine-tuning of your SDK filters and configuration.
 
@@ -50,3 +38,117 @@ You can set up a query in **Discover** to see which transactions you're receivin
 Once the changes are applied, sort the "Results" table by the "COUNT" column to display your busiest transactions:
 
 ![Busiest Issues](manage-trans-quota-02.png)
+
+## 2. Increasing Quotas
+
+Add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
+
+If you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
+
+If this is your first time exceeding quota, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
+
+### On-Demand Capacity
+
+If you need to increase your event quota temporarily, we recommend that you add or increase on-demand capacity. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand capacity](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
+
+### Reserved Capacity
+
+If the number of events you need is steadily increasing, you may want to increase your reserved capacity. Reserved capacity is less expensive than on-demand capacity since you prepay for it. It also allows you to choose the number of events that you want to have available beforehand rather than just setting an arbitrary on-demand budget. Learn more about [reserved capacity](/product/accounts/pricing/#prepaid-reserved-capacity) in our pricing documentation.
+
+You shouldn't increase your reserved capacity if you think your need for more events is temporary, since [reducing your reserved capacity is tied to your billing cycle](#decreasing-quotas).
+
+### Plan Upgrade
+
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event capacity and purchase on-demand capacity, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+
+## Decreasing Quotas
+
+Plan downgrades and decreases in reserved capacity are processed at the end of your billing cycle, and remaining capacity cannot be refunded. For example, if you have a monthly billing cycle that starts on the 5th of the month, and you decrease your reserved capacity on June 20th, then this change will be processed on July 4th. Your billing cycle beginning on July 5th will reflect your new reserved capacity.
+
+<Alert level="warning">
+
+If you have an annual billing cycle, plan downgrades and decreases in reserved capacity go into effect at the beginning of your **next billing year.**
+
+</Alert>
+
+Changes to on-demand capacity typically go into effect immediately and are guaranteed to go into effect within 24 hours.
+
+To decrease your quota, go to **Settings > Subscription** and click "Manage Subscriptions". When you reach the "Review & Confirm" step, the date that these changes go into effect will be displayed:
+
+![The Review & Confirm step of a subscription update.](review-subscription.png)
+
+<Note>
+
+We strongly recommend that you make subscription changes before the last day of your billing cycle. Depending on your time zone, in some cases, changes made on the last day of the billing cycle will not go into effect until the next billing cycle.
+
+</Note>
+
+## 3. Inbound Data Filters
+
+While SDK configuration requires changes to your source code and depends on your next deployment, server-side filters can be easily configured per project in the "Data Filters" section of **[Project] > Settings > Inbound Filters**.
+
+Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the "Inbound Filters" page.
+
+![Built-in Inbound Filters](manage-event-stream-03.png)
+
+<!-- added stuff -->
+
+In some cases, the data you’re receiving in Sentry is hard to filter, or you don’t have the ability to update the SDK’s configuration to apply the filters. Sentry provides several methods to filter all events and attachments server-side, which are applied before checking for potential rate limits.
+
+Inbound filters include:
+
+- Common browser extension errors
+- Events coming from localhost
+- Known legacy browsers errors
+- Known web crawlers
+- By their error message
+- From specific release versions of your code
+- From certain IP addresses.
+
+Explore these by navigating to **[Project] > Settings > Inbound Filters**.
+
+### IP Filters
+
+If you have a rogue client, Sentry supports blocking an IP from sending data. Navigate to **[Project] > Settings > Inbound Filters** to add the IP addresses (or subnets) in the "IP Addresses" field.
+
+### Filter by Release
+
+<Note>
+
+This feature is available only if your organization is on a Business plan.
+
+</Note>
+
+If you discover a problematic release causing excessive noise, Sentry supports ignoring all events from that release. Navigate to **[Project] > Settings > Inbound Filters**, then add the releases to the "Releases" field
+
+### Filter by Error Message
+
+<Note>
+
+This feature is available only if your organization is on a Business plan.
+
+</Note>
+
+Sentry supports filtering out a specific or certain kind of error as well. Navigate to **[Project] > Settings > Inbound Filters**, then add the error message to the "Error Message" field.
+
+To ensure you’re adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the "title" field near the end of the file.
+
+### Filter by Issue
+
+<Note>
+
+This feature is available only if your organization is on a Business plan.
+
+</Note>
+
+When you are unable to take immediate action on an issue, but it continues to occur, Sentry supports deleting and discarding that issue, which you can do from the **Issue Details** page. Navigate to the issue you would like to filter, click on the drop-down menu next to the bin icon, and select “Delete and discard future events”. This setting deletes most data associated with the issue and filters out new matching events before they count against your quota.
+
+You can view and restore previously discarded issues by navigating to the "Discarded Issues" tab of **[Project] > Settings > Inbound Filters**.
+
+## 4. SDK Sample Rate
+
+blah blah
+
+## 5. SDK Configuration: Tracing Options {#2-sdk-configuration-tracing-options}
+
+When you configure your the SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options). You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for performance monitoring to capture certain types of transactions.
