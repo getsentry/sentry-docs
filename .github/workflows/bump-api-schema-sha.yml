@@ -16,7 +16,10 @@ jobs:
       - name: "Bump API Schema SHA"
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          # An elevated token is necessary because with plain github.token
+          # GitHub does not recursively call workflows, which means CI does not
+          # kick off for the PR we're about to create.
+          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
         run: |
           git config user.email "bot@getsentry.com"
           git config user.name "openapi-getsentry-bot"
