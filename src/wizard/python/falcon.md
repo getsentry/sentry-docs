@@ -22,8 +22,15 @@ The integration has been confirmed to work with Falcon 1.4 and 2.0.
    from sentry_sdk.integrations.falcon import FalconIntegration
 
    sentry_sdk.init(
-       dsn="___PUBLIC_DSN___",
-       integrations=[FalconIntegration()]
+      dsn="___PUBLIC_DSN___",
+      integrations=[
+         FalconIntegration(),
+      ],
+
+      # Set traces_sample_rate to 1.0 to capture 100%
+      # of transactions for performance monitoring.
+      # We recommend adjusting this value in production,
+      traces_sample_rate=1.0,
    )
 
    api = falcon.API()

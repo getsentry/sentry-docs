@@ -28,8 +28,15 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
    from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 
    sentry_sdk.init(
-       dsn="___PUBLIC_DSN___",
-       integrations=[AioHttpIntegration()]
+      dsn="___PUBLIC_DSN___",
+      integrations=[
+         AioHttpIntegration(),
+      ],
+
+      # Set traces_sample_rate to 1.0 to capture 100%
+      # of transactions for performance monitoring.
+      # We recommend adjusting this value in production,
+      traces_sample_rate=1.0,
    )
 
    from aiohttp import web

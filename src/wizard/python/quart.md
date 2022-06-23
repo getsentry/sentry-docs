@@ -24,8 +24,14 @@ A Python version of 3.7 or higher is also required.
    from quart import Quart
 
    sentry_sdk.init(
-       dsn="___PUBLIC_DSN___",
-       integrations=[QuartIntegration()]
+      dsn="___PUBLIC_DSN___",
+      integrations=[
+         QuartIntegration(),
+      ],
+      # Set traces_sample_rate to 1.0 to capture 100%
+      # of transactions for performance monitoring.
+      # We recommend adjusting this value in production,
+      traces_sample_rate=1.0,
    )
 
    app = Quart(__name__)
