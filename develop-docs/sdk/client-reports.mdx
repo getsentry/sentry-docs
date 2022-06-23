@@ -2,6 +2,8 @@
 title: Client Reports
 sidebar_order: 20
 ---
+## Scope and Intent
+
 
 Client reports are a protocol feature that let clients send status reports
 about themselves to Sentry.  They are currently mainly used to emit outcomes
@@ -11,6 +13,12 @@ client reports to inform the next relay in chain about _some_ outcomes.
 Due to a bug in Relay, which discards envelopes containing unknown envelope
 items, the minimum required version of Sentry for client reports is 
 [21.9.0](https://github.com/getsentry/relay/blob/master/CHANGELOG.md#2190).
+
+Before client reports were added there were no insights into the full number of events generated within applications instrumented with Sentry SDKs. It was always clear to track the number of events dropped on Sentry server side for any number of reason, but there was a gap in knowing just how many events were never sent from the SDKs at all. Are there patterns in different platforms? Are there problems we are not aware of? If a customer were to call Sentry and ask where there events are, we would have no answer, and no way to find out if there are truly missing events from their SDKs. Client reports removes some of this doubt. That being said we are not looking to perfectly measure every nuance and edge case of events being discarded in SDKs. It is more important to have a best effort and be able to gain insights to our SDKs and their host applications.
+
+As seen here, we communicate *Accepted*, *filtered* and *dropped*, and now we can send a new type *discarded* (not displayed in product yet).
+![image](https://user-images.githubusercontent.com/47563310/166436813-8c92e6b2-acf0-4a81-9413-b94c9a178fbf.png)
+
 
 ## Basic Operation
 
