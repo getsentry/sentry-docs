@@ -1,0 +1,258 @@
+---
+title: "Dynamic Sampling Context (Experimental)"
+---
+
+<Alert level="warning">
+
+This page is under active development.
+Specifications are not final and subject to change.
+Anything that sounds fishy probably is - nothing is set in stone.
+Opening PRs to improve this page is therefore highly encouraged!
+
+</Alert>
+
+Traces sampling done through the <Link to="/sdk/performance/#tracessamplerate">`tracesSampleRate`</Link> or <Link to="/sdk/performance/#tracessampler">`tracesSampler`</Link> options in the SDKs has quite a few consquences for users of Sentry SDKs:
+
+- Changing the sampling rate involved either redeploying applications (which is problematic in case of applications that are not updated automatically, i.e., mobile apps or physically distributed software) or building complex systems to dynamically fetch a sample rate.
+- The sampling strategy leverages head-based simple random sampling.
+- Employing sampling rules, for example, based on event parameters, is very complex. Sometimes this even requires users to have an in-depth understanding of the event schema.
+- While writing rules for singular **transactions** is possible, enforcing them on entire **traces** is infeasible.
+
+The solution for these problems is **Dynamic Sampling**.
+Dynamic Sampling allows users to configure **sampling rules** directly in the Sentry interface. Important: Sampling rules may be applied to **entire traces** or to a **single transaction**.
+
+## High-Level Problem Statement
+
+### Ingest
+
+Implementing Dynamic Sampling comes with challenges, especially on the ingestion side of things.
+For Dynamic Sampling, we want to make sampling decisions for entire traces.
+However, to keep ingestion speedy, Relay only looks at singular transactions in isolation (as opposed to looking at whole traces).
+This means that we need the exact same decision basis for all transactions belonging to a trace.
+In other words, all transactions of a trace need to hold all of the information to make a sampling decision, and that **information needs to be the same across all transactions of the trace**.
+We call the information we base sampling decisions on **"Dynamic Sampling Context"** or **"DSC"**.
+
++Currently, we can dynamically sample in two ways. First, we can do dynamic sampling on single transactions. For this process, Relay looks at the incoming event payload to make decisions. Second, we can do dynamic sampling across an entire trace. For this process, Relay relies on a **Dynamic Sampling Context**.
+
+As a mental model:
+The head transaction in a trace determines the Dynamic Sampling Context for all following transactions in that trace.
+No information can be changed, added or deleted after the first propagation.
+Dynamic Sampling Context is bound to only one particular trace, and all the transactions that are part of this trace.
+Multiple different traces can and should have different Dynamic Sampling Contexts.
+
+### SDKs
+
+SDKs are responsible for propagating **Dynamic Sampling Context** across all applications that are part of a trace.
+This involves:
+
+1. Collecting the information that makes up the DSC **xor** extracting the DSC from incoming requests.
+2. Propagating DSC to downstream SDKs.
+3. Sending the DSC to Sentry via the `trace` envelope header.
+
+Because there are quite a few things to keep in mind for DSC propagation and to avoid every SDK running into the same problems, we defined a [unified propagation mechanism](#unified-propagation-mechanism) (step-by-step instructions) that all SDK implementations should be able to follow.
+
+## Baggage
+
+We chose `baggage` as the propagation mechanism for DSC. ([w3c baggage spec](https://www.w3.org/TR/baggage/))
+Baggage is a standard HTTP header with URI encoded key-value pairs.
+
+For the propagation of DSC, SDKs first read the DSC from the baggage header of incoming requests/messages.
+To propagate DSC to downstream SDKs/services, we create a baggage header (or modify an existing one) through HTTP request instrumentation.
+
+<Alert level="info">
+
+Other vendors might also be using the `baggage` header.
+If a `baggage` header already exists on an outgoing request, SDKs should aim to be good citizens by only **appending** Sentry values to the header.
+In the case that another vendor added Sentry values to an outgoing request, SDKs may overwrite those values.
+
+SDKs must not add other vendors' baggage from incoming requests to outgoing requests.
+Sentry SDKs only concern themselves with Sentry baggage.
+
+</Alert>
+
+The following is an example of what a baggage header containing Dynamic Sampling Context may look like:
+
+```
+baggage: other-vendor-value-1=foo;bar;baz, sentry-trace_id=771a43a4192642f0b136d5159a501700, sentry-public_key=49d0f7386ad645858ae85020e393bef3, sentry-sample_rate=0.01337, sentry-user_id=Am%C3%A9lie, other-vendor-value-2=foo;bar;
+```
+
+See the [Payloads section](#payloads) for a complete list of key-value pairs that SDKs should propagate.
+
+## Freezing Dynamic Sampling Context
+
+As mentioned above, in order to be able to make sampling decisions for entire traces, Dynamic Sampling Context must be the same across all transactions of a trace.
+
+**What does this mean for SDKs?**
+
+When starting a new trace, SDKs are no longer allowed to alter the DSC for that trace as soon as this DSC leaves the boundaries of the SDK for the first time.
+The DSC is then considered "frozen".
+DSC leaves SDKs in two situations:
+
+- When an outgoing request with a `baggage` header, containing the DSC, is made.
+- When a transaction envelope containing the DSC is sent to Sentry
+
+When an SDK receives an HTTP request that was "instrumented" or "traced" by a Sentry SDK, the receiving SDK should consider the incoming DSC as instantly frozen.
+Any values on the DSC should be propagated "as is" - this includes values like "environment" or "release".
+
+SDKs should recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
+
+- The incoming request has a `sentry-trace` header
+- The incoming request has a `baggage` header containing one or more keys starting with "`sentry-`"
+
+After the DSC of a particular trace has been frozen, API calls like `set_user` or `set_transaction` should have no effect on the DSC.
+
+## Payloads
+
+Dynamic Sampling Context is sent to Sentry via the `trace` envelope header and is propagated to downstream SDKs via a baggage header.
+
+All of the values in the payloads below are required (non-optional) in a sense, that when they are known to an SDK at the time a transaction envelope is sent to Sentry, or at the time a baggage header is propagated, they must also be included in said envelope or baggage.
+In any case, `trace_id`, `public_key`, and `sample_rate` should always be known to an SDK, so these values are strictly required.
+
+### Envelope Header
+
+Dynamic Sampling Context is transferred to Sentry through the `trace` envelope header.
+The value of this envelope header is a JSON object with the following fields:
+
+- `trace_id` (string) - The original trace ID as generated by the SDK, UUID V4 encoded as a hexadecimal sequence with no dashes (e.g. `771a43a4192642f0b136d5159a501700`) that is a sequence of 32 hexadecimal digits. This must match the trace id of the submitted transaction item.
+- `public_key` (string) - Public key from the DSN used by the SDK. It allows Sentry to sample traces spanning multiple projects, by resolving the same set of rules based on the starting project.
+- `sample_rate` (string) - The sample rate as defined by the user on the SDK. This string should always be a number between (and including) 0 and 1 in basic float notation (`0.04242`) - no funky business like exponents or anything similar.
+- `release` (string) - The release name as specified in client options`.
+- `environment` (string) - The environment name as specified in client options.
+- `user_id` (string) - User ID as set by the user with <Link to="/sdk/unified-api/#scope">`scope.set_user`</Link>.
+- `user_segment` (string) - User segment as set by the user with <Link to="/sdk/unified-api/#scope">`scope.set_user`</Link>.
+- `transaction` (string) - The transaction name set on the scope.
+
+It's important to note that at the current moment, only `release`, `environment`, `user_id`, `user_segment`, and `transaction` are used by the product for dynamic sampling functionality. The rest of the context attributes, `trace_id`, `public_key`, and `sample_rate`, are used by Relay for internal decisions (like transaction sample rate smoothing).
+
+### Baggage-Header
+
+SDKs may use the following keys to set entries on `baggage` HTTP headers:
+
+- `sentry-trace_id`
+- `sentry-public_key`
+- `sentry-sample_rate`
+- `sentry-release`
+- `sentry-environment`
+- `sentry-user_id`
+- `sentry-user_segment`
+- `sentry-transaction`
+
+SDKs must set all of the keys in the form of "`sentry-[name]`".
+The prefix "`sentry-`" acts to identify key-value pairs set by Sentry SDKs.
+
+All of the keys are defined in a way so their value directly corresponds to one of the fields on the `trace` envelope header.
+**This allows SDKs to put all of the sentry key-value pairs from the `baggage` directly onto the envelope header, after stripping away the `sentry-` prefix.**
+
+Being able to simply copy key-value pairs from the baggage header onto the `trace` envelope header gives us the flexibility to provide dedicated API methods to propagate additional values using Dynamic Sampling Context.
+This, in return, allows users to define their own values in the Dynamic Sampling Context so they can sample by those in the Sentry interface.
+
+## Unified Propagation Mechanism
+
+SDKs should follow these steps for any incoming and outgoing requests (in python pseudo-code for illustrative purposes):
+
+```python
+def collect_dynamic_sampling_context():
+  # Placeholder function that collects as many values for Dynamic Sampling Context
+  # as possible and returns a dict
+
+def has_sentry_value_in_baggage_header(request):
+  # Placeholder function that returns True when there is at least one key-value pair in the baggage
+  # header of `request`, for which the key starts with "sentry-". Otherwise, it returns False.
+
+def on_incoming_request(request):
+  if request.has_header("sentry-trace") and (not request.has_header("baggage") or not has_sentry_value_in_baggage_header(request)):
+    # Request comes from an old SDK which doesn't support Dynamic Sampling Context yet
+    # --> we don't propagate baggage for this trace
+    current_transaction.dynamic_sampling_context_frozen = True
+  elif request.has_header("baggage") and has_sentry_value_in_baggage_header(request):
+    current_transaction.dynamic_sampling_context_frozen = True
+    current_transaction.dynamic_sampling_context = baggage_header_to_dict(request.headers.baggage)
+
+def on_outgoing_request(request):
+  if not current_transaction.dynamic_sampling_context_frozen:
+    current_transaction.dynamic_sampling_context_frozen = True
+    current_transaction.dynamic_sampling_context = merge_dicts(collect_dynamic_sampling_context(), current_transaction.dynamic_sampling_context)
+
+  if not current_transaction.dynamic_sampling_context:
+    # Make sure there is at least an empty DSC set on transaction
+    # This is independent of whether it is locked or not
+    current_transaction.dynamic_sampling_context = {}
+
+  if request.has_header("baggage"):
+    outgoing_baggage_dict = baggage_header_to_dict(request.headers.baggage)
+    merged_baggage_dict = merge_dicts(outgoing_baggage_dict, current_transaction.dynamic_sampling_context)
+    request.set_header("baggage", dict_to_baggage_header(merged_baggage_dict))
+  else:
+    request.set_header("baggage", dict_to_baggage_header(current_transaction.dynamic_sampling_context))
+```
+
+While there is no strict necessity for the `current_transaction.dynamic_sampling_context_frozen` flag yet, there is a future use case where we need it:
+We might want users to be able to set Dynamic Sampling Context values themselves.
+The flag becomes relevant after the first propagation, where Dynamic Sampling Context becomes immutable.
+When users attempt to set DSC afterwards, our SDKs should make this operation a noop.
+
+## Considerations and Challenges
+
+This section details some open questions and considerations that need to be addressed for dynamic sampling and the usage of the baggage propogation mechanism.
+These are not blockers to the adoption of the spec, but instead are here as context for future developments of the dynamic sampling product and spec.
+
+### The Temporal Problem
+
+Unlike `environment` or `release`, which should always be known to an SDK at initialization time, `user_id`, `user_segment`, and `transaction` (name) are only known after SDK initialization time.
+This means that if a trace is propagated from a running transaction _BEFORE_ the user/transaction attributes are set, you'll get a portion of transactions in a trace that have different Dynamic Sampling Context than other portions, leading to _dynamic sampling across a trace_ not working as expected for users.
+
+Let's say we want to dynamically sample a browser application based on the `user_id`.
+In a typical single page application (SPA), the user information has to be requested from some backend service before it can be set with `Sentry.setUser` on the frontend.
+
+Here's an example of that flow:
+
+- Page starts loading
+- Sentry initializes and starts `pageload` transaction
+- Page makes HTTP request to user service to get user (propogates sentry-trace/baggage to user service)
+  - user service continues trace by automatically creating sampling transaction
+  - user service pings database service (propogates sentry-trace/baggage to database service)
+  - database service continues trace by automatically creating sampling transaction
+- Page gets data from user service, calls `Sentry.setUser` and sets `user_id`
+- Page makes HTTP requests to service A, service B, and service C (propogates sentry-trace/baggage to services A, B and C)
+  - DSC is propogated with baggage to service A, service B, and service C, so 3 child transactions
+- Page finishes loading, finishing `pageload` transaction, which is sent to Sentry
+
+In this case, the baggage that is propogated to the user service and the downstream database service _does not_ have the `user_id` value in it, because it was not yet set on the browser SDK.
+Therefore, when Relay tries to dynamically sample the user services and database services transactions based on `user_id`, it will not be able to.
+In addition, since the DSC is frozen after it's been sent, the DSC sent to service A, service B, and service C will not have `user_id` on it either. This means it also will not be dynamically sampled properly if there is a trace-wide DS rule on `user_id`.
+
+This problem exists for both `user_id` and `user_segment`, and it is because since we don't have the user information on some platforms/frameworks right as we initialize the SDK.
+
+For `transaction` name, the problem is similar, but it is because of paramaterization.
+As much as we can, the SDKs will try to paramaterize transaction names (for ex, turn `/teams/123/user/456` into `/teams/:id/user/:id`) so that similar transactions are grouped together in the UI.
+This improves both aggregate statistics for transactions and the general UX of using the product (setting alerts, checking measurements like web vitals, etc.).
+For some frameworks, for example React Router v4 - v6, we paramaterize the transaction name after the transaction has been started due to constraints with the framework itself.
+To illustrate this, let's look at another example:
+
+- Page starts loading
+- Sentry initializes and starts `pageload` transaction (with transaction name `/teams/123/user/456` - based on window URL)
+- Page makes HTTP request to service A (propogates sentry-trace/baggage to user service)
+- Page renders with react router, triggering paramaterization of transaction name (`/teams/123/user/456` -> `/teams/:id/user/:id`).
+- Page finishes loading, finishing pageload transaction, which is sent to Sentry
+
+When the pageload transaction shows up in Sentry, it'll be called `/teams/:id/user/:id`, but the Dynamic Sampling Context has `/teams/123/user/456` propogated, which means that the transaction from service A will not be affected by any trace-wide dynamic sampling rules put on the transaction name.
+This will be very confusing to users, as effectively the transaction name they thinking that works will not.
+
+### Choosing Baggage as the Propogation Mechanism
+
+For more information on this, check the [DACI around using baggage](https://www.notion.so/sentry/Trace-Context-vs-Baggage-f541525012344111921b6aa7bfd78dc4) (Sentry employees only).
+
+Previously, we were using the [w3c Trace Context spec](https://www.w3.org/TR/trace-context/) as the mechanism to propogate dynamic sampling context between SDKs.
+We switched to the [w3c Baggage spec](https://www.w3.org/TR/baggage) though because it was easier to use, required less code on the SDK side, and had much more [liberal size limits](https://www.w3.org/TR/baggage/#limits) than the trace context spec.
+To make sure that we were not colliding with user defined keys as baggage is an open standard, we decided to prefix all sentry related keys with `sentry-` as a namespace.
+This allowed us to use baggage as an open standard while only having to worry about Sentry data.
+
+### Other Items
+
+TODO - Add some sort of Q&A section on the following questions, after evaluating if they still need to be answered:
+
+- Why must baggage be immutable before the second transaction has been started?
+- What are the consequences and impacts of the immutability of baggage on Dynamic Sampling UX?
+- Why can't we just make the decision for the whole trace in Relay after the trace is complete?
+- What is sample rate smoothing and how does it use `sample_rate` from the Dynamic Sampling Context?
+- What are the differences between Dynamic Sampling on traces vs. transactions?
