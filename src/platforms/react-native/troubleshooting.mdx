@@ -171,9 +171,7 @@ If you experience mismatched line numbers on [sentry.io](https://sentry.io) when
 
 ## React Native 0.69 and higher
 
-If you're using React Native v0.69 or higher, the autolink has changed and we're working on a fix, follow the [issue](https://github.com/getsentry/sentry-react-native/issues/2267).
-
-### Android
+If you're using React Native v0.69 or higher, the auto-linking has changed and we're working on a fix, follow the [issue](https://github.com/getsentry/sentry-react-native/issues/2267).
 
 As a workaround, for now, update Sentry's `react-native.config.js` file located in `node_modules/@sentry/react-native/react-native.config.js`.
 
@@ -213,4 +211,19 @@ module.exports = {
     }
   }
 };
-```js
+```
+
+This should work on Android, however, on iOS, it'd still fail in the `Bundle React Native code and images` build step phase and for that, you've to revert the patched `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file where `$projectName` is likely your project's name.
+Search for the build step phase `Bundle React Native code and images` and patch the `shellScript`.
+
+_Old_:
+
+```bash
+shellScript = "export SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nset -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\n../node_modules/@sentry/cli/bin/sentry-cli react-native xcode REACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+```
+
+_New_:
+
+```bash
+shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+```
