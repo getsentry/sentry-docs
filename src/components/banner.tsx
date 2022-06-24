@@ -9,7 +9,7 @@ const SHOW_BANNER = true;
 const BANNER_TEXT =
   "See how AAA uses Ionic and Sentry to optimize the code health of their applications in our co-hosted live workshop on July 13 @ 10am PT.";
 const BANNER_LINK_URL =
-  "https://ionic.io/resources/webinars/sentry-and-capacticor-how-to-build-and-monitor-user-experiences?utm_source=hubspot&utm_medium=email&utm_campaign=webinar_sentry_and_capacitor";
+  "https://ionic.io/resources/webinars/sentry-and-capacticor-how-to-build-and-monitor-user-experiences?utm_source=partner&utm_medium=referral&utm_campaign=webinar_sentry_and_capacitor";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
