@@ -168,3 +168,49 @@ If you're using `React Navigation 5` and you're not receiving transactions anymo
 ## RAM Bundles Mismatched Line Numbers
 
 If you experience mismatched line numbers on [sentry.io](https://sentry.io) when using RAM Bundles, this is due to a [bug](https://github.com/facebook/metro/issues/399) on the Metro tooling.
+
+## React Native 0.69 and higher
+
+If you're using React Native v0.69 or higher, the autolink has changed and we're working on a fix, follow the [issue](https://github.com/getsentry/sentry-react-native/issues/2267).
+
+### Android
+
+As a workaround, for now, update Sentry's `react-native.config.js` file located in `node_modules/@sentry/react-native/react-native.config.js`.
+
+_Old_:
+
+```js
+module.exports = {
+  dependency: {
+    platforms: {
+      ios: {
+        sharedLibraries: ['libz']
+      },
+      android: {
+        packageInstance: 'new RNSentryPackage()'
+      }
+    },
+    hooks: {
+      postlink:
+        'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android',
+      postunlink:
+        'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android --uninstall'
+    }
+  }
+};
+```
+
+_New_:
+
+```js
+module.exports = {
+  dependency: {
+    platforms: {
+      ios: {},
+      android: {
+        packageInstance: 'new RNSentryPackage()'
+      }
+    }
+  }
+};
+```js
