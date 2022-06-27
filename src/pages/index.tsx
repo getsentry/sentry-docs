@@ -144,7 +144,7 @@ const IndexPage = () => {
           >
             Self-Hosted Sentry
           </a>
-          <a className="hover-card-link" href="/support/">
+          <a className="hover-card-link" href="https://help.sentry.io/">
             Support
           </a>
         </div>
