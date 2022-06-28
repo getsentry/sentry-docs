@@ -427,6 +427,12 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 </PlatformSection>
 
+<ConfigKey name="enabled" supported={["javascript", "node"]}>
+
+Specifies whether this SDK should send events to Sentry. Defaults to `true`.  Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
+
+</ConfigKey>
+
 <ConfigKey name="send-client-reports" supported={["java", "javascript", "dotnet", "python", "dart", "apple"]} notSupported={["react-native"]}>
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
@@ -541,10 +547,22 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 <ConfigKey name="send-attempts" supported={["php"]}>
 
-Controls how many times the SDK will attempt to resend an event to Sentry. The default is `3`.
+_Deprecated._ Controls how many times the SDK will attempt to resend an event to Sentry. The default is `0`.
 
 </ConfigKey>
 
+<ConfigKey name="http-connect-timeout" supported={["php"]}>
+
+The maximum number of seconds to wait while trying to connect to a server. The default is `2`.
+
+</ConfigKey>
+
+<ConfigKey name="http-timeout" supported={["php"]}>
+
+The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option. The default is `5`.
+
+</ConfigKey>
+  
 </PlatformSection>
 
 <PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
@@ -571,25 +589,37 @@ An optional property that configures which downstream services receive the `sent
 
 </PlatformSection>
 
-<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
+<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor", "flutter"]}>
 
 ## Hybrid SDK Options
 
-<ConfigKey name="enableNative">
+<ConfigKey name="enableNative" supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
 
 Set this boolean to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
 
 </ConfigKey>
 
-<ConfigKey name="autoInitializeNativeSdk" supported={["react-native"]}>
+<ConfigKey name="autoInitializeNativeSdk">
 
-Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer, but instead use [enableNative](#enableNative).
+Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
+
+<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
+
+To disable the native layer, use [enableNative](#enableNative).
 
 You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
 
+</PlatformSection>
+
+<PlatformSection supported={["flutter"]}>
+
+You should follow the [guide to native initialization](/platforms/flutter/native-init/) if you chose to use this option.
+
+</PlatformSection>
+
 </ConfigKey>
 
-<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor"]}>
+<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor", "flutter"]}>
 
 Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
 
@@ -622,7 +652,6 @@ Set this boolean to `false` to disable the scope sync from Java to NDK on Androi
 <ConfigKey name="attachThreads">
 
 Set this boolean to `true` to automatically attach all threads to all logged events on Android.
-
 </ConfigKey>
 
 <ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
@@ -631,7 +660,7 @@ Set this boolean to `false` to disable auto [performance monitoring](/product/pe
 
 </ConfigKey>
 
-<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native", "javascript.capacitor"]}>
+<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native", "javascript.capacitor", "flutter"]}>
 
 Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
 
@@ -640,6 +669,12 @@ Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/i
 <ConfigKey name="onReady" supported={["react-native"]}>
 
 Set this callback, which is called after the Sentry React Native SDK initializes its Native SDKs (Android and iOS).
+
+</ConfigKey>
+
+<ConfigKey name="enableScopeSync" supported={["flutter"]}>
+
+Set this boolean to `false` to disable sync of `Scope` data to Android and iOS SDKs.
 
 </ConfigKey>
 

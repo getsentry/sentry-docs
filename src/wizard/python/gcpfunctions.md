@@ -19,7 +19,14 @@ from sentry_sdk.integrations.gcp import GcpIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[GcpIntegration()],
+    integrations=[
+        GcpIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
 )
 
 def http_function_entrypoint(request):
@@ -39,7 +46,14 @@ To enable the warning, update the SDK initialization to set `timeout_warning` to
 ```python
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[GcpIntegration(timeout_warning=True)],
+    integrations=[
+        GcpIntegration(timeout_warning=True),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
 )
 ```
 

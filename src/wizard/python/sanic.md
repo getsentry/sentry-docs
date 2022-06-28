@@ -38,8 +38,15 @@ A Python version of 3.6 or greater is also required.
    from sanic import Sanic
 
    sentry_sdk.init(
-       dsn="___PUBLIC_DSN___",
-       integrations=[SanicIntegration()]
+      dsn="___PUBLIC_DSN___",
+      integrations=[
+         SanicIntegration(),
+      ],
+
+      # Set traces_sample_rate to 1.0 to capture 100%
+      # of transactions for performance monitoring.
+      # We recommend adjusting this value in production,
+      traces_sample_rate=1.0,
    )
 
    app = Sanic(__name__)

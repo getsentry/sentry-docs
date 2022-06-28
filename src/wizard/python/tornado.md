@@ -28,8 +28,15 @@ Python 3.6 or greater is required.
    from sentry_sdk.integrations.tornado import TornadoIntegration
 
    sentry_sdk.init(
-       dsn="___PUBLIC_DSN___",
-       integrations=[TornadoIntegration()]
+      dsn="___PUBLIC_DSN___",
+      integrations=[
+         TornadoIntegration(),
+      ],
+
+      # Set traces_sample_rate to 1.0 to capture 100%
+      # of transactions for performance monitoring.
+      # We recommend adjusting this value in production,
+      traces_sample_rate=1.0,
    )
 
    # Your app code here, without changes

@@ -12,7 +12,7 @@ Sentry customers using the SaaS product (sentry.io) will need to update the SDK,
 The minimum required version for the SDK is `@sentry/react-native` [SDK version `1.3.3`](https://github.com/getsentry/sentry-react-native/releases/tag/1.3.3),
 and `@sentry/cli` [version `1.51.1`](https://github.com/getsentry/sentry-cli/releases/tag/1.51.1).
 
-For Sentry open source, self-hosted users, the minimum version required is [f07352b](https://hub.docker.com/r/getsentry/sentry/tags?page=1&name=f07352b).
+For self-hosted Sentry users, the minimum version required is [f07352b](https://hub.docker.com/r/getsentry/sentry/tags?page=1&name=f07352b).
 
 Once you have the minimum version of the SDK, Sentry provides the standard integration as described in the [React Native Sentry documentation](/platforms/react-native/).
 
@@ -32,14 +32,14 @@ If you are manually bundling and building React Native apps, follow this three-s
 
 ### Compile Sourcemaps
 
-1. Bundle/minify with `metro` (`react-native`) to get the packager source map (`.packager.map`):
+1. Bundle/minify with `metro` (`react-native`) to get the bundle (`.bundle`) and packager source map (`.packager.map`):
 
 ```bash {tabTitle:Android}
-npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map
+npx react-native bundle --platform android --dev false --entry-file index.js --reset-cache --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map --minify false
 ```
 
 ```bash {tabTitle:iOS}
-npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output main.jsbundle --sourcemap-output main.jsbundle.packager.map
+npx react-native bundle --platform ios --dev false --entry-file index.js --reset-cache --bundle-output main.jsbundle --sourcemap-output main.jsbundle.packager.map --minify false
 ```
 
 2. Compile to bytecode using `hermes` to get the compiler source map (`.hbc.map`):
@@ -58,6 +58,12 @@ node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -
 node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=main.jsbundle.hbc main.jsbundle
 ```
 
+<Note>
+
+If you're using React Native v0.69 or higher, the path of `hermesc` has changed to `node_modules/react-native/sdks/hermesc/{OS-BIN}/hermesc`.
+
+</Note>
+
 3. Merge the two source maps using `compose-source-maps` to get the final source map (`.map`):
 
 ```bash {tabTitle:Android}
@@ -74,6 +80,6 @@ Upload your source maps following [Step 3 on the normal source maps guide](/plat
 
 <Note>
 
-You will upload the **original** bundle (output from Step 1) and the **composed** source map (output from Step 3)
+You will upload the **original** bundle (`.bundle`, output from Step 1) and the **composed** source map (`.map`, output from Step 3)
 
 </Note>
