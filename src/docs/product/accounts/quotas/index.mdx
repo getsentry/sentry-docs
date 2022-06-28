@@ -7,7 +7,7 @@ redirect_from:
 description: "Learn about what counts towards your quota and how to manage your quota."
 ---
 
-Events and quotas are interconnected in Sentry. At the most basic, when you [subscribe to Sentry](https://sentry.io/pricing/), you pay for the number of events - errors, attachments, and transactions - to be tracked. Each of these type of events has a quota. When Sentry accepts an event, it counts toward your quota for that type of event.
+Data and quotas are interconnected in Sentry. At the most basic, when you [subscribe to Sentry](https://sentry.io/pricing/), you pay for the amount of data &#151 events (errors and transactions) and attachments &#151 to be tracked. Each of these data categories has a quota. When Sentry accepts an event or attachment, it counts toward your quota for that type of data.
 
 To see which of your projects are using up your quota, you can review the "Usage" tab of **Stats**. This page is accessible to all members of your organization, so a Billing or Owner member can share this page with the developers directly responsible for a given project:
 
@@ -17,7 +17,7 @@ You can also com back to this page to assess if the changes you've are having th
 
 You can also download a project breakdown report in the "Usage History" tab of **Settings > Subscriptions**.
 
-Sentry’s flexibility means you can exercise fine-grained control over which events count toward your quota. This page provides you with high-level strategies for managing your quota, but you can get more detailed information in:
+Sentry’s flexibility means you can exercise fine-grained control over which events and attachments count toward your quota. This page provides you with high-level strategies for managing your quota, but you can get more detailed information in:
 
 - [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#common-workflows-for-managing-your-event-stream)
 - [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/#1-event-usage-stats).
@@ -36,8 +36,8 @@ This list of things to do to manage your quota is arranged from the fastest and 
 | 4. [Review repeated events](#6-event-repetition) | &check; |  | * |
 | 5. [Filter your events](#inbound-data-filters) | &check; | &check; | &check; |
 | 6. [Update your SDK sample rate](#6-sdk-sample-rate) | &check; | &check; |  |
-| 7. [SDK filtering](#7-sdk-filtering) | &check; |  |  |
-| 8. [SDK configuration](#8-sdk-configuration) | &check; | &check; | &check; |
+| 7. [Apply SDK filtering](#7-sdk-filtering) | &check; |  |  |
+| 8. [Update your SDK configuration](#8-sdk-configuration) | &check; | &check; | &check; |
 | 9. [Manage data size](#size-limits) | &check; | &check; | &check; |
 
 <!-- prettier-ignore-end -->
@@ -53,9 +53,7 @@ Let’s clarify a few terms to start:
 - **Data** - Anything you send to Sentry. This includes, events (errors or transactions), attachments, and event metadata.
 - **Quota** - Your quota is the amount of data (events, transactions, attachments) that you pay Sentry to track.
 
-<!-- ## Managing My Quota, an Overview -->
-
-## Some Other Heading {#what-counts-toward-my-quota-an-overview}
+## Manage Your Quota - Overview {#what-counts-toward-my-quota-an-overview}
 
 Sentry completes a thorough evaluation of each event to determine if it counts toward your quota, as outlined in this overview. Detailed documentation for each evaluation is linked throughout. Before completing any of these evaluations, Sentry confirms that each event includes a valid DSN and project as well as whether the event can be parsed. In addition, for error events, Sentry validates that the event contains valid fingerprint information. If any of these items are missing or incorrect, the event is rejected.
 
@@ -63,7 +61,7 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 Sentry’s spike protection prevents huge overages in error events from consuming your event capacity. Spike protection is not currently available for transactions. Learn more in the Spike Protection section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#1-spike-protection).
 
-### 2. Quota Availability {#increasing-quotas}
+### 2. Increasing Quota {#increasing-quotas}
 
 Events that exceed your quota are not accepted. Once your event volume is approaching or has exceeded the quota, teammates with the "owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. Learn about adding to your quota and what happens when you exceed it in the Increasing Quotas section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#3-increasing-quotas) and [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/#2-increasing-quotas).
 
@@ -89,17 +87,15 @@ After these checks are processed, the event counts toward your quota. It is acce
 
 If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is documented for each SDK. The SDK sample rate is not dynamic; changing it requires re-deployment. In addition, setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs. Learn more in the SDK Sample Rate section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#8-sdk-sample-rate) and [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/#4-sdk-sample-rate).
 
-### 7. SDK Filtering
+### 7. SDK Filtering: `beforeSend`
 
-Blah blah
-
-Learn More in the SDK Filtering section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#9-sdk-filtering-beforesend).
+All Sentry SDKs support the `beforeSend` callback method, which you can use to modify the event's data or drop it completely. Learn More in the SDK Filtering section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#9-sdk-filtering-beforesend).
 
 ### 8. SDK Configuration
 
 The SDK configuration either allows the event or filters the event out. Learn more in the SDK Configuration section of [Manage Your Error Quota](/product/accounts/quotas/manage-event-stream-guide/#10-sdk-configuration) and [Manage Your Transaction Quota](/product/accounts/quotas/manage-transaction-quota/#2-sdk-configuration-tracing-options) or in the [filtering docs for your specific SDK](/platform-redirect/?next=/configuration/filtering/).
 
-### 9. Manage Data Size {#size-limits}
+### 9. Data Size {#size-limits}
 
 Sentry imposes limits on various fields within an event, as well as the size of full events and the requests they are sent in:
 
@@ -117,9 +113,7 @@ The precise limits may change over time. For more information, please refer to t
 
 <Alert>
 
-If the event exceeds 200KB compressed or 1MB decompressed for events and 20MB
-compressed or 100MB decompressed for minidump uploads (all files combined),
-the event will be rejected.
+If the event exceeds 200KB compressed or 1MB decompressed for events and 20MB compressed or 100MB decompressed for minidump uploads (all files combined), the event will be rejected.
 
 </Alert>
 
@@ -145,3 +139,7 @@ This table outlines whether an an event (or any type of data) that you send to S
 | [Size limits](#size-limits) have been exceeeded |  |
 
 <!-- prettier-ignore-end -->
+
+## Next Steps
+
+<PageGrid />
