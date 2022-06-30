@@ -2,10 +2,10 @@
 title: Manage Your Transaction Quota
 keywords: ["best practices"]
 sidebar_order: 20
-description: "Learn how to use the tools Sentry provides to control the type and amount of transactions that are monitored."
+description: "Learn how to use the tools Sentry provides to control the type and amount of transactions that you pay for."
 ---
 
-In most cases, sending all [transaction](/product/performance/transaction-summary/#what-is-a-transaction) events to Sentry would generate more performance data than you might find useful and might use up your transactions quota too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have transaction data that's actionable and meaningful, and to manage your quota. Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction events.
+In most cases, sending all [transaction](/product/performance/transaction-summary/#what-is-a-transaction) events to Sentry would generate more performance data than you might find useful and might use up your transactions quota too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have transaction data that's actionable and meaningful, and to manage your quota. Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming./This list of things to do to manage your quota is arranged from the fastest and least involved thing you can do to the most. Options 1-5 are all things you can do in sentry.io whereas the remaining ones are things you'll do in the SDK.
 
 ## Before You Begin: Check Quota Usage {#3-event-usage-stats}
 
@@ -35,15 +35,11 @@ Once the changes are applied, sort the "Results" table by the "COUNT" column to 
 
 ## 1. Increasing Quotas
 
-Add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
+Add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately. Quotas can only be updated by a Billing or Owner member of your Sentry organization.
 
 If you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
 
 If this is your first time exceeding quota, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
-
-### On-Demand Capacity
-
-If you need to increase your event quota temporarily, we recommend that you add or increase on-demand capacity. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand capacity](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
 
 ### Reserved Capacity
 
@@ -51,13 +47,21 @@ If the number of events you need is steadily increasing, you may want to increas
 
 You shouldn't increase your reserved capacity if you think your need for more events is temporary, since [reducing your reserved capacity is tied to your billing cycle](#decreasing-quotas).
 
+### On-Demand Capacity
+
+If you need to increase your event quota temporarily, we recommend that you add or increase on-demand capacity. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand capacity](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
+
 ### Plan Upgrade
 
 If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event capacity and purchase on-demand capacity, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
 
+Upgrade from Team to Biz mid-cycle, your on demand pricing changes retroactively - more expensive - check pricing content
+
 ## Decreasing Quotas
 
 Plan downgrades and decreases in reserved capacity are processed at the end of your billing cycle, and remaining capacity cannot be refunded. For example, if you have a monthly billing cycle that starts on the 5th of the month, and you decrease your reserved capacity on June 20th, then this change will be processed on July 4th. Your billing cycle beginning on July 5th will reflect your new reserved capacity.
+
+Changes to on-demand - you can’t decrease to below what you’ve consumed
 
 <Alert level="warning">
 
@@ -85,6 +89,12 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 ![Built-in Inbound Filters](manage-event-stream-03.png)
 
+<Note>
+
+This page in [sentry.io](https://sentry.io) only refers to errors, but it is applicable for transactions as well.
+
+</Note>
+
 Sentry provides several methods to filter all events and attachments server-side, which are applied before checking for potential rate limits.
 
 Inbound filters include:
@@ -98,6 +108,8 @@ Inbound filters include:
 - From certain IP addresses.
 
 These are explained below.
+
+After these checks are processed, the event counts toward your quota. It is accepted into Sentry, where it persists and is stored.
 
 ### IP Filters
 

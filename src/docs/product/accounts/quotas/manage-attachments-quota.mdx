@@ -1,11 +1,11 @@
 ---
-title: Manage Your Error Quota
+title: Manage Your Attachments Quota
 keywords: ["best practices"]
-sidebar_order: 10
-redirect_from:
-  - /guides/manage-event-stream/
-description: "Learn how to use the tools Sentry provides to control the type and amount of errors that you pay for."
+sidebar_order: 30
+description: "Learn how to use the tools Sentry provides to control the type and amount of attachments that you pay for."
 ---
+
+<!-- indicate which of these actions can only be taken by a billing or owner member and add in guides as well  -->
 
 Sending all your application errors to Sentry ensures you'll be notified in real-time when errors occur in your code. However, with a basic setup, you may consume your error quota too rapidly and trigger more notifications than you can use. Sentry provides tools to control the _type_ and _amount_ of errors that are monitored. These tools allow you to:
 
@@ -15,13 +15,13 @@ Sending all your application errors to Sentry ensures you'll be notified in real
 
 Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process, but these tips will show you how to get the most out of your error events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming./This list of things to do to manage your quota is arranged from the fastest and least involved thing you can do to the most. Options 1-5 are all things you can do in sentry.io whereas the remaining ones are things you'll do in the SDK.
 
-## Before You Begin: Check Quota Usage {#common-workflows-for-managing-your-event-stream}
+## Before You Begin: Check Quota Usage
 
 You can look at your events in aggregate in the "Usage Stats" tab of **Stats**. This information will help you answer key questions about the breakdown of your incoming events or which projects are consuming your quota. The answers to these questions can help you figure out where you need to do further fine-tuning of your SDK filters and configuration.
 
 This page is accessible to all members of your organization, so a Billing or Owner member can share this page with the developers directly responsible for a given project. Also, you can come back to this page to assess if the changes you've made are having the desired effect.
 
-### How can I see a breakdown of incoming events? {#-how-can-i-see-a-breakdown-of-incoming-events}
+### How can I see a breakdown of incoming events?
 
 The [Usage Stats](/product/stats/#usage-stats) tab displays details about the total amount of data Sentry has received across your entire organization for up to 90 days. The page breaks down the events (by project) into three categories: accepted, dropped, or filtered. Only accepted events affect your quota:
 
@@ -31,7 +31,7 @@ The [Usage Stats](/product/stats/#usage-stats) tab displays details about the to
 
 The "Project" table in the "Usage Stats" tab of **Stats** breaks down your data by project, so you can see which ones are consuming your quota. Clicking on the settings icon next to a project name in the table will open the project's settings page where you can manage its inbound filters and rate limits
 
-### Which issues are consuming my quota? {#-what-issues-are-consuming-my-quota}
+### Which issues are consuming my quota?
 
 You can set up a query in **Discover** to take a more proactive approach to resolving your busiest issues. When you're building the query, search for `event.type:error` and then set the columns `issue`, `title`, `project`, and `count()`, as shown below:
 
@@ -41,71 +41,7 @@ Once the changes are applied, sort the "Results" table by the "COUNT" column to 
 
 ![Busiest Issues](manage-event-stream-10.png)
 
-## 1. Spike Protection
-
-<!-- add something about 429 error code -->
-
-A spike is both a **large** and **temporary** increase in error event volume. Sentry applies a dynamic rate limit to your account designed to protect you from short-term spikes. Spike protection is:
-
-- A one-time offering
-- Available only on paid accounts
-
-Spike protection is enabled for your organization by default, and when it's enabled, Sentry continually monitors for spikes. You can confirm that it's enabled in **Settings > Subscription**. This page can only be accessed by a Billing or Owner member of your Sentry organization.
-
-### How Does Spike Protection Work?
-
-Because Sentry bills based on monthly event volume, spikes can easily consume your capacity for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event capacity by dropping error events during the spike.
-
-We use your historical error event volume to implement a dynamic rate limit, and then discard error events when you hit its threshold. When spike protection is activated, we limit the number of error events accepted in any minute to:
-
-```
-maximum(20, 6 x average error events per minute over the last 24 hours)
-```
-
-<Note>
-
-The 24-hour window ends at the beginning of the current hour, not at the current minute.
-
-</Note>
-
-This means if you experience a spike, we'll temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually **increase until Sentry accepts all events**.
-
-For example, in the last 24 hours, your organization has been receiving, on average, 10 events per minute (after any inbound filters have been applied). That means your current per-minute limit is 6 \* 10 or 60 events. There have been no spikes in that time, so spike control is "inactive". Something breaks, and in the next minute, your organization sends Sentry 100 events. When we see the 61st event, three things happen:
-
-1. Spike protection becomes "active".
-
-1. If your organization has used more than 25% of your monthly quota, Sentry sends the organization owner a [notification](/product/alerts/notifications/#quota-notifications) including which project the 61st event came from. This is likely, but not guaranteed to be, the project in which something broke.
-
-1. Events 61-100 are dropped.
-
-When the next minute begins, we again record up to 60 events, dropping the rest until the minute is up. It continues like this for the remainder of the hour. After an hour, we re-calculate your per-minute limit, and for the next hour use that limit to decide whether events get dropped each minute. We repeat this process every hour until Sentry eventually accepts all events.
-
-If, instead of a single big spike (or an overall, permanent, increase in traffic), you experience many small spikes, there may be many days in a row when at least a few events are dropped. In that scenario, spike protection remains active the entire time.
-
-Spike protection is an organization-level setting, so once it's triggered, it affects all the projects in the organization, regardless of which project triggered the spike.
-
-### Managing a Spike {#-spike-protection-was-activated----what-should-i-do}
-
-If spike protection has been triggered for your account, you'll receive an email notifying you:
-
-![Spike Protection Email](spike-email.jpg)
-
-If an account depletes its event capacity and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10,000 events per hour. If you choose not to increase your capacity, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your capacity, events accepted during the grace period will be counted as consumed capacity.
-
-Once you've used your grace period, we recommend setting up an on-demand budget to ensure you have time to adjust your capacity in the event of a future spike in errors.
-
-Also, consider doing the following:
-
-- Set better rate limits on the DSN keys for the projects related to the spike.
-- If it's a specific release version that has caused the spike, add the version identifier to the project's inbound filters to avoid accepting events from that release.
-
-To review the error events dropped because of spike protection, go to **Settings > Subscription** for your Sentry org and scroll to the "Error Usage" section of the page.
-
-### When Does Spike Protection Become "Inactive?"
-
-Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes "inactive" again. This means that it is no longer dropping events, but _it does not mean the system has stopped paying attention._ It does however mean that the next time events are dropped, with respect to alerts it will count as a "reactivation" of spike protection.
-
-## 2. Increasing Quotas
+## 1. Increasing Quotas
 
 Add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately. Quotas can only be updated by a Billing or Owner member of your Sentry organization.
 
@@ -153,7 +89,7 @@ We strongly recommend that you make subscription changes before the last day of 
 
 </Note>
 
-## 3. Rate Limiting
+## 2. Rate Limiting
 
 <!-- add something about 429 error code -->
 
@@ -171,7 +107,7 @@ In **[Project] > Settings > Client Keys (DSN)**, click "Configure", and you can 
 
 If you have a project in production that generates a lot of noise, a rate limit allows you to set the maximum amount of data, such as “500 events per minute”. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
 
-### Setting Useful Rate Limits {#-how-to-set-proper-rate-limits}
+### Setting Useful Rate Limits
 
 A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Let's look at an example:
 
@@ -188,35 +124,13 @@ You should periodically go back and check the graph to see the number of events 
 
 ![Revisit rate limits](manage-event-stream-15-new.png)
 
-## 4. Review Event Repetition
+<!-- new stuff -->
 
-The following rules apply for error event repetition and your quota:
+#### Attachment Limits
 
-- If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota.
-- If you previously resolved an issue, a new error event counts toward your quota because it may represent a regression in your code.
-- If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring.
+If you have enabled the storage of crash reports, you may set limits for the maximum number of crash reports that will be stored per issue. To set up these limits, use the slider in the "Store Native Crash Reports" option in your organization's "Security & Privacy" settings.
 
-### Delete & Discard
-
-<Note>
-
-This feature is available only on a Business plan or higher.
-
-</Note>
-
-If there is an irrelevant, reoccurring issue that you are unable or unwilling to resolve, you can delete and discard it from the **Issue Details** page by clicking "Delete and discard future events". This will remove the issue and event data from Sentry and filter out future matching events.
-
-![Delete and Discard](manage-event-stream-06-new.png)
-
-You can find a list of deleted and discarded issues in the "Discarded Issues" tab in **[Project] > Settings > Inbound Filters**. From here, you can un-discarded any of these issues to receive future events.
-
-![List of Discarded Issues](manage-event-stream-07-new.png)
-
-Once you've identified a set of discarded issues, it might make sense to go back to your SDK configuration and add the related errors into your `before-send` client-side filtering.
-
-Event repetition only applies to error events, not transactions or attachments.
-
-## 5. Inbound Data Filters
+## 3. Inbound Data Filters
 
 While SDK configuration requires changes to your source code and depends on your next deployment, server-side filters can be easily configured per project in the "Data Filters" section of **[Project] > Settings > Inbound Filters**.
 
@@ -278,17 +192,7 @@ When you are unable to take immediate action on an issue, but it continues to oc
 
 You can view and restore previously discarded issues by navigating to the "Discarded Issues" tab of **[Project] > Settings > Inbound Filters**.
 
-## 6. SDK Sample Rate
-
-If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is documented for each SDK.
-
-The SDK sample rate is not dynamic; changing it requires re-deployment. In addition, setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
-
-## 7. SDK Filtering: beforeSend
-
-All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so you can use that to modify the event's data or drop it completely (by returning `null`) based on your custom logic and the data available on the event, like _tags_, _environment_, _release version_, _error attributes_, and so on. Learn more in [Filtering Events](/platform-redirect/?next=/configuration/filtering/).
-
-## 8. SDK Configuration
+## 4. SDK Configuration
 
 The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our docs under [Platforms](/platforms/) and [Configuration](/platform-redirect/?next=/configuration/). Following are some examples.
 
@@ -322,3 +226,26 @@ Check out additional configuration options with the [tryCatch](/platforms/javasc
 **PHP** - The `error_types` configuration option allows you to set the error types you want Sentry to monitor. Learn more in PHP [Basic Options](/platforms/php/configuration/options/#common-options).
 
 **Ruby** - The `excluded_exceptions` configuration option allows you to set the exception types you wish to suppress. Learn more in the [Ruby configuration docs](/platforms/ruby/configuration/options/#optional-settings)
+
+### 5. Data Size
+
+Sentry imposes limits on various fields within an event, as well as the size of full events and the requests they are sent in:
+
+- Events, attachments, and requests exceeding payload size limits are immediately dropped with a `413 Payload Too Large` error. Sentry allows compressed content encoding, and applies separate limits before and after decompression.
+- Fields exceeding the individual size limits are afterwards trimmed and truncated at a best effort.
+
+To avoid using up your attachments quota, whch is based on size and not number of instaces of data sent, or unintentional data loss, consider limiting the size of values passed into Sentry's APIs. For example, if your application attaches application state or request bodies to Sentry events, truncate them first.
+
+The precise limits may change over time. For more information, please refer to the following resources:
+
+- [Envelope Size Limits](https://develop.sentry.dev/sdk/store/#size-limits)
+- [Store Endpoint Size Limits](https://develop.sentry.dev/sdk/store/#size-limits)
+- [Minidump Size Limits](/platforms/native/guides/minidumps/#size-limits)
+- [Variable Size Limits](https://develop.sentry.dev/sdk/data-handling/#variable-size)
+- [Debug size limits]()?
+
+<Alert>
+
+If the event exceeds 200KB compressed or 1MB decompressed for events and 20MB compressed or 100MB decompressed for minidump uploads (all files combined), the event will be rejected.
+
+</Alert>
