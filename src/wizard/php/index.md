@@ -5,11 +5,15 @@ support_level: production
 type: language
 ---
 
-To install the SDK, you will need to be using `composer` in your project. If you are not already using Composer, check out the [Composer documentation](https://getcomposer.org/download/).
+## Install
+
+To install the PHP SDK, you need to be using Composer in your project. For more details about Composer, see the [Composer documentation](https://getcomposer.org/doc/).
 
 ```bash
 composer require sentry/sdk
 ```
+
+## Configure
 
 To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
 
@@ -17,10 +21,18 @@ To capture all errors, even the one during the startup of your application, you 
 \Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
 ```
 
-One way to verify your setup is by intentionally causing an error that breaks your application.
+## Usage
 
-You can throw an exception in your PHP application:
+In PHP you can either capture a caught exception or capture the last error with captureLastError.
 
 ```php
-throw new Exception("My first Sentry error!");
+try {
+    $this->functionFailsForSure();
+} catch (\Throwable $exception) {
+    \Sentry\captureException($exception);
+}
+
+// OR
+
+\Sentry\captureLastError();
 ```
