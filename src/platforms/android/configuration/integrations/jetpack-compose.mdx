@@ -1,0 +1,164 @@
+---
+title: Jetpack Compose
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.compose
+description: "Learn more about the Sentry Compose integration."
+categories:
+  - mobile
+---
+
+The `sentry-compose` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) Navigation support for Sentry using the [SentryNavigationIntegration](https://github.com/getsentry/sentry-java/blob/524ee49b212c3f2eead20960c3c6825ccdbf8007/sentry-compose/src/androidMain/kotlin/io/sentry/compose/SentryNavigationIntegration.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/blob/main/sentry-compose/src/androidMain/kotlin/io/sentry/compose/).
+
+On this page, we get you up and running with Sentry's Compose Navigation Integration, so that it will automatically add a breadcrumb and start a transaction for each navigation event.
+
+## Install
+
+Sentry captures data by adding a `withSentryObservableEffect` extension function to `NavHostController`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose` dependency using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose:{{ packages.version('sentry.java.compose', '6.2.0') }}'
+```
+
+## Configure
+
+Configuration should happen in the respective `@Composable` function, once you obtain an instance of `NavHostController`:
+
+```kotlin
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import io.sentry.compose.withSentryObservableEffect
+
+val navController = rememberNavController().withSentryObservableEffect(
+  enableNavigationBreadcrumbs = true, // enabled by default
+  enableNavigationTracing = true  // enabled by default
+)
+NavHost(
+  navController = navController
+) {
+  ...
+}
+```
+
+By default, the navigation transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. You can customize the timeout to your needs.
+
+## Verify
+
+This snippet includes a sample `Activity` with a couple of navigation events between composables and captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import io.sentry.Sentry
+import io.sentry.compose.withSentryObservableEffect
+
+class ComposeActivity : ComponentActivity() {
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    setContent {
+      val navController = rememberNavController().withSentryObservableEffect()
+      SampleNavigation(navController)
+    }
+  }
+}
+
+@Composable
+fun SampleNavigation(navController: NavHostController) {
+  NavHost(
+    navController = navController,
+    startDestination = "first"
+  ) {
+    composable("first") {
+      First(
+        navigateToSecond = { navController.navigate("second") }
+      )
+    }
+    composable("second") {
+      Second()
+    }
+  }
+}
+
+@Composable
+fun First(
+  navigateToSecond: () -> Unit
+) {
+  Column(
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.fillMaxSize()
+  ) {
+    Button(
+      onClick = { navigateToSecond() },
+      modifier = Modifier.padding(top = 32.dp)
+    ) {
+      Text("Navigate to Second")
+    }
+    Button(
+      onClick = { Sentry.captureMessage("Some message from Compose.") },
+      modifier = Modifier.padding(top = 32.dp)
+    ) {
+      Text("Message from Compose")
+    }
+  }
+}
+
+@Composable
+fun Second() {
+  Column(
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.fillMaxSize()
+  ) {
+    Text("Second Screen")
+  }
+}
+```
+
+## Customize the Recorded Breadcrumb/Transaction
+
+By default, the Navigation integration captures route arguments as additional data on breadcrumbs and transactions. In case the arguments contain any PII data, you can strip it out by way of `BeforeBreadcrumbCallback` and `EventProcessor` respectively. To do that, [manually initialize](/platforms/android/configuration/manual-init/) the SDK and add the following snippet:
+
+```kotlin
+import io.sentry.EventProcessor
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeBreadcrumbCallback
+import io.sentry.android.navigation.SentryNavigationListener
+
+SentryAndroid.init(this) { options ->
+  options.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb, hint ->
+    if (SentryNavigationListener.NAVIGATION_OP == breadcrumb.category) {
+      breadcrumb.data.remove("from_arguments")
+      breadcrumb.data.remove("to_arguments")
+    }
+    breadcrumb
+  }
+  options.addEventProcessor(object : EventProcessor {
+    override fun process(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
+      if (SentryNavigationListener.NAVIGATION_OP == transaction.contexts.trace.operation) {
+        transaction.removeExtra("arguments")
+      }
+      return transaction
+    }
+  })
+}
+```
