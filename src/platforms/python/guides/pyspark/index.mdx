@@ -20,7 +20,17 @@ import sentry_sdk
 from sentry_sdk.integrations.spark import SparkIntegration
 
 if __name__ == "__main__":
-    sentry_sdk.init("___PUBLIC_DSN___", integrations=[SparkIntegration()])
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        integrations=[
+            SparkIntegration(),
+        ],
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production,
+        traces_sample_rate=1.0,
+    )
 
     spark = SparkSession\
         .builder\
@@ -41,8 +51,20 @@ from sentry_sdk.integrations.spark import SparkWorkerIntegration
 import pyspark.daemon as original_daemon
 
 if __name__ == '__main__':
-    sentry_sdk.init("___PUBLIC_DSN___", integrations=[SparkWorkerIntegration()])
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        integrations=[
+            SparkWorkerIntegration(),
+        ],
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production,
+        traces_sample_rate=1.0,
+    )
+
     original_daemon.manager()
+    ...
 ```
 
 In your `spark_submit` command, add the following configuration options so the spark clusters can use the sentry integration.

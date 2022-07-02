@@ -22,7 +22,14 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[AwsLambdaIntegration()]
+    integrations=[
+        AwsLambdaIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
 )
 
 def my_function(event, context):
@@ -42,7 +49,13 @@ To enable the warning, update the SDK initialization to set `timeout_warning` to
 ```python
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[AwsLambdaIntegration(timeout_warning=True)]
+    integrations=[
+        AwsLambdaIntegration(timeout_warning=True),
+    ],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
 )
 ```
 

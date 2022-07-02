@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Sentry will be at Pycon US 2022 - join our live workshop, 'Elasticsearch and Python, a Match Made in Heaven' on Apr. 28 @ 9:00 AM MDT.";
+  "See how AAA uses Ionic and Sentry to optimize the code health of their applications in our co-hosted live workshop on July 13 @ 10am PT.";
 const BANNER_LINK_URL =
-  "https://us.pycon.org/2022/schedule/presentation/168/";
+  "https://ionic.io/resources/webinars/sentry-and-capacticor-how-to-build-and-monitor-user-experiences?utm_source=partner&utm_medium=referral&utm_campaign=webinar_sentry_and_capacitor";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
