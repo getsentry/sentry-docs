@@ -2,7 +2,7 @@
 title: "Guidelines for Performance Monitoring"
 ---
 
-This document covers how SDKs should add support for Performance Monitoring  with [Distributed
+This document covers how SDKs should add support for Performance Monitoring with [Distributed
 Tracing](https://docs.sentry.io/product/performance/distributed-tracing/).
 
 This should give an overview of the APIs that SDKs need to implement, without
@@ -64,6 +64,7 @@ The [Transaction](/sdk/event-payloads/transaction/) class is like a span, with a
 few key differences:
 
 - Transactions have `name`, spans don't.
+- Transactions must specify the [source](/sdk/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
 - Calling the `finish` method on spans record the span's end timestamp. For
   transactions, the `finish` method additionally sends an event to Sentry.
 
@@ -89,7 +90,6 @@ tree as well as the unit of reporting to Sentry.
   - A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions should not be sent to Sentry.
   - `TransactionContext` should have a static/ctor method called `fromSentryTrace` which prefills a `TransactionContext` with data received from a `sentry-trace` header value
   - `TransactionContext` should have a static/ctor method called `continueFromHeaders(headerMap)` which is really just a thin wrapper around `fromSentryTrace(headerMap.get("sentry-trace"))` right now. This should be preferred by integration/framework-sdk authors over `fromSentryTrace` as it hides the exact header names used deeper in the core sdk, and leaves opportunity for using additional headers (from the W3C) in the future without changing all integrations.
-
 
 - `Span.finish()`
 
@@ -196,6 +196,7 @@ keep track of it themselves.
   - The value should be the trace header string of the `Span` that is currently on the `Scope`
 
 - Introduce a method called `startTransaction`
+
   - Takes the same two arguments as `Sentry.startTransaction`
   - Creates a new `Transaction` instance
   - Should implement sampling as described in more detail in the 'Sampling' section of this document
