@@ -1,0 +1,120 @@
+To use this SDK, initialize Sentry in your Remix entry points for both the client and server.
+
+```typescript {filename: entry.client.tsx}
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
+
+Sentry.init({
+  dsn: "__DSN__",
+  tracesSampleRate: 1,
+  integrations: [
+    new Sentry.BrowserTracing({
+        routingInstrumentation: Sentry.remixRouterInstrumentation(
+            useEffect,
+            useLocation,
+            useMatches,
+        ),
+    }),
+  ],
+  // ...
+});
+```
+
+Initialize Sentry in your entry point for the server, to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations such as Prisma to get spans for your database calls.
+
+```typescript {filename: entry.server.tsx}
+import { prisma } from "~/db.server";
+
+import * as Sentry from "@sentry/remix";
+
+Sentry.init({
+  dsn: "__DSN__",
+  tracesSampleRate: 1,
+  integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
+  // ...
+});
+```
+
+Also, wrap your Remix root, with Sentry's `ErrorBoundary` component to catch React component errors, and `withSentryRouteTracing` to get parameterized router transactions.
+
+```typescript {filename: root.tsx}
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
+
+import { ErrorBoundary, withSentryRouteTracing } from "@sentry/remix";
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <html>
+        <head>
+          <Meta />
+          <Links />
+        </head>
+        <body>
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+          <LiveReload />
+        </body>
+      </html>
+    </ErrorBoundary>
+  );
+}
+
+export default withSentryRouteTracing(App);
+```
+
+Once you're set up, the SDK will automatically capture unhandled errors and promise rejections, and monitor performance in the client. You can also [manually capture errors](/platforms/javascript/guides/remix/usage).
+
+## Using Sentry DSN from environment variables
+
+To use Sentry DSN from environment variables on Remix client, you need to add it as a global in your `root` loader.
+
+```typescript {filename: root.tsx}
+// ...
+
+type LoaderData = {
+  GLOBALS: string;
+};
+
+export const loader: LoaderFunction = async ({ request }) => {
+  return json<LoaderData>({
+    GLOBALS: JSON.stringify({
+      SENTRY_DSN: process.env.SENTRY_DSN,
+    }),
+  });
+};
+
+function App() {
+  const { GLOBALS } = useLoaderData() as LoaderData;
+
+  return (
+    // ...
+  );
+}
+```
+
+Then, use it as a global in your `entry.client.tsx` file.
+
+```typescript {filename: entry.client.tsx}
+// ...
+
+Sentry.init({
+    dsn: window.GLOBALS.SENTRY_DSN,
+    // ...
+});
+
+declare global {
+    interface Window {
+        GLOBALS: Record<string, string | undefined>;
+    }
+}
+```
