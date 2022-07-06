@@ -99,7 +99,7 @@ SDKs should recognize incoming requests as "instrumented" or "traced" when at le
 - The incoming request has a `sentry-trace` header
 - The incoming request has a `baggage` header containing one or more keys starting with "`sentry-`"
 
-After the DSC of a particular trace has been frozen, API calls like `set_user` or `set_transaction` should have no effect on the DSC.
+After the DSC of a particular trace has been frozen, API calls like `set_user` should have no effect on the DSC.
 
 ## Payloads
 
@@ -107,26 +107,7 @@ Dynamic Sampling Context is sent to Sentry via the `trace` envelope header and i
 
 All of the values in the payloads below are required (non-optional) in a sense, that when they are known to an SDK at the time a transaction envelope is sent to Sentry, or at the time a baggage header is propagated, they must also be included in said envelope or baggage.
 
-### Handling Sensitive Data and PII
-
-<Alert level="info">
-
-The currently specified solution is subject to change and will be revisited, once all SDKs implemented a mechanism of controlling where DSC and tracing data should be propagated to.
-This mechanism is still up for discussion and implementation but it will be similar to the `tracingOrigins` property that is already used in some SDKs right now.
-In the meantime, the solution below should be adopted from all SDKs to handle PII concerns.
-
-</Alert>
-
-It should be noted that DSC holds potentially sensitive data, such as PII, which needs to be handled carefully.
-
-Therefore, the **only exception** to the rule that all available DSC values must be collected at DSC
-population time, is the `user_id` field.
-To avoid this sensitive information being leaked to third parties, `user_id` should only be added to the DSC, if the <Link to="/sdk/data-handling/#sensitive-data">`send_default_pii`</Link> option was enabled in the SDK's init options.
-Note that this only applies for the head-of-trace SDK that populates the DSC content.
-In case downstream SDKs receive a `user_id` in incoming DSC, they should continue to propagate it.
-The rationale behind this is that incoming DSC [must be frozen](#freezing-dynamic-sampling-context) and users must make DS rules based on the head SDK's DSC data anyway.
-
-#### Strictly required values
+### Strictly required values
 
 In any case, `trace_id`, `public_key`, and `sample_rate` should always be known to an SDK, so these values are strictly required.
 
@@ -140,11 +121,10 @@ The value of this envelope header is a JSON object with the following fields:
 - `sample_rate` (string) - The sample rate as defined by the user on the SDK. This string should always be a number between (and including) 0 and 1 in basic float notation (`0.04242`) - no funky business like exponents or anything similar. If a `tracesSampler` callback was used for the sampling decision, its result should be used for `sample_rate` instead of the `tracesSampleRate` from `SentryOptions`. In case `tracesSampler` returns `True` it should be sent as `1.0`, `False` should be sent as `0.0`.
 - `release` (string) - The release name as specified in client options`.
 - `environment` (string) - The environment name as specified in client options.
-- `user_id` (string) - User ID as set by the user with <Link to="/sdk/unified-api/#scope">`scope.set_user`</Link>. **Only included, if [`send_default_pii`](#handling-sensitive-data-and-pii) is enabled.**
 - `user_segment` (string) - User segment as set by the user with <Link to="/sdk/unified-api/#scope">`scope.set_user`</Link>.
-- `transaction` (string) - The transaction name set on the scope.
 
-It's important to note that at the current moment, only `release`, `environment`, `user_id`, `user_segment`, and `transaction` are used by the product for dynamic sampling functionality. The rest of the context attributes, `trace_id`, `public_key`, and `sample_rate`, are used by Relay for internal decisions (like transaction sample rate smoothing).
+It's important to note that at the moment, only `release`, `environment`, and `user_segment` are used by the product for dynamic sampling functionality.
+The rest of the context attributes, `trace_id`, `public_key`, and `sample_rate`, are used by Relay for internal decisions (like transaction sample rate smoothing).
 
 ### Baggage-Header
 
@@ -155,9 +135,7 @@ SDKs may use the following keys to set entries on `baggage` HTTP headers:
 - `sentry-sample_rate`
 - `sentry-release`
 - `sentry-environment`
-- `sentry-user_id` - **Only included, if [`send_default_pii`](#handling-sensitive-data-and-pii) is enabled.**
 - `sentry-user_segment`
-- `sentry-transaction`
 
 SDKs must set all of the keys in the form of "`sentry-[name]`".
 The prefix "`sentry-`" acts to identify key-value pairs set by Sentry SDKs.
@@ -219,6 +197,13 @@ This section details some open questions and considerations that need to be addr
 These are not blockers to the adoption of the spec, but instead are here as context for future developments of the dynamic sampling product and spec.
 
 ### The Temporal Problem
+
+<Alert level="warning">
+
+This section contains references to `transaction` and `user_id`, which are not part of the dynamic sampling context right now because of PII concerns.
+They might however make a comeback in the future and the problem outlined here still applies to `user_segment`.
+
+</Alert>
 
 Unlike `environment` or `release`, which should always be known to an SDK at initialization time, `user_id`, `user_segment`, and `transaction` (name) are only known after SDK initialization time.
 This means that if a trace is propagated from a running transaction _BEFORE_ the user/transaction attributes are set, you'll get a portion of transactions in a trace that have different Dynamic Sampling Context than other portions, leading to _dynamic sampling across a trace_ not working as expected for users.
