@@ -40,6 +40,10 @@ public static MauiApp CreateMauiApp()
             // This option is not recommended when deploying your application.
             options.Debug = true;
 
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
+
             // Other Sentry options can be set here.
         })
 
@@ -61,14 +65,6 @@ SentrySdk.CaptureMessage("Hello Sentry");
 
 We do not yet have automatic performance instrumentation for .NET MAUI.  We will be adding that in a future release.
 However, if desired you can still manually instrument parts of your application.
-
-First, [configure the traces sample rate](https://docs.sentry.io/platforms/dotnet/guides/maui/performance/) in the options when you called `UseSentry`:
-
-```csharp
-// Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-// We recommend adjusting this value in production.
-options.TracesSampleRate = 1.0;
-```
 
 For some parts of your code, [automatic instrumentation](https://docs.sentry.io/platforms/dotnet/guides/maui/performance/instrumentation/automatic-instrumentation/) is available across all of our .NET SDKs, and can be used with MAUI as well:
 
