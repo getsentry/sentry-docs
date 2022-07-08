@@ -282,3 +282,25 @@ Opt-in to capture values from [System.Diagnostic.Activity](https://github.com/do
 - An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features. (**C#**)
 - An [example](https://github.com/sentry-demos/giraffe) using Giraffe on top of ASP.NET Core with a basic overview of available features. (**F#**)
 - For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.
+
+## Tunnel
+
+If events are being logged to Sentry from the client-side, then you should use a [tunnel](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
+
+A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your application. Because you control this server, there is no risk of any requests sent to it being blocked.
+
+### Usage
+
+ * Add to the container by calling `AddSentryTunneling();` on `IServiceCollection`.
+ * Add the web app by calling `UseSentryTunneling();` on `IApplicationBuilder`.
+ * In the client-side JavaScript configuration, ensure the tunnel option is used:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "/tunnel",
+});
+```
+
+The [AspNetCore.Mvc sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) uses this approach.
+
