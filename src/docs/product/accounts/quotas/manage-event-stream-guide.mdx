@@ -49,13 +49,13 @@ A spike is both a **large** and **temporary** increase in error event volume. Se
 
 Spike protection is enabled for your organization by default, and when it's enabled, Sentry continually monitors for spikes. You can confirm that it's enabled in **Settings > Subscription**. This page can only be accessed by a Billing or Owner member of your Sentry organization.
 
-**We also include a one-time grace period for all paid accounts.** If an account depletes its event capacity and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10,000 events per hour. If you choose not to increase your capacity, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your capacity, events accepted during the grace period will be counted as consumed capacity.
+**We also include a one-time grace period for all paid accounts.** If an account depletes its event volume and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10,000 events per hour. If you choose not to increase your volume, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your volume, events accepted during the grace period will be counted as consumed volume.
 
 <!-- does this belong with spike protection or is this an entirely separate thing? does spike protection have to be enabled for the grace period to kick in?? -->
 
 ## How Does Spike Protection Work?
 
-Because Sentry bills based on monthly event volume, spikes can easily consume your capacity for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event capacity by dropping error events during the spike.
+Because Sentry bills based on monthly event volume, spikes can easily consume your volume for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event volume by dropping error events during the spike.
 
 We use your historical error event volume to implement a dynamic rate limit, and then discard error events when you hit its threshold. When spike protection is activated, we limit the number of error events accepted in any minute to:
 
@@ -93,7 +93,7 @@ If spike protection has been triggered for your account, you'll receive an email
 
 To manage or avoid future spikes, we recommend taking the following steps:
 
-- Set up an [on-demand budget](#on-demand-budget) to ensure you have time to adjust your capacity in the event of a future spike in errors.
+- Set up an [on-demand budget](#on-demand-budget) to ensure you have time to adjust your volume in the event of a future spike in errors.
 - Set better [rate limits](#6-rate-limiting) on the DSN keys for the projects related to the spike.
 - If it's a specific release version that has caused the spike, add the version identifier to the project's [inbound filters](#3-inbound-data-filters) to avoid accepting events from that release.
 
@@ -113,7 +113,7 @@ Quotas can only be updated by a Billing or Owner member of your Sentry organizat
 
 </Note>
 
-If you're dropping events that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved capacity, or increasing your on-demand capacity. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
+If you're dropping events that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved volume, or increasing your on-demand volume. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
 
 If you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
 
@@ -121,13 +121,13 @@ If this is your first time exceeding quota and you're on a paid plan, however, y
 
 ### Reserved Volume
 
-If the number of events you need is steadily increasing, you may want to increase your reserved volume or capacity. Reserved volume is less expensive than on-demand volume since you prepay for it. It also allows you to choose the number of events that you want to have available beforehand rather than just setting an arbitrary on-demand budget. Learn more about [reserved volume](/product/accounts/pricing/#prepaid-reserved-capacity) in our pricing documentation.
+If the number of events you need is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than on-demand volume since you prepay for it. It also allows you to choose the number of events that you want to have available beforehand rather than just setting an arbitrary on-demand budget. Learn more about [reserved volume](/product/accounts/pricing/#prepaid-reserved-capacity) in our pricing documentation.
 
-You shouldn't increase your reserved capacity if you think your need for more events is temporary, since [reducing your reserved capacity is tied to your billing cycle](#decreasing-quotas).
+You shouldn't increase your reserved volume if you think your need for more events is temporary, since [reducing your reserved volume is tied to your billing period](#decreasing-quotas).
 
 ### On-Demand Budget
 
-If you need to increase your event quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand volume or capacity, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand capacity](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
+If you need to increase your event quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
 
 ### Plan Upgrade
 
@@ -141,7 +141,7 @@ If you upgrade from Team to Business mid-billing period, your on-demand pricing 
 
 ### Decreasing Quotas
 
-Plan downgrades and decreases in reserved volume are processed at the end of your billing cycle, and remaining volume cannot be refunded. For example, if you have a monthly billing period that starts on the 5th of the month, and you decrease your reserved volume on June 20th, then this change will be processed on July 4th. Your billing period beginning on July 5th will reflect your new reserved volume.
+Plan downgrades and decreases in reserved volume are processed at the end of your billing period, and remaining volume cannot be refunded. For example, if you have a monthly billing period that starts on the 5th of the month, and you decrease your reserved volume on June 20th, then this change will be processed on July 4th. Your billing period beginning on July 5th will reflect your new reserved volume.
 
 <Alert level="warning">
 
@@ -240,7 +240,7 @@ Sentry provides several methods to filter all events and attachments server-side
 
 The first four options above are settings that you simply toggle on or off. Setting the others is explained further below.
 
-After these checks are processed, events that aren't dropped based on these filters toward your quota. They're accepted into Sentry, where they're persisted and stored.
+After these checks are processed, events and attachments that aren't dropped based on these filters toward your quota. They're accepted into Sentry, where they're persisted and stored.
 
 ### IP Filters
 
@@ -254,7 +254,7 @@ This feature is available only if your organization is on a Business plan.
 
 </Note>
 
-If you discover a problematic release causing excessive noise, Sentry supports ignoring all events from that release. Navigate to **[Project] > Settings > Inbound Filters**, then add the release to the "Releases" field.
+If you discover a problematic release causing excessive noise, Sentry supports ignoring all events and attachments from that release. Navigate to **[Project] > Settings > Inbound Filters**, then add the release to the "Releases" field.
 
 ### Filter by Error Message
 
