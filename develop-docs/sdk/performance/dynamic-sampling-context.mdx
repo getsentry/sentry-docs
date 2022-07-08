@@ -105,7 +105,30 @@ After the DSC of a particular trace has been frozen, API calls like `set_user` s
 
 Dynamic Sampling Context is sent to Sentry via the `trace` envelope header and is propagated to downstream SDKs via a baggage header.
 
-All of the values in the payloads below are required (non-optional) in a sense, that when they are known to an SDK at the time a transaction envelope is sent to Sentry, or at the time a baggage header is propagated, they must also be included in said envelope or baggage.
+All of the values in the payload schemas below are required (non-optional) in a sense, that when they are known to an SDK at the time a transaction envelope is sent to Sentry, or at the time a baggage header is propagated, they must also be included in said envelope or baggage.
+
+<Alert level="warning">
+
+### Note on "low-quality" transaction names:
+
+UX wise for the Dynamic Sampling product, we depend on transaction names (i.e. the `transaction` parameter of the DSC) to have "good quality".
+**Good quality transaction names** are descriptive, have proper grouping on Sentry, have low cardinality, and do not contain PII or other identifiers.
+
+**For that reason: If and only if a transaction name has good quality, it should be included in the DSC. Otherwise, it cannot be included!**
+
+Examples for **low quality** ❌ transaction names:
+
+- `"/organization/601242c3-8f49-4158-aef4-c9e42cb1422c/user/601242c3-8f49-4158-aef4-c9e42cb1422c"`
+- `"UIComponentWithHash_7sd8x823f48_x7b26"`
+
+Examples for **good quality** ✅ transaction names:
+
+- `"/organization/:organizationId/user/:userId"`
+- `"UserListUIComponent"`
+
+SDKs can leverage <Link to="/sdk/event-payloads/transaction/#transaction-annotations">transaction annotations</Link> (in particular the `source` of the transaction name) to determine which transaction names have a good quality.
+
+</Alert>
 
 ### Strictly required values
 
@@ -122,8 +145,9 @@ The value of this envelope header is a JSON object with the following fields:
 - `release` (string) - The release name as specified in client options`.
 - `environment` (string) - The environment name as specified in client options.
 - `user_segment` (string) - User segment as set by the user with <Link to="/sdk/unified-api/#scope">`scope.set_user`</Link>.
+- `transaction` (string, **only include if name has [good quality](#note-on-low-quality-transaction-names)**) - The transaction name set on the scope.
 
-It's important to note that at the moment, only `release`, `environment`, and `user_segment` are used by the product for dynamic sampling functionality.
+It's important to note that at the moment, only `release`, `environment`, `user_segment` and `transaction` are used by the product for dynamic sampling functionality.
 The rest of the context attributes, `trace_id`, `public_key`, and `sample_rate`, are used by Relay for internal decisions (like transaction sample rate smoothing).
 
 ### Baggage-Header
@@ -136,6 +160,7 @@ SDKs may use the following keys to set entries on `baggage` HTTP headers:
 - `sentry-release`
 - `sentry-environment`
 - `sentry-user_segment`
+- `sentry-transaction` (**only include if name has [good quality](#note-on-low-quality-transaction-names)**)
 
 SDKs must set all of the keys in the form of "`sentry-[name]`".
 The prefix "`sentry-`" acts to identify key-value pairs set by Sentry SDKs.
@@ -198,17 +223,10 @@ These are not blockers to the adoption of the spec, but instead are here as cont
 
 ### The Temporal Problem
 
-<Alert level="warning">
-
-This section contains references to `transaction` and `user_id`, which are not part of the dynamic sampling context right now because of PII concerns.
-They might however make a comeback in the future and the problem outlined here still applies to `user_segment`.
-
-</Alert>
-
-Unlike `environment` or `release`, which should always be known to an SDK at initialization time, `user_id`, `user_segment`, and `transaction` (name) are only known after SDK initialization time.
+Unlike `environment` or `release`, which should always be known to an SDK at initialization time, `user_segment`, and `transaction` (name) are only known after SDK initialization time.
 This means that if a trace is propagated from a running transaction _BEFORE_ the user/transaction attributes are set, you'll get a portion of transactions in a trace that have different Dynamic Sampling Context than other portions, leading to _dynamic sampling across a trace_ not working as expected for users.
 
-Let's say we want to dynamically sample a browser application based on the `user_id`.
+Let's say we want to dynamically sample a browser application based on the `user_segment`.
 In a typical single page application (SPA), the user information has to be requested from some backend service before it can be set with `Sentry.setUser` on the frontend.
 
 Here's an example of that flow:
@@ -219,16 +237,14 @@ Here's an example of that flow:
   - user service continues trace by automatically creating sampling transaction
   - user service pings database service (propogates sentry-trace/baggage to database service)
   - database service continues trace by automatically creating sampling transaction
-- Page gets data from user service, calls `Sentry.setUser` and sets `user_id`
+- Page gets data from user service, calls `Sentry.setUser` and sets `user_segment`
 - Page makes HTTP requests to service A, service B, and service C (propogates sentry-trace/baggage to services A, B and C)
   - DSC is propogated with baggage to service A, service B, and service C, so 3 child transactions
 - Page finishes loading, finishing `pageload` transaction, which is sent to Sentry
 
-In this case, the baggage that is propogated to the user service and the downstream database service _does not_ have the `user_id` value in it, because it was not yet set on the browser SDK.
-Therefore, when Relay tries to dynamically sample the user services and database services transactions based on `user_id`, it will not be able to.
-In addition, since the DSC is frozen after it's been sent, the DSC sent to service A, service B, and service C will not have `user_id` on it either. This means it also will not be dynamically sampled properly if there is a trace-wide DS rule on `user_id`.
-
-This problem exists for both `user_id` and `user_segment`, and it is because since we don't have the user information on some platforms/frameworks right as we initialize the SDK.
+In this case, the baggage that is propogated to the user service and the downstream database service _does not_ have the `user_segment` value in it, because it was not yet set on the browser SDK.
+Therefore, when Relay tries to dynamically sample the user services and database services transactions based on `user_segment`, it will not be able to.
+In addition, since the DSC is frozen after it's been sent, the DSC sent to service A, service B, and service C will not have `user_segment` on it either. This means it also will not be dynamically sampled properly if there is a trace-wide DS rule on `user_segment`.
 
 For `transaction` name, the problem is similar, but it is because of paramaterization.
 As much as we can, the SDKs will try to paramaterize transaction names (for ex, turn `/teams/123/user/456` into `/teams/:id/user/:id`) so that similar transactions are grouped together in the UI.
