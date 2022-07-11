@@ -1,5 +1,5 @@
 ---
-name: Multi-platform App UI (MAUI)
+name: Multi-platform App UI (.NET MAUI)
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/maui/
 support_level: production
 type: framework
