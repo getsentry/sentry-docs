@@ -108,5 +108,6 @@ SentrySDK.start { options in
     options.enableFileIOTracking = true
     options.enableCoreDataTracking = true
     options.enableUserInteractionTracing = true
+    options.enableAppHangTracking = true
 }
 ```
