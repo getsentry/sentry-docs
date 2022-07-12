@@ -51,11 +51,11 @@ Spike protection is enabled for your organization by default, and when it's enab
 
 **We also include a one-time grace period for all paid accounts.** If an account depletes its event volume and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10,000 events per hour. If you choose not to increase your volume, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your volume, events accepted during the grace period will be counted as consumed volume.
 
-<!-- does this belong with spike protection or is this an entirely separate thing? does spike protection have to be enabled for the grace period to kick in?? -->
+<!-- does the paragraph above belong with spike protection or is this an entirely separate thing? does spike protection have to be enabled for the grace period to kick in?? -->
 
-## How Does Spike Protection Work?
+### How Does Spike Protection Work?
 
-Because Sentry bills based on monthly event volume, spikes can easily consume your volume for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event volume by dropping error events during the spike.
+Because Sentry bills based on monthly event volume, spikes can easily consume your quota for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event quota by dropping error events during the spike.
 
 We use your historical error event volume to implement a dynamic rate limit, and then discard error events when you hit its threshold. When spike protection is activated, we limit the number of error events accepted in any minute to:
 
@@ -91,7 +91,7 @@ If spike protection has been triggered for your account, you'll receive an email
 
 ![Spike Protection Email](spike-email.jpg)
 
-To manage or avoid future spikes, we recommend taking the following steps:
+To manage the current spike and avoid future spikes, we recommend taking the following steps:
 
 - Set up an [on-demand budget](#on-demand-budget) to ensure you have time to adjust your volume in the event of a future spike in errors.
 - Set better [rate limits](#6-rate-limiting) on the DSN keys for the projects related to the spike.
@@ -105,7 +105,7 @@ Events will not be dropped during any minute in which you don't send more than t
 
 <!-- this last sentence sounds like a penalty of some sort; is it? or is just a fact? -->
 
-## 2. Increasing Quotas
+## 2. Adjusting Quotas
 
 <Note>
 
@@ -113,13 +113,25 @@ Quotas can only be updated by a Billing or Owner member of your Sentry organizat
 
 </Note>
 
-If you're dropping events that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved volume, or increasing your on-demand volume. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
-
-If you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
+Once your event volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
 
 If this is your first time exceeding quota and you're on a paid plan, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
 
-Once your event volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails.
+### Increasing Quotas
+
+If you're dropping events that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either increasing your [reserved](#reserved-volume) or [on-demand](#on-demand-budget) quota.
+
+When you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
+
+To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
+
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+
+<Note>
+
+If you upgrade from Team to Business mid-billing period, your on-demand pricing changes retroactively.
+
+</Note>
 
 ### Reserved Volume
 
@@ -130,16 +142,6 @@ You shouldn't increase your reserved volume if you think your need for more even
 ### On-Demand Budget
 
 If you need to increase your event quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
-
-### Plan Upgrade
-
-If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
-
-<Note>
-
-If you upgrade from Team to Business mid-billing period, your on-demand pricing changes retroactively.
-
-</Note>
 
 ### Decreasing Quotas
 
@@ -171,25 +173,25 @@ This feature is available only if your organization is on a Business plan.
 
 </Note>
 
-Rate limiting allows you to [set the maximum volume of error events a project key will accept during a period of time](/product/accounts/quotas/#what-counts-toward-my-quota-table-view). While this is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, **subsequent events will be dropped**. Therefore, you shouldn't constantly be hitting your rate limit; rather, it should act as a ceiling intended to protect you from unexpected spikes.
-
-If you have a project in production that generates a lot of noise, a rate limit allows you to set the maximum amount of data, such as “500 events per minute”. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
+Rate limiting allows you to set the maximum volume of error events a project key will accept during a period of time. For example, if you have a project in production that generates a lot of noise, a rate limit allows you to set the maximum amount of data, such as “500 events per minute”. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
 
 In **[Project] > Settings > Client Keys (DSN)**, click "Configure", and you can create multiple DSN keys per project and assign different (or no) rate limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on release, environment, and so on.
 
 ![Per DSN Key rate limits](manage-event-stream-11.png)
 
-Events dropped because of rate limiting generate a 429 error code.
+Once you've set the limit, events dropped because of rate limiting generate a 429 error code.
+
+While rate limiting is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, subsequent events will be dropped. Therefore, you shouldn't constantly be hitting your rate limit; rather, it should act as a ceiling intended to protect you from unexpected spikes.
 
 ### Setting Useful Rate Limits {#-how-to-set-proper-rate-limits}
 
 A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Here's how to do that:
 
 1. Go **[Project] > Settings > Client Keys (DSN)** and open the project DSN key configuration under by clicking "Configure".
-1. In the `KEY USAGE IN THE LAST 30 DAYS` graph and look for the highest point, or the maximum daily rate. In the example below, the maximum daily rate in the last month is less than 34K:
+1. In the "KEY USAGE IN THE LAST 30 DAYS" graph, look for the highest point, or the maximum daily rate. In the example below, the maximum daily rate in the last month is less than 34K:
    ![Calculating rate limits](manage-event-stream-14-new.png)
    <!-- image notes: Sentry, airflow, Santry, app-frontend -->
-1. Based on that, choose a **daily** maximum value or ceiling. In this example, we set a daily maximum of approximantely 35K, which is around 1458 events an **hour**, or about 24 events a **minute**.
+1. Based on the rate, choose a **daily** maximum value or ceiling. In this example, we calculated a daily maximum of approximantely 35K, which is around 1458 events an **hour**, or about 24 events a **minute**.
 1. Set a daily, hourly, or minute-based rate limit. We recommend using a minute-based rate to avoid situations where a random event spike might exhaust your daily or hourly quota and leave you without event data for a long period.
 
 You should periodically go back and check the graph to see the number of events dropped due to rate limiting and, if needed, revisit your settings.
@@ -202,7 +204,7 @@ The following rules apply for error event repetition and your quota:
 
 - If you previously resolved an issue, a new error event counts toward your quota because it may represent a regression in your code.
 - If you have chosen to ignore alerts about error events with the same fingerprint, a new event counts toward your quota because the event is still occurring.
-- If you have chosen to "Delete & Discard" an issue, then _future_ error events with the same fingerprint do not count toward your quota.
+- If you ["Delete & Discard"](#delete--discard) an issue, then **future** error events with the same fingerprint will not count toward your quota.
 
 ### Delete & Discard
 
@@ -242,7 +244,7 @@ Sentry provides several methods to filter all events and attachments server-side
 
 The first four options above are settings that you simply toggle on or off. Setting the others is explained further below.
 
-After these checks are processed, events and attachments that aren't dropped based on these filters toward your quota. They're accepted into Sentry, where they're persisted and stored.
+After these checks are processed, events and attachments that aren't dropped based on these filters count toward your quota. They're accepted into Sentry, where they're persisted and stored.
 
 ### IP Filters
 
@@ -272,7 +274,7 @@ To ensure you’re adding the correct message to the inbound filter setting, che
 
 ## 6. SDK Sample Rate
 
-If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is \* <PlatformLink to="/configuration/sampling/">documented for each SDK</PlatformLink>.
+If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is [documented for each SDK](/platform-redirect/?next=/configuration/sampling/).
 
 The SDK sample rate is not dynamic; changing it requires re-deployment. Also, keep in mind that setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
 
@@ -282,7 +284,7 @@ All Sentry SDKs support the `beforeSend` callback method. Once implemented, the 
 
 ## 8. SDK Configuration {#2-sdk-configuration}
 
-The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our docs under [Platforms](/platforms/) and [Configuration](/platform-redirect/?next=/configuration/). Following are some configuration examples for [JavaScript](#javascript) and [other SDKs](#other-sdks).
+The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our platform docs under [Configuration](/platform-redirect/?next=/configuration/). Following are some configuration examples for [JavaScript](#javascript) and [other SDKs](#other-sdks).
 
 ### JavaScript
 

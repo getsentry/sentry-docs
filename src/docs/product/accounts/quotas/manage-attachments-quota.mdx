@@ -7,7 +7,7 @@ description: "Learn how to use the tools Sentry provides to control the type and
 
 Sending all your error attachments to Sentry may consume your quota too rapidly, so we provide tools to control the _type_ and _amount_ of attachments that are stored.
 
-Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process, but these tips will show you how to get the most out of your error events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first three Options are all things you can do in [sentry.io](https://sentry.io), whereas the remaining one is something you'll do in the SDK.
+Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process, but these tips will show you how to get the most out of your error events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first three options are all things you can do in [sentry.io](https://sentry.io), whereas the remaining one is something you'll do in the SDK.
 
 ## Before You Begin: Check Your Quota Usage
 
@@ -25,7 +25,7 @@ The [Usage Stats](/product/stats/#usage-stats) tab displays details about the to
 
 The "Project" table in the "Usage Stats" tab of **Stats** breaks down your data by project, so you can see which ones are consuming your quota. Clicking on the settings icon next to a project name in the table will open the project's settings page where you can manage its inbound filters and rate limits
 
-## 1. Increasing Quotas
+## 1. Adjusting Quotas
 
 <Note>
 
@@ -33,11 +33,25 @@ Quotas can only be updated by a Billing or Owner member of your Sentry organizat
 
 </Note>
 
-If you're dropping attachments that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either upgrading to a higher plan or tier, increasing your reserved volume, or increasing your on-demand volume. To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
+Once your attachments volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
 
-If you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events and thus their associated attachments. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
+If this is your first time exceeding quota and you're on a paid plan, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
 
-If this is your first time exceeding quota, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
+### Increasing Quotas
+
+If you're dropping attachments that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either increasing your [reserved](#reserved-volume) or [on-demand](#on-demand-budget) quota.
+
+When you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events and thus their associated attachments. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
+
+To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
+
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more attachments volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+
+<Note>
+
+If you upgrade from Team to Business mid-billing period, your on-demand pricing changes retroactively.
+
+</Note>
 
 ### Reserved Volume
 
@@ -48,16 +62,6 @@ You shouldn't increase your reserved volume if you think your need for more even
 ### On-Demand Budget
 
 If you need to increase your attachments quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate receiving more data for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
-
-### Plan Upgrade
-
-If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
-
-<Note>
-
-If you upgrade from Team to Business mid-billing period, your on-demand pricing changes retroactively.
-
-</Note>
 
 ### Decreasing Quotas
 
@@ -95,7 +99,7 @@ Once applied, you can track the filtered attachments (numbers and cause) using t
 
 <Note>
 
-The **Inbound Data Filters** page in [sentry.io](https://sentry.io) only refers to errors, but it applies to attachments as well.
+The **Inbound Data Filters** page in [sentry.io](https://sentry.io) only refers to errors, but it applies to transactions and attachments as well.
 
 </Note>
 
@@ -129,6 +133,8 @@ If you discover a problematic release causing excessive noise, Sentry supports i
 
 ### Filter by Error Message
 
+<!--how do we do this exactly for attachments? or do we? -->
+
 <Note>
 
 This feature is available only if your organization is on a Business plan.
@@ -137,8 +143,6 @@ This feature is available only if your organization is on a Business plan.
 
 Sentry supports filtering out a specific or certain kind of attachments as well. Navigate to **[Project] > Settings > Inbound Filters**, then add the attachment name to the "Error Message" field.
 
-<!--how do we do this exactly for attachments? or do we? -->
-
 ## 4. Data Size
 
 Sentry imposes limits on various fields within an event, as well as the size of full events and the requests they are sent in:
@@ -146,7 +150,7 @@ Sentry imposes limits on various fields within an event, as well as the size of 
 - Events, attachments, and requests exceeding payload size limits are immediately dropped with a `413 Payload Too Large` error. Sentry allows compressed content encoding, and applies separate limits before and after decompression.
 - Fields exceeding the individual size limits are afterwards trimmed and truncated at a best effort.
 
-To avoid using up your attachments quota — whch is based on size and not number of instaces of data sent — or having the event dropped entirely, consider limiting the size of values passed into Sentry's APIs. For example, if your application attaches application state or request bodies to Sentry events, truncate them first.
+To avoid using up your attachments quota — whch is based on size and not number of instaces of attachments data sent — or having the event dropped entirely, consider limiting the size of values passed into Sentry's APIs. For example, if your application attaches application state or request bodies to Sentry events, truncate them first.
 
 The precise limits may change over time. For more information, please refer to the following resources:
 
