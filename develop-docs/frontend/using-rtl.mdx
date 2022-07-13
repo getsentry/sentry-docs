@@ -44,14 +44,14 @@ Avoid destructuring query functions from render method, use `screen` instead ([e
 You won't have to keep the render call destructure up-to-date as you add/remove the queries you need. You only need to type `screen` and let your editor's autocomplete take care of the rest.
 
 ```javascript
-import { mountWithTheme, screen } from "sentry-test/reactTestingLibrary";
+import { render, screen } from "sentry-test/reactTestingLibrary";
 
 // ❌
-const { getByRole } = mountWithTheme(<Example />);
+const { getByRole } = render(<Example />);
 const errorMessageNode = getByRole("alert");
 
 // ✅
-mountWithTheme(<Example />);
+render(<Example />);
 const errorMessageNode = screen.getByRole("alert");
 ```
 
@@ -59,14 +59,14 @@ Avoid using `queryBy...` for anything except checking for non-existence ([exampl
 The `getBy...` and `findBy...` variants will throw a more helpful error message if no element is found.
 
 ```javascript
-import { mountWithTheme, screen } from "sentry-test/reactTestingLibrary";
+import { render, screen } from "sentry-test/reactTestingLibrary";
 
 // ❌
-mountWithTheme(<Example />);
+render(<Example />);
 expect(screen.queryByRole("alert")).toBeInTheDocument();
 
 // ✅
-mountWithTheme(<Example />);
+render(<Example />);
 expect(screen.getByRole("alert")).toBeInTheDocument();
 expect(screen.queryByRole("button")).not.toBeInTheDocument();
 ```
@@ -75,20 +75,16 @@ Avoid using `waitFor` for waiting on appearance, use `findBy...` instead ([examp
 These two are basically equivalent (`findBy...` even uses `waitFor` under the hood), but the `findBy...` is simpler and the error message we get will be better.
 
 ```javascript
-import {
-  mountWithTheme,
-  screen,
-  waitFor,
-} from "sentry-test/reactTestingLibrary";
+import {render, screen, waitFor} from "sentry-test/reactTestingLibrary";
 
 // ❌
-mountWithTheme(<Example />);
+render(<Example />);
 await waitFor(() => {
   expect(screen.getByRole("alert")).toBeInTheDocument();
 });
 
 // ✅
-mountWithTheme(<Example />);
+render(<Example />);
 expect(await screen.findByRole("alert")).toBeInTheDocument();
 ```
 
@@ -97,37 +93,37 @@ The latter uses `MutationObserver` which is more efficient than polling the DOM 
 
 ```javascript
 import {
-  mountWithTheme,
+  render,
   screen,
   waitFor,
   waitForElementToBeRemoved,
 } from "sentry-test/reactTestingLibrary";
 
 // ❌
-mountWithTheme(<Example />);
+render(<Example />);
 await waitFor(() =>
   expect(screen.queryByRole("alert")).not.toBeInTheDocument()
 );
 
 // ✅
-mountWithTheme(<Example />);
+render(<Example />);
 await waitForElementToBeRemoved(() => screen.getByRole("alert"));
 ```
 
 Prefer using jest-dom assertions ([examples](https://github.com/getsentry/sentry/pull/29508)). The advantages of using these recommended assertions are better error messages, overall semantics, consistency, and uniformity.
 
 ```javascript
-import { mountWithTheme, screen } from "sentry-test/reactTestingLibrary";
+import {render, screen} from "sentry-test/reactTestingLibrary";
 
 // ❌
-mountWithTheme(<Example />);
+render(<Example />);
 expect(screen.getByRole("alert")).toBeTruthy();
 expect(screen.getByRole("alert").textContent).toEqual("abc");
 expect(screen.queryByRole("button")).toBeFalsy();
 expect(screen.queryByRole("button")).toBeNull();
 
 // ✅
-mountWithTheme(<Example />);
+render(<Example />);
 expect(screen.getByRole("alert")).toBeInTheDocument();
 expect(screen.getByRole("alert")).toHaveTextContent("abc");
 expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -136,14 +132,14 @@ expect(screen.queryByRole("button")).not.toBeInTheDocument();
 Prefer using case insensitive regex when searching by text. It will make the tests slightly more resilient to change.
 
 ```javascript
-import { mountWithTheme, screen } from "sentry-test/reactTestingLibrary";
+import {render, screen} from "sentry-test/reactTestingLibrary";
 
 // ❌
-mountWithTheme(<Example />);
+render(<Example />);
 expect(screen.getByText("Hello World")).toBeInTheDocument();
 
 // ✅
-mountWithTheme(<Example />);
+render(<Example />);
 expect(screen.getByText(/hello world/i)).toBeInTheDocument();
 ```
 
@@ -152,22 +148,14 @@ Use `userEvent` over `fireEvent` where possible.
 
 ```javascript
 // ❌
-import {
-  mountWithTheme,
-  screen,
-  fireEvent,
-} from "sentry-test/reactTestingLibrary";
-mountWithTheme(<Example />);
+import {render, screen, fireEvent} from "sentry-test/reactTestingLibrary";
+render(<Example />);
 fireEvent.change(screen.getByLabelText("Search by name"), {
   target: { value: "sentry" },
 });
 
 // ✅
-import {
-  mountWithTheme,
-  screen,
-  userEvent,
-} from "sentry-test/reactTestingLibrary";
-mountWithTheme(<Example />);
+import {render, screen, userEvent} from "sentry-test/reactTestingLibrary";
+render(<Example />);
 userEvent.type(screen.getByLabelText("Search by name"), "sentry");
 ```
