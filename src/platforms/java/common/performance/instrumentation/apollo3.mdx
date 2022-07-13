@@ -1,0 +1,171 @@
+---
+title: Apollo3 Integration
+sidebar_order: 31
+description: "Learn how to capture the performance of Apollo GraphQL client."
+notSupported:
+  - java.logback
+  - java.log4j2
+  - java.jul
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+Sentry Apollo3 integration provides the `SentryApollo3Interceptor` and the `SentryApollo3HttpInterceptor`, which create a span for each outgoing HTTP request executed with an [Apollo Kotlin](https://github.com/apollographql/apollo-kotlin) GraphQL client. For easier usage the integration also provides extension functions on the `ApolloClient.Builder`.
+
+## Install
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-apollo-3</artifactId>
+    <version>{{ packages.version('sentry.java.apollo3', '5.2.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-apollo-3:{{ packages.version('sentry.java.apollo3', '5.2.0') }}'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-apollo-3" % "{{ packages.version('sentry.java.apollo3', '5.2.0') }}"
+```
+
+For other dependency managers, see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-apollo-3).
+
+## Configure with Extension
+
+Add `Interceptors` to `ApolloClient.Builder` using `ApolloBuilderExtensions`:
+
+```java
+import com.apollographql.apollo.ApolloClient;
+import io.sentry.apollo3.ApolloBuilderExtensionsKt;
+
+ApolloClient apollo = ApolloBuilderExtensionsKt.sentryTracing(new ApolloClient.Builder())
+    .serverUrl("https://your-api-host/")
+    .sentryTracing()
+    .build();
+```
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo3.sentryTracing
+
+val apollo = ApolloClient.builder()
+    .serverUrl("https://your-api-host/")
+    .sentryTracing()
+    .build()
+```
+
+## Manual Configuration
+When using a custom `NetworkTransport`, the `SentryInterceptors` need to be added manually, because then `HttpInterceptors` need to be added to the `NetworkTransport`.
+
+```java
+import com.apollographql.apollo.ApolloClient;
+import io.sentry.apollo3.ApolloBuilderExtensionsKt;
+
+ApolloClient apollo = new ApolloClient.Builder()
+        .networkTransport(
+            new HttpNetworkTransport.Builder()
+                .serverUrl("https://your-api-host/")
+                .addInterceptor(new SentryApollo3HttpInterceptor())
+                .build())
+        .addInterceptor(new SentryApollo3Interceptor())
+        .build();
+```
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo3.SentryApollo3HttpInterceptor
+import io.sentry.apollo3.SentryApollo3Interceptor
+import com.apollographql.apollo3.network.http.HttpNetworkTransport
+
+val apollo = ApolloClient.builder()
+    .networkTransport(
+        HttpNetworkTransport.Builder()
+            .serverUrl("https://apollo-fullstack-tutorial.herokuapp.com/graphql")
+            .addInterceptor(SentryApollo3HttpInterceptor())
+            .build()
+    )
+    .addInterceptor(SentryApollo3Interceptor())
+    .build()
+```
+
+<Alert level="info" title="Important">
+
+Apollo Kotlin is built with Kotlin coroutines. This means that `SentryApolloInterceptor` can be used with Java using only Global Hub Mode (single Hub used by all threads), with Kotlin using single Hub mode, or with <PlatformLink to="/enriching-events/scopes/#kotlin-coroutines">Sentry's coroutines support</PlatformLink>.
+
+</Alert>
+
+## Using With Java
+
+Configure Global Hub Mode:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+  ..
+}, true)
+```
+
+<Note>
+In Global Hub Mode, all threads use the same Hub.
+</Note>
+
+## Using With Kotlin Coroutines
+
+To make sure that a coroutine has access to the correct Sentry context, an instance of `SentryContext` must be provided when launching a coroutine.
+
+```kotlin
+import io.sentry.kotlin.SentryContext
+import com.apollographql.apollo.exception.ApolloException
+import kotlinx.coroutines.launch
+
+launch(SentryContext()) {
+  val response = try {
+    apollo.query(..).toDeferred().await()
+  } catch (e: ApolloException) {
+    // handle protocol errors
+    return@launch
+  }
+}
+```
+
+## Modify or Drop Spans
+
+Spans created around requests can be modified or dropped using `SentryApollo3HttpInterceptor.BeforeSpanCallback` passed to `SentryApollo3HttpInterceptor` or the `sentryTracing` extension function:
+
+```java
+import com.apollographql.apollo.ApolloClient;
+import io.sentry.apollo.SentryApolloInterceptor;
+
+ApolloClient apollo = SentryApolloBuilderExtensionsKt.sentryTracing(
+            new ApolloClient.Builder(),
+            (span, request, response) -> {
+              if ("LaunchDetails".equals(span.getOperation())) {
+                span.setTag("tag-name", "tag-value");
+              }
+              return span;
+            })
+        .serverUrl("https://your-api-host/")
+        .build();
+```
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo.SentryApolloInterceptor
+
+val apollo = ApolloClient.builder()
+    .serverUrl("https://apollo-fullstack-tutorial.herokuapp.com/graphql")
+    .sentryTracing { span, request, response ->
+        if ("LaunchDetails" == span.operation) {
+            span.setTag("tag-name", "tag-value")
+        }
+        span
+    }
+    .build()
+```
