@@ -32,7 +32,7 @@ Sentry.init({ dsn: "___PUBLIC_DSN___" });
 app.on("error", (err, ctx) => {
   Sentry.withScope(function(scope) {
     scope.addEventProcessor(function(event) {
-      return Sentry.Handlers.parseRequest(event, ctx.request);
+      return Sentry.addRequestDataToEvent(event, ctx.request);
     });
     Sentry.captureException(err);
   });

@@ -85,7 +85,7 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
           <h6>Additional Resources</h6>
         </div>
         <ul className="list-unstyled" data-sidebar-tree>
-          <SidebarLink to="/support/">Support</SidebarLink>
+          <SidebarLink to="https://help.sentry.io/">Support</SidebarLink>
           <SidebarLink to="/platforms/">Platforms</SidebarLink>
           <SidebarLink to="/clients/">Legacy SDKs</SidebarLink>
           <SidebarLink to="/api/">API Reference</SidebarLink>

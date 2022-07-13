@@ -72,6 +72,12 @@ Cold and warm start are Mobile Vitals, which you can learn about in the [full do
 
 ## Slow and Frozen Frames
 
+<Alert level="info" title="Important">
+
+We recommend updating to at least [7.18.1](https://github.com/getsentry/sentry-cocoa/releases/tag/7.18.1), or else the SDK might report too high a percentage of slow frames.
+
+</Alert>
+
 This feature is available for iOS, tvOS, and Mac Catalyst.
 
 Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are *slow frames* and *frozen frames*. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
@@ -200,11 +206,11 @@ SentrySDK.start { options in
 }];
 ```
 
-The SDK composes the transaction name out of the host `UIViewController` and the method that the `UIView` is calling; for example, `YourApp_LoginUIViewController.loginButton`. The transaction operation is set to `ui.action` plus the interaction type `click`. The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds).
+The SDK composes the transaction name out of the host `UIViewController` and the method that the `UIView` is calling; for example, `YourApp_LoginUIViewController.loginButton`. The SDK sets the transaction operation to `ui.action`. If the SDK detects the interaction's origin was a click, it adds `click` as a suffix to the operation. The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds).
 
 <Note>
 
-If the UI transaction has idled, but didn't have any child spans added, it will be dropped.
+If the UI transaction has idled but didn't have any child spans added, the SDK will drop it.
 
 </Note>
 

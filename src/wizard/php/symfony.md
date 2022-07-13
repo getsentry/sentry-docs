@@ -5,38 +5,133 @@ support_level: production
 type: framework
 ---
 
+## Install
+
 Install the `sentry/sentry-symfony` package:
 
 ```bash
 composer require sentry/sentry-symfony
 ```
 
-Add your DSN to `app/config/config.yml`:
+<Note>
+
+Due to a bug in all versions below `6.0` of the [`SensioFrameworkExtraBundle`](https://github.com/sensiolabs/SensioFrameworkExtraBundle) bundle, you will likely receive an error during the execution of the command above related to the missing `Nyholm\Psr7\Factory\Psr17Factory` class. To workaround the issue, if you are not using the PSR-7 bridge, please change the configuration of that bundle as follows:
 
 ```yaml
-sentry:
-  dsn: "___PUBLIC_DSN___"
+sensio_framework_extra:
+   psr_message:
+      enabled: false
 ```
 
-If you're using the Symfony Flex plugin, you'll find this file already created for you; it will suggest using an environment variable to inject the DSN value securely.
+For more details about the issue see [https://github.com/sensiolabs/SensioFrameworkExtraBundle/pull/710](https://github.com/sensiolabs/SensioFrameworkExtraBundle/pull/710).
 
-If you are _not_ using Symfony Flex plugin, you will need to enable the bundle in `app/AppKernel.php`:
+</Note>
+
+## Configure
+
+Add your DSN to `config/packages/sentry.yaml`:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    dsn: "%env(SENTRY_DSN)%"
+```
+
+And in your `.env` file:
+
+```env {filename:.env}
+###> sentry/sentry-symfony ###
+SENTRY_DSN="___PUBLIC_DSN___"
+###< sentry/sentry-symfony ###
+```
+
+If you **are not** using Symfony Flex, you'll also need to enable the bundle in `config/bundles.php`:
+
+```php {filename:config/bundles.php}
+<?php
+
+return [
+    // ...
+    Sentry\SentryBundle\SentryBundle::class => ['all' => true],
+];
+```
+
+### Monolog Integration
+
+If you are using [Monolog](https://github.com/Seldaek/monolog) to report events instead of the typical error listener approach, you need this additional configuration to log the errors correctly:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
+
+monolog:
+    handlers:
+        sentry:
+            type: sentry
+            level: !php/const Monolog\Logger::ERROR
+            hub_id: Sentry\State\HubInterface
+```
+
+If you are using a version of [MonologBundle](https://github.com/symfony/monolog-bundle) prior to `3.7`, you need to
+configure the handler as a service instead:
+
+```yaml {filename:config/packages/sentry.yaml}
+monolog:
+    handlers:
+        sentry:
+            type: service
+            id: Sentry\Monolog\Handler
+
+services:
+    Sentry\Monolog\Handler:
+        arguments:
+            $hub: '@Sentry\State\HubInterface'
+            $level: !php/const Monolog\Logger::ERROR
+```
+
+Additionally, you can register the `PsrLogMessageProcessor` to resolve PSR-3 placeholders in reported messages:
+
+```yaml {filename:config/packages/sentry.yaml}
+services:
+    Monolog\Processor\PsrLogMessageProcessor:
+        tags: { name: monolog.processor, handler: sentry }
+```
+
+## Test the implementation
+
+To test that both logger error and exception are correctly sent to sentry.io, you can create the following controller:
 
 ```php
 <?php
-class AppKernel extends Kernel
+
+namespace App\Controller;
+
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Routing\Annotation\Route;
+
+class SentryTestController
 {
-    public function registerBundles()
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(LoggerInterface $logger)
     {
-        $bundles = array(
-            // ...
-
-            new Sentry\SentryBundle\SentryBundle(),
-        );
-
-        // ...
+        $this->logger = $logger;
     }
 
-    // ...
+    /**
+     * @Route(name="sentry_test", path="/_sentry-test")
+     */
+    public function testLog()
+    {
+        // the following code will test if monolog integration logs to sentry
+        $this->logger->error('My custom logged error.');
+
+        // the following code will test if an uncaught exception logs to sentry
+        throw new \RuntimeException('Example exception.');
+    }
 }
 ```
+
+After you visit the `/_sentry-test` page, you can view and resolve the recorded error by logging into [sentry.io](https://sentry.io) and opening your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
