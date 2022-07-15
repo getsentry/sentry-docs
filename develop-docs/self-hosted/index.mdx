@@ -10,11 +10,11 @@ Our recommendation is to download the [latest release of the self-hosted reposi
 
 ### Installing Behind a Proxy
 
-In some enterprise setups there is no direct Internet connection, so you must use an HTTP proxy server. How do you install Sentry in this environment? Let us assume: 
+In some enterprise setups there is no direct Internet connection, so you must use an HTTP proxy server. How do you install Sentry in this environment? Let us assume:
 
 1. Your Sentry installation is running on Linux.
-1. `http://proxy:3128` is your proxy address.
-1. `127.0.0.0/8` is the only network that should be accessed without a proxy.
+2. `http://proxy:3128` is your proxy address.
+3. `127.0.0.0/8` is the only network that should be accessed without a proxy.
 
 Here are the steps to follow:
 
@@ -27,7 +27,11 @@ Environment="HTTPS_PROXY=http://proxy:3128"
 Environment="NO_PROXY=127.0.0.0/8"
 ```
 3. Run `systemctl daemon-reload` and restart Docker with `systemctl restart docker.service`.
-4. To add your proxy environment variables into Sentry's Docker containers, create `~/.docker/config.json` with these contents:
+
+From there you can run `./install.sh` like usual.
+
+By default Sentry sends anonymous usage statistics to the Sentry team. It helps to improve the product. Also there can be different external integrations with third party services like Slack or Twilio. To make these features work it's required to allow Docker containers to access the Internet. To add your proxy environment variables into Sentry's Docker containers, create `~/.docker/config.json` with these contents:
+
 ```json
 {
  "proxies":
@@ -36,13 +40,13 @@ Environment="NO_PROXY=127.0.0.0/8"
    {
      "httpProxy": "http://proxy:3128",
      "httpsProxy": "http://proxy:3128",
-     "noProxy": "127.0.0.0/8"
+     "noProxy": "relay,web,sentry,127.0.0.0/8"
    }
  }
 }
 ```
 
-From there you can run `./install.sh` like usual.
+You can disable this feature by adding `SENTRY_BEACON = False` into `sentry.conf.py` file.
 
 ## Configuration
 
