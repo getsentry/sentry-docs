@@ -109,6 +109,8 @@ android.bundle.enableUncompressedNativeLibs=false
 
 ## Sentry Android Gradle Plugin Build Issues
 
+### Auto-Instrumentation Issues
+
 The [Sentry Android Gradle plugin](/platforms/android/gradle/) uses bytecode manipulation to automatically measure the performance of your application. This process requires looking at the dependencies of the application, which can potentially break the build process if there are libraries which have been compiled/minified with a non-default java compiler, like R8/D8.
 
 The culprit is usually our [File I/O instrumentation](/platforms/android/configuration/integrations/file-io/), which can be disabled as follows:
@@ -155,3 +157,64 @@ sentry {
 ```
 
 Please consider reporting these issues on [GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/issues), so we can keep track of them.
+
+
+### Auto-Installation Issues
+
+The [Sentry Android Gradle plugin](/platforms/android/gradle/) offers the automated installation feature of the Sentry Android SDK and the Fragment, Timber, and OkHttp integrations. Because we modify the dependency tree, this might lead to potential issues with Gradle's configuration and build phases.
+
+#### StackOverflowError during sync or build
+
+If you are facing a `StackOverflowError` when trying to trigger a Gradle Sync in Android Studio or during the Gradle build, most likely this is [the issue](https://issuetracker.google.com/issues/232075280) on the Android Gradle Plugin's (AGP) site. The issue is only present in version `7.2.0` of AGP and can be fixed as follows:
+
+Update the Sentry Android Gradle Plugin to version `3.1.3` or above:
+
+```groovy
+plugins {
+    id 'io.sentry.android.gradle' version '{{ packages.version('sentry.java.android.gradle-plugin', '3.1.3') }}'
+}
+```
+
+Or update the Android Gradle Plugin to version `7.2.1`:
+
+```groovy
+plugins {
+  id 'com.android.application' version '7.2.1' 
+}
+```
+
+If the problem persists, most likely this is caused by some other Gradle plugin that is processing `.pom` files. In this case, the problem can be worked around by upgrading the `sentry-android` or `sentry-android-core` dependency to version `6.3.0` or above:
+
+```groovy
+dependencies {
+  implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.3.0') }}' // or sentry-android-core if you don't use the ndk package
+}
+```
+
+#### Runtime crash when using sentry-android-core in a submodule
+
+If you're declaring `sentry-android-core:6.x` dependency **not in** your main `app` module, but in one of the submodules and are using the Sentry Android Gradle Plugin version `3.1.0`, the application will crash at runtime with a `NoSuchMethodError`, because the plugin will try to install the `sentry-android-ndk` with an incompatible version `5.7.0`. To fix this problem you can update the Sentry Android Gradle Plugin to version `3.1.1` or above:
+
+```groovy
+plugins {
+    id 'io.sentry.android.gradle' version '{{ packages.version('sentry.java.android.gradle-plugin', '3.1.1') }}'
+}
+```
+
+Alternatively, you can tell the plugin to use your version of the sentry NDK:
+
+```groovy
+sentry {
+  autoInstallation {
+    sentryVersion = '6.0.0' // or whatever version you use for `sentry-android-core`
+  }
+}
+```
+
+<Note>
+
+This problem is only relevant to these specific versions - `sentry-android-core` version `6.+` and `sentry-android-gradle-plugin` version `3.1.0`.
+
+</Note>
+
+Check [this issue](https://github.com/getsentry/sentry-android-gradle-plugin/issues/329) for more details.
