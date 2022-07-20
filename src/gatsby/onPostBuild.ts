@@ -1,5 +1,7 @@
 import fs from "fs";
 import jsdom from "jsdom";
+import remark from "remark";
+import remarkHtml from "remark-html";
 
 import PlatformRegistry from "../shared/platformRegistry";
 
@@ -37,6 +39,7 @@ export default async ({ graphql }) => {
                 frontmatter {
                   name
                   doc_link
+                  wizard_setup
                   support_level
                   type
                 }
@@ -120,6 +123,7 @@ const writeJson = async (
       type: node.frontmatter.type,
       details: sub ? `${main}/${sub}.json` : `${main}.json`,
       doc_link: node.frontmatter.doc_link,
+      wizard_setup: node.frontmatter.wizard_setup ? remark().use(remarkHtml).processSync(node.frontmatter.wizard_setup).toString() : null,
       name: node.frontmatter.name,
       aliases: [],
       categories: [],
