@@ -1,0 +1,29 @@
+---
+title: Current Limitations
+sidebar_order: 20
+description: "Learn about the current limitions of server-side sampling."
+---
+
+Following are the current known limitations and functionality specifics that can create challenges when you're writing server-side sampling rules.
+
+## Trace rules can only select based on the attributes of the initial transaction
+
+When sampling traces the decision on whether to keep or throw away a trace needs to be taken when the first transaction of the trace is seen. This in turn means that for transaction traces only the attributes of the first transaction can participate in the sampling decision.
+
+In conclusion all trace rules use the attributes (release, environment, and so on) of initiating transaction of the trace.
+
+## Changing trace attributes in secondary transactions
+
+Related to the previously discussed issue about trace rules, setting the transaction, the release or the environment in a transaction will have no influence on a trace sampling decision if the transaction is not the first transaction in the trace.
+
+## Limited number of rule conditions
+
+We're actively working on adding more conditions, from which you can sample by, for example; transaction name. However, feel free to provide suggestions by joining our Discord Server.
+
+## Arbitrary logical composition for rule conditions
+
+At the moment rules containing more than one condition use a logical `and` for each condition. Multiple values for a condition use a logical or condition for matching.
+
+The decision to implement it like that was taken from the desire to keep the UI simple while still being able to cover all common scenarios.
+
+Having multiple arguments within a single condition use the or operator is what we commonly want since an attribute generally has one value and having an `and` condition would not make a lot of sense (for example, the environment attribute could be `prod` or `dev` but it could not be prod and dev at the same time).
