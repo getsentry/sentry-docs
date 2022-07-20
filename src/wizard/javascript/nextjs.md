@@ -3,6 +3,12 @@ name: Next.js
 doc_link: https://docs.sentry.io/platforms/javascript/guides/nextjs/
 support_level: production
 type: framework
+wizard_setup: >-
+  Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
+
+  ```bash
+  npx @sentry/wizard -i nextjs
+  ```
 ---
 
 Install Sentry’s Next.js SDK using either `yarn` or `npm`:
