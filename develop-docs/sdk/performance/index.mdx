@@ -16,6 +16,8 @@ Reference implementations:
 
 ## SDK Configuration
 
+This section describes the options SDKs should expose to configure tracing and performance monitoring.
+
 Tracing is enabled by setting either one of two new SDK config options, `tracesSampleRate` and `tracesSampler`. If not set, both default to `undefined`, making tracing opt-in.
 
 ### `tracesSampleRate`
@@ -31,6 +33,34 @@ This should be a callback, called when a transaction is started, which will be g
 Optionally, the `tracesSampler` callback can also return a boolean to force a sampling decision (with `false` equivalent to `0.0` and `true` equivalent to `1.0`). If returning two different datatypes isn't an option in the implementing language, this possibility can safely be omitted.
 
 See more about how sampling should be performed below.
+
+### `tracePropagationTargets`
+
+Sentry SDKs propagate trace information to downstream SDKs via headers on outgoing HTTP requests. The `tracePropagationTargets` option gives users a mechanism of controlling to which outgoing HTTP requests these headers should be attached. For example, users can specify this property to keep trace propagation within their infrastructure, thereby preventing data within the headers from being sent to third party services.
+
+This option takes an array of strings and/or regular expressions, and SDKs should only add trace headers to an outgoing request if the request's URL matches (or, in the case of string literals, contains) at least one of the items from the array.
+
+SDKs may choose a default value which makes sense for their use case. Most SDKs default to the regex `/.*/` (meaning they attach headers to all outgoing requests), but deviation is allowed if necessary. For example, because of CORS, browser-based SDKs default to only adding headers to domain-internal requests.
+
+See [`sentry-trace`](#header-sentry-trace) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage) for more details on the individual headers which are attached to outgoing requests.
+
+#### Example
+
+The following example shows which URLs of outgoing requests would (not) match a given `tracePropagationTargets` array:
+
+```JS
+// Entries can be strings or regex
+tracePropagationTargets: ['localhost', /^\// ,/myApi.com\/v[2-4]/]
+
+URLs matching: 'localhost:8443/api/users', '/api/envelopes', 'myApi.com/v2/projects'
+URLs not matching: 'someHost.com/data', 'myApi.com/v1/projects'
+```
+
+<Alert level="info" title="Deprecation of tracingOrigins">
+
+This Option replaces the non-standardized `tracingOrigins` option which was previously used in some SDKs. SDKs that support `tracingOrigins` are encouraged to deprecate and and eventually remove `tracingOrigins` in favour `tracePropagationTargets`. In case both options are specified by users, SDKs should only rely on the `tracePropagationTargets` array.
+
+</Alert>
 
 ### `maxSpans`
 
@@ -159,6 +189,8 @@ The header is used for trace propagation. SDKs use the header to continue traces
 To offer a minimal compatibility with the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/#traceparent-header) (without the version prefix) and [Zipkin's `b3` headers](https://zipkin.io/pages/instrumenting#communicating-trace-information) (which consider both 64 and 128 bits for `traceId` valid), the `sentry-trace` header should have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars.
 To avoid confusion with the W3C `traceparent` header (to which our header is similar but not identical), we call it simply `sentry-trace`.
 No version is being defined in the header.
+
+The `sentry-trace` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#tracepropagationtargets) SDK option.
 
 ### The `sampled` Value
 
