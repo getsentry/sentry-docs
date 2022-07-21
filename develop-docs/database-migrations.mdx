@@ -62,6 +62,40 @@ Always commit the changes to `migrations_lockfile.txt` with your migration.
 
 There are some things we need to be careful about when running migrations.
 
+### Testing
+
+Database migrations are risky operations that can lead to irreversible data loss or corruption. This is especially true for [data migrations](https://docs.djangoproject.com/en/4.0/topics/migrations/#data-migrations).
+For this reason, every migration should have a corresponding integration test.
+
+To test your migration, derive a test case from `TestMigrations` and add it to `tests/sentry/migrations`.
+For example:
+
+```python
+class MyMigrationTest(TestMigrations):
+    migrate_from = "0123_previous_migration"
+    migrate_to = "0124_my_new_migration"
+
+    def setup_before_migration(self, apps):
+        # Create your db state here
+        Project = apps.get_model("sentry", "Project")
+        self.project = Project.objects.create(organization_id=self.organization.id, name="my_project")
+
+    def test(self):
+        # Test state after migration
+        self.project.refresh_from_db()
+        assert self.project.name == "MyProject"
+
+```
+
+To run the test locally, set environment variable `MIGRATIONS_TEST_MIGRATE=1`.
+
+#### Notes
+
+- There is a [known issue](https://github.com/getsentry/sentry/blob/e4627f093de4718e054ba9c6b002ff0b9a5b6033/tests/sentry/migrations/test_0295_backfill_alertrule_type.py#L1-L3) with the `django-pg-zero-downtime-migrations` package which causes the roll back of a `NOT NULL` constraint to fail.
+  If this happens with an old migration test, it's ok to delete the test rather than trying to fix the issue.
+- If you want to use existing [`create_*`](https://github.com/getsentry/sentry/blob/5f81ff47685db524133e75db181eb36e93f04327/src/sentry/testutils/factories.py#L241) helper functions to create model instances, override [`setup_initial_state`](https://github.com/getsentry/sentry/blob/57367022f65ada2323fb40147b38e795f869f148/src/sentry/testutils/cases.py#L1596-L1602)
+  rather than `setup_before_migration`. This function will run _before_ the database is rolled back to `migration_from`.
+
 ### Filters
 
 If a (data) migration involves large tables, or columns that aren't indexed it is better to iterate over the entire table instead of using a filter.
