@@ -4,13 +4,13 @@ sidebar_order: 1
 description: "Learn about how you can control which transactions Sentry retains."
 ---
 
-Server-side sampling lets you control what transactions Sentry retains by setting sampling rules and rates so you see more of the transactions you want to explore further, and less of the ones you don’t, without reconfiguring the SDK or redeploying your application.
+Server-side sampling lets you control which transactions Sentry retains by setting sampling rules and rates, so you see more of the transactions you want to explore further, and less of the ones you don’t. In contrast to [client-side sampling](/platform-redirect/?next=/configuration/sampling/), server-side sampling allows you to manage your sampling configuration centrally and lets you make changes without the need to reconfigure the SDK and redeploy your application.
 
 ![The Server-side Sampling page with a list of rules](server-side-sampling.png)
 
 Because every project is different, you can set multiple sample rules with different sample rates per project. For example, you may need more events from high converting pages, critical API endpoints, or need to focus on latency issues from your latest release.
 
-Server-side sampling also makes your SDK and server-side sampling largely independent of each other. This helps if you're building native applications with many releases active at a given time, or you've already configured server-side sampling to target specific transactions, but the SDK blocks more of those transactions being sent to our servers.
+Server-side sampling also makes your SDK and your sampling configuration largely independent of each other. This helps if you're building native applications with many releases active at a given time. 
 
 ## How Sentry Samples
 
@@ -18,7 +18,7 @@ Let's imagine for a moment that the total number of transactions the SDK observe
 
 ![Visualization of how Sentry samples from total transaction volume down to post server sampling volume](how-sentry-samples.png)
 
-In this analogy, the bucket of rocks is sifted through two sieves. Both sieves can hold the total number of rocks, but the first sieve allows more rocks to pass through because it's coarser than the second. The first sieve symbolizes the process of sampling with the SDK, which, in our example, samples half of the total number of transactions the SDK observes. Symbolizing the last sieve, server-side sampling receives the half of the total transactions and then filters for a quarter of the total transactions observed.
+In this analogy, the bucket of rocks is sifted through two sieves. Both sieves can hold the total number of rocks, but the first sieve allows more rocks to pass through because it's coarser than the second. The first sieve symbolizes the process of client-side sampling by the SDK, which, in our example, samples half of the total number of transactions the SDK observes. Symbolizing the last sieve, server-side sampling receives the half of the total transactions and then filters for a quarter of the total transactions observed.
 
 <!-- prettier-ignore-start -->
 
@@ -67,12 +67,12 @@ The Server-side Sampling page in sentry.io allows you to change the order of you
 The rule with the most specific conditional clause will always be evaluated because it's first in order.
 
 ```
-if (release = 3.0)  && (environment = production) {
+if (release = 3.0) && (environment = production) {
     transactionSample = 1.0
 } else if (environment = production) {
     transactionSample = 0.5
 } else {
-  transactionSample = 0.25
+    transactionSample = 0.25
 }
 ```
 
@@ -81,12 +81,12 @@ if (release = 3.0)  && (environment = production) {
 This configuration also works just fine because each rule will be evaluated based on entirely different conditions.
 
 ```
-if (release = 3.0)  {
+if (release = 3.0) {
     transactionSample = 1.0
 } else if (environment = production) {
     transactionSample = 0.5
 } else {
-  transactionSample = 0.25
+    transactionSample = 0.25
 }
 ```
 
@@ -97,10 +97,10 @@ The rule with the most specific conditional clause will never be evaluated becau
 ```
 if (environment = production) {
     transactionSample = 1.0
-} else if (release = 3.0)  && (environment = production) {
+} else if (release = 3.0) && (environment = production) {
     transactionSample = 0.5 // Will never be evaluated
 } else {
-  transactionSample = 0.25
+    transactionSample = 0.25
 }
 ```
 
