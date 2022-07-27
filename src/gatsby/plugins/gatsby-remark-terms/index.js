@@ -28,10 +28,10 @@ function replace(node) {
   if (node.type == "root") return;
 
   // If this is an empty node there's nothing to consider.
-  if (!node.children) return 'skip';
+  if (!node.children) return "skip";
 
   // Do not replace abbreviations in headings because that appears to break the heading anchors.
-  if (node.type == "heading") return 'skip';
+  if (node.type == "heading") return "skip";
 
   // Do not replace abbreviations in links because that's two interactive
   // nested elements nested in each other, and we decided we don't want to
@@ -39,7 +39,7 @@ function replace(node) {
   //
   // This currently doesn't handle nesting of e.g.
   // <a><strong><abbr>... but we don't have that in docs.
-  if (node.type == "link") return 'skip';
+  if (node.type == "link") return "skip";
 
   let insideCustomLink = false;
 
@@ -122,7 +122,7 @@ function replace(node) {
 
   node.children = newChildren;
 
-  return 'skip';
+  return "skip";
 }
 
 module.exports = async ({ markdownAST }) => {
