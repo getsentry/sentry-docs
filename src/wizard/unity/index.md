@@ -14,9 +14,6 @@ Install the package via the [Unity Package Manager using a Git URL](https://docs
 ```
 https://github.com/getsentry/unity.git#{{ packages.version('sentry.dotnet.unity', '0.1.0') }}
 ```
-Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
-
-If you're running into any kind of issue please check out our [troubleshooting page](/platforms/unity/troubleshooting/) or [raise an issue](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=Platform%3A+Unity%2CType%3A+Bug&template=bug.md).
 
 ## Configuration
 
@@ -37,3 +34,9 @@ using Sentry; // On the top of the script
 
 SentrySdk.CaptureMessage("Test event");
 ```
+
+## Troubleshooting
+
+Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
+
+If you're running into any kind of issue please check out our [troubleshooting page](/platforms/unity/troubleshooting/) or [raise an issue](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=Platform%3A+Unity%2CType%3A+Bug&template=bug.md).
