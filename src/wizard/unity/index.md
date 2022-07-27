@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-> The Unity SDK now support line numbers for IL2CPP. The feature is currently in beta but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](/platforms/unity/configuration/il2cpp/).
+> The Unity SDK now supports line numbers for IL2CPP. The feature is currently in beta, but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](/platforms/unity/configuration/il2cpp/).
 
 ## Installation
 
