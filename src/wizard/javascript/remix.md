@@ -17,7 +17,7 @@ npm install --save @sentry/remix
 
 Next, import and initialize initialize Sentry in your Remix entry points for both the client and server.
 
-```typescript {filename: entry.client.tsx}
+```javascript
 import { useLocation, useMatches } from "@remix-run/react";
 import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
@@ -39,7 +39,7 @@ Sentry.init({
 
 Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as Prisma, to get spans for your database calls.
 
-```typescript {filename: entry.server.tsx}
+```javascript
 import { prisma } from "~/db.server";
 
 import * as Sentry from "@sentry/remix";
@@ -53,7 +53,7 @@ Sentry.init({
 
 Finally, wrap your Remix root with `withSentry` to catch React component errors and to get parameterized router transactions.
 
-```typescript {filename: root.tsx}
+```javascript
 import {
   Links,
   LiveReload,
