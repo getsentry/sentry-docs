@@ -5,6 +5,8 @@ support_level: production
 type: framework
 ---
 
+> The Unity SDK now supports line numbers for IL2CPP. The feature is currently in beta, but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](https://docs.sentry.io/platforms/unity/configuration/il2cpp/).
+
 ## Installation
 
 Install the package via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
@@ -12,9 +14,6 @@ Install the package via the [Unity Package Manager using a Git URL](https://docs
 ```
 https://github.com/getsentry/unity.git#{{ packages.version('sentry.dotnet.unity', '0.1.0') }}
 ```
-Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
-
-Some Unity versions, such as `2019.4.24f1` and `2020.3.2f1`, have a bug on UPM and fail to install with the error `'HEAD': cannot update ref 'refs/heads/master'`. Unity has resolved this issue on newer releases. Learn more by checking the [Unity Issue Tracker](https://issuetracker.unity3d.com/issues/package-resolution-error-when-using-a-git-dependency-referencing-an-annotated-tag-in-its-git-url).
 
 ## Configuration
 
@@ -35,3 +34,9 @@ using Sentry; // On the top of the script
 
 SentrySdk.CaptureMessage("Test event");
 ```
+
+## Troubleshooting
+
+Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
+
+If you're running into any kind of issue please check out our [troubleshooting page](https://docs.sentry.io/platforms/unity/troubleshooting/) or [raise an issue](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=Platform%3A+Unity%2CType%3A+Bug&template=bug.md).
