@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-> The Unity SDK now supports line numbers for IL2CPP. The feature is currently in beta, but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](/platforms/unity/configuration/il2cpp/).
+> The Unity SDK now supports line numbers for IL2CPP. The feature is currently in beta, but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](https://docs.sentry.io/platforms/unity/configuration/il2cpp/).
 
 ## Installation
 
@@ -39,4 +39,4 @@ SentrySdk.CaptureMessage("Test event");
 
 Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package Manager will fail to find the package if a trailing whitespace is appended.
 
-If you're running into any kind of issue please check out our [troubleshooting page](/platforms/unity/troubleshooting/) or [raise an issue](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=Platform%3A+Unity%2CType%3A+Bug&template=bug.md).
+If you're running into any kind of issue please check out our [troubleshooting page](https://docs.sentry.io/platforms/unity/troubleshooting/) or [raise an issue](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=Platform%3A+Unity%2CType%3A+Bug&template=bug.md).
