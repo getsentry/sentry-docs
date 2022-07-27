@@ -37,6 +37,11 @@ export default async ({ graphql }) => {
                 frontmatter {
                   name
                   doc_link
+                  wizard_setup {
+                    childMarkdownRemark {
+                      html
+                    }
+                  }
                   support_level
                   type
                 }
@@ -110,9 +115,8 @@ const writeJson = async (
 
     if (!indexJson[main]) indexJson[main] = {};
     if (!node.frontmatter.doc_link) {
-      throw new Error(
-        `Invalid wizard frontmatter found in ${node.fields.slug}`
-      );
+      // Skip invalid files
+      return
     }
     const key = sub ? `${main}.${sub}` : `${main}`;
     const data = {
@@ -120,6 +124,7 @@ const writeJson = async (
       type: node.frontmatter.type,
       details: sub ? `${main}/${sub}.json` : `${main}.json`,
       doc_link: node.frontmatter.doc_link,
+      wizard_setup: node.frontmatter.wizard_setup?.childMarkdownRemark?.html,
       name: node.frontmatter.name,
       aliases: [],
       categories: [],
