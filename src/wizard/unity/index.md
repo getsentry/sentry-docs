@@ -5,8 +5,6 @@ support_level: production
 type: framework
 ---
 
-> The Unity SDK now supports line numbers for IL2CPP. The feature is currently in beta, but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](https://docs.sentry.io/platforms/unity/configuration/il2cpp/).
-
 ## Installation
 
 Install the package via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
@@ -16,6 +14,8 @@ https://github.com/getsentry/unity.git#{{ packages.version('sentry.dotnet.unity'
 ```
 
 ## Configuration
+
+> The Unity SDK now supports line numbers for IL2CPP. The feature is currently in beta, but you can enable it at `Tools -> Sentry -> Advanced -> IL2CPP line numbers`. To learn more check out our [docs](https://docs.sentry.io/platforms/unity/configuration/il2cpp/).
 
 Access the Sentry configuration window by going to Unity's top menu: `Tools` > `Sentry` and enter the following DSN:
 
