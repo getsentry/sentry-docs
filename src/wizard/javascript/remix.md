@@ -15,7 +15,7 @@ yarn add @sentry/remix
 npm install --save @sentry/remix
 ```
 
-Next, import and initialize initialize Sentry in your Remix entry points for both the client and server.
+Next, import and initialize initialize Sentry in your Remix entry points for both the client and server:
 
 ```javascript
 import { useLocation, useMatches } from "@remix-run/react";
@@ -37,7 +37,7 @@ Sentry.init({
 });
 ```
 
-Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as Prisma, to get spans for your database calls.
+Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as Prisma, to get spans for your database calls:
 
 ```javascript
 import { prisma } from "~/db.server";
@@ -51,7 +51,7 @@ Sentry.init({
 });
 ```
 
-Finally, wrap your Remix root with `withSentry` to catch React component errors and to get parameterized router transactions.
+Lastly, wrap your Remix root with `withSentry` to catch React component errors and to get parameterized router transactions:
 
 ```javascript
 import {
@@ -85,4 +85,4 @@ function App() {
 export default withSentry(App);
 ```
 
-Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/). There you'll find additional instructions for configuring the Remix SDK.
+Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/). There, you'll find additional instructions for configuring the Remix SDK.
