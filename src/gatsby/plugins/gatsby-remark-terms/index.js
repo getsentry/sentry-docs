@@ -126,12 +126,8 @@ function replace(state, node) {
 
 module.exports = async ({ markdownAST }) => {
   const state = {
-    alreadyExplained: {}
+    alreadyExplained: {},
   };
   const replaceWithState = replace.bind(null, state);
-  visit(
-    markdownAST,
-    () => true,
-    replaceWithState,
-  );
+  visit(markdownAST, () => true, replaceWithState);
 };
