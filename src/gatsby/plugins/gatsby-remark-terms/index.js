@@ -24,14 +24,17 @@ const REGEX = new RegExp(`(\\b|\\W)(${PATTERN})(\\b|\\W)`);
 const CUSTOM_LINK_START = new RegExp("^<([a-zA-Z]+Link|a) ");
 const CUSTOM_LINK_END = new RegExp("^</([a-zA-Z]+Link|a)>");
 
-function replace(node) {
+function replace(state, node) {
   if (node.type == "root") return;
 
   // If this is an empty node there's nothing to consider.
   if (!node.children) return "skip";
 
   // Do not replace abbreviations in headings because that appears to break the heading anchors.
-  if (node.type == "heading") return "skip";
+  if (node.type == "heading") {
+    state.alreadyExplained = {};
+    return "skip";
+  }
 
   // Do not replace abbreviations in links because that's two interactive
   // nested elements nested in each other, and we decided we don't want to
@@ -42,8 +45,6 @@ function replace(node) {
   if (node.type == "link") return "skip";
 
   let insideCustomLink = false;
-
-  const alreadyExplained = {};
 
   const newChildren = [];
 
@@ -103,8 +104,8 @@ function replace(node) {
     for (let i = 0; i < newTexts.length; i++) {
       const content = newTexts[i];
       let newNode;
-      if (TERMS[content] && !alreadyExplained[content]) {
-        alreadyExplained[content] = true;
+      if (TERMS[content] && !state.alreadyExplained[content]) {
+        state.alreadyExplained[content] = true;
         newNode = {
           type: "html",
           value: `<div class="term-wrapper"><span class="term">${content}</span><span class="description" role="tooltip" aria-label="${content} definition">${TERMS[content]}</span></div>`,
@@ -121,10 +122,16 @@ function replace(node) {
   }
 
   node.children = newChildren;
-
-  return "skip";
 }
 
 module.exports = async ({ markdownAST }) => {
-  visit(markdownAST, () => true, replace);
+  const state = {
+    alreadyExplained: {}
+  };
+  const replaceWithState = replace.bind(null, state);
+  visit(
+    markdownAST,
+    () => true,
+    replaceWithState,
+  );
 };
