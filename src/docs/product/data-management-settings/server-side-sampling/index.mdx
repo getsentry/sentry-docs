@@ -10,7 +10,7 @@ This feature is in beta and is only available if your organization is participat
 
 </Note>
 
-Capturing a single trace involves minimal overhead, but capturing traces for every page load or every API request may add an undesirable load to your system. Sampling your events allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs. 
+Capturing a single trace involves minimal overhead, but capturing traces for every page load or every API request may add an undesirable load to your system. Sampling your events allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs.
 
 _Server-side sampling_ lets you control which transactions Sentry retains by setting sampling rules and rates, so you see more of the transactions you want to explore further, and less of the ones you don’t. In contrast to [client-side sampling](/platform-redirect/?next=/configuration/sampling/), server-side sampling allows you to manage your sampling configuration centrally and lets you make changes without the need to reconfigure the SDK and redeploy your application.
 
@@ -20,99 +20,33 @@ _Server-side sampling_ lets you control which transactions Sentry retains by set
 
 Because every project is different, you can set multiple sample rules with different sample rates per project. For example, you may need more events from high converting pages, critical API endpoints, or need to focus on latency issues from your latest release.
 
-Server-side sampling also makes your SDK and your sampling configuration largely independent of each other. This helps if you're building native applications with many releases active at a given time. 
+Server-side sampling also makes your SDK and your sampling configuration largely independent of each other. This helps if you're building native applications with many releases active at a given time.
 
 ## How Sentry Samples
 
-Let's imagine for a moment that the total number of transactions the SDK observes is a bucket of rocks. The way Sentry samples transactions is similar to a person sifting rocks: by pouring the bucket of rocks into a sieve, you're allowing rocks small enough to pass through it:
+Before understanding how Sentry samples, there are some concepts you need to know:
 
-![Visualization of how Sentry samples from total transaction volume down to post server sampling volume](how-sentry-samples.png)
+- Total transaction volume: Total number of transactions the Sentry SDK has observed before any sampling has begun.
+- Client-side(SDK) sampling: The process of selecting which transactions are discarded or sent to Sentry for processing.
+- Server-Side sampling: The process of selecting which transactions are indexed after being processed.
 
-In this analogy, the bucket of rocks is sifted through two sieves. Both sieves can hold the total number of rocks, but the first sieve allows more rocks to pass through because it's coarser than the second. The first sieve symbolizes the process of client-side sampling by the SDK, which, in our example, samples half of the total number of transactions the SDK observes. Symbolizing the last sieve, server-side sampling receives the half of the total transactions and then filters for a quarter of the total transactions observed.
+Whether you’re sampling client-side or server-side, it’s always relative to the total transaction volume. Using the first illustration below as an example, we start the process of client-side sampling with a total transaction volume of 4. The client-Side sample rate is set at 50% which leaves only 2 transactions being sent to Sentry for processing. Server-side sampling then takes these 2 processed transactions and indexes only 1 of them because it's sampling at 25% (or a quarter) of the total transaction volume.
 
-<!-- prettier-ignore-start -->
+![Visualization of how Sentry samples with an effective sampling configuration](server-side-sampling-a.png)
 
-| Sampling Process | Rate | Count |
-|------------------|------|-------|
-|Total transactions observed | N/A | 1000 |
-| Sentry SDK sampled | 50% | 500 |
-| Sentry servers sampled | 25% | 250 |
+In the next illustration, we show what would happen if the client-side sample rate was lower than the server-side rate. We again start the process of client-side sampling with a total transaction volume of 4. The client-side sample rate is lower this time, set at 25%, leaving only 1 transaction being sent to Sentry for processing. At this stage, you might be asking, “how can server-side sample 50% of the total transaction volume when the client has already discarded 75%?”. It can’t. So even though the server-side sample rate is set to 50% of the total volume, it will only index the 1 transaction it received from the client.
 
-<!-- prettier-ignore-end -->
+Ultimately, your server-side sample rate must always be equal or lower than your client-side sample rate.
 
-Now in reality, transactions don't vary in size like a rock, but the sieve analogy illustrates how many accepted transactions are in the end calculated.
-
-Below, you can see how an incorrect configuration of your SDK and server-side sampling rates would affect the transactions received. The sieves are reversed, and the SDK allows for a quarter of the total number of transactions to pass through. In this analogy, the coarser sieve now assigned for server-side sampling, wouldn't filter any more transactions because it's coarser than its counterpart. To summarize, the sampling rate configured for your SDK needs to be equal or greater than the rate set on Sentry servers.
-
-<!-- prettier-ignore-start -->
-
-| Sampling Process | Rate | Count |
-|------------------|------|-------|
-|Total transactions observed | N/A | 1000 |
-| Sentry SDK sampled | 25% | 250 |
-| Sentry servers sampled | 50% | 250 |
-
-<!-- prettier-ignore-end -->
+![Visualization of how Sentry samples with an ineffective sampling configuration](server-side-sampling-b.png)
 
 ## Traces & Propagation of Sampling Decisions
 
-TBA
+For Dynamic Sampling, we want to make sampling decisions for entire traces. Sampling transactions using transaction traces is advantageous when trying to understand transactions in the context of the global system. In this case we are not interested in seeing a particular transaction, but the whole group of transactions in a trace, so sampling should occur at the trace level.
 
-## Server-Side Sampling Configurations
+When sampling traces, the sampling rules are based on the trace context, this means that the sampling decisions are based on the information extracted from the system that initiated the transaction.
 
-Now that you know how Sentry is sampling at a high-level, you can set server-side sampling rules in **[Project] > Settings > Server-side Sampling**.
-
-### Order of Precedence
-
-Rules evaluate from top to bottom, with the first matching rule determining the sample rate. Like with declaring a conditional statement in code, rules with the most specific conditional clauses should be evaluated first (`If`), followed by more generic ones (`Else If`). If generic rules lead the list, the more specific rules will likely never be evaluated. Setting a uniform sampling rate is equivalent to an `Else` clause which will always trail rules with conditional clauses.
-
-The Server-side Sampling page in sentry.io allows you to change the order of your rules so you can set it effectively.
-
-The following examples are illustrated as code samples, but you'll configure these rules using the **Server-side Sampling** page interface.
-
-### Good Examples
-
-**Most specific rule leads the list**
-
-The rule with the most specific conditional clause will always be evaluated because it's first in order.
-
-```
-if (release = 3.0) && (environment = production) {
-    transactionSample = 1.0
-} else if (environment = production) {
-    transactionSample = 0.5
-} else {
-    transactionSample = 0.25
-}
-```
-
-**Each rule is evaluated independently**
-
-This configuration also works just fine because each rule will be evaluated based on entirely different conditions.
-
-```
-if (release = 3.0) {
-    transactionSample = 1.0
-} else if (environment = production) {
-    transactionSample = 0.5
-} else {
-    transactionSample = 0.25
-}
-```
-
-### Poor Example
-
-The rule with the most specific conditional clause will never be evaluated because a rule with a similar, but more generic clause precedes it.
-
-```
-if (environment = production) {
-    transactionSample = 1.0
-} else if (release = 3.0) && (environment = production) {
-    transactionSample = 0.5 // Will never be evaluated
-} else {
-    transactionSample = 0.25
-}
-```
+As a mental model: The head transaction in a trace determines the trace context for all following transactions in that trace. No information can be changed, added or deleted after the first propagation. The trace context is bound to only one particular trace, and all the transactions that are part of this trace.
 
 ## Next Steps
 
