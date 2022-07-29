@@ -9,14 +9,12 @@ Install the **NuGet** package:
 
 .NET Core CLI:
 
-```shell
-dotnet add package Sentry.Maui -v 3.19.0-preview.2
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Maui --prerelease
 ```
 
-Or, with the Visual Studio Package Manager:
-
-```powershell
-Install-Package Sentry.Maui -Version 3.19.0-preview.2
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Maui -AllowPrereleaseVersions
 ```
 
 Then add Sentry to `MauiProgram.cs` through the `MauiAppBuilder`:
