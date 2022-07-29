@@ -7,8 +7,6 @@ type: framework
 
 Install the **NuGet** package:
 
-.NET Core CLI:
-
 ```shell {tabTitle:.NET Core CLI}
 dotnet add package Sentry.Maui --prerelease
 ```
