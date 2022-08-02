@@ -14,6 +14,7 @@ export default ({ actions, schema }) => {
       sidebar_title: String
       draft: Boolean
       redirect_from: [String!]
+      description: String
 
       platform: PlatformContext
       guide: GuideContext
