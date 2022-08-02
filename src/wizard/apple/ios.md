@@ -94,7 +94,7 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 
 Check out [the documentation](https://docs.sentry.io/platforms/apple/performance/instrumentation/) to learn more about the API and automatic instrumentations.
 
-> Want to play with some new features? Try out our experimental auto instrumentation for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), and [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+> Want to play with some new features? Try out our experimental features for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation), [Screenshots](https://docs.sentry.io/platforms/apple/guides/ios/enriching-events/screenshots/). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
 >
 > Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
 
@@ -108,5 +108,7 @@ SentrySDK.start { options in
     options.enableFileIOTracking = true
     options.enableCoreDataTracking = true
     options.enableUserInteractionTracing = true
+    options.enableAppHangTracking = true
+    options.attachScreenshot = true
 }
 ```

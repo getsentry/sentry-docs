@@ -5,6 +5,12 @@ support_level: production
 type: framework
 ---
 
+> Using Jetpack Compose? Try out our new [Jetpack Compose Navigation](https://docs.sentry.io/platforms/android/configuration/integrations/jetpack-compose/) integration.
+>  
+> This feature is available starting from version `6.2.1` of the [Sentry Android SDK](https://docs.sentry.io/platforms/android/). It automatically adds a breadcrumb and starts a transaction for each navigation event of the `androidx.navigation.NavController`.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-java/issues/new?assignees=&labels=Platform%3A+Android%2CType%3A+Bug&template=bug_report_android.yml).
+
 ## Integrating the SDK
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
