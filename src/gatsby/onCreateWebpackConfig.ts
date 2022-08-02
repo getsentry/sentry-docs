@@ -25,9 +25,9 @@ export default ({ actions, reporter }) => {
       alias: {
         "~src": path.join(path.resolve(__dirname, "..")),
       },
-    },
-    fallback: {
-      stream: require.resolve("stream-browserify"),
+      fallback: {
+        stream: require.resolve("stream-browserify"),
+      },
     },
     plugins: getPlugins(reporter),
   });
