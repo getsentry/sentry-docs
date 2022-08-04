@@ -224,6 +224,7 @@ export default {
   siteMetadata: {
     title: "Sentry Documentation",
     homeUrl: "https://docs.sentry.io",
+    siteUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
     description: "Product documentation for Sentry.io and its SDKs",
     author: "@getsentry",
