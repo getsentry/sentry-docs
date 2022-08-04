@@ -92,6 +92,7 @@ const getPlugins = () => {
     "gatsby-plugin-sharp",
     "gatsby-plugin-sass",
     "gatsby-plugin-zeit-now",
+    "gatsby-plugin-sitemap",
     {
       resolve: "gatsby-plugin-google-gtag",
       options: {
