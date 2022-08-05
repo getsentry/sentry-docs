@@ -29,17 +29,16 @@ For other dependency managers, see the [central Maven repository](https://search
 Add `Interceptors` to `ApolloClient.Builder` using `ApolloBuilderExtensions`:
 
 ```java
-import com.apollographql.apollo.ApolloClient;
-import io.sentry.apollo3.ApolloBuilderExtensionsKt;
+import com.apollographql.apollo3.ApolloClient;
+import io.sentry.apollo3.SentryApolloBuilderExtensionsKt;
 
-ApolloClient apollo = ApolloBuilderExtensionsKt.sentryTracing(new ApolloClient.Builder())
+ApolloClient apollo = SentryApolloBuilderExtensionsKt.sentryTracing(new ApolloClient.Builder())
     .serverUrl("https://your-api-host/")
-    .sentryTracing()
     .build();
 ```
 
 ```kotlin
-import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo3.ApolloClient
 import io.sentry.apollo3.sentryTracing
 
 val apollo = ApolloClient.builder()
@@ -52,8 +51,10 @@ val apollo = ApolloClient.builder()
 When using a custom `NetworkTransport`, the `SentryInterceptors` need to be added manually, because `HttpInterceptors` need to be added to the `NetworkTransport`:
 
 ```java
-import com.apollographql.apollo.ApolloClient;
-import io.sentry.apollo3.ApolloBuilderExtensionsKt;
+import com.apollographql.apollo3.ApolloClient;
+import com.apollographql.apollo3.network.http.HttpNetworkTransport;
+import io.sentry.apollo3.SentryApollo3HttpInterceptor;
+import io.sentry.apollo3.SentryApollo3Interceptor;
 
 ApolloClient apollo = new ApolloClient.Builder()
         .networkTransport(
@@ -66,7 +67,7 @@ ApolloClient apollo = new ApolloClient.Builder()
 ```
 
 ```kotlin
-import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo3.ApolloClient
 import io.sentry.apollo3.SentryApollo3HttpInterceptor
 import io.sentry.apollo3.SentryApollo3Interceptor
 import com.apollographql.apollo3.network.http.HttpNetworkTransport
@@ -87,8 +88,8 @@ val apollo = ApolloClient.builder()
 Spans created around requests can be modified or dropped using `SentryApollo3HttpInterceptor.BeforeSpanCallback` passed to `SentryApollo3HttpInterceptor` or the `sentryTracing` extension function:
 
 ```java
-import com.apollographql.apollo.ApolloClient;
-import io.sentry.apollo.SentryApolloInterceptor;
+import com.apollographql.apollo3.ApolloClient;
+import io.sentry.apollo3.SentryApolloBuilderExtensionsKt;
 
 ApolloClient apollo = SentryApolloBuilderExtensionsKt.sentryTracing(
             new ApolloClient.Builder(),
@@ -103,8 +104,8 @@ ApolloClient apollo = SentryApolloBuilderExtensionsKt.sentryTracing(
 ```
 
 ```kotlin
-import com.apollographql.apollo.ApolloClient
-import io.sentry.apollo.SentryApolloInterceptor
+import com.apollographql.apollo3.ApolloClient
+import io.sentry.apollo3.sentryTracing
 
 val apollo = ApolloClient.builder()
     .serverUrl("https://apollo-fullstack-tutorial.herokuapp.com/graphql")
