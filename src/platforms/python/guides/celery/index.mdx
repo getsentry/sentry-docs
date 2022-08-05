@@ -33,7 +33,30 @@ The integration will automatically report errors from all celery jobs.
 
 Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
-There are many valid ways to do this like, for example, using a signal like [`worker_process_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html#worker-process-init), or by initializing the SDK in the configuration file loaded with Celery's `--config` parameter.
+## Standalone Setup
+
+If you're using Celery standalone, there are two ways to set this up:
+
+* Initializing the SDK in the configuration file loaded with Celery's `--config` parameter
+* Initializing the SDK by hooking it to either the [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#celeryd-init) or [`worker_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#worker-init) signals
+
+    ```python
+    import sentry_sdk
+    from celery import Celery, signals
+
+    app = Celery("myapp")
+
+    #@signals.worker_init.connect
+    @signals.celeryd_init.connect
+    def init_sentry(**_kwargs):
+        sentry_sdk.init(dsn="...")
+    ```
+
+## Setup With Django
+
+If you're using Celery with Django in a conventional setup, have already initialized the SDK in [your `settings.py` file](/platforms/python/guides/django/#configure), and have Celery using the same settings with [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), you don't need to initialize the SDK separately for Celery.
+
+## Verify
 
 To verify if your SDK is initialized on worker start, you can pass `debug=True` to see extra output when the SDK is initialized. If the output appears during worker startup and not only after a task has started, then it's working properly.
 
