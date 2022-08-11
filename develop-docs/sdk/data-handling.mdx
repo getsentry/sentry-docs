@@ -1,23 +1,55 @@
 ---
 title: "Data Handling"
-sidebar_order: 5
+sidebar_order: 3
 ---
 
 Data handling is the standardized context in how we want SDKs help users filter data.
 
 ## Sensitive Data
 
-In older SDKs you might sometimes see elaborate constructs to allow the user to strip away sensitive data. Newer SDKs no longer have this feature as it turned out to be too hard to maintain per-SDK. Instead, only two simple config options are left:
+SDKs should not include PII or other sensitive data in the payload by default.
+When building an SDK we can come across to some API that can give useful information to debug a problem.
+In the event that API returns data considered PII, we guard that behind a flag called _Send Default PII_.
+This is an option in the SDK called [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii)
+and is **disabled by default**. That means that data that is naturally sensitive is not sent by default.
 
-- [_send-default-pii_](https://docs.sentry.io/error-reporting/configuration/#send-default-pii) is **disabled by default**, meaning that data that is naturally sensitive is not sent by default. That means, for example:
+Some examples of data guarded by this flag:
 
-  - When attaching HTTP requests to events, "raw" bodies (bodies which cannot be parsed as JSON or formdata) are removed, and known sensitive headers such as `Authorization` or `Cookies` are removed too.
+  - When attaching HTTP requests to events
+    - Request Body: "raw" bodies (bodies which cannot be parsed as JSON or formdata) are removed
+    - HTTP Headers: known sensitive headers such as `Authorization` or `Cookies` are removed too.
+    - *Note* that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
+  - User-specific information (e.g. the current user ID according to the used web-framework) is not sent at all.
+  - On desktop applications
+    - The username logged in the device is not included. This is often a person's name.
+    - The machine name is not included, for example `Bruno's laptop`
+  - SDKs don't set `{{auto}}` as `user.ip`. This instructs the server to keep the connection's IP address.*
 
-  - User-specific information (e.g. the current user ID according to the used webframework) is not sent at all.
+* Specifically about IP address, it's important to note that it's standard to log IP address of incoming connecting in services on the Internet.
+This not only allows security tools and operations to understand abuse coming from a single IP, like spam bots and other issues.
+But also developers to understand if issues in their application are being triggered by a single malicious source.
 
-  - Note that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
+Sentry server is always aware of the connecting IP address and can use it for logging in some platforms. Namely JavaScript and iOS/macOS/tvOS.
+All other platforms require the event to include `user.ip={{auto}}` which happens if `sendDefaultPii` is set to true.
 
-- [_before-send_](https://docs.sentry.io/error-reporting/configuration/#before-send) can be used to register a callback with custom logic to remove sensitive data.
+Before sending events to Sentry, the SDKs should invokes callbacks. That allows users to remove any sensitive data client-side.
+
+- [`before-send` and `event-processors`](https://develop.sentry.dev/sdk/unified-api/#static-api) can be used to register a callback with custom logic to remove sensitive data.
+
+### Application State
+
+App state can be critical to help developers reproduce bugs. For that reason, SDKs often collect app state and append to events through auto instrumentation.
+
+When attaching data that could potentially include sensitive data or PII, it's important to:
+
+- Add a note on the docs to notify developers.
+- [Mark that part of the protocol on Relay](https://github.com/getsentry/relay/pull/1383) as such. This allows [data scrubbing](https://docs.sentry.io/product/relay/) to run on those fields.
+
+Some examples of auto instrumentation that could attach sensitive data:
+
+- A SQL integration that includes the query. If a user doesn't use parameterized queries, and appends sensitive data to it, the SDK could include that in the event payload.
+- Desktop apps including window title.
+- A Web framework routing instrumentation attaching route `to` and `from`.
 
 ## Variable Size
 
