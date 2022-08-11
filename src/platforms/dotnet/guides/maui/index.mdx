@@ -1,0 +1,97 @@
+---
+title: Multi-platform App UI (MAUI)
+description: "Learn about Sentry's .NET integration with .NET Multi-platform App UI (MAUI)."
+redirect_from:
+  - /platforms/dotnet/maui/
+---
+
+Sentry has an integration for the [.NET Multi-platform App UI (MAUI)](https://dotnet.microsoft.com/apps/maui) through the [Sentry.Maui NuGet package](https://www.nuget.org/packages/Sentry.Maui).
+
+## Overview of the features
+
+- Easy MAUI integration by calling `UseSentry` on your `MauiAppBuilder`
+- All the features of our main [.NET SDK](/platforms/dotnet), for your managed code
+- Native crash reporting for Android, leveraging our [Android SDK](/platforms/android)
+- Managed crash reporting (unhandled exceptions), on any MAUI platform
+- Automatic breadcrumbs for MAUI app lifecycle and UI events
+- Detailed device and runtime information passed on every event
+- ... more coming soon!
+
+## Preview Status
+
+The `Sentry.Maui` SDK is currently in public preview.  All APIs added by this package are subject to breaking changes.  We appreciate your feedback:
+
+- [Open Issues (GitHub)](https://github.com/getsentry/sentry-dotnet/issues?q=is%3Aissue+is%3Aopen+label%3AMAUI)
+- [New Issues or Feature Requests (GitHub)](https://github.com/getsentry/sentry-dotnet/issues/new/choose)
+- [Community Chat (Discord)](https://discord.com/channels/621778831602221064/621783515423440927)
+
+This documentation will be updated as we get closer to general availability release.
+
+## Installation
+
+Add the Sentry dependency to your .NET MAUI application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Maui --prerelease
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Maui -AllowPrereleaseVersions
+```
+
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the MAUI related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
+
+### Configure
+
+In your `MauiProgram.cs` file, call `UseSentry` on your `MauiAppBuilder`, and include any options you would like to set.  The `Dsn` is the only required parameter.
+
+For example:
+
+```csharp
+public static MauiApp CreateMauiApp() =>
+    MauiApp.CreateBuilder()
+        .UseMauiApp<App>()
+        .UseSentry(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+        })
+        // The remainder of your configuration
+        .Build();
+}
+```
+
+## Options
+
+As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
+
+Below, the options that are specific to `Sentry.Maui` will be described.
+
+### IncludeTextInBreadcrumbs
+
+This option controls whether elements that implement the `IText` interface (such as `Button`, `Label`, `Entry`, and others) will have their text included on breadcrumbs.  This option is disabled by default.
+
+<Alert level="warning">
+
+Use caution when enabling, as such values may contain personally identifiable information (PII).
+
+</Alert>
+
+### IncludeTitleInBreadcrumbs
+
+This option contols whether elements that implement the `ITitledElement` interface (such as `Window`, `Page`, and others) will have their titles included on breadcrumbs.  This option is disabled by default.
+
+<Alert level="warning">
+
+Use caution when enabling, as such values may contain personally identifiable information (PII).
+
+</Alert>
+
+### IncludeBackgroundingStateInBreadcrumbs
+
+Controls whether the breadcrumb sent for the `Window.Backgrounding` event will include state data from `BackgroundingEventArgs.State`.  This option is disabled by default.
+
+<Alert level="warning">
+
+Use caution when enabling, as such values may contain personally identifiable information (PII).
+
+</Alert>

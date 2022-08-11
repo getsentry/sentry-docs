@@ -15,8 +15,15 @@ import sentry_sdk
 import sentry_sdk.integrations.trytond
 
 sentry_sdk.init(
-    desn="___PUBLIC_DSN___",
-    integrations=[sentry_sdk.integrations.trytond.TrytondWSGIIntegration()]
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        sentry_sdk.integrations.trytond.TrytondWSGIIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
 )
 
 from trytond.application import app as application

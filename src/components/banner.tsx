@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Sentry will be at Pycon US 2022 - join our live workshop, 'Elasticsearch and Python, a Match Made in Heaven' on Apr. 28 @ 9:00 AM MDT.";
+  "You've instrumented performance...now what? See what you can do in our interactive workshop on Aug 17 @ 10am PT";
 const BANNER_LINK_URL =
-  "https://us.pycon.org/2022/schedule/presentation/168/";
+  "https://sentry.io/resources/building-an-operational-dashboard-using-error-and-performance-data/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 

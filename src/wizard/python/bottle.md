@@ -24,8 +24,14 @@ However the integration with the development version (0.13) doesn't work properl
    from sentry_sdk.integrations.bottle import BottleIntegration
 
    sentry_sdk.init(
-       dsn="___PUBLIC_DSN___",
-       integrations=[BottleIntegration()]
+      dsn="___PUBLIC_DSN___",
+      integrations=[
+         BottleIntegration(),
+      ],
+      # Set traces_sample_rate to 1.0 to capture 100%
+      # of transactions for performance monitoring.
+      # We recommend adjusting this value in production,
+      traces_sample_rate=1.0,
    )
 
    app = Bottle()

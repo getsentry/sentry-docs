@@ -6,6 +6,22 @@ redirect_from:
 description: "Migrating between versions of Sentry's SDK for Android."
 ---
 
+## Migrating from `io.sentry:sentry-android 6.2.x` to `io.sentry:sentry-android 6.3.0`
+
+The `sentry-android-okhttp`, `sentry-android-fragment`, and `sentry-android-timber` integrations now declare their upstream dependencies as `compileOnly`. Make sure to have the `okhttp`, `fragment`, and `timber` dependencies on the classpath if you're using those integrations or the application will crash with a `NoClassDefFoundError` exception.
+
+## Migrating from `io.sentry:sentry-android 6.x` to `io.sentry:sentry-android 6.2.0`
+
+* Kotlin plugin is upgraded to `1.6.10`.
+
+This version is still compatible with Kotlin `1.4`.
+
+<Note>
+
+This only affects integrations that are written in Kotlin, such as `timber`, `fragment`, `okhttp`, `navigation` and `compose`.
+
+</Note>
+
 ## Migrating from `io.sentry:sentry-android 5.x` to `io.sentry:sentry-android 6.0.0`
 
 * Kotlin plugin is upgraded to `1.5`.
@@ -27,7 +43,7 @@ description: "Migrating between versions of Sentry's SDK for Android."
   * `IHandler` is now `MainLooperHandler` only.
 * `ISpan` now has higher precision using the `System#nanoTime` instead of milliseconds.
 
-* Hints changed its type from `Object` to `Map<String, Object>`
+* Hints changed its type from `Object` to `io.sentry.Hint`
 
 _Old_:
 
@@ -252,7 +268,7 @@ _New_:
 
 ```kotlin
 SentryOptions#addEventProcessor(object : EventProcessor {
-    override fun process(event: SentryEvent, hint: Any?): SentryEvent? {
+    override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
         return event
     }
 })

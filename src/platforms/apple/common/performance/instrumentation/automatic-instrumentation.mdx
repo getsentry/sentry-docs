@@ -12,16 +12,16 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 ## UIViewController Instrumentation
 
-This feature is available for iOS, tvOS, and Mac Catalyst, and only works for UIViewControllers.
+This feature is available for iOS, tvOS, and Mac Catalyst, is enabled by default, and works for `UIViewControllers`.
 
-The UIViewController Instrumentation, once enabled, captures transactions when your app loads an in-app [UIViewController][UIViewController]. However, the SDK doesn't capture transactions for UIViewControllers of third-party libraries or SwiftUI.
+The `UIViewController` Instrumentation captures transactions when your app loads an in-app [`UIViewController`][UIViewController]. However, the SDK doesn't capture transactions for the `UIViewController` of a third-party library or SwiftUI.
 The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
 
 The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
 
-![UIViewController Transaction](ui-view-controller-transaction.png)
+![`UIViewController` Transaction](ui-view-controller-transaction.png)
 
-To disable the UIViewController Instrumentation:
+To disable the `UIViewController` instrumentation:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -48,11 +48,13 @@ SentrySDK.start { options in
 This feature is available for iOS, tvOS, and Mac Catalyst.
 
 The App Start Instrumentation provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
-To enable this feature enable `AutoUIPerformanceTracking`. The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+
 * __Cold start__: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
 * __Warm start__: App launched at least once, is partially in memory, and no process exists.
 
-The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][UIWindow] as the end. It creates the following spans:
+The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][UIWindow] as the end. The SDK creates the following spans:
 * __Pre Main__: From the process start time to the runtime init.
 * __UIKit and Application Init__: From the runtime init to the [`didFinishLaunchingNotification`][didFinishLaunching].
 * __Initial Frame Render__: From the [`didFinishLaunchingNotification`][didFinishLaunching] to [`UIWindowDidBecomeVisibleNotification`][UIWindow].
@@ -163,6 +165,67 @@ SentrySDK.start { options in
     options.enableCoreDataTracking = YES;
 }];
 ```
+
+## User Interaction Instrumentation
+
+<Alert level="info" title="Important">
+
+This is an experimental feature and requires an opt-in. Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+
+</Alert>
+
+The UI instrumentation, once enabled, captures transactions for clicks. The UI instrumentation is disabled by default, but you can enable it by setting:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableUserInteractionTracing = true
+}
+```
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUserInteractionTracing = YES;
+}];
+```
+
+The SDK composes the transaction name out of the host `UIViewController` and the method that the `UIView` is calling; for example, `YourApp_LoginUIViewController.loginButton`. The SDK sets the transaction operation to `ui.action`. If the SDK detects the interaction's origin was a click, it adds `click` as a suffix to the operation. The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds).
+
+<Note>
+
+If the UI transaction has idled but didn't have any child spans added, the SDK will drop it.
+
+</Note>
+
+The SDK binds user interaction transactions to the `Scope` automatically if there's no other transaction set. Because of that, you can create spans using manual instrumentation, and those spans will be automatically associated with the running UI transaction.
+
+```Swift
+import Sentry
+
+func loadUserDataOnClick() {
+    let span = SentrySDK.span
+    let innerSpan = span?.startChild(operation: "loadUserData")
+    // omitted code
+    innerSpan?.finish()
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+- (void)loadUserDataOnClick {
+    id<SentrySpan> span = SentrySDK.span;
+    id<SentrySpan> innerSpan = [span startChildWithOperation:@"loadUserData"];
+    // omitted code
+    [innerSpan finish];
+}
+```
+
+When the user interaction transaction is not finished yet, but the user makes a new interaction, or the SDK starts a new UIViewController transaction, the SDK automatically finishes the previous user interaction transaction. This is because only one transaction can be bound to the scope at a time. However, if the same view has been interacted with (for example, a `UIButton` was clicked again within the `idleTimeout` window), the idle timer will be reset and the transaction duration will be extended with the `idleTimeout` value.
 
 ## Opt Out
 

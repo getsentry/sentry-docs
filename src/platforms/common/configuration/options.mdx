@@ -97,11 +97,19 @@ By default the SDK will read from `Application.productName` and `Application.ver
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["unity", "dotnet", "javascript.electron"]}>
+<PlatformSection notSupported={["unity", "dotnet", "javascript.electron", "native"]}>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["native"]}>
+
+Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Otherwise, the default environment is `production`.
 
 </PlatformSection>
 
@@ -370,10 +378,10 @@ This is the maximum number of properties or entries that will be included in any
 
 </ConfigKey>
 
-<ConfigKey name="attach-screenshot" supported={["android", "apple.ios"]}>
+<ConfigKey name="attach-screenshot" supported={["android", "apple.ios", "unity", "dotnet.xamarin"]}>
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
-Screenshots for hard crashes are not supported on iOS.
+Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink> .
 
 <PlatformSection supported={["android"]}>
 
@@ -426,6 +434,12 @@ Callback function that allows custom naming of renderer processes.
 If the callback is not set, or it returns `undefined`, the default naming scheme is used.
 
 </PlatformSection>
+
+<ConfigKey name="enabled" supported={["javascript", "node"]}>
+
+Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
+
+</ConfigKey>
 
 <ConfigKey name="send-client-reports" supported={["java", "javascript", "dotnet", "python", "dart", "apple"]} notSupported={["react-native"]}>
 
@@ -491,13 +505,13 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </ConfigKey>
 
-<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "flutter"]}>
+<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "dart"]}>
 
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "flutter", "rust"]}>
+<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "dart", "rust"]}>
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
@@ -541,7 +555,19 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 <ConfigKey name="send-attempts" supported={["php"]}>
 
-Controls how many times the SDK will attempt to resend an event to Sentry. The default is `3`.
+_Deprecated._ Controls how many times the SDK will attempt to resend an event to Sentry. The default is `0`.
+
+</ConfigKey>
+
+<ConfigKey name="http-connect-timeout" supported={["php"]}>
+
+The maximum number of seconds to wait while trying to connect to a server. The default is `2`.
+
+</ConfigKey>
+
+<ConfigKey name="http-timeout" supported={["php"]}>
+
+The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option. The default is `5`.
 
 </ConfigKey>
 
@@ -551,13 +577,13 @@ Controls how many times the SDK will attempt to resend an event to Sentry. The d
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
+<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "dart"]}>
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
-<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]} notSupported={["native"]}>
+<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
@@ -569,27 +595,59 @@ An optional property that configures which downstream services receive the `sent
 
 </ConfigKey>
 
+<ConfigKey name="trace-propagation-targets" supported={["node"]}>
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</ConfigKey>
+
 </PlatformSection>
 
-<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
+<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor", "flutter"]}>
+
+## Experimental Features
+
+<ConfigKey name="experimental" supported={[]}>
+
+An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
+
+</ConfigKey>
 
 ## Hybrid SDK Options
 
-<ConfigKey name="enableNative">
+<ConfigKey name="enableNative" supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
 
 Set this boolean to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
 
 </ConfigKey>
 
-<ConfigKey name="autoInitializeNativeSdk" supported={["react-native"]}>
+<ConfigKey name="autoInitializeNativeSdk">
 
-Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer, but instead use [enableNative](#enableNative).
+Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
+
+<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
+
+To disable the native layer, use [enableNative](#enableNative).
 
 You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
 
+</PlatformSection>
+
+<PlatformSection supported={["flutter"]}>
+
+You should follow the [guide to native initialization](/platforms/flutter/native-init/) if you chose to use this option.
+
+</PlatformSection>
+
 </ConfigKey>
 
-<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor"]}>
+<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor", "flutter"]}>
 
 Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
 
@@ -622,7 +680,6 @@ Set this boolean to `false` to disable the scope sync from Java to NDK on Androi
 <ConfigKey name="attachThreads">
 
 Set this boolean to `true` to automatically attach all threads to all logged events on Android.
-
 </ConfigKey>
 
 <ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
@@ -631,7 +688,7 @@ Set this boolean to `false` to disable auto [performance monitoring](/product/pe
 
 </ConfigKey>
 
-<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native"]}>
+<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native", "javascript.capacitor", "flutter"]}>
 
 Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
 
@@ -640,6 +697,12 @@ Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/i
 <ConfigKey name="onReady" supported={["react-native"]}>
 
 Set this callback, which is called after the Sentry React Native SDK initializes its Native SDKs (Android and iOS).
+
+</ConfigKey>
+
+<ConfigKey name="enableScopeSync" supported={["flutter"]}>
+
+Set this boolean to `false` to disable sync of `Scope` data to Android and iOS SDKs.
 
 </ConfigKey>
 

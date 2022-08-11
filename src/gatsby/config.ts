@@ -92,6 +92,7 @@ const getPlugins = () => {
     "gatsby-plugin-sharp",
     "gatsby-plugin-sass",
     "gatsby-plugin-zeit-now",
+    "gatsby-plugin-sitemap",
     {
       resolve: "gatsby-plugin-google-gtag",
       options: {
@@ -223,6 +224,7 @@ export default {
   siteMetadata: {
     title: "Sentry Documentation",
     homeUrl: "https://docs.sentry.io",
+    siteUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
     description: "Product documentation for Sentry.io and its SDKs",
     author: "@getsentry",

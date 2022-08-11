@@ -37,6 +37,11 @@ export default async ({ graphql }) => {
                 frontmatter {
                   name
                   doc_link
+                  wizard_setup {
+                    childMarkdownRemark {
+                      html
+                    }
+                  }
                   support_level
                   type
                 }
@@ -67,6 +72,37 @@ export default async ({ graphql }) => {
   await writeJson(output, nodes, platformRegistry);
 };
 
+const parsePathSlug = (slug: string) => {
+  if (slug.includes("performance-onboarding")) {
+    const pathMatch = slug.match(
+      /^\/(?<platform>[^/]+)\/performance-onboarding\/(?<sub_platform>[^/]+)\/(?<step>[^/]+)\/$/
+    );
+    
+    if(!pathMatch) {
+      throw new Error(`Unable to parse performance onboarding from slug: ${slug}`);
+    }
+    
+    const { platform, sub_platform } = pathMatch.groups;
+    const step = String(pathMatch.groups.step).replace(/\./g, "-");
+    const sub = platform === sub_platform ? `performance-onboarding-${step}` : `${sub_platform}-performance-onboarding-${step}`;
+
+    return {
+      platform,
+      sub,
+    };
+  }
+
+  const pathMatch = slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
+  if (!pathMatch) throw new Error("cant identify language");
+
+  const [, main, sub] = pathMatch;
+
+  return {
+    platform: main,
+    sub: sub,
+  };
+};
+
 const writeJson = async (
   path: string,
   nodes,
@@ -75,15 +111,12 @@ const writeJson = async (
   const platforms = [];
   const indexJson = {};
   nodes.forEach(node => {
-    const pathMatch = node.fields.slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
-    if (!pathMatch) throw new Error("cant identify language");
-    // eslint-disable-next-line no-unused-vars
-    const [, main, sub] = pathMatch;
+    const { platform: main, sub } = parsePathSlug(node.fields.slug);
+
     if (!indexJson[main]) indexJson[main] = {};
     if (!node.frontmatter.doc_link) {
-      throw new Error(
-        `Invalid wizard frontmatter found in ${node.fields.slug}`
-      );
+      // Skip invalid files
+      return
     }
     const key = sub ? `${main}.${sub}` : `${main}`;
     const data = {
@@ -91,6 +124,7 @@ const writeJson = async (
       type: node.frontmatter.type,
       details: sub ? `${main}/${sub}.json` : `${main}.json`,
       doc_link: node.frontmatter.doc_link,
+      wizard_setup: node.frontmatter.wizard_setup?.childMarkdownRemark?.html,
       name: node.frontmatter.name,
       aliases: [],
       categories: [],

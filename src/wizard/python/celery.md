@@ -15,7 +15,14 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 
 sentry_sdk.init(
     dsn='___PUBLIC_DSN___',
-    integrations=[CeleryIntegration()]
+    integrations=[
+        CeleryIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
 )
 ```
 

@@ -63,7 +63,7 @@ If your App Store Connect API key is revoked on the Apple side, the Sentry custo
 #### Upload BCSymbolMaps Using Fastlane {#symbolmap-fastlane}
 
 As dSYM download will be handled by sentry, it is not necessary to use the _download_dsyms_ or _sentry_upload_dsym_ commands.
-Instead, use the _sentry_upload_dif_ command to upload the BCSymbolMap.
+Instead, use the _sentry_upload_dif_ command to upload the BCSymbolMap.  You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/).
 
 ```ruby
 sentry_upload_dif(
@@ -84,6 +84,8 @@ The `sentry-cli upload-dif` command will automatically find and upload all _BCSy
 ### Using Fastlane {#bitcode-fastlane}
 
 Use the [Fastlane](https://github.com/fastlane/fastlane) action, _download_dsyms_, to download the dSYMs from App Store Connect and upload to Sentry. The dSYM won’t be generated until **after** the app is done processing on App Store Connect so this should be run in its own lane.
+
+ You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/).
 
 ```ruby
 lane :upload_symbols do
@@ -113,7 +115,7 @@ Download the dSYM from App Store Connect. After that, you can upload the dSYM us
 1.  Open Xcode Organizer, go to your app, and click “Download dSYMs...”
 2.  Login to App Store Connect, go to your app, go to “Activity", click the build number to go into the detail page, and click “Download dSYM”
 
-Afterwards manually upload the symbols with _sentry-cli_:
+ You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/). Afterwards manually upload the symbols with _sentry-cli_:
 
 ```bash
 sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dif --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_DSYMS
@@ -135,7 +137,7 @@ When not using Bitcode you can directly upload the symbols to Sentry as part of 
 
 ### Using Fastlane
 
-If you are already using Fastlane you can use it in this situation as well:
+If you are already using Fastlane you can use it in this situation as well. You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/):
 
 ```ruby
 lane :build do
@@ -162,12 +164,20 @@ api_host: 'https://mysentry.invalid/'
 
 Your project’s dSYM can be upload during the build phase as a “Run Script”. For this you need to set the _DEBUG_INFORMATION_FORMAT_ to be _DWARF with dSYM File_. By default, an Xcode project will only have _DEBUG_INFORMATION_FORMAT_ set to _DWARF with dSYM File_ in _Release_ so make sure everything is set in your build settings properly.
 
-You need to have an Auth Token for this to work. You can [create an Auth Token here](https://sentry.io/api/).
+You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/).
 
 1.  Download and install [sentry-cli](/product/cli/installation/)
 2.  You will need to copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_
 
-```bash
+<Alert level="" title="Warnings vs. Errors">
+
+Depending on your needs, you may want to emit warnings to the Xcode build log to let the build pass, or emit errors to fail it. For example, in a CI deployment where debug symbols may be harder to recover, and you might not realize symbols couldn't be symbolicated until after release, it might be better to fail the build.
+
+Another option is to use warnings, and then set `GCC_TREAT_WARNINGS_AS_ERRORS` to `YES` in build settings for configurations you use to deploy to production.
+
+</Alert>
+
+```bash {tabTitle:Warn on failures - nonblocking}
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
@@ -178,6 +188,20 @@ echo "warning: sentry-cli - $ERROR"
 fi
 else
 echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+fi
+```
+
+```bash {tabTitle:Error on failures - blocking}
+if which sentry-cli >/dev/null; then
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
+ERROR=$(sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+if [ ! $? -eq 0 ]; then
+echo "error: sentry-cli - $ERROR"
+fi
+else
+echo "error: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
 fi
 ```
 
