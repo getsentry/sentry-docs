@@ -30,7 +30,7 @@ Sentry.init({
       routingInstrumentation: Sentry.remixRouterInstrumentation(
         useEffect,
         useLocation,
-        useMatches,
+        useMatches
       ),
     }),
   ],
@@ -85,4 +85,14 @@ function App() {
 export default withSentry(App);
 ```
 
-Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/). There, you'll find additional instructions for configuring the Remix SDK.
+After this step, Sentry will report any uncaught exceptions triggered by your application.
+
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
+
+```javascript
+<button type="button" onClick={methodDoesNotExist}>
+  Throw error
+</button>
+```
+
+Once you've verified the SDK is initialized properly and sent a test event, check our our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/)for additional configuration instructions.
