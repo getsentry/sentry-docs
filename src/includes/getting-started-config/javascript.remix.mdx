@@ -42,6 +42,17 @@ Learn more about <Link to="/platforms/node/performance/database/opt-in/#prisma-o
 
 </Note>
 
+If you use a custom Express server in your Remix application, you should wrap your [`createRequestHandler` function](https://remix.run/docs/en/v1/other-api/adapter#createrequesthandler) manually with `wrapExpressCreateRequestHandler`. This is not required if you use the built-in Remix App Server.
+
+  
+```typescript {filename: server/index.ts}
+import { wrapExpressCreateRequestHandler } from "@sentry/remix";
+import { createRequestHandler } from '@remix-run/express';
+
+//...
+app.all('*', wrapExpressCreateRequestHandler(createRequestHandler)(/* ... */));
+```
+
 Also, wrap your Remix root with `withSentry` to catch React component errors and to get parameterized router transactions.
 
 ```typescript {filename: root.tsx}
