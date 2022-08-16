@@ -43,4 +43,4 @@ const app = new App({
 export default app;
 ```
 
-Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Svelte docs](https://docs.sentry.io/platforms/javascript/guides/svelte/). There, you'll find additional instructions for configuring the Svelte SDK.
+Once you've verified the library is initialized properly and you've sent a test event, check out our [complete Svelte docs](https://docs.sentry.io/platforms/javascript/guides/svelte/) for additional configuration instructions.
