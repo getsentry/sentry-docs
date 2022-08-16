@@ -25,6 +25,8 @@ ___PUBLIC_DSN___
 
 And that's it! Now Sentry can capture errors automatically.
 
+If you like additional contexts you could enable [Screenshots](https://docs.sentry.io/platforms/unity/enriching-events/screenshots/).
+
 ## Verify
 
 Once it is configured with the DSN you can call the SDK from anywhere:
