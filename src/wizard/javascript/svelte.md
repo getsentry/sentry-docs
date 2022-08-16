@@ -27,7 +27,6 @@ import { BrowserTracing } from "@sentry/tracing";
 // Initialize the Sentry SDK here
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  release: "my-project-name@2.3.12",
   integrations: [new BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -43,4 +42,18 @@ const app = new App({
 export default app;
 ```
 
-Once you've verified the library is initialized properly and you've sent a test event, check out our [complete Svelte docs](https://docs.sentry.io/platforms/javascript/guides/svelte/) for additional configuration instructions.
+The above configuration captures both error and performance data. We recommend adjusting `tracesSampleRate` in production, see [Sampling](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
+
+After this step, Sentry will report any uncaught exceptions triggered by your application.
+
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `on:click` handler attempts to invoke a function that doesn't exist:
+
+```html
+// SomeComponent.svelte
+
+<button type="button" on:click="{unknownFunction}">
+  Throw error
+</button>
+```
+
+Once you've verified the SDK is initialized properly and you've sent a test event, check out our [complete Svelte docs](https://docs.sentry.io/platforms/javascript/guides/svelte/) for additional configuration instructions.
