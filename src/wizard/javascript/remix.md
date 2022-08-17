@@ -95,4 +95,4 @@ You can trigger your first event from your development environment by raising an
 </button>
 ```
 
-Once you've verified the SDK is initialized properly and sent a test event, check our our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/)for additional configuration instructions.
+Once you've verified the SDK is initialized properly and sent a test event, check out our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/)for additional configuration instructions.
