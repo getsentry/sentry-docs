@@ -1,0 +1,25 @@
+In Rails, being able to serve dynamic (e.g. `.html.erb`) pages in response to errors is required in order to pass the needed `event_id` to the JavaScript SDK. Normally, this looks like overwriting the `config.exceptions_app` setting to point at your own router, and then calling your own controller to handle the error. Several tutorials or gems exist to allow for this.
+
+Once you are able to serve dynamic exception pages, supporting user feedback is straightforward.
+
+Make sure you've got the JavaScript SDK available:
+
+```ERB
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+And the template that brings up the dialog:
+
+```ERB
+<% sentry_id = request.env["sentry.error_event_id"] %>
+<% if sentry_id.present? %>
+<script>
+  Sentry.init({ dsn: "___PUBLIC_DSN___" });
+  Sentry.showReportDialog({ eventId: "<%= sentry_id %>" });
+</script>
+<% end %>
+```
