@@ -307,34 +307,36 @@ the check will be quick, but on larger tables this can cause downtime. There are
 
 ### Adding Columns With a Default
 
-Adding columns with a default to an existing table is dangerous. This requires Postgres to lock the table and rewrite it. Instead, the better option is to:
+We run Postgres 14 in production. This means that we can now safely add columns with a default without worrying about rewriting the table. We still need to be careful though.
 
-- Add the column without a default in Postgres, but with a default in Django. This allows us to be sure that all new rows have the default. This is done by modifying the migration file to include `migrations.SeperateDatabaseAndState`
+Django's default behaviour for creating a new not null column with a default is dangerous. When adding a default, in the migrations Django will add the default to backfill all fields, then immediately remove it so that it can handle them in the app layer. This means that during a deploy, the column is sitting in production without a default until all code rolls out. This means that inserts will fail for this table until the deploy completes.
+
+To work around this, you can tell your migration to leave the default in place in Postgres.
 
 ```python
-operations = [
-    migrations.SeparateDatabaseAndState(
-        database_operations=[
-            migrations.AddField(
-                model_name="mymodel",
-                name="new_field",
-                # Don't use a default in Postgres, a data migration can be used afterward to backfill
-                field=models.PositiveSmallIntegerField(null=True),
-            ),
-        ],
-        state_operations=[
-            migrations.AddField(
-                model_name="mymodel",
-                name="new_field",
-                # Use the default in Django, new rows will use the specified default
-                field=models.PositiveSmallIntegerField(null=True, default=1),
-            ),
-        ],
-    )
+    operations = [
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    """
+                    ALTER TABLE "sentry_groupedmessage" ADD COLUMN "type" integer NOT NULL DEFAULT 1;
+                    """,
+                    reverse_sql="""
+                    ALTER TABLE "sentry_groupedmessage" DROP COLUMN "type";
+                    """,
+                    hints={"tables": ["sentry_groupedmessage"]},
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name="group",
+                    name="type",
+                    field=sentry.db.models.fields.bounded.BoundedPositiveIntegerField(default=1),
+                ),
+            ],
+        )
     ]
 ```
-
-- Backfill the pre-existing rows with the default via a data migration.
 
 ### Altering Column Types
 
