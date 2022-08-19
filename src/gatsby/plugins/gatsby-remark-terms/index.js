@@ -10,7 +10,13 @@
 const visit = require("unist-util-visit");
 
 const TERMS = {
+  fingerprint: "The set of characteristics that define an event.",
   quota: "The monthly number of events that you pay Sentry to track.",
+  SaaS: "Sentry's cloud-based, software-as-a-service solution.",
+  token:
+    "In search, a key-value pair or raw search term. Also, a value used for authorization.",
+  tracing:
+    "The process of logging the events that took place during a request, often across multiple services.",
 };
 
 function escapeRegExp(str) {
