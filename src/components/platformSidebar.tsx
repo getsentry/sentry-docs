@@ -79,6 +79,7 @@ export const PlatformSidebar = ({
           `/${pathRoot}/enriching-events/`,
           `/${pathRoot}/data-management/`,
           `/${pathRoot}/performance/`,
+          `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
         ]}
       />
@@ -86,6 +87,13 @@ export const PlatformSidebar = ({
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
         prependLinks={[[`/${pathRoot}/performance/`, "Set Up"]]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/profiling`}
+        title="Profiling [beta]"
+        prependLinks={[[`/${pathRoot}/profiling/`, "Set Up"]]}
         suppressMissing
         tree={tree}
       />
