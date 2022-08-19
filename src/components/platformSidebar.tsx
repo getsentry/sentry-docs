@@ -92,7 +92,7 @@ export const PlatformSidebar = ({
       />
       <DynamicNav
         root={`/${pathRoot}/profiling`}
-        title="Profiling [beta]"
+        title="Profiling"
         prependLinks={[[`/${pathRoot}/profiling/`, "Set Up"]]}
         suppressMissing
         tree={tree}
