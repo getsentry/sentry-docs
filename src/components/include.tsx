@@ -1,15 +1,7 @@
 import React from "react";
-import styled from "@emotion/styled";
 import { graphql, useStaticQuery } from "gatsby";
 
-import usePlatform, {
-  getPlatform,
-  getPlatformsWithFallback,
-  Platform,
-} from "./hooks/usePlatform";
 import Content from "./content";
-import SmartLink from "./smartLink";
-
 
 const includeQuery = graphql`
   query IncludeQuery {
