@@ -11,8 +11,8 @@ import Content from "./content";
 import SmartLink from "./smartLink";
 
 const includeQuery = graphql`
-  query IncludeQuery {
-    allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
+  query PlatformContentQuery {
+    allFile(filter: { sourceInstanceName: { eq: "platform-includes" } }) {
       nodes {
         id
         relativePath
