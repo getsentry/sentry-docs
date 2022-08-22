@@ -281,29 +281,20 @@ Renaming tables is dangerous and will result in downtime. The reason this occurs
 
 - Don't rename the table in Postgres. Instead, just rename the model in Django, and make sure `Meta.db_table` is set to the current tablename so that nothing breaks. This is the preferred method.
 - If you absolutely want to rename the table, then the steps would be:
-- Create a table with the new name
-- Start dual-writing to both the old and new table, ideally in a transaction.
-- Backfill the old rows into the new table.
-- Change the model to start reading from the new table.
-- Stop writing to the old table and remove references from the code.
-- Drop the old table.
-- Generally, this is not worth doing and a lot of risk/effort compared to the reward.
+ - Create a table with the new name
+ - Start dual-writing to both the old and new table, ideally in a transaction.
+ - Backfill the old rows into the new table.
+ - Change the model to start reading from the new table.
+ - Stop writing to the old table and remove references from the code.
+ - Drop the old table.
+ - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
 
 ### Adding Columns
 
-When creating new columns they should always be created as nullable. This is for two reasons:
+When creating new columns they should either be:
 
-- If there are existing rows, adding a not null column requires a default to be set, and adding a default requires a full rewrite of the table. This is dangerous and will most likely result in downtime
-- During the deploy, a mix of old and new code is running. If old code attempts to insert a row to the table the insert will fail, since the old code doesn't know the new column exist, and so has no way to provide a value to the column.
-
-### Adding Not Null To Columns
-
-It can be dangerous to add not null to columns, even if there is data in every row of the table for that column. This is because Postgres still needs to perform a not null check on all rows before it can add the constraint. On small tables this can be fine since
-the check will be quick, but on larger tables this can cause downtime. There are a few options here to make this safe:
-
-- `ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID; ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;`. First we create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
-- If the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
--
+- Not null with a default. https://develop.sentry.dev/database-migrations/#adding-not-null-to-columns
+- Created as nullable. If no default value can be set on the column, then it's best just to make it nullable.
 
 ### Adding Columns With a Default
 
@@ -337,6 +328,14 @@ To work around this, you can tell your migration to leave the default in place i
         )
     ]
 ```
+
+### Adding Not Null To Columns
+
+It can be dangerous to add not null to columns, even if there is data in every row of the table for that column. This is because Postgres still needs to perform a not null check on all rows before it can add the constraint. On small tables this can be fine since
+the check will be quick, but on larger tables this can cause downtime. There are a few options here to make this safe:
+
+- `ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID; ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;`. First we create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
+- If the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
 
 ### Altering Column Types
 
