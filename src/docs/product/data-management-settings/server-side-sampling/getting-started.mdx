@@ -18,7 +18,7 @@ To set up or configure server-side sampling, you need to be an Owner, Manager, o
 
 ## Current Limitations
 
-Server-side sampling is currently only available for the following SDK's:
+Server-side sampling is currently only available for the following SDKs:
 
 - Python: 1.7.2 or later
 - JavaScript: 7.6.0 or later
@@ -40,19 +40,27 @@ For more detailed information about each of these, check out our [full Current L
 
 Once you’ve confirmed that your application only relies on [supported SDKs](#current-limitations), then the next step is to update them to the specified version or higher. Check out the migration documentation for the [SDKs](/platforms/) you’re using to learn everything you need to know to get up and running again with the latest Sentry features.
 
-## 2. Set a Uniform Sampling Rate
+## 2. Set a Uniform Sample Rate
 
-Next, go to **[Project] > Settings > Server-side Sampling** in [sentry.io](https://sentry.io) and set a uniform sampling rate for all transactions: this is the number of transactions that Sentry should accept from your application:
+Next, go to **[Project] > Settings > Server-Side Sampling** in [sentry.io](https://sentry.io) and set a sampling rate for all transactions: this is the number of transactions that Sentry should accept from your application:
 
-![Setting a uniform sampling rate for your project](set-uniform-sampling-rate.png)
+Before you set the rate, you'll need to tell us what your current SDK (or client-side) sample rate is:
+
+![Enter your client-side (SDK) sample rate](enter-sdk-sample-rate.png)
+
+With that done, set your uniform (global) sample rate:
+
+![Setting a sample rate for your project](set-global-sample-rate.png)
+
+Your client-side sample rate determines how many events are processed (all those ingested by Sentry), while the server-side sample rate determines how many events are then indexed (all those retained by Sentry). We use all your processed events to derive [performance metrics](/product/sentry-basics/metrics/), which makes us better able to provide you with statistically significant insights into the performance of your application. 
 
 Based on your quota and usage, in this step, we’ll suggest sampling rates for both Sentry servers and your Sentry SDK. However, you can enter a custom sampling rate by overriding our recommended values. For example, you can select your current sampling rates to understand how our proposed sampling configuration would impact your transaction volume within the scope of this project. Learn more about [How Sentry Samples](/product/data-management-settings/server-side-sampling/#how-sentry-samples).
 
-The numbers you enter in the “Client” field do not affect your actual SDK sample rate, but if you click “Next” and save, the number you’ve entered in the “Server” field on the “Suggested” row is saved as your uniform server-side sampling rate.
+The number you enter in the “Client” field does not affect your actual SDK sample rate, but if you click “Next” and save, the number you’ve entered in the “Server” field on the “Suggested” row is saved as your uniform server-side sampling rate.
 
-Even though you’ll only set this for one project/SDK, **this rate can affect all the transactions distributed across multiple services**, including other projects set up in Sentry. That’s because server-side currently samples by the context of all other transactions belonging to the same trace. Check out our [full Tracing documentation](/product/sentry-basics/tracing/) for a more detailed explanation.
+Even though you’ll only set this for one project/SDK, **this rate can affect all the transactions distributed across multiple services**, including other projects set up in Sentry. That’s because server-side sampling currently samples by the context of all other transactions belonging to the same trace. Check out our [full Tracing documentation](/product/sentry-basics/tracing/) for a more detailed explanation.
 
-If this chart doesn’t provide enough information for you to determine a uniform sampling rate for this project, we recommend checking your **Stats** page. The **Stats** page provides a complete overview of how many transactions each project accepts, filters, and drops rather than for just one project.
+If the chart displayed on screen doesn’t provide enough information for you to determine a uniform sampling rate for this project, we recommend checking your **Stats** page. The **Stats** page provides a complete overview of how many transactions each project accepts, filters, and drops rather than for just one project.
 
 Once you've entered a uniform sample rate for all transactions, now you need to activate it by clicking “Done” and then toggling the rule to on:
 
@@ -62,7 +70,7 @@ Once you've entered a uniform sample rate for all transactions, now you need to 
 
 Now, click “Add Rule” to set more sampling rules based on specific conditions. These rules will help you target the transactions you want to keep and allow you to have more of those transactions sent by the SDK.
 
-When a rule uses multiple conditions, we use the logical expression `AND` to determine when that rule should be evaluated. Multiple values for a condition use a logical or condition for matching. Learn more about [how to create effective server-side sampling rules](/product/data-management-settings/server-side-sampling/#server-side-sampling-configurations).
+When a rule uses multiple conditions, we use the logical expression `AND` to determine when that rule should be evaluated. Multiple values for a condition use a logical or condition for matching. Learn more about [how to create effective server-side sampling rules](/product/data-management-settings/server-side-sampling/sampling-configurations/).
 
 You can use the following conditions to sample transactions by:
 
@@ -71,11 +79,10 @@ You can use the following conditions to sample transactions by:
 
 \* Allows glob pattern matching
 
-![Editing a sampling rule based on a release condition](edit-rule-modal.png)
+![Adding a sampling rule based on a release condition](add-sampling-rule.png)
 
 If we've accepted a transaction which contains a key-value pair matching the above conditions in the past, Sentry will suggest values for each condition. Of course, you're free to set a custom value for each condition. Then, specify a sampling rate for that specific rule.
 
 ## 4. Increase Your SDK Transaction Sample Rate
 
-Generally speaking, the more active sampling rules you have, the fewer transactions we'll accept. If the volume of transactions our servers are receiving is insufficient given the rules you've specified, you might need to increase the sampling rate configured for your Sentry SDK. To see what we would suggest for your SDK sample rate, go to **[Project] > Settings > Server-side Sampling** and open the last rule in the list, which is where your uniform sample rate is set. Our suggestion is displayed there.
-
+Generally speaking, the more active sampling rules you have, the fewer transactions we'll accept. If the volume of transactions our servers are receiving is insufficient given the rules you've specified, you might need to increase the sampling rate configured for your Sentry SDK. To see what we would suggest for your SDK sample rate, go to **[Project] > Settings > Server-Side Sampling** and open the last rule in the list, which is where your uniform sample rate is set. Our suggestion is displayed there.
