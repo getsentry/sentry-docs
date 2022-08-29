@@ -117,32 +117,40 @@ Sentry.captureException(new Error("something went wrong"), () => scope);
 
 ## Clearing Context
 
-Context is held in the current scope and thus is cleared out at the end of each operation — request and so forth. You can also push and pop your own scopes to apply context data to a specific code block or function.
+Context is held in the current scope and thus is cleared when the scope is removed ("popped"). You can push and pop your own scopes to apply context data to a specific code block or function.
 
-Sentry supports two different scopes for unsetting context:
+<PlatformSection supported={["node"]}>
+<Note>
 
-1. A global scope, which Sentry does not discard at the end of an operation
-2. A scope created by the user
+For Node.js backend frameworks, the SDK will create a separate scope for each incoming request. Modifying the context of the current scope in a request handler will therefore only affect events related to the request being handled.
 
-This will be changed for all future events:
+</Note>
+</PlatformSection>
+
+Sentry supports two different ways for unsetting context:
+
+1. Modifying, overwriting or clearing values on the current scope.
+2. Creating a temporary scope for capturing exceptions.
+
+With the following snippet, the `user` context will be updated for all future events on the current scope:
 
 ```javascript
 Sentry.setUser(someUser);
 ```
 
-This will be changed only for the error caught inside the `withScope` callback and automatically restored to the previous value afterward:
+If you want to remove data from the current scope, you can call:
+
+```javascript
+Sentry.configureScope(scope => scope.clear());
+```
+
+The following will only configure the `user` context for the error captured inside the `withScope` callback. The context will be automatically restored to the previous state afterwards:
 
 ```javascript
 Sentry.withScope(function(scope) {
   scope.setUser(someUser);
   Sentry.captureException(error);
 });
-```
-
-If you want to remove globally configured data from the scope, you can call:
-
-```javascript
-Sentry.configureScope(scope => scope.clear());
 ```
 
 To learn more about setting the Scope, see our documentation on [Scopes and Hubs](../scopes/).

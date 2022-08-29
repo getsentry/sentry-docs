@@ -62,9 +62,15 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "event.transaction_source",
+    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "event.wait_time",
-    "description": "Time spent between receiving a request in Relay (that is, beginning of request handling) and\nthe start of synchronous processing in the EnvelopeProcessor. This metric primarily\nindicates backlog in event processing.",
+    "description": "Time spent between the start of request handling and processing of the envelope.\n\nThis includes streaming the request body, scheduling overheads, project config fetching,\nbatched requests and congestions in the internal processor. This does not include delays in\nthe incoming request (body upload) and skips all envelopes that are fast-rejected.",
     "features": []
   },
   {
@@ -77,9 +83,7 @@
     "type": "Timer",
     "name": "event_processing.filtering",
     "description": "Time in milliseconds spent running inbound data filters on an event.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Timer",
@@ -199,14 +203,18 @@
     "type": "Timer",
     "name": "metrics.extraction.transactions",
     "description": "Time in milliseconds spent on converting a transaction event into a metric.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Counter",
     "name": "metrics.insert",
     "description": "Incremented for every metric that is inserted.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.transaction_name",
+    "description": "Count extraction of transaction names. Tag with the decision to drop / replace / use original.",
     "features": []
   },
   {
@@ -238,6 +246,12 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "project_cache.garbage.queue_size",
+    "description": "The number of items currently in the garbage disposal queue.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "project_cache.hit",
     "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
@@ -260,6 +274,14 @@
     "name": "project_state.attempts",
     "description": "Number of attempts required to fetch the config for a given project key.",
     "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.decompression",
+    "description": "Time in milliseconds required to decompress a project config from redis.\n\nNote that this also times the cases where project config is uncompressed,\nin which case the timer should be very close to zero.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Timer",
@@ -363,12 +385,6 @@
     "type": "Counter",
     "name": "server.starting",
     "description": "Number of Relay server starts.\n\nThis can be used to track unwanted restarts due to crashes or termination.",
-    "features": []
-  },
-  {
-    "type": "Set",
-    "name": "unique_projects",
-    "description": "Represents the number of active projects in the current slice of time",
     "features": []
   },
   {

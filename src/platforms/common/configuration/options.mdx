@@ -97,11 +97,19 @@ By default the SDK will read from `Application.productName` and `Application.ver
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["unity", "dotnet", "javascript.electron"]}>
+<PlatformSection notSupported={["unity", "dotnet", "javascript.electron", "native"]}>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["native"]}>
+
+Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Otherwise, the default environment is `production`.
 
 </PlatformSection>
 
@@ -370,16 +378,23 @@ This is the maximum number of properties or entries that will be included in any
 
 </ConfigKey>
 
-<ConfigKey name="attach-screenshot" supported={["android", "apple.ios"]}>
+<ConfigKey name="attach-screenshot" supported={["android", "apple.ios", "unity", "dotnet.xamarin"]}>
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
-Screenshots for hard crashes are not supported on iOS.
+Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 <PlatformSection supported={["android"]}>
 
 _(New in version 6.0.0)_
 
 </PlatformSection>
+
+</ConfigKey>
+
+<ConfigKey name="attach-viewhierarchy" supported={["apple.ios"]}>
+
+Renders an ASCII represention of the entire view hierarchy of the application when an error happens and includes it as an attachment.
+Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
 
 </ConfigKey>
 
@@ -429,7 +444,7 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 <ConfigKey name="enabled" supported={["javascript", "node"]}>
 
-Specifies whether this SDK should send events to Sentry. Defaults to `true`.  Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
+Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
 
 </ConfigKey>
 
@@ -497,13 +512,13 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </ConfigKey>
 
-<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "flutter"]}>
+<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "dart"]}>
 
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "flutter", "rust"]}>
+<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "dart", "rust"]}>
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
@@ -562,20 +577,20 @@ The maximum number of seconds to wait while trying to connect to a server. The d
 The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option. The default is `5`.
 
 </ConfigKey>
-  
+
 </PlatformSection>
 
 <PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
+<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "dart"]}>
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
-<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]} notSupported={["native"]}>
+<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
@@ -587,9 +602,29 @@ An optional property that configures which downstream services receive the `sent
 
 </ConfigKey>
 
+<ConfigKey name="trace-propagation-targets" supported={["node"]}>
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</ConfigKey>
+
 </PlatformSection>
 
 <PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor", "flutter"]}>
+
+## Experimental Features
+
+<ConfigKey name="experimental" supported={[]}>
+
+An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
+
+</ConfigKey>
 
 ## Hybrid SDK Options
 

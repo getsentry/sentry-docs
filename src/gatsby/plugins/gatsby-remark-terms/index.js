@@ -10,7 +10,13 @@
 const visit = require("unist-util-visit");
 
 const TERMS = {
+  fingerprint: "The set of characteristics that define an event.",
   quota: "The monthly number of events that you pay Sentry to track.",
+  SaaS: "Sentry's cloud-based, software-as-a-service solution.",
+  token:
+    "In search, a key-value pair or raw search term. Also, a value used for authorization.",
+  tracing:
+    "The process of logging the events that took place during a request, often across multiple services.",
 };
 
 function escapeRegExp(str) {
@@ -24,12 +30,17 @@ const REGEX = new RegExp(`(\\b|\\W)(${PATTERN})(\\b|\\W)`);
 const CUSTOM_LINK_START = new RegExp("^<([a-zA-Z]+Link|a) ");
 const CUSTOM_LINK_END = new RegExp("^</([a-zA-Z]+Link|a)>");
 
-function replace(node) {
+function replace(state, node) {
+  if (node.type == "root") return;
+
   // If this is an empty node there's nothing to consider.
-  if (!node.children) return;
+  if (!node.children) return "skip";
 
   // Do not replace abbreviations in headings because that appears to break the heading anchors.
-  if (node.type == "heading") return;
+  if (node.type == "heading") {
+    state.alreadyExplained = {};
+    return "skip";
+  }
 
   // Do not replace abbreviations in links because that's two interactive
   // nested elements nested in each other, and we decided we don't want to
@@ -37,9 +48,11 @@ function replace(node) {
   //
   // This currently doesn't handle nesting of e.g.
   // <a><strong><abbr>... but we don't have that in docs.
-  if (node.type == "link") return;
+  if (node.type == "link") return "skip";
 
   let insideCustomLink = false;
+
+  const newChildren = [];
 
   // If a text node is present in child nodes, check if an abbreviation is present
   for (let c = 0; c < node.children.length; c++) {
@@ -85,36 +98,42 @@ function replace(node) {
       }
     }
 
-    if (insideCustomLink) continue;
-    if (child.type !== "text") continue;
-    if (!REGEX.test(child.value)) continue;
+    if (insideCustomLink || child.type !== "text" || !REGEX.test(child.value)) {
+      newChildren.push(child);
+      continue;
+    }
 
     // Transform node
     const newTexts = child.value.split(REGEX);
 
-    // Remove old text node
-    node.children.splice(c, 1);
-
     // Replace abbreviations
     for (let i = 0; i < newTexts.length; i++) {
       const content = newTexts[i];
-      node.children.splice(
-        c + i,
-        0,
-        TERMS[content]
-          ? {
-              type: "html",
-              value: `<div class="term-wrapper"><span class="term">${content}</span><span class="description" role="tooltip" aria-label="${content} definition">${TERMS[content]}</span></div>`,
-            }
-          : {
-              type: "text",
-              value: content,
-            }
-      );
+      let newNode;
+      if (TERMS[content] && !state.alreadyExplained[content]) {
+        state.alreadyExplained[content] = true;
+        newNode = {
+          type: "html",
+          value: `<div class="term-wrapper"><span class="term">${content}</span><span class="description" role="tooltip" aria-label="${content} definition">${TERMS[content]}</span></div>`,
+        };
+      } else {
+        newNode = {
+          type: "text",
+          value: content,
+        };
+      }
+
+      newChildren.push(newNode);
     }
   }
+
+  node.children = newChildren;
 }
 
 module.exports = async ({ markdownAST }) => {
-  visit(markdownAST, () => true, replace);
+  const state = {
+    alreadyExplained: {},
+  };
+  const replaceWithState = replace.bind(null, state);
+  visit(markdownAST, () => true, replaceWithState);
 };

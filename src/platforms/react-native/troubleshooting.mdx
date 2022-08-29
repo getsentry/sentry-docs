@@ -4,6 +4,13 @@ description: "Troubleshoot and resolve common issues with the React Native SDK."
 sidebar_order: 1000
 ---
 
+## App Start Numbers Are Too High To Be Accurate
+
+iOS 15 introduced a feature called pre-warm that affected the calculations the Sentry SDK does.
+This issue was fixed in version [4.1.1](https://github.com/getsentry/sentry-react-native/releases/tag/4.1.1) of the SDK. Please update to this version or a later one.
+
+For more details, [see the troubleshooting page for the iOS SDK](https://docs.sentry.io/platforms/apple/guides/ios/troubleshooting/).
+
 ## Unhandled Promise Rejections
 
 Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry. If the promise rejection handler was not correctly attached, our SDK might issue a warning:
@@ -225,5 +232,5 @@ shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts
 _New_:
 
 ```bash
-shellScript = "export SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nset -e\n\nexport NODE_BINARY=node\n../node_modules/@sentry/cli/bin/sentry-cli react-native xcode ../node_modules/react-native/scripts/react-native-xcode.sh\n";
+shellScript = "set -e\nexport SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\nSENTRY_CLI_PATH=\"../node_modules/@sentry/cli/bin/sentry-cli\"\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$SENTRY_CLI_PATH react-native xcode $REACT_NATIVE_XCODE\\\"\"";
 ```
