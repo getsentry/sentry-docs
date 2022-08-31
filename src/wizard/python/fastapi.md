@@ -13,22 +13,18 @@ The FastAPI integration adds support for the [FastAPI Framework](https://fastapi
 pip install --upgrade 'sentry-sdk[fastapi]'
 ```
 
-2. To configure the SDK, initialize it with the integration before your app has been initialized:
+2. To configure the SDK, initialize it before your app has been initialized:
+
+Sentry SDK will auto enabled support for FastAPI if you have the `fastapi` Python package installed in your project. There is no configuration options you need to add when initializing the Sentry SDK, everything works out of the box.
 
 ```python
 from fastapi import FastAPI
 
 import sentry_sdk
-from sentry_sdk.integrations.starlette import StarletteIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        StarletteIntegration(),
-        FastApiIntegration(),
-    ],
 
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.

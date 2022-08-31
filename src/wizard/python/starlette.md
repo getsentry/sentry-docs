@@ -13,20 +13,18 @@ The Starlette integration adds support for the [Starlette Framework](https://www
 pip install --upgrade 'sentry-sdk[starlette]'
 ```
 
-2. To configure the SDK, initialize it with the integration before your app has been initialized:
+2. To configure the SDK, initialize it before your app has been initialized:
+
+Sentry SDK will auto enabled support for Starlette if you have the `starlette` Python package installed in your project. There is no configuration options you need to add when initializing the Sentry SDK, everything works out of the box.
 
 ```python
 from starlette.applications import Starlette
 
 import sentry_sdk
-from sentry_sdk.integrations.starlette import StarletteIntegration
 
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        StarletteIntegration(),
-    ],
 
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
