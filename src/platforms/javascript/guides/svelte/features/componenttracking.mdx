@@ -1,0 +1,59 @@
+---
+title: Track Svelte Components
+---
+
+Sentry's Svelte SDK offers a feature to monitor the performance of your Svelte components: component tracking. Enabling this feature provides you with spans in your transactions that show the initialization and update cycles of your Svelte components. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
+
+## Usage
+
+To get started, add the Sentry `componentTrackingPreprocessor` to your `svelte.config.js` file:
+
+```javascript {tabTitle: svelte.config.js}
+import * as Sentry from "@sentry/svelte";
+
+const config = {
+  preprocess: [
+    Sentry.componentTrackingPreprocessor({
+      // Add the components you want to be tracked to this array.
+      // Specificy `true` to track all components or `false` to disable
+      // tracking entirely
+      // (defaults to `true`)
+      trackComponents: ["Navbar", "PrimaryButton", "LoginForm"],
+      // To disable component initialization spans, set this to `false`.
+      // (defaults to `true`)
+      trackInit: true,
+      // To disable component update spans, set this to `false`
+      // (defaults to `true`)
+      trackUpdates: false,
+    }),
+    // ...
+  ],
+  // ...
+};
+
+export default config;
+```
+
+This preprocessor is called at application build time. It inserts a function call to a function in the Sentry SDK into the `<script>` tag of your components before your app is compiled and bundled. The called function takes care of recording the spans by using the Svelte component's lifecycle hooks.
+
+## Alternative Usage
+
+If you don't want to use our preprocessor to automatically insert the function call at build time, you can call the tracking function manually in every component you would like to see tracked:
+
+```javascript {tabTitle: MyComponent.svelte}
+<script>
+  import * as Sentry from "@sentry/svelte";
+  Sentry.trackComponent({
+    // To disable component initialization spans, set this to `false`.
+    // (defaults to `true`)
+    trackInit: true,
+    // To disable component update spans, set this to `false`
+    // (defaults to `true`)
+    trackUpdates: false,
+    // Specify a custom name to be shown in the span description
+    // (defaults to the automatically detected component name)
+    componentName: string
+  })
+  // rest of your code
+</script>
+```
