@@ -22,13 +22,15 @@ _(Available in version 7 and above)_
 
 To use React Router v6 with Sentry:
 
-1. Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation and provide the functions it needs to enable performance tracing:
+Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation and provide the functions it needs to enable performance tracing:
 
     - `useEffect` hook from `react`
     - `useLocation` and `useNavigationType` hooks from `react-router-dom`
     - `createRoutesFromChildren` and `matchRoutes` functions from `react-router-dom` or `react-router` packages.
     
-2. Wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing` to create a higher order component, which will enable Sentry to reach your router context, as in the example below:
+### Usage with `<Routes />` component
+  
+If you use `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing` to create a higher order component, which will enable Sentry to reach your router context, as in the example below:
 
 ```javascript
 import React from 'react';
@@ -70,7 +72,62 @@ ReactDOM.render(
 );
 ```
 
-Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, /teams/:teamid/user/:userid), where applicable.
+### Usage with `useRoutes` hook
+_(Available in version 7.12.0 and above)_
+
+If you specify your route definitions as an object to the [`useRoutes` hook](https://reactrouter.com/en/main/hooks/use-routes), use `Sentry.wrapUseRoutes` to create a patched `useRoutes` hook that instruments your routes with Sentry.
+
+<Alert level="warning">
+
+`wrapUseRoutes` should be called outside of a React component, as in the example below. It's also recommended to assign the wrapped hook to a variable name starting with `use`, in accordance with [React documentation](https://reactjs.org/docs/hooks-custom.html#extracting-a-custom-hook).
+
+</Alert>
+
+```javascript
+import {
+    createRoutesFromChildren,
+    matchRoutes,
+    useLocation,
+    useNavigationType,
+    useRoutes,
+} from "react-router-dom";
+import { wrapUseRoutes } from "@sentry/react";
+import { useEffect } from "react";
+
+Sentry.init({
+    dsn: "__DSN__",
+    integrations: [
+        new BrowserTracing({
+            routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+                useEffect,
+                useLocation,
+                useNavigationType,
+                createRoutesFromChildren,
+                matchRoutes,
+            ),
+        }),
+    ],
+    tracesSampleRate: 1.0,
+});
+
+const useSentryRoutes = wrapUseRoutes(useRoutes);
+
+function App() {
+    return useSentryRoutes([
+        // ...
+    ]);
+}
+
+ReactDOM.render(
+    <BrowserRouter>
+        <App />
+    </BrowserRouter>,
+    document.getElementById("root"),
+);
+```
+
+
+Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable.
 
 
 ## React Router v4/v5
