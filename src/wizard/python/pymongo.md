@@ -5,7 +5,7 @@ support_level: production
 type: library
 ---
 
-The Pymongo integration adds support for [Pymongo](https://www.mongodb.com/docs/drivers/pymongo/) - the official MongoDB
+The Pymongo integration adds support for [Pymongo](https://www.mongodb.com/docs/drivers/pymongo/), the official MongoDB
 driver. It adds breadcrumbs and performace traces for all queries.
 
 1. Install `sentry-sdk` from PyPI with the `pymongo` extra:
@@ -14,7 +14,7 @@ driver. It adds breadcrumbs and performace traces for all queries.
 pip install --upgrade 'sentry-sdk[pymongo]'
 ```
 
-2. To configure the SDK, initialize it before creating any PyMongo's MongoClient instances:
+2. To configure the SDK, initialize it before creating any of PyMongo's MongoClient instances:
 
 ```python
 import sentry_sdk
