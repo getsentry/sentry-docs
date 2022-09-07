@@ -11,6 +11,7 @@ import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
 import GuideGrid from "./guideGrid";
+import Include from "./include";
 import JsCdnTag from "./jsCdnTag";
 import LambdaLayerDetail from "./lambdaLayerDetail";
 import Note from "./note";
@@ -33,6 +34,7 @@ const mdxComponents = {
   CodeTabs,
   ConfigKey,
   GuideGrid,
+  Include,
   JsCdnTag,
   Link: SmartLink,
   Note,

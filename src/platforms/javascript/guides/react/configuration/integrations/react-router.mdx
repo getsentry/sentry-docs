@@ -22,13 +22,15 @@ _(Available in version 7 and above)_
 
 To use React Router v6 with Sentry:
 
-1. Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation and provide the functions it needs to enable performance tracing:
+Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation and provide the functions it needs to enable performance tracing:
 
     - `useEffect` hook from `react`
     - `useLocation` and `useNavigationType` hooks from `react-router-dom`
     - `createRoutesFromChildren` and `matchRoutes` functions from `react-router-dom` or `react-router` packages.
     
-2. Wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing` to create a higher order component, which will enable Sentry to reach your router context, as in the example below:
+### Usage With `<Routes />` Component
+  
+If you use the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context, as in the example below:
 
 ```javascript
 import React from 'react';
@@ -70,20 +72,112 @@ ReactDOM.render(
 );
 ```
 
-Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, /teams/:teamid/user/:userid), where applicable.
+### Usage With `useRoutes` Hook
+_(Available in version 7.12.1 and above)_
+
+If you specify your route definitions as an object to the [`useRoutes` hook](https://reactrouter.com/en/main/hooks/use-routes), use `Sentry.wrapUseRoutes` to create a patched `useRoutes` hook that instruments your routes with Sentry.
+
+<Alert level="warning">
+
+`wrapUseRoutes` should be called outside of a React component, as in the example below. It's also recommended that you assign the wrapped hook to a variable name starting with `use`, as per the [React documentation](https://reactjs.org/docs/hooks-custom.html#extracting-a-custom-hook).
+
+</Alert>
+
+```javascript
+import {
+    createRoutesFromChildren,
+    matchRoutes,
+    useLocation,
+    useNavigationType,
+    useRoutes,
+} from "react-router-dom";
+import { wrapUseRoutes } from "@sentry/react";
+import { useEffect } from "react";
+
+Sentry.init({
+    dsn: "__DSN__",
+    integrations: [
+        new BrowserTracing({
+            routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+                useEffect,
+                useLocation,
+                useNavigationType,
+                createRoutesFromChildren,
+                matchRoutes,
+            ),
+        }),
+    ],
+    tracesSampleRate: 1.0,
+});
+
+const useSentryRoutes = wrapUseRoutes(useRoutes);
+
+function App() {
+    return useSentryRoutes([
+        // ...
+    ]);
+}
+
+ReactDOM.render(
+    <BrowserRouter>
+        <App />
+    </BrowserRouter>,
+    document.getElementById("root"),
+);
+```
+
+
+Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable.
 
 
 ## React Router v4/v5
 
 The React router instrumentation uses the React router library to create `pageload/navigation` transactions and paramaterize transaction names. Make sure you use a `Router` component combined with `createBrowserHistory` (or equivalent).
 
-### Parameterized transaction names
+### Parameterized Transaction Names
 
-To get parameterized transaction names (ex. `/teams/:teamid/user/:userid` instead of `/teams/123/user/345`), you must give the SDK access to the match path of the route render. This is as there is no static route config that the SDK can use in React Router v4/v5. There are two ways to accomplish this:
+To get parameterized transaction names (for example, `/teams/:teamid/user/:userid` instead of `/teams/123/user/345`), you must explicitly set the routes you want paramaterized. That's because there is no static route config that the SDK can use in React Router v4/v5.
 
-1. Pass a Route Config Object
+We recommend you use the `withSentryRouting` higher order component to create a `SentryRoute` component that will update the match path on render.
 
-You can pass an array of route config objects as per [react-router-config](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config). to the instrumentation function call. You will also need to provide the `matchPath` function exported from the `react-router-dom` or `react-router` packages.
+```javascript
+import {Route, Router, Switch } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+
+import * as Sentry from '@sentry/react';
+import { BrowserTracing } from '@sentry/tracing';
+
+// Create Custom Sentry Route component
+const SentryRoute = Sentry.withSentryRouting(Route);
+
+const history = createBrowserHistory();
+
+Sentry.init({
+  integrations: [
+    new BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
+    }),
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+render() {
+  return (
+    <Router history={history}>
+      <Switch>
+        <SentryRoute path="/users/:userid" component={() => <div>UserId</div>} />
+        <SentryRoute path="/users" component={() => <div>Users</div>} />
+        <SentryRoute path="/" component={() => <div>Home</div>} />
+      </Switch>
+    </Router>
+  );
+}
+```
+
+If you don't want to wrap individual routes, you can still specify parameterized routes manually by passing an array of route config objects, per [react-router-config](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config), to the instrumentation function call. You'll also need to provide the `matchPath` function exported from the `react-router-dom` or `react-router` packages.
 
 ```javascript
 import { Route, Router, Switch, matchPath } from 'react-router-dom';
@@ -118,47 +212,6 @@ render() {
          <Route path="/users/:userid" component={() => <div>UserId</div>} />
          <Route path="/users" component={() => <div>Users</div>} />
          <Route path="/" component={() => <div>Home</div>} />
-      </Switch>
-    </Router>
-  );
-}
-```
-
-2. Use Sentry Route component
-
-Use the `withSentryRouting` higher order component to create a `SentryRoute` component that will update the match path on render.
-
-```javascript
-import {Route, Router, Switch } from 'react-router-dom';
-import { createBrowserHistory } from 'history';
-
-import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
-
-// Create Custom Sentry Route component
-const SentryRoute = Sentry.withSentryRouting(Route);
-
-const history = createBrowserHistory();
-
-Sentry.init({
-  integrations: [
-    new BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-
-render() {
-  return (
-    <Router history={history}>
-      <Switch>
-        <SentryRoute path="/users/:userid" component={() => <div>UserId</div>} />
-        <SentryRoute path="/users" component={() => <div>Users</div>} />
-        <SentryRoute path="/" component={() => <div>Home</div>} />
       </Switch>
     </Router>
   );

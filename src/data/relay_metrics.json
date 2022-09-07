@@ -70,7 +70,7 @@
   {
     "type": "Timer",
     "name": "event.wait_time",
-    "description": "Time spent between receiving a request in Relay (that is, beginning of request handling) and\nthe start of synchronous processing in the EnvelopeProcessor. This metric primarily\nindicates backlog in event processing.",
+    "description": "Time spent between the start of request handling and processing of the envelope.\n\nThis includes streaming the request body, scheduling overheads, project config fetching,\nbatched requests and congestions in the internal processor. This does not include delays in\nthe incoming request (body upload) and skips all envelopes that are fast-rejected.",
     "features": []
   },
   {
@@ -140,6 +140,12 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "metrics.buckets.batches_per_partition",
+    "description": "The number of batches emitted per partition by [`crate::aggregation::Aggregator`].",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "metrics.buckets.cost",
     "description": "The total storage cost of metric buckets in Relay's metrics aggregator.",
@@ -194,6 +200,18 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "metrics.buckets.partition_keys",
+    "description": "Distribution of flush buckets over partition keys.\n\nThe distribution of buckets should be even.\nIf it is not, this metric should expose it.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.per_batch",
+    "description": "The number of buckets in a batch emitted by [`crate::aggregation::Aggregator`].\n\nThis corresponds to the number of buckets that will end up in an envelope.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "metrics.buckets.scan_duration",
     "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.",
@@ -243,6 +261,12 @@
     "type": "Counter",
     "name": "project_cache.eviction",
     "description": "Number of evicted stale projects from the cache.\n\nRelay scans the in-memory project cache for stale entries in a regular interval configured\nby `cache.eviction_interval`.\n\nThe cache duration for project states can be configured with the following options:\n\n- `cache.project_expiry`: The time after which a project state counts as expired. It is\nautomatically refreshed if a request references the project after it has expired.\n- `cache.project_grace_period`: The time after expiry at which the project state will still\nbe used to ingest events. Once the grace period expires, the cache is evicted and new\nrequests wait for an update.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "project_cache.garbage.queue_size",
+    "description": "The number of items currently in the garbage disposal queue.",
     "features": []
   },
   {
@@ -379,12 +403,6 @@
     "type": "Counter",
     "name": "server.starting",
     "description": "Number of Relay server starts.\n\nThis can be used to track unwanted restarts due to crashes or termination.",
-    "features": []
-  },
-  {
-    "type": "Set",
-    "name": "unique_projects",
-    "description": "Represents the number of active projects in the current slice of time",
     "features": []
   },
   {
