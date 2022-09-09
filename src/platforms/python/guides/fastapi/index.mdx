@@ -8,6 +8,8 @@ description: "Learn about using Sentry with FastAPI."
 
 The FastAPI integration adds support for the [FastAPI Framework](https://fastapi.tiangolo.com/).
 
+The Sentry SDK automatically enables support for FastAPI if you have the `fastapi` Python package installed in your project. There are no configuration options you need to add when initializing the Sentry SDK as everything works out of the box.
+
 ## Install
 
 Install `sentry-sdk` from PyPI with the `fastapi` extra:
@@ -24,16 +26,10 @@ To configure the SDK, initialize it with the integration before your app has bee
 from fastapi import FastAPI
 
 import sentry_sdk
-from sentry_sdk.integrations.starlette import StarletteIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        StarletteIntegration(),
-        FastApiIntegration(),
-    ],
 
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
@@ -43,14 +39,6 @@ sentry_sdk.init(
 
 app = FastAPI()
 ```
-
-Because FastAPI is based on the Starlette framework, you need to enable both `StarletteIntegration` and `FastApiIntegration`.
-
-<Note>
-
-In the future, we will make this auto-enabling, so you won't need to add the `StarletteIntegration` to your `sentry_sdk.init()` call. Instead, the Sentry SDK will detect the presence of Starlette and will set up the integration automatically.
-
-</Note>
 
 ## Verify
 
@@ -80,9 +68,11 @@ Visiting `"/sentry-debug"` will trigger an error that will be captured by Sentry
 
 ## Options
 
-You can pass the following keyword arguments to `FastApiIntegration()`:
+If you want to change the default behavior of the FastAPI integration, you need to instantiate the integration by hand and pass it to Sentry's `init` function.
 
-- `transaction_style`:
+Because FastAPI is based on the Starlette framework, both integrations `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
+
+You can pass the keyword argument `transaction_style` to `StarletteIntegration()` and `FastApiIntegration()`.
 
 With this option, you can influence how the transactions are named in Sentry. For example:
 
