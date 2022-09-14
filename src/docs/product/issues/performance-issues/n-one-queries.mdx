@@ -19,7 +19,7 @@ The evidence for a N+1 queries has four main aspects:
 - the source span. This is the query that caused the N+1 queries
 - the repeating span. This is the "N" of "N+1 queries". This is the looped query that should have been part of the source
 
-![N+1 Query span evidence](span-evidence.png)
+![N+1 Query span evidence](n-plus-one-span-evidence.png)
 
 ## Example
 
@@ -36,7 +36,7 @@ def books(request):
 
 This code has a subtle performance problem. Each call to `book.author.name` makes a query to fetch the book's author! In total, this code makes 11 queries: one query to fetch the list of books, and 10 more queries to fetch the author of each book. This results in a characteristic query span waterfall:
 
-![N+1 queries in an example application](n-plus-one-database-queries-in-booker.png)
+![N+1 queries in an example application](n-plus-one-queries-before.png)
 
 In order to fix this issue, you could use the `selected_related` method in Django, like so:
 
@@ -49,4 +49,6 @@ def books(request):
     return HttpResponse((", ").join(book_list))
 ```
 
-Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query.
+Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query. Instead of a long waterfall, there is a single `SELECT` query:
+
+![Solved N+1 queries in an example application](n-plus-one-queries-after.png)
