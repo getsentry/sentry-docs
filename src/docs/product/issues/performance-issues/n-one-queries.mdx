@@ -8,16 +8,16 @@ description: "Learn more about N+1 queries and how to diagnose and fix them."
 
 ## N+1 Queries
 
-An "N+1 Query" is a performance issue in which the application makes database queries in a loop, instead of making a single query that returns all the information at once. Each database connection has some amount of performance overhead, so querying the database in a loop can be many times slower than doing it just once. This issue often occurs when using an Object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
+"N+1 Queries" is a performance problem where the application makes database queries in a loop, instead of making a single query that returns all the information at once. Each database connection has some amount of performance overhead, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when using an Object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
 
-## Issue Properties
+## Span Evidence
 
-An N+1 Query issue has four main properties:
+The evidence for a N+1 queries has four main aspects:
 
 - the transaction name
-- the parent span. This can be a view, a serializer, or another kind of span that groups all the database queries
-- the source span. This is a database query span that caused the N+1 issue
-- the repeated span. This is the repeated query that fetches information that should have been fetched in the source span
+- the "parent" span. This can be a view, a serializer, or another span that logically groups the queries
+- the "source" span. This is the query that caused the N+1 queries
+- the "repeated" span. This is the "N" of "N+1 queries". This is the looped query that should have been part of the source
 
 ![N+1 Query span evidence](span-evidence.png)
 
@@ -34,7 +34,7 @@ def books(request):
     return HttpResponse((", ").join(book_list))
 ```
 
-This code has a performance issue. Instead of making one query to fetch all books and their authors, it makes 11 queries! One query to fetch the list of books, and then ten queries to fetch the author of each book one-by-one. This results in a characteristic N+1 Query span waterfall:
+This code has a subtle performance problem. Each call to `book.author.name` makes a query to fetch the book's author! In total, this code makes 11 queries: one query to fetch the list of books, and 10 more queries to fetch the author of each book. This results in a characteristic query span waterfall:
 
 ![N+1 queries in an example application](n-plus-one-database-queries-in-booker.png)
 
@@ -48,3 +48,5 @@ def books(request):
     book_list = [book.title + " by " + book.author.name for book in books]
     return HttpResponse((", ").join(book_list))
 ```
+
+Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query.
