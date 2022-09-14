@@ -166,6 +166,13 @@ const getPlugins = () => {
     {
       resolve: `gatsby-source-filesystem`,
       options: {
+        name: `platform-includes`,
+        path: `${root}/src/platform-includes`,
+      },
+    },
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
         name: `includes`,
         path: `${root}/src/includes`,
       },
