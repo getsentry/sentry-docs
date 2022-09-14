@@ -104,11 +104,11 @@ import Sentry
 SentrySDK.start { options in
     // ...
 
-    // Enable all experimental auto instrumentation features
+    // Enable all experimental features
     options.enableFileIOTracking = true
     options.enableCoreDataTracking = true
     options.enableUserInteractionTracing = true
-    options.enableAppHangTracking = true
     options.attachScreenshot = true
+    options.attachViewHierarchy = true
 }
 ```
