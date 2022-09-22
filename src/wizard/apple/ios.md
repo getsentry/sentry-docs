@@ -37,6 +37,11 @@ func application(_ application: UIApplication,
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0
+
+        // Features turned off by default, but worth checking out
+        options.enableAppHangTracking = true
+        options.enableFileIOTracking = true
+        options.enableCoreDataTracking = true
     }
 
     return true
@@ -58,6 +63,11 @@ struct SwiftUIApp: App {
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
+
+            // Features turned off by default, but worth checking out
+            options.enableAppHangTracking = true
+            options.enableFileIOTracking = true
+            options.enableCoreDataTracking = true
         }
     }
 }
@@ -105,8 +115,6 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
-    options.enableFileIOTracking = true
-    options.enableCoreDataTracking = true
     options.enableUserInteractionTracing = true
     options.attachScreenshot = true
     options.attachViewHierarchy = true
