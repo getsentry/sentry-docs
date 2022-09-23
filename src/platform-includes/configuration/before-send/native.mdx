@@ -18,11 +18,9 @@ int main(void) {
 The callback is executed in the same thread as the call to `sentry_capture_event`. Work performed by the function may thus block the executing thread. For this reason, consider avoiding heavy work in `before_send`.
 
 
-#### Using `on_crash` (starting with version 0.4.19)
+#### Using `on_crash`
 
-The `before_send` callback implementation in `sentry-native` makes it hard to distinguish between normal events
-and crashes. For this reason, we introduced another callback, `on_crash`, which - at this point - only exists 
-in `sentry_native`:
+The `before_send` callback implementation in `sentry-native` makes it hard to distinguish between normal events and crashes. For this reason, we introduced another callback, `on_crash`, which - at this point - only exists in `sentry_native`:
 
 ```c
 #include <sentry.h>
@@ -54,10 +52,7 @@ int main(void) {
 }
 ```
 
-The `on_crash` callback replaces `before_send` as a callback for crash events only. They can
-be defined simultaneously, where the SDK prevents `before_send` from being invoked for crash 
-events. This allows for better differentiation between crashes and other events and 
-gradual migration from existing `before_send` implementations:
+The `on_crash` callback replaces `before_send` as a callback for crash events only. They can be defined simultaneously, where the SDK prevents `before_send` from being invoked for crash events. This allows for better differentiation between crashes and other events and gradual migration from existing `before_send` implementations:
 
 - If you have a `before_send` implementation and do not define an `on_crash`
   callback `before_send` will receive both normal and crash events as before
