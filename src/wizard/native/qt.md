@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
 {
     sentry_options_t *options = sentry_options_new();
     sentry_options_set_dsn(options, "___PUBLIC_DSN___");
+    sentry_options_set_release(options, "my-project-name@2.3.12");
+    sentry_options_set_debug(options, 1);
     sentry_init(options);
 
     // Make sure everything flushes
