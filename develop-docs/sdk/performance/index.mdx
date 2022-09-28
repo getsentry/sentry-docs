@@ -38,7 +38,7 @@ See more about how sampling should be performed below.
 
 Sentry SDKs propagate trace information to downstream SDKs via headers on outgoing HTTP requests. The `tracePropagationTargets` option gives users a mechanism of controlling to which outgoing HTTP requests these headers should be attached. For example, users can specify this property to keep trace propagation within their infrastructure, thereby preventing data within the headers from being sent to third party services.
 
-This option takes an array of strings and/or regular expressions, and SDKs should only add trace headers to an outgoing request if the request's URL matches (or, in the case of string literals, contains) at least one of the items from the array.
+This option takes an array of strings and/or regular expressions. SDKs should only add trace headers to an outgoing request if the request's URL matches the regex or, in the case of string literals, contains at least one of the items from the array. String literals do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
 
 SDKs may choose a default value which makes sense for their use case. Most SDKs default to the regex `.*` (meaning they attach headers to all outgoing requests), but deviation is allowed if necessary. For example, because of CORS, browser-based SDKs default to only adding headers to domain-internal requests.
 
@@ -52,7 +52,7 @@ The following example shows which URLs of outgoing requests would (not) match a 
 // Entries can be strings or regex
 tracePropagationTargets: ['localhost', /^\// ,/myApi.com\/v[2-4]/]
 
-URLs matching: 'localhost:8443/api/users', '/api/envelopes', 'myApi.com/v2/projects'
+URLs matching: 'localhost:8443/api/users', 'mylocalhost:8080/api/users', '/api/envelopes', 'myApi.com/v2/projects'
 URLs not matching: 'someHost.com/data', 'myApi.com/v1/projects'
 ```
 
