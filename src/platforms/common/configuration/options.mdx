@@ -41,6 +41,27 @@ Changing this value will affect issue grouping. Since the frame significantly ch
 
 </ConfigKey>
 
+<ConfigKey name="is-global-mode-enabled" supported={["dotnet"]}>
+
+Specifies whether to use global scope management mode. Should be `true` for client applications and `false` for server applications.
+
+Example scenarios where it should be explicitly set to true:
+
+ * Universal Windows platform (UWP) applications
+ * WinForms applications
+ * Windows Presentation Foundation (WPF) applications
+ * Single user console applications
+
+Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
+
+</ConfigKey>
+
+<ConfigKey name="database-path" supported={["native"]}>
+
+Allows you to specify a path to the local event- and crash-database of the Native SDK. This path will default to `.sentry-native` relative to the current working directory (`CWD`). While this is a convenient setting for development, we strongly urge you to provide an explicit database path for our production deployments. In many deployment scenarios, the path relative to the `CWD` will not be writable. For this reason, you should store the database in your application's user-specific data/cache directory (e.g., under `%AppData%\Local` on Windows, `~/Library/Application Support` on macOS, or `XDG_CACHE_HOME` on Linux).
+
+</ConfigKey>
+
 <ConfigKey name="debug" notSupported={["php"]}>
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
@@ -97,11 +118,19 @@ By default the SDK will read from `Application.productName` and `Application.ver
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["unity", "dotnet", "javascript.electron"]}>
+<PlatformSection notSupported={["native", "javascript.electron", "unity", "dotnet", "python"]}>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</PlatformSection>
+
+<PlatformSection supported={["native"]}>
+
+Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Otherwise, the default environment is `production`.
 
 </PlatformSection>
 
@@ -126,6 +155,14 @@ Sets the environment. This string is freeform and set by default. A release can 
 By default, the SDK reports `debug` when the debugger is attached. Otherwise, the default environment is `production`.
 
 Additionally, if you are running with the ASP.NET Core integration, you will also see the environment named as `staging`, if running in staging, or `development`, if running in development mode.
+
+</PlatformSection>
+
+<PlatformSection supported={["python"]}>
+
+Sets the environment. This string is freeform and set to `production` by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `production` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable.
 
 </PlatformSection>
 
@@ -370,16 +407,23 @@ This is the maximum number of properties or entries that will be included in any
 
 </ConfigKey>
 
-<ConfigKey name="attach-screenshot" supported={["android", "apple.ios"]}>
+<ConfigKey name="attach-screenshot" supported={["android", "apple.ios", "unity", "dotnet.xamarin"]}>
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
-Screenshots for hard crashes are not supported on iOS.
+Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 <PlatformSection supported={["android"]}>
 
 _(New in version 6.0.0)_
 
 </PlatformSection>
+
+</ConfigKey>
+
+<ConfigKey name="attach-viewhierarchy" supported={["apple.ios"]}>
+
+Renders an ASCII represention of the entire view hierarchy of the application when an error happens and includes it as an attachment.
+Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
 
 </ConfigKey>
 
@@ -429,7 +473,7 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 <ConfigKey name="enabled" supported={["javascript", "node"]}>
 
-Specifies whether this SDK should send events to Sentry. Defaults to `true`.  Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
+Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
 
 </ConfigKey>
 
@@ -490,20 +534,26 @@ This function is called with an SDK-specific event object, and can return a modi
 
 </ConfigKey>
 
-<ConfigKey name="before-breadcrumb">
+<ConfigKey name="on-crash" supported={["native"]}>
+
+This function is called with a backend-specific event object, and can return a modified event object or nothing to skip reporting the event. In contrast to `before_send`, it is only called when a crash occured. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
+
+</ConfigKey>
+
+<ConfigKey name="before-breadcrumb" notSupported={["native"]}>
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
 </ConfigKey>
 
-<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "flutter"]}>
+<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "dart"]}>
 
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "flutter", "rust"]}>
+<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "dart", "rust"]}>
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
@@ -521,15 +571,41 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 </ConfigKey>
 
-<ConfigKey name="cache-directory-path" supported={["dotnet", "android"]}>
+<ConfigKey name="cache-directory-path" supported={["dotnet", "android", "unity"]}>
 
 Specifies a local directory used for caching payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
 
+</ConfigKey>
+
+<PlatformSection supported={["android"]}>
+
+Default: set to `android.content.Context.getCacheDir()/sentry`.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]} notSupported={["dotnet.xamarin", "dotnet.maui", "unity"]}>
+
 Default: not set (caching is disabled).
 
-Client SDKs built on top of the Sentry SDK for .NET, such Xamarin and Unity, have this feature enabled by default. For example in Unity, the default value is `Application.persistentDataPath`. You can disable offline caching by setting it to `null`.
+</PlatformSection>
 
-</ConfigKey>
+<PlatformSection supported={["unity"]}>
+
+The default value is `Application.persistentDataPath`. You can disable offline caching by setting it to `null`.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.xamarin"]}>
+
+The default value is `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)`.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.maui"]}>
+
+The default value is `Path.Combine(FileSystem.CacheDirectory, "sentry")`. See the [Microsoft docs](https://docs.microsoft.com/dotnet/maui/platform-integration/storage/file-system-helpers#platform-differences) for how `FileSystem.CacheDirectory` differs on each supported platform.
+
+</PlatformSection>
 
 <ConfigKey name="init-cache-flush-timeout" supported={["dotnet"]}>
 
@@ -547,7 +623,19 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 <ConfigKey name="send-attempts" supported={["php"]}>
 
-Controls how many times the SDK will attempt to resend an event to Sentry. The default is `3`.
+_Deprecated._ Controls how many times the SDK will attempt to resend an event to Sentry. The default is `0`.
+
+</ConfigKey>
+
+<ConfigKey name="http-connect-timeout" supported={["php"]}>
+
+The maximum number of seconds to wait while trying to connect to a server. The default is `2`.
+
+</ConfigKey>
+
+<ConfigKey name="http-timeout" supported={["php"]}>
+
+The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option. The default is `5`.
 
 </ConfigKey>
 
@@ -557,13 +645,13 @@ Controls how many times the SDK will attempt to resend an event to Sentry. The d
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native"]}>
+<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "dart"]}>
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
-<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]} notSupported={["native"]}>
+<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
@@ -575,9 +663,29 @@ An optional property that configures which downstream services receive the `sent
 
 </ConfigKey>
 
+<ConfigKey name="trace-propagation-targets" supported={["node"]}>
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</ConfigKey>
+
 </PlatformSection>
 
 <PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor", "flutter"]}>
+
+## Experimental Features
+
+<ConfigKey name="experimental" supported={[]}>
+
+An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
+
+</ConfigKey>
 
 ## Hybrid SDK Options
 
@@ -648,7 +756,7 @@ Set this boolean to `false` to disable auto [performance monitoring](/product/pe
 
 </ConfigKey>
 
-<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native", "flutter"]}>
+<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native", "javascript.capacitor", "flutter"]}>
 
 Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
 

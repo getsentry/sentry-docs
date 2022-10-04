@@ -6,7 +6,7 @@ type: language
 ---
 
 <Alert level="info">
-Sentry for .NET is a collection of NuGet packages provided by Sentry; it supports .NET Framework 4.6.1 and .NET Core 2.0 and above. At its core, Sentry for .NET provides a raw client for sending events to Sentry. If you use a framework such as <strong>ASP.NET</strong>, <strong>WinForms</strong>, <strong>WPF</strong>, <strong>Xamarin</strong>, <strong>Serilog</strong>, or similar, we recommend visiting our <a href="https://docs.sentry.io/platforms/dotnet/">Sentry .NET</a> documentation for installation instructions.
+Sentry for .NET is a collection of NuGet packages provided by Sentry; it supports .NET Framework 4.6.1 and .NET Core 2.0 and above. At its core, Sentry for .NET provides a raw client for sending events to Sentry. If you use a framework such as <strong>ASP.NET</strong>, <strong>WinForms</strong>, <strong>WPF</strong>, <strong>MAUI</strong>, <strong>Xamarin</strong>, <strong>Serilog</strong>, or similar, we recommend visiting our <a href="https://docs.sentry.io/platforms/dotnet/">Sentry .NET</a> documentation for installation instructions.
 </Alert>
 
 Install the **NuGet** package:
@@ -30,6 +30,8 @@ using (SentrySdk.Init(o =>
         // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         o.TracesSampleRate = 1.0;
+        // Enable Global Mode if running in a client app
+        o.IsGlobalModeEnabled = true;
     }))
 {
     // App code goes here. Dispose the SDK before exiting to flush events.

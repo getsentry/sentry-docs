@@ -46,6 +46,12 @@ codePush.getUpdateMetadata().then(update => {
 });
 ```
 
+If you're wrapping your root component with `Sentry.wrap` to access Performance features, `codePush` should be the outer most function because it needs access to the root component in order to swap out the bundle.
+
+```javascript
+export default codePush(Sentry.wrap(App));
+```
+
 ## Making Releases
 
 After updating your CodePush release, you have to upload the new assets to Sentry:
@@ -70,12 +76,15 @@ sentry-cli react-native appcenter {APP} ios ./build/CodePush --deployment {DEPLO
 ```
 
 For non-macOS devices building for iOS, you will need to pass extra parameters that can't be computed automatically (`--bundle-id` and `--version-name`).
+Within your `Info.plist`, `--version-name` corresponds to `CFBundleShortVersionString` .
+
+On iOS:
 
 ```bash
 sentry-cli react-native appcenter {APP} ios ./build/CodePush --deployment {DEPLOYMENT} --dist {DIST} --bundle-id {BUNDLE_ID} --version-name {VERSION_NAME}
 ```
 
-If you don't want to use the automatically computed release format, you will need to pass the `--release-name` parameter.
+If you don't want to use the automatically computed release format, instead of passing `--bundle-id` and `--version-name`, you'll need to pass the `--release-name` parameter.
 
 ```bash
 sentry-cli react-native appcenter {APP} ios ./build/CodePush --deployment {DEPLOYMENT} --dist {DIST} --release-name {RELEASE_NAME}

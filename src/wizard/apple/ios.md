@@ -37,6 +37,11 @@ func application(_ application: UIApplication,
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0
+
+        // Features turned off by default, but worth checking out
+        options.enableAppHangTracking = true
+        options.enableFileIOTracking = true
+        options.enableCoreDataTracking = true
     }
 
     return true
@@ -58,6 +63,11 @@ struct SwiftUIApp: App {
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
+
+            // Features turned off by default, but worth checking out
+            options.enableAppHangTracking = true
+            options.enableFileIOTracking = true
+            options.enableCoreDataTracking = true
         }
     }
 }
@@ -94,7 +104,7 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 
 Check out [the documentation](https://docs.sentry.io/platforms/apple/performance/instrumentation/) to learn more about the API and automatic instrumentations.
 
-> Want to play with some new features? Try out our experimental auto instrumentation for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), and [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+> Want to play with some new features? Try out our experimental features for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation), [Screenshots](https://docs.sentry.io/platforms/apple/guides/ios/enriching-events/screenshots/). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
 >
 > Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
 
@@ -104,9 +114,9 @@ import Sentry
 SentrySDK.start { options in
     // ...
 
-    // Enable all experimental auto instrumentation features
-    options.enableFileIOTracking = true
-    options.enableCoreDataTracking = true
+    // Enable all experimental features
     options.enableUserInteractionTracing = true
+    options.attachScreenshot = true
+    options.attachViewHierarchy = true
 }
 ```

@@ -92,6 +92,7 @@ const getPlugins = () => {
     "gatsby-plugin-sharp",
     "gatsby-plugin-sass",
     "gatsby-plugin-zeit-now",
+    "gatsby-plugin-sitemap",
     {
       resolve: "gatsby-plugin-google-gtag",
       options: {
@@ -165,6 +166,13 @@ const getPlugins = () => {
     {
       resolve: `gatsby-source-filesystem`,
       options: {
+        name: `platform-includes`,
+        path: `${root}/src/platform-includes`,
+      },
+    },
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
         name: `includes`,
         path: `${root}/src/includes`,
       },
@@ -223,6 +231,7 @@ export default {
   siteMetadata: {
     title: "Sentry Documentation",
     homeUrl: "https://docs.sentry.io",
+    siteUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
     description: "Product documentation for Sentry.io and its SDKs",
     author: "@getsentry",

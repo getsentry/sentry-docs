@@ -1,5 +1,29 @@
 [
   {
+    "type": "Histogram",
+    "name": "dynamic_sampling.change_duration",
+    "description": "Time in milliseconds from the start of transaction until the final name is determined.\n\nIf the transaction name changes multiple times, this records only the last instance. This\nmetric is not logged if there were no changes to the transaction name.\n\nThis metric is tagged with:\n\n- `source`: The transaction source value in the final event payload.\n- `platform`: The SDK platform value of the event payload.\n- `sdk_name`: The name of the client SDK as reported in the event payload.\n- `sdk_version`: The version of the client SDK as reported in the event payload.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "dynamic_sampling.change_pct",
+    "description": "Timing relative to the transaction duration until the final name is determined.\n\nThis is a percentage between `0.0` and `100.0`.\n\nThis metric is tagged with:\n\n- `source`: The transaction source value in the final event payload.\n- `platform`: The SDK platform value of the event payload.\n- `sdk_name`: The name of the client SDK as reported in the event payload.\n- `sdk_version`: The version of the client SDK as reported in the event payload.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "dynamic_sampling.changes",
+    "description": "Counts how often a transaction name was changed before submitting the final transaction.\n\nA value of `0` indicates that the transaction was created with the final transaction name.\nIn this case, the DSC will have the correct transaction name guaranteed. However, to\ndetermine how many traces had wrong transaction names propagated, check the\n`dynamic_sampling.propagations`.\n\nThis metric is tagged with:\n\n- `source`: The transaction source value in the final event payload.\n- `platform`: The SDK platform value of the event payload.\n- `sdk_name`: The name of the client SDK as reported in the event payload.\n- `sdk_version`: The version of the client SDK as reported in the event payload.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "dynamic_sampling.propagations",
+    "description": "Counts the number of propagations before the final transaction name has been determined.\n\nA value of `0` indicates that the entire trace had identical transaction names in the\nDynamic Sampling Context (DSC). This means that the entire trace is sampled consistently.\n\nNote that this differs from `dynamic_sampling.changes`, which indicates changes even in the\nabsence of propagations.\n\nThis metric is tagged with:\n\n- `source`: The transaction source value in the final event payload.\n- `platform`: The SDK platform value of the event payload.\n- `sdk_name`: The name of the client SDK as reported in the event payload.\n- `sdk_version`: The version of the client SDK as reported in the event payload.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.",
@@ -62,9 +86,15 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "event.transaction_source",
+    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "event.wait_time",
-    "description": "Time spent between receiving a request in Relay (that is, beginning of request handling) and\nthe start of synchronous processing in the EnvelopeProcessor. This metric primarily\nindicates backlog in event processing.",
+    "description": "Time spent between the start of request handling and processing of the envelope.\n\nThis includes streaming the request body, scheduling overheads, project config fetching,\nbatched requests and congestions in the internal processor. This does not include delays in\nthe incoming request (body upload) and skips all envelopes that are fast-rejected.",
     "features": []
   },
   {
@@ -77,9 +107,7 @@
     "type": "Timer",
     "name": "event_processing.filtering",
     "description": "Time in milliseconds spent running inbound data filters on an event.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Timer",
@@ -136,6 +164,12 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "metrics.buckets.batches_per_partition",
+    "description": "The number of batches emitted per partition by [`crate::aggregation::Aggregator`].",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "metrics.buckets.cost",
     "description": "The total storage cost of metric buckets in Relay's metrics aggregator.",
@@ -172,6 +206,12 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "metrics.buckets.invalid_timestamp",
+    "description": "Distribution of invalid bucket timestamps observed, relative to the time of observation.\n\nThis is a temporary metric to better understand why we see so many invalid timestamp errors.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "metrics.buckets.merge.hit",
     "description": "Incremented every time two buckets or two metrics are merged.\n\nTagged by metric type and name.",
@@ -190,6 +230,18 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "metrics.buckets.partition_keys",
+    "description": "Distribution of flush buckets over partition keys.\n\nThe distribution of buckets should be even.\nIf it is not, this metric should expose it.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.per_batch",
+    "description": "The number of buckets in a batch emitted by [`crate::aggregation::Aggregator`].\n\nThis corresponds to the number of buckets that will end up in an envelope.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "metrics.buckets.scan_duration",
     "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.",
@@ -199,14 +251,18 @@
     "type": "Timer",
     "name": "metrics.extraction.transactions",
     "description": "Time in milliseconds spent on converting a transaction event into a metric.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Counter",
     "name": "metrics.insert",
     "description": "Incremented for every metric that is inserted.\n\nTagged by metric type and name.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.transaction_name",
+    "description": "Count extraction of transaction names. Tag with the decision to drop / replace / use original.",
     "features": []
   },
   {
@@ -238,6 +294,12 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "project_cache.garbage.queue_size",
+    "description": "The number of items currently in the garbage disposal queue.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "project_cache.hit",
     "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
@@ -260,6 +322,14 @@
     "name": "project_state.attempts",
     "description": "Number of attempts required to fetch the config for a given project key.",
     "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.decompression",
+    "description": "Time in milliseconds required to decompress a project config from redis.\n\nNote that this also times the cases where project config is uncompressed,\nin which case the timer should be very close to zero.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Timer",
@@ -290,6 +360,14 @@
     "name": "project_state.received",
     "description": "Number of project states **returned** from the upstream for each batch request.\n\nIf multiple batches are updated concurrently, this metric is reported multiple times.\n\nSee `project_cache.size` for more description of the project cache.",
     "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.redis.requests",
+    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Counter",
@@ -355,12 +433,6 @@
     "type": "Counter",
     "name": "server.starting",
     "description": "Number of Relay server starts.\n\nThis can be used to track unwanted restarts due to crashes or termination.",
-    "features": []
-  },
-  {
-    "type": "Set",
-    "name": "unique_projects",
-    "description": "Represents the number of active projects in the current slice of time",
     "features": []
   },
   {

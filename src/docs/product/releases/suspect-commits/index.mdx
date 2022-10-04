@@ -1,13 +1,16 @@
 ---
 title: Suspect Commits
 sidebar_order: 2
+redirect_from:
+  - /product/releases/setup/manual-setup-releases/
 description: "Learn how associating commits to a release allows you to track suspect commits."
 ---
 
 In your release process, you can add a step to create a release in Sentry and associate it with commits from your linked repository. When you've done this, you'll be able to see suspect commits and suggested assignees in issues, as well as resolve issues by commit, as described below.
 
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, suspect commits should already be enabled and this step should be done automatically.
 
-If you're using one of our [release automation](/product/releases/setup/release-automation/) options or our [manual setup](/product/releases/setup/manual-setup-releases/) instructions, suspect commits should already be enabled. However, we've included directions for enabling suspect commits using the [Sentry CLI](#using-the-cli) and [our API](#using-the-api) at the end of this page, just in case you need them. 
+However, if you don't have a repository integration installed, you can send Sentry your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
 
 ## Suspect Commits & Suggested Assignees
 
@@ -24,7 +27,7 @@ Suspect commits and suggested assignees will then display on the **Issue Details
 
 ## Resolve Issues by Commit
 
-Additionally, when you've enabled suspect commits, you'll be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the **Issue Details** page, next to the assignee dropdown. 
+Additionally, when you've enabled suspect commits, you'll be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the **Issue Details** page, next to the assignee dropdown.
 
 A commit message might look like this, for example:
 
@@ -44,7 +47,7 @@ If you’re using GitHub, you may have a privacy setting enabled that prevents S
 
 ## Enable Suspect Commits
 
-We recommend using Sentry’s [Command Line Interface](/product/cli/releases/) or [our API](/product/releases/setup/manual-setup-releases/#using-the-api) to add this step in your release process, whether you're doing this manually or using release automation. If you're using one of our [release automation](/product/releases/setup/release-automation/) options or our [manual setup](/product/releases/setup/manual-setup-releases/) instructions, this step should already be included, but we've included the relevant code below just in case.
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, suspect commits should already be enabled. However, if you don’t want to install a repository integration so Sentry can connect to your repository, or you’re using an unsupported repository provider or VCS (for example, Perforce), you can send Sentry your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
 
 This process assumes:
 
@@ -53,13 +56,12 @@ This process assumes:
 
 ### Using the CLI
 
-In this CLI example, the `--auto` flag determines the repository name automatically, and associates commits between the previous release’s commit and the current head commit with the release.
+In this CLI example:
 
-<Note>
-
-If the previous release doesn't have any commits associated with it, we’ll use the latest 20 commits.
-
-</Note>
+- Environment variables configure the CLI (see [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) for alternatives)
+- The `propose-version` sub-command determines a release ID automatically
+- A release tagged `VERSION` is created for the organization `my-org` for projects `project1` and `project2`
+- Because of the `--auto` flag, the repository name is determined automatically, and commits between the previous release’s head commit and the current head commit are associated with the release.
 
 ```bash
 # Assumes you're in a git repository
@@ -74,15 +76,88 @@ sentry-cli releases new -p project1 -p project2 $VERSION
 sentry-cli releases set-commits --auto $VERSION
 ```
 
+If you don't have a repo-based integration associated with your Sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's head commit and the current head commit with the release. If this is the first release, Sentry will use the latest 10 - 20 commits, depending on the integration. This behavior is configurable with the `--initial-depth` flag.
+
+Alternatively, you can use the `--local` flag to enable this behavior by default:
+
+```bash
+sentry-cli releases set-commits --local $VERSION
+```
+
 For more control over which commits to associate, or if you're unable to execute the command inside the repository, you can manually specify a repository and range.
 
-The following example associates commits (or refs) between `from` and `to` with the current release, where `from` is the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo using the form `owner-name/repo-name`. The `from` commit is optional; we’ll use the previous release’s commit as the baseline if it is excluded.
+The following example associates commits (or refs) between `from` and `to` with the current release, where `from` is the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo using the form `owner-name/repo-name`. The `from` commit is optional; we’ll use the previous release’s commit as the baseline if it is excluded:
 
 ```bash
 sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION
 ```
 
 ### Using the API
+
+To send Sentry your commit metadata using the API, use the [create release endpoint](/api/releases/create-a-new-release-for-an-organization/).
+
+Use the following format for your commits:
+
+```json
+{
+  "commits": [
+    {
+      "patch_set": [
+        { "path": "path/to/added-file.html", "type": "A" },
+        { "path": "path/to/modified-file.html", "type": "M" },
+        { "path": "path/to/deleted-file.html", "type": "D" }
+      ],
+      "repository": "owner-name/repo-name",
+      "author_name": "Author Name",
+      "author_email": "author_email@example.com",
+      "timestamp": "2018-09-20T11:50:22+03:00",
+      "message": "This is the commit message.",
+      "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+  ]
+}
+```
+
+`patch_set`
+
+: A list of the files that have been changed in the commit. Specifying the `patch_set` is necessary to power suspect commits and suggested assignees. It consists of two parts:
+
+    `path`
+    : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
+
+    `type`
+    : The types of changes that happend in that commit. The options are:
+        - `Add (A)`
+        - `Modify (M)`
+        - `Delete (D)`
+
+`repository`
+
+: The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
+
+`author_email`
+
+: The commit author's email is required to enable the suggested assignee feature.
+
+`author_name`
+
+: The commit author's name may also be included.
+
+`timestamp`
+
+: The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
+
+`message`
+
+: The commit message.
+
+`id`
+
+: The commit ID.
+
+#### Create the Release with Patch Data
+
+Here is an example of a request using patch data:
 
 <Note>
 
@@ -91,22 +166,31 @@ Confirm you’re using [Auth Tokens](/api/auth/#auth-tokens), **not** [API Keys]
 </Note>
 
 ```bash
-# Create a new release
-curl https://sentry.io/api/0/organizations/:organization_slug/releases/ \
+curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
   -X POST \
-  -H 'Authorization: Bearer {TOKEN}' \
+  -H 'Authorization: Bearer <Token>' \
   -H 'Content-Type: application/json' \
   -d '
  {
- "version": "2da95dfb052f477380608d59d32b4ab9",
- "refs": [{
- "repository":"owner-name/repo-name",
- "commit":"2da95dfb052f477380608d59d32b4ab9",
- "previousCommit":"1e6223108647a7bfc040ef0ca5c92f68ff0dd993"
- }],
- "projects":["my-project","my-other-project"]
-}
-'
+ "version": "2.0rc2",
+ "projects":["project-1","project-2"],
+ "commits":[
+     {
+        "patch_set": [
+            {"path": "path/to/added-file.html", "type": "A"},
+            {"path": "path/to/modified-file.html", "type": "M"},
+            {"path": "path/to/deleted-file.html", "type": "D"}
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
+        "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+ ]
+ }
+ '
 ```
 
 If you’d like to have more control over what order the commits appear in, you can send us a list of all commits. That might look like this:
