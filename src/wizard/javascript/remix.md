@@ -23,7 +23,7 @@ import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
-  dsn: "__DSN__",
+  dsn: "___DSN___",
   tracesSampleRate: 1,
   integrations: [
     new Sentry.BrowserTracing({
@@ -45,7 +45,7 @@ import { prisma } from "~/db.server";
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: "__DSN__",
+  dsn: "___DSN___",
   tracesSampleRate: 1,
   integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
 });

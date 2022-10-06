@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Join us in sorting through the madness that is code, and finding new ways to improve workflow productivity at DEX 2022 on Sept. 28, 2022.";
+  "See how Instacart re-built their entire release monitoring workflow in our live workshop on Oct. 12 @ 10am PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/events/dex/?promo_name=docs-banner";
+  "https://sentry.io/resources/how-instacart-re-built-release-monitoring-workflow/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
