@@ -20,12 +20,25 @@ const query = graphql`
   }
 `;
 
+type PageLink = {
+  title: string;
+  path: string;
+  description?: string;
+};
+
 type Props = {
   nextPages: boolean;
   header?: string;
+
+  /** Adds list items of page links that are not automatically found by the PageGrid component */
+  additionalPages?: PageLink[];
 };
 
-export default ({ nextPages = false, header }: Props): JSX.Element => {
+export default ({
+  nextPages = false,
+  header,
+  additionalPages,
+}: Props): JSX.Element => {
   const data = useStaticQuery(query);
   const location = useLocation();
 
@@ -53,11 +66,21 @@ export default ({ nextPages = false, header }: Props): JSX.Element => {
 
   if (!matches.length) return null;
 
+  const addedPages =
+    (additionalPages &&
+      additionalPages.map(p => ({
+        path: p.path,
+        context: { title: p.title, description: p.description },
+      }))) ||
+    [];
+
+  const items = [...matches, ...addedPages];
+
   return (
     <nav>
       {header && <h2>{header}</h2>}
       <ul>
-        {matches.map(n => (
+        {items.map(n => (
           <li key={n.path} style={{ marginBottom: "1rem" }}>
             <h4 style={{ marginBottom: 0 }}>
               <SmartLink to={n.path}>{n.context.title}</SmartLink>
