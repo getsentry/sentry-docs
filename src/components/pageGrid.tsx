@@ -37,7 +37,7 @@ type Props = {
 export default ({
   nextPages = false,
   header,
-  additionalPages,
+  additionalPages = [],
 }: Props): JSX.Element => {
   const data = useStaticQuery(query);
   const location = useLocation();
@@ -66,13 +66,10 @@ export default ({
 
   if (!matches.length) return null;
 
-  const addedPages =
-    (additionalPages &&
-      additionalPages.map(p => ({
-        path: p.path,
-        context: { title: p.title, description: p.description },
-      }))) ||
-    [];
+  const addedPages = additionalPages.map(p => ({
+    path: p.path,
+    context: { title: p.title, description: p.description },
+  }));
 
   const items = [...matches, ...addedPages];
 
