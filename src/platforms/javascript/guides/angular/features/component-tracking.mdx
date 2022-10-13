@@ -1,0 +1,161 @@
+---
+title: Track Angular Components
+description: "Learn how Sentry's Angular SDK allows you to monitor the rendering performance of your application and its components."
+---
+
+Sentry's Angular SDK offers a feature to monitor the performance of your Angular components: component tracking. Enabling this feature provides you with spans in your transactions that show the initialization and update cycles of your Angular components. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
+
+<Alert>
+
+To set up component tracking, you need to configure performance monitoring. For details on how to do this, check out our [Performance documentation](/platforms/javascript/guides/angular/performance/).
+
+</Alert>
+
+To track your components as part of your transactions, use any (or a combination) of the following options.
+
+## Using `TraceDirective`
+
+`TraceDirective` tracks a duration between the `OnInit` and `AfterViewInit` lifecycle hooks in your component template. It adds spans called **`ui.angular.init`** to the currently active transaction that allows you to track specific individual instances of your components. If you want to track all instances instead, use [`TraceClassDecorator`](#using-traceclassdecorator).
+
+Import `TraceModule` either globally in your application's `app.module.ts` file or in the module(s) in which
+you want to track your components:
+
+```typescript {filename:app.module.ts}
+import * as Sentry from "@sentry/angular";
+
+@NgModule({
+  // ...
+  imports: [Sentry.TraceModule],
+  // ...
+})
+export class AppModule {}
+```
+
+Then, in your component's template, add the directive to all components you want to track. Remember to give the `trace` attribute a name, which will be shown in the span's description:
+
+```html {filename:app.component.ts}
+<app-header [trace]="'header'"></app-header>
+<articles-list [trace]="'articles-list'"></articles-list>
+<app-footer [trace]="'footer'"></app-footer>
+```
+
+<Alert level="info" title="Compatibility">
+
+If you're using version 6 of the Angular SDK, using `TraceDirective` or `TraceModule` causes a
+compiler error at application compile time of your Angular application. This is a [known issue](https://github.com/getsentry/sentry-javascript/issues/3282)
+of our Angular SDK v6 and it was [fixed](https://github.com/getsentry/sentry-javascript/issues/4644)
+in version 7. We recommend upgrading to the latest Angular SDK version.
+Otherwise, please use the other options (`TraceClassDecorator` and `TraceMethodDecorator`)
+below to track your Angular components.
+
+</Alert>
+
+## Using `TraceClassDecorator`
+
+`TraceClassDecorator` tracks the duration between the `OnInit` and `AfterViewInit` lifecycle hooks in components. It adds spans called **`ui.angular.init`** to the currently active transaction. In contrast to [`TraceDirective`](#using-tracedirective), `TraceClassDecorator` tracks all instances of the component(s) you add it to, creating spans for each component instance.
+
+Just add `TraceClassDecorator` to the components you want to track:
+
+```typescript {filename:header.component.ts}
+import { Component } from "@angular/core";
+import * as Sentry from "@sentry/angular";
+
+@Component({
+  selector: "app-header",
+  templateUrl: "./header.component.html",
+})
+@Sentry.TraceClassDecorator()
+export class HeaderComponent {
+  // ...
+}
+```
+
+## Using `TraceMethodDecorator`
+
+`TraceMethodDecorator` tracks specific component lifecycle hooks as point-in-time spans. The added spans are called **`ui.angular.[methodname]`** (like, `ui.angular.ngOnChanges`). For example, you can use this decorator to track how often component changes are detected during an ongoing transaction:
+
+```typescript {filename:login.component.ts}
+import { Component, OnInit } from "@angular/core";
+import * as Sentry from "@sentry/angular";
+
+@Component({
+  selector: "app-login",
+  templateUrl: "./login.component.html",
+})
+export class LoginComponent implements OnChanges {
+  @Sentry.TraceMethodDecorator()
+  ngOnChanges(changes: SimpleChanges) {}
+}
+```
+
+## Advanced Usage
+
+You can combine our tracking utilities and track the bootstrapping duration of your app.
+
+### Combining Component Tracking Utilities
+
+To get the best insights into your components' performance, you can combine `TraceDirective`, `TraceClassDecorator`, and `TraceMethodDecorator`. This allows you to track component initialization durations as well as arbitrary lifecycle events, such as change and destroy events:
+
+```typescript {filename:user-card.component.ts}
+import { Component, OnInit } from "@angular/core";
+import * as Sentry from "@sentry/angular";
+
+@Component({
+  selector: "app-user-card",
+  templateUrl: "./user-card.component.html",
+})
+@Sentry.TraceClassDecorator()
+export class UserCardComponent implements OnChanges, OnDestroy {
+  @Sentry.TraceMethodDecorator()
+  ngOnChanges(changes: SimpleChanges) {}
+
+  @Sentry.TraceMethodDecorator()
+  ngOnDestroy() {}
+}
+```
+
+User `TraceDirective` if you only want to track components in certain instances or locations:
+
+```html {user-card.component.html}
+<div>
+  <app-icon trace="user-icon">user</app-icon>
+  <label>{{ user.name }}</label>
+  <!--...-->
+  <app-button trace="save-user">Save</app-button>
+</div>
+```
+
+### Track Angular Bootstrapping
+
+You can add your own custom spans by attaching them to the currently active transaction using the `getActiveTransaction`
+helper. For example, you can track the duration of the Angular bootstrapping process to find out how long your app takes to bootstrap on your users' devices:
+
+```javascript
+import { enableProdMode } from "@angular/core";
+import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
+import * as Sentry from "@sentry/angular";
+
+import { AppModule } from "./app/app.module";
+
+// ...
+
+const activeTransaction = Sentry.getActiveTransaction();
+const bootstrapSpan =
+  activeTransaction &&
+  activeTransaction.startChild({
+    description: "platform-browser-dynamic",
+    op: "ui.angular.bootstrap",
+  });
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .then(() => console.log(`Bootstrap success`))
+  .catch(err => console.error(err))
+  .finally(() => {
+    if (bootstrapSpan) {
+      bootstrapSpan.finish();
+    }
+  });
+```
+
+Learn more about [custom instrumentation](../../performance/instrumentation/custom-instrumentation/).
