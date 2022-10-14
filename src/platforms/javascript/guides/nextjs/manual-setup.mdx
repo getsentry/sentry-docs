@@ -48,29 +48,6 @@ Sentry.init({
 
 You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
-If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
-
-```javascript {filename:pages/api/*}
-import { withSentry } from "@sentry/nextjs";
-
-const handler = async (req, res) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default withSentry(handler);
-```
-
-```typescript {filename:pages/api/*}
-import type { NextApiRequest, NextApiResponse } from "next"
-import { withSentry } from "@sentry/nextjs";
-
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default withSentry(handler);
-```
-
 ## Create a Custom `_error` Page
 
 In serverless deployment environments, including Vercel, the Next.js server runs in a "minimal" mode to reduce serverless function size. As a result, some of the auto-instrumentation done by `@sentry/nextjs` doesn't run, and therefore certain errors aren't caught. In addition, Next.js includes a custom error boundary which will catch certain errors before they bubble up to our handlers.
@@ -242,21 +219,21 @@ module.exports = withSentryConfig(moduleExports);
 
 In that case you can also skip the `sentry-cli` configuration step below.
 
-### Automatically Instrument API Routes and Data Fetching Methods
+### Automatic Instrumentation of API Routes and Data Fetching Methods
 
 _(New in version 7.14.0)_
 
-The SDK provides an option to automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring, removing the need to manually wrap API routes in `withSentry`:
+The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring To disable it, set the `autoInstrumentServerFunctions` to `false`.
 
 ```javascript {filename:next.config.js}
 const moduleExports = {
   sentry: {
-    autoInstrumentServerFunctions: true,
+    autoInstrumentServerFunctions: false,
   },
 };
 ```
 
-Under the hood, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
+Under the hood, when using this option, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
 
 If the automatic instrumentation doesn't work for your use case, API routes can also be wrapped manually using the `withSentry` function:
 
