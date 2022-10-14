@@ -1,0 +1,97 @@
+---
+title: Track Vue Components
+description: "Learn how Sentry's Vue SDK allows you to monitor the rendering performance of your application and its components."
+---
+
+Sentry's Vue SDK offers a feature to monitor the performance of your Vue components: component tracking. Enabling this feature provides you with spans in your transactions that represent the component life cycle events and durations. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
+
+## Usage
+
+<Alert>
+
+To set up component tracking, you need to configure performance monitoring. For details on how to do this, check out our [Performance documentation](/platforms/javascript/guides/vue/performance/).
+
+</Alert>
+
+### Initial Application Load
+
+By default, the Vue SDK tracks the rendering performance of your app (that is, its root component) on the initial page load. This operation is represented in the page load transaction by the **`ui.vue.render`** span.
+
+### Child Components
+
+You can also track your app's child components to get more details about the rendering process. This feature will create spans for each tracked component instance. The spans are called **`ui.vue.[hook]`** where `[hook]` is replaced by each tracked lifecycle stage. For example, the span representing the mount stage (the time between `beforeMount` and `mounted`) is called `ui.vue.mount`.
+
+To set it up, add, at minimum, [`trackComponents`](#trackcomponents) in your `Sentry.init` call. Optionally, you can also add [`hooks`](#hooks), and [`timeout`](#timeout).
+
+#### `trackComponents`
+
+This is the main option that controls which child components should be tracked. Set it to `true` to track all of them or specify a list of individual components you want to track:
+
+```javascript
+Sentry.init({
+  // ...
+  trackComponents: true,
+  // OR
+  trackComponents: [
+    "App",
+    "RwvHeader",
+    "RwvFooter",
+    "RwvArticleList",
+    "Pagination",
+  ],
+});
+```
+
+The default is `false`.
+
+#### `hooks`
+
+Control which lifecycle hooks should be tracked. This is helpful if, for example, you want to know if some components are removed during the initial page load, in which case you can add a `destroy` hook to the default:
+
+```javascript
+Sentry.init({
+  // ...
+  trackComponents: true
+  hooks: ["mount", "update", "destroy"],
+});
+```
+
+The following hooks are available to track: `['activate', 'create', 'destroy', 'mount', 'update']`
+
+Note that when specifying `hooks`, we use the simple verb rather than `before` and `-ed` pairs. For example, `destroy` is correct, while `beforeDestroy` and `destroyed` are incorrect.
+
+The default set of hooks is `['activate', 'mount', 'update']`.
+
+#### `timeout`
+
+You can specify how long the root rendering span should wait for the last component to render.
+Every new rendering cycle debounces the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed, and all the rendering information is sent to Sentry:
+
+```javascript
+Sentry.init({
+  // ...
+  trackComponents: true,
+  timeout: 500,
+});
+```
+
+The default is `2000`.
+
+#### Alternative Configuration With `tracingOptions`
+
+You can also group the component tracking options by using the optional `tracingOptions` property in `Sentry.init`:
+
+```javascript
+Sentry.init({
+  // ...
+  tracingOptions: {
+    trackComponents: true;
+    timeout: 500;
+    hooks: string['mount', 'update'];
+  }
+})
+```
+
+Note that when you use this property there is no change in behaviour, as opposed to when you use the three top-level properties described above.
+
+The default value for `tracingOptions` is `undefined`.

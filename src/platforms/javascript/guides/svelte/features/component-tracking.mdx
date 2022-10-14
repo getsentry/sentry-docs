@@ -1,10 +1,17 @@
 ---
 title: Track Svelte Components
+description: "Learn how Sentry's Svelte SDK allows you to monitor the rendering performance of your application and its components."
 ---
 
 Sentry's Svelte SDK offers a feature to monitor the performance of your Svelte components: component tracking. Enabling this feature provides you with spans in your transactions that show the initialization and update cycles of your Svelte components. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
 
 ## Usage
+
+<Alert>
+
+To set up component tracking, you need to configure performance monitoring. For details on how to do this, check out our [Performance documentation](/platforms/javascript/guides/svelte/performance/).
+
+</Alert>
 
 To get started, add the Sentry `componentTrackingPreprocessor` to your `svelte.config.js` file:
 
@@ -36,6 +43,16 @@ export default config;
 
 This preprocessor is called at application build time. It inserts a function call to a function in the Sentry SDK into the `<script>` tag of your components before your app is compiled and bundled. The called function takes care of recording the spans by using the Svelte component's lifecycle hooks.
 
+This feature adds the following spans to the ongoing transaction:
+
+`ui.svelte.init`
+
+: A span that represents the duration between a component's instance creation and the `onMount` lifecycle hook call.
+
+`ui.svelte.update`
+
+: A span that represents the duration between a component's `beforeUpdate` and `afterUpdate` lifecycle hook calls.
+
 ## Alternative Usage
 
 If you don't want to use our preprocessor to automatically insert the function call at build time, you can call the tracking function manually in every component you would like to see tracked:
@@ -52,7 +69,7 @@ If you don't want to use our preprocessor to automatically insert the function c
     trackUpdates: false,
     // Specify a custom name to be shown in the span description
     // (defaults to the automatically detected component name)
-    componentName: string
+    componentName: 'MyAwesomeComponent'
   })
   // rest of your code
 </script>
