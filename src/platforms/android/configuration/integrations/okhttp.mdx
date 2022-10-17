@@ -239,3 +239,89 @@ private final OkHttpClient client = new OkHttpClient.Builder()
   .addInterceptor(new SentryOkHttpInterceptor(new CustomBeforeSpanCallback()))
   .build();
 ```
+
+## HTTP Client errors
+
+HTTP Client errors such as bad response code are captured as error events and reported to Sentry. The error event will contain the `request` and `response` data such as `url`, `status_code`, and so on.
+
+This feature is opt-in and can be enabled by setting the `captureFailedRequests` option to `true`:
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor(captureFailedRequests = true))
+  .build()
+```
+
+Only HTTP Client errors with the response code between `500` and `599` are captured as error events, but you can change this behavior by setting the `failedRequestStatusCodes` option.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+import io.sentry.HttpStatusCodeRange
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor(
+    captureFailedRequests = true,
+    failedRequestStatusCodes = listOf(HttpStatusCodeRange(400, 599))))
+  .build()
+```
+
+HTTP Client errors from every target (`.*` Regular expression) will be automatically captured, but you can change this behavior by setting the `failedRequestTargets` option either with a `String.contains` value or a Regular expression.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+import io.sentry.HttpStatusCodeRange
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor(
+    captureFailedRequests = true,
+    failedRequestTargets = listOf("myapi.com")))
+  .build()
+```
+
+By default, error events won't contain any PII data such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+</application>
+```
+
+Those events can be searchable and alertable with the `http.url` and `http.status_code` properties, learn more about it in the [Searchable Properties](/product/sentry-basics/search/searchable-properties/) docs.
+
+### Customize or drop the error event
+
+For that, you need to do a [Manual Initialization](/platforms/android/configuration/manual-init/) of the Sentry Android SDK.
+
+The captured error event can be customized or dropped with a `BeforeSendCallback`:
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import okhttp3.Request
+import okhttp3.Response
+import io.sentry.TypeCheckHint.OKHTTP_REQUEST
+import io.sentry.TypeCheckHint.OKHTTP_RESPONSE
+
+SentryAndroid.init(this) { options ->
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    val request = hint.getAs(OKHTTP_REQUEST, Request::class.java)
+    val response = hint.getAs(OKHTTP_RESPONSE, Response::class.java)
+
+    // customize or drop the event
+    event
+  }
+}
+```
+
+### Automatically captured HTTP Client errors and manually captured errors
+
+When `captureFailedRequests` is enabled, be aware that some HTTP Client libraries throw Unchecked exceptions such as `retrofit2.HttpException`, in this case, the error event will be captured twice, once by the HTTP Client library and once by the Sentry Android SDK.
+
+The recommendation is to identify those errors and to __not__ capture them manually with the `Sentry.captureException` method.
