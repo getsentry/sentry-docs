@@ -1,0 +1,89 @@
+---
+title: "OpenTelemetry Support"
+---
+
+<Alert level="warning">
+
+This page is under active development. Specifications are not final and subject to change.
+
+"Proof is in the progress" - Drake
+
+</Alert>
+
+This document details Sentry's work in integrating and supporting [OpenTelemetry](https://opentelemetry.io/), the open standard for metrics, traces and logs. In particular, it focuses on the integration between [Sentry's performance monitoring product](https://docs.sentry.io/product/performance/) and [OpenTelemetry's tracing spec](https://opentelemetry.io/docs/concepts/signals/traces/).
+
+## Background
+
+When Sentry performance monitoring was initially introduced, OpenTelemetry was in early stages. This lead to us adopt a slightly different model from OpenTelemetry, notably we have this concept of transactions that OpenTelemetry does not have. We've described this, and some more historical background, in our <Link to="/sdk/research/performance/">performance monitoring research document</Link>.
+
+## Approach
+
+TODO: Talk about the approach we are using, based on Matt's hackweek project - https://github.com/getsentry/sentry-ruby/pull/1876
+
+## Span Protocol
+
+import "./span-protocol.mdx"
+
+## Transaction Protocol
+
+There is no concept of a transaction within OpenTelemetry, so we rely on promoting spans to become transactions. The span `description` becomes the transaction `name`, and the span `op` becomes the transaction `op`. Therefore, OpenTelemetry spans must be mapped to Sentry spans before they can be promoted to become a transaction.
+
+**We should not set tags on transactions. Instead, we should populate the `attributes` field on the `otel` context, <Link to="./#opentelemetry-context">see below</Link>**
+
+## OpenTelemetry Context
+
+Aside from information from Spans and Transactions, OpenTelemetry has meta-level information about the SDK, resource, and service that generated spans. To track this information, we generate a new OpenTelemetry Event Context.
+
+The existence of this context on an event (transaction or error) is how the Sentry backend will know that the incoming event is an OpenTelemetry event.
+
+It uses the following schema:
+
+```ts
+type Primitive = number | string | boolean | bigint;
+
+interface Attributes<T extends Primitive> {
+    [key: string]: T | Array<T> | Record<string, T>;
+}
+
+interface OpenTelemetryContext {
+    type?: "otel",
+
+    // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186
+    attributes?: Attributes;
+
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
+    service?: {
+        // from: service.name
+        name: string;
+        // from: service.namespace
+        namespace?: string;
+        // from: service.instance.id
+        instance_id?: string;
+        // from: service.version
+        version?: string;
+    };
+
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#telemetry-sdk
+    otel_sdk?: {
+        // from: telemetry.sdk.name
+        name?: string;
+        // from: telemetry.sdk.language
+        language?: SDKLanguage;
+        // from: telemetry.sdk.version
+        version?: string;
+        // from: telemetry.auto.version
+        auto_version?: string;
+    };
+
+    // Rest of attribute keys excluding service and sdk keys
+    // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/resource/v1/resource.proto#L32
+    [key: string]?: string,
+}
+```
+
+The reason sdk and service are split are so they can be indexed as top level fields in the future for easier usage within Sentry.
+
+## SDK Spec
+
+- SpanProcessor: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor
+- Propogator: https://opentelemetry.io/docs/reference/specification/context/api-propagators/
