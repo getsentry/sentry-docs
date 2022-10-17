@@ -31,8 +31,6 @@ The version of the sibling SDK must match with the version refered by Sentry Cap
 
 </Note>
 
-
-
 ## Capacitor 2 - Android Installation
 
 <Note>
