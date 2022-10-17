@@ -324,4 +324,17 @@ SentryAndroid.init(this) { options ->
 
 When `captureFailedRequests` is enabled, be aware that some HTTP Client libraries throw Unchecked exceptions such as `retrofit2.HttpException`, in this case, the error event will be captured twice, once by the HTTP Client library and once by the Sentry Android SDK.
 
+```kotlin
+import io.sentry.Sentry
+import retrofit2.HttpException
+
+try {
+  // If this API call returns 500, it will be captured as an error event by the `SentryOkHttpInterceptor`.
+  return GithubAPI.service.listReposAsync("getsentry")
+} catch (e: HttpException) {
+  // Do not manually capture this exception to avoid duplicated error events.
+  // Sentry.captureException(e)
+}
+```
+
 The recommendation is to identify those errors and to __not__ capture them manually with the `Sentry.captureException` method.
