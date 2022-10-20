@@ -1,0 +1,146 @@
+---
+title: "craft Quick Start"
+---
+
+this guide goes over the minimal setup needed to publish something via
+[publish] and [craft].  this example will use a pypi package.
+
+[publish]: https://github.com/getsentry/publish
+[craft]: https://github.com/getsentry/craft
+
+## the first release
+
+this guide assumes this thing has never been released before and has no
+existing tags.  if that's not the case feel free to skip this section!
+
+a tag must exist for the "beginning" of the repository due to [a limitation] --
+it is recommended to tag the first commit of the repository before any
+meaningful history such that the first changelog includes useful context.
+
+```bash
+git tag 0.0.0 "$(git log -1 --reverse --format=%h)"
+git push origin --tags
+```
+
+[a limitation]: https://github.com/getsentry/craft/issues/342
+
+## ci requirements
+
+first we need to ensure your repository responds to `release/**` branches
+and produces an artifact with the right name
+
+for our example repository that's done using [push: branches] and an
+[artifact instruction]
+
+[push: branches]: https://github.com/getsentry/uwsgi-dogstatsd-plugin/blob/5057cba0104827c226094f153ffba7ade1a4331d/.github/workflows/build.yml#L5
+[artifact instruction]: https://github.com/getsentry/uwsgi-dogstatsd-plugin/blob/5057cba0104827c226094f153ffba7ade1a4331d/.github/workflows/build.yml#L81-L84
+
+## setting up craft
+
+### .craft.yml
+
+we're just interested in making a github release and a pypi release so our
+craft configuration looks like:
+
+```yaml
+minVersion: 0.28.1
+targets:
+- name: pypi
+- name: github
+```
+
+### scripts/bump-version.sh
+
+this script will be invoked by craft by default when bumping the version
+
+since we're specifying version in `setup.cfg` this is pretty easy to do with
+sed (we're ignoring `$1` which contains the old version):
+
+```bash
+#!/usr/bin/env bash
+set -euxo pipefail
+
+sed -i "s/^version =.*/version = $2/" setup.cfg
+```
+
+try the script out (but don't commit the changes):
+
+```console
+$ ./scripts/bump-version.sh 0.0.0 1.0.0
++ sed -i 's/^version =.*/version = 1.0.0/' setup.cfg
+$ git diff | grep '^[-+]'
+--- a/setup.cfg
++++ b/setup.cfg
+-version = 0.0.0
++version = 1.0.0
+$ git checkout -- .
+```
+
+nice !
+
+### .github/workflows/release.yml
+
+this file is used to trigger the release from the github ui
+
+you'll notice it uses `secrets.GH_RELEASE_PAT` -- this should already be
+available to your repository automatically!
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release
+        required: true
+      force:
+        description: Force a release even when there are release-blockers (optional)
+        required: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: "Release a new version"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_RELEASE_PAT }}
+          fetch-depth: 0
+      - name: Prepare release
+        uses: getsentry/action-prepare-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+        with:
+          version: ${{ github.event.inputs.version }}
+          force: ${{ github.event.inputs.force }}
+```
+
+### commit + PR
+
+**commit those three files and make a pull request**
+
+here's [an example PR] and the [followup to fix fetch-depth]
+
+[an example PR]: https://github.com/getsentry/uwsgi-dogstatsd-plugin/pull/2
+[followup to fix fetch-depth]: https://github.com/getsentry/uwsgi-dogstatsd-plugin/pull/3
+
+## setting up permissions
+
+give the following teams access to your repository:
+
+- `engineering` -> `write`
+- `release-bot` -> `admin`
+
+you can do this self-service via the settings page of your repository:
+`https://github.com/getsentry/REPONAME_HERE/settings/access`
+
+## making your first release!
+
+navigate to the actions tab of your repository, locate the release workflow,
+and create the first release!  I used `1.0.0` as the first version.
+
+this will create an [issue in publish] which you'll need an approver to
+add a label to
+
+[issue in publish]: https://github.com/getsentry/publish/issues
