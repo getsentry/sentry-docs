@@ -239,3 +239,102 @@ private final OkHttpClient client = new OkHttpClient.Builder()
   .addInterceptor(new SentryOkHttpInterceptor(new CustomBeforeSpanCallback()))
   .build();
 ```
+
+## HTTP Client Errors
+
+This feature, once enabled, automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry. The error event will contain the `request` and `response` data, such as `url`, `status_code`, and so on.
+
+This feature is opt-in and can be enabled by setting the `captureFailedRequests` option to `true`:
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor(captureFailedRequests = true))
+  .build()
+```
+
+By default, only HTTP client errors with a response code between `500` and `599` are captured as error events, but you can change this behavior by setting the `failedRequestStatusCodes` option:
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+import io.sentry.HttpStatusCodeRange
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor(
+    captureFailedRequests = true,
+    failedRequestStatusCodes = listOf(HttpStatusCodeRange(400, 599))))
+  .build()
+```
+
+HTTP client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by setting the `failedRequestTargets` option with either a regular expression or a plain `String`. A plain string must contain at least one of the items from the list. Plain strings don't have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+import io.sentry.HttpStatusCodeRange
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor(
+    captureFailedRequests = true,
+    failedRequestTargets = listOf("myapi.com")))
+  .build()
+```
+
+By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+</application>
+```
+
+Those events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/product/sentry-basics/search/searchable-properties/) documentation.
+
+### Customize or Drop the Error Event
+
+To customize or drop the error event, you need to do a [manual initialization](/platforms/android/configuration/manual-init/) of the Sentry Android SDK.
+
+The captured error event can be customized or dropped with a `BeforeSendCallback`:
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import okhttp3.Request
+import okhttp3.Response
+import io.sentry.TypeCheckHint.OKHTTP_REQUEST
+import io.sentry.TypeCheckHint.OKHTTP_RESPONSE
+
+SentryAndroid.init(this) { options ->
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    val request = hint.getAs(OKHTTP_REQUEST, Request::class.java)
+    val response = hint.getAs(OKHTTP_RESPONSE, Response::class.java)
+
+    // customize or drop the event
+    event
+  }
+}
+```
+
+### Automatically Captured HTTP Client Errors and Manually Captured Errors
+
+When `captureFailedRequests` is enabled, some HTTP client libraries throw unchecked exceptions like `retrofit2.HttpException`. In this case, the error event is captured twice; once by the HTTP client library and once by the Sentry Android SDK:
+
+```kotlin
+import io.sentry.Sentry
+import retrofit2.HttpException
+
+try {
+  // If this API call returns 500, it will be captured as an error event by the `SentryOkHttpInterceptor`.
+  return GithubAPI.service.listReposAsync("getsentry")
+} catch (e: HttpException) {
+  // Do not manually capture this exception to avoid duplicated error events.
+  // Sentry.captureException(e)
+}
+```
+
+We recommend you identify those errors and  __not__ capture them manually with the `Sentry.captureException` method.
