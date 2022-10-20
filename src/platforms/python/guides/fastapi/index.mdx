@@ -8,8 +8,6 @@ description: "Learn about using Sentry with FastAPI."
 
 The FastAPI integration adds support for the [FastAPI Framework](https://fastapi.tiangolo.com/).
 
-The Sentry SDK automatically enables support for FastAPI if you have the `fastapi` Python package installed in your project. There are no configuration options you need to add when initializing the Sentry SDK as everything works out of the box.
-
 ## Install
 
 Install `sentry-sdk` from PyPI with the `fastapi` extra:
@@ -20,7 +18,7 @@ pip install --upgrade 'sentry-sdk[fastapi]'
 
 ## Configure
 
-To configure the SDK, initialize it with the integration before your app has been initialized:
+To configure the Sentry SDK, initialize it before your app has been initialized:
 
 ```python
 from fastapi import FastAPI
@@ -60,17 +58,39 @@ Visiting `"/sentry-debug"` will trigger an error that will be captured by Sentry
 
 ## Behavior
 
-- All exceptions leading to an Internal Server Error are reported.
+The following information about your FastAPI project will be available to you on Sentry.io:
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+### Issue Reporting
 
-- If a `traces_sample_rate` is set, then performance information is also reported, which you can see on the **Performance** page of [sentry.io](https://sentry.io).
+- All exceptions leading to an Internal Server Error are captured and reported.
+- Request data such as URL, HTTP method, headers, form data, and JSON payloads is attached to all issues.
+- Sentry excludes raw bodies and multipart file uploads.
+- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
-## Options
+![Issues List](issues-list.png)
 
-If you want to change the default behavior of the FastAPI integration, you need to instantiate the integration by hand and pass it to Sentry's `init` function.
+### Measuring performance
 
-Because FastAPI is based on the Starlette framework, both integrations `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
+The following parts of your FastAPI project are measured:
+
+- Middleware stack
+- Middleware `send` and `receive` callbacks
+- Database queries
+- Redis commands
+
+![Performance details are shown as waterfall diagram](performance-details.png)
+
+<Note>
+
+The parameter `traces_sample_rate` needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
+
+</Note>
+
+## Integration Options
+
+If you want to change the default behavior of the FastAPI integration, you need to instantiate the integration manually and then pass it to Sentry's `init` function. Because FastAPI is based on the Starlette framework, both integrations, `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
+
+<ConfigKey name="transaction_style">
 
 You can pass the keyword argument `transaction_style` to `StarletteIntegration()` and `FastApiIntegration()`.
 
@@ -98,3 +118,10 @@ In the above code, the transaction name will be:
 - `"product_detail"` if you set `transaction_style="endpoint"`
 
 The default is `"url"`.
+
+</ConfigKey>
+
+## Supported Versions
+
+- FastAPI: 0.79.0+
+- Python: 3.7+
