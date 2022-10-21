@@ -1,12 +1,22 @@
 ---
 title: "N+1 Queries"
 sidebar_order: 10
+redirect_from:
+  - /product/issues/performance-issues/n-one-queries/
 description: "Learn more about N+1 queries and how to diagnose and fix them."
 ---
 
-<Include name="early-adopter-note.mdx" />
-
 _N+1 queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
+
+## Detection Criteria
+
+The detector for performance issues looks for a set of sequential, non-overlapping database spans with similar descriptions. It also uses the following criteria:
+
+- Total duration of involved spans must exceed a threshold (usually 100 ms)
+- Total count of involved spans must exceed a threshold (usually five spans)
+- Involved spans cannot be truncated
+
+If Sentry is not detecting an N+1 issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
 
 ## Span Evidence
 
@@ -14,8 +24,7 @@ The evidence for an N+1 queries problem has four main aspects:
 
 - Transaction name
 - Parent span - This can be a view, a serializer, or another span that logically groups the queries.
-- Source span - This is the query that caused the N+1 queries.
-- Repeating span - This is the "N" of N+1 queries. This is the looped query that should have been part of the source.
+- Repeating span - This is the "N" of N+1 queries. This is the looped query that should have been part of a bulk query.
 
 ![N+1 Query span evidence](n-plus-one-span-evidence.png)
 

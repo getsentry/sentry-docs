@@ -5,20 +5,23 @@ redirect_from:
   - /sdks/react/integrations/vue-router/
 ---
 
-If you are using Vue Router, you should use our provided integration to get better, parameterized transaction names. Here is a full example of how to use it:
+If you're using Vue Router, you should use our provided routing instrumentation to get better, parameterized transaction names.
 
-```javascript
+Our routing instrumentation supports `vue-router` v2, v3, and v4.
+
+Here is a full example of how to use it:
+
+```javascript {filename:main.js}
 import Vue from "vue";
 import App from "./App";
 import * as Sentry from "@sentry/vue";
 import { BrowserTracing } from "@sentry/tracing";
 import Router from "vue-router";
 import HelloWorld from "@/components/HelloWorld";
+import Foo from "@/components/Foo";
+import Bar from "@/components/Bar";
 
 Vue.use(Router);
-
-const Foo = { template: "<div>foo</div>" };
-const Bar = { template: "<div>bar</div>" };
 
 const router = new Router({
   routes: [
@@ -32,10 +35,8 @@ const router = new Router({
   ],
 });
 
-Vue.config.productionTip = false;
-
 Sentry.init({
-  Vue: Vue,
+  Vue,
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
   integrations: [
@@ -43,10 +44,8 @@ Sentry.init({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
     }),
   ],
-  trackComponents: true,
 });
 
-/* eslint-disable no-new */
 new Vue({
   el: "#app",
   router,
