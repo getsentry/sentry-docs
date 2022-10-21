@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "See how Instacart re-built their entire release monitoring workflow in our live workshop on Oct. 12 @ 10am PT.";
+  "Level up your performance monitoring to see and solve what matters, faster in our live AMA on Nov. 1 @ 11am PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/how-instacart-re-built-release-monitoring-workflow/?promo_name=docs-banner";
+  "https://sentry.io/resources/ama-deep-dive-performance-monitoring/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
