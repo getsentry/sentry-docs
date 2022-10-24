@@ -18,7 +18,240 @@ When Sentry performance monitoring was initially introduced, OpenTelemetry was i
 
 ## Approach
 
-TODO: Talk about the approach we are using, based on Matt's hackweek project - https://github.com/getsentry/sentry-ruby/pull/1876
+To transform OpenTelemetry SDK data to Sentry data, we rely on the [OpenTelemetry SpanProcessor](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor). The SpanProcessor is a component that runs on the same thread as the application code, so it effectively runs in process alongside user code and the Sentry SDK.
+
+To enable OpenTelemetry support for your SDK, go through the following steps.
+
+### Step 1: Implement the SentrySpanProcessor on your SDK
+
+Below we have written a custom SpanProcessor that will transform the OpenTelemetry spans to Sentry spans.
+
+This relies on a couple key assumptions.
+
+1. Hub/Scope propogation works properly in your platform. This means that the hub used in `onStart` is the same hub used in `onEnd` and it means that hubs fork properly in async contexts.
+2. The SDK is initialized before the OpenTelemetry SDK is initialized.
+3. There will only be a single transaction occuring at the same time. This is a limitation of the current SDK design.
+
+```ts
+import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { Span as OpenTelemetrySpan } from '@opentelemetry/api';
+import { Span as SentrySpan } from '@sentry/tracing';
+
+class SentrySpanProcessor implements SpanProcessor {
+  /**
+   * A map that stores a spanId to a tuple of a span and it's parent span.
+   * Used to decide what span gets finished.
+   */
+  private readonly _map: Record<SentrySpan['spanId'], [span: SentrySpan, parentSpan?: SentrySpan]>;
+
+  constructor(options: SentrySpanProcessorOptions) {
+    this._options = options;
+  }
+
+  onStart(otelSpan: OpenTelemetrySpan): void {
+    const hub = Sentry.getCurrentHub();
+    if (!hub) return;
+
+    const scope = hub.getScope();
+    if (!scope) return;
+
+    // Func definition is explained in Step 2
+    if isSentryRequest(otelSpanId) {
+      // This is a request to Sentry, so we don't want to create a transaction/span.
+      return;
+    }
+
+    const otelSpanId = otelSpan.spanContext().spanId;
+
+    const parentSpan = scope.getSpan();
+    if (parentSpan) {
+      // create a new span as a child of the parentSpan
+      const childSpan = parentSpan.startChild({
+        description: otelSpan.name,
+        instrumenter: 'otel',
+        // Make sure we use otel span id as the span id.
+        spanId: otelSpanId,
+        startTimestamp: otelSpan.startTime,
+        // Use `default` since we will redefine span op on finish
+        op: 'default',
+      });
+
+      // We store the otelSpan and its parent in the map
+      this._map[otelSpanId] = [childSpan, parentSpan];
+      scope.setSpan(childSpan);
+
+    } else {
+      // Will grab Dynamic Sampling Context and sentry-trace header if available
+      // Func definition is explained in Step 3
+      const traceCtx = getTraceData(otelSpan);
+      // If the parentSpan doesn't exist, we create a new transaction
+      const transaction = Sentry.startTransaction({
+        name: otelSpan.name,
+        ...traceCtx,
+        instrumenter: 'otel',
+        startTimestamp: otelSpan.startTime,
+        // Use `default` since we will redefine span op on finish
+        op: 'default',
+      });
+
+      if (transaction) {
+          // We store the otelSpan and its parent in the map
+          this._map[otelSpanId] = [transaction, undefined];
+          scope.setSpan(transaction);
+      }
+    }
+  }
+
+  onEnd(otelSpan: OpenTelemetrySpan): void {
+    const hub = Sentry.getCurrentHub();
+    if (!hub) return;
+
+    const scope = hub.getScope();
+    if (!scope) return;
+
+    const otelSpanId = otelSpan.spanContext().spanId;
+    const mapVal = this._map[otelSpanId];
+
+    if (mapVal) {
+      const [sentrySpan, parentSpan] = mapVal;
+
+      // Update op, description, status, and endTimestamp.
+      // Func definition is explained in Step 4
+      updateSpanWithOtelData(sentrySpan, otelSpan);
+
+      // We finish the span
+      sentrySpan.finish();
+      // We set the parent span as the active span if parent span is defined.
+      scope.setSpan(parentSpan);
+      // We remove the span from the map
+      delete this._map[otelSpanId];
+    }
+  }
+}
+```
+
+Users are required to add this `SentrySpanProcessor` to their OpenTelemetry SDK initialization logic to make this work, like so. Individual SDK implementations might be a little different.
+
+```ts
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { Resource } from "@opentelemetry/resources";
+import * as Sentry from "@sentry/node";
+import { SentrySpanProcessor } from "@sentry/opentelemetry-node";
+
+Sentry.init({
+  /// ...
+});
+
+const sdk = new NodeSDK({
+  resource: new Resource({
+    "service.name": "my-service",
+    "service.version": "1.0.0",
+  }),
+  spanProcessor: new SentrySpanProcessor(),
+});
+```
+
+### Step 2: Define `isSentryRequest`
+
+We want to make sure we don't create spans that represent requests to Sentry
+
+TODO @neel
+
+### Step 3: Define `getTraceData`
+
+We want to make sure a transaction is started with information from the `sentry-trace` and `baggage` headers.
+
+TODO @neel
+
+### Step 4: Define `updateSpanWithOtelData`
+
+We want to update the Sentry Span with the OpenTelemetry data. This includes the span's operation, description, and resource attributes.
+
+The Sentry span description should come from the OpenTelemetry Span name. The Sentry span operation should come from a combinations of the OpenTelemetry Span name, kind, and attributes.
+
+To make things simple, only set ops for `db` and `http` spans. Don't do any other extended logic, this will be done in Relay in the future.
+
+### Step 5: Add OpenTelemetry Context
+
+All SDKs are required to add event context with the key `otel` to events generated by the SpanProcessor. This is detailed in <Link to="./#opentelemetry-context">our spec for the Context</Link>. The OpenTelemetryContext should be generated from information from the OpenTelemetry Span.
+
+```ts
+{
+  contexts: {
+    otel: {
+      attributes: {
+        "http.method": "GET",
+        "http.url": "https://example.com",
+        "http.status_code": 200,
+      },
+      service: {
+        name: "my-service",
+        version: "1.0.0",
+      },
+      otel_sdk: {
+        name: "opentelemetry-node"
+        version: "4.0.0",
+      },
+      // ...
+    }
+  },
+}
+```
+
+### Step 6: Add instrumenter option to Sentry SDK
+
+We want to avoid double instrumenting the same library. To do this, we want to add an option to the Sentry SDK that disables Sentry performance instrumentation (automatic and manual) when OpenTelemetry is enabled. For now users will have to manually add this option to their SDK initialization code, but in the future we can do this automatically (by detecting if OpenTelemetry exists).
+
+```ts
+Sentry.init({
+  // ...
+  instrumenter: "otel",
+});
+```
+
+You have two options for this:
+
+1. Add an early return to `Sentry.startTransaction()` and `Sentry.trace()` (a helper method) if the `instrumenter` option is set to `otel`. This may require SDK changes, as `Sentry.trace()` is not part of the unified API.
+
+```ts
+class Hub implements HubInterface {
+  // ...
+  startTransaction(
+    this: Hub,
+    context: TransactionContext
+  ): Transaction | undefined {
+    // ...
+    if (this.instrumenter !== context.instrumenter) {
+      return;
+    }
+    // ...
+  }
+
+  // Note this is not part of the unified API.
+  // It is being proposed as part of:
+  // https://github.com/getsentry/rfcs/issues/28
+  // see: https://github.com/getsentry/develop/issues/720
+  trace<T>(this: Hub, context: SpanContext, callback: (span?: Span) => T): T {
+    // ...
+    if (this.instrumenter !== context.instrumenter) {
+      return callback();
+    }
+    // ...
+  }
+}
+```
+
+2. Add if conditionals around all callsites where you are using `Sentry.startTransaction` and `span.startChild` in the Sentry SDK code. This is a little more work, but it doesn't require any SDK changes to the unified API.
+
+```ts
+if (instrumenter === "otel") {
+  span.startChild({
+    // ...
+  });
+}
+```
+
+You are also free to do both, or an alternative method, the only requirement is that we don't double instrument.
 
 ## Span Protocol
 
@@ -382,42 +615,18 @@ It uses the following schema:
 type Primitive = number | string | boolean | bigint;
 
 interface Attributes<T extends Primitive> {
-    [key: string]: T | Array<T> | Record<string, T>;
+  [key: string]: T | Array<T> | Record<string, T>;
 }
 
 interface OpenTelemetryContext {
-    type?: "otel",
+  type?: "otel";
 
-    // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186
-    attributes?: Attributes;
+  // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186
+  attributes?: Attributes;
 
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
-    service?: {
-        // from: service.name
-        name: string;
-        // from: service.namespace
-        namespace?: string;
-        // from: service.instance.id
-        instance_id?: string;
-        // from: service.version
-        version?: string;
-    };
-
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#telemetry-sdk
-    otel_sdk?: {
-        // from: telemetry.sdk.name
-        name?: string;
-        // from: telemetry.sdk.language
-        language?: SDKLanguage;
-        // from: telemetry.sdk.version
-        version?: string;
-        // from: telemetry.auto.version
-        auto_version?: string;
-    };
-
-    // Rest of attribute keys excluding service and sdk keys
-    // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/resource/v1/resource.proto#L32
-    [key: string]?: string,
+  // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/resource/v1/resource.proto
+  // Resource information.
+  resource?: Attributes;
 }
 ```
 
