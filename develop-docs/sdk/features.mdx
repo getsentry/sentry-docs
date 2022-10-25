@@ -203,6 +203,39 @@ If the SDK is being [rate-limited](/sdk/rate-limiting/), which causes the SDK to
 - [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryHttpTransport.m)
 - [TypeScript](https://github.com/getsentry/sentry-electron/blob/master/src/main/transports/electron-offline-net.ts)
 
+## Start-Up Crash Detection
+
+We recommend implementing this feature for mobile and desktop SDKs.
+
+If the application crashes shortly after the init of the SDK, the SDK should provide a mechanism to guarantee transmission
+to Sentry. Ideally, SDKs could send the events in a separate process not impacted by the crashing application. With the
+limitations on mobile platforms, spawning an extra process only for sending envelopes is hard to achieve or impossible.
+The SDKs on these platforms send envelopes on a background thread to not block the UI thread or because they forbid network
+operations on the UI thread. A crash occurring shortly after the SDK init could lead to never reporting such crashes,
+keeping the users unaware of a critical bug. 
+
+When the app crashes, the SDK needs to check if it happens two seconds after the SDK init. If it does, it needs to store
+that information on the disk. We recommend using a marker file, which the SDK checks on initialization. Suppose the SDK
+allows storing this information in another place to avoid creating an additional marker file and causing extra IO. In that
+case, the recommendation is to use such an approach to prevent additional IO. We accept the tradeoff of extra IO to be able
+to detect start-up crashes.
+
+If the platform allows it, the SDK may call flush directly after the detected start-up crash occurs and before the
+application terminates. If the SDK can guarantee transmission to Sentry while crashing, it can skip creating a marker file
+and making a blocking flush call on the next initialization.
+
+While, ideally, the SDK should only flush out the crash event envelope, it is acceptable to call flush for all envelopes to
+reduce the complexity, as most of the time, there shouldn't be too many envelopes in the offline cache.
+
+We decided against making this feature configurable. The only reason to disable it should be if the feature is broken; hence
+users can't disable it. The users can't modify the duration for detecting the start-up crashes, which is two seconds, and the
+flush duration, which is five seconds, because users usually don't know which values to pick so that we can choose the proper
+ones. We can always add these values later.
+
+#### Example implementations
+- [Java](https://github.com/getsentry/sentry-java/pull/2277)
+- [Objective-C](https://github.com/getsentry/sentry-cocoa/pull/2220)
+
 ## HTTP Proxy
 
 Ability to use an HTTP proxy. Often easy to implement using the existing HTTP client.  This should be picked up from the system config if possible or explicit config in the client options.
