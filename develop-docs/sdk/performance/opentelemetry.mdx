@@ -63,8 +63,9 @@ class SentrySpanProcessor implements SpanProcessor {
 
     const otelSpanId = otelSpan.spanContext().spanId;
 
-    const parentSpan = scope.getSpan();
-    if (parentSpan) {
+    const mapVal = this._map[otelSpanId];
+    if (mapVal) {
+      const [parentSpan] = mapVal;
       // create a new span as a child of the parentSpan
       const childSpan = parentSpan.startChild({
         description: otelSpan.name,
@@ -177,20 +178,18 @@ All SDKs are required to add event context with the key `otel` to events generat
 
 ```ts
 {
-  contexts: {
-    otel: {
-      attributes: {
+  "contexts": {
+    "otel": {
+      "attributes": {
         "http.method": "GET",
         "http.url": "https://example.com",
         "http.status_code": 200,
       },
-      service: {
-        name: "my-service",
-        version: "1.0.0",
-      },
-      otel_sdk: {
-        name: "opentelemetry-node"
-        version: "4.0.0",
+      "resource": {
+        "service.name": "my-service",
+        "service.version": "1.0.0",
+	"telemetry.sdk.name": "opentelemetry-node",
+	"telemetry.sdk.version": "4.0.0",
       },
       // ...
     }
