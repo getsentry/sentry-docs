@@ -27,7 +27,7 @@ yarn add @sentry/capacitor
 
 <Note>
 
-The version of the sibling SDK must match with the version refered by Sentry Capacitor. To verify the correct version of the sibling SDK using the following command: `npm info @sentry/capacitor peerDependencies`
+The version of the sibling SDK must match with the version referred by Sentry Capacitor. To check which version of the sibling SDK is installed, use the following command: `npm info @sentry/capacitor peerDependencies`
 
 </Note>
 
