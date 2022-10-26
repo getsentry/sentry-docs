@@ -7,16 +7,22 @@ You may also be interested in <Link to="/sentry-vs-getsentry/">sentry vs. getsen
 
 ## Testing Sentry commits in Getsentry
 
-Sometimes, it's prudent to also run Getsentry tests against commits in Sentry.
-The most common scenarios here are that you're either working on a particularly
-large or scary-looking Sentry PR, or upgrading a Python dependency.
+**If you need to deploy to a staging environment**: use
+`./bin/bump-sentry <sha>` to update the committed version.  Note that this will
+likely create a merge conflict so you'll want to merge just before updating:
 
-This is manually achieved by running `bin/bump-sentry <sha>` in a Getsentry PR,
-but it could be a chore to keep this up as you continually push commits to the
-Sentry PR you need synced. In this case, we have the <Link to="https://github.com/getsentry/sentry-deploy-sync-hook">sentry-deploy-sync-hook</Link>.
+```bash
+git pull origin HEAD --rebase
+./bin/bump-sentry deadbeef
+git push origin HEAD -f
+```
 
-For it to work, you must first add `#sync-getsentry` to the Sentry PR's description,
-and then create a Getsentry PR where the branch is the same name.
+**If you only need to validate CI**: add `requires <PR link>` to the body of
+your pull request.  The `getsentry/action-get-dependent-pr` github action will
+pick up this value and update the sentry revision during CI.  This is meant as
+a temporary measure to quickly validate a change -- one should commit backward
+and forward compatible changes in `sentry` since commits cannot be merged in
+lockstep.
 
 ## Fast reverting a change
 
