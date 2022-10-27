@@ -6,7 +6,7 @@ import SidebarLink from "./sidebarLink";
 
 const navQuery = graphql`
   query NavQuery {
-    allSitePage(filter: { context: { draft: { ne: false } } }) {
+    allSitePage(filter: { context: { draft: { ne: true } } }) {
       nodes {
         path
         context {
