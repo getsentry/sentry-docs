@@ -214,7 +214,7 @@ The SDKs on these platforms send envelopes on a background thread to not block t
 operations on the UI thread. A crash occurring shortly after the SDK init could lead to never reporting such crashes,
 keeping the users unaware of a critical bug. 
 
-When the app crashes, the SDK needs to check if it happens two seconds after the SDK init. If it does, it needs to store
+When the app crashes, the SDK needs to check if it happens within two seconds after the SDK init. If it does, it needs to store
 that information on the disk. We recommend using a marker file, which the SDK checks on initialization. Suppose the SDK
 allows storing this information in another place to avoid creating an additional marker file and causing extra IO. In that
 case, the recommendation is to use such an approach to prevent additional IO. We accept the tradeoff of extra IO to be able
@@ -223,6 +223,10 @@ to detect start-up crashes.
 If the platform allows it, the SDK may call flush directly after the detected start-up crash occurs and before the
 application terminates. If the SDK can guarantee transmission to Sentry while crashing, it can skip creating a marker file
 and making a blocking flush call on the next initialization.
+
+If the marker file exists upon the next SDK initialization, the SDK should clear the marker and block the `init` execution up 
+to five seconds, in order to flush out pending envelopes. If the timeout of five seconds is exceeded, the SDK should release 
+the `init` lock and continue flushing on a background thread.
 
 While, ideally, the SDK should only flush out the crash event envelope, it is acceptable to call flush for all envelopes to
 reduce the complexity, as most of the time, there shouldn't be too many envelopes in the offline cache.
