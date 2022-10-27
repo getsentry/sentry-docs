@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Level up your performance monitoring to see and solve what matters, faster in our live AMA on Nov. 1 @ 11am PT.";
+  "Learn how to customize performance monitoring in real time with Tonal in a live workshop on Nov. 1 @ 11am PT.";
 const BANNER_LINK_URL =
   "https://sentry.io/resources/ama-deep-dive-performance-monitoring/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
