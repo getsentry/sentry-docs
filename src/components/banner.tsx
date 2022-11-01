@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   "Learn how to customize performance monitoring in real time with Tonal in a live workshop on Nov. 1 @ 11am PT.";
 const BANNER_LINK_URL =
