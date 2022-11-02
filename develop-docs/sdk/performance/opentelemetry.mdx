@@ -37,13 +37,9 @@ import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { Span as OpenTelemetrySpan } from '@opentelemetry/api';
 import { Span as SentrySpan } from '@sentry/tracing';
 
-class SentrySpanProcessor implements SpanProcessor {
-  /**
-   * A map that stores a spanId to a tuple of a span and it's parent span.
-   * Used to decide what span gets finished.
-   */
-  private readonly _map: Record<SentrySpan['spanId'], [span: SentrySpan, parentSpan?: SentrySpan]>;
+const MAP = Map<SentrySpan['spanId'], SentrySpan> = new Map<SentrySpan['spanId'], SentrySpan>();
 
+class SentrySpanProcessor implements SpanProcessor {
   constructor(options: SentrySpanProcessorOptions) {
     this._options = options;
   }
@@ -55,78 +51,56 @@ class SentrySpanProcessor implements SpanProcessor {
     const scope = hub.getScope();
     if (!scope) return;
 
-    // Func definition is explained in Step 2
-    if isSentryRequest(otelSpanId) {
-      // This is a request to Sentry, so we don't want to create a transaction/span.
-      return;
-    }
-
     const otelSpanId = otelSpan.spanContext().spanId;
+    const otelParentSpanId = otelSpan.parentSpanId;
 
-    const mapVal = this._map[otelSpanId];
-    if (mapVal) {
-      const [parentSpan] = mapVal;
-      // create a new span as a child of the parentSpan
-      const childSpan = parentSpan.startChild({
+    // Otel supports having multiple non-nested spans at the same time
+    // so we cannot use hub.getSpan(), as we cannot rely on this being on the current span
+    const sentryParentSpan = otelParentSpanId && MAP.get(otelParentSpanId);
+
+    if (sentryParentSpan) {
+      const sentryChildSpan = sentryParentSpan.startChild({
         description: otelSpan.name,
-        instrumenter: 'otel',
-        // Make sure we use otel span id as the span id.
+        instrumentor: 'otel',
+        startTimestamp: convertOtelTimeToSeconds(otelSpan.startTime),
         spanId: otelSpanId,
-        startTimestamp: otelSpan.startTime,
-        // Use `default` since we will redefine span op on finish
-        op: 'default',
       });
 
-      // We store the otelSpan and its parent in the map
-      this._map[otelSpanId] = [childSpan, parentSpan];
-      scope.setSpan(childSpan);
-
+      MAP.set(otelSpanId, sentryChildSpan);
     } else {
-      // Will grab Dynamic Sampling Context and sentry-trace header if available
-      // Func definition is explained in Step 3
       const traceCtx = getTraceData(otelSpan);
-      // If the parentSpan doesn't exist, we create a new transaction
-      const transaction = Sentry.startTransaction({
+      const transaction = hub.startTransaction({
         name: otelSpan.name,
         ...traceCtx,
-        instrumenter: 'otel',
-        startTimestamp: otelSpan.startTime,
-        // Use `default` since we will redefine span op on finish
-        op: 'default',
+        instrumentor: 'otel',
+        startTimestamp: convertOtelTimeToSeconds(otelSpan.startTime),
+        spanId: otelSpanId,
       });
 
-      if (transaction) {
-          // We store the otelSpan and its parent in the map
-          this._map[otelSpanId] = [transaction, undefined];
-          scope.setSpan(transaction);
-      }
+      MAP.set(otelSpanId, transaction);
     }
   }
 
   onEnd(otelSpan: OpenTelemetrySpan): void {
-    const hub = Sentry.getCurrentHub();
-    if (!hub) return;
-
-    const scope = hub.getScope();
-    if (!scope) return;
-
     const otelSpanId = otelSpan.spanContext().spanId;
-    const mapVal = this._map[otelSpanId];
+    const sentrySpan = MAP.get(otelSpanId);
 
-    if (mapVal) {
-      const [sentrySpan, parentSpan] = mapVal;
-
-      // Update op, description, status, and endTimestamp.
-      // Func definition is explained in Step 4
-      updateSpanWithOtelData(sentrySpan, otelSpan);
-
-      // We finish the span
-      sentrySpan.finish();
-      // We set the parent span as the active span if parent span is defined.
-      scope.setSpan(parentSpan);
-      // We remove the span from the map
-      delete this._map[otelSpanId];
+     // Func definition is explained in Step 2
+    if isSentryRequest(otelSpanId) {
+      // This is a request to Sentry, so we don't want to finish the transaction/span (so it isn't sent to Sentry)
+      MAP.delete(otelSpanId);
+      return;
     }
+
+    if (sentrySpan instanceof Transaction) {
+      updateTransactionWithOtelData(sentrySpan, otelSpan);
+      finishTransactionWithContextFromOtelData(sentrySpan, otelSpan);
+    } else {
+      updateSpanWithOtelData(sentrySpan, otelSpan);
+      sentrySpan.finish(convertOtelTimeToSeconds(otelSpan.endTime));
+    }
+
+    MAP.delete(otelSpanId);
   }
 }
 ```
