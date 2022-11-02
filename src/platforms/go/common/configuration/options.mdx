@@ -16,59 +16,102 @@ initialized.
 type ClientOptions struct {
 	// The DSN to use. If the DSN is not set, the client is effectively disabled.
 	Dsn string
-	// In debug mode, the debug information is printed to stdout to help you understand what
-	// sentry is doing.
+	// In debug mode, the debug information is printed to stdout to help you understand what sentry is doing.
 	Debug bool
 	// Configures whether SDK should generate and attach stacktraces to pure capture message calls.
 	AttachStacktrace bool
-	// The sample rate for event submission (0.0 - 1.0, defaults to 1.0)
+	// The sample rate for event submission in the range [0.0, 1.0]. By default,
+	// all events are sent. Thus, as a historical special case, the sample rate
+	// 0.0 is treated as if it was 1.0. To drop all events, set the DSN to the
+	// empty string.
 	SampleRate float64
-	// The sample rate for performance data submission (0.0 - 1.0)
-	// (defaults to 0.0 (meaning performance monitoring disabled))
+	// The sample rate for sampling traces in the range [0.0, 1.0].
 	TracesSampleRate float64
+	// Used to customize the sampling of traces, overrides TracesSampleRate.
+	TracesSampler TracesSampler
 	// List of regexp strings that will be used to match against event's message
 	// and if applicable, caught errors type and value.
 	// If the match is found, then a whole event will be dropped.
 	IgnoreErrors []string
-	// Before send callback.
+	// If this flag is enabled, certain personally identifiable information (PII) is added by active integrations.
+	// By default, no such data is sent.
+	SendDefaultPII bool
+	// BeforeSend is called before error events are sent to Sentry.
+	// Use it to mutate the event or return nil to discard the event.
+	// See EventProcessor if you need to mutate transactions.
 	BeforeSend func(event *Event, hint *EventHint) *Event
 	// Before breadcrumb add callback.
 	BeforeBreadcrumb func(breadcrumb *Breadcrumb, hint *BreadcrumbHint) *Breadcrumb
-	// Integrations to be installed on the current Client, receives default integrations
+	// Integrations to be installed on the current Client, receives default
+	// integrations.
 	Integrations func([]Integration) []Integration
-	// io.Writer implementation that should be used with the `Debug` mode
+	// io.Writer implementation that should be used with the Debug mode.
 	DebugWriter io.Writer
-	// The transport to use.
-	// This is an instance of a struct implementing `Transport` interface.
-	// Defaults to `httpTransport` from `transport.go`
+	// The transport to use. Defaults to HTTPTransport.
 	Transport Transport
 	// The server name to be reported.
 	ServerName string
 	// The release to be sent with events.
+	//
+	// Some Sentry features are built around releases, and, thus, reporting
+	// events with a non-empty release improves the product experience. See
+	// https://docs.sentry.io/product/releases/.
+	//
+	// If Release is not set, the SDK will try to derive a default value
+	// from environment variables or the Git repository in the working
+	// directory.
+	//
+	// If you distribute a compiled binary, it is recommended to set the
+	// Release value explicitly at build time. As an example, you can use:
+	//
+	// 	go build -ldflags='-X main.release=VALUE'
+	//
+	// That will set the value of a predeclared variable 'release' in the
+	// 'main' package to 'VALUE'. Then, use that variable when initializing
+	// the SDK:
+	//
+	// 	sentry.Init(ClientOptions{Release: release})
+	//
+	// See https://golang.org/cmd/go/ and https://golang.org/cmd/link/ for
+	// the official documentation of -ldflags and -X, respectively.
 	Release string
 	// The dist to be sent with events.
 	Dist string
 	// The environment to be sent with events.
 	Environment string
-	// Maximum number of breadcrumbs.
+	// Maximum number of breadcrumbs
+	// when MaxBreadcrumbs is negative then ignore breadcrumbs.
 	MaxBreadcrumbs int
-	// An optional pointer to `http.Client` that will be used with a default HTTPTransport.
-	// Using your own client will make HTTPTransport, HTTPProxy, HTTPSProxy and CaCerts options ignored.
+	// Maximum number of spans.
+	//
+	// See https://develop.sentry.dev/sdk/envelopes/#size-limits for size limits
+	// applied during event ingestion. Events that exceed these limits might get dropped.
+	MaxSpans int
+	// An optional pointer to http.Client that will be used with a default
+	// HTTPTransport. Using your own client will make HTTPTransport, HTTPProxy,
+	// HTTPSProxy and CaCerts options ignored.
 	HTTPClient *http.Client
-	// An optional pointer to `http.Transport` that will be used with a default HTTPTransport.
-	// Using your own transport will make HTTPProxy, HTTPSProxy and CaCerts options ignored.
-	HTTPTransport *http.Transport
+	// An optional pointer to http.Transport that will be used with a default
+	// HTTPTransport. Using your own transport will make HTTPProxy, HTTPSProxy
+	// and CaCerts options ignored.
+	HTTPTransport http.RoundTripper
 	// An optional HTTP proxy to use.
-	// This will default to the `http_proxy` environment variable.
-	// or `https_proxy` if that one exists.
+	// This will default to the HTTP_PROXY environment variable.
 	HTTPProxy string
 	// An optional HTTPS proxy to use.
-	// This will default to the `HTTPS_PROXY` environment variable
-	// or `http_proxy` if that one exists.
+	// This will default to the HTTPS_PROXY environment variable.
+	// HTTPS_PROXY takes precedence over HTTP_PROXY for https requests.
 	HTTPSProxy string
-	// An optional CaCerts to use.
-	// Defaults to `gocertifi.CACerts()`.
+	// An optional set of SSL certificates to use.
 	CaCerts *x509.CertPool
+	// MaxErrorDepth is the maximum number of errors reported in a chain of errors.
+	// This protects the SDK from an arbitrarily long chain of wrapped errors.
+	//
+	// An additional consideration is that arguably reporting a long chain of errors
+	// is of little use when debugging production errors with Sentry. The Sentry UI
+	// is not optimized for long chains either. The top-level error together with a
+	// stack trace is often the most useful information.
+	MaxErrorDepth int
 }
 ```
 
