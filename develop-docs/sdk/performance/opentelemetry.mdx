@@ -164,7 +164,31 @@ export class SentryPropagator implements TextMapPropagator {
 
 We want to make sure that we don't create Sentry Spans for requests to Sentry.
 
-TODO: We need to make sure we filter these out somehow. Spec WIP
+```ts
+import { Span as OtelSpan } from '@opentelemetry/sdk-trace-base';
+import { SemanticAttributes } from '@opentelemetry/semantic-conventions';
+import { getCurrentHub } from '@sentry/core';
+
+export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
+  const { attributes } = otelSpan;
+
+  const httpUrl = attributes[SemanticAttributes.HTTP_URL];
+
+  if (!httpUrl) {
+    return false;
+  }
+
+  return isSentryRequestUrl(httpUrl.toString());
+}
+
+function isSentryRequestUrl(url: string): boolean {
+  const dsn = getCurrentHub().getClient()?.getDsn();
+  return dsn ? url.includes(dsn.host) : false;
+}
+```
+
+Note: In some environments (e.g. JavaScript), you do not have access to attributes in the SpanProcessor `onStart` hook.
+In that case, we will always create transactions/spans, but never finish them in the case they are identified as Sentry requests in `onEnd`.
 
 ### Step 3: Define `getTraceData`
 
