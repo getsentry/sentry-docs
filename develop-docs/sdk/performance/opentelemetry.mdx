@@ -512,74 +512,80 @@ In OpenTelemetry, [Span Status is an enum of 3 values](https://github.com/open-t
 
 To map from OpenTelemetry Span Status to, you need to rely on both OpenTelemetry [Span Status](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255) and [Span attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186). This approach was adapted from a PR by GH user [@anguisa](https://github.com/anguisa) to the [OpenTelemetry Sentry Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/pull/13407).
 
-```go
+```ts
 // OpenTelemetry span status can be Unset, Ok, Error. HTTP and Grpc codes contained in tags can make it more detailed.
 
+import { Span as OtelSpan } from '@opentelemetry/sdk-trace-base';
+import { SemanticAttributes } from '@opentelemetry/semantic-conventions';
+import { SpanStatusType as SentryStatus } from '@sentry/tracing';
+
 // canonicalCodesHTTPMap maps some HTTP codes to Sentry's span statuses. See possible mapping in https://develop.sentry.dev/sdk/event-payloads/span/
-var canonicalCodesHTTPMap = map[string]sentry.SpanStatus{
-	"400": sentry.SpanStatusFailedPrecondition, // SpanStatusInvalidArgument, SpanStatusOutOfRange
-	"401": sentry.SpanStatusUnauthenticated,
-	"403": sentry.SpanStatusPermissionDenied,
-	"404": sentry.SpanStatusNotFound,
-	"409": sentry.SpanStatusAborted, // SpanStatusAlreadyExists
-	"429": sentry.SpanStatusResourceExhausted,
-	"499": sentry.SpanStatusCanceled,
-	"500": sentry.SpanStatusInternalError, // SpanStatusDataLoss, SpanStatusUnknown
-	"501": sentry.SpanStatusUnimplemented,
-	"503": sentry.SpanStatusUnavailable,
-	"504": sentry.SpanStatusDeadlineExceeded,
-}
+const canonicalCodesHTTPMap: Record<string, SentryStatus> = {
+  '400': 'failed_precondition',
+  '401': 'unauthenticated',
+  '403': 'permission_denied',
+  '404': 'not_found',
+  '409': 'aborted',
+  '429': 'resource_exhausted',
+  '499': 'cancelled',
+  '500': 'internal_error',
+  '501': 'unimplemented',
+  '503': 'unavailable',
+  '504': 'deadline_exceeded',
+} as const;
 
 // canonicalCodesGrpcMap maps some GRPC codes to Sentry's span statuses. See description in grpc documentation.
-var canonicalCodesGrpcMap = map[string]sentry.SpanStatus{
-	"1":  sentry.SpanStatusCanceled,
-	"2":  sentry.SpanStatusUnknown,
-	"3":  sentry.SpanStatusInvalidArgument,
-	"4":  sentry.SpanStatusDeadlineExceeded,
-	"5":  sentry.SpanStatusNotFound,
-	"6":  sentry.SpanStatusAlreadyExists,
-	"7":  sentry.SpanStatusPermissionDenied,
-	"8":  sentry.SpanStatusResourceExhausted,
-	"9":  sentry.SpanStatusFailedPrecondition,
-	"10": sentry.SpanStatusAborted,
-	"11": sentry.SpanStatusOutOfRange,
-	"12": sentry.SpanStatusUnimplemented,
-	"13": sentry.SpanStatusInternalError,
-	"14": sentry.SpanStatusUnavailable,
-	"15": sentry.SpanStatusDataLoss,
-	"16": sentry.SpanStatusUnauthenticated,
-}
+const canonicalCodesGrpcMap: Record<string, SentryStatus> = {
+  '1': 'cancelled',
+  '2': 'unknown_error',
+  '3': 'invalid_argument',
+  '4': 'deadline_exceeded',
+  '5': 'not_found',
+  '6': 'already_exists',
+  '7': 'permission_denied',
+  '8': 'resource_exhausted',
+  '9': 'failed_precondition',
+  '10': 'aborted',
+  '11': 'out_of_range',
+  '12': 'unimplemented',
+  '13': 'internal_error',
+  '14': 'unavailable',
+  '15': 'data_loss',
+  '16': 'unauthenticated',
+} as const;
 
-code := spanStatus.Code()
-if code < 0 || int(code) > 2 {
-    return sentry.SpanStatusUnknown, fmt.Sprintf("error code %d", code)
-}
-httpCode, foundHTTPCode := tags["http.status_code"]
-grpcCode, foundGrpcCode := tags["rpc.grpc.status_code"]
-var sentryStatus sentry.SpanStatus
-switch {
-case code == 1 || code == 0:
-    sentryStatus = sentry.SpanStatusOK
-case foundHTTPCode:
-    httpStatus, foundHTTPStatus := canonicalCodesHTTPMap[httpCode]
-    switch {
-    case foundHTTPStatus:
-        sentryStatus = httpStatus
-    default:
-        sentryStatus = sentry.SpanStatusUnknown
+export function mapOtelStatus(otelSpan: OtelSpan): SentryStatus {
+  const { status, attributes } = otelSpan;
+
+  const statusCode = status.code;
+
+  if (statusCode < 0 || statusCode > 2) {
+    return 'unknown_error';
+  }
+
+  if (statusCode === 0 || statusCode === 1) {
+    return 'ok';
+  }
+
+  const httpCode = attributes[SemanticAttributes.HTTP_STATUS_CODE];
+  const grpcCode = attributes[SemanticAttributes.RPC_GRPC_STATUS_CODE];
+
+  if (typeof httpCode === 'string') {
+    const sentryStatus = canonicalCodesHTTPMap[httpCode];
+    if (sentryStatus) {
+      return sentryStatus;
     }
-case foundGrpcCode:
-    grpcStatus, foundGrpcStatus := canonicalCodesGrpcMap[grpcCode]
-    switch {
-    case foundGrpcStatus:
-        sentryStatus = grpcStatus
-    default:
-        sentryStatus = sentry.SpanStatusUnknown
+  }
+
+  if (typeof grpcCode === 'string') {
+    const sentryStatus = canonicalCodesGrpcMap[grpcCode];
+    if (sentryStatus) {
+      return sentryStatus;
     }
-default:
-    sentryStatus = sentry.SpanStatusUnknown
+  }
+
+  return 'unknown_error';
 }
-return sentryStatus
 ```
 
 ### Span Events
