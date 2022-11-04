@@ -42,6 +42,7 @@ func application(_ application: UIApplication,
         options.enableAppHangTracking = true
         options.enableFileIOTracking = true
         options.enableCoreDataTracking = true
+        options.enableCaptureFailedRequests = true
     }
 
     return true
@@ -68,6 +69,7 @@ struct SwiftUIApp: App {
             options.enableAppHangTracking = true
             options.enableFileIOTracking = true
             options.enableCoreDataTracking = true
+            options.enableCaptureFailedRequests = true
         }
     }
 }
