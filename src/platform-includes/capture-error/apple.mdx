@@ -26,3 +26,19 @@ By default, macOS applications do not crash whenever an uncaught exception occur
 1. Open the application's `Info.plist` file
 2. Search for `Principal class` (the entry is expected to be `NSApplication`)
 3. Replace `NSApplication` with `SentryCrashExceptionApplication`
+
+## Customizing Error Descriptions
+
+This feature is available on [sentry-cocoa 7.25.0](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md#7250) and above.
+
+By default, Sentry will display the error code as the error description. For custom error types, you may want to provide a custom description that makes it easier to identify the error in the **Issues** page. You can provide a custom description for `NSError` values by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
+
+This can be particularly useful for Swift enum error types that conform to `Error`, where the error code can be hard to match with an enum case. To customize the description for Swift `Error` types, you should conform to the `CustomNSError` protocol and return a user info dictionary:
+
+```swift {tabTitle:Swift}
+extension MyCustomError: CustomNSError {
+    var errorUserInfo: [String : Any] {
+        [NSDebugDescriptionErrorKey: "Custom error description"]
+    }
+}
+```

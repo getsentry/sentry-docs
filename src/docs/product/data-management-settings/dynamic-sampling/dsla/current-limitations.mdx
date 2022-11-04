@@ -1,0 +1,38 @@
+---
+title: Current Limitations
+sidebar_order: 20
+noindex: true
+description: "Learn about the current limitations of dynamic sampling."
+---
+
+<Include name="limited-avail-note.mdx" />
+
+Following are the current known limitations and functionality specifics that can create challenges when you're creating server-side sampling rules.
+
+## Supported SDKs & Versions
+
+The **Dynamic Sampling** feature is currently only available for the following SDK's:
+
+<Include name="sampling-supported-sdks.mdx" />
+
+If your application relies on any Sentry SDK that isn't specified above, then you won't be able to use Sentry's **Dynamic Sampling**.
+
+## Trace rules can only select based on the attributes of the initial transaction
+
+When sampling traces, the decision to keep or throw away a trace needs to be taken when the first transaction of the trace is seen. This, in turn, means that for transaction traces, only the attributes of the first transaction can participate in the sampling decision. For example, if you have a frontend and a backend in the trace, you can only sample the trace by the SDK context available in the frontend, not the backend data.
+
+## Changing trace attributes in secondary transactions
+
+Related to the previously discussed issue about trace rules, setting the transaction, the release, or the environment in a transaction will have no influence on a trace sampling decision if the transaction is not the first transaction in the trace.
+
+## Limited number of rule conditions
+
+We're actively working on adding more conditions that you can sample by (for example, transaction name). However, feel free to provide suggestions by joining the channel [#dynamic-sampling](https://discord.com/channels/621778831602221064/1024798855058960475) on our Discord Server.
+
+## Arbitrary logical composition for rule conditions
+
+Currently, rules containing more than one condition use a logical `and` for each condition. Multiple values for a condition use a logical `or` condition for matching.
+
+The decision to implement it this way was based on the desire to keep the UI simple while still being able to cover all common scenarios.
+
+Having multiple arguments within a single condition use the `or` operator is what we typically want since an attribute generally has one value, and having an `and` condition wouldn't make sense. For example, the environment attribute could be `prod` or `dev`, but it couldn't be `prod` and `dev` at the same time.

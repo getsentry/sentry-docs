@@ -1,0 +1,35 @@
+---
+title: Dynamic Sampling
+sidebar_order: 10
+draft: true
+noindex: true
+description: "Learn about how you can control which transactions Sentry retains using dynamic sampling."
+---
+
+<Include name="limited-avail-note.mdx" />
+
+Capturing a single trace involves minimal overhead, but capturing traces for every page load or every API request may add undesirable load to your system. Sampling your transaction events allows you to better manage the number of transactions sent to Sentry so you can tailor your volume to your organization's needs.
+
+Sentry's **Dynamic Sampling** feature allows you to view more accurate performance metrics based on all the transaction events you send to Sentry (called _processed events_), while retaining a smaller number of more relevant transaction events that you can explore in full detail (called _indexed events_).
+
+With dynamic sampling, you control which transactions Sentry retains by setting _server-side sampling_ rules and rates, so you see more of the transactions you want to explore further, and less of the ones you don’t. In addition, dynamic sampling allows you to manage your sampling configuration centrally, server-side, and lets you make changes without the need to reconfigure the SDK and redeploy your application.
+
+![The Dynamic Sampling page with a list of rules](dynamic-sampling-dsla.png)
+
+> _[A trace](/product/sentry-basics/tracing/distributed-tracing/) represents the record of an entire operation you want to measure or track, like a page load, an instance of a user completing some action in your application, or a cron job in your backend. A trace consists of one or more transactions and the trace can be distributed across multiple services or projects._
+
+Dynamic sampling allows you to retain a smaller number of more relevant transactions that you can explore in full detail, without giving up the accuracy of performance metrics that are based on larger set of all the transactions you send to Sentry.
+
+Because every project is different, you can set multiple sample rules with different sample rates per project. For example, you may need more transactions from high converting pages, critical API endpoints, or you may need to focus on latency issues from your latest release.
+
+Dynamic sampling also makes your SDK (client-side) and your server-side sampling configuration largely independent of each other. This helps if you're building native applications with many active releases at a given time.
+
+## Traces & Propagation of Sampling Decisions
+
+When Sentry makes sampling decisions, we do so for entire traces. Instead of looking at a particular transaction, we look at the entire group of transactions in a trace. Sampling transactions using transaction traces is ideal because it allows you to understand transactions in the context of your whole system.
+
+Since we sample traces, sampling rules are based on the trace context. This means that sampling decisions are based on the information extracted from the _system that initiated the transaction_. The head transaction in a trace determines the trace context for all following transactions in that trace. No information can be changed, added, or deleted after the first propagation. The trace context is bound to only one particular trace, and all the transactions that are part of this trace.
+
+## Next Steps
+
+<PageGrid />

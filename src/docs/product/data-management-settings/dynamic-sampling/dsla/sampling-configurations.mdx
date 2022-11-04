@@ -1,0 +1,72 @@
+---
+title: Dynamic Sampling Configurations
+sidebar_order: 15
+noindex: true
+description: "Learn about effective dynamic sampling configurations."
+---
+
+<Include name="limited-avail-note.mdx" />
+
+<Note>
+
+To set up or configure dynamic sampling, you need to be an Owner, Manager, or Admin of your Sentry organization.
+
+</Note>
+
+Once you understand [how Sentry samples](/product/sentry-basics/sampling/dsla/), you can set server-side sampling rules in **[Project] > Settings > Dynamic Sampling**. Below, we explain how rules are evaluated and provide examples of good and bad configurations.
+
+## Order of Precedence
+
+Rules evaluate from top to bottom, with the first matching rule determining the sample rate. Like with declaring a conditional statement in code, rules with the most specific conditional clauses should be evaluated first (`If`), followed by more generic ones (`Else If`). If generic rules lead the list, the more specific rules will likely never be evaluated. Setting a uniform server-side sampling rate is equivalent to an `Else` clause which will always trail rules with conditional clauses.
+
+You can change the order of your rules on the **Dynamic Sampling** page in [sentry.io](https://sentry.io) to make them more effective.
+
+<Note>
+
+The following examples are illustrated as code samples, but you'll configure these rules using the **Dynamic Sampling** page interface.
+
+</Note>
+
+## Good Examples
+
+**Most specific rule leads the list**
+
+The rule with the most specific conditional clause will always be evaluated because it's first in order:
+
+```
+if (release = 3.0) && (environment = production) {
+    transactionSample = 1.0
+} else if (environment = production) {
+    transactionSample = 0.5
+} else {
+    transactionSample = 0.25
+}
+```
+
+**Each rule is evaluated independently**
+
+This configuration also works because each rule will be evaluated based on entirely different conditions:
+
+```
+if (release = 3.0) {
+    transactionSample = 1.0
+} else if (environment = production) {
+    transactionSample = 0.5
+} else {
+    transactionSample = 0.25
+}
+```
+
+## Poor Example
+
+The rule with the most specific conditional clause will never be evaluated because a rule with a similar, but more generic clause precedes it:
+
+```
+if (environment = production) {
+    transactionSample = 1.0
+} else if (release = 3.0) && (environment = production) {
+    transactionSample = 0.5 // Will never be evaluated
+} else {
+    transactionSample = 0.25
+}
+```

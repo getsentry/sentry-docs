@@ -52,7 +52,11 @@ Supported options:
 
 ### tracingOrigins
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the additional headers attached.**
+A list of strings and regular expressions. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link transactions together as part of a single trace.
+
+**The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the additional headers attached.**
+
+The default value of `tracingOrigins` is `['localhost', /^\//]`. This means that by default, tracing headers are only attached to requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
 
 <PlatformContent includePath="performance/tracingOrigins-example" />
 
@@ -72,9 +76,21 @@ This function can be used to filter out unwanted spans such as XHR's running hea
 
 ### idleTimeout
 
-The idle time, measured in ms, to wait until the transaction will be finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+The idle time, measured in ms, to wait until the transaction will be finished, if there are no unfinished spans. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
 
 The default is `1000`.
+
+### finalTimeout
+
+The maximum duration of the transaction, measured in ms. If the transaction duration hits the `finalTimeout` value, it will be finished.
+
+The default is `30000`.
+
+### heartbeatInterval
+
+The time, measured in ms, one heartbeat takes. If no new spans were started or no open spans finished within **three heartbeats**, the transaction will be finished. The heartbeat count restarts whenever a new span is created or an open span is finished.
+
+The default is `5000`.
 
 ### startTransactionOnLocationChange
 
@@ -88,31 +104,25 @@ This flag enables or disables creation of `pageload` transaction on first pagelo
 
 The default is `true`.
 
-### maxTransactionDuration
-
-The maximum duration of a transaction, measured in seconds, before it will be marked as "deadline_exceeded". If you never want transactions marked that way, set `maxTransactionDuration` to 0.
-
-The default is `600`.
-
 ### markBackgroundTransactions
 
 This option flags transactions when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
 
 The default is `true`.
 
+### \_experiments
 
-### _experiments
-
-This is an object containing experimental flags for features that may involve breaking changes that haven't yet landed in a new major version. 
+This is an object containing experimental flags for features that haven't yet landed in a new major version and might include breaking changes.
 
 The default is
+
 ```
 {
   enableLongTasks: true
 }
 ```
 
-#### _experiments.enableLongTasks
+#### \_experiments.enableLongTasks
 
 This experimental option determines whether spans for long tasks automatically get created.
 

@@ -30,6 +30,8 @@ using (SentrySdk.Init(o =>
         // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         o.TracesSampleRate = 1.0;
+        // Enable Global Mode if running in a client app
+        o.IsGlobalModeEnabled = true;
     }))
 {
     // App code goes here. Dispose the SDK before exiting to flush events.
