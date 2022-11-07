@@ -7,7 +7,7 @@ const navQuery = graphql`
   query PlatformNavQuery {
     allSitePage(
       filter: {
-        context: { draft: { ne: false } }
+        context: { draft: { ne: true } }
         path: { regex: "/^/(platforms|product)/" }
       }
     ) {

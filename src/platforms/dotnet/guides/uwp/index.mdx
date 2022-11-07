@@ -9,26 +9,26 @@ Sentry's .NET SDK works with Universal Windows platform applications through the
 
 ## Configuration
 
-In addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must configure the UWP specific error handler.
+In addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must configure the UWP specific `Application.UnhandledException` and `Application.Suspending` events.
 
 <Note>
 
-The SDK should be initialized in the constructor of your application class (usually `App.xaml.cs`). Do not initialize the SDK in the `OnLaunched()` event of the application or the `Hub` will not be initialized correctly.
+The SDK should be initialized in the constructor of your application class (usually `App.xaml.cs`). Do not initialize the SDK in the `OnLaunched` event of the application or the `Hub` will not be initialized correctly.
 
 </Note>
 
 ```csharp
+// Add these to your existing using statments.
 using Sentry;
-using System.Runtime.ExceptionServices;
-using System.Security;
-using Windows.UI.Xaml;
+using Sentry.Protocol;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 sealed partial class App : Application
 {
     public App()
     {
-        SentrySdk.Init(o => 
+        // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
+        SentrySdk.Init(o =>
         {
             // Tells which project in Sentry to send events to:
             o.Dsn = "___PUBLIC_DSN___";
@@ -40,29 +40,57 @@ sealed partial class App : Application
             // We recommend adjusting this value in production.
             o.TracesSampleRate = 1.0;
 
-            // Enable Global Mode since this is a client app
+            // Enable Global Mode since this is a client app.
             o.IsGlobalModeEnabled = true;
 
-            //TODO: any other options you need go here
+            // TODO:Any other Sentry options you need go here.
         });
-        Current.UnhandledException += ExceptionHandler;
+
+        // Hook the UWP UnhandledException event before initalizing the app component.
+        this.UnhandledException += OnUnhandledException;
+
+        // Initialize the app component, and hook the Suspending event.
+        this.InitializeComponent();
+        this.Suspending += OnSuspending;
+
+        // Add any other code you may need last.
     }
 
-    [HandleProcessCorruptedStateExceptions, SecurityCritical]
-    internal void ExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+    // Update your OnSuspending handler as shown
+
+    private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
-        // We need to hold the reference, because the Exception property is cleared when accessed.
+        var deferral = e.SuspendingOperation.GetDeferral();
+
+        // Flush Sentry events when suspending
+        await SentrySdk.FlushAsync(TimeSpan.FromSeconds(2));
+
+        // TODO: Save any other application state and stop any background activity.
+
+        deferral.Complete();
+    }
+
+    // Add this OnUnhandledException handler.
+
+    // Use these attributes to ensure all types of exceptions are handled.
+    [SecurityCritical]
+    [HandleProcessCorruptedStateExceptions]
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        // Get a reference to the exception, because the Exception property is cleared when accessed.
         var exception = e.Exception;
         if (exception != null)
         {
-            // Tells Sentry this was an Unhandled Exception
+            // Tell Sentry this was an unhandled exception
             exception.Data[Mechanism.HandledKey] = false;
             exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
+
+            // Capture the exception
             SentrySdk.CaptureException(exception);
-            // Make sure the event is flushed to disk or to Sentry
-            SentrySdk.FlushAsync(TimeSpan.FromSeconds(3)).Wait();
+
+            // Flush the event immediately
+            SentrySdk.FlushAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
         }
     }
-
 }
 ```

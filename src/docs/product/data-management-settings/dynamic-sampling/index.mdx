@@ -3,33 +3,46 @@ title: Dynamic Sampling
 sidebar_order: 1
 redirect_from:
   - /product/data-management-settings/server-side-sampling/
-description: "Learn about how you can control which transactions Sentry retains using dynamic sampling."
+  - /product/data-management-settings/server-side-sampling/current-limitations/
+  - /product/data-management-settings/server-side-sampling/sampling-configurations/
+  - /product/data-management-settings/dynamic-sampling/current-limitations/
+  - /product/data-management-settings/dynamic-sampling/sampling-configurations/
+description: "Learn about Sentry dynamically prioritizes your transaction data."
 ---
 
-<Include name="early-adopter-note.mdx" />
+Just because you don’t record a problem, that doesn’t mean it didn’t happen. Sentry's **Dynamic Sampling** feature ensures that you get complete insight into the performance of your application in a way that scales affordably with your traffic, so you never miss a critical issue. With dynamic sampling, we can maximize the value from your performance data as you scale, without you having to manage complex sampling rules.
 
-Capturing a single trace involves minimal overhead, but capturing traces for every page load or every API request may add undesirable load to your system. Sampling your transaction events allows you to better manage the number of transactions sent to Sentry so you can tailor your volume to your organization's needs.
+We do this by automatically prioritizing your transactions, server-side, so that we can provide you with the most valuable and accurate insights about your application’s performance while also applying helpful prioritization to the data we retain for you.
 
-Sentry's **Dynamic Sampling** feature allows you to view more accurate performance metrics based on all the transaction events you send to Sentry (called _processed events_), while retaining a smaller number of more relevant transaction events that you can explore in full detail (called _indexed events_).
+While we do our best to provide you with the most useful transaction data, our **Dynamic Sampling** feature allows you to turn the priorities that we apply to your data retention on or off. By default, these toggles are all enabled so that Sentry's dynamic sampling priorities are applied to your data:
 
-With dynamic sampling, you control which transactions Sentry retains by setting _server-side sampling_ rules and rates, so you see more of the transactions you want to explore further, and less of the ones you don’t. In addition, dynamic sampling allows you to manage your sampling configuration centrally, server-side, and lets you make changes without the need to reconfigure the SDK and redeploy your application.
+![The Dynamic Sampling page with priority toggles enabled.](dynamic-sampling.png)
 
-![The Dynamic Sampling page with a list of rules](dynamic-sampling.png)
+Because every project is different, you can set these toggles differently for different projects. For example, you may have a project where retaining transactions from the latest release is not a priority for you.
 
-> _[A trace](/product/sentry-basics/tracing/distributed-tracing/) represents the record of an entire operation you want to measure or track, like a page load, an instance of a user completing some action in your application, or a cron job in your backend. A trace consists of one or more transactions and the trace can be distributed across multiple services or projects._
+## Data Retention Priorities
 
-Dynamic sampling allows you to retain a smaller number of more relevant transactions that you can explore in full detail, without giving up the accuracy of performance metrics that are based on larger set of all the transactions you send to Sentry.
+When your data reaches high volumes, Sentry begins to automatically prioritize your transactions, server-side. By default, we prioritize transaction data in the following ways:
 
-Because every project is different, you can set multiple sample rules with different sample rates per project. For example, you may need more transactions from high converting pages, critical API endpoints, or you may need to focus on latency issues from your latest release.
+<!-- prettier-ignore-start -->
 
-Dynamic sampling also makes your SDK (client-side) and your server-side sampling configuration largely independent of each other. This helps if you're building native applications with many active releases at a given time.
+| Prioritize | Ignore |
+|------------|--------|
+| Latest release | Health checks |
+| Dev environments | |
 
-## Traces & Propagation of Sampling Decisions
+<!-- prettier-ignore-end -->
 
-When Sentry makes sampling decisions, we do so for entire traces. Instead of looking at a particular transaction, we look at the entire group of transactions in a trace. Sampling transactions using transaction traces is ideal because it allows you to understand transactions in the context of your whole system.
+We prioritize data from development environments because these environments typically generate a relatively small number of transactions compared to your production environments. As a result, to gain meaningful insights during your testing phase, we prioritize transaction data from these environments.
 
-Since we sample traces, sampling rules are based on the trace context. This means that sampling decisions are based on the information extracted from the _system that initiated the transaction_. The head transaction in a trace determines the trace context for all following transactions in that trace. No information can be changed, added, or deleted after the first propagation. The trace context is bound to only one particular trace, and all the transactions that are part of this trace.
+_Health check_ type transactions, while important for checking the stability of your application, don't have any value for you beyond the task associated with them. They also tend to be high in volume, potentially using up a lot of you quota if retained. To avoid using up your volume on this type of transactions, we ignore these when sampling your data.
 
-## Next Steps
+## Dynamic Sampling & SDK Sampling
 
-<PageGrid />
+Dynamic sampling and your SDK sampling configuration are largely independent of each other. This helps if you're building native applications with many active releases at a given time.
+
+Our dynamic sampling works best when you send us as much data as you can (ideally 100%). As you purchase more transaction volume, however, your per-transaction pricing goes down accordingly.
+
+## Next Step
+
+Check out our [Getting Started](/product/data-management-settings/dynamic-sampling/getting-started/) documentation.
