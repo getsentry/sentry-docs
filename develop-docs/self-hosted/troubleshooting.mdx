@@ -24,6 +24,8 @@ This happens where Kafka and the consumers get out of sync. Possible reasons are
 
 ### Recovery
 
+Note: These solutions may result in data loss when resetting the offset of the snuba consumers.
+
 #### Proper solution
 
 The _proper_ solution is as follows ([reported](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)):
@@ -48,6 +50,17 @@ The _proper_ solution is as follows ([reported](https://github.com/getsentry/sel
 <Alert title="Tip" level="info">
 You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
 </Alert>
+
+#### Another option
+
+This option is as follows ([reported](https://github.com/getsentry/self-hosted/issues/1690) by [@gabn88](https://github.com/gabn88)):
+
+1. Set offset to latest and execute:
+   ```shell
+   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
+   ```
+
+Unlike the proper solution, this involves resetting the offsets of all consumer groups and all topics.
 
 #### Nuclear option
 
