@@ -8,11 +8,78 @@ categories:
   - mobile
 ---
 
-The `sentry-compose` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) Navigation support for Sentry using the [SentryNavigationIntegration](https://github.com/getsentry/sentry-java/blob/524ee49b212c3f2eead20960c3c6825ccdbf8007/sentry-compose/src/androidMain/kotlin/io/sentry/compose/SentryNavigationIntegration.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/blob/main/sentry-compose/src/androidMain/kotlin/io/sentry/compose/).
+The `sentry-compose` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) Navigation support for Sentry.
 
 On this page, we get you up and running with Sentry's Compose Navigation Integration, so that it will automatically add a breadcrumb and start a transaction for each navigation event.
 
-## Install
+## Auto-Installation With the Sentry Android Gradle Plugin
+
+### Install
+
+If you're using the [Sentry Android Gradle Plugin](/platforms/android/gradle/), the Jetpack Compose Navigation Integration is automatically applied, and both breadcrumbs and transactions are automatically created for every navigation event.
+
+Add the Sentry Android Gradle plugin in `build.gradle`:
+
+```groovy
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+<Note>
+
+Learn more about the Sentry Android Gradle plugin in our [Gradle](/platforms/android/gradle/) documentation. Details about auto-installation can be found in the [Auto Instrumentation](/platforms/android/gradle/#tracing-auto-instrumentation) section.
+
+</Note>
+
+### Disable
+
+If you want to disable the Jetpack Compose instrumentation feature, you can adapt your `build.gradle(.kts)` file like so:
+
+```groovy
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.COMPOSE
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.COMPOSE)
+  }
+}
+```
+
+## Manual Installation
+
+### Install
 
 Sentry captures data by adding a `withSentryObservableEffect` extension function to `NavHostController`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose` dependency using Gradle:
 
@@ -21,7 +88,7 @@ implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.androi
 implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose.android', '6.2.0') }}'
 ```
 
-## Configure
+### Configure
 
 Configuration should happen in the respective `@Composable` function, once you obtain an instance of `NavHostController`:
 
