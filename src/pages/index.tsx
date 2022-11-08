@@ -71,6 +71,11 @@ const IndexPage = () => {
             <Nav className="justify-content-end" style={{ flex: 1 }}>
               <NavbarPlatformDropdown />
               <Nav.Item>
+                <SmartLink className="nav-link" to="/product/">
+                  Product
+                </SmartLink>
+              </Nav.Item>
+              <Nav.Item>
                 <SmartLink className="nav-link" to="/api/">
                   API
                 </SmartLink>
@@ -132,16 +137,8 @@ const IndexPage = () => {
       <Banner />
       <div className="index-container pad-top">
         <div className="flex-row card-row">
-          <a className="hover-card-link" href="/product/">
-            Product Guides
-          </a>
-          <a className="hover-card-link" href="/api/">
-            Web and Event API
-          </a>
-          <a
-            className="hover-card-link"
-            href="https://develop.sentry.dev/self-hosted/"
-          >
+          <a className="hover-card-link"
+            href="https://develop.sentry.dev/self-hosted/">
             Self-Hosted Sentry
           </a>
           <a className="hover-card-link" href="https://help.sentry.io/">
