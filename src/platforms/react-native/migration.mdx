@@ -4,6 +4,22 @@ sidebar_order: 100
 description: "Learn about migrating from 1.x to 2.x to enable release health tracking and native stack traces by default."
 ---
 
+## From 4.8.x to 4.9.x
+
+New feature that enables sending runtime JS dependencies in Events for React Native apps was added in `4.9.0` release. There are no manual steps required to enable this on Android builds. For iOS, you need to patch the `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file, where `$projectName` is likely your project's name. Search for the `Bundle React Native code and images` phase and patch the `shellScript`.
+
+_Old_:
+
+```bash
+shellScript = "export SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nset -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\n../node_modules/@sentry/cli/bin/sentry-cli react-native xcode REACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$REACT_NATIVE_XCODE\\\"\"\n";
+```
+
+_New_:
+
+```bash
+shellScript = "export SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nset -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\n../node_modules/@sentry/cli/bin/sentry-cli react-native xcode REACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$REACT_NATIVE_XCODE\\\"\"\n\n/bin/sh ../node_modules/@sentry/react-native/scripts/collect-modules.sh\n";
+```
+
 ## From 3.x to 4.x
 
 By bumping Sentry JavaScript to v7, new breaking changes were introduced, to know more what was changed, check the [breaking changes changelog](https://github.com/getsentry/sentry-javascript/blob/7.0.0/CHANGELOG.md#breaking-changes) from Sentry Javascript.
