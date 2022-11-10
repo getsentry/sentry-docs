@@ -65,7 +65,7 @@ import hashlib
 import hmac
 import json
 
-expected_digest = request.headers.get('sentry-hook-signature') # returns None if header is missing
+expected_digest = request.headers.get('sentry-hook-signature')  # returns None if header is missing
 body = json.dumps(request.body)
 
 digest = hmac.new(
@@ -74,8 +74,10 @@ digest = hmac.new(
     digestmod=hashlib.sha256,
 ).hexdigest()
 
+if not expected_digest:  # The signature is missing
+    raise UnauthorizedError
 
-if expected_digest and not hmac.compare_digest(digest, expected_digest):
+if not hmac.compare_digest(digest, expected_digest):
     raise UnauthorizedError
 ```
 
