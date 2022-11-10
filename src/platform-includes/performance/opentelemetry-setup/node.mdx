@@ -1,0 +1,24 @@
+You need to register the SentrySpanProcessor and SentryPropagator with your OpenTelemetry installation:
+
+```js
+import _ as Sentry from '@sentry/node';
+import _ as otelApi from '@opentelemetry/api';
+import { SentrySpanProcessor } from '@sentry/opentelemetry-node';
+
+// Make sure to call `Sentry.init` BEFORE initializing the OpenTelemetry SDK
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  // ...
+});
+
+const sdk = new opentelemetry.NodeSDK({
+  // Existing config
+  traceExporter: new OTLPTraceExporter(),
+  instrumentations: [getNodeAutoInstrumentations()],
+
+  // Sentry config
+  spanProcessor: new SentrySpanProcessor(),
+});
+
+otelApi.propagation.setGlobalPropagator(new SentryPropagator());
+```
