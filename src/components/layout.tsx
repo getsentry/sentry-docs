@@ -55,6 +55,11 @@ export default ({
           <Nav className="justify-content-center" style={{ flex: 1 }}>
             <NavbarPlatformDropdown />
             <Nav.Item>
+              <SmartLink className="nav-link" to="/product/">
+                Product
+              </SmartLink>
+            </Nav.Item>
+            <Nav.Item>
               <SmartLink className="nav-link" to="/api/">
                 API
               </SmartLink>
