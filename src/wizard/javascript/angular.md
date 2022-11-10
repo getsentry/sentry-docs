@@ -31,7 +31,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new BrowserTracing({
-      tracingOrigins: ["localhost", "https://yourserver.io/api"],
+      tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
   ],
