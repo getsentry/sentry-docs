@@ -73,18 +73,18 @@ export default async ({ graphql }) => {
 };
 
 const parsePathSlug = (slug: string) => {
-  if (slug.includes("performance-onboarding")) {
+  if (slug.includes("/performance-onboarding/") || slug.includes("/replay-onboarding/")) {
     const pathMatch = slug.match(
-      /^\/(?<platform>[^/]+)\/performance-onboarding\/(?<sub_platform>[^/]+)\/(?<step>[^/]+)\/$/
+      /^\/(?<platform>[^/]+)\/(?<product>performance|replay)-onboarding\/(?<sub_platform>[^/]+)\/(?<step>[^/]+)\/$/
     );
-    
+
     if(!pathMatch) {
       throw new Error(`Unable to parse performance onboarding from slug: ${slug}`);
     }
-    
-    const { platform, sub_platform } = pathMatch.groups;
+
+    const { platform, product, sub_platform } = pathMatch.groups;
     const step = String(pathMatch.groups.step).replace(/\./g, "-");
-    const sub = platform === sub_platform ? `performance-onboarding-${step}` : `${sub_platform}-performance-onboarding-${step}`;
+    const sub = platform === sub_platform ? `${product}-onboarding-${step}` : `${sub_platform}-${product}-onboarding-${step}`;
 
     return {
       platform,
