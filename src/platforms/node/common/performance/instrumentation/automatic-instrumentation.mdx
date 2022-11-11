@@ -1,6 +1,11 @@
 ---
-title: Instrumentation
-description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+title: Automatic Instrumentation
+sidebar_order: 10
+supported:
+  - node
+description: "Learn what transactions are captured after tracing is enabled."
+redirect_from:
+  - /performance/included-instrumentation
 ---
 
 By default, Sentry error events will not get trace context unless you configure the scope with the transaction, as illustrated in the example below.
@@ -62,27 +67,6 @@ request.on("close", () => {
 });
 ```
 
-## Custom Instrumentation
-
-To instrument a specific region of your code, you can create a transaction to capture it.
-
-The following example creates a transaction for a part of the code that contains an expensive operation (for example, `processItem`), and sends the result to Sentry:
-
-```javascript
-app.use(function processItems(req, res, next) {
-  const item = getFromQueue();
-  const transaction = Sentry.startTransaction({
-    op: "task",
-    name: item.getTransaction(),
-  });
-
-  // processItem may create more spans internally (see next examples)
-  processItem(item, transaction).then(() => {
-    transaction.finish();
-    next();
-  });
-});
-```
 
 ### Retrieving a Transaction
 
@@ -105,11 +89,3 @@ app.get("/success", function successHandler(req, res) {
   res.status(200).end();
 });
 ```
-
-## Connecting Services
-
-If you are also using Performance Monitoring for [JavaScript](/platforms/javascript/performance/), depending on where your request originates, you can connect traces:
-1. For requests that start in your backend, by [adding a meta tag](/platforms/javascript/performance/connect-services/#pageload) in your HTML template that contains tracing information.
-2. For requests that start in JavaScript, by the SDK [setting a header](/platforms/javascript/performance/connect-services/#navigation-and-other-xhr-requests) on requests to your backend.
-
-Otherwise, backend services with Performance Monitoring connect automatically.
