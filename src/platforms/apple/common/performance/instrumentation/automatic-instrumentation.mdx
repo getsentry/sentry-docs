@@ -57,7 +57,8 @@ To enable this feature, enable `AutoUIPerformanceTracking`.
 
 <Alert level="info" title="Important">
 
-Starting with iOS 15, the system might [pre-warm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. In such cases, we can't reliably measure the app start, so we drop it as of [sentry-cocoa 7.18.0](https://github.com/getsentry/sentry-cocoa/releases/tag/7.18.0). We are working on a fix for this. Follow the [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/1897) for more details.
+Starting with iOS 15, the system might [pre-warm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it.
+Since [sentry-cocoa 7.30.3](https://github.com/getsentry/sentry-cocoa/releases/tag/7.30.3), we have a still experimental feature `enablePreWarmedAppStartTracking` to collect pre-warmed app starts. If you don't enable the feature, we drop pre-warmed app starts.
 
 </Alert>
 
@@ -74,6 +75,39 @@ The SDK uses the process start time as the beginning of the app start and the [`
 ![App Start Transaction](app-start-transaction.png)
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
+
+### Pre-warmed app start tracking
+
+Starting with iOS 15, the system might [pre-warm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it.
+You can enable the experimental feature `enablePreWarmedAppStartTracking` to report pre-warmed app starts. Once enabled, the SDK will drop the first app start spans if pre-warming paused during these steps. This approach will shorten the app start duration, but it represents the duration a user has to wait after clicking the app icon until the app is responsive.
+With this feature, the SDK differentiates between four different app start types:
+
+* __Cold start__: Same as _cold start_ above, and __not__ prewarmed.
+* __Warm start__: Same as _warm start_ above, and __not__ prewarmed.
+* __Cold start pre-warmed__: Same as _warm start_, and prewarmed.
+* __Warm start pre-warmed__: Same as _warm start_, and prewarmed.
+
+You can filter for different app start types in Discover with `app_start_type:cold.prewarmed`, `app_start_type:warm.prewarmed`, `app_start_type:cold`, and `app_start_type:warm`.
+
+To enable pre-warmed app start tracking:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enablePreWarmedAppStartTracking = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enablePreWarmedAppStartTracking = YES;
+}];
+```
 
 ## Slow and Frozen Frames
 
