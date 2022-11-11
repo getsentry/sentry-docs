@@ -15,7 +15,9 @@ These rules can be configured on a per-project basis in **[Project] > Settings >
 1. Identify the match logic for grouping issues together.
 1. Set the match logic and the fingerprint for it.
 
-The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, prefix the expression with an exclamation mark (`!`).
+The syntax follows the [syntax](/product/sentry-basics/search/#syntax) from **Discover** queries. If you want to negate the match, prefix the expression with an exclamation mark (`!`).
+
+If you want to create a rule that includes square brackets `[ ]`, replace them with asterisks `*`.
 
 Sentry attempts to match against all values that are configured in the fingerprint. In the case of stack traces, all frames are considered. If the event data matches all the values in a line for a matcher and expression, then the fingerprint is applied:
 
@@ -34,6 +36,7 @@ error.type:ConnectionError -> system-down
 
 error.value:"connection error: *" -> connection-error, {{ transaction }}
 ```
+
 Now, all the events with the error type `DatabaseUnavailable` or `ConnectionError` will be grouped into an issue with the type `system-down`. In addition, all events with the error value `connection error` will be grouped by their transaction name. So, for example, if your transactions `/api/users/foo/` and `/api/events/foo/`—both with the value `connection error`—crash the same way, Sentry will create two issues, regardless of stack trace or any other default grouping method.
 
 ## Matchers
@@ -297,7 +300,7 @@ logger:"com.foo.auditlogger.*" -> audit-log, {{ message }}
 
 ## Custom Titles
 
-When you use fingerprinting to group events together it can sometimes be useful to also change the default title of the event.  Normally the title of the event is the exception type and value (or the top most function names for certain platforms).  When you group by custom rules this title can often be misleading.  For instance if you group a logger together you might want to name the group after that logger.  This can be accomplished by setting the `title` attribute like this:
+When you use fingerprinting to group events together it can sometimes be useful to also change the default title of the event. Normally the title of the event is the exception type and value (or the top most function names for certain platforms). When you group by custom rules this title can often be misleading. For instance if you group a logger together you might want to name the group after that logger. This can be accomplished by setting the `title` attribute like this:
 
 ```discover {tabTitle:Fingerprinting Config}
 logger:my.package.* level:error -> error-logger, {{ logger }} title="Error from Logger {{ logger }}"
