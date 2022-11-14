@@ -127,6 +127,14 @@ docker-compose run -T web cleanup --days 7 -m nodestore -l debug
 docker-compose run -T postgres bash -c "apt update && apt install -y --no-install-recommends postgresql-9.6-repack && su postgres -c 'pg_repack -E info -t nodestore_node'"
 ```
 
+If the script above still does not clear up enough disk space, you can try the following in Postgres. This will lead to data loss in event details. _SENTRY_RETENTION_DAYS_ will need to be filled in manually.
+```shell
+DELETE FROM public.nodestore_node WHERE “timestamp” < NOW() - INTERVAL ‘[SENTRY_RETENTION_DAYS]’;
+VACUUM FULL public.nodestore_node;
+```
+
+VACUUM FULL actively compacts tables by writing a complete new version of the table file with no dead space. This minimizes the size of the table, but can take a long time. It also requires extra disk space for the new copy of the table, until the operation completes.
+
 ## Docker Containers' Healthcheck
 
 There may be some circumstances which you may want to increase or decrease healthcheck interval, timeout or retries for your custom needs. This can be achieved by editing `HEALTHCHECK_INTERVAL`, `HEALTHCHECK_TIMEOUT`, `HEALTHCHECK_RETRIES` variables' values in `.env`.
