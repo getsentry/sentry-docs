@@ -62,6 +62,12 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
  Access-Control-Allow-Origin: *
 ```
 
+## Sentry Cookies
+
+If you are testing your setup and see Sentry cookies in your local cookie storage, note that these cookies are NOT set by any Sentry SDK, and therefore will not be set on your users' machines. Those cookies come from the Sentry frontend, and do things like allow you to stay logged in for a period of time after you close a tab containing Sentry.
+
+If you instead use an incognito window to send test events to Sentry, it will mimic more closely what will happen for your users (assuming they are not themselves Sentry customers, of course!), and you can confirm that no Sentry cookies are set.
+
 ## Unexpected OPTIONS request
 
 If your application started to misbehave because of performing additional OPTIONS requests, it is most likely an issue with unwanted `sentry-trace` request headers, which can happen when you are using too generic a configuration for our Tracing Integration in the Browser SDK.
@@ -266,7 +272,12 @@ This also helps to prevent tracking of any parent application errors in case you
 inside of it. In this example we use `@sentry/browser` but it's also applicable to `@sentry/node`.
 
 ```javascript
-import { BrowserClient, defaultStackParser, defaultIntegrations, makeFetchTransport } from "@sentry/browser";
+import {
+  BrowserClient,
+  defaultStackParser,
+  defaultIntegrations,
+  makeFetchTransport,
+} from "@sentry/browser";
 
 const client = new BrowserClient({
   dsn: "___PUBLIC_DSN___",
@@ -281,7 +292,12 @@ client.captureException(new Error("example"));
 While the above sample should work perfectly fine, some methods like `configureScope` and `withScope` are missing on the `Client` because the `Hub` takes care of the state management. That's why it may be easier to create a new `Hub` and bind your `Client` to it. The result is the same but you will also get state management with it.
 
 ```javascript
-import { BrowserClient, defaultStackParser, defaultIntegrations, makeFetchTransport } from "@sentry/browser";
+import {
+  BrowserClient,
+  defaultStackParser,
+  defaultIntegrations,
+  makeFetchTransport,
+} from "@sentry/browser";
 
 const client = new BrowserClient({
   dsn: "___PUBLIC_DSN___",
