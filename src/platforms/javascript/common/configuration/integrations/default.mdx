@@ -7,9 +7,7 @@ redirect_from:
   - /platforms/javascript/default-integrations/
 ---
 
-All of Sentry’s SDKs provide integrations, which extend functionality of the SDK.
-
-System integrations are enabled by default to integrate into the standard library or the interpreter itself. They are documented so you can be both aware of what they do and disable them if they cause issues.
+System integrations are enabled by default to integrate into the standard library or the interpreter itself. They're documented so you can understand what they do and disable them if they cause issues.
 
 ## Enabled by Default
 
@@ -22,15 +20,15 @@ message, or URLs in a given exception.
 
 It ignores errors that start with `Script error` or `Javascript error: Script error` by default.
 
-To configure this integration, use `ignoreErrors`, `denyUrls`,
+To configure this integration, use the `ignoreErrors`, `denyUrls`,
 and `allowUrls` SDK options directly. Keep in mind that `denyURLs` and `allowURLs`
-work only for captured exceptions, not raw message events.
+only work for captured exceptions, not raw message events.
 
 ### FunctionToString
 
 _Import name: `Sentry.Integrations.FunctionToString`_
 
-This integration allows the SDK to provide original functions and method names, even when our error or breadcrumbs handlers wrap them.
+This integration allows the SDK to provide original functions and method names, even when those functions or methods are wrapped by our error or breadcrumb handlers.
 
 ### TryCatch
 
@@ -92,7 +90,7 @@ Available options:
 
 _Import name: `Sentry.Integrations.LinkedErrors`_
 
-This integration allows you to configure linked errors. They’ll be recursively read up to a specified limit and lookup will be performed by a specific key. By default, the Sentry SDK sets the limit to five and the key used is `cause`.
+This integration allows you to configure linked errors. They’ll be recursively read up to a specified limit, and lookup will be performed by a specific key. By default, the Sentry SDK sets the limit to five and the key used is `"cause"`.
 
 Available options:
 
@@ -122,35 +120,49 @@ document
   });
 ```
 
-### HttpContext (previously: UserAgent)
+### HttpContext
+
+_(Previously: `UserAgent`)_
 
 _Import name: `Sentry.Integrations.HttpContext`_
 
 <Note>
 
 Before version 7.0.0 of the Sentry SDK, this integration was called `UserAgent`.
-It was renamed because the integration handles more than just user-agent data.
+It was renamed because the integration handles more than user-agent data.
 
 _Import name: `Sentry.Integrations.UserAgent`_
 
 </Note>
 
-This integration attaches HTTP request information, such as URL, user-agent, referrer and other headers to the event.
+This integration attaches HTTP request information, such as URL, user-agent, referrer, and other headers to the event.
 It allows us to correctly catalog and tag events with specific OS, browser, and version information.
 
 ### Dedupe
 
 _Import name: `Sentry.Integrations.Dedupe`_
 
-This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Note that Sentry will only compare stack traces and fingerprints. This integration is enabled by default for Browser.
+This integration deduplicates certain events. It can be helpful if you're receiving many duplicate errors. Note that Sentry only compares stack traces and fingerprints. This integration is enabled by default for Browser.
 
 <PlatformContent includePath="configuration/dedupe" />
 
 ## Modifying System Integrations
 
-To disable system integrations set `defaultIntegrations: false` when calling `init()`.
+To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
 
-To override their settings, provide a new instance with your config to `integrations` option. For example, to turn off browser capturing console calls: `integrations: [new Sentry.Integrations.Breadcrumbs({ console: false })]`.
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls: 
+
+```javascript
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+
+  integrations: [
+    new Sentry.Integrations.Breadcrumbs({
+      console: false
+    })
+  ]
+});
+```
 
 ### Removing an Integration
 
