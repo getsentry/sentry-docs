@@ -94,14 +94,6 @@ export default ({ contentRef, pageContext }: Props) => {
         <h6>On this page</h6>
       </div>
       <ul className="section-nav">{recurse(items)}</ul>
-      {platform && (
-        <>
-          <div className="doc-toc-title">
-            <h6>Related Guides</h6>
-          </div>
-          <GuideGrid platform={platform.name} className="section-nav" />
-        </>
-      )}
     </div>
   );
 };
