@@ -44,9 +44,9 @@ transaction.finish();
 
 Under the hood, the sentry profiler leverages V8's [CpuProfiler](https://v8docs.nodesource.com/node-18.2/d2/d34/classv8_1_1_cpu_profiler.html) to collect stack samples. This means that sentry/profiling-node is written as a [native add-on](https://nodejs.org/docs/latest-v18.x/api/addons.html) for Node and won't run in environments like Deno or Bun. Profiling enhances tracing by providing profiles for individual transactions. This allows you to look at higher level performance information like transaction and span durations before diving deeper and looking at profiles.
 
-## Runtime flags
+## Runtime Flags
 
-Profiling package enables you to run the profiler in either eager or lazy [mode](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374). During our initial tests, we have seen that the default profiling mode (lazy) can cause calls to startProfiling to take a long time - sometimes in the range of couple hundred milliseconds. We found that this occurs when we are starting a profile when no other profiles are started. This is the benefit of lazy logging, it adds no overhead when no profiles are running.
+The Profiling package enables you to run the profiler in either [eager or lazy mode](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374). During initial tests, when we started a profile while no other profiles were running, we saw that the default profiling mode (lazy) sometimes caused startProfiling calls to take a long time, (sometimes in the range of a couple hundred milliseconds). The benefit of lazy logging is that it doesn't add any overhead when profiles aren't running.
 
 If you find this behavior prohibitive for your use case, there is an environment flag that you can set which will cause the profiler to run in eager mode. Eager mode improves the performance of calls to startProfiling at the tradeoff of small constant CPU overhead.
 
