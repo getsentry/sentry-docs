@@ -119,27 +119,27 @@ Spike protection is enabled for every project by default, and when it's enabled,
 
 The way our spike protection algorithm essentially works is by using a weighted average of your events over the past 168 hours (past 7 days), applying a multiplier to that number, comparing this final number against a floor bound that is determined using your quota, and setting that as your spike limit.
 
-### Spike Protection Inputs
+#### Spike Protection Inputs
 
 - Number of projects
 - Quota (per event type)
 - Events in the past 7 days
 
-### Floor Bound Calculation
+#### Floor Bound Calculation
 
 To break it down even further, the first step of this algorithm identifies a floor bound that is calculated using your quota. This bound takes the max of either 500 events or (3 \* your quota)/(720 \* number of projects) - the latter number represents your project using up 3 times your overall quota in 30 days if events are continually ingested at this hourly rate, thus flagging for a potential spike.
 
-### Spike Limit Calculation
+#### Spike Limit Calculation
 
 The next step uses hourly data from the past 7 days to calculate spike limit projections for the next 7 days. This data is used to calculate weighted averages, which takes into account weekly and hourly seasonality. For example, the weighted average calculated for Monday at 3 pm is more heavily influenced by data points on Monday or hours around 3 pm. This weighted average is then multiplied by a multiplier that is 5 times the overall standard deviation of the past week - this multiplier is bounded between 3 and 6.
 
-### Setting the Final Limit
+#### Setting the Final Limit
 
 The final spike limit for each hour is set to the max of the floor bound or the calculated limit. This is done for a multitude of reasons - firstly, using the floor bound protects smaller or new projects. New projects that do not have a week’s worth of data to use to calibrate spike limits can use the floor, an adaptation of the organization’s quota, to approximate appropriate limits. Additionally, the floor can be used to minimize false positives in smaller/new projects such that spikes aren’t flagged incorrectly.
 
 Additionally, at the onset of a spike, spike limits are recalculated in real time throughout the duration of the spike. While this is done to adjust for the increasing volume of incoming events, the limit grows at a steady rate such that quota is protected and not blown through. An example of how our heuristic works during a spike is shown below.
 
-### **Example Calculations**
+#### Example Calculations
 
 ![Spike zoomed out](spike-protection-zoomed-out.png)
 
