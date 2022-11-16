@@ -136,12 +136,11 @@ const IndexPage = () => {
       </div>
       <Banner />
       <div className="index-container pad-top">
-        <div className="flex-row card-row">
-          <a className="hover-card-link"
-            href="https://develop.sentry.dev/self-hosted/">
+        <div className="flex-row card-row footer-btns">
+          <a href="https://develop.sentry.dev/self-hosted/">
             Self-Hosted Sentry
           </a>
-          <a className="hover-card-link" href="https://help.sentry.io/">
+          <a href="https://help.sentry.io/">
             Support
           </a>
         </div>
