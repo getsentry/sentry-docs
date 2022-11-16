@@ -5,8 +5,13 @@ description: "Learn about using the Sentry Android Gradle Plugin."
 ---
 
 The [Sentry Android Gradle Plugin](https://github.com/getsentry/sentry-android-gradle-plugin) is an addition to the main Android and Hybrid SDKs (like React Native and Flutter) and offers
-seamless integration with the Gradle build system. It supports the upload of ProGuard/R8 mappings and of Native debug symbols and sources, as well as
-auto-instrumentation tracing through bytecode manipulation.
+seamless integration with the Gradle build system. It supports the following features:
+
+- ProGuard/R8 mappings upload
+- Native debug symbols and sources upload
+- Auto-instrumentation tracing through bytecode manipulation
+- Auto-installation of the Sentry Android SDK and its integrations
+- External dependencies report
 
 ## Setup
 
@@ -89,7 +94,7 @@ sentry {
 
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
       // Defaults to all available values of InstrumentationFeature enum class.
-      features = [InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP]
+      features = [InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP, InstrumentationFeature.COMPOSE]
     }
 
     // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
@@ -109,6 +114,14 @@ sentry {
       // Defaults to the latest published sentry version.
       sentryVersion = '{{ packages.version('sentry.java.android', '5.0.0') }}'
     }
+    
+    // Disables or enables dependencies metadata reporting for Sentry.
+    // If enabled, the plugin will collect external dependencies and
+    // upload them to Sentry as part of events. If disabled, all the logic
+    // related to the dependencies metadata report will be excluded.
+    //
+    // Default is enabled.
+    includeDependenciesReport = true
 }
 ```
 
@@ -154,10 +167,10 @@ sentry {
 
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
       // Defaults to all available values of InstrumentationFeature enum class.
-      features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP))
+      features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP, InstrumentationFeature.COMPOSE))
     }
 
-    // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
+    // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber, fragment and compose integrations).
     // Default is enabled.
     // Only available v3.1.0 and above.
     autoInstallation {
@@ -174,6 +187,15 @@ sentry {
       // Defaults to the latest published sentry version.
       sentryVersion.set("{{ packages.version('sentry.java.android', '5.0.0') }}")
     }
+    
+    // Disables or enables dependencies metadata reporting for Sentry.
+    // If enabled, the plugin will collect external dependencies and 
+    // upload them to Sentry as part of events. If disabled, all the logic
+    // related to the dependencies metadata report will be excluded.
+    //
+    // Default is enabled.
+    //
+    includeDependenciesReport.set(true)
 }
 ```
 
@@ -292,7 +314,15 @@ enum class InstrumentationFeature {
      * Requires sentry-android SDK version 5.0.0 and above.
      * Only available v3.1.0 and above of the Sentry Android Gradle plugin.
      */
-    OKHTTP
+    OKHTTP,
+
+    /**
+     * When enabled the SDK will create breadcrumbs when navigating
+     * using [androidx.navigation.NavController].
+     * This feature uses bytecode manipulation and adds an OnDestinationChangedListener to all
+     * navigation controllers used in Jetpack Compose.
+     */
+    COMPOSE
 }
 ```
 
@@ -306,7 +336,7 @@ To learn more about the internals of auto-instrumentation, check out this [blog 
 
 ## Auto-Installation
 
-The plugin offers the automated installation feature of the Sentry Android SDK and the [Fragment](/platforms/android/configuration/integrations/fragment/), [Timber](/platforms/android/configuration/integrations/timber/), and [OkHttp](/platforms/android/configuration/integrations/okhttp/) integrations. Starting with version 3.1.0, the feature is enabled by default, so you don't need to add any dependencies — you just use the Sentry Gradle plugin.
+The plugin offers the automated installation feature of the Sentry Android SDK and the [Fragment](/platforms/android/configuration/integrations/fragment/), [Timber](/platforms/android/configuration/integrations/timber/), [OkHttp](/platforms/android/configuration/integrations/okhttp/), and [Jetpack Compose](/platforms/android/configuration/integrations/jetpack-compose/) integrations. Starting with version 3.1.0, the feature is enabled by default, so you don't need to add any dependencies — you just use the Sentry Gradle plugin.
 
 The plugin algorithm does the following when defining dependency versions:
 
