@@ -60,6 +60,14 @@ When you call a global function such as `capture_event` internally Sentry
 discovers the current hub and asks it to capture an event. Internally the hub will
 then merge the event with the topmost scope's data.
 
+<PlatformSection supported={["native"]}>
+<Alert level="warning" title="Hub abstraction is not implemented">
+The Native SDK currently only provides a single Scope shared by all threads in the program and maintains no thread-local state via a Hub. As a result of this limitation, client code must ensure that threads do not interfere with their changes to the global scope, even though it is safe to do so from a data-race perspective. This, for example, affects use cases where you want to track many users in server-like programs while capturing events or when you want to trace multiple threads in performance monitoring.
+
+For details on how this affects performance monitoring, please consult the [Connect Errors With Spans](/platforms/native/performance/instrumentation/custom-instrumentation/#connect-errors-with-spans) section of "Custom Instrumentation".
+</Alert> 
+</PlatformSection>
+
 ## Configuring the Scope
 
 The most useful operation when working with scopes is the `configure-scope` function. It can be used to reconfigure the current scope.
