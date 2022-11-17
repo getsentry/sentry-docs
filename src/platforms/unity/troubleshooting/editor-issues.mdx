@@ -1,7 +1,7 @@
 ---
-title:  Troubleshooting
+title:  Editor Issues
 sidebar_order: 100
-description: "Learn more about how to troubleshoot common issues with the Unity SDK. "
+description: "Issues relating to the Unity Editor"
 ---
 
 ## Installation Issues
@@ -29,50 +29,24 @@ Unity has resolved this issue on newer releases. Learn more by checking the [Uni
 This issue was resolved in the release 0.7.0 of the Sentry SDK for Unity.
 If you're still encountering this issue on a version later than 0.7.0, please let us know [with an issue report](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=&template=BUG_REPORT.md).
 
-## Editor Issues
-
 ### Sentry.Unity.Editor.iOS - System.Reflection.ReflectionTypeLoadException
 
 The `Sentry.Unity.Editor.iOS.dll` is responsible for adding native support to your iOS builds. For that, it relies on editor functionality that Unity provides in the form of their iOS module. If you don't have the iOS module installed and, for example, `Assembly.GetTypes()` gets called, this leads to a `ReflectionTypeLoadException`. To resolve this, you can install the iOS module using the Unity Hub or, if you don't intend to build for iOS, you can [embed](https://docs.unity3d.com/Manual/upm-embed.html) the Sentry SDK package and safely remove the `Sentry.Unity.Editor.iOS.dll`.
 
-## Build Issues
+## Buildtime Issues
 
 ### Disabling the Sentry SDK for selected platforms
 
-By adding the snippet below to an `Editor` directory inside your Unity project, you can set up the ability to automatically disable the Sentry SDK for any targeted platform.
-
-```csharp
-using Sentry.Unity;
-using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
-
-public class PreBuildProcessor : IPreprocessBuildWithReport
-{
-    public int callbackOrder => 0;
-
-    public void OnPreprocessBuild(BuildReport report)
-    {
-        if (report.summary.platform is BuildTarget.Android)
-        {
-            var sentryOptions =
-                AssetDatabase.LoadAssetAtPath<ScriptableSentryUnityOptions>("Assets/Resources/Sentry/SentryOptions.asset");
-            sentryOptions.Enabled = false;
-            EditorUtility.SetDirty(sentryOptions);
-        }
-    }
-}
-```
+The SDK provides you hooks in the editor window to add to scriptable objects to allow for [programmatic configuration](/configuration/options/#programmatic-configuration). This allows for not only disabling the SDK from initializing during runtime but also gives control over the configuration of native SDKs that get set up during buildtime.
 
 ### Build input file cannot be found: '**/Libraries/io.sentry.unity/Plugins/iOS/SentryNativeBridge.m'
 
-You can resolve this issue by creating a clean build or chosing "Replace" when prompted. Alternatively, you can remove the unused `SentryNativeBridge.m`from the **UnityFramework Target > Compile Sources** in the project settings. Instead of relying on Unity to copy the `SentryNativeBridge.m` over to the generated Xcode project, starting with 0.12.0, the SDK copies it manually to `**/Libraries/io.sentry.unity/SentryNativeBridge.m`.
+This issue can come up when upgrading from version 0.12.0. You can resolve this by creating a clean build or chosing "Replace" when prompted. Alternatively, you can remove the unused `SentryNativeBridge.m`from the **UnityFramework Target > Compile Sources** in the Xcode project settings. Instead of relying on Unity to copy the `SentryNativeBridge.m` over to the generated Xcode project, the SDK copies it manually to `**/Libraries/io.sentry.unity/SentryNativeBridge.m`.
+If you're still encountering this issue on a version later than 0.12.0, please let us know [with an issue report](https://github.com/getsentry/sentry-unity/issues/new?assignees=&labels=&template=BUG_REPORT.md).
 
 ### Failed to locate the Sentry package
 
-This happens if you've copied some of the SDK files directly to the Assets folder. You can resolve this issue by installing the SDK with UPM.
-
-## Runtime issues
+This happens if you've copied some of the SDK files directly to the Assets folder. You can resolve this issue by either installing the SDK via UPM or by moving the Sentry SDK into your project's package directory.
 
 ### Library not loaded: @rpath/Sentry.framework/Sentry
 
@@ -86,18 +60,4 @@ If you encounter the following error:
 
 This can happen if you've copied some of the SDK files directly to the Assets folder and the `Sentry.Unity.Editor.iOS.dll` which runs when you build an iOS player wasn't able to copy the `Sentry.framework` to the final app. Enabling debug mode in the Sentry editor window would display more information in the Unity console.
 
-You can resolve this issue by installing the SDK with UPM.
-
-## Events
-
-### Unhandled Exceptions - Debug.LogException
-
-Currenty, it is not possible for the SDK to distinguish between the user calling `Debug.LogException` and the SDK capturing an unhandled exception. To capture an exception and mark it as handled you can call `SentrySDK.CaptureException` instead.
-
-### Universal Windows Platform - Events Not Sent
-
-In order to send events to Sentry, you will need to activate the InternetClient Capability in your Player Settings.
-
-### Mono JIT stack trace is incomplete on crashes
-
-This is a [known limitation](https://github.com/getsentry/sentry-unity/issues/884#issuecomment-1233035296) of the Mono JIT scripting backend, resulting from the native code not being able to see the actual generated code at the time of a crash. There are no debug files we can use to provide more information to stack traces since all code is generated when running the managed code. Using the IL2CPP scripting backend may provide more information, if that's an option for you.
+You can resolve this issue by either installing the SDK via UPM or by moving the Sentry SDK into your project's package directory.
