@@ -1,12 +1,71 @@
-Integrate your Svelte project's source maps with Sentry using these steps:
+## Uploading Source Maps For A Svelte Project
 
-### 1: Generate Source Maps
+Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
+This page is a guide on how to create releases and upload source maps to Sentry when bundling your Svelte app.
 
-The Svelte compiler and your bundler (for example, Vite) need to be configured to output source maps. Learn more about [how to generate source maps with Svelte](./generating/).
+To generate source maps with your Svelte project, you need to set the source map [compiler options](https://svelte.dev/docs#compile-time-svelte-compile) in your Svelte config:
 
-### 2: Provide Source Maps to Sentry
+```JavaScript {filename:svelte.config.js}
+import sveltePreprocess from "svelte-preprocess";
 
-Source maps can be uploaded to Sentry by creating a release. Learn more about [how to upload source maps](./uploading/).
+const config = {
+  compilerOptions: {
+    enableSourcemap: true,
+  },
+  preprocess: sveltePreprocess({
+    sourceMap: true,
+  }),
+};
+
+export default config;
+```
+
+If you are using Vite in you Svelte project, you can use Sentry's Vite plugin for convenience.
+
+```npm
+npm install @sentry/vite-plugin --save-dev
+```
+
+```yarn
+yarn add @sentry/vite-plugin --dev
+```
+
+Configure Vite to emit source maps and use the Sentry Vite plugin:
+
+```JavaScript {filename:vite.config.js}
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import sentryVitePlugin from "@sentry/vite-plugin";
+
+export default defineConfig({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
+  plugins: [
+    svelte(),
+
+    // Put the Sentry esbuild plugin after any other plugins
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Specify the directory containing build artifacts
+      include: "./dist",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and needs the `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Optionally uncomment the line below to override automatic release name detection
+      // release: process.env.RELEASE,
+    }),
+  ],
+});
+```
+
+### Other Bundlers
+
+If you're using bundlers other than Vite, check out our general guide on how to <PlatformLink to="/sourcemaps/uploading/">upload source maps</PlatformLink> with them, or refer to their documentation.
 
 <Note>
 
