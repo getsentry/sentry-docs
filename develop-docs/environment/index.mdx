@@ -8,9 +8,9 @@ for anything else for now.
 
 Read about known issues in [the troubleshooting section](#troubleshooting).
 
-## Automatic Bootstrapping
+# Automatic Bootstrapping
 
-If you are using a mac you can use the automatic bootstrapping script that can be piped to bash:
+If you are using macOS you can use the automatic bootstrapping script that can be piped to bash:
 
 ```shell
 bash <(curl -s https://raw.githubusercontent.com/getsentry/bootstrap-sentry/main/bootstrap.sh)
@@ -18,6 +18,10 @@ bash <(curl -s https://raw.githubusercontent.com/getsentry/bootstrap-sentry/main
 
 This script does more than what's documented on the rest of the page to ensure a somewhat uniform development environment
 for Sentry engineers.
+
+# Manual Setup
+
+This will guide you through manually setting up your development environment.
 
 ## Clone the Repository
 
@@ -32,6 +36,8 @@ You're going to be working out of this repository for the remainder of the setup
 
 ## System Dependencies
 
+Let's make sure that your system is ready for Sentry.
+
 ### Xcode CLI tools (Mac specific)
 
 You'll need to first install Xcode CLI tools. Run this command and follow the instructions:
@@ -43,7 +49,7 @@ xcode-select --install
 ### Brew
 
 Install [Homebrew](http://brew.sh), and then run the following command to install
-the various system packages as listed in Sentry's `Brewfile`.
+the various system packages (like Docker, openssl, ...) as listed in Sentry's [Brewfile](https://github.com/getsentry/sentry/blob/master/Brewfile).
 
 ```shell
 brew bundle --verbose
@@ -51,13 +57,28 @@ brew bundle --verbose
 
 ### Docker (Mac specific)
 
-<Alert title="Note" level="info">
-  It's recommended to increase the Docker memory limit to something higher than the default (2048MB).
-</Alert>
+Docker was installed by `brew bundle`.
 
-On Docker Desktop, you can adjust the memory limits by going to: `Preferences > Resources > Memory`
+On macOS, `docker` (which brew has already installed for you under `/Applications/Docker.app`) needs some manual
+intervention. You can run this command to set it up automatically for you:
 
-Or through CLI:
+```shell
+open -g -a Docker.app
+```
+
+You should soon see the Docker icon in your macOS menubar. Docker will automatically run on system restarts,
+so this should be the only time you do this.
+
+#### Increasing the memory limit
+
+It's recommended to increase the Docker memory limit to something higher than the default (2048MB).
+
+On Docker Desktop, you can adjust the memory limits by going to:
+
+`[Cog Symbol] > Preferences > Resources > Advanced > Memory`
+
+Or you can change the memory limit via the CLI:
+
 ```shell
 # quit Docker if its running
 osascript -e 'quit app "Docker"'
@@ -68,45 +89,20 @@ cat /Users/`id -un`/Library/Group\ Containers/group.com.docker/settings.json | g
 # increase configured memory to something reasonable
 sed -i .bak 's/"memoryMiB":.*/"memoryMiB": 7168,/g' /Users/`id -un`/Library/Group\ Containers/group.com.docker/settings.json
 
-# check configuration 
+# check configuration
 cat /Users/`id -un`/Library/Group\ Containers/group.com.docker/settings.json | grep "memoryMiB"
 
 # start up docker with next steps
 ```
 
-On Mac, `docker` (which brew has already installed for you under `/Applications/Docker.app`) needs some manual
-intervention. You can run this command to set it up automatically for you:
-
-```shell
-open -g -a Docker.app
-```
-
-You should soon see the Docker icon in your macOS menubar. Docker will automatically run on system restarts,
-so this should be the only time you do this.
-
 You can verify that Docker is running by running `docker ps` in your terminal.
 
-## Build Toolchain
-
-Sentry depends on [Python Wheels](https://pythonwheels.com/) (packages containing binary extension modules),
-which we distribute for the following platforms:
-
-- Linux compatible with [PEP-513](https://www.python.org/dev/peps/pep-0513/) (`manylinux1`)
-- macOS 10.15 or newer
-
-If your development machine does not run one of the above systems, you need to install the Rust
-toolchain. Follow the instructions at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
-to install the compiler and related tools. Once installed, the Sentry setup will automatically use Rust to build all
-binary modules without additional configuration.
-
-We generally track the latest stable Rust version, which updates every six weeks. Therefore, ensure to keep your Rust
-toolchain up to date by occasionally running:
-
-```shell
-rustup update stable
-```
-
 ## Python
+
+Sentry depends on binary Python packages called [Python Wheels](https://packaging.python.org/en/latest/specifications/binary-distribution-format/#binary-distribution-format), which we distribute for the following platforms:
+
+- Linux (arm64 or x86_64) compatible with [PEP-600](https://peps.python.org/pep-0600/) (``manylinux_2_28)
+- macOS 11 (x86_64) or macOS 12 (arm64) or newer
 
 We utilize [pyenv](https://github.com/pyenv/pyenv) to install and manage Python versions. It got
 installed when you ran `brew bundle`.
@@ -116,24 +112,6 @@ computer is actually compiling Python!
 
 ```shell
 make setup-pyenv
-```
-
-fish users will need to manually set some of the environment variables. This only needs to be done
-once.
-
-```shell {tabTitle: Fish}
-set -Ux PYENV_ROOT $HOME/.pyenv
-# fish >=3.2.0
-fish_add_path $PYENV_ROOT/bin
-# fish <3.2.0
-set -U fish_user_paths $PYENV_ROOT/bin $fish_user_paths
-```
-
-Once that's done, your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it
-again and cd into sentry. To reload it, run:
-
-```shell
-exec "$SHELL"
 ```
 
 After this, if you type `which python`, you should see something like `$HOME/.pyenv/shims/python`
@@ -151,12 +129,9 @@ for instructions on how to set up Bash.
 ```shell {filename: ~/.zprofile} {tabTitle: Zsh}
 
 # It is assumed that pyenv is installed via Brew, so this is all we need to do.
-eval "$(pyenv init --path)"
-```
 
-```shell {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
-# pyenv init
-status is-login; and pyenv init --path | source
+eval "\$(pyenv init --path)"
+
 ```
 
 ### Virtual Environment
@@ -175,10 +150,6 @@ source .venv/bin/activate
 
 ```shell {tabTitle: Zsh}
 source .venv/bin/activate
-```
-
-```shell {tabTitle: Fish}
-source .venv/bin/activate.fish
 ```
 
 If everything worked, running `which python` should now result in something like `/Users/you/sentry/.venv/bin/python`.
@@ -204,17 +175,13 @@ startup script:
 
 ```shell {filename: ~/.bashrc} {tabTitle: Bash}
 export VOLTA_HOME="$HOME/.volta"
-grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
+grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:\$PATH"
+
 ```
 
 ```shell {filename: ~/.zshrc} {tabTitle: Zsh}
 export VOLTA_HOME="$HOME/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
-```
-
-```shell {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
-set -gx VOLTA_HOME "$HOME/.volta"
-set -gx PATH "$VOLTA_HOME/bin" $PATH
 ```
 
 Now, if you try and run `volta`, you should see some help text, meaning volta is installed correctly. To install node,
@@ -228,19 +195,33 @@ Volta intercepts this and automatically downloads and installs the node and yarn
 
 ## Bootstrap Services
 
-Source your virtual environment again (`source .venv/bin/activate`), then run `make bootstrap`. This will take a long time,
-as it bootstraps Sentry, its dependencies, starts up related services and runs database migrations.
+Source your virtual environment again (`source .venv/bin/activate`), then run:
 
-The `bootstrap` command does a few things you'll want to know about:
+```shell
+make bootstrap
+```
+
+This will take a long time, as it bootstraps Sentry, its dependencies, starts up related services and runs database migrations.
+
+The bootstrap command does a few things you'll want to know about:
 
 - `sentry init` creates the baseline Sentry configuration in `~/.sentry/`.
 - `sentry devservices up` spins up required Docker services (such as Postgres and Clickhouse)
-- `sentry upgrade` runs Postgres migrations, and will also prompt you to create a user. You will want to ensure your first
-  user is designated as **superuser**.
+- `sentry upgrade` runs Postgres migrations, and will also prompt you to create a user. This user will be the **superuser**.
 
 Once this command has finished you'll have Sentry installed in development mode with all its required dependencies.
 
-**Note**: This command is meant to be run only once. To bring your dependencies up-to-date use `make develop`.
+If the command is done you should see a "Finished bootstrapping!" message.
+
+**Note**: This command is meant to be run only once. If the command fails please remove all existing Docker containers, all Docker volumes, and `~/.sentry/` and try running it again.
+
+### (Optional) Bringing your services up-to-date
+
+To bring your dependencies up-to-date do not run `make bootstrap` again but instead run:
+
+```shell
+make develop
+```
 
 ## direnv
 
@@ -248,19 +229,21 @@ Once this command has finished you'll have Sentry installed in development mode 
 variables for you, and performs some simple checks to make sure your environment is as expected (and tries its best to guide
 you if it isn't). This happens every time you change directories into sentry.
 
-First, you should be done bootstrapping. Then, run `brew install direnv` and add the following snippet to the end of your
-startup script:
+First, you should be done bootstrapping. Then, run:
+
+```shell
+brew install direnv
+```
+
+After direnv is installed add the following snippet to the end of your startup script:
 
 ```shell {filename: ~/.bashrc} {tabTitle: Bash}
-eval "$(direnv hook bash)"
+eval "\$(direnv hook bash)"
+
 ```
 
 ```shell {filename: ~/.zshrc} {tabTitle: Zsh}
 eval "$(direnv hook zsh)"
-```
-
-```shell {filename ~/.config/fish/config.fish} {tabTitle: Fish}
-direnv hook fish | source
 ```
 
 And after doing that, reload your shell:
@@ -269,8 +252,13 @@ And after doing that, reload your shell:
 exec "$SHELL"
 ```
 
-Any time the `.envrc` configuration changes (including the first load) you will be prompted to run `direnv allow` before any
-of the configuration will run. This is for security purposes and you are encouraged to inspect the changes before running this command.
+Any time the `.envrc` configuration changes (including the first load) you will be prompted to run
+
+```shell
+direnv allow
+```
+
+before any of the configuration will run. This is for security purposes and you are encouraged to inspect the changes before running this command.
 
 ### Customize your development environment variables
 
@@ -282,7 +270,7 @@ to enable that setting you would insert `SENTRY_DEVENV_NO_REPORT=1` into your `.
 
 ## Running the Development Server
 
-Once you’ve successfully stood up your datastore, you can now run the development server:
+Now you can run the development server at [http://localhost:8000](http://localhost:8000):
 
 ```shell
 sentry devserver --workers
