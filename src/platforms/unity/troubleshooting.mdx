@@ -35,6 +35,22 @@ If you're still encountering this issue on a version later than 0.7.0, please le
 
 The `Sentry.Unity.Editor.iOS.dll` is responsible for adding native support to your iOS builds. For that, it relies on editor functionality that Unity provides in the form of their iOS module. If you don't have the iOS module installed and, for example, `Assembly.GetTypes()` gets called, this leads to a `ReflectionTypeLoadException`. To resolve this, you can install the iOS module using the Unity Hub or, if you don't intend to build for iOS, you can [embed](https://docs.unity3d.com/Manual/upm-embed.html) the Sentry SDK package and safely remove the `Sentry.Unity.Editor.iOS.dll`.
 
+## IL2CPP Issues 
+
+### No line numbers in iOS events
+
+Sentry relies on debug symbols and line mappings to be uploaded to provide line number support. By default, Unity exports an Xcode project with `Bitcode` enabled. This feature is [deprecated in Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes) and disables the automatic symbol upload.
+
+### C++ as part of the stacktrace
+
+It's possible that your stacktraces contain C++ frames. There are several reasons for that.
+- The generated C++ code does not contain the `<source_info>` annotation to point back to which C# code it was generated from. This can be due to optimization or due to the IL2CPP compiler generating code to handle C# specific features.
+- The C++ exception might return an incorrect line number which makes Sentry miss the `<source_info>` annotation. You can try enabling uploading your source code in the debug symbol options to take a look at the generated C++ code.
+
+![A Sentry event with a mixed stacktrace](unity-cpp-stacktrace.jpg)
+
+This is also the reason why you might end up with very high line numbers (in the several thousand) even tho you C# script is very small. The line numbers relate to the generated C++ code.
+
 ## Build Issues
 
 ### Disabling the Sentry SDK for selected platforms

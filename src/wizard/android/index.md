@@ -147,6 +147,8 @@ Check out [the documentation](https://docs.sentry.io/platforms/android/performan
 
 ### Next Steps
 
+If you like additional contexts you could enable [Screenshots](https://docs.sentry.io/platforms/android/enriching-events/screenshots/).
+
 Using ProGuard/DexGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
 
 [The documentation](https://docs.sentry.io/platforms/android/configuration/) has more information about the many configurations and API available in Sentry's SDK.
