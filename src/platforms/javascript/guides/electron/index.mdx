@@ -82,6 +82,33 @@ init({ /* config */ }, reactInit);
 
 ```
 
+## Offline Support
+
+The default transport automatically handles offline events caching. Following, are a
+number of options that allow you to customize queueing behavior:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  transportOptions: {
+    // The maximum number of days to keep an event in the queue.
+    maxQueueAgeDays: 30,
+    // The maximum number of events to keep in the queue.
+    maxQueueCount: 30,
+    // Called every time the number of requests in the queue changes.
+    queuedLengthChanged: (length) => { },
+    // Called before attempting to send an event to Sentry. Used to override queuing behavior.
+    //
+    // Return 'send' to attempt to send the event.
+    // Return 'queue' to queue and persist the event for sending later.
+    // Return 'drop' to drop the event.
+    beforeSend: (request) => isOnline() ? 'send' : 'queue'
+  }
+});
+```
+
 ## Inter-Process Communication
 
 To give detailed information for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
