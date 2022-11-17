@@ -128,8 +128,8 @@ const IndexPage = () => {
           </div>
 
           <div className="integrations-all">
-            <a href="/platforms/" className="hover-card-link">
-              See all {totalPlatformCount} supported platforms
+            <a href="/platforms/" className="see-all-btn">
+              See All {totalPlatformCount} Supported Platforms
             </a>
           </div>
         </div>
