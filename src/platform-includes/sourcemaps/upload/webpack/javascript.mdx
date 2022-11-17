@@ -1,24 +1,45 @@
-Sentry uses [releases](/product/releases/) to match the correct source maps to your events. The release API is intended to allow you to store source files (and source maps) within Sentry.
+Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
+You can use the Sentry Webpack plugin to automatically create releases and upload source maps to Sentry when bundling your app.
 
-You can do this with the help of our Webpack plugin, which internally uses our Sentry CLI.
+## Installation
 
-1. Create a new authentication token from your **[Account] > API keys**
-2. Confirm you have `project:write` selected under "Scopes"
-3. Install `@sentry/webpack-plugin` using `npm`
-4. Create `.sentryclirc` file with necessary configuration, as documented on [this page](/product/cli/configuration/)
-5. Update your Webpack config
+```shell {tabTitle:npm}
+npm install --save-dev @sentry/webpack-plugin
+```
+
+```shell {tabTitle:yarn}
+yarn add --dev @sentry/webpack-plugin
+```
+
+## Configuration
+
+Learn more about the configuration of the plugin using our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
+
+Example:
 
 <PlatformSection notSupported={["javascript.gatsby"]}>
 
 ```javascript {filename:webpack.config.js}
-const SentryPlugin = require("@sentry/webpack-plugin");
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 
 module.exports = {
   // ... other config above ...
+
+  devtool: "source-map", // Source map generation must be turned on
   plugins: [
-    new SentryPlugin({
-      release: process.env.RELEASE,
+    new SentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Specify the directory containing build artifacts
       include: "./dist",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and needs the `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Optionally uncomment the line below to override automatic release name detection
+      // release: process.env.RELEASE,
     }),
   ],
 };
@@ -29,14 +50,26 @@ module.exports = {
 <PlatformSection supported={["javascript.gatsby"]}>
 
 ```javascript {filename:gatsby-node.js}
-const SentryPlugin = require("@sentry/webpack-plugin");
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 
 exports.onCreateWebpackConfig = ({ actions }) => {
   actions.setWebpackConfig({
     plugins: [
-      new SentryPlugin({
-        include: "public",
+      new SentryWebpackPlugin({
+        org: "___ORG_SLUG___",
+        project: "___PROJECT_SLUG___",
+
         ignore: ["app-*", "polyfill-*", "framework-*", "webpack-runtime-*"],
+
+        // Specify the directory containing build artifacts
+        include: "public",
+
+        // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+        // and needs the `project:releases` and `org:read` scopes
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+
+        // Optionally uncomment the line below to override automatic release name detection
+        // release: process.env.RELEASE,
       }),
     ],
   });
@@ -45,21 +78,21 @@ exports.onCreateWebpackConfig = ({ actions }) => {
 
 </PlatformSection>
 
-Learn more about further configuration of the plugin using our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
+<Note>
 
-Additionally, you’ll need to configure the client to send the `release`:
+If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
+
+</Note>
+
+The Sentry Rollup plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  release: process.env.RELEASE,
+
+  // When using the plugin, either remove the `release`` property here entirely or
+  // make sure that the plugin's release option and the Sentry.init()'s release
+  // option match exactly.
+  // release: "my-example-release-1"
 });
 ```
-
-<Note>
-
-You don't _have_ to use `RELEASE` environment variables. You can provide them in any form as long as the `release` from your upload **matches** `release` from the SDK's `init` call.
-
-</Note>
-
-Learn more about the [Releases API documentation](/api/releases/).
