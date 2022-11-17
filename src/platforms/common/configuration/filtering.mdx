@@ -14,11 +14,11 @@ We also offer [Inbound Filters](/product/data-management-settings/filtering/) to
 
 ## Filtering Error Events
 
-Configure your SDK to filter error events by using the <PlatformIdentifier name="before-send" /> callback method and configuring, enabling, or disabling integrations.
+Configure your SDK to filter events by using the <PlatformIdentifier name="before-send" /> callback method, by using event processors, or by configuring, enabling, or disabling integrations.
 
 ### Using <PlatformIdentifier name="before-send" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. <PlatformIdentifier name="before-send" /> is called immediately before the event is sent to the server, so it’s the final place where you can edit its data. It receives the event object as a parameter, so you can use that to modify the event’s data or drop it completely (by returning `null`) based on custom logic and the data available on the event.
+All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. <PlatformIdentifier name="before-send" /> is called immediately before the event is sent to the server, so it's the final place you can edit an event's data. It receives the event object as a parameter, which you can use to modify the event's data or to drop the event completely (by returning `null`) based on custom logic and the data available on the event.
 
 <PlatformContent includePath="configuration/before-send" />
 
@@ -28,13 +28,19 @@ Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs doc
 
 #### Event Hints
 
-The <PlatformIdentifier name="before-send" /> callback is passed both the `event` and a second argument, `hint`, that holds one or more hints.
+The <PlatformIdentifier name="before-send" /> callback is passed both the event object and a second argument, `hint`, which holds extra data about the event.
 
-Typically a `hint` holds the original exception so that additional data can be extracted or grouping is affected. In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
+When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, a message event is typically created from a log record and an error event is typically created from an exception instance. For better customization, SDKs pass these objects in the hint to <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-breadcrumb" />, and event processors.
+
+For example, for error events, `hint` holds the original exception so that additional data can be extracted or grouping behavior can be modified.
+
+In the snippet below, the event is conditionally dropped based on data in the hint:
 
 <PlatformContent includePath="configuration/before-send-hint" />
 
-When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from a log record or exception instance. For better customization, SDKs send these objects to certain callbacks (<PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-breadcrumb" /> or the event processor system in the SDK).
+In this snippet, the fingerprint is forced to a common value if an exception of a certain type has been caught:
+
+<PlatformContent includePath="configuration/before-send-fingerprint" />
 
 </PlatformSection>
 
@@ -42,30 +48,49 @@ When the SDK creates an event or breadcrumb for transmission, that transmission 
 
 ### Using Hints
 
-Hints are available in two places:
+Hints are available in three places:
 
-1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
-2. `eventProcessors`
+1. <PlatformIdentifier name="before-send" />
+2. <PlatformIdentifier name="before-breadcrumb" />
+3. event processors
 
-Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
-
-For events, hints contain properties such as `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
-
-For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
-
-In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
-
-<PlatformContent includePath="configuration/before-send-fingerprint" />
+Event and breadcrumb hints are objects containing various information used to put together an event or a breadcrumb. For example, for error events, hints hold the original exception so that additional data can be extracted or grouping can be affected. For breadcrumbs, the use of hints is implementation-dependent. For XHR requests for instance, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name, and so forth.
 
 #### Hints for Events
 
+`eventId`
+
+: A unique identifier for the event, searchable in the Sentry UI. Available in message and error events.
+
 `originalException`
 
-: The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+: The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information. Available in error events.
 
 `syntheticException`
 
-: When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
+: When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction. Available in error events.
+
+<PlatformSection supported={["javascript", "node"]}>
+
+`captureContext`
+
+: Additional scope data passed as a second parameter to `captureMessage` and a third parameter to `captureException` and `captureEvent`. Available in message and error events.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript", "node"]}>
+
+`attachments`
+
+: Files to be attached to the outgoing event. Available in message and error events.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript", "node"]}>
+
+Any other data passed in the second parameter to `captureException` or `captureEvent`. Available in message and error events.
+
+</PlatformSection>
 
 #### Hints for Breadcrumbs
 
@@ -75,7 +100,9 @@ In this example, the fingerprint is forced to a common value if an exception of 
 
 <PlatformSection supported={["android", "javascript", "java", "python"]} >
 
-### Decluttering Sentry
+### Filtering by Script URL, Error Message, or Logger
+
+Depending on the SDK, you may be able to filter events automatically based on certain criteria.
 
 <PlatformContent includePath="configuration/decluttering" />
 
