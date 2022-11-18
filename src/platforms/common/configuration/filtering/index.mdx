@@ -1,0 +1,77 @@
+---
+title: Filtering
+sidebar_order: 60
+description: "Learn more about how to configure your SDK to filter events reported to Sentry."
+notSupported:
+  - perl
+---
+
+Adding Sentry to your app gives you a great deal of very valuable information about errors and performance you wouldn't otherwise get. And lots of information is good -- as long as it's the right information, at a reasonable volume.
+
+The Sentry SDKs have several configuration options to help you filter out events.
+
+We also offer [Inbound Filters](/product/data-management-settings/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/event-payloads/).
+
+## Filtering Error Events
+
+You can configure your SDK to filter events in a number of ways:
+
+- by using the <PlatformIdentifier name="before-send" /> callback method
+- by using event processors,
+- by configuring, enabling, or disabling integrations.
+
+### Using <PlatformIdentifier name="before-send" />
+
+All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. <PlatformIdentifier name="before-send" /> is called immediately before the event is sent to the server, so it's the final place you can edit an event's data. It receives the event object as a parameter, which you can use to modify the event's data or to drop the event completely (by returning `null`) based on custom logic and the data available on the event.
+
+<PlatformContent includePath="configuration/before-send" />
+
+Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
+
+<PlatformSection notSupported={["apple", "dotnet"]}>
+
+### Hints
+
+Both event processors and the <PlatformIdentifier name="before-send" /> callback are passed two parameters: the event object and a second argument, `hint`, which holds extra data about the event. Similarly, <PlatformIdentifier name="before-breadcrumb" /> is passed the breadcrumb and a `hint` object.
+
+When the SDK creates an event or breadcrumb, it's typically created from some sort of source object. For instance, a message event is typically created from a log record and an error event is typically created from an exception instance. Breadcrumbs may be created from XHR requests or user interactions. For better customization, SDKs pass these objects - the message which was logged, the exception which was thrown, the XHR request object, the DOM element and event name, etc. - in the hint.
+
+For example, for error events, `hint` holds the original exception so that additional data can be extracted or grouping behavior can be modified.
+
+In the snippet below, the event is conditionally dropped based on data in the hint:
+
+<PlatformContent includePath="configuration/before-send-hint" />
+
+In this snippet, the fingerprint is forced to a common value if an exception of a certain type has been caught:
+
+<PlatformContent includePath="configuration/before-send-fingerprint" />
+
+To see the properties available in the `hint` object, see <PlatformLink to="/configuration/filtering/hint-contents">Hints</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection supported={["android", "javascript", "java", "python"]} >
+
+### Filtering by Script URL, Error Message, or Logger
+
+Depending on the SDK, you may be able to filter events automatically based on certain criteria.
+
+<PlatformContent includePath="configuration/decluttering" />
+
+</PlatformSection>
+
+<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dart"]} notSupported={["javascript.cordova"]}>
+
+## Using Sampling to Filter Transaction Events
+
+To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want. (It also allows you to sample different transactions at different rates.)
+
+**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
+
+In its simplest form, used just for filtering the transaction, it looks like this:
+
+<PlatformContent includePath="performance/traces-sampler-as-filter" />
+
+Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
+
+</PlatformSection>
