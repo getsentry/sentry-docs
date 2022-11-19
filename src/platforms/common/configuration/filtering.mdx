@@ -12,13 +12,13 @@ The Sentry SDKs have several configuration options to help you filter out events
 
 We also offer [Inbound Filters](/product/data-management-settings/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/event-payloads/).
 
-## Filtering Error Events
+## Filtering Events
 
-Configure your SDK to filter events by using the <PlatformIdentifier name="before-send" /> callback method, by using event processors, or by configuring, enabling, or disabling integrations.
+Configure your SDK to filter error and transaction events by using the <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> callback methods, respectively, by using event processors, or by configuring, enabling, or disabling integrations.
 
-### Using <PlatformIdentifier name="before-send" />
+### Using <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. <PlatformIdentifier name="before-send" /> is called immediately before the event is sent to the server, so it's the final place you can edit an event's data. It receives the event object as a parameter, which you can use to modify the event's data or to drop the event completely (by returning `null`) based on custom logic and the data available on the event.
+All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method for error and message events. Some SDKs also support the <PlatformIdentifier name="before-send-transaction" /> callback method for transaction events. <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> are called immediately before the event is sent to the server, so they're the final place you can edit an event's data. They receive the event object as a parameter, which you can use to modify the event's data or to drop the event completely (by returning `null`) based on custom logic and the data available on the event.
 
 <PlatformContent includePath="configuration/before-send" />
 
@@ -28,9 +28,9 @@ Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs doc
 
 #### Event Hints
 
-The <PlatformIdentifier name="before-send" /> callback is passed both the event object and a second argument, `hint`, which holds extra data about the event.
+The <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> callbacks are passed both the event object and a second argument, `hint`, which holds extra data about the event.
 
-When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, a message event is typically created from a log record and an error event is typically created from an exception instance. For better customization, SDKs pass these objects in the hint to <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-breadcrumb" />, and event processors.
+When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, a message event is typically created from a log record and an error event is typically created from an exception instance. For better customization, SDKs pass these objects in the hint to <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-send-transaction" /> (on supported platforms), <PlatformIdentifier name="before-breadcrumb" />, and event processors.
 
 For example, for error events, `hint` holds the original exception so that additional data can be extracted or grouping behavior can be modified.
 
@@ -48,11 +48,12 @@ In this snippet, the fingerprint is forced to a common value if an exception of 
 
 ### Using Hints
 
-Hints are available in three places:
+Hints are available in four places:
 
 1. <PlatformIdentifier name="before-send" />
-2. <PlatformIdentifier name="before-breadcrumb" />
-3. event processors
+2. <PlatformIdentifier name="before-send-transaction" /> (on supported platforms)
+3. <PlatformIdentifier name="before-breadcrumb" />
+4. event processors
 
 Event and breadcrumb hints are objects containing various information used to put together an event or a breadcrumb. For example, for error events, hints hold the original exception so that additional data can be extracted or grouping can be affected. For breadcrumbs, the use of hints is implementation-dependent. For XHR requests for instance, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name, and so forth.
 
@@ -60,7 +61,7 @@ Event and breadcrumb hints are objects containing various information used to pu
 
 `eventId`
 
-: A unique identifier for the event, searchable in the Sentry UI. Available in message and error events.
+: A unique identifier for the event, searchable in the Sentry UI. Available in message, error, and transaction events.
 
 `originalException`
 
@@ -82,7 +83,7 @@ Event and breadcrumb hints are objects containing various information used to pu
 
 `attachments`
 
-: Files to be attached to the outgoing event. Available in message and error events.
+: Files to be attached to the outgoing event. Available in message, error, and transaction events.
 
 </PlatformSection>
 
