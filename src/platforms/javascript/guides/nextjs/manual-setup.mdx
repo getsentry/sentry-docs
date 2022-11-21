@@ -197,13 +197,13 @@ Make sure to add the Sentry config last; otherwise, the source maps the plugin r
 
 ## Configure Source Maps
 
-By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), `sentry-cli` will automatically detect and upload your source files, source maps, and bundles to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), because otherwise the full upload process would reoccur on each file change.)
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), certain tasks will be handled for you automatically: the `release` value in `Sentry.init()` will be set, and sourcemaps will be generated and uploaded to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), to prevent the full upload process from reoccurring on each file change.)
 
 To configure the plugin, pass a `sentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
 
 ### Disable `SentryWebpackPlugin`
 
-If you want or need to handle source map uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
+If you choose to handle source map generation and uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
 
 ```javascript {filename:next.config.js}
 const moduleExports = {
@@ -213,6 +213,8 @@ const moduleExports = {
   },
 };
 ```
+
+Note that you'll also have to explicitly set a `release` value in your `Sentry.init()`.
 
 If you disable the plugin for both server and client builds, it's safe to omit the `sentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
 
