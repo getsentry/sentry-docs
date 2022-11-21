@@ -50,15 +50,21 @@ Sentry.init({
 
 Supported options:
 
-### tracingOrigins
+### tracePropagationTargets
+
+<Note>
+
+The `tracingOrigins` option was renamed `tracePropagationTargets` and deprecated in [version `7.19.0`](https://github.com/getsentry/sentry-javascript/releases/tag/7.19.0) of the JavaScript SDK. `tracingOrigins` will be removed in version 8.
+
+</Note>
 
 A list of strings and regular expressions. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link transactions together as part of a single trace.
 
-**The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the additional headers attached.**
+**The `tracePropagationTargets` option matches the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have additional headers attached.**
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. This means that by default, tracing headers are only attached to requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
+The default value of `tracePropagationTargets` is `['localhost', /^\//]`. This means that by default, tracing headers are only attached to requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
 
-<PlatformContent includePath="performance/tracingOrigins-example" />
+<PlatformContent includePath="performance/tracePropagationTargets-example" />
 
 You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` and `baggage` headers. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"` and `"Access-Control-Allow-Headers: baggage"`, but it depends on your set up. If you do not allow the two headers, the request might be blocked.
 
@@ -70,7 +76,9 @@ You will need to configure your web server [CORS](https://developer.mozilla.org/
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter out unwanted spans such as XHR's running health checks or something similar. Whether specified or not, `shouldCreateSpanForRequest` filters out everything but what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans such as XHRs running
+health checks or something similar. If this function isn't specified, spans
+will be created for all requests.
 
 <PlatformContent includePath="performance/filter-span-example" />
 
