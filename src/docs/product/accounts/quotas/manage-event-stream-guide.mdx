@@ -111,41 +111,47 @@ To review the error events dropped because of spike protection, go to the "Usage
 
 Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes "inactive" again. This means that it is no longer dropping events, but _it does not mean the system has stopped paying attention._ The next time events are dropped, spike protection will be "reactivated".
 
-### New Heuristic Changes
+### New Spike Protection Calculations
 
 <Include name="limited-avail-note.mdx" />
 
-Spike protection is enabled for every project by default, and when it's enabled, Sentry continually monitors for spikes. You can confirm that it's enabled in **Settings > Projects > _Select Project_ > General Settings**.
+Limited availability spike protection is a project-level tool that helps prevent quota overconsupmption. It's enabled for every project by default, and when it's enabled, Sentry continually monitors for spikes. You can confirm that it's enabled in **[Project] > Settings > General Settings**.
 
-The way our spike protection algorithm essentially works is by using a weighted average of your events over the past 168 hours (past 7 days), applying a multiplier to that number, comparing this final number against a floor bound that is determined using your quota, and setting that as your spike limit.
+Our spike protection algorithm does the following:
 
-#### Spike Protection Inputs
+- Uses a weighted average of your events over the past 168 hours (seven days)
+- Applies a multiplier to that number
+- Compares this final number against a minimum number of events to trigger a spike that is determined using your quota
+- Sets this as your spike limit
 
-- Number of projects
-- Quota (per event type)
-- Events in the past 7 days
+#### Setting the Spike Limit
 
-#### Floor Bound Calculation
+There are two ways that we can set your spike limit, or the number of events that trigger a spike:
 
-To break it down even further, the first step of this algorithm identifies a floor bound that is calculated using your quota. This bound takes the max of either 500 events or (3 \* your quota)/(720 \* number of projects) - the latter number represents your project using up 3 times your overall quota in 30 days if events are continually ingested at this hourly rate, thus flagging for a potential spike.
+- [Minimum Event Calculation](#minimum-event-calculation) - A calculation that determines a minimum number of events
+- [Usage-Based Calculation](#usage-based-calculation) - A projection based on your past usage
 
-#### Spike Limit Calculation
+The spike limit for each hour is set to either the minimum event or usage-based calculation — whichever is higher. This is done for a number of reasons. Firstly, using a minimum event calculation protects smaller or new projects. New projects that don't have a week’s worth of data to use to calibrate spike limits can use this minimum number of events, an adaptation of the organization’s quota, to approximate appropriate limits. Additionally, this calculation can be used to minimize false positives in smaller or new projects so that spikes aren’t flagged incorrectly.
 
-The next step uses hourly data from the past 7 days to calculate spike limit projections for the next 7 days. This data is used to calculate weighted averages, which takes into account weekly and hourly seasonality. For example, the weighted average calculated for Monday at 3 pm is more heavily influenced by data points on Monday or hours around 3 pm. This weighted average is then multiplied by a multiplier that is 5 times the overall standard deviation of the past week - this multiplier is bounded between 3 and 6.
+Spike limits are recalculated in real time throughout the duration of the spike to adjust for the increasing volume of incoming events. This allows the limit to grow at a steady rate such that quota is protected from being quickly consumed. An example of how this works during a spike is shown below.
 
-#### Setting the Final Limit
+##### Minimum Event Calculation
 
-The final spike limit for each hour is set to the max of the floor bound or the calculated limit. This is done for a multitude of reasons - firstly, using the floor bound protects smaller or new projects. New projects that do not have a week’s worth of data to use to calibrate spike limits can use the floor, an adaptation of the organization’s quota, to approximate appropriate limits. Additionally, the floor can be used to minimize false positives in smaller/new projects such that spikes aren’t flagged incorrectly.
+This calculation, which is the first step of our algorithm, identifies a minimum number of events using your quota as a guide. This number takes the maximum of either 500 events or the result of the following formula `(3 \* your quota)/(720 \* number of projects)`. The equation represents your project using up three times your overall quota in 30 days if events are continually ingested at this hourly rate, thus flagging the project for a potential spike.
 
-Additionally, at the onset of a spike, spike limits are recalculated in real time throughout the duration of the spike. While this is done to adjust for the increasing volume of incoming events, the limit grows at a steady rate such that quota is protected and not blown through. An example of how our heuristic works during a spike is shown below.
+##### Usage-Based Calculation
+
+This calculation, which is the second step of our algorithm, calculates hourly data from the past seven days to determine spike limit projections for the next seven days. This data is used to calculate weighted averages, which takes into account weekly and hourly seasonality. For example, the weighted average calculated for Monday at 3 pm is more heavily influenced by data points on Monday or the hours around 3 pm. This weighted average is then multiplied by a multiplier that is `5` times the overall standard deviation of the past week — this multiplier is bounded between `3` and `6`.
 
 #### Example Calculations
 
+In this example, the project usually ingests 100-200 events per hour. There's been a spike that’s reached 50,000 events, as shown in the graph below:
 ![Spike zoomed out](spike-protection-zoomed-out.png)
 
+In the graph below, we can see a zoomed in perspective of the 12-hour period of the spike, along with a line indicating the spike limit as it’s being recalculated over the course of the spike:
 ![Spike zoomed in plotted with spike limits](spike-protection-zoomed-in.png)
 
-**_During Spike_**
+Throughout the spike, the recalulating limit has the following effect:
 
 - 1st hour: 6k events ingested, limit is recalculated to 2083, 3917 events dropped
 - 2nd hour: 34k events ingested, limit is recalculated to 2873, 31217 events dropped
@@ -153,17 +159,17 @@ Additionally, at the onset of a spike, spike limits are recalculated in real tim
 - 4th hour: 49k events ingested, limit is recalculated to 7628, ~41k events dropped
 - 5th hour: 41k events ingested, limit is recalculated to 9371, ~31k events dropped
 
-Limits are recalculated throughout the duration of the spike.
-
 For this particular example:
 
-- Org Quota: 500k
-- Events Ingested: ~478k
-- Events ~157k
+- Org quota: 500k
+- Events ingested during the spike: ~478k
+- Events accepted overall: ~157k
 
 Here's an example of spike limit projections for a week, taking into account seasonality:
 
 ![Spike limit projections with seasonality](spike-protection-steady-state.png)
+
+These regular differences in event ingestion don't cause a spike to occur.
 
 ## 2. Adjusting Quotas
 
