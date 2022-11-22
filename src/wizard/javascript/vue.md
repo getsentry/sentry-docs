@@ -48,7 +48,7 @@ Sentry.init({
   integrations: [
     new BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
     }),
   ],
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -86,7 +86,7 @@ Sentry.init({
   integrations: [
     new BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
     }),
   ],
   // Set tracesSampleRate to 1.0 to capture 100%

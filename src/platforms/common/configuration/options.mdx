@@ -47,10 +47,10 @@ Specifies whether to use global scope management mode. Should be `true` for clie
 
 Example scenarios where it should be explicitly set to true:
 
- * Universal Windows platform (UWP) applications
- * WinForms applications
- * Windows Presentation Foundation (WPF) applications
- * Single user console applications
+- Universal Windows platform (UWP) applications
+- WinForms applications
+- Windows Presentation Foundation (WPF) applications
+- Single user console applications
 
 Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
 
@@ -236,14 +236,25 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 
 </Note>
 
-If possible, we recommended turning on this feature to send all such data by default, and manually removing what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 </ConfigKey>
 
 <ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java", "dart", "dotnet"]} notSupported={["android"]}>
 
-This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server. Most SDKs
-will attempt to auto-discover this value.
+This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+
+<PlatformSection notSupported={["dotnet"]}>
+
+Most SDKs will attempt to auto-discover this value.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+
+For ASP.NET and ASP.NET Core applications, the value will default to the server's name.  For other application types, the value will default to the computer's name only when the `SendDefaultPii` is set to `true`, because the computer's name can be considered personally identifiable information (PII) in the case of a desktop or mobile application.
+
+</PlatformSection>
 
 </ConfigKey>
 
@@ -577,15 +588,44 @@ Switches out the transport used to send events. How this works depends on the SD
 
 </ConfigKey>
 
-<ConfigKey name="http-proxy" supported={["node", "php", "python", "java", "dotnet", "rust"]}>
+<ConfigKey name="transport-options" supported={["javascript", "node"]}>
+
+Options used to configure the transport. This is an object with the following possible optional keys:
+
+<PlatformSection supported={["node"]}>
+
+- `headers`: An object containing headers to be sent with every request.
+- `proxy`: A proxy used for outbound requests. Can be http or https.
+- `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
+- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
+- `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript"]} notSupported={["node"]}>
+
+- `headers`: An object containing headers to be sent with every request. Used by the SDK's fetch and XHR transports.
+- `fetchOptions`: An object containing options to be passed to the `fetch` call. Used by the SDK's fetch transport.
+
+</PlatformSection>
+
+</ConfigKey>
+
+<ConfigKey name="http-proxy" supported={["php", "python", "java", "dotnet", "rust"]}>
 
 When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
 
 </ConfigKey>
 
-<ConfigKey name="https-proxy" supported={["python", "node", "rust"]}>
+<ConfigKey name="https-proxy" supported={["python", "rust"]}>
 
 Configures a separate proxy for outgoing HTTPS requests. This value might not be supported by all SDKs. When not supported the `http-proxy` value is also used for HTTPS requests at all times.
+
+</ConfigKey>
+
+<ConfigKey name="proxy-headers" supported={["python"]}>
+
+A dict containing additional proxy headers (usually for authentication) to be forwarded to `urllib3`'s [`ProxyManager`](https://urllib3.readthedocs.io/en/1.24.3/reference/index.html#urllib3.poolmanager.ProxyManager).
 
 </ConfigKey>
 

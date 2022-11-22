@@ -118,6 +118,7 @@ SentrySDK.start { options in
 
     // Enable all experimental features
     options.enableUserInteractionTracing = true
+    options.enablePreWarmedAppStartTracking = true
     options.attachScreenshot = true
     options.attachViewHierarchy = true
 }
