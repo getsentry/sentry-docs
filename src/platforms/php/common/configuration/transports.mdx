@@ -83,9 +83,8 @@ through the client builder, but you can override it using the appropriate method
 
 ```php
 use Http\Discovery\HttpAsyncClientDiscovery;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\StreamFactoryDiscovery;
-use Http\Discovery\UriFactoryDiscovery;
+use Http\Discovery\Psr17FactoryDiscovery;
+use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\HttpClient\HttpClientFactoryInterface;
@@ -94,12 +93,12 @@ use Sentry\SentrySdk;
 use Sentry\Transport\TransportFactoryInterface;
 
 $httpClientFactory = new HttpClientFactory(
-    UriFactoryDiscovery::find(),
-    MessageFactoryDiscovery::find(),
-    StreamFactoryDiscovery::find(),
+    Psr17FactoryDiscovery::findUriFactory(),
+    Psr17FactoryDiscovery::findResponseFactory(),
+    Psr17FactoryDiscovery::findStreamFactory(),
     HttpAsyncClientDiscovery::find(),
     'sentry.php',
-    '2.3'
+    Client::SDK_VERSION
 );
 
 $transportFactory = new class($httpClientFactory) implements TransportFactoryInterface  {
@@ -115,7 +114,7 @@ $transportFactory = new class($httpClientFactory) implements TransportFactoryInt
 
     public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
     {
-        return new HttpTransport($options, $this->clientFactory->create($options), MessageFactoryDiscovery::find());
+        return new HttpTransport($options, $this->clientFactory->create($options), Psr17FactoryDiscovery::findStreamFactory(), Psr17FactoryDiscovery::findRequestFactory(), new PayloadSerializer($options));
     }
 };
 

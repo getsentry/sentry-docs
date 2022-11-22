@@ -69,19 +69,23 @@ config :sentry, dsn: "___PUBLIC_DSN___",
 
 In this example, we are getting the environment name from the `RELEASE_LEVEL` environment variable. If that variable does not exist, it will default to `"development"`. Now, on our servers, we can set the environment variable appropriately. On our local development machines, exceptions will never be sent, because the default value is not in the list of `included_environments`.
 
-If using an environment with Plug or Phoenix, add the following to `Plug.Router` or `Phoenix.Endpoint`:
+If you're using an environment with Phoenix, add the following to `Plug.Router` and `Phoenix.Endpoint`:
 
 ```elixir
-# Phoenix
+# Endpoint
 use Sentry.PlugCapture
 use Phoenix.Endpoint, otp_app: :my_app
-# ...
+
+# Endpoint or Router
 plug Plug.Parsers,
  parsers: [:urlencoded, :multipart, :json],
  pass: ["*/*"],
  json_decoder: Phoenix.json_library()
 plug Sentry.PlugContext
-# Plug
+```
+
+If you're not using Phoenix but are using Plug, add the following to your plug pipeline:
+```elixir
 use Plug.Router
 use Sentry.PlugCapture
 # ...
