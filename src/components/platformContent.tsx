@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "@emotion/styled";
 import { graphql, useStaticQuery } from "gatsby";
 
 import usePlatform, {
@@ -60,19 +59,6 @@ const getFileForPlatform = (
     .find(m => m);
   return contentMatch;
 };
-
-const MissingContent = styled.div`
-  font-style: italic;
-  background: var(--lightest-purple-background);
-  border: 1px dashed #ccc;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-
-  p:last-child {
-    margin-bottom: 0;
-  }
-`;
 
 export default ({
   includePath,
