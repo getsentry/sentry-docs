@@ -45,7 +45,6 @@ type Props = {
   platform?: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
-  notateUnsupported?: boolean;
 };
 
 const getFileForPlatform = (
@@ -59,11 +58,6 @@ const getFileForPlatform = (
   const contentMatch = platformsToSearch
     .map(name => name && fileList.find(m => slugMatches(m.name, name)))
     .find(m => m);
-  if (!contentMatch) {
-    console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${platform.key}`
-    );
-  }
   return contentMatch;
 };
 
@@ -84,7 +78,6 @@ export default ({
   includePath,
   platform,
   children,
-  notateUnsupported = true,
 }: Props): JSX.Element => {
   const {
     allFile: { nodes: files },
@@ -102,6 +95,24 @@ export default ({
     matches,
     currentPlatform
   );
+
+  if (!contentMatch && !children) {
+    // children is used to conditionally show introductory paragraph if the
+    // snippet exists. in case children is null, it is unlikely that the page
+    // is correctly written to deal with missing snippets and the correct
+    // course of action is probably to hide the page for the affected platform
+    throw new Error(
+      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
+    );
+  }
+
+  if (!contentMatch) {
+    return null;
+  }
+
+  if (hasDropdown) {
+    throw new Error(`${includePath} has a dropdown??`);
+  }
 
   return (
     <section className="platform-specific-content">
@@ -153,28 +164,10 @@ export default ({
 
       <div className="tab-content">
         <div className="tab-pane show active">
-          {contentMatch ? (
-            <React.Fragment>
-              {children || null}
-              <Content key={contentMatch.id} file={contentMatch} />
-            </React.Fragment>
-          ) : (
-            notateUnsupported && (
-              <MissingContent>
-                <p>
-                  The platform or SDK you've selected either does not support
-                  this functionality, or it is missing from documentation.
-                </p>
-                <p>
-                  If you think this is an error, feel free to{" "}
-                  <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new/choose">
-                    let us know on GitHub
-                  </SmartLink>
-                  .
-                </p>
-              </MissingContent>
-            )
-          )}
+          <React.Fragment>
+            {children || null}
+            <Content key={contentMatch.id} file={contentMatch} />
+          </React.Fragment>
         </div>
       </div>
     </section>
