@@ -53,17 +53,13 @@ SDKs provide a <PlatformIdentifier name="before-send" /> hook, which is invoked 
 
 <PlatformContent includePath="configuration/before-send" />
 
-There's a few areas you should consider that sensitive data may appear:
+Sensitive data may appear in the following areas:
 
-- Stack-locals → some SDKs (Python + PHP), will pick up variable values within the stacktrace. This can be scrubbed or disabled altogether, if necessary
-- Breadcrumbs → some SDKs (for example, JavaScript, Java logging integrations) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will surface DB queries which may need to be scrubbed
-- User context → automated behavior is controlled via `send-default-pii`
-- HTTP context → query strings may be picked up in some frameworks as part of the HTTP request context
-- Transaction Names → In certain situations, transaction names might contain sensitive data.
-  For example, a browser's pageload transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII).
-In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`.
-  However, depending on the framework you use, your routing configurations, timings, and a few other factors, the SDKs might not be able to
-  completely parameterize all your URLs.
+- Stack-locals → Some SDKs (Python and PHP) will pick up variable values within the stacktrace. These can be scrubbed, or this behavior can be disabled altogether if necessary.
+- Breadcrumbs → Some SDKs (JavaScript and the Java logging integrations, for example) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will also record database queries, which may need to be scrubbed.
+- User context → Automated behavior is controlled via `send-default-pii`.
+- HTTP context → Query strings may be picked up in some frameworks as part of the HTTP request context.
+- Transaction Names → In certain situations, transaction names might contain sensitive data. For example, a browser's pageload transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the framework, your routing configuration, race conditions, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
 
 For more details and data filtering instructions, see <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink>.
 
