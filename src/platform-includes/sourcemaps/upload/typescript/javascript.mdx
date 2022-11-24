@@ -1,8 +1,31 @@
-If you choose [`sentry-cli`](/product/cli/) as the method to upload your source files, we assume you already know how to generate source maps within your build tool chain.
+<Note>
 
-Sentry uses [releases](/product/releases/) to match the correct uploaded source maps to your events. You can use `sentry-cli` to create releases and upload source maps to Sentry.
+This guide is only applicable if you're using `tsc` to compile your project. If you use another tool (such as Webpack) in combination with TypeScript, you'll most likely want to follow that guide instead.
 
-## 1. Update SDK Options
+</Note>
+
+Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
+If you're using TypeScript (`tsc`) to compile your project, you should configure TypeScript to generate source maps, and use Sentry CLI to create the release and upload the generated source maps.
+
+## 1. Generate Source Maps
+
+First, configure the TypeScript compiler to output source maps:
+
+```json {filename:tsconfig.json}
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+
+    // Set `sourceRoot` to  `/` to strip the build path prefix from
+    // generated source code references. This allows Sentry to match source files
+    // relative to your source root folder.
+    "sourceRoot": "/"
+  }
+}
+```
+
+## 2. Update SDK Options
 
 To be able to match Sentry errors with the correct release, you must provide a `release` property in the SDK options:
 
@@ -14,7 +37,7 @@ Sentry.init({
 });
 ```
 
-## 2. Upload Source Maps Using Sentry CLI
+## 3. Upload Source Maps Using Sentry CLI
 
 <Note>
 
@@ -47,7 +70,7 @@ export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 ```
 
-Then, create a release with Sentry CLI. The release name must be unique within your organization:
+After configuring Sentry CLI and compiling your project with `tsc`, create a release with Sentry CLI:
 
 ```bash
 sentry-cli releases new <release_name>
@@ -61,7 +84,7 @@ sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
 
 <Note>
 
-You can verify your uploaded artifacts by navigating to **Releases -> [latest release] -> Source Maps (right sidebar)** on Sentry.
+You can verify that your upload was successful by navigating to **Releases -> [latest release] -> Source Maps (right sidebar)** on Sentry.
 
 </Note>
 

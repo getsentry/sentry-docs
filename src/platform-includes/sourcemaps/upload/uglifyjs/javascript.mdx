@@ -1,6 +1,5 @@
-If you choose [`sentry-cli`](/product/cli/) as the method to upload your source files, we assume you already know how to generate source maps within your build tool chain.
-
-Sentry uses [releases](/product/releases/) to match the correct uploaded source maps to your events. You can use `sentry-cli` to create releases and upload source maps to Sentry.
+Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
+If you're using UglifyJS to transpile your project you should configure UglifyJS to generate source maps and use Sentry CLI to create the release and upload the source maps.
 
 ## 1. Update SDK Options
 
@@ -14,7 +13,17 @@ Sentry.init({
 });
 ```
 
-## 2. Upload Source Maps Using Sentry CLI
+## 2. Generate Source Maps
+
+Next, configure UglifyJS to output source maps:
+
+```bash
+uglifyjs app.js \
+  -o app.min.js.map \
+  --source-map url=app.min.js.map,includeSources
+```
+
+## 3. Upload Source Maps Using Sentry CLI
 
 <Note>
 
@@ -47,7 +56,7 @@ export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 ```
 
-Then, create a release with Sentry CLI. The release name must be unique within your organization:
+After configuring Sentry CLI and bundling your project, create a release with Sentry CLI:
 
 ```bash
 sentry-cli releases new <release_name>
@@ -65,10 +74,10 @@ You can verify your uploaded artifacts by navigating to **Releases -> [latest re
 
 </Note>
 
-At this point, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded and your app has been published successfully, finalize the release with the following command:
+At this point, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded, and your app has been published successfully, finalize the release with the following command:
 
 ```bash
 sentry-cli releases finalize <release_name>
 ```
 
-For more information on how to configure releases via Sentry CLI, see our [Sentry CLI release management docs](/product/cli/releases/).
+For more information on how to configure releases via Sentry CLI, check out our [Sentry CLI release management docs](/product/cli/releases/).
