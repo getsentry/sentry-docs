@@ -105,8 +105,8 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental auto instrumentation features
-    options.enableFileIOTracking = true
-    options.enableCoreDataTracking = true
+    options.enableFileIOTracing = true
+    options.enableCoreDataTracing = true
     options.enableUserInteractionTracing = true
     options.enableAppHangTracking = true
     options.attachScreenshot = true
