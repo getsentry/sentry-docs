@@ -10,17 +10,29 @@ categories:
 
 _(New in version 6.17.0)_
 
-The UI instrumentation, once enabled, captures transactions for a set of different user interactions, which include clicks, long clicks, taps, etc. The SDK composes the transaction name out of the `Widget`'s `key`, which captured the user interaction; for example, `login_button`. The transaction operation is set to `ui.action.click`.
+<Note>
+
+This feature is currently in Beta. Beta features are still in-progress and may have bugs. We recognize the irony.
+
+</Note>
+
+The UI instrumentation, once enabled, captures transactions and adds breadcrumbs for a set of different user interactions, which include clicks, long clicks, taps, etc. The SDK composes the transaction name out of the `Widget`'s `key`, which captured the user interaction; for example, `login_button`. The transaction operation is set to `ui.action.click`.
 
 <Note>
 
-If the view doesn't have the `key` assigned, the transaction won't be captured because it can't be uniquely identified otherwise.
+If the view doesn't have the `key` assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified otherwise.
 
 The `key` value should be unique across the whole application because the transactions are grouped by its name.
 
 </Note>
 
-The UI instrumentation is disabled by default, but you can enable it by setting the `enableUserInteractionTracing` option to `true` and wrapping your app with the `SentryUserInteractionWidget` widget:
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+The UI instrumentation tracing is disabled by default, but you can enable it by setting the `enableUserInteractionTracing` option to `true` and wrapping your app with the `SentryUserInteractionWidget` widget:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -33,6 +45,10 @@ Future<void> main() async {
   );
 }
 ```
+
+The UI instrumentation breadcrumbs are enabled by default, but you can disable them by setting the `enableUserInteractionBreadcrumbs` option to `false`.
+
+Breadcrumbs don't contain the `Widget`'s labels, texts, etc due to PII concerns, but in case you want to capture them, you can enable them by setting the `sendDefaultPii` option to `true`.
 
 The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/flutter/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds). You can also disable the idle timeout by setting it to `null`, but the transaction must be finished manually in this case.
 
