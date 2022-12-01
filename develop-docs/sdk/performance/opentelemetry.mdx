@@ -22,6 +22,13 @@ To transform OpenTelemetry SDK data to Sentry data, we rely on the [OpenTelemetr
 
 We want users to use Sentry for sampling functionality, so users should use OpenTelemetry's default sampler and sample through Sentry's `trace_sampler` and `traces_sample_rate` options.
 
+To be an classified as fully supporting OpenTelemetry the OpenTelemetry instrumentation must support the following features.
+
+1. Linking of errors and transactions via `trace` context.
+2. Propagation of `sentry-trace` and `baggage` headers (this is done via the SentryPropagator)
+3. Span/Trace ID's must match between Sentry and OpenTelemetry.
+4. Spans that represent requests to Sentry must not be recorded in Sentry
+
 To enable OpenTelemetry support for your SDK, go through the following steps.
 
 ### Step 1: Implement the SentrySpanProcessor on your SDK
@@ -36,14 +43,31 @@ This relies on a couple key assumptions.
 
 ```ts
 import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { Span as OpenTelemetrySpan } from '@opentelemetry/api';
+import { Span as OpenTelemetrySpan, trace } from '@opentelemetry/api';
 import { Span as SentrySpan } from '@sentry/tracing';
 
 const MAP = Map<SentrySpan['spanId'], SentrySpan> = new Map<SentrySpan['spanId'], SentrySpan>();
 
 class SentrySpanProcessor implements SpanProcessor {
-  constructor(options: SentrySpanProcessorOptions) {
-    this._options = options;
+  constructor() {
+    Sentry.addGlobalEventProcessor(event => {
+      const otelSpan = trace.getActiveSpan();
+      if (!otelSpan) {
+        return event;
+      }
+
+      const otelSpanId = otelSpan.spanContext().spanId;
+      const sentrySpan = MAP.get(otelSpanId);
+
+      if (!sentrySpan) {
+        return event;
+      }
+
+      // If event has already set `trace` context, use that one.
+      // This happens in the case of transaction events.
+      event.contexts = { trace: sentrySpan.getTraceContext(), ...event.contexts };
+      return event;
+    });
   }
 
   onStart(otelSpan: OpenTelemetrySpan): void {
@@ -164,9 +188,9 @@ export class SentryPropagator implements TextMapPropagator {
 We want to make sure that we don't create Sentry Spans for requests to Sentry.
 
 ```ts
-import { Span as OtelSpan } from '@opentelemetry/sdk-trace-base';
-import { SemanticAttributes } from '@opentelemetry/semantic-conventions';
-import { getCurrentHub } from '@sentry/core';
+import { Span as OtelSpan } from "@opentelemetry/sdk-trace-base";
+import { SemanticAttributes } from "@opentelemetry/semantic-conventions";
+import { getCurrentHub } from "@sentry/core";
 
 export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
   const { attributes } = otelSpan;
@@ -181,7 +205,9 @@ export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
 }
 
 function isSentryRequestUrl(url: string): boolean {
-  const dsn = getCurrentHub().getClient()?.getDsn();
+  const dsn = getCurrentHub()
+    .getClient()
+    ?.getDsn();
   return dsn ? url.includes(dsn.host) : false;
 }
 ```
@@ -212,13 +238,15 @@ The Sentry span description should come from the OpenTelemetry Span name. The Se
 
 To make things simple, only set ops for `db` and `http` spans. Don't do any other extended logic, this will be done in Relay in the future.
 
-
 ```ts
-function updateSpanWithOtelData(sentrySpan: SentrySpan, otelSpan: OtelSpan): void {
+function updateSpanWithOtelData(
+  sentrySpan: SentrySpan,
+  otelSpan: OtelSpan
+): void {
   const { attributes, kind } = otelSpan;
 
   sentrySpan.setStatus(mapOtelStatus(otelSpan));
-  sentrySpan.setData('otel.kind', kind.valueOf());
+  sentrySpan.setData("otel.kind", kind.valueOf());
 
   Object.keys(attributes).forEach(prop => {
     const value = attributes[prop];
@@ -230,7 +258,10 @@ function updateSpanWithOtelData(sentrySpan: SentrySpan, otelSpan: OtelSpan): voi
   sentrySpan.description = description;
 }
 
-function updateTransactionWithOtelData(transaction: Transaction, otelSpan: OtelSpan): void {
+function updateTransactionWithOtelData(
+  transaction: Transaction,
+  otelSpan: OtelSpan
+): void {
   transaction.setStatus(mapOtelStatus(otelSpan));
 
   const { op, description } = parseSpanDescription(otelSpan);
@@ -249,8 +280,11 @@ All SDKs are required to add event context with the key `otel` to events generat
 We recommend doing this by adding a `transaction.setContext()` method to your SDK.
 
 ```ts
-function finishTransactionWithContextFromOtelData(transaction: Transaction, otelSpan: OtelSpan): void {
-  transaction.setContext('otel', {
+function finishTransactionWithContextFromOtelData(
+  transaction: Transaction,
+  otelSpan: OtelSpan
+): void {
+  transaction.setContext("otel", {
     attributes: otelSpan.attributes,
     resource: otelSpan.resource.attributes,
   });
@@ -268,17 +302,17 @@ Example:
       "attributes": {
         "http.method": "GET",
         "http.url": "https://example.com",
-        "http.status_code": 200,
+        "http.status_code": 200
       },
       "resource": {
         "service.name": "my-service",
         "service.version": "1.0.0",
         "telemetry.sdk.name": "opentelemetry-node",
-        "telemetry.sdk.version": "4.0.0",
-      },
+        "telemetry.sdk.version": "4.0.0"
+      }
       // ...
     }
-  },
+  }
 }
 ```
 
@@ -592,43 +626,43 @@ To map from OpenTelemetry Span Status to, you need to rely on both OpenTelemetry
 ```ts
 // OpenTelemetry span status can be Unset, Ok, Error. HTTP and Grpc codes contained in tags can make it more detailed.
 
-import { Span as OtelSpan } from '@opentelemetry/sdk-trace-base';
-import { SemanticAttributes } from '@opentelemetry/semantic-conventions';
-import { SpanStatusType as SentryStatus } from '@sentry/tracing';
+import { Span as OtelSpan } from "@opentelemetry/sdk-trace-base";
+import { SemanticAttributes } from "@opentelemetry/semantic-conventions";
+import { SpanStatusType as SentryStatus } from "@sentry/tracing";
 
 // canonicalCodesHTTPMap maps some HTTP codes to Sentry's span statuses. See possible mapping in https://develop.sentry.dev/sdk/event-payloads/span/
 const canonicalCodesHTTPMap: Record<string, SentryStatus> = {
-  '400': 'failed_precondition',
-  '401': 'unauthenticated',
-  '403': 'permission_denied',
-  '404': 'not_found',
-  '409': 'aborted',
-  '429': 'resource_exhausted',
-  '499': 'cancelled',
-  '500': 'internal_error',
-  '501': 'unimplemented',
-  '503': 'unavailable',
-  '504': 'deadline_exceeded',
+  "400": "failed_precondition",
+  "401": "unauthenticated",
+  "403": "permission_denied",
+  "404": "not_found",
+  "409": "aborted",
+  "429": "resource_exhausted",
+  "499": "cancelled",
+  "500": "internal_error",
+  "501": "unimplemented",
+  "503": "unavailable",
+  "504": "deadline_exceeded",
 } as const;
 
 // canonicalCodesGrpcMap maps some GRPC codes to Sentry's span statuses. See description in grpc documentation.
 const canonicalCodesGrpcMap: Record<string, SentryStatus> = {
-  '1': 'cancelled',
-  '2': 'unknown_error',
-  '3': 'invalid_argument',
-  '4': 'deadline_exceeded',
-  '5': 'not_found',
-  '6': 'already_exists',
-  '7': 'permission_denied',
-  '8': 'resource_exhausted',
-  '9': 'failed_precondition',
-  '10': 'aborted',
-  '11': 'out_of_range',
-  '12': 'unimplemented',
-  '13': 'internal_error',
-  '14': 'unavailable',
-  '15': 'data_loss',
-  '16': 'unauthenticated',
+  "1": "cancelled",
+  "2": "unknown_error",
+  "3": "invalid_argument",
+  "4": "deadline_exceeded",
+  "5": "not_found",
+  "6": "already_exists",
+  "7": "permission_denied",
+  "8": "resource_exhausted",
+  "9": "failed_precondition",
+  "10": "aborted",
+  "11": "out_of_range",
+  "12": "unimplemented",
+  "13": "internal_error",
+  "14": "unavailable",
+  "15": "data_loss",
+  "16": "unauthenticated",
 } as const;
 
 export function mapOtelStatus(otelSpan: OtelSpan): SentryStatus {
@@ -637,31 +671,31 @@ export function mapOtelStatus(otelSpan: OtelSpan): SentryStatus {
   const statusCode = status.code;
 
   if (statusCode < 0 || statusCode > 2) {
-    return 'unknown_error';
+    return "unknown_error";
   }
 
   if (statusCode === 0 || statusCode === 1) {
-    return 'ok';
+    return "ok";
   }
 
   const httpCode = attributes[SemanticAttributes.HTTP_STATUS_CODE];
   const grpcCode = attributes[SemanticAttributes.RPC_GRPC_STATUS_CODE];
 
-  if (typeof httpCode === 'string') {
+  if (typeof httpCode === "string") {
     const sentryStatus = canonicalCodesHTTPMap[httpCode];
     if (sentryStatus) {
       return sentryStatus;
     }
   }
 
-  if (typeof grpcCode === 'string') {
+  if (typeof grpcCode === "string") {
     const sentryStatus = canonicalCodesGrpcMap[grpcCode];
     if (sentryStatus) {
       return sentryStatus;
     }
   }
 
-  return 'unknown_error';
+  return "unknown_error";
 }
 ```
 
