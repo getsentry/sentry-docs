@@ -86,7 +86,7 @@ export const PlatformSidebar = ({
       <DynamicNav
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
-        prependLinks={[[`/${pathRoot}/performance/`, "Set Up"]]}
+        prependLinks={[[`/${pathRoot}/performance/`, "Set Up Performance"]]}
         suppressMissing
         tree={tree}
       />

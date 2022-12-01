@@ -34,6 +34,51 @@ Make sure `Sentry.reactRouterV6Instrumentation` is initialized by your `Sentry.i
 
 </Alert>
 
+### Usage with React Router 6.4 Data API
+_(Available in version 7.21.0 and above)_
+
+
+If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) from the `react-router-dom` package, you can use `Sentry.wrapCreateBrowserRouter` to wrap it with the instrumentation:
+
+```javascript
+import { createBrowserRouter } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
+import { BrowserTracing } from '@sentry/tracing';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+          React.useEffect,
+          useLocation,
+          useNavigationType,
+          createRoutesFromChildren,
+          matchRoutes,
+      ),
+    }),
+  ],
+  tracesSampleRate: 1.0,
+});
+
+
+const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
+  createBrowserRouter
+);
+
+const router = sentryCreateBrowserRouter([
+  // ...
+]);
+
+```
+
+<Alert level="warning" title="Note">
+
+While [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router) isn't supported by Sentry yet, you can instrument [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router) using the `wrapCreateBrowserRouter` function.
+
+</Alert>
+
+
 ### Usage With `<Routes />` Component
 
 If you use the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context, as in the example below:
@@ -99,6 +144,7 @@ import {
 } from "react-router-dom";
 import { wrapUseRoutes } from "@sentry/react";
 import { useEffect } from "react";
+import { BrowserTracing } from "@sentry/tracing";
 
 Sentry.init({
     dsn: "___DSN___",
