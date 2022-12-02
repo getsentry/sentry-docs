@@ -228,3 +228,10 @@ Sometimes build scripts and plugins produce pre-compressed minified files (for e
 ## Verify workers are sharing the same volume as web (if running self-hosted Sentry via Docker)
 
 Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. Double check that the cron workers and web workers can read/write files from the same disk.
+
+## Verify you are not using the `source-map-support` package
+
+The Sentry Node.js SDK generally works well with the [source-map-support](https://www.npmjs.com/package/source-map-support) package if you don't already have source maps uploaded to Sentry.
+
+If you are uploading source maps to Sentry or if you are using a Sentry SDK in the browser, your code cannot use the `source-map-support` package.
+`source-map-support` overwrites the captured stack trace in a way that prevents our source map processors from correctly parsing it.
