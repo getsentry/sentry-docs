@@ -82,7 +82,13 @@ const IndexPage = () => {
               </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
-                  <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
+                  <Nav.Link
+                    className="text-primary"
+                    href={getSandboxURL().toString()}
+                    target="_blank"
+                  >
+                    Demo
+                  </Nav.Link>
                 </Nav.Item>
               </SandboxOnly>
               <Nav.Item>
@@ -140,9 +146,7 @@ const IndexPage = () => {
           <a href="https://develop.sentry.dev/self-hosted/">
             Self-Hosted Sentry
           </a>
-          <a href="https://help.sentry.io/">
-            Support
-          </a>
+          <a href="https://help.sentry.io/">Support</a>
         </div>
 
         <h3>Learn more...</h3>
@@ -150,9 +154,7 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/performance/">
-                  Performance Monitoring
-                </a>
+                <a href="/product/performance/">Performance Monitoring</a>
               </li>
               <li>
                 <a href="/product/sentry-basics/tracing/distributed-tracing/">
@@ -160,13 +162,13 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
+                <a href="/product/session-replay/">Session Replay</a>
+              </li>
+              <li>
                 <a href="/product/releases/health/">Release Health</a>
               </li>
               <li>
                 <a href="/product/releases/">Releases</a>
-              </li>
-              <li>
-                <a href="/product/cli/">Sentry-CLI</a>
               </li>
             </ul>
           </div>
@@ -179,8 +181,9 @@ const IndexPage = () => {
                 <a href="/product/sentry-basics/environments/">Environments</a>
               </li>
               <li>
-                <a href="/product/integrations/">Integrations</a>
+                <a href="/product/cli/">Sentry-CLI</a>
               </li>
+
               <li>
                 <a href="/product/discover-queries/">Discover Queries</a>
               </li>
@@ -191,6 +194,9 @@ const IndexPage = () => {
           </div>
           <div>
             <ul className="unstyled-list">
+              <li>
+                <a href="/product/integrations/">Integrations</a>
+              </li>
               <li>
                 <a href="/product/integrations/integration-platform/">
                   Integration Platform
