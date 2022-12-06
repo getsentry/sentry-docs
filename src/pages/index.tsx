@@ -82,7 +82,13 @@ const IndexPage = () => {
               </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
-                  <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
+                  <Nav.Link
+                    className="text-primary"
+                    href={getSandboxURL().toString()}
+                    target="_blank"
+                  >
+                    Demo
+                  </Nav.Link>
                 </Nav.Item>
               </SandboxOnly>
               <Nav.Item>
@@ -140,9 +146,7 @@ const IndexPage = () => {
           <a href="https://develop.sentry.dev/self-hosted/">
             Self-Hosted Sentry
           </a>
-          <a href="https://help.sentry.io/">
-            Support
-          </a>
+          <a href="https://help.sentry.io/">Support</a>
         </div>
 
         <h3>Learn more...</h3>
@@ -150,9 +154,7 @@ const IndexPage = () => {
           <div>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/performance/">
-                  Performance Monitoring
-                </a>
+                <a href="/product/performance/">Performance Monitoring</a>
               </li>
               <li>
                 <a href="/product/sentry-basics/tracing/distributed-tracing/">
@@ -209,6 +211,11 @@ const IndexPage = () => {
               <li>
                 <a href="/product/alerts-notifications/">
                   Alerts & Notifications
+                </a>
+              </li>
+              <li>
+                <a href="/product/session-replay/">
+                  Session Replay
                 </a>
               </li>
             </ul>
