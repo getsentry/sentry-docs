@@ -47,7 +47,7 @@ After this step, Sentry will report any uncaught exceptions triggered by your ap
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
 ```javascript
-return <button onClick={methodDoesNotExist}>Break the world</button>;
+return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 
 Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete React docs](https://docs.sentry.io/platforms/javascript/guides/react/). There you'll find additional instructions for surfacing valuable context from React error boundaries, React Router, Redux, and more.
