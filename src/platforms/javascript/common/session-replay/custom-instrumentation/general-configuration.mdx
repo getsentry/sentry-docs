@@ -1,0 +1,87 @@
+---
+title: General Configuration
+sidebar_order: 410
+supported:
+  - javascript
+  - javascript.angular
+  - javascript.ember
+  - javascript.gatsby
+  - javascript.nextjs
+  - javascript.react
+  - javascript.remix
+  - javascript.svelte
+  - javascript.vue
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.wasm
+description: "Learn about the general Session Replay configuration fields."
+---
+
+<Include name="beta-note-session-replay.mdx" />
+
+## Identifying Users
+
+If you have only followed the above instructions to setup session replays, you will only see IP addresses in Sentry's UI. In order to associate a user identity to a session replay, use [setUser](/platforms/javascript/enriching-events/identify-user/).
+
+```javascript
+import * as Sentry from "@sentry/browser";
+Sentry.setUser({ email: "jane.doe@example.com" });
+```
+
+## Start and Stop Recording
+
+Replay recording only starts automatically when it is included in the integrations key when calling Sentry.init. Otherwise you can initialize the plugin and manually call the start() method on the integration instance. To stop recording you can call the stop().
+
+```javascript {tabTitle: ESM}
+const replay = new Replay(); // This will *NOT* begin recording replays
+
+replay.start(); // Start recording
+
+replay.stop(); // Stop recording
+```
+
+```javascript {tabTitle: CDN}
+const replay = new Sentry.Integrations.Replay(); // This will *NOT* begin recording replays
+
+replay.start(); // Start recording
+
+replay.stop(); // Stop recording
+```
+
+## General Integration Configuration
+
+The following options can be configured on the root level of your browser-based Sentry SDK, in `init({})`:
+
+| key                      | type    | default | description |
+| ------------------------ | ------- | ------- | --- |
+| replaysSessionSampleRate | number  | `0.1`   | The sample rate for replays that begin recording immediately and last the entirety of the user's session. 1.0 will collect all replays, 0 will collect no replays. |
+| replaysOnErrorSampleRate | number  | `1.0`   | The sample rate for replays that are recorded when an error happens. This type of replay will record up to a minute of events prior to the error and continue recording until the session ends. 1.0 capturing all sessions with an error, and 0 capturing none. |
+
+The following options can be configured as options to the integration, in `new Replay({})`:
+
+| key                 | type    | default | description |
+| ------------------- | ------- | ------- | --- |
+| stickySession       | boolean | `true`  | Keep track of the user across page loads. Note a single user using multiple tabs will result in multiple sessions. Closing a tab will result in the session being closed as well.                                               |
+
+## Optimization Configuration
+
+The following options can be configured as options to the integration, in `new Replay({})`:
+
+| key              | type    | default | description |
+| ---------------- | ----------------------- | ------- | --- |
+| collectFonts     | boolean | `false` | Should collect fonts used on the website |
+| inlineImages     | boolean | `false` | Should inline `<image>` content |
+| inlineStylesheet | boolean | `true`  | Should inline stylesheets used in the recording |
+| recordCanvas     | boolean | `false` | Should record `<canvas>` elements |
+
+## rrweb Configuration
+
+In addition to the options described above, you can also directly pass configuration to [rrweb](https://github.com/rrweb-io/rrweb/blob/rrweb%401.1.3/guide.md), which is the underlying library used to make the recordings:
+
+```javascript
+new Replay({
+  // any further configuration here is passed directly to rrweb
+});
+```

@@ -79,6 +79,7 @@ export const PlatformSidebar = ({
           `/${pathRoot}/enriching-events/`,
           `/${pathRoot}/data-management/`,
           `/${pathRoot}/performance/`,
+          `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
         ]}
@@ -87,6 +88,15 @@ export const PlatformSidebar = ({
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
         prependLinks={[[`/${pathRoot}/performance/`, "Set Up Performance"]]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/session-replay`}
+        title="Session Replay"
+        prependLinks={[
+          [`/${pathRoot}/session-replay/`, "Set Up Session Replay"],
+        ]}
         suppressMissing
         tree={tree}
       />
