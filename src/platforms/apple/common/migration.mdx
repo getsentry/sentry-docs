@@ -3,7 +3,66 @@ title: Migration Guide
 sidebar_order: 1000
 ---
 
-To upgrade from the 4.x version of the SDK to the 7.x version of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x and finally from 6.x to 7.x.
+To upgrade from the 4.x version of the SDK to the 8.x version of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x, then 6.x to 7.x, and finally from 7.x to 8.x.
+
+## Migrating from 7.x to 8.x
+
+Migrating to 8.x from 7.x includes a few breaking changes. We provide this guide to help you to update your SDK.
+
+### Configuration Changes
+
+This version includes the following configuration changes:
+
+- Rename `SentryOptions.enableAutoPerformanceTracking` to `SentryOptions.enableAutoPerformanceTracing`
+- Rename `SentryOptions.enableUIViewControllerTracking` to `SentryOptions.enableUIViewControllerTracing`
+- Rename `SentryOptions.enablePreWarmedAppStartTracking` to `SentryOptions.enablePreWarmedAppStartTracing`
+- Rename `SentryOptions.enableFileIOTracking` to `SentryOptions.enableFileIOTracing`
+- Rename `SentryOptions.enableCoreDataTracking` to `SentryOptions.enableCoreDataTracing`
+- Rename `SentryOptions.enableOutOfMemoryTracking` to `SentryOptions.enableWatchdogTerminationsTracking`
+
+### Breaking Changes
+
+#### SDK Inits
+
+We removed the version of `SentrySDK.startWithOptions` which took a dictionary, and renamed `SentrySDK.startWithOptionsObject` to `SentrySDK.startWithOptions`. The recommended way to initialize Sentry has not changed:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    // ...
+}
+```
+
+```objective-c
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    // ...
+}];
+```
+
+#### Swift API improvements
+
+We made some changes to make the API more ergonomic in Swift:
+
+- Rename `SentrySDK.addBreadcrumb(crumb:)` to `SentrySDK.addBreadcrumb(_ crumb:)`
+- Rename `SentryScope.add(_ crumb:)` to `SentryScope.addBreadcrumb(_ crumb:)`
+- Rename `SentryScope.add(_ attachment:)` to `SentryScope.addAttachment(_ attachment:)`
+- Rename `Client` to `SentryClient`
+
+#### Default integrations
+
+- The user interaction tracing integration is now enabled by default.
+- The File I/O tracing integration is now enabled by default.
+
+#### Changes to minimum OS versions and Xcode
+
+The minimum supported OS versions have been bumped to macOS 10.13, iOS 11, tvOS 11, and watchOS 4.
+
+The minimum Xcode version has been bumbed to 13.
 
 ## Migrating from 6.x to 7.x
 
@@ -52,8 +111,8 @@ on `SentryOptions` to align with other Sentry SDKs, and set the default `diagnos
 `SentryLevel.debug`. Furthermore, we removed setting the `logLevel` statically on the `SentrySDK`.
 Please use the `SentryOptions` to set the `diagnosticLevel` instead.
 
-
 6.x
+
 ```swift
 SentrySDK.start { options in
   options.logLevel = SentryLogLevel.verbose
@@ -65,6 +124,7 @@ SentrySDK.logLevel = SentryLogLevel.verbose
 ```
 
 7.x
+
 ```swift
 SentrySDK.start { options in
   options.diagnosticLevel = SentryLevel.debug
