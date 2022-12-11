@@ -108,6 +108,37 @@ exports.handler = Sentry.AWSLambda.wrapHandler(
 // `first` and `second` errors are captured
 ```
 
+### Build a context according to the exception raised
+
+_(New in version ??)_
+
+It is possible to pass a `contextBuilderFn` function which allows to build a SentryContext
+according to the error raised by `captureAllSettledReasons`.
+
+```javascript {tabTitle:captureAllSettledReasons}
+exports.handler = Sentry.AWSLambda.wrapHandler(
+  () => {
+    return Promise.allSettled([
+      Promise.rejected(new Error("first")),
+      Promise.rejected(new Error("second")),
+    ]);
+  },
+  {
+    captureAllSettledReasons: {
+      contextBuilderFn: (
+        event: SQSEvent | YourLambdaEvent,
+        reason: Error,
+        allSettledResultIndex: number
+      ) => {
+        return { tags: { errorMessage: reason.message } };
+      },
+    },
+  }
+);
+// `first` and `second` errors are captured,
+// the event on sentry will be tagged with the error message (first and second)
+```
+
 ## Behavior
 
 With the AWS Lambda integration enabled, the Node SDK will:
