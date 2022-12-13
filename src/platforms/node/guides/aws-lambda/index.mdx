@@ -11,6 +11,11 @@ Looking for instructions on how to add Sentry without modifying your code? [Chec
 
 </Note>
 
+Before you begin, note:
+
+- The estimated time to configure the integration is 5 - 15 minutes.
+- You need to have experience with AWS console and a basic understanding of Lambda.
+- You'll need an AWS account and you have to create an [IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
 
 _(New in version 5.26.0)_
 
@@ -80,8 +85,8 @@ exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
 });
 ```
 
-
 ## Capture Rejected Promises in `Promise.allSettled`
+
 _(New in version 6.14.3)_
 
 By default, Sentry captures errors raised by your handler.
@@ -91,12 +96,15 @@ In this case, even if one of the messages has failed, Sentry won't capture any e
 The `captureAllSettledReasons` (default: `false`) option captures all promise rejected results
 
 ```javascript {tabTitle:captureAllSettledReasons}
-exports.handler = Sentry.AWSLambda.wrapHandler(() => {
-  return Promise.allSettled([
-        Promise.rejected(new Error('first')),
-        Promise.rejected(new Error('second')),
-  ]);
-}, { captureAllSettledReasons: true });
+exports.handler = Sentry.AWSLambda.wrapHandler(
+  () => {
+    return Promise.allSettled([
+      Promise.rejected(new Error("first")),
+      Promise.rejected(new Error("second")),
+    ]);
+  },
+  { captureAllSettledReasons: true }
+);
 // `first` and `second` errors are captured
 ```
 
