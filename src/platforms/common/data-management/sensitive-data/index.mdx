@@ -7,7 +7,7 @@ redirect_from:
 description: "Learn about filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event. You can also configure server-side scrubbing to ensure the data is not stored."
 ---
 
-As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored.
+As with any third-party service it's important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored.
 
 These are some great examples for data scrubbing that every company should think about:
 
@@ -49,7 +49,7 @@ If you _do not_ wish to use the default PII behavior, you can also choose to ide
 
 ## Scrubbing Data
 
-SDKs provide a <PlatformIdentifier name="before-send" /> hook, which is invoked before an event is sent and can be used to modify event data to remove sensitive information. Using <PlatformIdentifier name="before-send" /> in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, so sensitive data never leaves the local environment.
+SDKs provide a <PlatformIdentifier name="before-send" /> hook, which is invoked before an error or message event is sent and can be used to modify event data to remove sensitive information. Some SDKs also provide a <PlatformIdentifier name="before-send-transaction" /> hook which does the same thing for transactions. We recommend using <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> in the SDKs to **scrub any data before it is sent**, to ensure that sensitive data never leaves the local environment.
 
 <PlatformContent includePath="configuration/before-send" />
 
@@ -57,7 +57,7 @@ Sensitive data may appear in the following areas:
 
 - Stack-locals → Some SDKs (Python and PHP) will pick up variable values within the stacktrace. These can be scrubbed, or this behavior can be disabled altogether if necessary.
 - Breadcrumbs → Some SDKs (JavaScript and the Java logging integrations, for example) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will also record database queries, which may need to be scrubbed.
-- User context → Automated behavior is controlled via `send-default-pii`.
+- User context → Automated behavior is controlled via <PlatformIdentifier name="send-default-pii" />.
 - HTTP context → Query strings may be picked up in some frameworks as part of the HTTP request context.
 - Transaction Names → In certain situations, transaction names might contain sensitive data. For example, a browser's pageload transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the framework, your routing configuration, race conditions, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
 
