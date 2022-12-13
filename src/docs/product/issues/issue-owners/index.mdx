@@ -15,13 +15,13 @@ description: "Learn how to automatically assign issues to their respective owner
 
 Sentry offers multiple ways to define the "ownership" of an issue. With ownership defined, we can automatically assign issues and send alerts to the owner. Sentry defines ownership with _code owners_ and _ownership rules_. Code owners functionality lets you import your [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) or [GitLab](https://docs.gitlab.com/ee/user/project/code_owners.html) CODEOWNERS file, and then we assign issues according to those file paths. Ownership rules allow you to override the assignments based on code owners and provide advanced matcher types (for example, urls and tags). These rules can also match on the file paths of files in the stack trace, URL of the request, or event tags.
 
-## How It Works
+## Methods
 
 Ownership rules and code owners are matched against individual events in an issue. This matching is relied upon in other areas of [sentry.io](https://sentry.io), as described in the following sections. One key thing to note: issue owners are set for an issue, not a project or organization.
 
 ### Ownership Rules
 
-You define ownership rules per project. To configure ownership rules, navigate to your **[Project] > Settings > Issue Owners**, or click on the "Create Ownership Rule" button on an Issue Details page.
+You can set ownership by defining ownership rules per project. To configure ownership rules, navigate to **[Project] > Settings > Issue Owners**, or click on the "Create Ownership Rule" button on an **Issue Details** page.
 
 Types of matches available:
 
@@ -116,32 +116,6 @@ Let us know if you have feedback: [ecosystem-feedback@sentry.io](mailto:ecosyste
 
 Create external team/user mappings for your GitHub/GitLab teams and users by navigating to **Settings > Integrations > GitHub/GitLab > [Configuration] > Team Mappings/User Mappings**. Suggestions will come from any CODEOWNERS files on projects for the organization.
 
-### Suggested Assignees
-
-On the **Issue Details** page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the **Issue Details** page shows the latest event). Suggested assignees can also be based on [suspect commits](/product/issues/suspect-commits/). You can assign the _issue_ to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
-
-![Avatar icons of suggested assignees and ability to click on them for assignment.](suggested_assignees.png)
-
-### Auto-Assign
-
-You can automatically assign issues to their owners by enabling the following setting in **[Project] > Settings > Issue Owners**.
-
-![Select from dropdown to automatically assign issues to their owners.](auto-assign-issue-owner.png)
-
-If an issue is already assigned, a new event for that issue will not re-assign the issue even if it has a different owner. If an issue is not assigned, but a new event has multiple owners, [sentry.io](https://sentry.io) assigns it to the owner(s) from the last matching rule (regardless of the rule `type`).
-
-### Issue Alerts
-
-You can send [Issue Alerts](/product/alerts-notifications/issue-alerts/) to issue owners. Issue alerts are event-driven: when [sentry.io](https://sentry.io) receives an event, it evaluates issue alert rules for the issue for that event. If the alert conditions match, [sentry.io](https://sentry.io) sends an alert to the _owners of the event that triggered the alert_.
-
-![Dropdown indicating choices for Issue Alert recipients.](perform_these_actions.png)
-
-If no ownership rules match the event, the alert will either be sent to nobody or all members of the project, depending on the following setting in **[Project] > Settings > Issue Owners:**
-
-![Toggle that auto-assigns issue owners if no ownership rules match the event.](ownership_not_determined.png)
-
-Alerts sent to issue owners obey the user or team's notification preferences.
-
 ## Evaluation Flow
 
 If you have both ownership rules and code owners, Sentry evaluates an event against the rules in the following order:
@@ -184,6 +158,24 @@ The matches, in order, are:
 ```
 
 Sentry will return the last matching rule, which in this case is `path:dist/frontend/components/* #frontend`
+
+## Where It's Applied
+
+Once issue ownership is configured, it's applied in the following ways.
+
+### Suggested Assignees
+
+On the **Issue Details** page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the **Issue Details** page shows the latest event). Suggested assignees can also be based on [suspect commits](/product/releases/suspect-commits/). You can assign the _issue_ to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
+
+![Avatar icons of suggested assignees and ability to click on them for assignment.](suggested_assignees.png)
+
+### Auto-Assign
+
+You can automatically assign issues to their owners by enabling the following setting in **[Project] > Settings > Issue Owners**.
+
+![Select from dropdown to automatically assign issues to their owners.](auto-assign-issue-owner.png)
+
+If an issue is already assigned, a new event for that issue will not re-assign the issue even if it has a different owner. If an issue is not assigned, but a new event has multiple owners, [sentry.io](https://sentry.io) assigns it to the owner(s) from the last matching rule (regardless of the rule `type`).
 
 ## Troubleshooting
 
