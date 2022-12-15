@@ -219,10 +219,20 @@ Which in reality is useful for proxies to set it to `0` and opt out of tracing.
 ## Static API Changes
 
 The `Sentry.startTransaction` function should take two arguments - the `transactionContext` passed to the `Transaction` constructor and an optional `customSamplingContext` object containing data to be passed to `tracesSampler` (if defined).
-
 It creates a `Transaction` bound to the current hub and returns the instance.
 Users interact with the instance for creating child spans and, thus, have to
 keep track of it themselves.
+
+With `Sentry.span` users can attach spans to an already ongoing transaction.
+This property returns a `SpanProtocol` if a running transaction is bound to
+the scope; otherwise, it returns nil. Although we recommend users keep track
+of their own transactions, the SDKs should offer a way to expose auto-generated
+transactions. SDKs shall bind auto-generated transactions to the scope, making
+them accessible with `Sentry.span`.
+If the SDK has global mode enabled, which specifies whether to use global scope
+management mode and should be `true` for client applications and `false` for server
+applications, `Sentry.span` shall return the active transaction. If the
+user disables global mode, `Sentry.span` shall return the latest active (unfinished) span.
 
 ## `Hub` Changes
 
