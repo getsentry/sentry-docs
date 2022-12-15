@@ -1,0 +1,14 @@
+If you are not using the auto initialization provided by `sentry-opentelemetry-agent` (`SENTRY_AUTO_INIT=false`) you have to set the `instrumenter` option to `otel`. This disables all Sentry instrumentation and relies on the chosen OpenTelemetry tracers for creating spans. You also have to add the `OpenTelemetryLinkErrorEventProcessor` to ensure errors are properly linked to transactions that were created by the OpenTelemetry integration:
+
+```java {tabTitle: Java}
+import io.sentry.Instrumenter;
+import io.sentry.Sentry;
+import io.sentry.opentelemetry.OpenTelemetryLinkErrorEventProcessor;
+
+Sentry.init(options -> {
+  options.setDsn("___PUBLIC_DSN___");
+  options.setTracesSampleRate(1.0);
+  options.setInstrumenter(Instrumenter.OTEL);
+  options.addEventProcessor(new OpenTelemetryLinkErrorEventProcessor());
+});
+```
