@@ -1,0 +1,225 @@
+---
+title: Dependency Upgrade Policies
+---
+
+## Our philosophy
+
+- Core packages such as `react`, `emotion`, `typescript`, `@babel` etc. should be kept up with. These packages have minimal dependences and typically have well documented and thoughtful upgrade paths. updating core dependencies is non negotiable because of the increasing marginal cost of major version updates. For packages like this it may also be a good idea to delay major upgrades until a month or two have passed.
+
+- Avoid upgrading packages that are constantly releasing patch versions. Prefer upgrading once the package has stabilized.
+
+- Upgrades that drop sub-dependencies are a win! The less packages installed the better. This means less code to ship and less possibility for library specific bugs.
+
+- Upgrades that reduce the number of discrepant shared sub-dependencies are a win! If upgrading a package a minor version means that it will share the same version dependency with another top-level package this reduces the amount of code that is shipped.
+
+- Upgrades for non-critical packages such as `jest`, `eslint`, `prettier` can be done as time permits. eg, if all tests pass and everything looks OK, upgrading is a no brainer.
+
+- When in doubt, discuss upgrades in the [Frontend Technical Steering Committee (TSC)](https://www.notion.so/Frontend-Technical-Steering-Committee-TSC-504b63ca92204f068ffda7e36feefc04)
+
+### Take a balanced approach
+
+Understand that upgrading is a double-edged sword.
+
+If you let everything stagnate and upgrade nothing, simply because it all works, inevitably you will have to upgrade a package for a new security patch, a feature to help make code more maintainable, or in the worst case, so you can upgrade another dependency.
+
+This can become a massive amount of work, as the package is maybe many minor versions **or even multiple major versions** out of date. If it becomes difficult enough to upgrade, the engineer may choose to avoid upgrading altogether and implement a hack to work around the need. This of course is doubly bad, as when you do _absolutely need to upgrade_, not only is it difficult to upgrade a very outdated package, you now have to understand and reverse the hack.
+
+By being proactive and keeping up with major and minor versions, we will typically need to only consider a small set of changes in the package. This is safer as it is less likely for usages of the package to break since there is simply less to validate. This also helps to keep up with the latest performance updates, bug fixes, security patches. And helps to ensure when a developer is looking for documentation on the usage of a package, they won’t have to hunt for older versions of the documentation.
+
+### Consider the benefits and risks
+
+On the other hand, choosing to constantly keep packages updated to the absolute most recent versions can have numerous consequences.
+
+- Upgrading can in some cases be a non-trivial effort for marginal gains. Validating even small upgrades takes time, often when really nothing has changed. (This is of course a slippery slope, wait too long and packages can become exponentially more work to upgrade)
+
+- There is a cost to too much `package.json` churn such as developers having to constantly run `yarn install` on every git pull.
+
+- A security vulnerability may be introduced in a new version that was not previously present. If we had waited to upgrade until the patch we would not be vulnerable.
+
+- New versions of the package may include new defects introduced by the maintainers, which may be difficult to detect during validation.
+
+Overall, our approach to upgrading packages is **a balanced one**, taking into account both the potential benefits and drawbacks of upgrading. Carefully consider each upgrade decision to ensure that it is the right choice for our codebase. This guideline allows us to keep our codebase up-to-date and secure, while avoiding unnecessary effort and potential risks.
+
+## How to upgrade a package
+
+<Alert level="info">
+
+You may not have to do this manually! See the below section on [Take advantage of tooling](#take-advantage-of-tooling) to learn more about our usage of `dependabot` for automatic frontend package upgrades.
+
+</Alert>
+
+### Seeing what can be upgraded
+
+```bash
+yarn outdated --color | sort
+```
+
+### Upgrading packages
+
+```bash
+yarn upgrade --latest [package-name] [...]
+```
+
+<Alert level="note">
+
+Don’t forget to upgrade the `@types/[package-name]` package as well if necessary.
+
+</Alert>
+
+If you would like to upgrade a group of packages (for example `@babel`) you can use
+
+```bash
+yarn upgrade --latest $(yarn outdated | cut -d' ' -f1 | grep [group-name])
+```
+
+## Proper testing of upgrades
+
+<Alert level="warning">
+
+**This is absolutely the most critical step in dealing with package upgrades.** The Sentry client application should not break due to package upgrades.
+
+</Alert>
+
+### Classifying types of upgrades
+
+Depending on what category of package you’ve upgraded there are a number of steps you’ll need to take to validate that the upgrade is safe and that nothing has broken. The first step is to consider what categories the package being upgraded falls into.
+
+The general category of frontend dependencies we have are
+
+1. **Feature specific dependencies**
+
+   This is a package that is used for a particular feature in the application. For example, in our group comment box we use a package to handle @ mentions. This dependency is highly isolated to this feature and is not generally used anywhere else.
+
+2. **Framework style dependencies**
+
+   These are dependencies which are generally globally used throughout the application. Things like `react`, `react-router`, `emotion`, `moment` etc. These can be difficult to validate when there is lots of usage across the application, and will depend on what has changed in the new version of the library.
+
+3. **Testing dependencies**
+
+   These are almost always the easiest to validate, since passing tests in CI essentially guarantees that the upgrade will not be problematic.
+
+4. **Application build dependencies**
+
+   This is a package that is used to either compile the sentry application into javascript files that will be shipped to production. These types of dependencies can be relatively quickly validated since generally if something breaks, the application will fail to build and CI will fail.
+
+5. **Development dependencies**
+
+   These are dependencies used when running the application in development. Such as `fork-ts-checker-webpack-plugin`. Care should still be taken when upgrading these dependencies so we are not breaking the development environment, as that can slow everyone down. However, a breakage in these is not nearly as critical as a package that affects production.
+
+<Alert level="warning">
+
+**It is important to correctly understand the category of the dependency you are upgrading.**
+
+For example, some dependencies such as `webpack` fall both into the app build **\*\***and\*\* development dependency categories. As such, care needs to be taken to validate both use cases of the dependency.
+
+</Alert>
+
+### Steps to validate a upgrade
+
+1. **Read the CHANGELOG of the package**
+
+   This will give you context into what you need to look out for. If the package has explicit breaking changes it’s important to be aware of those so you can validate that our usages is not affected by those changes. If we are affected changes will have to be made to Sentry’s usage of that dependency to make it compatible.
+
+2. **Is CI passing?**
+
+   This is a really good first indicator of if the change is safe. If CI is failing there’s a good chance the application itself is actually broken. You will need to fix failing tests before you can merge a package upgrade.
+
+   However, **DO NOT** rely on CI passing to guarantee that the package was successfully upgraded! Our test coverage is good, but it is not perfect.
+
+   When upgrading Testing dependencies, at this point may also want to check the test logs and make sure there’s no unusual output, ensure the number of tests run has not changed, and even check that the performance of the test runs has not regressed.
+
+3. **Does the application work?**
+
+   This is where it begins to become important to understand the category of the dependency. It’s very useful to use the **Vercel Frontend Previews** during this step to see how the application acts with the upgraded package in a production build.
+
+   - For feature-specific dependencies, you can specifically check that the features using the package are correctly working as expected.
+
+   - For dependencies affecting specific UI components you can reference the **Vercel Storybook Previews** to validate that the component behaves as it should.
+
+   - For framework dependencies, you’ll want to spot-check as much as you can. You should take into consideration the changes in the new version of the package and validate that whatever was changed behaves as expected. Looking for “odd” usage of APIs can be helpful here (eg, are we doing manual `ReactDOM` calls anywhere? etc)
+
+   - For application build dependencies we should already be feeling pretty good at this step, considering the application built and passed CI. But it’s still worth checking the change log to make sure nothing in the build pipeline may have affected the application. However, problems with the application build here may be hard to spot as they will likely be subtle if CI did not catch them.
+
+   - For test and development dependencies, it’s highly likely the application should be working fine. The only scenario where the application could be broken is if the dependency DID have some effect on the application code (in which case it should not be categorized as a pure test or dev dependency).
+
+   This may also be a good time to check if the **size-limit report bot** has left a comment indicating a change in bundle size. If the bundle has increased dramatically it’s worth investigating (likewise if it’s decreased in size dramatically)
+
+4. **Does the development environment work**
+
+   If you’ve upgraded a build or development dependency, you’ll definitely want to make sure the development environment is still working as expected.
+
+   - Does `sentry devserver` still correctly run the client-side application?
+
+   - Does `yarn dev-ui` still run the client-only version of the application?
+
+   Depending on what package you’re upgrading, you’ll what to consider what to test. For example, if you upgraded `fork-ts-checker-webpack-plugin` you’ll want to validate that types are still being checked in development.
+
+5. **Upgrade the package in getsentry if applicable**
+
+   Developer tooling and build packages are currently duplicated in `getsentry`'s `package.json`. For those packages, it is important to remember that you will need to upgrade the package in both places.
+
+6. **Read the `yarn.lock` diff**
+
+   It’s good to understand exactly what has changed with the upgrade. It’s generally a bad thing if upgrading has caused a discrepancy in shared sub dependency versions. For example, if you upgrade `lodash` but another top level package specifies that it needs and older version of `lodash` we will now have **two versions** of `lodash` installed. That means two separate versions of `lodash`l will be shipped!
+
+   Generally you will want to make sure nothing has duplicated versions, in that case you may need to use `[yarn-deduplicate](https://www.npmjs.com/package/yarn-deduplicate)` or in the worst case you may need to upgrade the package which is pulling in the offending older versions.
+
+   See [The Ultimate Guide to yarn.lock Lockfiles](https://www.arahansen.com/the-ultimate-guide-to-yarn-lock-lockfiles/) for an in-depth look on how these work.
+
+7. **Validate in production after the upgrade is merged**
+
+   Finally, in some cases, it may be worth checking that the production application is operating as expected in production. In some rare cases a package may behave differently in production (though this is very rare, as checking the frontend preview is very close to the same production bundle).
+
+## Take advantage of tooling
+
+We use [GitHub’s Dependabot](https://docs.github.com/en/code-security/dependabot) to automatically open pull requests for package upgrades.
+
+It has two primary modes of operation
+
+- **Creating security vulnerability PRs**
+
+  These package version bumps are critical as they fix known CVE vulnerabilities reported in the [GitHub Advisory Database](https://github.com/advisories). These should be merged ASAP.
+  [Learn more about Dependabot alerts on GitHub](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts).
+  Again, keeping dependencies up to date helps to ensure that when a vulnerability is discovered, we’re able to upgrade that package without having to upgrade across multiple minor or even major versions.
+
+- **Opening version upgrade PRs**
+
+  The PRs this mode creates is equivalent to manually doing upgrades of packages in the `package.json`. This is convenient because we can at a glance see if CI is passing for the upgrade. Dependabot also is smart about upgrading groups of packages, for example, it will upgrade `@type/*` packages alongside the library.
+  We configure
+
+**Both of these modes are currently in use for `getsentry/sentry`.** You can look at the [dependabot.yml](https://github.com/getsentry/sentry/blob/master/.github/dependabot.yml) for more specifics on the interval for how often it will automatically open PRs and how many it will open at once.
+
+<Alert level="warning">
+
+We try and use dependabot to stay on top of dependency upgrades! These PRs happen relatively often, so there is a dedicated GitHub team `[@owners-js-deps](https://github.com/orgs/getsentry/teams/owners-js-deps)` which dependabot assigns the PRs for review.
+
+</Alert>
+
+### Merging dependabot PRs
+
+To tackle a dependabot PR there are a few steps to take
+
+1. To get CI to finish running you will need to do two things
+
+   1. Comment `/gcbrun` to trigger off the `self-hosted-github-pr-check`.
+
+   2. Label the PR with [`trigger-getsentry-external`](https://github.com/getsentry/sentry/labels/trigger-getsentry-external) to trigger the `getsentry / frontend` check.
+
+   - <details>
+         <summary>Why do I have to do this?</summary>
+
+     The `dependabot` user is considered an outside contributor so the same precautions must be taken with these PRs as would be with an outside contributor.
+     It’s important to note that this is an explicit action you’re taking to indicate that the upgrade is **generally considered safe**. Since it is theoretically possible for a package to exfiltrate secrets from the `getsentry/getsentry` GitHub actions run by including malicious code in the new package. This situation however is highly unlikely and would need to be a coordinated supply chain attack by one of our already vetted dependencies.
+
+      </details>
+
+2. Very conveniently dependabot includes a section in the PR description for the upgrade with the relevant release notes for the versions being upgraded. **Read this!** If the release notes are not included you may need to track down the CHANGELOG file in the packages repository itself to understand what has changed.
+
+3. All steps in [Steps to validate a successful upgrade](https://www.notion.so/Steps-to-validate-a-successful-upgrade-b2a86b52c333417fb6a2dfba641d8dea) should be followed to validate that the upgrade will not break anything.
+
+4. **Approve and merge the PR**. Ideally, you should get a second pair of eyes on the PR and have a second person review it. But as of now, we have no explicit requirement other than yourself reviewing it.
+
+## References
+
+- [Continuous dependency updates: Improving processes by front-loading pain | Snyk](https://snyk.io/blog/continuous-dependency-updates-improving-processes-front-loading-pain/)
+- [When should dependencies be updated?](https://softwareengineering.stackexchange.com/a/340742)
