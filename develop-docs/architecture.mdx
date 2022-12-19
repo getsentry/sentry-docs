@@ -6,31 +6,8 @@ title: Architecture
 
 Edges represent service dependencies.
 
-```mermaid
-graph TD
-app[Your Application] --> |SDK| lb{{Load Balancer}}
-lb --> |"sentry.example.com/api/\d+/store/"| relay
-lb --> |"sentry.example.com"| sentry_web["Sentry (web)"]
-symbolicator --> sentry_web
-relay --> kafka
-relay --> redis
-sentry_web --> snuba
-sentry_web --> memcached
-sentry_web --> postgres
-sentry_web --> redis
-snuba --> kafka
-snuba --> redis
-snuba --> clickhouse
-kafka --> zookeeper
-sentry_web --> sentry_worker["Sentry (worker)"]
-sentry_worker --> memcached
-sentry_worker --> redis
-sentry_worker --> postgres
-sentry_worker --> symbolicator
-
-click snuba "https://github.com/getsentry/snuba" "Snuba Documentation"
-click relay "https://github.com/getsentry/relay" "Relay Documentation"
-```
+![](https://mermaid.ink/svg/pako:eNqFU01PwzAM_StRTiDGeu8BCbQbcKFc0DwhN_XWqs2H0kQwtv13smSj1SrgFj8_v9gvzo4LXRHP-caiqdnrAhQas3zT3rJ7Y7pGoGu0WrHb2zu2LxaPe9aVu92Txoo9YIdKkD0cQHVlYgDvSTm7ndMnStPRXGiZoWkygOom6522lAHfM0sdbv8uO9IS-v5B5RJ4EQN2FaJr4CtQ_VaWOraobdQZ6KDiDRFtcd3iGLBUNX0o_2GnYuVLnKCSpEBRUzXJGN27jaWp0Fn-qDduYAAmDBGmaGvtewIV2RH90rolMmSnvZ5CbVuyY2sicHJnzPltliF5YcqQmM455MYvAApUnCM5yYDXzpk-z7JN42pfxlXYkEsqWbKbB1oR6QstvAypuG_Az1rp1f7RStt01HqJ9AstPuOSrMSmCou-A8UC0dUkCXgejhWt0XfueOchUNE7XWyV4LmznmbcmwodLRoMX0TyfI1dH9DgVpj5OX2e-IcO3z0YL2M)
+[diagram source](https://mermaid.live/edit#pako:eNqFU01PwzAM_StRTiDGeu8BCbQbcKFc0DwhN_XWqs2H0kQwtv13smSj1SrgFj8_v9gvzo4LXRHP-caiqdnrAhQas3zT3rJ7Y7pGoGu0WrHb2zu2LxaPe9aVu92Txoo9YIdKkD0cQHVlYgDvSTm7ndMnStPRXGiZoWkygOom6522lAHfM0sdbv8uO9IS-v5B5RJ4EQN2FaJr4CtQ_VaWOraobdQZ6KDiDRFtcd3iGLBUNX0o_2GnYuVLnKCSpEBRUzXJGN27jaWp0Fn-qDduYAAmDBGmaGvtewIV2RH90rolMmSnvZ5CbVuyY2sicHJnzPltliF5YcqQmM455MYvAApUnCM5yYDXzpk-z7JN42pfxlXYkEsqWbKbB1oR6QstvAypuG_Az1rp1f7RStt01HqJ9AstPuOSrMSmCou-A8UC0dUkCXgejhWt0XfueOchUNE7XWyV4LmznmbcmwodLRoMX0TyfI1dH9DgVpj5OX2e-IcO3z0YL2M)
 
 ## Event pipeline
 
@@ -47,27 +24,5 @@ This graph is extremely simplified mostly due to layout constraints. Missing fro
 
 For more information read [Path of an event through Relay](https://getsentry.github.io/relay/relay_server/index.html#path-of-an-event-through-relay) and [Event Ingestion Pipeline](https://getsentry.github.io/event-ingestion-graph/).
 
-
-```mermaid
-graph TD
-
-app[Your application] --> |sends crashes| lb{{nginx}}
-lb --> |/api/n/store/| relay
-relay --> kafka[(Ingest Kafka)]
-kafka --> ingest-consumer["Sentry ingest consumer"]
-ingest-consumer --> preprocess-event
-
-subgraph celery["Sentry celery tasks"]
-  preprocess-event --> save-event
-  preprocess-event --> process-event
-  preprocess-event --> symbolicate-event
-  symbolicate-event --> process-event
-  process-event --> save-event
-  save-event --> snuba-kafka[("Snuba Kafka<br>(eventstream)")]
-end
-
-subgraph snuba["Snuba"]
-  snuba-kafka --> snuba-consumer["Snuba consumers"]
-  snuba-consumer --> clickhouse[("Clickhouse")]
-end
-```
+![](https://mermaid.ink/svg/pako:eNp9UsFugzAM_ZUop1Uq4o6mXtbLNO3UXSbSgwluQUCC4qQaovz7QqArbdWdEtvPz_azey51jjzhRwNtwb62QgkFbZt-a2eY_9SlBFtqtWdRtGFnQpUTkwaoQDqzOut7dSzVzzAIVWcTJoa2jFVMVhuMz8xgDZ1Q4QmACg4VpC_v6ohk2cdorfZCBXcAlCESSa3INWhSwXeorOnmALsEBPdpd-BA0BpsjZZIFOHJp45DkcumGSXWaLor6WQzC1RRYGQP-YGU4IQXuieQu6LPiLom00HXBd-D8xnh_21drSmoXAbRLLifeDQnxV8zs3kJQLIGoVkJPi7Br_dGrECQzpmzOgvSRZHltkKZi4Nu0m72JP3AVaEd4djd25-16IWvuUc3UOb-SPuRR3BbYOMxif_meABXW8GFGjwUnNW7TkmeWONwzV2be0G3JfhpGp4coCbvxbz0t_k5HX64_-EXvdQVKA)
+[diagram source](https://mermaid.live/edit#pako:eNp9UsFugzAM_ZUop1Uq4o6mXtbLNO3UXSbSgwluQUCC4qQaovz7QqArbdWdEtvPz_azey51jjzhRwNtwb62QgkFbZt-a2eY_9SlBFtqtWdRtGFnQpUTkwaoQDqzOut7dSzVzzAIVWcTJoa2jFVMVhuMz8xgDZ1Q4QmACg4VpC_v6ohk2cdorfZCBXcAlCESSa3INWhSwXeorOnmALsEBPdpd-BA0BpsjZZIFOHJp45DkcumGSXWaLor6WQzC1RRYGQP-YGU4IQXuieQu6LPiLom00HXBd-D8xnh_21drSmoXAbRLLifeDQnxV8zs3kJQLIGoVkJPi7Br_dGrECQzpmzOgvSRZHltkKZi4Nu0m72JP3AVaEd4djd25-16IWvuUc3UOb-SPuRR3BbYOMxif_meABXW8GFGjwUnNW7TkmeWONwzV2be0G3JfhpGp4coCbvxbz0t_k5HX64_-EXvdQVKA)
