@@ -17,10 +17,10 @@ Sentry Crons allows you to monitor any job running on a scheduled interval. To g
 
 ## Step 2: Set up health checks
 
-Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial check-in emitted before the start of your job execution, and a final check-in emitted after your job completes.
+Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in.
 
-Initial check-in
-To set up your health checks, you must first execute an initial check-in HTTP POST request to the following endpoint:
+Create a check-in
+To set up your health checks, you must first create a check-in via an HTTP POST request to the following endpoint:
 
 ```bash {tabTitle: curl}
 $ curl -X POST \
@@ -34,7 +34,7 @@ $ curl -X POST \
 
 : Required. The Crons ID is provided in the previous cron monitor creation step.
 
-Upon an initial check-in, you will receive a response with a unique identifier for your check-in. Save this ID in your job runtime context to be utilized later:
+Upon check-in creation, you will receive a response with a unique identifier for your check-in. Save this ID in your job runtime context to be utilized later:
 
 ```json
 {
@@ -42,8 +42,8 @@ Upon an initial check-in, you will receive a response with a unique identifier f
 }
 ```
 
-Final check-in (Required)
-After completion of your job, execute a final check-in HTTP PUT request defining it as either a success or failed check-in with the following body:
+Update check-in (Required)
+After completion of your job, execute a final update HTTP PUT request to update your check-in status to be either success of failure based on whether your job executed correctly:
 
 ```bash {tabTitle: curl}
 $ curl -X PUT \
