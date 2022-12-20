@@ -7,20 +7,31 @@ sidebar_order: 0
 
 Sentry Crons allows you to monitor any job running on a scheduled interval. To get started, first create a new crons monitoring service for one of your projects:
 
-1. First, access the Crons product area by clicking “Crons” in the sidebar.
-2. From here, click the "Set Up Cron Monitor" button.
+1. First, access the Crons product area by clicking **“Crons”** in the sidebar.
+2. From here, click the **"Set Up Cron Monitor"** button.
     ![Set Up Crons](cron-setup.png)
-3. Select a project to which you'd like your crons to be attached. The project selected is where any issues in your job execution will be created.
-4. Name your job, for example, "Generate daily invoices".
-5. [add remainings inputs here]
-6. Click on save at the bottom of the page to proceed to the next step.
-7. Save your Crons project ID and project DSN, you'll need these later.
+3. In the details section:
+    - **Project:** Select a project to which you'd like your crons to be attached. The project selected is where any issues in your job execution will be created.
+    - **Name:** Name your job, for example, "Generate Daily Invoices".
+4. In the configuration section:
+    - **Max Runtime:** Enter the maximum time allowed for a job to run before it's considered as failed, in minutes. For example, if you add 30, any job execution that runs for more than 30 minutes will be considered as failed and a new issue will be created in your project.
+    - **Schedule Type:** Select the schedule type on how your job will run. Available options are:
+        - **Crontab:** A Crontab schedule utilizes the Crontab syntax to specify your job run schedule. Use this if your job runs on a more elaborate schedule. For example, with Crontab, you can set up your monitor to verify if your job has run every hour, every day, or in more detail, such as at every half an hour, etc. *Learn more about the [Crontab syntax](https://en.wikipedia.org/wiki/Cron).* Crontab examples:
+            ![every hour contrab](cron-setup-crontab-example-1.png)
+            Example of a Crontab for every hour.
+            ![every hour contrab](cron-setup-crontab-example-2.png)
+            Example of a Crontab for every month on the 1st and 15th day.
+        - **Interval:** Differently from Crontab, the Interval schedule type is much simpler in nature allowing you to specify your job on an *"every X hour(s)"* type of schedule. You can define your frequency from every X minute(s) up to every X year(s).
+    - **Check-in Margin:** Enter the amount of minutes Sentry should wait after the expected check-in time based on the schedule above before your job is considered failed.  For example, if your monitor is configured as a Crontab of `0 * * * *` (every hour at minute 0) and the check-in margin is defined as 10 minutes, your job can check-in up to the 10th minute of every hour before it is considered missed.
+5. Click on **"Next Steps"** at the bottom of the page to proceed and configure your health checks.
+
 
 ## Step 2: Set up health checks
 
 Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in.
 
-Create a check-in
+### Create a Check-in
+
 To set up your health checks, you must first create a check-in via an HTTP POST request to the following endpoint:
 
 ```bash {tabTitle: curl}
@@ -43,7 +54,8 @@ Upon check-in creation, you will receive a response with a unique identifier for
 }
 ```
 
-Update check-in (Required)
+### Update Check-in
+
 After completion of your job, execute a final update HTTP PUT request to update your check-in status to be either success of failure based on whether your job executed correctly:
 
 ```bash {tabTitle: curl}
@@ -56,15 +68,15 @@ $ curl -X PUT \
 
 `MONITOR_ID`:
 
-: Required. The Crons ID is provided in the previous cron monitor creation step.
+: Required. The Crons Monitor ID is provided in the previous cron monitor creation step.
 
 `CHECK_IN_ID`:
 
-: Required. The check-in ID is provided in the response to the initial check-in.
+: Required. The check-in ID is provided in the response to your check-in creation.
 
 `STATUS`:
 
-: Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are success or failure.
+: Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are `ok` or `error`.
 
 `DURATION`:
 
