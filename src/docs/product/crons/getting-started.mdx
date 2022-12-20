@@ -1,0 +1,68 @@
+---
+title: Set Up
+sidebar_order: 0
+---
+
+## Step 1: Create a Cron monitor
+
+Sentry Crons allows you to monitor any job running on a scheduled interval. To get started, first create a new crons monitoring service for one of your projects:
+
+1. First, access the Crons product area by clicking “Crons” in the sidebar.
+2. From here, click the "Set Up Cron Monitor" button.
+3. Select a project to which you'd like your crons to be attached. The project selected is where any issues in your job execution will be created.
+4. Name your job, for example, "Generate daily invoices".
+5. [add remainings inputs here]
+6. Click on save at the bottom of the page to proceed to the next step.
+7. Save your Crons project ID and project DSN, you'll need these later.
+
+## Step 2: Set up health checks
+
+Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial check-in emitted before the start of your job execution, and a final check-in emitted after your job completes.
+
+Initial check-in
+To set up your health checks, you must first execute an initial check-in HTTP POST request to the following endpoint:
+
+```bash
+$ curl -X POST \
+    'https://sentry.io/api/0/monitors/9d47c17f-9f9d-42b0-9792-499bdf732624/checkins/' \
+    --header 'Authorization: DSN {DSN}' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "in_progress"}'
+```
+
+`CRONS_ID`:
+
+: Required. The Crons ID is provided in the previous cron monitor creation step.
+
+`PROJECT_DSN`:
+
+: Required. The Project DSN is provided after you create your first cron monitor, and it can also be found on your project's configuration page.
+
+Upon an initial check-in, you will receive a response with a unique identifier for your check-in. Save this ID in your job runtime context to be utilized later:
+
+[request response here]
+
+Final check-in (Required)
+After completion of your job, execute a final check-in HTTP PUT request defining it as either a success or failed check-in with the following body:
+
+```bash
+$ curl -X PUT \
+    'https://sentry.io/api/0/monitors/9d47c17f-9f9d-42b0-9792-499bdf732624/checkins/{checkInId}/' \
+    --header 'Authorization: DSN {DSN}' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "ok", "duration": 3000}'
+```
+
+`CHECK_IN_ID`:
+
+: Required. The check-in ID is provided in the response to the initial check-in.
+
+`STATUS`:
+
+: Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are success or failure.
+
+`DURATION`:
+
+: Recommended. The runtime of the job in milliseconds.
+
+Once these health checks are set up, your cron monitor is ready to observe and report on future scheduled job executions.
