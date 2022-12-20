@@ -22,21 +22,17 @@ Sentry monitors your job status via regular health checks emitted from your appl
 Initial check-in
 To set up your health checks, you must first execute an initial check-in HTTP POST request to the following endpoint:
 
-```bash
+```bash {tabTitle: curl}
 $ curl -X POST \
-    'https://sentry.io/api/0/monitors/9d47c17f-9f9d-42b0-9792-499bdf732624/checkins/' \
-    --header 'Authorization: DSN {DSN}' \
+    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "in_progress"}'
 ```
 
-`CRONS_ID`:
+`MONITOR_ID`:
 
 : Required. The Crons ID is provided in the previous cron monitor creation step.
-
-`PROJECT_DSN`:
-
-: Required. The Project DSN is provided after you create your first cron monitor, and it can also be found on your project's configuration page.
 
 Upon an initial check-in, you will receive a response with a unique identifier for your check-in. Save this ID in your job runtime context to be utilized later:
 
@@ -45,13 +41,17 @@ Upon an initial check-in, you will receive a response with a unique identifier f
 Final check-in (Required)
 After completion of your job, execute a final check-in HTTP PUT request defining it as either a success or failed check-in with the following body:
 
-```bash
+```bash {tabTitle: curl}
 $ curl -X PUT \
-    'https://sentry.io/api/0/monitors/9d47c17f-9f9d-42b0-9792-499bdf732624/checkins/{checkInId}/' \
-    --header 'Authorization: DSN {DSN}' \
+    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECK_IN_ID}/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "ok", "duration": 3000}'
 ```
+
+`MONITOR_ID`:
+
+: Required. The Crons ID is provided in the previous cron monitor creation step.
 
 `CHECK_IN_ID`:
 
