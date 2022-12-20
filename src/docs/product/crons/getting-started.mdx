@@ -28,57 +28,39 @@ Sentry Crons allows you to monitor any job running on a scheduled interval. To g
 
 ## Step 2: Set up health checks
 
-Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in.
+Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in. Creating these health checks can be accomplished automatically using the [CLI](/product/cli/installation/) or manually via HTTP.
 
-### Create a Check-in
+```bash
+sentry-cli monitors run <monitor_id> -- <command> <args>
+```
+```python
+import requests
 
-To set up your health checks, you must first create a check-in via an HTTP POST request to the following endpoint:
+headers = {'Authorization': 'DSN ___PUBLIC_DSN___'}
 
-```bash {tabTitle: curl}
-$ curl -X POST \
-    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "in_progress"}'
+# Create the check-in
+json_data = {'status': 'in_progress'}
+response = requests.post('https://sentry.io/api/0/monitors/<monitor_id>/checkins/', headers=headers, json=json_data)
+check_in_id = response.json()['id']
+
+# Execute your scheduled task code here...
+
+# Update the check-in status (required) and duration (optional)
+json_data = {'status': 'ok', 'duration': 3000}
+response = requests.put(f'https://sentry.io/api/0/monitors/<monitor_id>/checkins/{check_in_id}/', headers=headers, json=json_data)
 ```
 
-`MONITOR_ID`:
+### API Parameters
+`monitor_id`:
 
-: Required. The Crons ID is provided in the previous cron monitor creation step.
+: Required. The id of your monitor. It can be found on the monitor details page under the name.
+![Monitor Id](cron-id-example.png)
 
-Upon check-in creation, you will receive a response with a unique identifier for your check-in. Save this ID in your job runtime context to be utilized later:
-
-```json
-{
-  "id": <example-check-in-id-here>
-}
-```
-
-### Update Check-in
-
-After completion of your job, execute a final update HTTP PUT request to update your check-in status to be either success of failure based on whether your job executed correctly:
-
-```bash {tabTitle: curl}
-$ curl -X PUT \
-    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECK_IN_ID}/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok", "duration": 3000}'
-```
-
-`MONITOR_ID`:
-
-: Required. The Crons Monitor ID is provided in the previous cron monitor creation step.
-
-`CHECK_IN_ID`:
-
-: Required. The check-in ID is provided in the response to your check-in creation.
-
-`STATUS`:
+`status`:
 
 : Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are `ok` or `error`.
 
-`DURATION`:
+`duration`:
 
 : Optional. The runtime of the job in milliseconds. If this value is not provided, a duration will be automatically calculated based on the amount of time elapsed from check-in creation to updating a check-in as successful or failed.
 
