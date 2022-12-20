@@ -5,13 +5,13 @@ sidebar_order: 0
 
 ## Step 1: Create a Cron Monitor
 
-Sentry Crons allows you to monitor any job running on a scheduled interval. To get started, first create a new cron monitoring service for one of your projects:
+Sentry Cron Monitoring allows you to monitor any job running on a scheduled interval. To get started, first create a new cron monitoring service for one of your projects:
 
-1. First, access the Crons product area by clicking **“Crons”** in the sidebar.
+1. First, access the Cron Monitor product area by clicking **“Crons”** in the sidebar.
 2. From here, click the **"Set Up Cron Monitor"** button.
-    ![Set Up Crons](cron-setup.png)
+    ![Set Up Cron Monitor](cron-setup.png)
 3. In the details section:
-    - **Project:** Select a project to which you'd like your crons to be attached. The project selected is where any issues in your job execution will be created.
+    - **Project:** Select a project to which you'd like your Cron Monitor to be attached. The project selected is where any issues in your job execution will be created.
     - **Name:** Name your job, for example, "Generate Daily Invoices".
 4. In the configuration section:
     - **Max Runtime:** Enter the maximum time allowed for a job to run before it's considered as failed, in minutes. For example, if you add 30, any job execution that runs for more than 30 minutes will be considered as failed and a new issue will be created in your project.
@@ -28,10 +28,16 @@ Sentry Crons allows you to monitor any job running on a scheduled interval. To g
 
 ## Step 2: Set up health checks
 
-Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in. Creating these health checks can be accomplished automatically using the [CLI](/product/cli/installation/) or manually via HTTP.
+Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in.
 
-```bash
-sentry-cli monitors run <monitor_id> -- <command> <args>
+Creating these health checks can be accomplished automatically using the Sentry's CLI or manually via HTTP. To get started, [install](/product/cli/installation) and [configure](/product/cli/configuration) your CLI, or simply use the example below to construct an HTTP request in your favorite language:
+
+
+```bash {tabTitle: CLI}
+# sentry-cli monitors run <monitor_id> -- <command> <args>
+
+# Example for a Python job:
+sentry-cli monitors run 63261d96-2027-472a-a8bb-9895dbebd793 -- python path/to/file.py
 ```
 ```python
 import requests
@@ -51,7 +57,7 @@ json_data = {'status': 'ok', 'duration': 3000}
 response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/{check_in_id}/', headers=headers, json=json_data)
 ```
 
-### API Parameters
+### Request Parameters
 `monitor_id`:
 
 : Required. The id of your monitor. It can be found on the monitor details page under the name.
@@ -59,10 +65,10 @@ response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins
 
 `status`:
 
-: Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are `ok` or `error`.
+: Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are `in_progress`, `ok` or `error`.
 
 `duration`:
 
 : Optional. The runtime of the job in milliseconds. If this value is not provided, a duration will be automatically calculated based on the amount of time elapsed from check-in creation to updating a check-in as successful or failed.
 
-Once these health checks are set up, your cron monitor is ready to observe and report on future scheduled job executions.
+Once these health checks are set up, your Cron Monitor is ready to observe and report on future scheduled job executions.
