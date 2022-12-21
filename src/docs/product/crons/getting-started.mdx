@@ -5,32 +5,30 @@ sidebar_order: 0
 
 ## Step 1: Create a Cron Monitor
 
-Sentry Cron Monitoring allows you to monitor any job running on a scheduled interval. To get started, first create a new cron monitoring service for one of your projects:
+Sentry Cron Monitoring allows you to monitor any job running on a scheduled interval. To get started, create a new cron monitoring service for one of your projects:
 
-1. First, access the Cron Monitor product area by clicking **“Crons”** in the sidebar.
-2. From here, click the **"Set Up Cron Monitor"** button.
+1. Select **“Crons”** from the sidebar.
+2. Click the **"Set Up Cron Monitor"** button.
     ![Set Up Cron Monitor](cron-setup.png)
-3. In the details section:
-    - **Project:** Select a project to which you'd like your Cron Monitor to be attached. The project selected is where any issues in your job execution will be created.
-    - **Name:** Name your job, for example, "Generate Daily Invoices".
-4. In the configuration section:
-    - **Max Runtime:** Enter the maximum time allowed for a job to run before it's considered as failed, in minutes. For example, if you add 30, any job execution that runs for more than 30 minutes will be considered as failed and a new issue will be created in your project.
-    - **Schedule Type:** Select the schedule type on how your job will run. Available options are:
-        - **Crontab:** A Crontab schedule utilizes the Crontab syntax to specify your job run schedule. Use this if your job runs on a more elaborate schedule. For example, with Crontab, you can set up your monitor to verify if your job has run every hour, every day, or in more detail, such as at every half an hour, etc. *Learn more about the [Crontab syntax](https://en.wikipedia.org/wiki/Cron).* Crontab examples:
-            ![Example of an every hour Crontab](cron-setup-crontab-example-1.png)
-            Example of a Crontab for every hour.
-            ![Example of an every hour Crontab](cron-setup-crontab-example-2.png)
-            Example of a Crontab for every month on the 1st and 15th day.
-        - **Interval:** Differently from Crontab, the Interval schedule type is much simpler in nature allowing you to specify your job on an *"every X hour(s)"* type of schedule. You can define your frequency from every X minute(s) up to every X year(s).
-    - **Check-in Margin:** Enter the amount of minutes Sentry should wait after the expected check-in time based on the schedule above before your job is considered failed.  For example, if your monitor is configured as a Crontab of `0 * * * *` (every hour at minute 0) and the check-in margin is defined as 10 minutes, your job can check-in up to the 10th minute of every hour before it is considered missed.
-5. Click on **"Next Steps"** at the bottom of the page to proceed and configure your health checks.
+3. In the details section, select the project to which you'd like your Cron Monitor to be attached. That's where you'll see any job execution issues.
+4. Name your job. For example, "Generate Daily Invoices".
+5. In the configuration section, enter the maximum number of minutes allowed for a job to run before it's considered failed. For example, if you enter 30, any job running for more than 30 minutes will be considered failed and a new issue will be generated.
+6. Select whether you'd like to schedule job monitors using Crontab syntax or time intervals:
+    - **Crontab:** A Crontab schedule uses Crontab syntax. This works well if your job runs on a very rigorous schedule. Crontab syntax lets you verify if your job has run every day, every hour, or even in smaller increments. *Learn more about the [Crontab syntax](https://en.wikipedia.org/wiki/Cron).* Crontab examples:
+        ![Example of an every hour Crontab](cron-setup-crontab-example-1.png)
+        Example of a Crontab for every hour.
+        ![Example of an every hour Crontab](cron-setup-crontab-example-2.png)
+        Example of a Crontab for every month on the 1st and 15th day.
+    - **Interval:** If getting granular with scheduling is less important, the Interval schedule type may be better suited for your needs. It allows you to schedule your job to run every X years, hours, minutes, or anything in-between.
+7. Enter the acceptable number of minutes an expected check-in can be late by before it's considered failed, based on the schedule above. For example, if your monitor is configured as a Crontab of `0 * * * *` (every hour at minute 0) and the check-in margin is defined as 10 minutes, your job won't be considered failed as long as it checks in by hour X, minute 10.
+8. Click on **"Next Steps"** at the bottom of the page to configure your health checks.
 
 
-## Step 2: Set up health checks
+## Step 2: Set Up Health Checks
 
-Sentry monitors your job status via regular health checks emitted from your application. A health check constitutes two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes to update the status of your check-in.
+Sentry monitors your job status via regular health checks emitted by your application. A health check consists of two (2) HTTP "check-in" requests: an initial request emitted before the start of your job execution to create a check-in, and a final update request emitted after your job completes, to update the status of your check-in.
 
-Creating these health checks can be accomplished automatically using the Sentry's CLI or manually via HTTP. To get started, [install](/product/cli/installation) and [configure](/product/cli/configuration) your CLI, or simply use the example below to construct an HTTP request in your favorite language:
+Creating these health checks can be done automatically, using Sentry's CLI, or manually via HTTP. To get started, [install](/product/cli/installation) and [configure](/product/cli/configuration) your CLI, or simply use the example below to construct an HTTP request in your favorite language:
 
 
 ```bash {tabTitle: CLI}
@@ -60,15 +58,15 @@ response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins
 ### Request Parameters
 `monitor_id`:
 
-: Required. The id of your monitor. It can be found on the monitor details page under the name.
+: **Required.** Your monitor ID can be found on the monitor details page.
 ![Monitor Id](cron-id-example.png)
 
 `status`:
 
-: Required. The status of your job execution, if it was completed successfully or unsuccessfully. Values accepted are `in_progress`, `ok` or `error`.
+: **Required.** The status of your job execution and whether it was completed successfully or unsuccessfully. The values accepted are `in_progress`, `ok` or `error`.
 
 `duration`:
 
-: Optional. The runtime of the job in milliseconds. If this value is not provided, a duration will be automatically calculated based on the amount of time elapsed from check-in creation to updating a check-in as successful or failed.
+: **Optional.** The runtime of the job in milliseconds. If this value is not provided, a duration will be automatically calculated based on the amount of time elapsed from check-in creation to updating a check-in as successful or failed.
 
 Once these health checks are set up, your Cron Monitor is ready to observe and report on future scheduled job executions.
