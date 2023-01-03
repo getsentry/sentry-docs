@@ -55,32 +55,37 @@ folder or ZIP archive.
 
 ## Creating Source Bundles
 
-To get inline source context in stack traces in the Sentry UI, `sentry-cli` can
-scan debug files for references to source code files, resolve them in the local
-file system and bundle them up. The resulting source bundle is an archive
-containing all source files referenced by a specific debug information file.
+To get inline source context in stack traces in the Sentry UI, Sentry needs so-called
+__source bundles__, an archive containing all source files referenced by a specific
+debug information file. You can use sentry-cli to scan debug files for references to
+source code files, resolve them in the local file system and bundle them up in a source
+bundle. Either use the `difutil bundle-sources` command or add the `--include-sources`
+option to the `upload-dif` command.
 
-This is particularly useful when building and uploading debug information files
-are detached. In this case, a source bundle can be created when building and can
-be uploaded at any later point in time with `sentry-cli upload-dif`.
+### Dif Util
 
-To create a source bundle, use the `difutil bundle-sources` command on a list of
-debug information files:
+This option is handy when building and uploading debug information files are detached.
+
+First, use the `difutil bundle-sources` command on a list of debug information files to
+create the source bundle. To create multiple source bundles for all debug information
+files, use the command on each file individually.:
 
 ```bash
 # on the build machine:
 sentry-cli difutil bundle-sources /path/to/files...
+```
 
-# at any later time:
+Then upload the source bundle to Sentry at any later time:
+
+```bash
 sentry-cli upload-dif --type sourcebundle /path/to/bundles...
 ```
 
-To create multiple source bundles for all debug information files, use the
-command on each file individually.
+### Include Sources
 
-Alternatively, add the `--include-sources` option to the `upload-dif` command,
-which generates source bundles on the fly during the upload. This requires that
-the upload is performed on the same machine as the application build:
+Add the `--include-sources` option to the `upload-dif` command, which generates
+source bundles on the fly during the upload. This requires that the upload is
+performed on the same machine as the application build:
 
 ```bash
 sentry-cli upload-dif --include-sources /path/to/files...
