@@ -66,7 +66,7 @@ Below is a list of issue-level and event-level keys and tokens reserved and know
 - I - issues
 - R - replays
 
-The Xs in these columns of the table indicate whether the property is an event property, an issue property, or a combination of these.
+The Xs in these columns of the table indicate whether the property is an event property, an issue property, a replay property or a combination of the three.
 
 <Note>
 
@@ -85,13 +85,13 @@ Release properties overlap with event and issue search properties, so they don't
 | assigned_<br></br>or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/issues/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or # followed by the team name, that is `#team-name`. |  | x |  | team or org user |
 | avg(field) | Returns results with matching averages for the field selected. The field can be either a number or a duration. Typically used with a comparison operator. | x |  |  | matches field |
 | bookmarks | Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or `me` for yourself. |  | x |  | team or org user |
-| browser.name | Name of the users web browser. For example, `Chrome`, `Firefox`, or `Safari` |  |  | x | string |
+| browser.name | Name of the users' web browser. For example, `Chrome`, `Firefox`, or `Safari` |  |  | x | string |
 | browser.version | The version string of the browser. |  |  | x | string |
+| count() | Returns results with a matching count. (Same as `timesSeen` in issue search.) Doesn't take a parameter. | x |  |  | number |
 | count_if<br></br>(column,operator,value) | Returns results with a matching count that satisfy the condition passed to the parameters of the function. | x |  |  | number |
 | count_miserable<br></br>(field,threshold) | Returns results with a matching count of unique instances of the field that fall above the miserable threshold. | x |  |  | number |
 | count_unique(field) | Returns results with a matching count of the unique instances of the field entered. | x |  |  | number |
 | count_web_vitals(vital,threshold) | Returns results with a matching count that meet a web vitals quality threshold (`poor`, `meh`, `good`, or `any`). | x |  |  | number |
-| count() | Returns results with a matching count. (Same as `timesSeen` in issue search.) Doesn't take a parameter. | x |  |  | number |
 | countErrors | The number of errors within a replay. |  |  | x | number |
 | countSegments | The number of segments within a replay. More segments represent more activity over time. |  |  | x | number |
 | countUrls | The number of URLs that the user visited during a replay recording. |  |  | x | number |
@@ -114,7 +114,7 @@ Release properties overlap with event and issue search properties, so they don't
 | device.simulator | Indicates whether this device is a simulator or a real device. A string that is either `True` or `False`. | x |  |  | string |
 | device.uuid | Deprecated | x | x |  | uuid |
 | dist | Distinguishes build or deployment variants of the same release of an application. For example, the dist can be the build number of an XCode build or the version code of an Android build. | x | x | x | string |
-| duration | Duration of a Replay, in seconds |  |  | x | number |
+| duration | Duration of a replay in seconds. |  |  | x | number |
 | environment | Refers to your code deployment naming convention. For example, *development*, *testing*, *staging* and so on. [Learn more](/product/sentry-basics/environments/).<br></br><br></br>In some pages of [sentry.io](https://sentry.io), you filter on environment using a dropdown. | x |  |  | string |
 | epm() | Returns results with a matching events-per-minute count. Doesn't take a parameter. | x |  |  | number |
 | eps() | Returns results with a matching events-per-second count. Doesn't take a parameter. | x |  |  | number |
@@ -174,13 +174,13 @@ Release properties overlap with event and issue search properties, so they don't
 | platform.name | Name of the platform |  | x |  | string |
 | project | The name of the project. In **Issues** you can only search by project ID.<br></br><br></br>In some pages of [sentry.io](https://sentry.io), you filter on project using a dropdown. | x | x |  | string |
 | pXY(duration field) | Returns results with an approximate percentile of the field. Replace "XY" with 50, 75, 95, 99, or 100. For example, if you wanted to find the 50th percentile of transaction durations, you would enter `p50(transaction.duration)`. | x |  |  | number |
-| release | A release is a version of your code deployed to an environment. You can create a token with an exact match on the version of a release, or `release:latest` to pick the most recent release. | x | x |  | string |
-| releases | A release is a version of your code deployed to an environment. You can create a token with an exact match on the version of a release, or `release:latest` to pick the most recent release. |  |  | x | string |
+| release | A release is a version of your code deployed to an environment. You can create a token with an exact match of the version of a release, or `release:latest` to pick the most recent release. | x | x |  | string |
+| releases | A release is a version of your code deployed to an environment. You can create a token with an exact match of the version of a release, or `release:latest` to pick the most recent release. |  |  | x | string |
 | release.build | The number that identifies an iteration of your app. For example, `CFBundleVersion` on iOS or `versionCode` on Android. [Learn more](/product/releases/usage/sorting-filtering/). | x | x |  | number |
 | release.package | The unique identifier of the project/app. For example, `CFBundleIdentifier` on iOS or `packageName` on Android. [Learn more](/product/releases/usage/sorting-filtering/). | x | x |  | string |
 | release.stage | The usage your release is seeing relative to other releases. Values can be `adopted`, `low`, or `replaced`. [Learn more](/product/releases/health/#adoption-stages). | x | x |  | string |
 | release.version | A shorter version of the name; name without the package or short version of the hash. [Learn more](/product/releases/usage/sorting-filtering/). | x | x |  | string |
-| replayType | The reason a replay was triggered. For example, `session` when `replaysSessionSampleRate` takes effect, or `error` when the session is not sampled, but `replaysOnErrorSampleRate` is instead. |  |  | x | string |
+| replayType | The reason a replay was triggered. For example, `session` when `replaysSessionSampleRate` takes effect, or `error` when `replaysOnErrorSampleRate` is sampled instead of `session`. |  |  | x | string |
 | sdk.name | Name of the Sentry SDK that sent the event. | x | x | x | string |
 | sdk.version | Version of the Sentry SDK that sent the event. | x | x | x | string |
 | spans.browser | Cumulative browser time for a transaction, based on the span operations. | x |  |  | duration |
@@ -212,8 +212,8 @@ Release properties overlap with event and issue search properties, so they don't
 | user.display | In order, the first available user field available: email, then username, ID, and then IP address. | x |  |  | string |
 | user.email | An alternative, or addition, to the username. Sentry is aware of email addresses and can therefore display things such as Gravatars and unlock messaging capabilities. | x | x | x | string |
 | user.id | Application-specific internal identifier for the user. | x | x | x | string |
-| user.ip | User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. | x | x |  | string |
-| user.ipAddress | User's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. |  |  | x | string |
+| user.ip | User's IP address. Sentry uses the IP address as a unique identifier for unauthenticated users. | x | x |  | string |
+| user.ipAddress | User's IP address. Sentry uses the IP address as a unique identifier for unauthenticated users. |  |  | x | string |
 | user.name | Username, which is typically a better label than the `user.id`. |  |  | x | string |
 | user.username | Username, which is typically a better label than the `user.id`. | x | x |  | string |
 | user_misery(number) | Returns transactions with the defined user misery value. [User Misery](/product/performance/metrics/#user-misery) is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (in milliseconds). It highlights transactions that have the highest impact on users. | x |  |  | number |
