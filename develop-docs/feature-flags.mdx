@@ -68,11 +68,15 @@ add a third optional boolean parameter when adding the feature, for example:
 default_manager.add('organizations:test-feature', OrganizationFeature, True)
 ```
 
-If you don't plan to use flagr don't pass this third parameter, for example: 
+If you don't plan to use flagr don't pass this third parameter, for example:
 
 ```python
 default_manager.add('organizations:test-feature', OrganizationFeature)
 ```
+
+Flagr has significant latency, and is somewhat flakey. If you're working in
+high throughput areas like Ingest or Relay, Flagr is not fast enough or
+reliable enough. In these cases, you should use [options](/options/) instead.
 
 ### Add it to the Organization Model Serializer
 
@@ -192,7 +196,7 @@ flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
 Flagr is used to configure flags in production.
 
 If you want to enable your feature for a subset of production users, you will
-need to set up your feature in Flagr. If you haven't already make sure that 
+need to set up your feature in Flagr. If you haven't already make sure that
 when you add your flag in sentry that you passed the third option so that Flagr
 knows to check this feature in production.
 
@@ -404,7 +408,7 @@ clicking **Delete Flag** at the bottom of the page.
 ## Getsentry feature handlers
 
 Getsentry contains a variety of feature handlers that override the
-`SENTRY_FEATURES` map. 
+`SENTRY_FEATURES` map.
 
 ### Plan specific features
 
@@ -418,7 +422,7 @@ you need to:
 ### Custom handlers
 
 If your feature requires additional logic to become active, you can also
-implement a feature handler in getsentry, follow these steps:
+implement a feature handler in getsentry. For example, you can create a feature flag that is backed by [options](/options/). follow these steps:
 
 1. Disable the feature in `getsentry/conf/settings/defaults.py` by updating `SENTRY_FEATURES`.
 2. Add a new feature handler class in `getsentry/features.py` that determines availability of the feature based on the organization or actor.
