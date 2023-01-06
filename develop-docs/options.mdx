@@ -1,0 +1,134 @@
+---
+title: 'Options'
+---
+
+Options are a way to store generic system-wide configuration. They serve a similar purpose to configuration files, but they are backed by a database, so it's possible to change them at runtime without a deploy. Options are stored in the database and cached, so they are performant and reliable. This makes options well-suited for rates, quotas, and limits.
+
+## Adding New Options
+
+To add a new system option, add it to [`sentry/options/defaults.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/options/defaults.py) by registering it. e.g.,
+
+```python
+register("performance.some-feature-rate", default=0.0)
+```
+
+Follow these rules when adding new options:
+
+- namespace your option (e.g., `feature-scope.feature-name`)
+- colocate your new option with related existing options
+- use dashes and not underscores
+- always set a default value with `default=`
+
+The value of an option can be any pickleable value.
+
+<Alert level="warning">
+  Always split up registering the new option and the code that relies on the new option.
+  Register new options in their own pull requests (e.g.,{' '}
+  <Link to="https://github.com/getsentry/sentry/pull/26009">#26009</Link>
+  ), ahead of the code changes (e.g., <Link to="https://github.com/getsentry/sentry/pull/26003">
+    #26003
+  </Link>).
+</Alert>
+
+## Using Options
+
+To check the value of an option, import the `options` module and use the `get` method. e.g.,
+
+```python
+from sentry import options
+feature_rate = options.get("performance.some-feature-rate")
+```
+
+## Setting Options
+
+You can change the value of an option using `sentry shell`, or by using the [options UI](#options-ui).
+
+### Sentry Shell
+
+You can set option values using `sentry shell`. e.g.,
+
+```bash
+sentry shell
+```
+
+then,
+
+```python
+from sentry import options
+options.set("performance.some-feature-rate", 0.01)
+```
+
+<Alert level="info">
+  If you do not have access to the shell, you'll need to contact OPS to set the option
+  value for you.
+</Alert>
+
+### Options UI
+
+If you expect to frequently update your option, you can make it editable in the options UI. The `/admin/settings` page in the Sentry app has inputs for a small set of the available options. You can submit a pull request to add your option to the UI by [updating the corresponding React view](https://github.com/getsentry/sentry/blob/master/static/app/views/admin/options.tsx). The options UI is only available to superusers. Editing options requires the `"options.admin"` permission, and all changes are added to an audit log.
+
+## Using Options for Feature Rollout
+
+If you're working on a system-wide feature, you may choose to use options for your rollout instead of feature flags. Unlike feature flags, options don't allow for easy segmentation, but they are performant, stable, and simple to implement. e.g.,
+
+```python
+import random
+from sentry import options
+
+rate = options.get("performance.some-feature-rate")
+if rate > random.random():
+    do_feature_stuff()
+```
+
+However, be careful! Using `random.random` will cause your feature to be enabled and disabled randomly between page requests. This may be unacceptable for user-facing features. To avoid this, you can use the `sample_modulo` helper. e.g.,
+
+```python
+from sentry.utils.options import sample_modulo
+
+if sample_modulo("performance.some-feature-rate", organization.id):
+    do_feature_stuff()
+```
+
+`sample_modulo` guarantees that for a given value of the option and a given organization it will always return the same boolean value.
+
+## Setting Options in Tests
+
+In order to test features that check options, you can use the `override_options` decorator. e.g.,
+
+```python
+from sentry.testutils.helpers import override_options
+
+@override_options({"performance.some-feature-rate": 1.0})
+def test_some_feature(self):
+    ...
+```
+
+There is also a matching `override_options` context manager:
+
+```python
+from sentry.testutils.helpers.options import override_options
+
+def test_some_feature(self):
+    with override_options({"performance.some-feature-rate": 1.0}):
+        ...
+```
+
+## Removing Options
+
+If your option is short-lived, you should remove it once it's no longer needed. First, create a pull request to remove the option and its usage. Once it's merged and deployed, remove the option from the database. To do this, you can use the Sentry shell. e.g.,
+
+```bash
+sentry shell
+```
+
+then,
+
+```python
+from sentry import options
+options.delete("performance.some-feature-rate")
+```
+
+<Alert level="info">
+  If you do not have access to the shell, you'll need to contact OPS to remove the option
+  for you.
+</Alert>
