@@ -29,6 +29,10 @@ The evidence for an N+1 queries problem has four main aspects:
 
 ![N+1 Query span evidence](n-plus-one-span-evidence.png)
 
+## Fingerprinting
+
+Sentry computes the issue fingerprint based on the parent span, the source span, and the repeating spans. If you're finding that Sentry is failing to correctly group N+1 query issues, make sure that the database spans in your transactions have parameterized queries as the span description. e.g., the span description `SELECT * FROM books WHERE books.id = 1` is not parameterized correctly, since it includes the book ID. The book ID parameter would vary between queries, and would create different fingerprints and therefore separate issues. The span description should look like this: `SELECT * FROM books WHERE books.id = %s`, or similar. Sentry attempts to parameterize queries, but it may miss some cases.
+
 ## Example
 
 Consider a book review website. It has two ORM models, `Book` and `Author`, each with a corresponding database table. The website shows a list of the ten oldest books and their respective authors. The code might look like this:
