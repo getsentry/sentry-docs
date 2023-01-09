@@ -43,6 +43,7 @@ func application(_ application: UIApplication,
         options.enableFileIOTracking = true
         options.enableCoreDataTracking = true
         options.enableCaptureFailedRequests = true
+        options.enableMetricKit = true
     }
 
     return true
@@ -70,6 +71,7 @@ struct SwiftUIApp: App {
             options.enableFileIOTracking = true
             options.enableCoreDataTracking = true
             options.enableCaptureFailedRequests = true
+            options.enableMetricKit = true
         }
     }
 }
@@ -121,5 +123,6 @@ SentrySDK.start { options in
     options.enablePreWarmedAppStartTracking = true
     options.attachScreenshot = true
     options.attachViewHierarchy = true
+    options.enableMetricKit = true
 }
 ```
