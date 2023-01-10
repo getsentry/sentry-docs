@@ -22,6 +22,7 @@ If you change your organization slug, you'll need to make the same update in the
 - Deactivate users
 - Push groups
 - Import groups
+- Configure organization-level roles
 
 ### Requirements
 
@@ -58,14 +59,86 @@ Okta SCIM provisioning requires:
    ![Okta Save SCIM Settings](scim-okta-edit.png)
 
 1. Enable both "Create Users" and "Deactivate Users", then "Save" your changes.
+    ![Okta Create and Deactivate Users](okta-user-sync.png)
 
 As a result of these changes, users who are assigned will be sent an invitation email. When a user is un-assigned, their membership object in Sentry will be deleted.
 
 You can use "Push Groups" to sync and assign groups in Okta; they will be reflected in Sentry teams.
 
-### Known Issues / Troubleshooting
+### Configuring organization-level roles (Beta)
 
-- Sentry does not currently support setting any User attributes other than `userName` and `active`.
+<Alert level="warning">
+
+Organization role provisioning is in beta. If you'd like to try this feature, contact support@sentry.io.
+
+</Alert>
+
+Here's how to assign an organization-level role to an Okta group:
+
+1. Add a new custom attribute to your Okta application profile.
+
+  a. Navigate to your application settings in Okta
+
+  b. Under the "Provisioning" tab, select "Go to Profile Editor"
+        ![Okta Provisioning Page](okta-go-to-profile.png)
+
+  c. Select "+ Add Attribute"
+        ![Okta Add Attribute](okta-add-attribute.png)
+
+  d. Fill out the form with the following settings (you can set whatever value you want for any setting not listed below):
+
+    * Data Type: `string`
+    * Display Name: `Org Role`
+    * Variable Name: `sentryOrgRole`
+    * External name: `sentryOrgRole`
+    * External namespace: `urn:ietf:params:scim:schemas:core:2.0:User`
+    * Attribute type: `Group`
+  ![Okta Custom Attribute](./okta-custom-attribute-values.png)
+
+
+2. Assign a group to your okta application
+    ![Okta Assign Group](okta-assign-group.png)
+
+3. In the form, enter the string for the org-level role
+    ![Okta Set Role](okta-set-group-attribute.png)
+
+- If the `sentryOrgField` field is left blank, Group members will be provisioned with the default organization-level role. This default role is configured in Sentry, under Settings -> Organization -> Auth. Otherwise, the role must be one of the following:
+  - Admin
+  - Manager
+  - Billing
+  - Member
+- Invalid role names will prevent group members from being provisioned. To try again, you'll need to remove the group first.
+- For security, The "Owner" role cannot be provisioned through SCIM.
+  - For self-hosted users with custom roles, this extends to any role with the `org:admin` permission
+
+<Alert level="note">
+
+If a user is a member of multiple Okta groups, only the attributes set by the first group will be used.
+
+</Alert>
+
+### Troubleshooting
+
+#### I get an error in Okta when provisioning a user saying "Matching user not found"
+
+Make sure that `Create User` and `Deactivate User` are enabled in the "Provisioning" tab of your Sentry application in Okta
+
+#### I pushed a group to Sentry but the team is empty. (Or) I assigned Sentry to a group but no team was created?
+
+In Okta, there's a difference between pushing and assigning.
+
+Assigning Sentry to a group is the same as assigning Sentry to every member of that group. Functionally, this
+provisions every group member within Sentry.
+
+Pushing a group, on the other hand, only tells Sentry to create a new team with the same name as the Okta group. Group
+members will be added to the Sentry team only if the user is already provisioned.
+
+In order to sync a group in Okta as a team in Sentry:
+1. Assign Sentry to the Group and allow the users to be provisioned
+2. Push the Group to Sentry
+
+### Known Issues
+
 - The Import Users feature is not currently supported. Sentry's SCIM API does not at this time support the User `name` attribute fields `firstName` and `lastName`. Instead, we return these with values of `N/A` for compatibility purposes.
 - Setting `active` to `false` on a User will delete the organization member record associated with the user.
 - The only filter operation supported for resources is `eq`.
