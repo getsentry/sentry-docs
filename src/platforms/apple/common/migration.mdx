@@ -7,9 +7,31 @@ To upgrade from version 4.x of the SDK to version 8.x of the SDK, you must first
 
 ## Migrating From 7.x to 8.x
 
-Migrating to 8.x from 7.x includes a few breaking changes. We provide this guide to help you to update your SDK.
+Migrating to 8.x from 7.x includes a few breaking changes. We provide this guide to help you to update your SDK. It is important to note that this version adds a dependency to Swift.
 
-### Configuration Changes
+### Changes to Minimum OS Versions and Xcode
+
+The minimum supported OS versions have been bumped to macOS 10.13, iOS 11, tvOS 11, and watchOS 4. The minimum Xcode version has been bumped to 13.
+
+### Features Enabled by Default
+
+The following features are now enabled by default:
+
+- <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#user-interaction-tracing">The user interaction tracing integration</PlatformLink>
+- <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#file-io-tracking">The File I/O tracing integration</PlatformLink>
+- <PlatformLink to="/configuration/http-client-errors/">Capture failed requests</PlatformLink>
+
+### Changes to Grouping
+
+App Hang events might group differently as we now set the event stacktrace snapshot property to `true`.
+
+### Rename OOM to Watchdog Termination
+
+The OOM (out of memory integration) actually tracks [watchdog terminations](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) based on heuristics. We renamed the integration to better reflect what it does.
+
+### Breaking Changes
+
+#### Configuration Changes
 
 This version includes the following configuration changes:
 
@@ -20,7 +42,32 @@ This version includes the following configuration changes:
 - Rename `SentryOptions.enableCoreDataTracking` to `SentryOptions.enableCoreDataTracing`
 - Rename `SentryOptions.enableOutOfMemoryTracking` to `SentryOptions.enableWatchdogTerminationsTracking`
 
-### Breaking Changes
+#### Swift API Improvements
+
+We made some changes to make the API more ergonomic in Swift:
+
+- Rename `SentrySDK.addBreadcrumb(crumb:)` to `SentrySDK.addBreadcrumb(_ crumb:)`
+- Rename `SentryScope.add(_ crumb:)` to `SentryScope.addBreadcrumb(_ crumb:)`
+- Rename `SentryScope.add(_ attachment:)` to `SentryScope.addAttachment(_ attachment:)`
+- Rename `Client` to `SentryClient`
+
+#### Cleanup Public Classes
+
+We cleaned up our public classes by removing a few functions and properties, that shouldn't be public, to make the API cleaner. In case we removed something you need, please [open an issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose) on GitHub.
+
+- Make `SpanProtocol.data` non nullable
+- Mark `[SpanProtocol setExtraValue:forKey:]` as deprecated
+- Make SpanContext immutable
+    - Remove tags from SpanContext
+    - Remove context property from SentrySpan
+- Remove `SentryScope.apply(to:)`
+- Remove `SentryScope.apply(to:maxBreadcrumb:)`
+- Remove `- [SentryOptions initWithDict:didFailWithError:]`
+- Remove `- [SentryOptions sdkInfo]`
+- Make SentrySession and SentrySDKInfo internal
+- Remove default attachment content type
+- Remove captureEnvelope from Hub and Client
+- Remove confusing transaction tag
 
 #### SDK Inits
 
@@ -44,25 +91,9 @@ SentrySDK.start { options in
 }];
 ```
 
-#### Swift API Improvements
+#### SentrySDK.close Is Now Blocking
 
-We made some changes to make the API more ergonomic in Swift:
-
-- Rename `SentrySDK.addBreadcrumb(crumb:)` to `SentrySDK.addBreadcrumb(_ crumb:)`
-- Rename `SentryScope.add(_ crumb:)` to `SentryScope.addBreadcrumb(_ crumb:)`
-- Rename `SentryScope.add(_ attachment:)` to `SentryScope.addAttachment(_ attachment:)`
-- Rename `Client` to `SentryClient`
-
-#### Default Integrations
-
-- The user interaction tracing integration is now enabled by default.
-- The File I/O tracing integration is now enabled by default.
-
-#### Changes to Minimum OS Versions and Xcode
-
-The minimum supported OS versions have been bumped to macOS 10.13, iOS 11, tvOS 11, and watchOS 4.
-
-The minimum Xcode version has been bumped to 13.
+`SentrySDK.close` now calls flush, which is a blocking call.
 
 ## Migrating From 6.x to 7.x
 
