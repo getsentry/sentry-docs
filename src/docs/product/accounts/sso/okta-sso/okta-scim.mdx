@@ -65,9 +65,9 @@ As a result of these changes, users who are assigned will be sent an invitation 
 
 You can use "Push Groups" to sync and assign groups in Okta; they will be reflected in Sentry teams.
 
-<Alert level="warning">
+<Alert level="note">
 
-Creating users through Okta will lock the created user’s membership within Sentry.
+If you use Okta to assign organization membership, you’ll be unable to make membership changes through Sentry and will need to continue using Okta.
 
 </Alert>
 
@@ -127,51 +127,49 @@ If a user is a member of multiple Okta groups, only the attributes set by the fi
 
 </Alert>
 
-<Alert level="warning">
+<Alert level="note">
 
-Setting the organization-level role for a user through Okta will lock that user's role within Sentry.
+If you use Okta to assign organization-level roles, you’ll be unable to make membership changes through Sentry and will need to continue using Okta.
 
 </Alert>
 
-Users who have had their role assigned via Okta will be unable to change their role from within the Sentry application.
+Users who've had their roles assigned via Okta will only be able to make membership changes via Okta.
 
 ![Okta Role Restricted Role Select](./okta-role-restricted-sentry-role-select.png)
 
-### Troubleshooting
+## Troubleshooting
 
-#### I get an error in Okta when provisioning a user saying "Matching user not found"
+### I get an error in Okta when provisioning a user saying "Matching user not found".
 
 Make sure that `Create User` and `Deactivate User` are enabled in the "Provisioning" tab of your Sentry application in Okta.
 
-#### I pushed a group to Sentry but the team is empty. (Or) I assigned Sentry to a group but no team was created?
+### I assigned Sentry to a group but no team was created.
 
-In Okta, there's a difference between pushing and assigning.
+Assigning Sentry to a group in Okta is the same as assigning Sentry to every member of that group. Functionally, this
+provisions every group member within Sentry, but does not create a team. In order to create a team, push the group to Sentry from the `Push Groups` tab of your Sentry application in Okta.
 
-Assigning Sentry to a group is the same as assigning Sentry to every member of that group. Functionally, this
-provisions every group member within Sentry.
+### I pushed a group to Sentry but the team is empty.
 
-Pushing a group, on the other hand, only tells Sentry to create a new team with the same name as the Okta group. Group
-members will be added to the Sentry team only if the user is already provisioned.
+Pushing a group via Okta only tells Sentry to create a new team with the same name as the Okta group. Group
+members will be added to the Sentry team only if the user is already provisioned. Make sure that your group in Okta contains the appropriate users and that they are provisioned before pushing the group to Sentry.
 
-In order to sync a group in Okta as a team in Sentry:
-1. Assign Sentry to the Group and allow the users to be provisioned
-2. Push the Group to Sentry
+### I’m unable to use the Sentry application to remove a member whose membership is managed by an identity provider.
 
-#### I'm unable to remove a member from my organization from within Sentry because their organization membership is managed by an identity provider
+When team membership is managed by an identity provider (such as Okta), it can only be updated or revoked via that identity provider.
 
-An organization member whose membership is managed by an identity provider (e.g. Okta) can only be removed from the organization in Sentry by removing them via the associated identity provider.
+### I’m unable to use the Sentry application to add or remove members from my team.
 
-#### I'm unable to add or remove a member from my team in Sentry
+If you use Okta to assign members to a team, you’ll be unable to make membership changes through Sentry and will need to continue using Okta.
 
-Groups in Okta that have been pushed to Sentry will create teams that have their team membership locked. Adding or removing members from these teams must be done through Okta.
+### I used Okta to remove a user from Sentry, but they’re still showing up in my Sentry organization.
 
-#### I removed a user from the Sentry app in Okta, but the user still exists in my Sentry organization
+Make sure that `Deactivate User` is enabled in the "Provisioning" tab of your Sentry application in Okta. Re-provision the user, then remove them again.
 
-Make sure that `Deactivate User` is enabled in the "Provisioning" tab of your Sentry application in Okta. Re-provision the user to your Sentry organization via Okta, then remove them again.
+#### How do I remove the organization-level role for a user that I sent through Okta?
 
-#### How do I unset the organization-level role for a user?
+If the user is part of a group with an organization-level role assigned, remove the group from the Sentry application. Remove the user from the group and re-provision the user separately, then re-provision the group with its original role. If the user is the only member of a group, re-provision the group with a blank role.
 
-If the user is re-provisioned with a blank (default) role, then the user's role in Sentry won't be restricted via Okta.
+If the user is not part of a group with an organization-level role assigned, re-provision the user with a blank role.
 
 ### Known Issues
 
