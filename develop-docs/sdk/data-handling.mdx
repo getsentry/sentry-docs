@@ -8,26 +8,23 @@ Data handling is the standardized context in how we want SDKs help users filter 
 ## Sensitive Data
 
 SDKs should not include PII or other sensitive data in the payload by default.
-When building an SDK we can come across to some API that can give useful information to debug a problem.
+When building an SDK we can come across some API that can give useful information to debug a problem.
 In the event that API returns data considered PII, we guard that behind a flag called _Send Default PII_.
 This is an option in the SDK called [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii)
 and is **disabled by default**. That means that data that is naturally sensitive is not sent by default.
 
 Some examples of data guarded by this flag:
 
-  - When attaching HTTP requests to events
-    - Request Body: "raw" bodies (bodies which cannot be parsed as JSON or formdata) are removed
-    - HTTP Headers: known sensitive headers such as `Authorization` or `Cookies` are removed too.
-    - *Note* that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
-  - User-specific information (e.g. the current user ID according to the used web-framework) is not sent at all.
-  - On desktop applications
-    - The username logged in the device is not included. This is often a person's name.
-    - The machine name is not included, for example `Bruno's laptop`
-  - SDKs don't set `{{auto}}` as `user.ip`. This instructs the server to keep the connection's IP address.*
-
-* Specifically about IP address, it's important to note that it's standard to log IP address of incoming connecting in services on the Internet.
-This not only allows security tools and operations to understand abuse coming from a single IP, like spam bots and other issues.
-But also developers to understand if issues in their application are being triggered by a single malicious source.
+- When attaching data of HTTP requests and/or responses to events
+  - Request Body: "raw" HTTP bodies (bodies which cannot be parsed as JSON or formdata) are removed
+  - HTTP Headers: known sensitive headers such as `Authorization` or `Cookies` are removed too.
+  - _Note_ that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
+- User-specific information (e.g. the current user ID according to the used web-framework) is not sent at all.
+- On desktop applications
+  - The username logged in the device is not included. This is often a person's name.
+  - The machine name is not included, for example `Bruno's laptop`
+- SDKs don't set `{{auto}}` as `user.ip`. This instructs the server to keep the connection's IP address.
+- Server SDKs remove the IP address of incoming HTTP requests.
 
 Sentry server is always aware of the connecting IP address and can use it for logging in some platforms. Namely JavaScript and iOS/macOS/tvOS.
 All other platforms require the event to include `user.ip={{auto}}` which happens if `sendDefaultPii` is set to true.
@@ -50,6 +47,59 @@ Some examples of auto instrumentation that could attach sensitive data:
 - A SQL integration that includes the query. If a user doesn't use parameterized queries, and appends sensitive data to it, the SDK could include that in the event payload.
 - Desktop apps including window title.
 - A Web framework routing instrumentation attaching route `to` and `from`.
+
+## Structuring Data
+
+For better data scrubbing on the server side, SDKs should save data in a strucutured way, when possible. Starting point of the discussion was [RFC-0038](https://github.com/getsentry/rfcs/blob/main/text/0038-scrubbing-sensitive-data.md)
+
+### Spans
+
+This helps Relay to know what kind of data it receives and this helps with scrubbing sensitive data.
+
+- `http` spans containing urls:
+
+  The description of spans with `op` set to `http` must follow the format `HTTP_METHOD scheme://host/path` (ex. `GET https://example.com/foo`).
+  If an authority is present in the URL (`https://username:password@example.com`), the authority must be omitted completely.
+  If query strings or fragments are present in the URL, both are set into the data attribute of the span.
+
+  ```js
+  span.setData({
+    "http.query": url.getQuery(),
+    "http.fragment": url.getFragment(),
+  });
+  ```
+
+  Additionally all semantic conventions of OpenTelementry for http spans should be set in the `span.data` if applicable:
+  https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/
+
+- `db` spans containing database queries: (sql, graphql, elasticsearch, mongodb, ...)
+
+  The description of spans with `op` set to `db` must not include any query parameters.
+  Instead, use placeholders like `SELECT FROM 'users' WHERE id = ?`
+
+Additionally all semantic conventions of OpenTelementry for database spans should be set in the `span.data` if applicable:
+https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/
+
+### Breadcrumbs
+
+If the `message` in a breadcrumb contains an URL it should be formatted the same way as in `http` spans (see above).
+The query and the fragment should also be set in the data attribute like with `http` spans.
+
+```js
+getCurrentHub().addBreadcrumb({
+  type: "http",
+  category: "xhr",
+  data: {
+    method: "POST",
+    url: "https://example.com/api/users/create.php",
+    "http.query": "username=ada&password=123&newsletter=0",
+    "http.fragment": "#foo",
+  },
+});
+```
+
+Additionally all semantic conventions of OpenTelementry for database spans should be set in the `data` if applicable:
+https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/
 
 ## Variable Size
 
