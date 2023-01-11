@@ -4,10 +4,7 @@ sidebar_order: 12
 description: "Learn how to monitor the performance of your SwiftUI views."
 ---
 
-<Note>
-    This is an experimental feature.
-</Note>
-
+<Include name="beta-note.mdx" />
 
 You can monitor the performance of your views in a SwiftUI project with SentrySwiftUI library.
 
@@ -24,20 +21,22 @@ end
 
 Or by importing sentry-cocoa repository (https://github.com/getsentry/sentry-cocoa) with SPM.
 
+> If you plan to add _SentrySwiftUI_, you don`t need to also add _Sentry_ library since the former dependents on the latter.
 
-In order to use it, you need to wrap your view with `SentryTracedView`, like this:
+In order to start monitoring the performance of your views, you need to wrap it with `SentryTracedView`, like this:
 ```swift {tabTitle:Swift}
 
 import SentrySwiftUI
 
 var body: some View {
     SentryTracedView("<NAME YOUR TRANSACTION>"){
-        //... Your view content
+        List {
+        }
     }
 }
 ```
 
-You may omit the transaction name, Sentry will use the root view type as name.
+You may omit the transaction name, Sentry will use the root view type as name, in the previous example the transaction name would be `List`.
 
 Alternatively, you can use a modifier like this:
 
@@ -46,8 +45,35 @@ Alternatively, you can use a modifier like this:
 import SentrySwiftUI
 
 var body: some View {
-    VStack {
+    List {
 
     }.sentryTrace("<NAME YOUR TRANSACTION>")
 }
 ```
+
+It is possible to use nested `SentryTracedView` to have a more granular transaction.
+
+
+```swift {tabTitle:Swift}
+
+import SentrySwiftUI
+
+var body: some View {
+    SentryTracedView("My Awesome Screen"){
+        HStack {
+            SentryTracedView("Menu") {
+                List{
+                }
+            }
+            SentryTracedView("Content") {
+                VStack{
+                }
+            }
+        }
+    }
+}
+```
+
+This is the result
+
+![Transaction with nested traced views](nested-view-transaction.png)

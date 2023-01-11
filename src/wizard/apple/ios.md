@@ -126,47 +126,4 @@ SentrySDK.start { options in
 
 ## Performance Monitoring for SwiftUI
 
-> This is an experimental feature
-
-If you want to find out the performance of your Views in a SwiftUI project, try SentrySwiftUI library.
-
-You can install it with CocoaPod:
-
-```ruby
-platform :ios, '13.0'
-use_frameworks! # This is important
-
-target 'YourApp' do
-  pod 'SentrySwiftUI'
-end
-```
-
-Or by importing sentry-cocoa repository (https://github.com/getsentry/sentry-cocoa) with SPM.
-
-
-In order to use it, you need to wrap your view with `SentryTracerView`, like this:
-```swift {tabTitle:Swift}
-
-import SentrySwiftUI
-
-var body: some View {
-    SentryTracedView("<NAME YOU TRANSACTION>"){ 
-        //... Your view content
-    }
-}
-```
-
-You may omit the transaction name, Sentry will use the root view type as name.
-
-Alternatively you can use a modifier like this:
-
-```swift {tabTitle:Swift}
-
-import SentrySwiftUI
-
-var body: some View {
-    VStack {
-        
-    }.sentryTrace("<NAME YOUR TRANSACTION>")
-}
-```
+If you want to find out the performance of your Views in a SwiftUI project, [try SentrySwiftUI library](/platforms/apple/performance/instrumentation/swiftui-instrumentation).
