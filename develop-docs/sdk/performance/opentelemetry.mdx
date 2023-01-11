@@ -1,5 +1,5 @@
 ---
-title: "OpenTelemetry Support"
+title: 'OpenTelemetry Support'
 ---
 
 <Alert level="warning">
@@ -57,15 +57,13 @@ class SentrySpanProcessor implements SpanProcessor {
       }
 
       const otelSpanId = otelSpan.spanContext().spanId;
-      const sentrySpan = MAP.get(otelSpanId);
-
-      if (!sentrySpan) {
-        return event;
-      }
 
       // If event has already set `trace` context, use that one.
       // This happens in the case of transaction events.
-      event.contexts = { trace: sentrySpan.getTraceContext(), ...event.contexts };
+      event.contexts = { trace: {
+        trace_id: event.contexts.trace.trace_id,
+        span_id: otelSpanId,
+      }, ...event.contexts };
       return event;
     });
   }
@@ -131,10 +129,10 @@ class SentrySpanProcessor implements SpanProcessor {
 Users are required to add this `SentrySpanProcessor` to their OpenTelemetry SDK initialization logic to make this work, like so. Individual SDK implementations might be a little different.
 
 ```ts
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { Resource } from "@opentelemetry/resources";
-import * as Sentry from "@sentry/node";
-import { SentrySpanProcessor } from "@sentry/opentelemetry-node";
+import {NodeSDK} from '@opentelemetry/sdk-node';
+import {Resource} from '@opentelemetry/resources';
+import * as Sentry from '@sentry/node';
+import {SentrySpanProcessor} from '@sentry/opentelemetry-node';
 
 Sentry.init({
   /// ...
@@ -142,8 +140,8 @@ Sentry.init({
 
 const sdk = new NodeSDK({
   resource: new Resource({
-    "service.name": "my-service",
-    "service.version": "1.0.0",
+    'service.name': 'my-service',
+    'service.version': '1.0.0',
   }),
   spanProcessor: new SentrySpanProcessor(),
 });
@@ -154,8 +152,8 @@ const sdk = new NodeSDK({
 `SentryPropagator` is used to inject/extract `sentry-trace` and `baggage` headers to make trace propogation and dynamic sampling work correctly.
 
 ```ts
-import { Context, TextMapPropagator } from "@opentelemetry/api";
-import { SpanContext } from "@opentelemetry/api";
+import {Context, TextMapPropagator} from '@opentelemetry/api';
+import {SpanContext} from '@opentelemetry/api';
 
 export class SentryPropagator implements TextMapPropagator {
   inject(context: Context, carrier: unknown, setter: TextMapSetter): void {
@@ -188,12 +186,12 @@ export class SentryPropagator implements TextMapPropagator {
 We want to make sure that we don't create Sentry Spans for requests to Sentry.
 
 ```ts
-import { Span as OtelSpan } from "@opentelemetry/sdk-trace-base";
-import { SemanticAttributes } from "@opentelemetry/semantic-conventions";
-import { getCurrentHub } from "@sentry/core";
+import {Span as OtelSpan} from '@opentelemetry/sdk-trace-base';
+import {SemanticAttributes} from '@opentelemetry/semantic-conventions';
+import {getCurrentHub} from '@sentry/core';
 
 export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
-  const { attributes } = otelSpan;
+  const {attributes} = otelSpan;
 
   const httpUrl = attributes[SemanticAttributes.HTTP_URL];
 
@@ -205,9 +203,7 @@ export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
 }
 
 function isSentryRequestUrl(url: string): boolean {
-  const dsn = getCurrentHub()
-    .getClient()
-    ?.getDsn();
+  const dsn = getCurrentHub().getClient()?.getDsn();
   return dsn ? url.includes(dsn.host) : false;
 }
 ```
@@ -224,7 +220,7 @@ function getTraceData(otelSpan: OtelSpan): Partial<TransactionContext> {
   const spanId = spanContext.spanId;
 
   const parentSpanId = otelSpan.parentSpanId;
-  return { spanId, traceId, parentSpanId };
+  return {spanId, traceId, parentSpanId};
 }
 ```
 
@@ -239,21 +235,18 @@ The Sentry span description should come from the OpenTelemetry Span name. The Se
 To make things simple, only set ops for `db` and `http` spans. Don't do any other extended logic, this will be done in Relay in the future.
 
 ```ts
-function updateSpanWithOtelData(
-  sentrySpan: SentrySpan,
-  otelSpan: OtelSpan
-): void {
-  const { attributes, kind } = otelSpan;
+function updateSpanWithOtelData(sentrySpan: SentrySpan, otelSpan: OtelSpan): void {
+  const {attributes, kind} = otelSpan;
 
   sentrySpan.setStatus(mapOtelStatus(otelSpan));
-  sentrySpan.setData("otel.kind", kind.valueOf());
+  sentrySpan.setData('otel.kind', kind.valueOf());
 
   Object.keys(attributes).forEach(prop => {
     const value = attributes[prop];
     sentrySpan.setData(prop, value);
   });
 
-  const { op, description } = parseSpanDescription(otelSpan);
+  const {op, description} = parseSpanDescription(otelSpan);
   sentrySpan.op = op;
   sentrySpan.description = description;
 }
@@ -264,7 +257,7 @@ function updateTransactionWithOtelData(
 ): void {
   transaction.setStatus(mapOtelStatus(otelSpan));
 
-  const { op, description } = parseSpanDescription(otelSpan);
+  const {op, description} = parseSpanDescription(otelSpan);
   transaction.op = op;
   transaction.name = description;
 }
@@ -284,7 +277,7 @@ function finishTransactionWithContextFromOtelData(
   transaction: Transaction,
   otelSpan: OtelSpan
 ): void {
-  transaction.setContext("otel", {
+  transaction.setContext('otel', {
     attributes: otelSpan.attributes,
     resource: otelSpan.resource.attributes,
   });
@@ -323,7 +316,7 @@ We want to avoid double instrumenting the same library. To do this, we want to a
 ```ts
 Sentry.init({
   // ...
-  instrumenter: "otel",
+  instrumenter: 'otel',
 });
 ```
 
@@ -334,10 +327,7 @@ You have two options for this:
 ```ts
 class Hub implements HubInterface {
   // ...
-  startTransaction(
-    this: Hub,
-    context: TransactionContext
-  ): Transaction | undefined {
+  startTransaction(this: Hub, context: TransactionContext): Transaction | undefined {
     // ...
     if (this.instrumenter !== context.instrumenter) {
       return;
@@ -362,7 +352,7 @@ class Hub implements HubInterface {
 2. Add if conditionals around all callsites where you are using `Sentry.startTransaction` and `span.startChild` in the Sentry SDK code. This is a little more work, but it doesn't require any SDK changes to the unified API.
 
 ```ts
-if (instrumenter === "otel") {
+if (instrumenter === 'otel') {
   span.startChild({
     // ...
   });
@@ -378,241 +368,232 @@ Below describe the transformations between an OpenTelemetry span and a Sentry Sp
 This is based on a mapping done as part of work on the [OpenTelemetry Sentry Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/sentryexporter/docs/transformation.md).
 
 <table>
-    <thead>
-        <tr>
-            <th>OpenTelemetry Span</th>
-            <th>Sentry Span</th>
-            <th>Notes</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span trace_id Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L81-L89"
-                >
-                    trace_id
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span trace_id Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L37"
-                >
-                    trace_id
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span span_id Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L91-L99"
-                >
-                    span_id
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span span_id Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L30"
-                >
-                    span_id
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span parent_span_id Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L106-L108"
-                >
-                    parent_span_id
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span parent_span_id Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L33"
-                >
-                    parent_span_id
-                </a>
-            </td>
-            <td>
-                If a span does not have a parent span ID, it is a root span. For
-                a root span:
-                <li>
-                    If there is an active Sentry transaction, add it to the
-                    transaction
-                </li>
-                <li>
-                    If there is no active Sentry transaction, construct a new
-                    transaction from that span
-                </li>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span name Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121"
-                >
-                    name
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span description Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L22"
-                >
-                    description
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span name Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121"
-                >
-                    name
-                </a>
-                ,
-                <a
-                    title="OpenTelemetry Span attributes Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186"
-                >
-                    attributes
-                </a>
-                ,
-                <a
-                    title="OpenTelemetry Span kind Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156"
-                >
-                    kind
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span op Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L26"
-                >
-                    op
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span attributes Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186"
-                >
-                    attributes
-                </a>,
-               <a
-                    title="OpenTelemetry Span kind Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156"
-                >
-                    kind
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span data Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L48"
-                >
-                    data
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span attributes Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186"
-                >
-                    attributes
-                </a>
-                ,
-                <a
-                    title="OpenTelemetry Span Status Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255"
-                >
-                    status
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span status Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L40"
-                >
-                    status
-                </a>
-            </td>
-            <td>
-                See <Link to="./#span-status">Span Status</Link> for more details
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span start_time_unix_nano Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L158-L164"
-                >
-                    start_time_unix_nano
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span start_timestamp Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L14"
-                >
-                    start_timestamp
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span end_time_unix_nano Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L166-L172"
-                >
-                    end_time_unix_nano
-                </a>
-            </td>
-            <td>
-                <a
-                    title="Sentry Span timestamp Relay definitions"
-                    href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L10"
-                >
-                    timestamp
-                </a>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>
-                <a
-                    title="OpenTelemetry Span event Protobuf definitions"
-                    href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L193-L214"
-                >
-                    event
-                </a>
-            </td>
-            <td>
-            </td>
-            <td>
-                See <Link to="./#span-events">Span Events</Link> for more details
-            </td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>OpenTelemetry Span</th>
+      <th>Sentry Span</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span trace_id Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L81-L89"
+        >
+          trace_id
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span trace_id Relay definitions"
+          href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L37"
+        >
+          trace_id
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span span_id Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L91-L99"
+        >
+          span_id
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span span_id Relay definitions"
+          href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L30"
+        >
+          span_id
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span parent_span_id Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L106-L108"
+        >
+          parent_span_id
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span parent_span_id Relay definitions"
+          href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L33"
+        >
+          parent_span_id
+        </a>
+      </td>
+      <td>
+        If a span does not have a parent span ID, it is a root span. For a root span:
+        <li>If there is an active Sentry transaction, add it to the transaction</li>
+        <li>
+          If there is no active Sentry transaction, construct a new transaction from that
+          span
+        </li>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span name Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121"
+        >
+          name
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span description Relay definitions"
+          href="https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L22"
+        >
+          description
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span name Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121"
+        >
+          name
+        </a>
+        ,<a
+          title="OpenTelemetry Span attributes Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186"
+        >
+          attributes
+        </a>,<a
+          title="OpenTelemetry Span kind Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156"
+        >
+          kind
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span op Relay definitions"
+          href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L26"
+        >
+          op
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span attributes Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186"
+        >
+          attributes
+        </a>
+        ,<a
+          title="OpenTelemetry Span kind Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156"
+        >
+          kind
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span data Relay definitions"
+          href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L48"
+        >
+          data
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span attributes Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186"
+        >
+          attributes
+        </a>
+        ,<a
+          title="OpenTelemetry Span Status Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255"
+        >
+          status
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span status Relay definitions"
+          href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L40"
+        >
+          status
+        </a>
+      </td>
+      <td>
+        See <Link to="./#span-status">Span Status</Link> for more details
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span start_time_unix_nano Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L158-L164"
+        >
+          start_time_unix_nano
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span start_timestamp Relay definitions"
+          href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L14"
+        >
+          start_timestamp
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span end_time_unix_nano Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L166-L172"
+        >
+          end_time_unix_nano
+        </a>
+      </td>
+      <td>
+        <a
+          title="Sentry Span timestamp Relay definitions"
+          href="https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L10"
+        >
+          timestamp
+        </a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          title="OpenTelemetry Span event Protobuf definitions"
+          href="https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L193-L214"
+        >
+          event
+        </a>
+      </td>
+      <td></td>
+      <td>
+        See <Link to="./#span-events">Span Events</Link> for more details
+      </td>
+    </tr>
+  </tbody>
 </table>
 
 Currently there is no spec for how [Span.link in OpenTelemetry](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L220-L247) should appear in Sentry.
@@ -626,76 +607,76 @@ To map from OpenTelemetry Span Status to, you need to rely on both OpenTelemetry
 ```ts
 // OpenTelemetry span status can be Unset, Ok, Error. HTTP and Grpc codes contained in tags can make it more detailed.
 
-import { Span as OtelSpan } from "@opentelemetry/sdk-trace-base";
-import { SemanticAttributes } from "@opentelemetry/semantic-conventions";
-import { SpanStatusType as SentryStatus } from "@sentry/tracing";
+import {Span as OtelSpan} from '@opentelemetry/sdk-trace-base';
+import {SemanticAttributes} from '@opentelemetry/semantic-conventions';
+import {SpanStatusType as SentryStatus} from '@sentry/tracing';
 
 // canonicalCodesHTTPMap maps some HTTP codes to Sentry's span statuses. See possible mapping in https://develop.sentry.dev/sdk/event-payloads/span/
 const canonicalCodesHTTPMap: Record<string, SentryStatus> = {
-  "400": "failed_precondition",
-  "401": "unauthenticated",
-  "403": "permission_denied",
-  "404": "not_found",
-  "409": "aborted",
-  "429": "resource_exhausted",
-  "499": "cancelled",
-  "500": "internal_error",
-  "501": "unimplemented",
-  "503": "unavailable",
-  "504": "deadline_exceeded",
+  '400': 'failed_precondition',
+  '401': 'unauthenticated',
+  '403': 'permission_denied',
+  '404': 'not_found',
+  '409': 'aborted',
+  '429': 'resource_exhausted',
+  '499': 'cancelled',
+  '500': 'internal_error',
+  '501': 'unimplemented',
+  '503': 'unavailable',
+  '504': 'deadline_exceeded',
 } as const;
 
 // canonicalCodesGrpcMap maps some GRPC codes to Sentry's span statuses. See description in grpc documentation.
 const canonicalCodesGrpcMap: Record<string, SentryStatus> = {
-  "1": "cancelled",
-  "2": "unknown_error",
-  "3": "invalid_argument",
-  "4": "deadline_exceeded",
-  "5": "not_found",
-  "6": "already_exists",
-  "7": "permission_denied",
-  "8": "resource_exhausted",
-  "9": "failed_precondition",
-  "10": "aborted",
-  "11": "out_of_range",
-  "12": "unimplemented",
-  "13": "internal_error",
-  "14": "unavailable",
-  "15": "data_loss",
-  "16": "unauthenticated",
+  '1': 'cancelled',
+  '2': 'unknown_error',
+  '3': 'invalid_argument',
+  '4': 'deadline_exceeded',
+  '5': 'not_found',
+  '6': 'already_exists',
+  '7': 'permission_denied',
+  '8': 'resource_exhausted',
+  '9': 'failed_precondition',
+  '10': 'aborted',
+  '11': 'out_of_range',
+  '12': 'unimplemented',
+  '13': 'internal_error',
+  '14': 'unavailable',
+  '15': 'data_loss',
+  '16': 'unauthenticated',
 } as const;
 
 export function mapOtelStatus(otelSpan: OtelSpan): SentryStatus {
-  const { status, attributes } = otelSpan;
+  const {status, attributes} = otelSpan;
 
   const statusCode = status.code;
 
   if (statusCode < 0 || statusCode > 2) {
-    return "unknown_error";
+    return 'unknown_error';
   }
 
   if (statusCode === 0 || statusCode === 1) {
-    return "ok";
+    return 'ok';
   }
 
   const httpCode = attributes[SemanticAttributes.HTTP_STATUS_CODE];
   const grpcCode = attributes[SemanticAttributes.RPC_GRPC_STATUS_CODE];
 
-  if (typeof httpCode === "string") {
+  if (typeof httpCode === 'string') {
     const sentryStatus = canonicalCodesHTTPMap[httpCode];
     if (sentryStatus) {
       return sentryStatus;
     }
   }
 
-  if (typeof grpcCode === "string") {
+  if (typeof grpcCode === 'string') {
     const sentryStatus = canonicalCodesGrpcMap[grpcCode];
     if (sentryStatus) {
       return sentryStatus;
     }
   }
 
-  return "unknown_error";
+  return 'unknown_error';
 }
 ```
 
@@ -733,7 +714,7 @@ interface Attributes<T extends Primitive> {
 }
 
 interface OpenTelemetryContext {
-  type?: "otel";
+  type?: 'otel';
 
   // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186
   attributes?: Attributes;
