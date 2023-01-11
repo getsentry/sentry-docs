@@ -6,6 +6,10 @@ type: framework
 ---
 
 <Alert level="info">
+There are two variants of Sentry available for Spring Boot. If you are using Spring Boot 2, please use `sentry-spring-boot-starter` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-boot-starter)). If you are using Spring Boot 3, please use `sentry-spring-boot-starter-jakarta` instead ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-boot-starter-jakarta)).
+</Alert>
+
+<Alert level="info">
 Sentry's integration with <a href=https://spring.io/projects/spring-boot>Spring Boot</a> supports Spring Boot 2.1.0 and above to report unhandled exceptions as well as release and registration of beans. If you're on an older version, use <a href=https://docs.sentry.io/platforms/java/legacy/spring>our legacy integration</a>.
 </Alert>
 
@@ -13,7 +17,7 @@ Install using either Maven or Gradle:
 
 ### Maven
 
-```xml
+```xml {tabTitle: Spring Boot 2}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring-boot-starter</artifactId>
@@ -21,10 +25,22 @@ Install using either Maven or Gradle:
 </dependency>
 ```
 
+```xml {tabTitle: Spring Boot 3}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+    <version>{{ packages.version('sentry.java.spring-boot.jakarta', '6.7.0') }}</version>
+</dependency>
+```
+
 ### Gradle
 
-```groovy {tabTitle:Gradle}
+```groovy {tabTitle: Spring Boot 2}
 implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java.spring-boot', '4.0.0') }}'
+```
+
+```groovy {tabTitle: Spring Boot 3}
+implementation 'io.sentry:sentry-spring-boot-starter-jakarta:{{ packages.version('sentry.java.spring-boot.jakarta', '6.7.0') }}'
 ```
 
 Open up `src/main/application.properties` (or `src/main/application.yml`) and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
@@ -104,7 +120,7 @@ Each incoming Spring MVC HTTP request is automatically turned into a transaction
 
 ### Java
 
-```java
+```java {tabTitle: Spring Boot 2}
 import org.springframework.stereotype.Component;
 import io.sentry.spring.tracing.SentrySpan;
 
@@ -118,11 +134,39 @@ class PersonService {
 }
 ```
 
+```java {tabTitle: Spring Boot 3}
+import org.springframework.stereotype.Component;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
 ### Kotlin
 
-```kotlin
+```kotlin {tabTitle: Spring Boot 2}
 import org.springframework.stereotype.Component
 import io.sentry.spring.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle: Spring Boot 3}
+import org.springframework.stereotype.Component
+import io.sentry.spring.jakarta.tracing.SentrySpan
 
 @Component
 class PersonService {
