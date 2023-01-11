@@ -56,14 +56,14 @@ class SentrySpanProcessor implements SpanProcessor {
         return event;
       }
 
-      const otelSpanId = otelSpan.spanContext().spanId;
-
       // If event has already set `trace` context, use that one.
-      // This happens in the case of transaction events.
-      event.contexts = { trace: {
-        trace_id: event.contexts.trace.trace_id,
-        span_id: otelSpanId,
-      }, ...event.contexts };
+      event.contexts = {
+        trace: {
+          trace_id: otelSpan.spanContext().traceId,
+          span_id: otelSpan.spanContext().spanId,
+        },
+        ...event.contexts
+      };
       return event;
     });
   }
