@@ -1,0 +1,16 @@
+A function can be passed to `sentry.Init` via `BeforeSendTransaction` configuration option:
+
+```go
+sentry.Init(sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+		// Called for transaction events
+		BeforeSendTransaction: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			if strings.Contains(event.Message, "test-transaction") {
+				// Don't send the transaction to Sentry
+				return nil
+			}
+			// Update the message for every sent transaction
+			event.Message += " [example]"
+			return event
+		},
+```
