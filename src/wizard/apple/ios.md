@@ -40,10 +40,6 @@ func application(_ application: UIApplication,
 
         // Features turned off by default, but worth checking out
         options.enableAppHangTracking = true
-        options.enableFileIOTracking = true
-        options.enableCoreDataTracking = true
-        options.enableCaptureFailedRequests = true
-        options.enableMetricKit = true
     }
 
     return true
@@ -68,10 +64,6 @@ struct SwiftUIApp: App {
 
             // Features turned off by default, but worth checking out
             options.enableAppHangTracking = true
-            options.enableFileIOTracking = true
-            options.enableCoreDataTracking = true
-            options.enableCaptureFailedRequests = true
-            options.enableMetricKit = true
         }
     }
 }
@@ -116,10 +108,7 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
-    options.enableFileIOTracing = true
-    options.enableCoreDataTracing = true
-    options.enableUserInteractionTracing = true
-    options.enablePreWarmedAppStartTracking = true
+    options.enablePreWarmedAppStartTracing = true
     options.attachScreenshot = true
     options.attachViewHierarchy = true
     options.enableMetricKit = true
