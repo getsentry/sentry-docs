@@ -23,14 +23,14 @@ import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
-  dsn: "__DSN__",
+  dsn: "___DSN___",
   tracesSampleRate: 1,
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.remixRouterInstrumentation(
         useEffect,
         useLocation,
-        useMatches,
+        useMatches
       ),
     }),
   ],
@@ -45,7 +45,7 @@ import { prisma } from "~/db.server";
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: "__DSN__",
+  dsn: "___DSN___",
   tracesSampleRate: 1,
   integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
 });
@@ -85,4 +85,14 @@ function App() {
 export default withSentry(App);
 ```
 
-Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/). There, you'll find additional instructions for configuring the Remix SDK.
+After this step, Sentry will report any uncaught exceptions triggered by your application.
+
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
+
+```javascript
+<button onClick={() => methodDoesNotExist()}>
+  Break the world
+</button>
+```
+
+Once you've verified the SDK is initialized properly and sent a test event, check out our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/)for additional configuration instructions.

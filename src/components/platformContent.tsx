@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "@emotion/styled";
 import { graphql, useStaticQuery } from "gatsby";
 
 import usePlatform, {
@@ -11,8 +10,8 @@ import Content from "./content";
 import SmartLink from "./smartLink";
 
 const includeQuery = graphql`
-  query IncludeQuery {
-    allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
+  query PlatformContentQuery {
+    allFile(filter: { sourceInstanceName: { eq: "platform-includes" } }) {
       nodes {
         id
         relativePath
@@ -45,7 +44,6 @@ type Props = {
   platform?: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
-  notateUnsupported?: boolean;
 };
 
 const getFileForPlatform = (
@@ -59,32 +57,13 @@ const getFileForPlatform = (
   const contentMatch = platformsToSearch
     .map(name => name && fileList.find(m => slugMatches(m.name, name)))
     .find(m => m);
-  if (!contentMatch) {
-    console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${platform.key}`
-    );
-  }
   return contentMatch;
 };
-
-const MissingContent = styled.div`
-  font-style: italic;
-  background: var(--lightest-purple-background);
-  border: 1px dashed #ccc;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-
-  p:last-child {
-    margin-bottom: 0;
-  }
-`;
 
 export default ({
   includePath,
   platform,
   children,
-  notateUnsupported = true,
 }: Props): JSX.Element => {
   const {
     allFile: { nodes: files },
@@ -102,6 +81,24 @@ export default ({
     matches,
     currentPlatform
   );
+
+  if (!contentMatch && !children) {
+    // children is used to conditionally show introductory paragraph if the
+    // snippet exists. in case children is null, it is unlikely that the page
+    // is correctly written to deal with missing snippets and the correct
+    // course of action is probably to hide the page for the affected platform
+    throw new Error(
+      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
+    );
+  }
+
+  if (!contentMatch) {
+    return null;
+  }
+
+  if (hasDropdown) {
+    throw new Error(`${includePath} has a dropdown??`);
+  }
 
   return (
     <section className="platform-specific-content">
@@ -153,28 +150,10 @@ export default ({
 
       <div className="tab-content">
         <div className="tab-pane show active">
-          {contentMatch ? (
-            <React.Fragment>
-              {children || null}
-              <Content key={contentMatch.id} file={contentMatch} />
-            </React.Fragment>
-          ) : (
-            notateUnsupported && (
-              <MissingContent>
-                <p>
-                  The platform or SDK you've selected either does not support
-                  this functionality, or it is missing from documentation.
-                </p>
-                <p>
-                  If you think this is an error, feel free to{" "}
-                  <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new/choose">
-                    let us know on GitHub
-                  </SmartLink>
-                  .
-                </p>
-              </MissingContent>
-            )
-          )}
+          <React.Fragment>
+            {children || null}
+            <Content key={contentMatch.id} file={contentMatch} />
+          </React.Fragment>
         </div>
       </div>
     </section>

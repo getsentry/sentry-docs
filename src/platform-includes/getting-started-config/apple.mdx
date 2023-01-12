@@ -1,0 +1,109 @@
+You should also initialize the SDK as soon as possible, such as in your AppDelegate `application:didFinishLaunchingWithOptions` method:
+
+```swift {tabTitle:Swift}
+import Sentry // Make sure you import Sentry
+
+// ....
+
+func application(_ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+
+    SentrySDK.start { options in
+        options.dsn = "___PUBLIC_DSN___"
+        options.debug = true // Enabled debug when first installing is always helpful
+
+        // Features turned off by default, but worth checking out
+        options.enableAppHangTracking = true
+        options.enableFileIOTracking = true
+        options.enableCoreDataTracking = true
+        options.enableCaptureFailedRequests = true
+        options.enableMetricKit = true
+    }
+
+    return true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Features turned off by default, but worth checking out
+        options.enableAppHangTracking = YES;
+        options.enableFileIOTracking = YES;
+        options.enableCoreDataTracking = YES;
+        options.enableCaptureFailedRequests = YES;
+        options.enableMetricKit = YES;
+    }];
+
+    return YES;
+}
+```
+
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+
+```swift
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Enabled debug when first installing is always helpful
+
+            // Features turned off by default, but worth checking out
+            options.enableAppHangTracking = true
+            options.enableFileIOTracking = true
+            options.enableCoreDataTracking = true
+            options.enableCaptureFailedRequests = true
+            options.enableMetricKit = true
+        }
+    }
+}
+```
+<!-- You can't write SwiftUI in Objective-C. Therefore no code sample. -->
+
+## Experimental features
+
+> Want to play with some new features? Try out our experimental features for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation), [Screenshots](https://docs.sentry.io/platforms/apple/guides/ios/enriching-events/screenshots/). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+>
+> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    // ...
+
+    // Enable all experimental features
+    options.enableUserInteractionTracing = true
+    options.enablePreWarmedAppStartTracking = true
+    options.attachScreenshot = true
+    options.attachViewHierarchy = true
+    options.enableMetricKit = true
+}
+```
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    // ...
+
+    // Enable all experimental features
+    options.enableUserInteractionTracing = YES;
+    options.enablePreWarmedAppStartTracking = YES;
+    options.attachScreenshot = YES;
+    options.attachViewHierarchy = YES;
+    options.enableMetricKit = YES;
+}];
+```
+
+## Provide Debug Information {#debug-symbols}
+
+Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by <PlatformLink to="/dsym">uploading dSYM files</PlatformLink>.

@@ -42,64 +42,64 @@ module.exports = {
     {
       resolve: "@sentry/gatsby",
     },
-  ]
+  ],
 };
 ```
 
 Configure your `Sentry.init`:
 
 ```javascript {filename:sentry.config.js}
-import * as Sentry from '@sentry/gatsby';
+import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    sampleRate: 1.0, // Adjust this value in production
-    beforeSend(event) {
-      // Modify the event here
-      if (event.user) {
-        // Don't send user's email address
-        delete event.user.email;
-      }
-      return event;
-    },
-    // ...
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0, // Adjust this value in production
+  beforeSend(event) {
+    // Modify the event here
+    if (event.user) {
+      // Don't send user's email address
+      delete event.user.email;
+    }
+    return event;
+  },
+  // ...
 });
 ```
 
 ```typescript {filename:sentry.config.ts}
-import * as Sentry from '@sentry/gatsby';
+import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    sampleRate: 1.0, // Adjust this value in production
-    beforeSend(event) {
-      // Modify the event here
-      if (event.user) {
-        // Don't send user's email address
-        delete event.user.email;
-      }
-      return event;
-    },
-    // ...
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0, // Adjust this value in production
+  beforeSend(event) {
+    // Modify the event here
+    if (event.user) {
+      // Don't send user's email address
+      delete event.user.email;
+    }
+    return event;
+  },
+  // ...
 });
 ```
 
 ### Gatsby Plugin Configuration
 
-Another alternative is to use Gatsby's [plugin configuration options](https://www.gatsbyjs.com/docs/how-to/plugins-and-themes/using-a-plugin-in-your-site/#using-plugin-configuration-options). While this keeps the SDK options with the plugin definition, it doesn't support non-serializable options.
+Another alternative is to use Gatsby's [plugin configuration options](https://www.gatsbyjs.com/docs/how-to/plugins-and-themes/using-a-plugin-in-your-site/#using-plugin-configuration-options). While this keeps the SDK options with the plugin definition, it doesn't support non-serializable options like `integrations`, `transport`, `stackParser`,`beforeSend`, `beforeSendTransaction`, and `tracesSampler`.
 
 ```javascript {filename:gatsby-config.js}
 module.exports = {
+  plugins: [
     {
       resolve: "@sentry/gatsby",
       options: {
         dsn: "___PUBLIC_DSN___",
-        sampleRate: 1.0, // Adjust this value in production
-        // Cannot set `beforeSend`
+        tracesSampleRate: 1.0, // Adjust this value in production
+        // Cannot set any non-serializable options
       },
     },
-
-  ]
+  ],
 };
 ```
 

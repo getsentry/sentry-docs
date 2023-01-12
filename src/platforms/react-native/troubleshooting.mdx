@@ -121,10 +121,6 @@ Try passing `--force-foreground` to the Sentry CLI command in the build script. 
 - If your release health statistics are being attributed to the wrong release, confirm that you [pass the `release` and `dist` to the `init` call](/platforms/react-native/configuration/releases/#bind-the-version).
 - If you are using Code Push, check that you are not using `setRelease` and `setDist` as they will break release health. You can read more on the [CodePush guide](/platforms/react-native/manual-setup/codepush/).
 
-## Expo
-
-If you use the [sentry-expo](https://github.com/expo/sentry-expo) SDK, make sure that you do not manually upgrade the version of the `@sentry/react-native` SDK and instead rely on the version that the `sentry-expo` SDK depends on. Upgrading could cause a version mismatch that could lead to errors being unreported and other undefined behavior. This is due to the `sentry-expo` SDK not being officially maintained by Sentry but instead by the Expo team.
-
 ## Minified Names in Production
 
 When bundling for production, React Native will minify class and function names to reduce the bundle size. This means that you won't get the full original component names in your Touch Event breadcrumbs or Profiler spans.
@@ -234,3 +230,27 @@ _New_:
 ```bash
 shellScript = "set -e\nexport SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\nSENTRY_CLI_PATH=\"../node_modules/@sentry/cli/bin/sentry-cli\"\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$SENTRY_CLI_PATH react-native xcode $REACT_NATIVE_XCODE\\\"\"";
 ```
+
+## React Native 0.60.3 Failing Build
+
+React Native 0.60.3 tooling was unexpectedly moving source maps files, which caused the Sentry Gradle plugin to fail. This was fixed in version 0.60.4. For more detailed information, follow the [issue](https://github.com/getsentry/sentry-react-native/issues/2442).
+
+## Missing Java stacktrace on the New Architecture
+
+If you're using the new architecture on React Native, you might be missing the Java stacktrace. Follow the [issue](https://github.com/facebook/react-native/issues/34923) for more information.
+
+## Failing Build Due to `sentry-cli`
+
+If your build fails due to Sentry CLI error, because you don't have internet connection, or because [sentry.io](https://sentry.io) is down, you can allow failure of the `sentry-cli` step by adding an environmental variable `SENTRY_ALLOW_FAILURE` equal to `true`. The CLI will still run, but won't cause the build to fail:
+
+```bash
+# iOS
+SENTRY_ALLOW_FAILURE=true npx react-native run-ios
+
+# Android
+SENTRY_ALLOW_FAILURE=true npx react-native run-android
+```
+
+Note that if the source maps upload fails, you'll have to do it [manually](/platforms/react-native/sourcemaps) later when the connection is restored.
+
+When you remove the environmental variable in front of your build command, your build will work as before.

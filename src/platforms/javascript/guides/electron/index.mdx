@@ -70,6 +70,45 @@ In the renderer processes:
 import * as Sentry from "@sentry/electron/renderer";
 ```
 
+## Framework-Specific SDKs
+
+If you're using a framework-specific Sentry SDK in the Electron renderers, you
+can pass that `init` function as the second parameter and the two SDKs functionalities will be combined:
+```javascript
+import { init } from '@sentry/electron/renderer';
+import { init as reactInit } from '@sentry/react';
+
+init({ /* config */ }, reactInit);
+
+```
+
+## Offline Support
+
+The default transport automatically handles offline events caching. Following, are a
+number of options that allow you to customize queueing behavior:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  transportOptions: {
+    // The maximum number of days to keep an event in the queue.
+    maxQueueAgeDays: 30,
+    // The maximum number of events to keep in the queue.
+    maxQueueCount: 30,
+    // Called every time the number of requests in the queue changes.
+    queuedLengthChanged: (length) => { },
+    // Called before attempting to send an event to Sentry. Used to override queuing behavior.
+    //
+    // Return 'send' to attempt to send the event.
+    // Return 'queue' to queue and persist the event for sending later.
+    // Return 'drop' to drop the event.
+    beforeSend: (request) => isOnline() ? 'send' : 'queue'
+  }
+});
+```
+
 ## Inter-Process Communication
 
 To give detailed information for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
@@ -117,13 +156,11 @@ This script exposes IPC to the isolated renderer via Electrons `contextBridge` A
 
 Check out the [example apps](https://github.com/getsentry/sentry-electron/tree/master/examples) for how to do this.
 
-## Uploading Debug Information
+## Debug Information
 
-To get symbolicated stack traces for native crashes, you have to upload debug symbols to Sentry. Sentry Wizard creates a convenient `sentry-symbols.js` script that will upload the Electron symbols for you. After installing the SDK and every time you upgrade the Electron version, run this script:
-
-```shell
-node sentry-symbols.js
-```
+To get symbolicated stack traces for native crashes, you should enable fetching
+debug symbols from the Electron symbol server. Go to **Project Settings > Debug
+Files** and add Electron to the list of built-in repositories.
 
 If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_](/platforms/electron/).
 

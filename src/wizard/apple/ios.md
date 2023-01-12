@@ -37,6 +37,13 @@ func application(_ application: UIApplication,
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0
+
+        // Features turned off by default, but worth checking out
+        options.enableAppHangTracking = true
+        options.enableFileIOTracking = true
+        options.enableCoreDataTracking = true
+        options.enableCaptureFailedRequests = true
+        options.enableMetricKit = true
     }
 
     return true
@@ -58,6 +65,13 @@ struct SwiftUIApp: App {
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
+
+            // Features turned off by default, but worth checking out
+            options.enableAppHangTracking = true
+            options.enableFileIOTracking = true
+            options.enableCoreDataTracking = true
+            options.enableCaptureFailedRequests = true
+            options.enableMetricKit = true
         }
     }
 }
@@ -65,10 +79,7 @@ struct SwiftUIApp: App {
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
-
-- [With Bitcode](/platforms/apple/dsym/#dsym-with-bitcode)
-- [Without Bitcode](/platforms/apple/dsym/#dsym-without-bitcode)
+Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym).
 
 ## Performance Monitoring
 
@@ -104,11 +115,13 @@ import Sentry
 SentrySDK.start { options in
     // ...
 
-    // Enable all experimental auto instrumentation features
+    // Enable all experimental features
     options.enableFileIOTracing = true
     options.enableCoreDataTracing = true
     options.enableUserInteractionTracing = true
-    options.enableAppHangTracking = true
+    options.enablePreWarmedAppStartTracking = true
     options.attachScreenshot = true
+    options.attachViewHierarchy = true
+    options.enableMetricKit = true
 }
 ```

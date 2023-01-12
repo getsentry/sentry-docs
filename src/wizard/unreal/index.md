@@ -25,13 +25,13 @@ Access the Sentry configuration window by going to editor's menu: **Project Sett
 ___PUBLIC_DSN___
 ```
 
-## Crash Report Client
+## Crash Reporter Client
 
-For Windows and Mac, [Crash Report Client](/platforms/unreal/setup-crashreport/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
+For Windows and Mac, [Crash Reporter Client](/platforms/unreal/setup-crashreporter/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
 
 ### Include the UE4 Crash Reporter
 
-You can add the crash report client to your game in **Project Settings**.
+You can add the crash reporter client to your game in **Project Settings**.
 
 The option is located under **Project > Packaging**; select "show advanced" followed by
 checking the box for "Include Crash Reporter".

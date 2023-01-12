@@ -32,8 +32,7 @@ Sentry.init({
 ```typescript {filename:sentry.server.config.ts/sentry.client.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
-const SENTRY_DSN: string =
-  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 Sentry.init({
   dsn: SENTRY_DSN || "___PUBLIC_DSN___",
@@ -47,29 +46,6 @@ Sentry.init({
 });
 ```
 
-If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
-
-```javascript {filename:pages/api/*}
-import { withSentry } from "@sentry/nextjs";
-
-const handler = async (req, res) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default withSentry(handler);
-```
-
-```typescript {filename:pages/api/*}
-import type { NextApiRequest, NextApiResponse } from "next"
-import { withSentry } from "@sentry/nextjs";
-
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default withSentry(handler);
-```
-
 You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
 ## Create a Custom `_error` Page
@@ -79,67 +55,83 @@ In serverless deployment environments, including Vercel, the Next.js server runs
 To capture these errors in Sentry, you can use the Next.js [error page customization](https://nextjs.org/docs/advanced-features/custom-error-page#reusing-the-built-in-error-page) option. To do this, create `pages/_error.js`, and include the following:
 
 ```javascript {filename:pages/_error.js}
-import NextErrorComponent from "next/error";
+/**
+ * NOTE: This requires `@sentry/nextjs` version 7.3.0 or higher.
+ *
+ * This page is loaded by Nextjs:
+ *  - on the server, when data-fetching methods throw or reject
+ *  - on the client, when `getInitialProps` throws or rejects
+ *  - on the client, when a React lifecycle method throws or rejects, and it's
+ *    caught by the built-in Nextjs error boundary
+ *
+ * See:
+ *  - https://nextjs.org/docs/basic-features/data-fetching/overview
+ *  - https://nextjs.org/docs/api-reference/data-fetching/get-initial-props
+ *  - https://reactjs.org/docs/error-boundaries.html
+ */
 
 import * as Sentry from "@sentry/nextjs";
+import NextErrorComponent from "next/error";
 
-const MyError = ({ statusCode, hasGetInitialPropsRun, err }) => {
-  if (!hasGetInitialPropsRun && err) {
-    // getInitialProps is not called in case of
-    // https://github.com/vercel/next.js/issues/8592. As a workaround, we pass
-    // err via _app.js so it can be captured
-    Sentry.captureException(err);
-    // Flushing is not required in this case as it only happens on the client
-  }
+const CustomErrorComponent = props => {
+  // If you're using a Nextjs version prior to 12.2.1, uncomment this to
+  // compensate for https://github.com/vercel/next.js/issues/8592
+  // Sentry.captureUnderscoreErrorException(props);
 
-  return <NextErrorComponent statusCode={statusCode} />;
+  return <NextErrorComponent statusCode={props.statusCode} />;
 };
 
-MyError.getInitialProps = async ({ res, err, asPath }) => {
-  const errorInitialProps = await NextErrorComponent.getInitialProps({
-    res,
-    err,
-  });
+CustomErrorComponent.getInitialProps = async contextData => {
+  // In case this is running in a serverless function, await this in order to give Sentry
+  // time to send the error before the lambda exits
+  await Sentry.captureUnderscoreErrorException(contextData);
 
-  // Workaround for https://github.com/vercel/next.js/issues/8592, mark when
-  // getInitialProps has run
-  errorInitialProps.hasGetInitialPropsRun = true;
-
-  // Running on the server, the response object (`res`) is available.
-  //
-  // Next.js will pass an err on the server if a page's data fetching methods
-  // threw or returned a Promise that rejected
-  //
-  // Running on the client (browser), Next.js will provide an err if:
-  //
-  //  - a page's `getInitialProps` threw or returned a Promise that rejected
-  //  - an exception was thrown somewhere in the React lifecycle (render,
-  //    componentDidMount, etc) that was caught by Next.js's React Error
-  //    Boundary. Read more about what types of exceptions are caught by Error
-  //    Boundaries: https://reactjs.org/docs/error-boundaries.html
-
-  if (err) {
-    Sentry.captureException(err);
-
-    // Flushing before returning is necessary if deploying to Vercel, see
-    // https://vercel.com/docs/platform/limits#streaming-responses
-    await Sentry.flush(2000);
-
-    return errorInitialProps;
-  }
-
-  // If this point is reached, getInitialProps was called without any
-  // information about what the error might be. This is unexpected and may
-  // indicate a bug introduced in Next.js, so record it in Sentry
-  Sentry.captureException(
-    new Error(`_error.js getInitialProps missing data at path: ${asPath}`)
-  );
-  await Sentry.flush(2000);
-
-  return errorInitialProps;
+  // This will contain the status code of the response
+  return NextErrorComponent.getInitialProps(contextData);
 };
 
-export default MyError;
+export default CustomErrorComponent;
+```
+
+```typescript {filename:pages/_error.tsx}
+/**
+ * NOTE: This requires `@sentry/nextjs` version 7.3.0 or higher.
+ *
+ * This page is loaded by Nextjs:
+ *  - on the server, when data-fetching methods throw or reject
+ *  - on the client, when `getInitialProps` throws or rejects
+ *  - on the client, when a React lifecycle method throws or rejects, and it's
+ *    caught by the built-in Nextjs error boundary
+ *
+ * See:
+ *  - https://nextjs.org/docs/basic-features/data-fetching/overview
+ *  - https://nextjs.org/docs/api-reference/data-fetching/get-initial-props
+ *  - https://reactjs.org/docs/error-boundaries.html
+ */
+
+import * as Sentry from "@sentry/nextjs";
+import type { NextPage } from "next";
+import type { ErrorProps } from "next/error";
+import NextErrorComponent from "next/error";
+
+const CustomErrorComponent: NextPage<ErrorProps> = props => {
+  // If you're using a Nextjs version prior to 12.2.1, uncomment this to
+  // compensate for https://github.com/vercel/next.js/issues/8592
+  // Sentry.captureUnderscoreErrorException(props);
+
+  return <NextErrorComponent statusCode={props.statusCode} />;
+};
+
+CustomErrorComponent.getInitialProps = async contextData => {
+  // In case this is running in a serverless function, await this in order to give Sentry
+  // time to send the error before the lambda exits
+  await Sentry.captureUnderscoreErrorException(contextData);
+
+  // This will contain the status code of the response
+  return NextErrorComponent.getInitialProps(contextData);
+};
+
+export default CustomErrorComponent;
 ```
 
 ## Extend Next.js Configuration
@@ -164,13 +156,19 @@ const moduleExports = {
 
   // Optional build-time configuration options
   sentry: {
-    // See the 'Configure Source Maps' and 'Configure Legacy Browser Support'
-    // sections below for information on the following options:
-    //   - disableServerWebpackPlugin
-    //   - disableClientWebpackPlugin
-    //   - hideSourceMaps
-    //   - widenClientFileUpload
-    //   - transpileClientSDK
+    // See the sections below for information on the following options:
+    //   'Configure Source Maps':
+    //     - disableServerWebpackPlugin
+    //     - disableClientWebpackPlugin
+    //     - hideSourceMaps
+    //     - widenClientFileUpload
+    //   'Configure Legacy Browser Support':
+    //     - transpileClientSDK
+    //   'Configure Serverside Auto-instrumentation':
+    //     - autoInstrumentServerFunctions
+    //     - excludeServerRoutes
+    //   'Configure Tunneling to avoid Ad-Blockers':
+    //     - tunnelRoute
   },
 };
 
@@ -201,13 +199,13 @@ Make sure to add the Sentry config last; otherwise, the source maps the plugin r
 
 ## Configure Source Maps
 
-By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), `sentry-cli` will automatically detect and upload your source files, source maps, and bundles to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), because otherwise the full upload process would reoccur on each file change.)
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), certain tasks will be handled for you automatically: the `release` value in `Sentry.init()` will be set, and sourcemaps will be generated and uploaded to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), to prevent the full upload process from reoccurring on each file change.)
 
 To configure the plugin, pass a `sentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
 
 ### Disable `SentryWebpackPlugin`
 
-If you want or need to handle source map uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
+If you choose to handle source map generation and uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
 
 ```javascript {filename:next.config.js}
 const moduleExports = {
@@ -217,6 +215,8 @@ const moduleExports = {
   },
 };
 ```
+
+Note that you'll also have to explicitly set a `release` value in your `Sentry.init()`.
 
 If you disable the plugin for both server and client builds, it's safe to omit the `sentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
 
@@ -228,9 +228,9 @@ In that case you can also skip the `sentry-cli` configuration step below.
 
 ### Use `hidden-source-map`
 
-_(New in version 6.17.1)_
+_(New in version 6.17.1, will default to `true` in 8.0.0 and beyond.)_
 
-If you would like to use `hidden-source-map` rather than `source-map` as your webpack `devtool`, so that your built files do not contain a `sourceMappingURL` comment, add a `sentry` object to `moduleExports` above, and set the `hideSourceMaps` option to `true`:
+Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [Webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `moduleExports` above, and set the `hideSourceMaps` option to `true`:
 
 ```javascript {filename:next.config.js}
 const moduleExports = {
@@ -240,7 +240,7 @@ const moduleExports = {
 };
 ```
 
-Note that this only applies to client-side builds, and requires the `SentryWebpackPlugin` to be enabled.
+Note that this only applies to client-side builds, and requires the `SentryWebpackPlugin` to be enabled. This option will default to `true` starting in version 8.0.0. See https://webpack.js.org/configuration/devtool/ for more information.
 
 ### Widen the Upload Scope
 
@@ -314,3 +314,104 @@ const moduleExports = {
 ```
 
 (This assumes you are using [the `next.config.js` setup shown above](#extend-nextjs-configuration).)
+
+## Configure Server-side Auto-instrumentation
+
+The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring.
+
+### Disable API Route and Data Fetching Auto-instrumentation Entirely
+
+_(New in version 7.14.0)_
+
+To disable the automatic instrumentation of API route handlers and server-side data fetching functions, set the `autoInstrumentServerFunctions` to `false`.
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    autoInstrumentServerFunctions: false,
+  },
+};
+```
+
+With this option, under the hood, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
+
+### Opt In to Auto-instrumentation on Specific Routes
+
+_(New in version 7.14.0)_
+
+If the automatic instrumentation doesn't work for your use case, you can turn it off globally and choose to only wrap specific API route handlers or data fetching functions instead.
+
+For API routes, use the `withSentry` function:
+
+```javascript {filename:pages/api/*}
+import { withSentry } from "@sentry/nextjs";
+
+const handler = (req, res) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next"
+import { withSentry } from "@sentry/nextjs";
+
+const handler = (req: NextApiRequest, res: NextApiResponse) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
+For data fetching methods, use the following functions:
+
+- `withSentryServerSideGetInitialProps` for `getInitialProps`
+- `withSentryGetServerSideProps` for `getServerSideProps`
+- `withSentryGetStaticProps` for `getStaticProps`
+- `withSentryServerSideErrorGetInitialProps` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
+- `withSentryServerSideAppGetInitialProps` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
+- `withSentryServerSideDocumentGetInitialProps` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
+
+### Opt Out of Auto-instrumentation on Specific Routes
+
+_(New in version 7.20.0)_
+
+If you want auto-instrumentation to apply by default, but want to exclude certain routes, use the `excludeServerRoutes` option in the `sentry` object in your `next.config.js`:
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    excludeServerRoutes: [
+      "/some/excluded/route",
+      "/excluded/route/with/[parameter]",
+      /^\/route\/beginning\/with\/some\/prefix/,
+      /\/routeContainingASpecificPathSegment\/?/,
+    ],
+  },
+};
+```
+
+Excluded routes can be specified either as regexes or strings. When using a string, make sure that it matches the route exactly, and has a leading slash but no trailing one.
+
+## Configure Tunneling to avoid Ad-Blockers
+
+_(New in version 7.26.0)_
+
+You might notice that Sentry events are sometimes blocked by Ad-Blockers.
+Ad-blockers can be circumvented by using **tunneling**.
+
+The Sentry Next.js SDK provides an easy way to set up tunneling for your application.
+Use the `tunnelRoute` option in the `sentry` object in your `next.config.js` to provide a route the SDK will use to tunnel events to Sentry:
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    tunnelRoute: "/monitoring-tunnel",
+  },
+};
+```
+
+Please note that this option will tunnel Sentry events through your Next.js application so you might experience increased server usage.
+
+Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.

@@ -8,6 +8,8 @@ description: "Learn about using Sentry with Starlette."
 
 The Starlette integration adds support for the [Starlette Framework](https://www.starlette.io/).
 
+The Sentry SDK automatically enables support for Starlette if you have the `starlette` Python package installed in your project. There are no configuration options you need to add when initializing the Sentry SDK, as everything works out of the box.
+
 ## Install
 
 Install `sentry-sdk` from PyPI with the `starlette` extra:
@@ -24,14 +26,10 @@ To configure the SDK, initialize it with the integration before your app has bee
 from starlette.applications import Starlette
 
 import sentry_sdk
-from sentry_sdk.integrations.starlette import StarletteIntegration
 
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        StarletteIntegration(),
-    ],
 
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
@@ -41,12 +39,6 @@ sentry_sdk.init(
 
 app = Starlette(routes=[...])
 ```
-
-<Note>
-
-In the future, we will make this auto-enabling, so you won't need to add the `StarletteIntegration` to your `sentry_sdk.init()` call. Instead, the Sentry SDK will detect the presence of Starlette and will set up the integration automatically.
-
-</Note>
 
 ## Verify
 
@@ -77,13 +69,15 @@ Visiting `"/sentry-debug"` will trigger an error that will be captured by Sentry
 
 ## Options
 
-You can pass the following keyword arguments to `StarletteIntegration()`:
+If you want to change the default behavior of the Starlette integration, you need to instantiate the integration by hand and pass it to Sentry's `init` function.
 
-- `transaction_style`:
+You can pass the keyword argument `transaction_style` to `StarletteIntegration()`.
 
 With this option, you can influence how the transactions are named in Sentry. For example:
 
 ```python
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
 sentry_sdk.init(
     # ...
     integrations=[

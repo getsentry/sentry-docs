@@ -8,11 +8,147 @@ categories:
   - mobile
 ---
 
-The `sentry-compose` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) Navigation support for Sentry using the [SentryNavigationIntegration](https://github.com/getsentry/sentry-java/blob/524ee49b212c3f2eead20960c3c6825ccdbf8007/sentry-compose/src/androidMain/kotlin/io/sentry/compose/SentryNavigationIntegration.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/blob/main/sentry-compose/src/androidMain/kotlin/io/sentry/compose/).
+The `sentry-compose-android` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) support for the following interactions:
+* User interactions like clicks, swipes and scroll gestures
+* Jetpack Compose navigation
 
-On this page, we get you up and running with Sentry's Compose Navigation Integration, so that it will automatically add a breadcrumb and start a transaction for each navigation event.
+## User Interactions
+_(New in version 6.10.0)_
 
-## Install
+### Installation
+
+To add the Jetpack Compose integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose-android` dependency using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose', '6.2.0') }}'
+```
+
+### Configuration
+
+This feature is disabled by default, but you can enable it the following ways.
+
+#### Using `AndroidManifest.xml`
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+    <meta-data android:name="io.sentry.breadcrumbs.user-interaction" android:value="true" />
+</application>
+```
+
+#### Using `SentryOptions`
+
+If you initialize the SDK [manually as mentioned here](/platforms/android/configuration/manual-init/), you can enable user interactions like this:
+```kotlin {filename:MyApplication.kt}
+SentryAndroid.init(this) { options ->
+    // ...
+    options.isEnableUserInteractionTracing = true
+    options.isEnableUserInteractionBreadcrumbs = true
+}
+```
+
+The Sentry SDK utilizes the built-in `Modifier.testTag("<tag>")` of a Composable to determine its identifier. Here's an example:
+
+```kotlin
+import androidx.compose.ui.platform.testTag
+@Composable
+fun LoginScreen() {
+  Column {
+    // ...
+    Button(
+        modifier = Modifier.testTag("button_login"),
+        onClick = { TODO() }) {
+        Text(text = "Login")
+    }
+  }
+}
+```
+
+<Note>
+
+If a `@Composable` doesn't have a `testTag` modifier applied, both breadcrumbs and transactions won't be captured because they can't be uniquely identified.
+
+</Note>
+
+<Note>
+
+If you want to customize the recorded breadcrumbs/transactions, you can skip to [the section below](#customize-the-recorded-breadcrumbtransaction).
+
+</Note>
+
+## Jetpack Compose Navigation
+
+
+In this section, we get you up and running with Sentry's Compose Navigation Integration, so that it will automatically add a breadcrumb and start a transaction for each navigation event.
+
+### Auto-Installation With the Sentry Android Gradle Plugin
+
+#### Install
+
+If you're using the [Sentry Android Gradle Plugin](/platforms/android/gradle/), the Jetpack Compose Navigation Integration is automatically applied, and both breadcrumbs and transactions are automatically created for every navigation event.
+
+Add the Sentry Android Gradle plugin in `build.gradle`:
+
+```groovy
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+<Note>
+
+Learn more about the Sentry Android Gradle plugin in our [Gradle](/platforms/android/gradle/) documentation. Details about auto-installation can be found in the [Auto Instrumentation](/platforms/android/gradle/#tracing-auto-instrumentation) section.
+
+</Note>
+
+#### Disable
+
+If you want to disable the Jetpack Compose instrumentation feature, you can adapt your `build.gradle(.kts)` file like so:
+
+```groovy
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.COMPOSE
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.COMPOSE)
+  }
+}
+```
+
+### Manual Installation
+
+#### Install
 
 Sentry captures data by adding a `withSentryObservableEffect` extension function to `NavHostController`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose` dependency using Gradle:
 
@@ -21,7 +157,7 @@ implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.androi
 implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose.android', '6.2.0') }}'
 ```
 
-## Configure
+#### Configure
 
 Configuration should happen in the respective `@Composable` function, once you obtain an instance of `NavHostController`:
 
@@ -43,7 +179,7 @@ NavHost(
 
 By default, the navigation transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. You can customize the timeout to your needs.
 
-## Verify
+### Verify
 
 This snippet includes a sample `Activity` with a couple of navigation events between composables and captures an intentional message, so you can test that everything is working as soon as you set it up:
 

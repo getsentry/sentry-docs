@@ -8,7 +8,7 @@ const query = graphql`
     allSitePage(
       filter: {
         path: { regex: "/contributing/" }
-        context: { draft: { ne: false } }
+        context: { draft: { ne: true } }
       }
     ) {
       nodes {

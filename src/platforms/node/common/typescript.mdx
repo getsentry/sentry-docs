@@ -62,21 +62,36 @@ Unfortunately, Node is very fragile in that manner and doesn’t have a reliable
 
 If you want, you can set this value by hand to something like _/var/www/html/some-app_ if you can get this from some external source or you know it won’t ever change.
 
-This can also be achieved by creating a separate file called _root.js_ or similar that’ll be placed in the same place as your entry point and exporting obtained value instead of exporting it globally.
-
-```javascript
-// index.js
+```typescript
+// Insert the following in a file inside your root directory
+global.__rootdir__ = __dirname || process.cwd();
 
 // This allows TypeScript to detect our global value
 declare global {
-  namespace NodeJS {
-    interface Global {
-      __rootdir__: string;
-    }
-  }
+  var __rootdir__: string;
 }
+```
 
+```javascript
+// Insert the following in a file inside your root directory
 global.__rootdir__ = __dirname || process.cwd();
+```
+
+The same could be achieved by creating a separate file called _root.js_ or similar that'll be placed in the root directory of your project and exporting the obtained value instead of defining it globally.
+
+Afterwards, depending on your approach, you can use either the globally defined variable or the exported variable for the `RewriteFrames` integration's `root` option:
+
+```typescript
+import { RewriteFrames } from "@sentry/integrations";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new RewriteFrames({
+      root: global.__rootdir__,
+    }),
+  ],
+});
 ```
 
 ```javascript

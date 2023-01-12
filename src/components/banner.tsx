@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
-  "You've instrumented performance...now what? See what you can do in our interactive workshop on Aug 17 @ 10am PT";
+  "Join us for our upcoming integration workshop with Cloudflare on 12/8 at 10am PT.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/building-an-operational-dashboard-using-error-and-performance-data/?promo_name=docs-banner";
+  "https://sentry.io/resources/cloudflare-built-sentry-client-for-serverless-computing/?promo_name=docs-banner";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 

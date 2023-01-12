@@ -24,7 +24,7 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
 
-<PlatformSection notSupported={["apple", "dotnet"]}>
+<PlatformSection notSupported={["apple", "dotnet", "elixir", "rust"]}>
 
 #### Event Hints
 
@@ -53,9 +53,11 @@ For events, hints contain properties such as `event_id`, `originalException`, `s
 
 For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
 
+<PlatformContent includePath="configuration/before-send-fingerprint">
+
 In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
 
-<PlatformContent includePath="configuration/before-send-fingerprint" />
+</PlatformContent>
 
 #### Hints for Events
 
@@ -69,25 +71,7 @@ In this example, the fingerprint is forced to a common value if an exception of 
 
 #### Hints for Breadcrumbs
 
-`event`
-
-: For breadcrumbs created from browser events, the Sentry SDK often supplies the event to the breadcrumb as a hint. This, for instance, can be used to extract data from the target DOM element into a breadcrumb.
-
-`level` / `input`
-
-: For breadcrumbs created from console log interceptions. This holds the original console log level and the original input data to the log function.
-
-`response` / `input`
-
-: For breadcrumbs created from HTTP requests. This holds the response object (from the fetch API) and the input parameters to the fetch function.
-
-`request` / `response` / `event`
-
-: For breadcrumbs created from HTTP requests. This holds the request and response object (from the node HTTP API) as well as the node event (`response` or `error`).
-
-`xhr`
-
-: For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
+<PlatformContent includePath="configuration/breadcrumb-hints" />
 
 </PlatformSection>
 
@@ -101,9 +85,11 @@ In this example, the fingerprint is forced to a common value if an exception of 
 
 <PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dart"]} notSupported={["javascript.cordova"]}>
 
-## Using Sampling to Filter Transaction Events
+## Filtering Transaction Events
 
-To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want. (It also allows you to sample different transactions at different rates.)
+To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
+
+### Using <PlatformIdentifier name="traces-sampler" />
 
 **Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
 
@@ -111,6 +97,16 @@ In its simplest form, used just for filtering the transaction, it looks like thi
 
 <PlatformContent includePath="performance/traces-sampler-as-filter" />
 
+It also allows you to sample different transactions at different rates.
+
 Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
+
+<PlatformSection supported={["node", "javascript", "php"]} notSupported={["php.symfony"]}>
+
+### Using <PlatformIdentifier name="before-send-transaction" />
+
+<PlatformContent includePath="configuration/before-send-transaction" />
+
+</PlatformSection>
 
 </PlatformSection>

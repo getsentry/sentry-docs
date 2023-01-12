@@ -7,7 +7,7 @@ const navQuery = graphql`
   query PlatformNavQuery {
     allSitePage(
       filter: {
-        context: { draft: { ne: false } }
+        context: { draft: { ne: true } }
         path: { regex: "/^/(platforms|product)/" }
       }
     ) {
@@ -79,13 +79,31 @@ export const PlatformSidebar = ({
           `/${pathRoot}/enriching-events/`,
           `/${pathRoot}/data-management/`,
           `/${pathRoot}/performance/`,
+          `/${pathRoot}/session-replay/`,
+          `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
         ]}
       />
       <DynamicNav
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
-        prependLinks={[[`/${pathRoot}/performance/`, "Set Up"]]}
+        prependLinks={[[`/${pathRoot}/performance/`, "Set Up Performance"]]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/session-replay`}
+        title="Session Replay"
+        prependLinks={[
+          [`/${pathRoot}/session-replay/`, "Set Up Session Replay"],
+        ]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/profiling`}
+        title="Profiling"
+        prependLinks={[[`/${pathRoot}/profiling/`, "Set Up"]]}
         suppressMissing
         tree={tree}
       />

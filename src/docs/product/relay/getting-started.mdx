@@ -32,16 +32,18 @@ container and copying in the files.
 
 ```shell {tabTitle:Run in Docker}
 # Adjust permissions for the configuration directory
-docker run --rm -it                \
-  -v $(pwd)/config/:/work/.relay/  \
-  --entrypoint bash                \
-  getsentry/relay                  \
+# The :z option is only necessary on selinux.
+# See https://docs.docker.com/storage/bind-mounts/#configure-the-selinux-label.
+docker run --rm -it                  \
+  -v $(pwd)/config/:/work/.relay/:z  \
+  --entrypoint bash                  \
+  getsentry/relay                    \
   -c 'chown -R relay:relay /work/.relay'
 
 # Generate the configuration
-docker run --rm -it                \
-  -v $(pwd)/config/:/work/.relay/  \
-  getsentry/relay                  \
+docker run --rm -it                  \
+  -v $(pwd)/config/:/work/.relay/:z  \
+  getsentry/relay                    \
   config init
 ```
 
