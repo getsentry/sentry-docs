@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Join our upcoming livestream on Session Replay on Jan 26th at 10am PST.";
+  "Join our upcoming Session Replay livestream on Jan 26th at 10am PST.";
 const BANNER_LINK_URL =
   "https://sentry.io/resources/session-replay-ama-livestream/";
 const BANNER_LINK_TEXT = "Register here.";
