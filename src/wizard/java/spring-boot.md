@@ -6,7 +6,7 @@ type: framework
 ---
 
 <Alert level="info">
-There are two variants of Sentry available for Spring Boot. If you are using Spring Boot 2, please use `sentry-spring-boot-starter` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-boot-starter)). If you are using Spring Boot 3, please use `sentry-spring-boot-starter-jakarta` instead ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-boot-starter-jakarta)).
+There are two variants of Sentry available for Spring Boot. If you're using Spring Boot 2, use `sentry-spring-boot-starter` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-boot-starter)). If you're using Spring Boot 3, use `sentry-spring-boot-starter-jakarta` instead ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-boot-starter-jakarta)).
 </Alert>
 
 <Alert level="info">

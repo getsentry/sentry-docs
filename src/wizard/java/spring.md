@@ -6,7 +6,7 @@ type: framework
 ---
 
 <Alert level="info">
-    There are two variants of Sentry available for Spring. If you are using Spring 5, please use `sentry-spring` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring)). If you are using Spring 6, please use `sentry-spring-jakarta` instead ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-jakarta)).
+    There are two variants of Sentry available for Spring. If you're using Spring 5, use `sentry-spring` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring)). If you're using Spring 6, use `sentry-spring-jakarta` instead ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-jakarta)).
 </Alert>
 
 <Alert level="info">
