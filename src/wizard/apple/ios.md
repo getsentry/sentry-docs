@@ -116,6 +116,8 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
+    options.enableFileIOTracing = true
+    options.enableCoreDataTracing = true
     options.enableUserInteractionTracing = true
     options.enablePreWarmedAppStartTracking = true
     options.attachScreenshot = true
