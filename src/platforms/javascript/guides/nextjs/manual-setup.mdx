@@ -8,11 +8,11 @@ If you can't (or prefer not to) run the [configuration step](/platforms/javascri
 
 ## Create Initialization Config Files
 
-Create two files in the root directory of your project, `sentry.client.config.js` and `sentry.server.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
+Create three files in the root directory of your project, `sentry.client.config.js`, `sentry.server.config.js` and `sentry.edge.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
 
 For each configuration:
 
-```javascript {filename:sentry.server.config.js/sentry.client.config.js}
+```javascript {filename:sentry.server.config.js/sentry.client.config.js/sentry.edge.config.js}
 import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -29,7 +29,7 @@ Sentry.init({
 });
 ```
 
-```typescript {filename:sentry.server.config.ts/sentry.client.config.ts}
+```typescript {filename:sentry.server.config.ts/sentry.client.config.ts/sentry.edge.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -319,7 +319,7 @@ const moduleExports = {
 
 The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring.
 
-### Disable API Route and Data Fetching Auto-instrumentation Entirely
+### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
 
 _(New in version 7.14.0)_
 
@@ -341,7 +341,7 @@ _(New in version 7.14.0)_
 
 If the automatic instrumentation doesn't work for your use case, you can turn it off globally and choose to only wrap specific API route handlers or data fetching functions instead.
 
-For API routes, use the `withSentry` function:
+For API routes, use the `wrapApiHandlerWithSentry` function:
 
 ```javascript {filename:pages/api/*}
 import { withSentry } from "@sentry/nextjs";
@@ -350,7 +350,7 @@ const handler = (req, res) => {
   res.status(200).json({ name: "John Doe" });
 };
 
-export default withSentry(handler);
+export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
 ```
 
 ```typescript {filename:pages/api/*}
@@ -361,17 +361,17 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
   res.status(200).json({ name: "John Doe" });
 };
 
-export default withSentry(handler);
+export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
 ```
 
 For data fetching methods, use the following functions:
 
-- `withSentryServerSideGetInitialProps` for `getInitialProps`
-- `withSentryGetServerSideProps` for `getServerSideProps`
-- `withSentryGetStaticProps` for `getStaticProps`
-- `withSentryServerSideErrorGetInitialProps` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
-- `withSentryServerSideAppGetInitialProps` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
-- `withSentryServerSideDocumentGetInitialProps` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
+- `wrapGetInitialPropsWithSentry` for `getInitialProps`
+- `wrapGetServerSidePropsWithSentry` for `getServerSideProps`
+- `wrapGetStaticPropsWithSentry` for `getStaticProps`
+- `wrapErrorGetInitialPropsWithSentry` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
+- `wrapAppGetInitialPropsWithSentry` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
+- `wrapDocumentGetInitialPropsWithSentry` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
 
 ### Opt Out of Auto-instrumentation on Specific Routes
 
@@ -393,6 +393,20 @@ const moduleExports = {
 ```
 
 Excluded routes can be specified either as regexes or strings. When using a string, make sure that it matches the route exactly, and has a leading slash but no trailing one.
+
+### Opt Out of Auto-instrumentation on Middleware
+
+_(New in version 7.31.0)_
+
+To disable the automatic instrumentation of Next.js middleware, set the `autoInstrumentMiddleware` option to `false`.
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    autoInstrumentMiddleware: false,
+  },
+};
+```
 
 ## Configure Tunneling to avoid Ad-Blockers
 
