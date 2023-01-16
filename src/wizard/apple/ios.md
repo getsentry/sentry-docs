@@ -108,3 +108,7 @@ SentrySDK.start { options in
     options.enableMetricKit = true
 }
 ```
+
+## Performance Monitoring for SwiftUI
+
+If you want to find out the performance of your Views in a SwiftUI project, [try the SentrySwiftUI library](/platforms/apple/performance/instrumentation/swiftui-instrumentation).
