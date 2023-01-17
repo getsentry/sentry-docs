@@ -254,3 +254,27 @@ SENTRY_ALLOW_FAILURE=true npx react-native run-android
 Note that if the source maps upload fails, you'll have to do it [manually](/platforms/react-native/sourcemaps) later when the connection is restored.
 
 When you remove the environmental variable in front of your build command, your build will work as before.
+
+## Expo Transactions Never Finish
+
+If you're using [expo-dev-client](https://docs.expo.dev/development/introduction/#what-is-an-expo-dev-client), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
+
+```javascript
+import * as Sentry from 'sentry-expo';
+import * as Network from 'expo-network';
+
+const devServerPort = 8081;
+let devServerIpAddress: string | null = null;
+Network.getIpAddressAsync().then((ip) => {devServerIpAddress = ip});
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+    new Sentry.Native.ReactNativeTracing({
+      shouldCreateSpanForRequest: (url) => {
+        return !__DEV__ || !url.startsWith(`http://${devServerIpAddress}:${devServerPort}/logs`);
+      },
+    }),
+  ],
+});
+```
