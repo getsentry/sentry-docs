@@ -65,10 +65,7 @@ struct SwiftUIApp: App {
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
-
-- [With Bitcode](/platforms/apple/dsym/#dsym-with-bitcode)
-- [Without Bitcode](/platforms/apple/dsym/#dsym-without-bitcode)
+Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
 
 ## Performance Monitoring
 
