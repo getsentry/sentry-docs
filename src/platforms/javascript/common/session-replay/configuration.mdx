@@ -56,22 +56,38 @@ new Replay({
 
 ## Start and Stop Recording
 
-Replay recording only starts automatically when it's included in the integrations key when calling `Sentry.init`. Otherwise, you can initialize the plugin and manually call the `start()` method on the integration instance. To stop recording you can call the `stop()`:
+Replay recording starts automatically when it's included in the `integrations` key when calling `Sentry.init()` or when adding it via `addIntegration()`. Call `stop()` to stop recording and `start()` to resume recording:
 
 ```javascript {tabTitle: ESM}
-const replay = new Replay(); // This will *NOT* begin recording replays
+const replay = new Replay();
 
-replay.start(); // Start recording
+// Load replay when you configure Sentry SDK
+Sentry.init({
+  integrations: [replay]
+});
 
-replay.stop(); // Stop recording
+// Or if you want to defer loading Replay
+getCurrentHub().getClient().addIntegration(replay);
+
+// some time later
+replay.stop();
+replay.start();
 ```
 
 ```javascript {tabTitle: CDN}
-const replay = new Sentry.Integrations.Replay(); // This will *NOT* begin recording replays
+const replay = new Sentry.Integrations.Replay();
 
-replay.start(); // Start recording
+// Load replay when you configure Sentry SDK
+Sentry.init({
+  integrations: [replay]
+});
 
-replay.stop(); // Stop recording
+// Or if you want to defer loading Replay
+Sentry.getCurrentHub().getClient().addIntegration(replay);
+
+// some time later
+replay.stop();
+replay.start();
 ```
 
 ## Privacy
