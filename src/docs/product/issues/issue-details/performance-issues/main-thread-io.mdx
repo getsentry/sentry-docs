@@ -12,25 +12,25 @@ If you’re interested in being an Early Adopter, you can turn your organization
 
 </Note>
 
-An important concept for mobile application's is the Main UI thread, the thread in charge of handling events such as button presses, or scrolling the page. This means that long running operations like File IO on the main thread will cause the User Interface to block until the operation is complete. This can be a significant problem if it causes your application to not respond
+The Main UI thread in a mobile application handles user interface events such as button presses and page scrolls. If the Main UI thread performs long running operations like File IO, it will block the whole UI until the operation is complete, preventing the user from interacting with the app. If the Main UI thread is blocked for a long period of time, it can cause App Hangs and Application Not Responding errors.
 
 ## Detection Criteria
 
-The detector for this performance issue looks at the total non-overlapping duration for file io spans, and if it exceeds 16ms creates a Performance Issue
+The detector for this performance issue looks at the total non-overlapping duration for file io spans, and if it exceeds 16ms creates a Performance Issue.
 
 ## Span Evidence
 
-The evidence for an N+1 queries problem has four main aspects:
+The evidence for an file IO on main thread problem has four main aspects:
 
 - Transaction name
-- Parent span - This is the span where the File IO spans occurred during.
+- Parent span - This is the span where the File IO spans occurred during
 - Offending Span - The actual spans that are performing IO in the main thread
 
 ![File IO Span Evidence](file-io.png)
 
 ## Example
 
-Consider this swift code where you're opening a file to get its content
+Consider this Swift code where you're opening a file to get its content:
 
 ```swift
 if let path = Bundle.main.path(forResource: "LoremIpsum", ofType: "txt") {
@@ -39,7 +39,7 @@ if let path = Bundle.main.path(forResource: "LoremIpsum", ofType: "txt") {
 }
 ```
 
-In order to fix this performance issue, you should instead use a dispatch queue.
+In order to fix this performance issue, you could use a dispatch queue:
 
 ```swift
 let dispatchQueue = DispatchQueue(label: "ViewController", attributes: .concurrent) {
@@ -54,7 +54,7 @@ let dispatchQueue = DispatchQueue(label: "ViewController", attributes: .concurre
 }
 ```
 
-Or alternatively for Kotlin
+Or alternatively for Kotlin:
 
 ```kotlin
 val file = File(context.cacheDir, "LoremIpsum.txt")
