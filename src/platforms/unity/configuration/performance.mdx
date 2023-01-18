@@ -1,0 +1,38 @@
+---
+title: Performance Instrumentation
+description: "Learn how the SDK provides performance instrumentation."
+sidebar_order: 11
+---
+
+The SDK provides automated performance instrumentation.
+
+## Initialization
+
+The SDK creates a transaction for the whole of the games initialization cycle that ends when the first scene finishes loading. Unity provides access to [RuntimeInitializeOnLoadMethodAttributes](https://docs.unity3d.com/ScriptReference/RuntimeInitializeOnLoadMethodAttribute.html) that can be used to execute code during specific times of the game's initialization. The SDK automatically creates spans for the following `LoadTypes`:
+- SubsystemRegistration
+- AfterAssembliesLoaded
+- BeforeSplashScreen
+- BeforeSceneLoad
+- AfterSceneLoad
+
+## Scene Loading
+
+<Note>
+
+The Scene loading instrumentation requires Unity `2020.3 LTS` or newer as it relies on the [Scene Manager API](https://docs.unity3d.com/2020.3/Documentation/ScriptReference/SceneManagement.SceneManagerAPI.html).
+
+</Note>
+
+The SDK captures a transaction for every scene loading event. The transaction finishes when the loading of a scene is complete. The loading of initial scene falls outside of the scene loading loading integration and gets covered by the initialization transaction.
+
+## Awake Calls
+
+<Note>
+
+This feature is currently experimental.
+
+</Note>
+
+The SDK provides support for instrumenting all instances of [Awake](https://docs.unity3d.com/ScriptReference/MonoBehaviour.Awake.html) in your project. The spans created in those `Awake` methods rely on an active transaction and do not create one on their own. This makes them especially useful during the games initialization or during scene loading as these get automatically instrumented.
+
+The `Awake` methods get modified by use of the [Cecil library](https://github.com/jbevain/cecil). The SDK hooks up to Unity's build system and modifies the compiled player assembly before passing it back into the pipeline.
