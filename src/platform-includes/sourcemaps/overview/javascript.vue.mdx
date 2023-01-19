@@ -1,0 +1,90 @@
+## Uploading Source Maps using Vite
+
+If you are using Vue, chances are good you are using Vite to bundle your project.
+You can use the Sentry Vite plugin to automatically create [releases](/product/releases/) and upload source maps to Sentry when bundling your app.
+
+### Installation
+
+```npm
+npm install @sentry/vite-plugin --save-dev
+```
+
+```yarn
+yarn add @sentry/vite-plugin --dev
+```
+
+### Configuration
+
+Learn more about configuring the plugin in our [Sentry Vite Plugin documentation](https://github.com/getsentry/sentry-javascript-bundler-plugins/tree/main/packages/vite-plugin).
+
+Example:
+
+```javascript {filename:vite.config.js}
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import sentryVitePlugin from "@sentry/vite-plugin";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
+  plugins: [
+    vue(),
+
+    // Put the Sentry vite plugin after all other plugins
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Specify the directory containing build artifacts
+      include: "./dist",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and needs the `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Optionally uncomment the line below to override automatic release name detection
+      // release: process.env.RELEASE,
+    }),
+  ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+});
+```
+
+The Sentry Vite plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // When using the plugin, either remove the `release`` property here entirely or
+  // make sure that the plugin's release option and the Sentry.init()'s release
+  // option match exactly.
+  // release: "my-example-release-1"
+});
+```
+
+## Other Bundlers
+
+In case you are using a bundler other than Vite to build your Vue project, we've compiled a list of guides on how to upload source maps to Sentry for the most popular JavaScript bundlers:
+
+- <PlatformLink to="/sourcemaps/uploading/webpack/">Webpack</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/typescript/">TypeScript (tsc)</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/rollup/">Rollup</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/esbuild/">esbuild</PlatformLink>
+
+## Other Tools
+
+If you're not using any of tools above, we assume you already know how to generate source maps with your toolchain and we recommend you upload them using <PlatformLink to="/sourcemaps/uploading/cli/">Sentry CLI</PlatformLink>.
+
+<Note>
+
+Though we strongly recommend uploading source maps as part of your build process, for browser applications it's also possible to <PlatformLink to="/sourcemaps/uploading/hosting-publicly/">host your source maps publicly</PlatformLink>.
+
+</Note>

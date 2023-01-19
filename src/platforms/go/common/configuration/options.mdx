@@ -14,17 +14,22 @@ initialized.
 ```go
 // ClientOptions that configures a SDK Client
 type ClientOptions struct {
-	// The DSN to use. If the DSN is not set, the client is effectively disabled.
+	// The DSN to use. If the DSN is not set, the client is effectively
+	// disabled.
 	Dsn string
-	// In debug mode, the debug information is printed to stdout to help you understand what sentry is doing.
+	// In debug mode, the debug information is printed to stdout to help you
+	// understand what sentry is doing.
 	Debug bool
-	// Configures whether SDK should generate and attach stacktraces to pure capture message calls.
+	// Configures whether SDK should generate and attach stacktraces to pure
+	// capture message calls.
 	AttachStacktrace bool
 	// The sample rate for event submission in the range [0.0, 1.0]. By default,
 	// all events are sent. Thus, as a historical special case, the sample rate
 	// 0.0 is treated as if it was 1.0. To drop all events, set the DSN to the
 	// empty string.
 	SampleRate float64
+	// Enable performance tracing.
+	EnableTracing bool
 	// The sample rate for sampling traces in the range [0.0, 1.0].
 	TracesSampleRate float64
 	// Used to customize the sampling of traces, overrides TracesSampleRate.
@@ -38,8 +43,10 @@ type ClientOptions struct {
 	SendDefaultPII bool
 	// BeforeSend is called before error events are sent to Sentry.
 	// Use it to mutate the event or return nil to discard the event.
-	// See EventProcessor if you need to mutate transactions.
 	BeforeSend func(event *Event, hint *EventHint) *Event
+	// BeforeSendTransaction is called before transaction events are sent to Sentry.
+	// Use it to mutate the transaction or return nil to discard the transaction.
+	BeforeSendTransaction func(event *Event, hint *EventHint) *Event
 	// Before breadcrumb add callback.
 	BeforeBreadcrumb func(breadcrumb *Breadcrumb, hint *BreadcrumbHint) *Breadcrumb
 	// Integrations to be installed on the current Client, receives default

@@ -1,0 +1,72 @@
+---
+title: "IO on Main Thread for Mobile"
+sidebar_order: 20
+description: "Learn more about File IO on Main Thread and how to diagnose and fix these issues."
+---
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program, and have the latest version of either the Android or iOS Mobile SDK. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily. You can find information about the previous version of reprocessing in [Legacy Reprocessing](#legacy-reprocessing).
+
+</Note>
+
+The Main UI thread in a mobile application handles user interface events such as button presses and page scrolls. If the Main UI thread performs long running operations like File IO, it will block the whole UI until the operation is complete, preventing the user from interacting with the app. If the Main UI thread is blocked for a long period of time, it can cause App Hangs and Application Not Responding errors.
+
+## Detection Criteria
+
+The detector for this performance issue looks at the total non-overlapping duration for file io spans, and if it exceeds 16ms creates a Performance Issue.
+
+## Span Evidence
+
+The evidence for an file IO on main thread problem has four main aspects:
+
+- Transaction name
+- Parent span - This is the span where the File IO spans occurred during
+- Offending Span - The actual spans that are performing IO in the main thread
+
+![File IO Span Evidence](file-io.png)
+
+## Example
+
+Consider this Swift code where you're opening a file to get its content:
+
+```swift
+if let path = Bundle.main.path(forResource: "LoremIpsum", ofType: "txt") {
+    let content = String(contentsOfFile: path)
+    label.text = content
+}
+```
+
+In order to fix this performance issue, you could use a dispatch queue:
+
+```swift
+let dispatchQueue = DispatchQueue(label: "ViewController", attributes: .concurrent) {
+    dispatchQueue.async {
+        if let path = Bundle.main.path(forResource: "LoremIpsum", ofType: "txt") {
+            let content = String(contentsOfFile: path)
+                DispatchQueue.main.async {
+                    label.text = content
+                }
+        }
+    }
+}
+```
+
+Or alternatively for Kotlin:
+
+```kotlin
+val file = File(context.cacheDir, "LoremIpsum.txt")
+val content = file.readText()
+```
+
+In order to fix this performance issue you can initialize another thread to read the file instead. 
+
+```kotlin
+suspend fun readFile(): String = withContext(Dispatchers.IO) {
+    val file = File(context.cacheDir, "LoremIpsum.txt")
+    val content = file.readText()
+    return content
+}
+```

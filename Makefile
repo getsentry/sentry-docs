@@ -10,3 +10,6 @@ endif
 
 test:
 	yarn test
+
+preview-api-docs:
+	bin/preview-api-docs

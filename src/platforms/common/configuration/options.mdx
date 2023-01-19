@@ -236,27 +236,37 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 
 </Note>
 
-If possible, we recommended turning on this feature to send all such data by default, and manually removing what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 </ConfigKey>
 
 <ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java", "dart", "dotnet"]} notSupported={["android"]}>
 
-This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server. Most SDKs
-will attempt to auto-discover this value.
+This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+
+<PlatformSection notSupported={["dotnet"]}>
+
+Most SDKs will attempt to auto-discover this value.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+
+For ASP.NET and ASP.NET Core applications, the value will default to the server's name. For other application types, the value will default to the computer's name only when the `SendDefaultPii` is set to `true`, because the computer's name can be considered personally identifiable information (PII) in the case of a desktop or mobile application.
+
+</PlatformSection>
 
 </ConfigKey>
 
 <ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A list of strings or regex patterns that match error URLs that should not be sent to Sentry. By default, all errors will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
+A list of strings or regex patterns that match error URLs that should not be sent to Sentry. Errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will not be sent. As a result, if you add `'foo.com'` to the list, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
 
 </ConfigKey>
 
 <ConfigKey name="allow-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. By default, all errors
-will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
+A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. If you use this option, only errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will be sent. As a result, if you add `'foo.com'` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
 
 </ConfigKey>
 
@@ -426,18 +436,20 @@ _(New in version 6.0.0)_
 
 </ConfigKey>
 
-<ConfigKey name="attach-viewhierarchy" supported={["apple.ios"]}>
+<ConfigKey name="attach-viewhierarchy" supported={["apple.ios", "flutter"]}>
 
-Renders an ASCII represention of the entire view hierarchy of the application when an error happens and includes it as an attachment.
+Renders a JSON represention of the entire view hierarchy of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
 
 </ConfigKey>
 
-<ConfigKey name="idle-timeout" supported={["android"]}>
+<ConfigKey name="idle-timeout" supported={["android", "flutter"]}>
 
 The idle time, measured in ms, to wait until a transaction will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
 
 The default is `3000`.
+
+<PlatformSection supported={["android"]}>
 
 _(New in version 6.0.0)_
 
@@ -446,6 +458,8 @@ _(New in version 6.0.0)_
 This only affects [user interaction transactions](/platforms/android/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation).
 
 </Note>
+
+</PlatformSection>
 
 </ConfigKey>
 
@@ -519,6 +533,24 @@ _(New in version 7.30.0)_
 
 </ConfigKey>
 
+<ConfigKey name="\_experiments.include-stack-locals" supported={["node"]}>
+
+Enables the `LocalVariables` integration, which adds stack local variables to
+stack traces.
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  _experiments: {
+    includeStackLocals: true,
+  },
+});
+```
+
+</ConfigKey>
+
 <PlatformSection supported={["javascript", "python", "node", "dart", "java", "apple"]}>
 
 ## Integration Configuration
@@ -548,7 +580,19 @@ thread-safe APIs and only use Unity-specific APIs after you've checked that you'
 
 <ConfigKey name="before-send">
 
-This function is called with an SDK-specific event object, and can return a modified event object or nothing to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+</ConfigKey>
+
+<ConfigKey name="before-send-transaction" supported={["javascript", "node", "php", "go", "python"]} notSupported={["php.symfony"]}>
+
+This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+
+<PlatformSection supported={["javascript", "node"]}>
+
+_(New in version 7.18.0)_
+
+</PlatformSection>
 
 </ConfigKey>
 
@@ -609,6 +653,12 @@ When set, a proxy can be configured that should be used for outbound requests. T
 <ConfigKey name="https-proxy" supported={["python", "rust"]}>
 
 Configures a separate proxy for outgoing HTTPS requests. This value might not be supported by all SDKs. When not supported the `http-proxy` value is also used for HTTPS requests at all times.
+
+</ConfigKey>
+
+<ConfigKey name="proxy-headers" supported={["python"]}>
+
+A dict containing additional proxy headers (usually for authentication) to be forwarded to `urllib3`'s [`ProxyManager`](https://urllib3.readthedocs.io/en/1.24.3/reference/index.html#urllib3.poolmanager.ProxyManager).
 
 </ConfigKey>
 
@@ -791,7 +841,7 @@ Set this boolean to `false` to disable the scope sync from Java to NDK on Androi
 Set this boolean to `true` to automatically attach all threads to all logged events on Android.
 </ConfigKey>
 
-<ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
+<ConfigKey name="enableAutoPerformanceTracking" supported={["react-native", "flutter"]}>
 
 Set this boolean to `false` to disable auto [performance monitoring](/product/performance/) tracking.
 
@@ -812,6 +862,36 @@ Set this callback, which is called after the Sentry React Native SDK initializes
 <ConfigKey name="enableScopeSync" supported={["flutter"]}>
 
 Set this boolean to `false` to disable sync of `Scope` data to Android and iOS SDKs.
+
+</ConfigKey>
+
+<ConfigKey name="reportPackages" supported={["flutter"]}>
+
+Set this boolean to `false` to disable reporting all the package dependencies.
+
+</ConfigKey>
+
+<ConfigKey name="anrEnabled" supported={["flutter"]}>
+
+Set this boolean to `true` to enable ANR (Application Not Responding) detection on Android.
+
+</ConfigKey>
+
+<ConfigKey name="anrTimeoutInterval" supported={["flutter"]}>
+
+Set this to change the default interval of the ANR detection. The default is `5` seconds.
+
+</ConfigKey>
+
+<ConfigKey name="reportSilentFlutterErrors" supported={["flutter"]}>
+
+Set this boolean to `true` to enable reporting [FlutterErrorDetails.silent](https://api.flutter.dev/flutter/foundation/FlutterErrorDetails/silent.html) errors automatically.
+
+</ConfigKey>
+
+<ConfigKey name="autoAppStart" supported={["flutter"]}>
+
+Set this boolean to `false` to disable automatic app start tracking.
 
 </ConfigKey>
 

@@ -226,9 +226,21 @@ For more information see our [file I/O integration](/platforms/android/configura
 
 ### User Interaction Instrumentation
 
+The UI instrumentation, once enabled, captures transactions for a set of different user interactions, which include clicks, scrolls, and swipes. User interaction instrumentation is available for both classic Android Views as well as Jetpack Compose.
+
+This feature is disabled by default, but you can enable it by setting:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+</application>
+```
+
+#### User Interaction Instrumentation for Classic Android View System
+
 _(New in version 6.0.0)_
 
-The UI instrumentation, once enabled, captures transactions for a set of different user interactions, which include clicks, scrolls and swipes. The SDK composes the transaction name out of the host `Activity` and the `id` of the view, which captured the user interaction; for example, `LoginActivity.login_button`. The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll` or `swipe`).
+ The SDK composes the transaction name out of the host `Activity` and the `id` of the view that captured the user interaction — for example, for `LoginActivity.login_button`. The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll`, or `swipe`).
 
 <Note>
 
@@ -236,13 +248,35 @@ If the view doesn't have the `id` assigned, the transaction won't be captured be
 
 </Note>
 
-The UI instrumentation is disabled by default, but you can enable it by setting:
+#### User Interaction Instrumentation for Jetpack Compose
 
-```xml {filename:AndroidManifest.xml}
-<application>
-    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
-</application>
+_(New in version 6.10.0)_
+
+The SDK composes the transaction name out of the host `Activity` and the `tag` set by way of the `Modifier.testTag("<tag>")` of the `Composable` (for example, `LoginActivity.login_button`). The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll`, or `swipe`).
+
+```kotlin
+import androidx.compose.ui.platform.testTag
+
+@Composable
+fun LoginScreen() {
+  Column {
+    // ...
+    Button(
+        modifier = Modifier.testTag("button_login"),
+        onClick = { TODO() }) {
+        Text(text = "Login")
+    }
+  }
+}
 ```
+
+<Note>
+
+If the `@Composable` doesn't have a `testTag` modifier applied, the transaction won't be captured because it can't be uniquely identified otherwise.
+
+</Note>
+
+#### Transaction Lifetime
 
 The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds). You can also disable the idle timeout by setting it to `null`, but the transaction must be finished manually in this case.
 

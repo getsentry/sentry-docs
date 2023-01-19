@@ -90,8 +90,8 @@ After this step, Sentry will report any uncaught exceptions triggered by your ap
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
 ```javascript
-<button type="button" onClick={methodDoesNotExist}>
-  Throw error
+<button onClick={() => methodDoesNotExist()}>
+  Break the world
 </button>
 ```
 

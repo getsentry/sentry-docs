@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Join us for our upcoming integration workshop with Cloudflare on 12/8 at 10am PT.";
+  "Join our upcoming Session Replay livestream on Jan 26th at 10am PST.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/cloudflare-built-sentry-client-for-serverless-computing/?promo_name=docs-banner";
+  "https://sentry.io/resources/session-replay-ama-livestream/";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
