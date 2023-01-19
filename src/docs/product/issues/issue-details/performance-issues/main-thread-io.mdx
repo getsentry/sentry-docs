@@ -1,30 +1,30 @@
 ---
-title: "IO on Main Thread for Mobile"
+title: "File IO on Main Thread for Mobile"
 sidebar_order: 20
 description: "Learn more about File IO on Main Thread and how to diagnose and fix these issues."
 ---
 
 <Include name="early-adopter-note.mdx" />
 
-The Main UI thread in a mobile application handles user interface events such as button presses and page scrolls. If the Main UI thread performs long running operations like File IO, it will block the whole UI until the operation is complete, preventing the user from interacting with the app. If the Main UI thread is blocked for a long period of time, it can cause App Hangs and Application Not Responding errors.
+The Main UI thread in a mobile application handles user interface events such as button presses and page scrolls. If the Main UI thread performs long-running operations like File IO, it will block the whole UI until the operation is complete, preventing the user from interacting with the app. If the Main UI thread is blocked for a long time, it can cause App Hangs and Application Not Responding errors.
 
 ## Detection Criteria
 
-The detector for this performance issue looks at the total non-overlapping duration for file io spans, and if it exceeds 16ms creates a Performance Issue.
+The detector for this performance issue looks at the total non-overlapping duration for File IO spans. If it exceeds 16ms, a Performance Issue is created.
 
 ## Span Evidence
 
-The evidence for an file IO on main thread problem has four main aspects:
+Span evidence identifies the root cause of the File IO on main thread problem by showing you: 
 
 - Transaction name
-- Parent span - This is the span where the File IO spans occurred during
-- Offending Span - The actual spans that are performing IO in the main thread
+- Parent Span - Where the File IO spans occurred 
+- Offending Span - The actual spans that are performing File IO in the main thread
 
 ![File IO Span Evidence](file-io.png)
 
 ## Example
 
-Consider this Swift code where you're opening a file to get its content:
+Consider this Swift code where you're opening a file to get its contents:
 
 ```swift
 if let path = Bundle.main.path(forResource: "LoremIpsum", ofType: "txt") {
@@ -48,7 +48,7 @@ let dispatchQueue = DispatchQueue(label: "ViewController", attributes: .concurre
 }
 ```
 
-Or alternatively for Kotlin:
+For Kotlin:
 
 ```kotlin
 val file = File(context.cacheDir, "LoremIpsum.txt")
