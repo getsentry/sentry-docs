@@ -53,17 +53,17 @@ monitor_id = '' # Write your monitor_id here
 # Create the check-in
 json_data = {'status': 'in_progress'}
 response = requests.post(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/', headers=headers, json=json_data)
-check_in_id = response.json()['id']
+checkin_id = response.json()['id']
 
 # Execute your scheduled task code here...
 
 # Update the check-in status (required) and duration (optional)
 json_data = {'status': 'ok', 'duration': 3000}
-response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/{check_in_id}/', headers=headers, json=json_data)
+response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/{checkin_id}/', headers=headers, json=json_data)
 ```
 
 ```bash {tabTitle: curl}
-# Create the check-in and save the returned CHECK_IN_ID
+# Create the check-in and save the returned CHECKIN_ID
 $ curl -X POST \
     'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
@@ -74,7 +74,7 @@ $ curl -X POST \
 
 # Update the check-in status (required) and duration (optional)
 $ curl -X PUT \
-    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECK_IN_ID}/' \
+    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECKIN_ID}/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "ok", "duration": 3000}'
@@ -91,9 +91,15 @@ $ curl -X PUT \
 
 : **Required.** The status of your job execution and whether it was completed successfully or unsuccessfully. The values accepted are `in_progress`, `ok` or `error`.
 
+`checkin_id`:
+
+: **Required.** The check-in id to use when updating a check-in to mark the completion or failure of a scheduled job. You can also supply "`latest`" for this parameter in order to retrieve the most recent check-in, more info [here](/api/crons/update-a-checkin/)
+
 `duration`:
 
 : **Optional.** The runtime of the job in milliseconds. If this value is not provided, a duration will be automatically calculated based on the amount of time elapsed from check-in creation to updating a check-in as successful or failed.
+
+More API docs can be found [here](/api/crons/)
 
 Once these health checks are set up, your Cron Monitor is ready to observe and report on future scheduled job executions.
 
