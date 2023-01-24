@@ -8,38 +8,39 @@ description: "Learn more about Consecutive DB Queries and how to diagnose and fi
 
 <Include name="early-adopter-note.mdx" />
 
-Consecutive DB Queries are a sequence of database spans where one or more have been identified as parallelizable, or in other words, spans that may be shifted to the start of the sequence. This often occurs when a db query performs no filtering on the data, for example a query without a WHERE clause. To learn more about how to fix consecutive DB queries, check out these resources:
+Consecutive DB Queries are a sequence of database spans where one or more have been identified as parallelizable, in other words, spans that can be shifted to the start of the sequence. This often occurs when a DB query performs no filtering on the data, for example a query without a WHERE clause.
 
 ## Detection Criteria
 
-The detector for this performance issuee looks for a set of sequential, non-overlapping database spans (consecutive spans). Within this set of spans, it proceeds to look for queries that are parallelziable, which occurs when all following criteria is true about the query.
+The detector for this performance issue looks for a set of sequential, non-overlapping database spans. Within this set of spans, it proceeds to look for queries that are parallelizable, which occurs when the following is true about the query:
 
-- It does not contain a WHERE clause
-- It is a SELECT query
-- There is no parameters in the query
-- It is not the first query in the set of sequential spans
+- It doesn't contain a `WHERE` clause
+- It's a `SELECT` query
+- There are no parameters in the query
+- It's not the first query in a set of sequential spans
 
-Once these spans are found, they following criteria must also hold true:
+Once these spans are found, the following must also hold true:
 
 - Maximum time saved from parallelization must exceed a threshold
 - Total duration of each parallelizable span must exceed a threshold
 
-If Sentry is not detecting a Consecutive DB issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
+If Sentry isn't detecting a Consecutive DB issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
 
 ## Span Evidence
 
-The evidence for a Consecutive DB queries problem has four main aspects:
+You can identify a Consecutive DB queries problem by four main aspects in the "Span Evidence" section:
 
 - Transaction name
-- Starting Span - This is the first span in the set of consecutive spans
-- Parallelizable Spans - These are the spans that can be parallelized
-- Duration Impact - This is the fraction of time added to the total transaction time as a result of spans not being ran in parallel.
+- Starting Span - The first span in a set of consecutive spans
+- Parallelizable Spans - The spans that can be parallelized
+- Duration Impact - The fraction of time added to the total transaction time as a result of spans not being ran in parallel
 
 ![Consecutive DB Queries span evidence](span-evidence.png)
 
+View it by going to the **Issues** page in Sentry, selecting your project, clicking on the Consecutive DB Queries error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
 ## Example
 
-Consider this node code where you're retriving all the users from a database, and a count of all the users
+Consider using this Node.js code when counting and retrieving all the users from a database 
 
 ```javascript
   const result = await db.query("SELECT * FROM USERS");
@@ -47,13 +48,13 @@ Consider this node code where you're retriving all the users from a database, an
   processMyData({ result, count });
 ```
 
-This results in a consecutive db performance issue, we'll notice in the span tree these queries occur sequentially,
-but they don't depend on each other, we aren't using the result of one in the other, and can therefore execute in parallel.
+This results in a consecutive DB performance issue. You'll notice these queries occur sequentially in the span tree,
+but they aren't interdependent because the result of one doesn't affect the other. Therefore, they can be executed in parallel.
 
 ![Consecutive DB Queries example](consecutive-example.png)
 
 
-In order to fix this performance issue, you could use Promise.all():
+To fix this performance issue, you could use Promise.all():
 
 ```javascript
   const [result, count] = await Promise.all([
@@ -63,6 +64,6 @@ In order to fix this performance issue, you could use Promise.all():
   processMyData({ result, count });
 ```
 
-This results in the queries executing in parallel, and in this case it reduced the transaction duration by almost half!
+This makes the queries execute in parallel, which in this case, reduced the transaction duration by almost half!
 
 ![Consecutive DB Queries solved](parallel-example.png)
