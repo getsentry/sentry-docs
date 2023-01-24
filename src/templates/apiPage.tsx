@@ -21,7 +21,13 @@ const Params = ({ params }) => (
         <dt>
           <div>
             <code data-index>{param.name}</code>
-            {!!param.schema?.type && <em> ({param.schema.type}{param.schema.items && `(${param.schema.items.type})`})</em>}
+            {!!param.schema?.type && (
+              <em>
+                {" "}
+                ({param.schema.type}
+                {param.schema.items && `(${param.schema.items.type})`})
+              </em>
+            )}
           </div>
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
@@ -175,6 +181,18 @@ export default props => {
   return (
     <BasePage sidebar={<ApiSidebar />} {...props}>
       <div className="row">
+        <div className="col-12">
+          <div className="api-block">
+            <div className="api-block-header request">
+              <span className="api-request-block-verb">
+                {data.method.toUpperCase()}
+              </span>{" "}
+              <span>{data.apiPath}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="row">
         <div className="col-6">
           {data.summary && <p>{data.summary}</p>}
 
@@ -232,12 +250,6 @@ export default props => {
         </div>
         <div className="col-6">
           <div className="api-block">
-            <div className="api-block-header request">
-              <span className="api-request-block-verb">
-                {data.method.toUpperCase()}
-              </span>{" "}
-              <span>{data.apiPath}</span>
-            </div>
             <pre className="api-block-example request">
               {apiExample.join(" \\\n")}
             </pre>

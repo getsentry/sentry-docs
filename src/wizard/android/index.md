@@ -5,9 +5,9 @@ support_level: production
 type: framework
 ---
 
-> Using Jetpack Compose? Try out our new [Jetpack Compose Navigation](https://docs.sentry.io/platforms/android/configuration/integrations/jetpack-compose/) integration.
+> Using Jetpack Compose? Try out our new [Jetpack Compose](https://docs.sentry.io/platforms/android/configuration/integrations/jetpack-compose/) integration.
 >  
-> This feature is available starting from version `6.2.1` of the [Sentry Android SDK](https://docs.sentry.io/platforms/android/). It automatically adds a breadcrumb and starts a transaction for each navigation event of the `androidx.navigation.NavController`.
+> This feature is available starting from version `6.10.0` of the [Sentry Android SDK](https://docs.sentry.io/platforms/android/). It automatically adds a breadcrumb and starts a transaction for each navigation or user interaction event.
 >
 > Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-java/issues/new?assignees=&labels=Platform%3A+Android%2CType%3A+Bug&template=bug_report_android.yml).
 

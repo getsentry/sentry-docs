@@ -14,7 +14,8 @@ The detector for performance issues looks for a set of sequential, non-overlappi
 
 - Total duration of involved spans must exceed a threshold (usually 100 ms)
 - Total count of involved spans must exceed a threshold (usually five spans)
-- Involved spans cannot be truncated
+- Involved spans must have full queries as their descriptions (some SDKs truncate queries and add an ellipsis to the end)
+- There must be at least one database span that precedes the repeating spans (this is called the "source" span, and is used for fingerprinting)
 
 If Sentry is not detecting an N+1 issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
 
@@ -27,6 +28,10 @@ The evidence for an N+1 queries problem has four main aspects:
 - Repeating span - This is the "N" of N+1 queries. This is the looped query that should have been part of a bulk query.
 
 ![N+1 Query span evidence](n-plus-one-span-evidence.png)
+
+## Fingerprinting
+
+Sentry computes the issue fingerprint based on the parent span, the source span, and the repeating spans. If you're finding that Sentry is failing to correctly group N+1 query issues, make sure that the database spans in your transactions have parameterized queries as the span description. For example, the span description `SELECT * FROM books WHERE books.id = 1` is not parameterized correctly because it includes the book ID. The book ID parameter should vary for each query. This would create different fingerprints and separate issues. A correct span description should look something like this: `SELECT * FROM books WHERE books.id = %s`. While Sentry attempts to parameterize queries while fingerprinting, it may miss some cases.
 
 ## Example
 
