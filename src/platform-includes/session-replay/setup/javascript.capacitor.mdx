@@ -1,0 +1,33 @@
+To set up the integration, add the following to your Sentry initialization. Several options are supported and passable using the integration constructor. See the [configuration documentation](/javascript/guides/capacitor/session-replay/configuration/) for more details.
+
+```javascript {tabTitle: ESM}
+import * as Sentry from '@sentry/capacitor';
+import { Replay } from "@sentry/replay";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
+
+  // If the entire session is not sampled, use the below sample rate to sample
+  // sessions when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+
+  integrations: [
+    new Replay({
+      // Additional SDK configuration goes in here, for example:
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+  ],
+});
+```
+
+With the settings above, session replays with errors are always captured.
+You can verify that with the following:
+
+```javascript
+myUndefinedFunction();
+```
