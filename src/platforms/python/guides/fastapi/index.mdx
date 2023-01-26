@@ -86,6 +86,31 @@ The parameter `traces_sample_rate` needs to be set when initializing the Sentry 
 
 </Note>
 
+## Data collected
+
+Here an overview of all the data that is collected by the FastAPI integration
+
+|                                                                       | **Default** </br> - No performance monitoring <sup>1)</sup> </br> - Send PII = False <sup>2)</sup> | </br>- Performance monitoring enabled <sup>3)</sup> </br>- Send PII = False <sup>2)</sup> | </br>- No performance monitoring <sup>1)</sup> </br>- Send PII = True <sup>4)</sup> | </br>- Performance monitoring enabled <sup>3)</sup> </br> - Send PII = True <sup>4)</sup> |
+| --------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
+| Data sent when an </br> unhandled error occurs                        |                                                Yes                                                 |                                            Yes                                            |                                         Yes                                         |                                            Yes                                            |
+| Data sent for </br> each request                                      |                                                 No                                                 |                                            Yes                                            |                                         No                                          |                                            Yes                                            |
+| HTTP Headers                                                          |                                              Not Sent                                              |                                         Not Sent                                          |                                        Sent                                         |                                           Sent                                            |
+| Cookies                                                               |                                              Not Sent                                              |                                         Not Sent                                          |                                        Sent                                         |                                           Sent                                            |
+| Request Body                                                          |                                              Not Sent                                              |                                         Not Sent                                          |                                        Sent                                         |                                           Sent                                            |
+| event.logentry.params                                                 |                                                 -                                                  |                                             -                                             |                                          -                                          |                                             -                                             |
+| Data of logged in User                                                |                                              Not Sent                                              |                                         Not Sent                                          |                                      Not Sent                                       |                                         Not Sent                                          |
+| event.breadcrumbs.values </br> -> value.data                          |                                              Not Sent                                              |                                         Not Sent                                          |                                      Not Sent                                       |                                         Not Sent                                          |
+| event.exception.values </br> -> value.stacktrace.frames -> frame.vars |                                                 -                                                  |                                             -                                             |                                          -                                          |                                             -                                             |
+| event.spans -> span.data                                              |                                              Not sent                                              |                                           Sent                                            |                                      Not sent                                       |                                           Sent                                            |
+
+1\) `traces_sample_rate` is _not_ set in `sentry_sdk.init()` call
+
+2\) `send_default_pii` is _not_ set or set to `False` in `sentry_sdk.init()` call
+
+3\) `traces_sample_rate` is set to `>0` in `sentry_init()` call
+
+4\) `send_default_pii` is set to `True` in `sentry_sdk.init()` call
+
 ## Integration Options
 
 If you want to change the default behavior of the FastAPI integration, you need to instantiate the integration manually and then pass it to Sentry's `init` function. Because FastAPI is based on the Starlette framework, both integrations, `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
@@ -98,7 +123,7 @@ With this option, you can influence how the transactions are named in Sentry. Fo
 
 ```python
 from sentry_sdk.integrations.starlette import StarletteIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration  
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 sentry_sdk.init(
     # ...
