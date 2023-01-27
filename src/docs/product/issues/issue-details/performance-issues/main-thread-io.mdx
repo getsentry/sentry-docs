@@ -1,30 +1,33 @@
 ---
-title: "IO on Main Thread for Mobile"
+title: "File IO on Main Thread"
 sidebar_order: 20
 description: "Learn more about File IO on Main Thread and how to diagnose and fix these issues."
 ---
 
 <Include name="early-adopter-note.mdx" />
 
-The Main UI thread in a mobile application handles user interface events such as button presses and page scrolls. If the Main UI thread performs long running operations like File IO, it will block the whole UI until the operation is complete, preventing the user from interacting with the app. If the Main UI thread is blocked for a long period of time, it can cause App Hangs and Application Not Responding errors.
+The main UI thread in a mobile application handles user interface events such as button presses and page scrolls. To prevent App Hangs and Application Not Responding errors, the main UI thread should not be used for performing long-running operations like File IO. These kinds of operations block the whole UI until they finish running and get in the way of the user interacting with the app.
 
 ## Detection Criteria
 
-The detector for this performance issue looks at the total non-overlapping duration for file io spans, and if it exceeds 16ms creates a Performance Issue.
+The detector for this performance issue looks at the total non-overlapping duration for File IO spans. If it exceeds 16ms, a Performance Issue is created.
 
 ## Span Evidence
 
-The evidence for an file IO on main thread problem has four main aspects:
+Span evidence identifies the root cause of the File IO on main thread problem by showing you three main aspects: 
 
 - Transaction name
-- Parent span - This is the span where the File IO spans occurred during
-- Offending Span - The actual spans that are performing IO in the main thread
+- Parent Span - Where the File IO spans occurred 
+- Offending Span - The actual spans that are performing File IO in the main thread
 
 ![File IO Span Evidence](file-io.png)
 
+View it by going to the **Issues** page in Sentry, selecting your Android project, clicking on the File IO error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
 ## Example
 
-Consider this Swift code where you're opening a file to get its content:
+Here are two examples of how a File IO error may appear in your code if you're using Swift or Kotlin and how you might solve them.
+
+This is what you might see when you're opening a file to get its contents if you're using Swift:
 
 ```swift
 if let path = Bundle.main.path(forResource: "LoremIpsum", ofType: "txt") {
@@ -48,7 +51,7 @@ let dispatchQueue = DispatchQueue(label: "ViewController", attributes: .concurre
 }
 ```
 
-Or alternatively for Kotlin:
+This is what you might see if you're using Kotlin:
 
 ```kotlin
 val file = File(context.cacheDir, "LoremIpsum.txt")
