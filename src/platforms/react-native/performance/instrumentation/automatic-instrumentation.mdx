@@ -348,7 +348,7 @@ Sentry.init({
 
   integrations: [
     new Sentry.ReactNativeTracing({
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
       // ... other options
     }),
   ],
@@ -415,9 +415,9 @@ type ReactNavigationTransactionContext = {
 
 If you use **Typescript**, you can type your `beforeNavigate` function with `Sentry.ReactNavigationTransactionContext`.
 
-### tracingOrigins
+### tracePropagationTargets
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+The default value of `tracePropagationTargets` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracePropagationTargets` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
 
 <PlatformContent includePath="performance/tracePropagationTargets-example" />
 
@@ -425,7 +425,7 @@ You will need to configure your web server CORS to allow the `sentry-trace` head
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracePropagationTargets`.
 
 <PlatformContent includePath="performance/filter-span-example" />
 

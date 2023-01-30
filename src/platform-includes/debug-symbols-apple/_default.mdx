@@ -1,153 +1,50 @@
 
-Sentry requires a dSYM upload to symbolicate your crash logs. The symbolication process unscrambles Apple’s crash logs to reveal the function, file names, and line numbers of the crash. Upload the dSYM file using either [sentry-cli](https://github.com/getsentry/sentry-cli), the [Fastlane](https://fastlane.tools/) action, or set up the Sentry [App Store Connect](#bitcode-appstore) integration for Bitcode builds. Every solution requires a Sentry Auth Token with the [correct permissions](/product/cli/dif/#permissions). You can [create one here](https://sentry.io/api/). To view uploaded dSYMs in your project, go to **[Project] > Settings > Debug Files**.
+Sentry requires dSYMs (debug information files) to symbolicate your stacktraces. The symbolication process unscrambles the stacktraces to reveal the function, file names, and line numbers of the crash.
+Every solution requires a Sentry Auth Token with the [correct permissions](/product/cli/dif/#permissions). You can [create one here](https://sentry.io/api/). To view uploaded dSYMs in your project, select an existing project from the "Projects" page, then go to **Settings > Debug Files**.
+
+You can upload dSYMs using:
+
+* [sentry-cli](#sentry-cli)
+* [Sentry Fastlane Plugin](#fastlane)
+* [Xcode Build Phase](#xcode-build-phase)
+* [App Store Connect Integration](#bitcode-appstore)
 
 <Note>
 
-Starting with Xcode 13, newly generated projects do not automatically create a required `Info.plist` configuration file.
-If this is your situation, please read [Info.plist Is Missing in Xcode 13 — Here’s How To Get It Back](https://betterprogramming.pub/info-plist-is-missing-in-xcode-13-heres-how-to-get-it-back-1a7abf3e2514).
+Starting with Xcode 13, newly generated projects don't automatically create a required `Info.plist` configuration file.
+If this is your situation, please read [Info.plist Is Missing in Xcode 13 — Here's How To Get It Back](https://betterprogramming.pub/info-plist-is-missing-in-xcode-13-heres-how-to-get-it-back-1a7abf3e2514).
 
 </Note>
 
-## With Bitcode {#dsym-with-bitcode}
+## Sentry-cli
 
-If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, dSYM files will only be available **after** App Store Connect finishes processing the build. Sentry can fetch dSYM files automatically as they become available from App Store Connect when setting up the [App Store Connect](#bitcode-appstore) integration.
-Alternatively, the dSYM files can be downloaded either with [Fastlane](#bitcode-fastlane) or manually, and uploaded with [Fastlane](#bitcode-fastlane) or [sentry-cli](#bitcode-sentrycli).
+Use the `sentry-cli upload-dif` command to upload dSYMs to Sentry. The command will recursively scan the provided folders or ZIP archives. Files that have already been uploaded will be skipped automatically.
 
-### Using App Store Connect {#bitcode-appstore}
+Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include_sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
-<Alert level="Note">
+```bash
+sentry-cli upload-dif --auth-token YOUR_AUTH_TOKEN \
+  --org ___ORG_SLUG___ \
+  --project ___PROJECT_SLUG___ \
+  PATH_TO_DSYMS
+```
 
-Looking for the upload methods when using this intergration?
+Visit the [sentry-cli docs](/product/cli/dif/#uploading-files) for more information.
 
-- [Upload BCSymbolMaps Using Fastlane](#symbolmap-fastlane)
-- [Upload BCSymbolMaps Using sentry-cli](#symbolmap-sentrycli)
+## Sentry Fastlane Plugin {#fastlane}
 
-</Alert>
+If you're already using Fastlane, you can use the [Sentry Fastlane plugin](https://github.com/getsentry/sentry-fastlane-plugin)
+to upload your dSYMs to Sentry.
 
-When you use the App Store Connect integration, Sentry will automatically discover and fetch dSYM files for Bitcode builds as they become available on App Store Connect. These dSYM files however contain obfuscated symbol names and paths. An additional BCSymbolMap file needs to be uploaded to provide properly symbolicated crash reports. These BCSymbolMap files can be uploaded using either [sentry-cli](#symbolmap-sentrycli) or [Fastlane](#symbolmap-fastlane).
-
-To configure the integration, go to **[Project] > Settings > Debug Files** and add "App Store Connect" in the "Custom Repositories" section.
-
-![Adding an App Store Connect Integration to a project](adding-asc-repository.png)
-
-Once the integration is set up it will ensure that new builds are detected and fetched within an hour of being available on App Store Connect.
-
-![A fully set-up App Store Connect Integration](asc-repository.png)
-
-<Alert title="Note" level="info">
-
-Organizations using _Developer_ and _Team_ plans are limited to one App Store Connect source per project. To be able to use multiple App Store Connect sources per project, upgrade to a [_Business_ or _Enterprise_ plan](https://sentry.io/pricing/) or contact [sales@sentry.io](mailto:sales@sentry.io).
-
-</Alert>
-
-Setting up an App Store Connect custom repository requires an App Store Connect API Key.
-
-Follow the documentation on [Creating API Keys for App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api) and provide the _Issuer_, _Key ID_, and _Private Key_. The API Key needs to have the _Developer_ role in order to fetch build details.
-
-**Invalid Credentials**
-
-If your App Store Connect API key is revoked on the Apple side, the Sentry custom repository using this key's credentials will no longer be able to discover and fetch dSYM files and the following warnings will be displayed in Sentry's User Interface:
-
-##### `Issue Details`
-
-![Warning to update credentials in an issue's details](issue-details-warning.png)
-
-##### `Project Settings`
-
-![Warning to update credentials in sidebar](sidebar-warning.png)
-
-##### `Custom Repositories`
-
-![Warning to update credentials in Custom Repositories](custom-repositories-warning.png)
-
-#### Upload BCSymbolMaps Using Fastlane {#symbolmap-fastlane}
-
-As dSYM download will be handled by sentry, it is not necessary to use the _download_dsyms_ or _sentry_upload_dsym_ commands.
-Instead, use the _sentry_upload_dif_ command to upload the BCSymbolMap.  You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/).
+Sentry can display snippets of your code next to event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `include_sources` parameter to `true`, the Fastlane plugin will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
 ```ruby
 sentry_upload_dif(
   auth_token: 'YOUR_AUTH_TOKEN',
-  org_slug: '___ORG_SLUG___'
+  org_slug: '___ORG_SLUG___',
   project_slug: '___PROJECT_SLUG___',
-  path: '/path/to/files' # Optional. Well default to '.' when no value is provided.
+  include_sources: true, # Optional. For source context.
 )
-
-```
-
-When using the _upload_to_testflight_ action, it is recommended to pass the _skip_waiting_for_build_processing_ parameter to speed up the action.
-
-#### Upload BCSymbolMaps Using `sentry-cli` {#symbolmap-sentrycli}
-
-The `sentry-cli upload-dif` command will automatically find and upload all _BCSymbolMap_ files, given the path to the app's `.xcarchive`.
-
-### Using Fastlane {#bitcode-fastlane}
-
-Use the [Fastlane](https://github.com/fastlane/fastlane) action, _download_dsyms_, to download the dSYMs from App Store Connect and upload to Sentry. The dSYM won’t be generated until **after** the app is done processing on App Store Connect so this should be run in its own lane.
-
- You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/).
-
-```ruby
-lane :upload_symbols do
-  download_dsyms # this is the important part
-  sentry_upload_dsym(
-    auth_token: 'YOUR_AUTH_TOKEN',
-    org_slug: '___ORG_SLUG___',
-    project_slug: '___PROJECT_SLUG___',
-  )
-end
-```
-
-<Alert level="" title="On Prem">
-
-By default fastlane will connect to sentry.io. For on-prem you need to provide the _url_ parameter to instruct the tool to connect to your server:
-
-```
-url: 'https://mysentry.invalid/'
-```
-
-</Alert>
-
-### Using `sentry-cli` {#bitcode-sentrycli}
-
-Download the dSYM from App Store Connect. After that, you can upload the dSYM using [sentry-cli](https://github.com/getsentry/sentry-cli/releases).
-
-1.  Open Xcode Organizer, go to your app, and click “Download dSYMs...”
-2.  Login to App Store Connect, go to your app, go to “Activity", click the build number to go into the detail page, and click “Download dSYM”
-
- You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/). Afterwards manually upload the symbols with _sentry-cli_:
-
-```bash
-sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dif --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_DSYMS
-```
-
-<Alert level="" title="On Prem">
-
-By default sentry-cli will connect to sentry.io. For on-prem you need to export the _SENTRY_URL_ environment variable to instruct the tool to connect to your server:
-
-```bash
-export SENTRY_URL=https://mysentry.invalid/
-```
-
-</Alert>
-
-## Without Bitcode {#dsym-without-bitcode}
-
-When not using Bitcode you can directly upload the symbols to Sentry as part of your build.
-
-### Using Fastlane
-
-If you are already using Fastlane you can use it in this situation as well. You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/):
-
-```ruby
-lane :build do
-  gym # building your app
-  sentry_upload_dsym(
-    auth_token: 'YOUR_AUTH_TOKEN',
-    org_slug: '___ORG_SLUG___',
-    project_slug: '___PROJECT_SLUG___',
-  )
-end
 ```
 
 <Alert level="" title="On Prem">
@@ -160,14 +57,16 @@ api_host: 'https://mysentry.invalid/'
 
 </Alert>
 
-### Uploading Symbols with _sentry-cli_
+## Xcode Build Phase
 
-Your project’s dSYM can be upload during the build phase as a “Run Script”. For this you need to set the _DEBUG_INFORMATION_FORMAT_ to be _DWARF with dSYM File_. By default, an Xcode project will only have _DEBUG_INFORMATION_FORMAT_ set to _DWARF with dSYM File_ in _Release_ so make sure everything is set in your build settings properly.
+Your project's dSYM can be uploaded during Xcode's build phase as a _Run Script_. To do this, set the _DEBUG_INFORMATION_FORMAT_ to _DWARF with a dSYM file_. By default, an Xcode project will only have _DEBUG_INFORMATION_FORMAT_ set to _DWARF with a dSYM file_ in _release_, so make sure everything is properly set up in your build settings.
 
-You need to have an auth token for this to work. You can [create an auth token here](https://sentry.io/api/).
+Follow these steps to upload the debug symbols:
 
-1.  Download and install [sentry-cli](/product/cli/installation/)
-2.  You will need to copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_
+1.  Download and install [sentry-cli](/product/cli/installation/).
+2.  Copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_.
+
+Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include_sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry. Simply change `sentry-cli upload-dif` to `sentry-cli upload-dif --include_sources` in the copied script.
 
 <Alert level="" title="Warnings vs. Errors">
 
@@ -223,3 +122,61 @@ export SENTRY_URL=https://mysentry.invalid/
 ```
 
 </Alert>
+
+## App Store Connect {#appstore-connect} Integration
+
+<Alert level="" title="Source Context">
+
+The App Store Connect integration doesn't support <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. To get it to work, choose one of the methods above.
+
+</Alert>
+
+When you use the App Store Connect integration, Sentry will automatically discover and fetch dSYMs for builds as they become available on App Store Connect.
+
+To configure the integration, select an existing project from the "Projects" page, then go to **Settings > Debug Files** and add "App Store Connect" in the "Custom Repositories" section.
+
+![Adding an App Store Connect Integration to a project](adding-asc-repository.png)
+
+Once the integration is set up, it will ensure that new builds are detected and fetched within an hour of being available on App Store Connect.
+
+![A fully set-up App Store Connect Integration](asc-repository.png)
+
+<Alert title="Note" level="info">
+
+Organizations using _Developer_ and _Team_ plans are limited to one App Store Connect source per project. To be able to use multiple App Store Connect sources per project, upgrade to a [_Business_ or _Enterprise_ plan](https://sentry.io/pricing/) or contact [sales@sentry.io](mailto:sales@sentry.io).
+
+</Alert>
+
+Setting up an App Store Connect custom repository requires an App Store Connect API Key. Follow the documentation on [Creating API Keys for App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api) and provide the _Issuer_, _Key ID_, and _Private Key_. In order to be able to fetch build details, your API Key needs to be assigned the _Developer_ role.
+
+**Invalid Credentials**
+
+If your App Store Connect API key is revoked on the Apple side, the Sentry custom repository using this key's credentials will no longer be able to discover and fetch dSYM files. You'll see the following warnings in Sentry's user interface:
+
+#### `Issue Details`
+
+![Warning to update credentials in an issue's details](issue-details-warning.png)
+
+#### `Project Settings`
+
+![Warning to update credentials in sidebar](sidebar-warning.png)
+
+#### `Custom Repositories`
+
+![Warning to update credentials in Custom Repositories](custom-repositories-warning.png)
+
+When using Fastlane's _upload_to_testflight_ action, it's recommended to pass the _skip_waiting_for_build_processing_ parameter to speed up the action.
+
+## Bitcode {#dsym-with-bitcode}
+
+The App Store will not accept bitcode submissions from [Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes). If you’re using Xcode 13, you’ll need to download the dSYMs from App Store Connect after it finishes processing your build, and then upload them to Sentry using one of the methods below:
+
+- Download Fastlane's [download_dsyms](https://docs.fastlane.tools/actions/download_dsyms/) action and then upload the dSYMs with the [Sentry Fastlane plugin](#fastlane).
+- Use the [Sentry App Store Connect integration](#appstore-connect), which fetches the dSYMS directly from App Store Connect.
+- Download manually from App Store Connect:
+  - Open Xcode Organizer, go to your app, and click _Download dSYMs..._
+  - Log in to App Store Connect, go to your app > “Activity".
+  - Click the build number to go into the "detail" page, and click _Download dSYM_.
+  - Manually upload the dSYMs with [sentry-cli](#sentry-cli).
+
+These dSYMs contain obfuscated symbol names and paths. You must upload the BCSymbolMap file stored in your xcarchive so Sentry can  properly symbolicate your crash reports. You can do this by using the upload-dif command of either [sentry-cli](#sentry-cli) or the [Sentry Fastlane plugin](#fastlane), which will automatically find and upload all BCSymbolMap files when specifying the path to the app's xcarchive.
