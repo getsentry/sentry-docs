@@ -1,17 +1,23 @@
 ---
-title: CLI Integration
-description: "Configure your project to use the features provided by the Sentry CLI integration."
+title: MSBuild Setup
+description: "Configure MSBuild properties in your .NET project to automatically use the Sentry CLI."
 sidebar_order: 10
+redirect_from:
+  - /platforms/dotnet/configuration/cli-integration/
 ---
 
-The [Sentry CLI](/product/cli) provides many useful features.  For .NET, we can use it to upload [debug information files](/product/cli/dif) to Sentry,
-such as .NET `PDB` symbol files.  This allows Sentry to show a more complete stack trace, including filenames and line numbers.
+The [Sentry CLI](/product/cli) has many useful features that can improve your Sentry experience.
+For .NET, you can use it to upload [debug information files](/product/cli/dif), such as .NET `PDB` symbol files.
+This allows Sentry to show a more complete stack trace, including file names and line numbers.
+You can also use it to upload *source code*, which enables Sentry to display [source context](../../data-management/debug-files/source-context/)
+when viewing stack traces.
 
-In the future, we may incorporate additional features of the Sentry CLI into the Sentry .NET SDK.
+While you can always run `sentry-cli` from the command line manually, we've made it easier by including it in the `Sentry`
+NuGet package, and providing properties to enable it from your build.
 
 ## Authentication
 
-For this integration to work, you must authenticate to Sentry on the machine that is performing your release builds.
+For this feature to work, you must authenticate to Sentry on the machine that is performing your release builds.
 
 <Alert level="info" title="Important">
 
@@ -162,7 +168,7 @@ for more complex builds.
 
 ### Additonal MSBuild Properties
 
-There are a few extra properties available to control the usage of the Sentry CLI integration:
+There are a few additional properties available to control the Sentry CLI:
 
 <ConfigKey name="SentryUploadSymbols">
 
@@ -171,10 +177,39 @@ or `false` otherwise.
 
 </ConfigKey>
 
+<ConfigKey name="SentryUploadSources">
+
+Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false`.
+Set `true` to opt-in to enable [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
+
+<Note>
+
+If you are already embedding source code in your symbol files using [`EmbedAllSources`](https://github.com/dotnet/sourcelink/blob/main/docs/README.md#embedallsources),
+you do not need to upload them to Sentry separately.  In other words, use *either* `SentryUploadSources` or `EmbedAllSources`, not both.
+
+</Note>
+
+</ConfigKey>
+
+<ConfigKey name="SentryIncludeIntermediateOutputPath">
+
+When uploading symbols, the `bin` folder of each project is always searched for debug information files.
+Set this option to `true` to also search the `obj` folder.  Defaults to `false`.
+
+<Note>
+
+For some application types, such as those that use AOT compilation, this will collect significantly more
+files than you may expect.  Typically, these files are not needed for symbolication, but can add additional
+information for *native* crashes.
+
+</Note>
+
+</ConfigKey>
+
 <ConfigKey name="UseSentryCLI">
 
-Controls whether the Sentry CLI integration is enabled.  `true` by default.
-Set to `false` to disable the Sentry CLI integration completely, ignoring all other properties.
+Controls whether the Sentry CLI is enabled in your build.  `true` by default.
+Set to `false` to disable the Sentry CLI completely, ignoring all other properties.
 
 </ConfigKey>
 
