@@ -36,88 +36,79 @@ However, we generally recommend the following:
 - If building from a CI/CD server, use the secrets feature of your CI/CD platform to set the `SENTRY_AUTH_TOKEN` environment variable.
 
   For example, if using GitHub Actions, first set an [encrypted secret](https://docs.github.com/actions/security-guides/encrypted-secrets)
-  and then pass the secret as an environment variable to the step performing your build action.  (See [below](#environment-variables) for an example.)
+  and then pass the secret via the `SENTRY_AUTH_TOKEN` environment variable to the step performing your build action.
 
-  <Note>
+  ```yaml
+  steps:
+  - name: Build
+    run: dotnet build
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  ```
 
-  You do not need to separately install Sentry CLI on your build server, as it is already bundled with the nuget package.
+  You do not need to separately install Sentry CLI on your build server, as it is already provided by the Sentry NuGet package.
 
-  </Note>
 
 ## Configuration
 
-In addition to authentication, you must provide your Sentry organization and project slugs.  These can be found in various places
-from the Sentry UI, such as in the URL after selecting a project.
+In addition to authentication, you must configure your Sentry organization and project slugs.
+You may also want to configure other [optional properties](#optional-msbuild-properties).
 
-For example, if the project URL is `https://sentry.io/organizations/example-org/projects/example-project/?project=1234567`, then the org slug
-is `example-org` and the project slug is `example-project`.
+The slugs can be found in various places from the Sentry UI, such as in the URL after selecting a project.
+For example, if the project URL is `https://sentry.io/organizations/example-org/projects/example-project/?project=1234567`,
+then the organization slug is `example-org` and the project slug is `example-project`.
 
 If you are self-hosting Sentry (rather than using sentry.io), then you will also need to provide the URL to your Sentry server.
 
-These can be set in a variety of different ways, as described in the following sections.
-
-### Environment Variables
-
-The following environment variables can be set:
-
-<ConfigKey name="SENTRY_AUTH_TOKEN">
-
-The authentication token for your Sentry account.  Should be kept secret.
-
-</ConfigKey>
-
-<ConfigKey name="SENTRY_API_KEY">
-
-The API key for your Sentry account, only if using legacy API keys.  (Prefer auth tokens.)  Should be kept secret.
-
-</ConfigKey>
-
-<ConfigKey name="SENTRY_ORG">
-
-The org slug for your Sentry account.
-
-</ConfigKey>
-
-<ConfigKey name="SENTRY_PROJECT">
-
-The project slug for the specific Sentry project you are using.
-
-</ConfigKey>
-
-<ConfigKey name="SENTRY_URL">
-
-The URL to your Sentry server, if self-hosted.  (Leave empty if using sentry.io.)
-
-</ConfigKey>
-
 <Alert title="Tip">
 
-Environment variables are a good choice for configuring CI/CD environments.
-Only the authentication information needs to be secret.
-For example, if using GitHub Actions you can do the following:
+Any of the [Sentry CLI configuration values](/product/cli/configuration/#configuration-values) can be set via environment variables
+or in configuration files, such as shown in the above authentication steps.
 
-```yaml
-steps:
-- name: Build
-  run: dotnet build
-  env:
-    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-    SENTRY_ORG: ___ORG_SLUG___
-    SENTRY_PROJ: ___PROJECT_SLUG___
-```
+However, other than authentication, you should consider setting configuration values via the MSBuild properties described below,
+such that they are part of your code that is commited to source control.  This allows them to be consistent across environments,
+and also allows the settings to differ per each project in your solution, if desired.
+
+If _both_ MSBuild properties and environment variables are provided, the MSBuild properties will take precedence.
 
 </Alert>
 
-### MSBuild Properties
+### Setting MSBuild Properties
 
-If desired, you can choose to set your org and project slugs via MSBuild properties instead of environment variables.
-(If _both_ are provided, MSBuild properties will take precedence.)
+MSBuild properties can be set in any MSBuild project file, such as those that are created by Visual Studio or the `dotnet` CLI
+(`YourProject.csproj`, `YourProject.vbproj`, `Directory.Build.props`, etc.).
 
-The following properties are available:
+You can add Sentry's MSBuild properties to any property group. For example:
+
+```xml
+<PropertyGroup>
+  <SentryOrg>___ORG_SLUG___</SentryOrg>
+  <SentryProject>___PROJECT_SLUG___</SentryProject>
+  <SentryUploadSources>true</SentryUploadSources>
+</PropertyGroup>
+```
+
+Alternatively, they could be passed as parameters when building your project.  For example:
+
+```shell
+dotnet build YourProject.csproj -c Release -p:SentryOrg=___ORG_SLUG___ -p:SentryProject=___PROJECT_SLUG___ -p:SentryUploadSources=true
+```
+
+<Alert title="Tip">
+
+In a solution with multiple projects, you may have properties that are the same across multiple projects.
+Consider placing these properties in a [`Directory.Build.props`](https://learn.microsoft.com/visualstudio/msbuild/customize-your-build)
+file, so that they are shared with all projects in your solution.
+
+</Alert>
+
+### Required MSBuild Properties
+
+The following MSBuild properties will pass required information to the Sentry CLI:
 
 <ConfigKey name="SentryOrg">
 
-The org slug for your Sentry account.
+The organization slug for your Sentry account.
 
 </ConfigKey>
 
@@ -129,44 +120,11 @@ The project slug for the specific Sentry project you are using.
 
 <ConfigKey name="SentryUrl">
 
-The URL to your Sentry server, if self-hosted.  (Leave empty if using sentry.io.)
+The URL to your Sentry server.  Required only if self-hosting Sentry.  (Do not use with sentry.io.)
 
 </ConfigKey>
 
-<Alert level="info" title="Important">
-
-There are two more properties, `SentryAuthToken` and `SentryApiKey`, that are available for authentication.
-However we recommend that they are used only for simple testing, and not for production.  If you decide to use
-them, be very careful that their values are not committed to source control or appear in build logs.
-A more secure approach is to set authentication via environment variable or `~/.sentryclirc` file,
-
-</Alert>
-
-These can be set as properties in an MSBuild project file (`YourProject.csproj`, `YourProject.vbproj`, `Directory.Build.props`, etc.).  For example:
-
-```xml
-<PropertyGroup>
-  <SentryOrg>___ORG_SLUG___</SentryOrg>
-  <SentryProject>___PROJECT_SLUG___</SentryProject>
-</PropertyGroup>
-```
-
-They could also be passed as parameters when building your project.  For example:
-
-```shell
-dotnet build YourProject.csproj -c Release -p:SentryOrg=___ORG_SLUG___ -p:SentryProject=___PROJECT_SLUG___
-```
-
-<Alert title="Tip">
-
-One reason to specify the org and project via properties is in the case where a solution has multiple
-projects corresponding to separate Sentry projects.  In that case, each .NET project can specify its own
-`SentryOrg` and `SentryProject` properties, or they can be set in [`Directory.Build.props`](https://learn.microsoft.com/visualstudio/msbuild/customize-your-build)
-for more complex builds.
-
-</Alert>
-
-### Additonal MSBuild Properties
+### Optional MSBuild Properties
 
 There are a few additional properties available to control the Sentry CLI:
 
@@ -180,7 +138,8 @@ or `false` otherwise.
 <ConfigKey name="SentryUploadSources">
 
 Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false`.
-Set `true` to opt-in to enable [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
+
+Set this property to `true` to opt-in to enable [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
 
 <Note>
 
@@ -213,8 +172,11 @@ Set to `false` to disable the Sentry CLI completely, ignoring all other properti
 
 </ConfigKey>
 
-<Note>
+<Alert level="info" title="Important">
 
-This list may be updated in the future, as new features are added.
+There are two more properties, `SentryAuthToken` and `SentryApiKey`, that are available for authentication.
+However we recommend that they are used only for simple testing, and not for production.  If you decide to use
+them, be very careful that their values are not committed to source control or appear in build logs.
+A more secure approach is to set authentication via environment variable or `~/.sentryclirc` file,
 
-</Note>
+</Alert>
