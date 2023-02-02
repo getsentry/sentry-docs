@@ -10,15 +10,15 @@ err := sentry.Init(sentry.ClientOptions{
 	// ...
 
 	// A custom TracesSampler can access data from the span's context:
-	TracesSampler: sentry.TracesSamplerFunc(func(ctx sentry.SamplingContext) sentry.Sampled {
+	TracesSampler: sentry.TracesSampler(func(ctx sentry.SamplingContext) float64 {
 		data, ok := ctx.Span.Context().Value(myContextKey{}).(*myContextData)
 		if !ok {
-			return sentry.SampledFalse
+			return 0.0
 		}
 		if data.request.URL.Hostname() == "example.com" {
-			return sentry.SampledTrue
+			return 1.0
 		}
-		return sentry.SampledFalse
+		return 0.0
 	}),
 })
 // ...
