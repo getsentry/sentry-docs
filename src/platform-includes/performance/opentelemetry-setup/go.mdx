@@ -1,0 +1,27 @@
+You need to register the Sentry-provided SpanProcessor and Propagator as shown below:
+
+```go
+import (
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go/otel"
+	// ...
+)
+
+sentry.Init(sentry.ClientOptions{
+	Dsn:              "__DSN__",
+	EnableTracing:    true,
+	TracesSampleRate: 1.0,
+	Debug:            true,
+})
+
+tp := sdktrace.NewTracerProvider(
+	sdktrace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()),
+)
+otel.SetTracerProvider(tp)
+otel.SetTextMapPropagator(sentryotel.NewSentryPropagator())
+```
+
+Now, all spans produced by OpenTelemetry will be also captured and sent to Sentry.
