@@ -93,6 +93,13 @@ the last character of the file extension replaced with `_`. A full example would
 be: `KERNEL32.dll/590285E9e0000/KERNEL32.dl_`. This is not required on your own
 repositories, as Sentry detects compression on all paths.
 
+## Notes about Portable PDBs
+
+Portable PDBs are generally treated like native PDBs with, the following amendments:
+- The `age` part of the id is masked with `FFFFFFFF`.
+- Downloading a Portable PDB from Nuget requires the debug checksum to be supplied
+  via the `SymbolChecksum` header.
+
 ## Directory Layouts
 
 Sentry supports multiple layouts for external repositories. Based on the
@@ -101,14 +108,15 @@ selected layout and the file type, we try to download files at specific paths.
 The following table contains a mapping from the supported layouts to file path
 schemas applied for specific files:
 
-| Layout                          |  Mach-O  |   ELF   |    PE    |   PDB    | Breakpad |  WASM   |
-| ------------------------------- | :-----: | :-----: | :------: | :------: | :------: | :-----: |
-| Platform-Specific               |  LLDB   | BuildID | SymStore | SymStore | Breakpad | BuildID |
-| Microsoft SymStore              |    -    |    -    | SymStore | SymStore |    -     |    -    |
-| Microsoft SymStore (index2.txt) |    -    |    -    |  Index2  |  Index2  |    -     |    -    |
-| Microsoft SSQP                  |  SSQP   |  SSQP   |   SSQP   |   SSQP   |    -     |    -    |
-| Debuginfod                      |    -    | Debuginfod | -     |    -     |    -     |    -    |
-| Unified Layout                  | Unified | Unified | Unified  | Unified  | Unified  | Unified |
+| Layout                          |  Mach-O |   ELF   |    PE    |   PDB    |  PPDB    | Breakpad |  WASM   |
+| ------------------------------- | :-----: | :-----: | :------: | :------: | :------: | :------: | :-----: |
+| Platform-Specific               |  LLDB   | BuildID | SymStore | SymStore | SymStore | Breakpad | BuildID |
+| Microsoft SymStore              |    -    |    -    | SymStore | SymStore | SymStore |    -     |    -    |
+| Microsoft SymStore (index2.txt) |    -    |    -    |  Index2  |  Index2  |  Index2  |    -     |    -    |
+| Microsoft SSQP                  |  SSQP   |  SSQP   |   SSQP   |   SSQP   |   SSQP   |    -     |    -    |
+| Nuget                           |    -    |    -    |    -     |    -     | SymStore |    -     |    -    |
+| Debuginfod                      |    -    | Debuginfod | -     |    -     |    -     |    -     |    -    |
+| Unified Layout                  | Unified | Unified | Unified  | Unified  | Unified  | Unified  | Unified |
 
 The path schemas in the table above are defined as follows:
 
