@@ -93,12 +93,10 @@ the last character of the file extension replaced with `_`. A full example would
 be: `KERNEL32.dll/590285E9e0000/KERNEL32.dl_`. This is not required on your own
 repositories, as Sentry detects compression on all paths.
 
-## Notes about Portable PDBs
+## Note about Portable PDBs and Nuget
 
-Portable PDBs are generally treated like native PDBs with, the following amendments:
-- The `age` part of the id is masked with `FFFFFFFF`.
-- Downloading a Portable PDB from Nuget requires the debug checksum to be supplied
-  via the `SymbolChecksum` header.
+Downloading a Portable PDB from the Nuget symbol server requires the debug checksum
+to be supplied via the `SymbolChecksum` header.
 
 ## Directory Layouts
 
@@ -204,6 +202,7 @@ The `build_id` construction differs among file formats:
 
 - PE: `<Signature><Age>` (age in hex, not padded)
 - PDB: `<Signature><Age>` (age in hex, not padded)
+- Portable PDB: `<Signature><Age>` (age in hex, not padded)
 - ELF: the gnu-build-id code note byte sequence.
 - Mach-O: `LC_UUID` bytes
 - WASM: `build_id` section as bytes
@@ -233,6 +232,8 @@ file types:
   (PE file)
 - `<debug_name>/<signature><AGE>/<debug_name>` (PDB
   file)
+- `<debug_name>/<signature>FFFFFFFF/<debug_name>` (Portable PDB
+  file)
 - `<code_name>/elf-buildid-<buildid>/<code_name>` (ELF
   binary)
 - `_.debug/elf-buildid-sym-<buildid>/_.debug` (ELF debug file)
@@ -254,7 +255,7 @@ Examples:
 
 ### SymStore
 
-Path: `<FileName>/<SIGNATURE><AGE>/<FileName>`
+Path: `<FileName>/<SIGNATURE><AGE>/<FileName>` (`<FileName>/<SIGNATURE>FFFFFFFF/<FileName>` for Portable PDB)
 
 The public symbol server provided by Microsoft used to only host PDBs for the
 Windows platform. These use a _signature-age_ debug identifier in addition to
@@ -279,7 +280,7 @@ Examples:
 
 ### Index2
 
-Path: `<Fi>/<FileName>/<SIGNATURE><AGE>/<FileName>`
+Path: `<Fi>/<FileName>/<SIGNATURE><AGE>/<FileName>` (`<Fi>/<FileName>/<SIGNATURE>FFFFFFFF/<FileName>` for Portable PDB)
 
 This layout is identical to _SymStore_, except that the first two characters
 of the file name are prepended to the path as an additional folder.
