@@ -25,6 +25,10 @@ Sentry Cron Monitoring allows you to monitor any job running on a scheduled inte
      Example of a Crontab for every hour.
      ![Example of an every hour Crontab](cron-setup-crontab-example-2.png)
      Example of a Crontab for every month on the 1st and 15th day.
+
+     You will also want to ensure the timezone matches the timezone of the machine your cron is running on. This is important to account for daylight saving time in some cases.
+     ![Crontab timezone setting](cron-setup-crontab-timezone.png)
+
    - **Interval:** If getting granular with scheduling is less important, the Interval schedule type may be better suited for your needs. It allows you to schedule your job to run every X years, hours, minutes, or anything in-between.
 
 7. Enter the acceptable number of minutes an expected check-in can be late by before it's considered failed, based on the schedule above. For example, if your monitor is configured as a Crontab of `0 * * * *` (every hour at minute 0) and the check-in margin is defined as 10 minutes, your job won't be considered failed as long as it checks in by hour X, minute 10.
@@ -53,17 +57,17 @@ monitor_id = '' # Write your monitor_id here
 # Create the check-in
 json_data = {'status': 'in_progress'}
 response = requests.post(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/', headers=headers, json=json_data)
-check_in_id = response.json()['id']
+checkin_id = response.json()['id']
 
 # Execute your scheduled task code here...
 
 # Update the check-in status (required) and duration (optional)
 json_data = {'status': 'ok', 'duration': 3000}
-response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/{check_in_id}/', headers=headers, json=json_data)
+response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/{checkin_id}/', headers=headers, json=json_data)
 ```
 
 ```bash {tabTitle: curl}
-# Create the check-in and save the returned CHECK_IN_ID
+# Create the check-in and save the returned CHECKIN_ID
 $ curl -X POST \
     'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
@@ -74,7 +78,7 @@ $ curl -X POST \
 
 # Update the check-in status (required) and duration (optional)
 $ curl -X PUT \
-    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECK_IN_ID}/' \
+    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECKIN_ID}/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "ok", "duration": 3000}'
@@ -91,9 +95,15 @@ $ curl -X PUT \
 
 : **Required.** The status of your job execution and whether it was completed successfully or unsuccessfully. The values accepted are `in_progress`, `ok` or `error`.
 
+`checkin_id`:
+
+: **Required.** The check-in id to use when updating a check-in to mark the completion or failure of a scheduled job. You can also supply "`latest`" for this parameter in order to retrieve the most recent check-in, more info in [the API documentation](/api/crons/update-a-checkin/)
+
 `duration`:
 
 : **Optional.** The runtime of the job in milliseconds. If this value is not provided, a duration will be automatically calculated based on the amount of time elapsed from check-in creation to updating a check-in as successful or failed.
+
+More API docs can be found in [the API documentation](/api/crons/).
 
 Once these health checks are set up, your Cron Monitor is ready to observe and report on future scheduled job executions.
 

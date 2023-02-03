@@ -2,7 +2,6 @@
 title: Privacy
 sidebar_order: 4200
 notSupported:
-  - javascript.capacitor
   - javascript.cordova
   - javascript.electron
   - javascript.wasm
@@ -15,17 +14,17 @@ There are several ways to deal with personally identifiable information (PII). B
 
 ## Masking
 
-Masking replaces the text content with something else. The default masking behavior is to replace each character with a `*`. In this example the relevant HTML code is: `<table class="sentry-mask">...</table>`:
+Masking replaces the text content with something else. The default masking behavior is to replace each character with a `*`. Elements with class name `sentry-mask` or the attribute `data-sentry-mask` will be blocked. In this example, the relevant HTML code is: `<table class="sentry-mask">...</table>`:
 ![Masking example](./session-replay-masking.png)
 
 ## Blocking
 
-Blocking replaces the element with a placeholder that has the same dimensions. The recording will show an empty space where the content was. In this example the relevant HTML code is: `<table data-sentry-block>...</table>`:
+Blocking replaces the element with a placeholder that has the same dimensions. The recording will show an empty space in place of the content. Elements with class name `sentry-block` or the attribute `data-sentry-block` will be blocked. In this example, the relevant HTML code is: `<table data-sentry-block>...</table>`:
 ![Blocking example](./session-replay-blocking.png)
 
 ## Ignoring
 
-Ignoring only applies to form inputs. Events will be ignored on the input element so that the replay doesn't show what occurs inside of the input. In the below example, notice how the results in the table below the input changes, but no text is visible in the input:
+Ignoring only applies to form inputs. Events will be ignored on the input element so that the replay doesn't show what occurs inside of the input. Any event on an input element with class name `sentry-ignore` or the attribute `data-sentry-ignore` will be ignored. Notice how the results in the table below show input changes, but no visible text:
 
 ![Ignoring Example](./session-replay-ignore-input.gif)
 
@@ -33,16 +32,17 @@ Ignoring only applies to form inputs. Events will be ignored on the input elemen
 
 The following options can be configured as options to the integration, in `new Replay({})`:
 
-| Key              | Type                     | Default                             | description                                                                                                                                                                                                                        |
-| ---------------- | ------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| blockAllMedia    | boolean                  | `true`                              | Block _all_ media elements (`img`, `svg`, `video`, `object`, `picture`, `embed`, `map`, `audio`).                                                                                                                                  |
-| blockClass       | string \| RegExp         | `'sentry-block'`                    | Redact all elements that match the class name. See [Blocking](#blocking) above for an example.                                                                                                                                     |
-| blockSelector    | string                   | `'[data-sentry-block]'`             | Redact all elements that match the DOM selector. See [Blocking](#blocking) above for an example.                                                                                                                                   |
-| ignoreClass      | string \| RegExp         | `'sentry-ignore'`                   | Ignores all events on the matching input field. See [Ignoring](#ignoring) above for an example.                                                                                                                                    |
-| maskAllInputs    | boolean                  | `true`                              | Mask values of `<input>` elements. Passes input values through `maskInputFn` before sending to server.                                                                                                                             |
-| maskAllText      | boolean                  | `true`                              | Mask _all_ text content. Will pass text content through `maskTextFn` before sending to server.                                                                                                                                     |
-| maskInputFn      | (text: string) => string | `(text) => '*'.repeat(text.length)` | Function to customize how form input values are masked before sending to server. By default, masks values with `*`.                                                                                                                |
-| maskInputOptions | Record<string, boolean>  | `{ password: true }`                | Customize which inputs `type` to mask. <br /> Available `<input>` types: `color`, `date`, `datetime-local`, `email`, `month`, `number`, `range`, `search`, `tel`, `text`, `time`, `url`, `week`, `textarea`, `select`, `password`. |
-| maskTextClass    | string \| RegExp         | `'sentry-mask'`                     | Mask all elements that match the class name. See [Masking](#masking) above for an example.                                                                                                                                         |
-| maskTextFn       | (text: string) => string | `(text) => '*'.repeat(text.length)` | Function to customize how text content is masked before sending to server. By default, masks text with `*`.                                                                                                                        |
-| maskTextSelector | string                   | `undefined`                         | Mask all elements that match the given DOM selector. See [Masking](#masking) above for an example.                                                                                                                                 |
+| key              | type                     | default                                 | description                                                                                                                                                                                         |
+| ---------------- | ------------------------ | -----------------------------------     | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| block            | string[]                 | `.sentry-block, [data-sentry-block]`    | Redact all elements that match the DOM selector(s). See [Blocking](#blocking) above for an example.                                                                                                 |
+| blockAllMedia    | boolean                  | `true`                                  | Block _all_ media elements (`img`, `svg`, `video`, `object`, `picture`, `embed`, `map`, `audio`).                                                                                                   |
+| ignore           | string[]                 | `.sentry-ignore, [data-sentry-ignore]`  | Ignores all events on the matching input fields. See [Ignoring](#ignoring) above for an example.                                                                                                    |
+| mask             | string[]                 | `.sentry-mask, [data-sentry-mask]`      | Mask all elements that match the given DOM selectors. See [Masking](#masking) section for an example.                                                                                               |
+| maskAllText      | boolean                  | `true`                                  | Mask _all_ text content. Will pass text content through `maskTextFn` before sending to server.                                                                                                      |
+| maskAllInputs    | boolean                  | `true`                                  | Mask values of `<input>` elements. Passes input values through `maskTextFn` before sending to server.                                                                                               |
+| maskTextFn       | (text: string) => string | `(text) => '*'.repeat(text.length)`     | Function to customize how text content is masked before sending to server. By default, masks text with `*`.                                                                                         |
+| unblock          | string[]                 | `.sentry-unblock, [data-sentry-unblock]`| Don't redact any elements that match the DOM selectors. Used to unblock specific media elements that are blocked with `blockAllMedia`.                                                     |
+| unmask           | string[]                 | `.sentry-unmask, [data-sentry-unmask]`  | Unmask all elements that match the given DOM selectors. Used to unmask specific elements that are masked with `maskAllText`.                                                                |
+
+### Deprecated Options
+Note that the privacy API prior to version 7.35.0 has been deprecated and replaced with the options above. Please see the [Replay migration guide](https://github.com/getsentry/sentry-javascript/blob/master/packages/replay/MIGRATION.md#upgrading-replay-from-7340-to-7350---6645) for further information.

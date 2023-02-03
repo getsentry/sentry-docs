@@ -31,7 +31,7 @@ const getPlugins = () => {
           packages,
           apps,
         },
-        excludeExpr: ["default"],
+        excludeExpr: ["default", "secrets.SENTRY_AUTH_TOKEN"],
       },
     },
     {
