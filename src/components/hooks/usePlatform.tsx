@@ -163,9 +163,11 @@ export const usePlatformList = (): Platform[] => {
   const {
     allPlatform: { nodes: platformList },
   } = useStaticQuery(query);
-  return platformList.sort((a: Platform, b: Platform) =>
-    a.title.localeCompare(b.title)
-  );
+  return platformList.sort((a: Platform, b: Platform) => {
+    // Exclude leading non-alphanumeric characters to order .NET between Native and NodeJS instead of the beginning.
+    const skippedPrefix = /^[^a-zA-Z]+/;
+    return a.title.replace(skippedPrefix, '').localeCompare(b.title.replace(skippedPrefix, ''))
+  });
 };
 
 /**

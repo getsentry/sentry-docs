@@ -5,15 +5,37 @@ description: "Learn about setting up source bundles to show source code in stack
 ---
 
 If Sentry has access to application source code, it can show snippets of code
-around the location of stack frames. Certain SDKs can resolve this source
-context automatically, such as the Python SDK, because they have access to
-unobfuscated source code at runtime.
+around the location of stack frames.  We refer to these snippets as _source context_.
+Source context can be very useful for quickly identify problematic code.
 
-To get source context for native applications, source code needs to be uploaded
-alongside the debug information files. The recommended way to do this is by
-using `sentry-cli`. See [Creating Source Bundles](/product/cli/dif/#creating-source-bundles) for more information.
+For example, here's a stack trace from a .NET application.  The source context contains
+the original C# source code of the application, with the location of the frame highlighted.
 
-Source bundles show up as regular debug files on the _Debug Files_ settings
-page. They are designated as "source bundle" and feature a `sources` tag. To
-match them with crash reports, they carry the same debug file as the respective
-debug information file they have been created from.
+<image src="./source-context-screenshot.png" alt="Screenshot of stack trace showing source context." />
+<br />
+
+### Source Bundles
+
+Certain SDKs, such as the Python SDK, can resolve this source context automatically,
+because they have access to unobfuscated source code at runtime.
+By contrast, to get source context for compiled applications, the source code
+needs to be uploaded alongside the debug information files.
+The recommended way to do this is by using `sentry-cli`.
+See [Creating Source Bundles](/product/cli/dif/#creating-source-bundles) for more information.
+
+<PlatformSection supported={["dotnet"]} notSupported={["unity"]}>
+
+<Note>
+
+For .NET projects, you can [configure MSBuild](../../../configuration/msbuild/) to
+call `sentry-cli` automatically.  Enable the `SentryUploadSources` property to
+create and upload source bundles automatically while uploading symbols.
+
+</Note>
+
+</PlatformSection>
+
+After they've been uploaded you can review and manage source bundles the same as
+any other debug information file.  See [Managing Debug Information Files](../#managing-debug-information-files).
+Source bundles will be tagged with `sources`, and will carry the same filename as the
+respective debug information file they were created from.
