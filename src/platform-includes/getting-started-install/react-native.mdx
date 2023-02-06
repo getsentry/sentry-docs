@@ -8,6 +8,32 @@ npm install --save @sentry/react-native
 yarn add @sentry/react-native
 ```
 
+Run `@sentry/wizard`:
+
+```bash
+npx @sentry/wizard -i reactNative -p ios android
+
+cd ios
+pod install
+```
+
+<Note>
+
+For React Native 0.68 and older you will have to manually patch the Xcode project. Read more at the [Manual Configuration](/platforms/react-native/manual-setup/manual-setup/) page.
+
+</Note>
+
+[Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [setup manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer. You need to do this only once, then the created files can go into your version control system.
+
+The following changes will be performed by Sentry Wizard:
+
+- enable the Sentry React Native Gradle build step for Android to auto upload generated source maps and debug symbols
+- wrap _Bundle React Native code and images_ Xcode project build phase script to upload generated source maps and collect bundled node modules
+- add _Upload Debug Symbols to Sentry_ Xcode project build phase
+- store build credentials in _*ios/sentry.properties*_ and _*android/sentry.properties*_.
+- configure Sentry for the supplied DSN in your _*App.tsx*_ file
+- wrap your _App_ for [touch event tracking](/platforms/react-native/touchevents/) and [automatic performance monitoring](/platforms/react-native/performance/instrumentation/automatic-instrumentation/)
+
 ### Expo
 
 If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
@@ -17,40 +43,6 @@ If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs
 Make sure that the version of `@sentry/react-native` matches what `sentry-expo` depends on, [read more on our troubleshooting page](/platforms/react-native/troubleshooting/#expo).
 
 </Note>
-
-### Linking
-
-<Note>
-
-If you are running a project with `react-native` prior to 0.60, you still need to call `react-native link`, otherwise you can skip this step as `react-native` version 0.60 and above does this automatically.
-
-</Note>
-
-Link the SDK to your native projects to enable native crash reporting.
-
-```bash
-react-native link @sentry/react-native
-```
-
-### Run the Sentry Wizard
-
-```bash
-npx @sentry/wizard -i reactNative -p ios android
-
-cd ios
-pod install
-```
-
-The call to the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [link manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer. You need to do this only once, then the created files can go into your version control system.
-
-The following changes will be performed by Sentry Wizard:
-
-- add the `sentry-android` package for native crash reporting on Android
-- add the `sentry-cocoa` package for native crash reporting on iOS
-- enable the Sentry Gradle build step for Android
-- patch _*MainApplication.java*_ for Android
-- configure Sentry for the supplied DSN in your _*index.js/App.js*_ files
-- store build credentials in _*ios/sentry.properties*_ and _*android/sentry.properties*_.
 
 ### iOS Specifics
 
