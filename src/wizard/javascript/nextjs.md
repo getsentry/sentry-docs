@@ -6,14 +6,6 @@ type: framework
 wizard_setup: "./nextjs_wizard.md"
 ---
 
-Install Sentry’s Next.js SDK using either `yarn` or `npm`:
-
-```bash
-yarn add @sentry/nextjs
-# or
-npm install --save @sentry/nextjs
-```
-
 Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
 
 ```bash
@@ -29,6 +21,14 @@ Sentry wizard will automatically patch your application:
 You can also [configure it manually](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/).
 
 Configure the Sentry initialization:
+
+Install Sentry’s Next.js SDK using either `yarn` or `npm`:
+
+```bash
+yarn add @sentry/nextjs
+# or
+npm install --save @sentry/nextjs
+```
 
 ```javascript
 Sentry.init({
