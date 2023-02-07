@@ -171,11 +171,38 @@ If you're using `React Navigation 5` and you're not receiving transactions anymo
 
 If you experience mismatched line numbers on [sentry.io](https://sentry.io) when using RAM Bundles, this is due to a [bug](https://github.com/facebook/metro/issues/399) on the Metro tooling.
 
-## React Native 0.69 and Higher
+## Setup SKD v4 with React Native 0.69 and Higher
 
-If you're using React Native v0.69 or higher, the auto-linking has changed and we're working on a fix. Follow the [issue](https://github.com/getsentry/sentry-react-native/issues/2267).
+To install an older version of the `@sentry/react-native` you need to specify it in the install command. Similarly, you will need to use compatible `@sentry/wizard` as shown in the script below.
 
-As a workaround, for now, update Sentry's `react-native.config.js` file, located in `node_modules/@sentry/react-native/react-native.config.js`.
+```bash
+yarn add @sentry/react-native@4
+npx @sentry/wizard@1 -i reactNative -p ios android
+npx pod-install
+```
+
+Before building the app check that the `android/app/build.gradle` was patched with the following Gradle integration:
+
+```groovy
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+This should work on Android, however, on iOS, it will still fail in the `Bundle React Native code and images` build step phase and for that, you have to revert the patched `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file, where `$projectName` is likely your project's name.
+Search for the build step phase `Bundle React Native code and images` and patch the `shellScript`.
+
+_Old_:
+
+```bash
+shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+```
+
+_New_:
+
+```bash
+shellScript = "set -e\nexport SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\nSENTRY_CLI_PATH=\"../node_modules/@sentry/cli/bin/sentry-cli\"\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$SENTRY_CLI_PATH react-native xcode $REACT_NATIVE_XCODE\\\"\"";
+```
+
+If your build is failing due to outdate fields in `react-native.config.js`. Update the config file, located in `node_modules/@sentry/react-native/react-native.config.js`. This is required on React Native 0.69. The newer versions only show warning, but that can change.
 
 _Old_:
 
@@ -213,21 +240,6 @@ module.exports = {
     }
   }
 };
-```
-
-This should work on Android, however, on iOS, it will still fail in the `Bundle React Native code and images` build step phase and for that, you have to revert the patched `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file, where `$projectName` is likely your project's name.
-Search for the build step phase `Bundle React Native code and images` and patch the `shellScript`.
-
-_Old_:
-
-```bash
-shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
-```
-
-_New_:
-
-```bash
-shellScript = "set -e\nexport SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\nSENTRY_CLI_PATH=\"../node_modules/@sentry/cli/bin/sentry-cli\"\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$SENTRY_CLI_PATH react-native xcode $REACT_NATIVE_XCODE\\\"\"";
 ```
 
 ## React Native 0.60.3 Failing Build
