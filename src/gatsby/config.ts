@@ -6,9 +6,6 @@ import resolveOpenAPI from "./utils/resolveOpenAPI";
 const packages = new PackageRegistry();
 const apps = new AppRegistry();
 
-const activeEnv =
-  process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
-
 const root = `${__dirname}/../..`;
 
 process.env.DISABLE_THUMBNAILS = process.env.DISABLE_THUMBNAILS || "0";
@@ -83,11 +80,6 @@ const getPlugins = () => {
   const plugins = [
     {
       resolve: "@sentry/gatsby",
-      options: {
-        dsn: process.env.SENTRY_DSN,
-        release: process.env.SENTRY_RELEASE,
-        tracesSampleRate: activeEnv === "development" ? 0 : 1,
-      },
     },
     "gatsby-plugin-sharp",
     "gatsby-plugin-sass",
