@@ -4,9 +4,8 @@ const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
 
 Sentry.init({
-  debug: true,
-  dsn: process.env.SENTRY_DSN,
-  release: process.env.SENTRY_RELEASE,
+  dsn: process.env.GATSBY_SENTRY_DSN,
+  release: process.env.GATSBY_SENTRY_RELEASE,
   integrations: [
     new Sentry.Replay({
       maskAllText: true,
