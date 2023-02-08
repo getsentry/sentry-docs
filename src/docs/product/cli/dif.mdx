@@ -250,9 +250,9 @@ of Breakpad symbols.
 
 `sentry-cli` can be used to upload ProGuard files to Sentry; however, in most
 situations, you would use the [Gradle
-plugin](https://github.com/getsentry/sentry-android-gradle-plugin) to do that. There are some
-situations, however, where you would upload ProGuard files manually (for instance
-when you only release some of the builds you are creating).
+plugin](https://github.com/getsentry/sentry-android-gradle-plugin) to do that. Nevertheless, there may be
+situations where you would upload ProGuard files manually. For instance,
+when you only release some of the builds you're creating.
 
 <Note>
 
@@ -265,23 +265,14 @@ because ProGuard files work on projects. For more information about this refer t
 The `upload-proguard` command is the one to use for uploading ProGuard files. It
 takes the path to one or more ProGuard mapping files and will upload them to
 Sentry.
-Example:
 
 ```bash
 sentry-cli upload-proguard \
     app/build/outputs/mapping/{BuildVariant}/mapping.txt
 ```
 
-Since the Android SDK needs to know the UUID of the mapping file, you need
-to associate it with the upload. If you supply `--uuid`, it sets that value:
-
-```bash
-sentry-cli upload-proguard \
-    --uuid A_VALID_UUID \
-    app/build/outputs/mapping/{BuildVariant}/mapping.txt
-```
-
-Which then also needs to be included in your `AndroidManifest.xml` file:
+Since the Android Sentry SDK needs to know the UUID of the mapping file, you need
+to associate it with the upload. However, you first have to place that UUID into the `AndroidManifest.xml` file:
 
 ```xml
 <application>
@@ -289,7 +280,17 @@ Which then also needs to be included in your `AndroidManifest.xml` file:
 </application>
 ```
 
-After the upload, Sentry deobfuscates future events. If you want to send an obfuscated crash to Sentry to verify the correct operation, ensure that the ProGuard mapping files are listed in _Project Settings > ProGuard_.
+The same UUID needs to be used to upload the mapping file:
+
+
+```bash
+sentry-cli upload-proguard \
+    --uuid A_VALID_UUID \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt
+```
+
+After the upload, Sentry deobfuscates future events. 
+To make sure that it worked, you can check _Project Settings > ProGuard_  and see if the upload mapping files are listed.
 
 ### Upload Options
 
