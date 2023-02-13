@@ -1,0 +1,16 @@
+---
+title: "Performance Overhead"
+sidebar_order: 48
+description: "Session Replay SDK performance overhead."
+---
+
+<Include name="beta-note-session-replay.mdx" />
+
+Sentry’s Session Replay SDK takes several steps to avoid negatively impacting the performance of the page on which it’s running:
+
+- At the time of publishing this document, the Session Replay plugin is an additional ~36KB gzipped. In our own research, this is among the smallest Session Replay SDKs available.
+- The Session Replay SDK works by snapshotting the web page’s Document Object Model (DOM) and transmitting its content to Sentry’s servers. To minimize the amount of bytes transferred, multiple strategies are employed:
+    - Once the initial DOM tree is snapshotted, the SDK records and transmits *changes* to the DOM rather than snapshotting the entire tree again. This significantly reduces the amount of bytes transferred.
+    - DOM content itself is gzip compressed client-side before transmission over HTTP. The compression operation is executed in a background thread using a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers), which means the browser’s UI thread is unaffected.
+
+Sentry’s event ingestion infrastructure uses [distributed Points-of-Presence (PoPs)](https://blog.sentry.io/2022/03/31/sentry-points-of-presence-how-we-built-a-distributed-ingestion/) which place ingestion servers around the world and close to your users. When a Session Replay event is transmitted, the user’s browser connects and transmits the event payload to the closest PoP available for their region. This greatly reduces end-to-end latency and minimizes the amount of networking overhead placed on the browser.
