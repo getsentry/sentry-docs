@@ -113,6 +113,8 @@ class SentrySpanProcessor implements SpanProcessor {
       return;
     }
 
+    generateSentryErrorsFromOtelSpan(otelSpan);
+
     if (sentrySpan instanceof Transaction) {
       updateTransactionWithOtelData(sentrySpan, otelSpan);
       finishTransactionWithContextFromOtelData(sentrySpan, otelSpan);
@@ -360,6 +362,38 @@ if (instrumenter === 'otel') {
 ```
 
 You are also free to do both, or an alternative method, the only requirement is that we don't double instrument.
+
+### Step 7: Define `generateSentryErrorsFromOtelSpan`
+
+In OpenTelemetry, spans can have [exception events](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/). These have a stacktrace, message, and type. We want to convert these to Sentry errors and attach them to the trace.
+
+```ts
+function generateSentryErrorsFromOtelSpan(otelSpan) {
+  otelSpan.events.forEach(event => {
+    // Only convert exception events to Sentry errors.
+    if (event.name !=== 'exception') {
+      return;
+    }
+
+    const attributes = event.attributes;
+
+    const message = attributes[SemanticAttributes.EXCEPTION_MESSAGE];
+    const syntheticError = new Error(message);
+    syntheticError.stack = attributes[SemanticAttributes.EXCEPTION_STACKTRACE];
+    syntheticError.name = attributes[SemanticAttributes.EXCEPTION_TYPE];
+
+    Sentry.captureException(syntheticError, {
+      contexts: {
+        trace: {
+          trace_id: otelSpan.spanContext().traceId,
+          span_id: otelSpan.spanContext().spanId,
+          parent_span_id: otelSpan.parentSpanId,
+        },
+      },
+    });
+  });
+}
+```
 
 ## Span Protocol
 
