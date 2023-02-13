@@ -159,6 +159,34 @@ Available options:
   captureAllExceptions?: boolean;
 }
 ```
+<Alert level="warning">
+
+Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we
+are currently unable to capture local variables for unhandled errors when using
+JavaScript modules (ESM).
+
+You can work around this issue by wrapping your code in try/catch and
+enabling the `captureAllExceptions` option:
+
+```javascript
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new Sentry.Integrations.LocalVariables({
+      captureAllExceptions: true,
+    }),
+  ],
+});
+
+try {
+  mainCode();
+} catch (e) {
+  Sentry.captureException(e);
+}
+```
+
+</Alert>
+
 
 ### Modules
 
