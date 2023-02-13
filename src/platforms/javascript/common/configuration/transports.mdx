@@ -1,0 +1,67 @@
+---
+title: Transports
+sidebar_order: 30
+description: "Transports let you change the way in which events are delivered to Sentry."
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.wasm
+---
+
+The JavaScript SDK uses a `transport` to send events to Sentry. On modern
+browsers, the default transport uses the browsers `fetch` API to send events.
+
+The default transports drop events if they fail to send due to a lack of connection.
+
+### Offline Caching
+
+If your JavaScript application is designed to continue working offline,
+dropping events when no connection is available could mean you are missing
+events that occur in that mode.
+
+To enable offline caching of events, `makeBrowserOfflineTransport` can be used
+to wrap existing transports and queue events in the browsers IndexedDB storage.
+Sending of events is then retried later.
+
+<PlatformContent includePath="configuration/offline" />
+
+This adds a number of optional properties to `transportOptions`:
+
+```javascript
+transportOptions:{
+  /**
+   * Name of IndexedDb database to store events
+   * Default: 'sentry-offline'
+   */
+  dbName: string;
+  /**
+   * Name of IndexedDb object store to store events
+   * Default: 'queue'
+   */
+  storeName: string;
+  /**
+   * Maximum number of events to store
+   * Default: 30
+   */
+  maxQueueSize: number;
+  /**
+   * Flush the store shortly after startup.
+   * Default: false
+   */
+  flushAtStartup: boolean;
+  /**
+   * Called before an event is stored.
+   * Return false to drop the envelope rather than store it.
+   *
+   * @param envelope The envelope that failed to send.
+   * @param error The error that occurred.
+   * @param retryDelay The current retry delay in milliseconds.
+   */
+  shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+}
+```
+
+#### Browser Support
+
+Offline caching is not supported in IE due to a lack of IndexedDB features.
