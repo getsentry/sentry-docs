@@ -33,10 +33,11 @@ and their memory addresses. Instruction addresses in the [Stack Trace](/sdk/even
 mapped into the list of debug images in order to retrieve debug files for
 symbolication.
 
-There are two kinds of debug images:
+There are three kinds of debug images:
 
 - Native debug images with types `macho`, `elf`, and `pe`
 - Android debug images with type `proguard`
+- JavaScript source map debug images with type `sourcemap`
 
 ### Mach-O Images
 
@@ -326,15 +327,15 @@ leading 16 bytes.
 
 `debug_file`
 
-: _Optional_: Name or absolute URL to the WASM file containing debug
+: _Optional_. Name or absolute URL to the WASM file containing debug
 information for this image. This value might be required to retrieve debug
 files from certain symbol servers. This should correspond to the externalized
 URL pulled from the `external_debug_info` custom section.
 
 `code_id`
 
-: _Optional_. Identifier of the WASM file.  It is the value of the
-`build_id` custom section formatted as HEX string.  It can be omitted in case
+: _Optional_. Identifier of the WASM file. It is the value of the
+`build_id` custom section formatted as HEX string. It can be omitted in case
 the section contains a UUID (16 bytes).
 
 `code_file`
@@ -367,6 +368,38 @@ Example:
 ```json
 {
   "uuid": "395835f4-03e0-4436-80d3-136f0749a893"
+}
+```
+
+### Source Map Images
+
+Source Map images are used to provide information about which artifact (i.e.
+source map) should be used to resolve a particular JavaScript file to its
+original source. We use the `abs_path` property of a stack frame and the
+`code_file` field in the image to query for a source map file via the `debug_id`
+field.
+
+Attributes:
+
+`type`
+
+: **Required**. Type of the debug image. Must be `"sourcemap"`.
+
+`code_file`
+
+: **Required**. Path/Url of the file that should be mapped. Corresponds to the
+`abs_path` property inside a stack frame.
+
+`debug_id`
+
+: **Required**. Identifier of the file that will be used to resolve the source
+file.
+
+```json
+{
+  "type": "sourcemap",
+  "code_file": "https://example.com/static/js/main.js",
+  "debug_id": "395835f4-03e0-4436-80d3-136f0749a893"
 }
 ```
 
