@@ -17,20 +17,29 @@ npm install --save @sentry/gatsby
 
 ## Connecting the SDK to Sentry
 
-Register the plugin in your Gatsby configuration file (typically `gatsby-config.js`).
+Register the `@sentry/gatsby` plugin in your Gatsby configuration file (typically `gatsby-config.js`).
 
 ```javascript {filename:gatsby-config.js}
 module.exports = {
-  // ...
   plugins: [
     {
       resolve: "@sentry/gatsby",
-      options: {
-        dsn: "___PUBLIC_DSN___",
-        sampleRate: 0.7,
-      },
     },
-    // ...
   ],
 };
+```
+
+Then, configure your `Sentry.init`:
+
+```javascript {filename:sentry.config.js}
+import * as Sentry from "@sentry/gatsby";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
 ```
