@@ -33,7 +33,7 @@ export default ({ platforms }: Props): JSX.Element => {
           </Nav.Item>
           <SandboxOnly>
             <Nav.Item>
-              <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
+              <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Sandbox</Nav.Link>
             </Nav.Item>
           </SandboxOnly>
           <Nav.Item>
