@@ -87,7 +87,7 @@ const IndexPage = () => {
                     href={getSandboxURL().toString()}
                     target="_blank"
                   >
-                    Demo
+                    Sandbox
                   </Nav.Link>
                 </Nav.Item>
               </SandboxOnly>
