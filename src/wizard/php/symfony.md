@@ -5,9 +5,11 @@ support_level: production
 type: framework
 ---
 
+Symfony is supported via the [`sentry-symfony`](https://github.com/getsentry/sentry-symfony) package as a native bundle.
+
 ## Install
 
-Install the `sentry/sentry-symfony` package:
+Install the `sentry/sentry-symfony` bundle:
 
 ```bash
 composer require sentry/sentry-symfony
@@ -44,6 +46,14 @@ SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
 ```
 
+<Alert level= "warning" title="Performance">
+
+Performance monitoring integrations to support tracing are enabled by default. To use them, update to the latest version of the SDK.
+
+These integrations hook into critical paths of the framework and of the vendors. As a result, there may be a performance penalty. To disable tracing, please see the [Integrations documentation](/platforms/php/guides/symfony/performance/pm-integrations/).
+
+</Alert>
+
 If you **are not** using Symfony Flex, you'll also need to enable the bundle in `config/bundles.php`:
 
 ```php {filename:config/bundles.php}
@@ -62,6 +72,7 @@ If you are using [Monolog](https://github.com/Seldaek/monolog) to report events 
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
+    register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
 
 monolog:
     handlers:
@@ -106,9 +117,10 @@ To test that both logger error and exception are correctly sent to sentry.io, yo
 namespace App\Controller;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
-class SentryTestController
+class SentryTestController extends AbstractController
 {
     /**
      * @var LoggerInterface
