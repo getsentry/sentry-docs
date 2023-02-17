@@ -594,3 +594,109 @@ The following example illustrates the contexts part of the <Link to="/sdk/event-
   }
 }
 ```
+
+## Trace Context
+
+Additional information that allows Sentry to connect multiple transactions, spans, and/or errors into one trace.
+
+`trace_id`
+
+: _Required_. The trace ID. Determines which `trace` the Span/Transaction belongs to. The value should be 16 random bytes encoded as a hex string (32 characters long).
+
+- Example: `"8f431b7aa08441bbbd5a0100fd91f9fe"`
+
+`span_id`
+
+: _Required_. The ID of the span.
+
+- Example: `"bb8f278130535c3c"`
+
+`parent_span_id`
+
+: _Optional_. The ID of the span enclosing this span.
+
+- Example: `null` or `"a8972eefa820e2ff"`
+
+`op`
+
+: _Optional_. Short code identifying the type of operation the span is measuring. For more details, see [Sentry's conventions around span operations](https://develop.sentry.dev/sdk/performance/span-operations/).
+
+- Example: `"http.server"`
+
+`status`
+
+: _Optional_. Whether the trace failed or succeeded. Currently only used to indicate status of individual transactions.
+
+- Example: `"ok"`
+
+- List of availabale status plus description:
+
+  | State                        | Description                                                                                                  | HTTP status code equivalent |
+  | ---------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------- |
+  | `ok`                         | Not an error, returned on success                                                                            | 200 and 2XX HTTP statuses   |
+  | `cancelled`                  | The operation was cancelled, typically by the caller                                                         | 499                         |
+  | `unknown` or `unknown_error` | An unknown error raised by APIs that don't return enough error information                                   | 500                         |
+  | `invalid_argument`           | The client specified an invalid argument                                                                     | 400                         |
+  | `deadline_exceeded`          | The deadline expired before the operation could succeed                                                      | 504                         |
+  | `not_found`                  | Content was not found or request was denied for an entire class of users                                     | 404                         |
+  | `already_exists`             | The entity attempted to be created already exists                                                            | 409                         |
+  | `permission_denied`          | The caller doesn't have permission to execute the specified operation                                        | 403                         |
+  | `resource_exhausted`         | The resource has been exhausted e.g. per-user quota exhausted, file system out of space                      | 429                         |
+  | `failed_precondition`        | The client shouldn't retry until the system state has been explicitly handled                                | 400                         |
+  | `aborted`                    | The operation was aborted                                                                                    | 409                         |
+  | `out_of_range`               | The operation was attempted past the valid range e.g. seeking past the end of a file                         | 400                         |
+  | `unimplemented`              | The operation is not implemented or is not supported/enabled for this operation                              | 501                         |
+  | `internal_error`             | Some invariants expected by the underlying system have been broken. This code is reserved for serious errors | 500                         |
+  | `unavailable`                | The service is currently available e.g. as a transient condition                                             | 503                         |
+  | `data_loss`                  | Unrecoverable data loss or corruption                                                                        | 500                         |
+  | `unauthenticated`            | The requester doesn't have valid authentication credentials for the operation                                | 401                         |
+
+`exclusive_time`
+
+: _Optional_. The amount of time in milliseconds spent in this transaction span, excluding its immediate child spans.
+
+- Example: `1.035`
+
+`client_sample_rate`
+
+: _Optional_. The client-side sample rate.
+
+- Example: `0.1`
+
+`tags`
+
+: _Optional_. A map or list of tags for this event. Each tag must be less than 200 characters.
+
+- Example: `{ "deviceMemory": "8 GB", "effectiveConnectionType": "4g", "routing.instrumentation": "react-router-v3" }`
+
+`dynamic_sampling_context`
+
+: _Optional_. The [Dynamic Sampling Context](https://develop.sentry.dev/sdk/performance/dynamic-sampling-context/).
+
+- Example: `{ "trace_id": "12312012123120121231201212312012", "sample_rate": "1.0", "public_key": "93D0D1125146288EAEE2A9B3AF4F96CCBE3CB316" },`
+
+### Example Trace Context
+
+```json
+{
+  "contexts": {
+    "trace": {
+      "trace_id": "12312012123120121231201212312012",
+      "span_id": "0415201309082013",
+      "parent_span_id": null,
+      "description": "<OrganizationContext>",
+      "op": "http.server",
+      "tags": {
+        "deviceMemory": "8 GB",
+        "effectiveConnectionType": "4g",
+        "routing.instrumentation": "react-router-v3"
+      },
+      "dynamic_sampling_context": {
+        "trace_id": "12312012123120121231201212312012",
+        "sample_rate": "1.0",
+        "public_key": "93D0D1125146288EAEE2A9B3AF4F96CCBE3CB316"
+      }
+    }
+  }
+}
+```
