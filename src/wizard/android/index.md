@@ -54,9 +54,9 @@ Here's an example config which should get you started:
 
 Under the hood Sentry uses a `ContentProvider` to initalize the SDK based on the values provided above. This way the SDK can capture important crashes and metrics right from the app start.
 
-Additional options can be found [on our dedicated options page](/platforms/android/configuration/options/).
+Additional options can be found [on our dedicated options page](https://docs.sentry.io/platforms/android/configuration/options/).
 
-If you want to customize the SDK init behaviour, you can still use the [Manual Initialization method](/platforms/android/configuration/manual-init/).
+If you want to customize the SDK init behaviour, you can still use the [Manual Initialization method](https://docs.sentry.io/platforms/android/configuration/manual-init/).
 
 ## Verifying Your Setup
 
