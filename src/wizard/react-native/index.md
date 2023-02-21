@@ -18,9 +18,7 @@ npm install --save @sentry/react-native
 yarn add @sentry/react-native
 ```
 
-### Linking
-
-Link the SDK to your native projects to enable native crash reporting. If you are running a project with `react-native < 0.60`, you still need to call `react-native link`, otherwise you can skip this step as `react-native >=0.60` does this automatically.
+Run `@sentry/wizard` to setup automatic source maps upload:
 
 ```bash
 npx @sentry/wizard -i reactNative -p ios android
@@ -31,10 +29,10 @@ cd ios
 pod install
 ```
 
-The call to the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [link manually](https://docs.sentry.io/platforms/react-native/manual-setup/manual-setup/) if you prefer.
+[Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [setup manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer.
 
 - iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. However, if you are using bitcode, you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
-- Android Specifics: We hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry. If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build by setting `org.gradle.configureondemand=false` or remove it.
+- Android Specifics: We hook into Gradle for the source map build process. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry. If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build by setting `org.gradle.configureondemand=false` or remove it.
 
 ### Initialize the SDK
 
@@ -49,7 +47,7 @@ Sentry.init({
 });
 ```
 
-The `sentry-wizard` will try to add it to your `App.js`
+The `sentry-wizard` will try to add it to your `App.tsx`
 
 ### Wrap your app
 
