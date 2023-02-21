@@ -25,6 +25,7 @@ import PlatformIdentifier from "./platformIdentifier";
 import RelayMetrics from "./relayMetrics";
 import SandboxLink, { SandboxOnly } from "./sandboxLink";
 import { VimeoEmbed, YouTubeEmbed } from "./video";
+import Expandable from "./expandable";
 
 const mdxComponents = {
   Alert,
@@ -33,6 +34,7 @@ const mdxComponents = {
   CodeBlock,
   CodeTabs,
   ConfigKey,
+  Expandable,
   GuideGrid,
   Include,
   JsCdnTag,
