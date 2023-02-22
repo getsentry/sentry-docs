@@ -1,0 +1,44 @@
+---
+title: "Large Render Blocking Asset"
+sidebar_order: 30
+redirect_from:
+  - /product/issues/performance-issues/large-render-blocking-asset/
+description: "Learn more about large render blocking assets and how to diagnose and fix them."
+---
+
+<Include name="early-adopter-note.mdx" />
+
+A _Large Render Blocking Asset_ is a performance problem that happens when a large asset blocks the rendering of your web page, causing a delay in the page's paint. For example, when a page includes a large stylesheet, rendering of the page may stop until that stylesheet is fully downloaded and processed by the browser.
+
+## Detection Criteria
+
+The detector for this performance issue looks for specific asset (resource) spans with the following criteria:
+
+- The span has to be one of either: `resource.link` or `resource.script` spans.
+- The span's `resource.render_blocking_status` data property must have a value of `blocking` (added by the `@sentry/tracing` SDK as of version `7.38.0`) or be missing.
+- It has to be over `1mb` in size.
+- The [FCP (First Contentful Paint)](/product/performance/web-vitals/#first-contentful-paint-fcp) of the transaction must be at least `2` seconds (with an upper bound of `10` seconds to eliminate outliers).
+- The resource span must take up at least `33%` of the FCP.
+
+## Span Evidence
+
+The evidence for a Large Render Blocking Asset problem identifies four aspects:
+
+- Transaction name
+- Asset URL
+- Effect on FCP
+- Effect on total transaction time
+
+View it by going to the Issues page in Sentry, selecting your project, clicking on the Large Render Blocking Asset error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+
+## Fingerprinting
+
+Sentry computes the issue fingerprint based on the asset URL. We detect many different patterns of cache-busting hashes in URL paths, filenames, and query strings so that the same asset is grouped into a single issue even as its contents changes.
+
+## Recommendations
+
+Use tools like Chrome's DevTools to identify non-critical CSS and JS in your render-blocking assets, and move the non-critical content into a separate non-blocking asset.
+
+You can learn more about this approach from the following resource:
+
+* [Lighthouse: Eliminate render-blocking resources](https://developer.chrome.com/en/docs/lighthouse/performance/render-blocking-resources/)
