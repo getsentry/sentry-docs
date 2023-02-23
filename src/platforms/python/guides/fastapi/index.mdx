@@ -56,11 +56,11 @@ async def trigger_error():
 
 Visiting `"/sentry-debug"` will trigger an error that will be captured by Sentry.
 
-## Behavior
-
-The following information about your FastAPI project will be available to you on Sentry.io:
+## Behaviour
 
 ### Issue Reporting
+
+The following information about your FastAPI project will be available to you on Sentry.io:
 
 - All exceptions leading to an Internal Server Error are captured and reported.
 - Request data such as URL, HTTP method, headers, form data, and JSON payloads is attached to all issues.
@@ -69,9 +69,9 @@ The following information about your FastAPI project will be available to you on
 
 ![Issues List](issues-list.png)
 
-### Measuring performance
+### Monitor Performance
 
-The following parts of your FastAPI project are measured:
+The following parts of your FastAPI project are monitored:
 
 - Middleware stack
 - Middleware `send` and `receive` callbacks
@@ -98,7 +98,7 @@ With this option, you can influence how the transactions are named in Sentry. Fo
 
 ```python
 from sentry_sdk.integrations.starlette import StarletteIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration  
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 sentry_sdk.init(
     # ...
@@ -123,6 +123,44 @@ In the above code, the transaction name will be:
 The default is `"url"`.
 
 </ConfigKey>
+
+## Data Collected
+
+### Data Collected by Issue Reporting
+
+|                                                                                                                                                 | Send PII: Off <br/>`(send_default_pii=False)` <br/>(DEFAULT) | Send PII: On <br/>`(send_default_pii=True)` <br/>&nbsp;                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|                                                                                                                                                 |                                                              |                                                                                                                                                                               |
+| Data sent when an <br/> unhandled error occurs                                                                                                  | <span style="color: #C83852;">Yes</span>                     | <span style="color: #C83852;">Yes</span>                                                                                                                                      |
+| Data sent on <br/> each request                                                                                                                 | <span style="color: #69C289;">No</span>                      | <span style="color: #69C289;">No</span>                                                                                                                                       |
+| HTTP headers                                                                                                                                    | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #D79528;">Sent <br/> ([Denylist](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L19-L26) applied) </span> |
+| Cookies                                                                                                                                         | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #D79528;">All Sent <br/></span>                                                                                                                           |
+| Information about logged-in user<br/>(user id, user name, email)                                                                                | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #C83852;">Sent</span>                                                                                                                                     |
+| Users' IP address                                                                                                                               | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #C83852;">Sent</span>                                                                                                                                     |
+| Request body                                                                                                                                    | <span style="color: #C83852;">Sent</span>                    | <span style="color: #C83852;">Sent</span>                                                                                                                                     |
+| Local variables in stack trace<br/><small>(Turn off with ["with_locals"](/platforms/python/configuration/options/#with-locals) option.)</small> | <span style="color: #C83852;">Sent</span>                    | <span style="color: #C83852;">Sent</span>                                                                                                                                     |
+| Performance spans                                                                                                                               | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #69C289;">Not Sent</span>                                                                                                                                 |
+
+### Data Collected by Performance Monitoring
+
+<Note>
+
+The parameter `traces_sample_rate` needs to be set when initializing the Sentry SDK to monitor performance.
+
+</Note>
+
+|                                                                                                                                                 | Send PII: Off <br/>`(send_default_pii=False)` <br/>(DEFAULT) | Send PII: On <br/>`(send_default_pii=True)` <br/>&nbsp;                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|                                                                                                                                                 |                                                              |                                                                                                                                                                              |
+| Data sent when an <br/> unhandled error occurs                                                                                                  | <span style="color: #C83852;">Yes</span>                     | <span style="color: #C83852;">Yes</span>                                                                                                                                     |
+| Data sent on <br/> each request                                                                                                                 | <span style="color: #C83852;">Yes</span>                     | <span style="color: #C83852;">Yes</span>                                                                                                                                     |
+| HTTP headers                                                                                                                                    | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #D79528;">Sent <br/> ([Denylist](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L19-L26) applied)</span> |
+| Cookies                                                                                                                                         | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #D79528;">All Sent <br/></span>                                                                                                                          |
+| Information about logged-in user                                                                                                                | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #C83852;">Sent</span>                                                                                                                                    |
+| Users' IP address                                                                                                                               | <span style="color: #69C289;">Not Sent</span>                | <span style="color: #C83852;">Sent</span>                                                                                                                                    |
+| Request body                                                                                                                                    | <span style="color: #C83852;">Sent</span>                    | <span style="color: #C83852;">Sent</span>                                                                                                                                    |
+| Local variables in stack trace<br/><small>(Turn off with ["with_locals"](/platforms/python/configuration/options/#with-locals) option.)</small> | <span style="color: #C83852;">Sent</span>                    | <span style="color: #C83852;">Sent</span>                                                                                                                                    |
+| Performance spans                                                                                                                               | <span style="color: #C83852;">Sent</span>                    | <span style="color: #C83852;">Sent</span>                                                                                                                                    |
 
 ## Supported Versions
 
