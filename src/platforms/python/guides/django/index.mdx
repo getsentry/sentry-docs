@@ -1,0 +1,92 @@
+---
+title: Django
+redirect_from:
+  - /clients/python/integrations/django/
+  - /platforms/python/django/
+description: "Learn about using Sentry with Django."
+---
+
+The Django integration adds support for the [Django Framework](https://www.djangoproject.com/).
+
+Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io), then return to this page.
+
+<Note>
+
+Sentry's Django integration enables automatic reporting of errors and exceptions as well as performance monitoring.
+
+Django applications using Channels 2.0 will be correctly instrumented using Python 3.7. Older versions of Python require installation of [aiocontextvars](https://pypi.org/project/aiocontextvars/).
+
+</Note>
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `django` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[django]'
+```
+
+## Configure
+
+To configure the Sentry SDK, initialize in your `settings.py` file.
+
+```python {filename:settings.py}
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
+)
+```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
+
+```python
+from django.urls import path
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+urlpatterns = [
+    path('sentry-debug/', trigger_error),
+    # ...
+]
+```
+
+Visiting this route will trigger an error that will be captured by Sentry.
+
+## Behaviour
+
+### Issue Reporting
+
+- If you use `django.contrib.auth` and you have set `send_default_pii=True` in your call to `init`, user data (current user id, email address, username) is attached to error eventa.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
+- Logs emitted by any logger are recorded as breadcrumbs by the [Logging](/platforms/python/guides/logging/) integration (this integration is enabled by default).
+
+### Performance Monitoring
+
+The following parts of your FastAPI project are monitored:
+
+- Middleware stack
+- Signals
+- Database queries
+- Redis commands
+
+<Note>
+
+The parameter `traces_sample_rate` needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
+
+</Note>
+
+## Supported Versions
+
+- Django 1.8-1.11 (Python: 2.7+)
+- Django 2.x (Python: 3.5+)
+- Django 3.x (Python: 3.6+)
+- Django 4.x (Python: 3.8+)
