@@ -6,6 +6,7 @@ supported:
   - apple.ios
   - flutter
   - android
+  - react-native
 notSupported:
   - apple.macos
   - apple.tvos
@@ -29,3 +30,49 @@ View hierarchy debugging is an opt-in feature. You can enable it as shown below:
 View hierarchies appear in the "Attachments" tab, where you can view all attachments, as well as associated events. Click the event ID to open the **Issue Details** page of that specific event.
 
 ![Screenshots List Example](viewhierarchy-list-example.png)
+
+<PlatformSection supported={["react-native"]}>
+
+## View Hierarchy Mapping to React Native Components
+
+View Hierarchy as captured by the SDK, represents the native user interface generated based on a React Native components structure. Generally, each React Element maps to a native component, but there are exception like [View Flattening](https://reactnative.dev/architecture/view-flattening), as described in the React Native documentation.
+
+Native components wrapping the app (created by React Native), are another part of View Hierarchy.
+
+### iOS
+
+The code snippet below shows React Native and native UIKit components the way they would be included in the view hierarchy.
+
+```javascript
+                                 // UIWindow
+                                 // RCTRootContentView
+                                 // ...
+function MyComponent() {
+  return (
+    <View testID='id'>           // RTCView - id
+      <Text>Hello World!</Text>  // RCTTextView
+    </View>
+  );
+}
+```
+
+### Android
+
+The code snippet below shows React Native and native Android components the way they would be included in the view hierarchy.
+
+```javascript
+                                 // com.android.internal.policy.DecorView
+                                 // android.widget.LinearLayout
+                                 // ...
+                                 // com.facebook.react.ReactRootView
+function MyComponent() {
+  return (
+    <View>                       // com.facebook.react.views.view.ReactViewGroup
+      <Text>Hello World!</Text>  // com.facebook.react.views.text.ReactTextView
+    </View>
+  );
+}
+                                 // android.view.View - navigationBarBackground
+                                 // android.view.View - statusBarBackground
+```
+</PlatformSection>

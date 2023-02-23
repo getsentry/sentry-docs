@@ -53,23 +53,24 @@ import requests
 
 headers = {'Authorization': 'DSN ___PUBLIC_DSN___'}
 monitor_id = '' # Write your monitor_id here
+org_slug = '___ORG_SLUG___' # Write your organization slug here
 
 # Create the check-in
 json_data = {'status': 'in_progress'}
-response = requests.post(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/', headers=headers, json=json_data)
+response = requests.post(f'https://sentry.io/api/0/organizations/{org_slug}/monitors/{monitor_id}/checkins/', headers=headers, json=json_data)
 checkin_id = response.json()['id']
 
 # Execute your scheduled task code here...
 
 # Update the check-in status (required) and duration (optional)
 json_data = {'status': 'ok', 'duration': 3000}
-response = requests.put(f'https://sentry.io/api/0/monitors/{monitor_id}/checkins/{checkin_id}/', headers=headers, json=json_data)
+response = requests.put(f'https://sentry.io/api/0/organizations/{org_slug}/monitors/{monitor_id}/checkins/{checkin_id}/', headers=headers, json=json_data)
 ```
 
 ```bash {tabTitle: curl}
 # Create the check-in and save the returned CHECKIN_ID
 $ curl -X POST \
-    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/' \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/{MONITOR_ID}/checkins/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "in_progress"}'
@@ -78,13 +79,17 @@ $ curl -X POST \
 
 # Update the check-in status (required) and duration (optional)
 $ curl -X PUT \
-    'https://sentry.io/api/0/monitors/{MONITOR_ID}/checkins/{CHECKIN_ID}/' \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/{MONITOR_ID}/checkins/{CHECKIN_ID}/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "ok", "duration": 3000}'
 ```
 
 ### Request Parameters
+
+`org_slug`:
+
+: **Required.** Your organization's slug.
 
 `monitor_id`:
 
@@ -112,6 +117,26 @@ To verify that everything is set up correctly make sure that you are receiving r
 ![Example Recent Monitor Check-In](cron-recent-checkin.png)
 
 If your own cron monitor isn't producing "ok" check-ins even when running as expected, consult the [troubleshooting](/product/crons/troubleshooting/) section.
+
+## Step 3: Health Check Attachments (Optional)
+
+Sentry Crons can help you better understand your job check-ins by storing a file, such as a log output. You'll be able to use this to debug check-in failures or track job statuses. To set up your health check, execute an initial HTTP POST (multipart/form-data) check-in request to the following endpoint:
+
+```bash {tabTitle: curl}
+# Perform a POST request to attach a file to a check-in
+$ curl -X POST \
+'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_id>/checkins/<checkin_id>/attachment/' \
+  --header 'Authorization: DSN ___PUBLIC_DSN___' \
+  --form 'file=<file_path>'
+```
+
+We do not currently support sending attachments through the CLI but are working on implementing that functionality soon!
+
+Attachments display on each corresponding check-in. To download the attached file, navigate to your monitor details page and click the "Attachment" button under your recent check-ins.
+
+Note: Currently the max size for file attachments is 100kb; and only one attachment can be associated with each check-in.
+
+![Example Check-In Attachment](cron-attachment-example.png)
 
 ## Next Steps
 
