@@ -1,0 +1,69 @@
+---
+title: Data Collected
+description: "See what data is collected by the Sentry SDK."
+sidebar_order: 900
+---
+
+### HTTP headers
+
+By default the Sentry SDK does not send any HTTP headers.
+
+You can turn on sending of HTTP headers by setting `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+When sending of HTTP is enabled we have a [Denylist](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L19-L26) to filter out headers that contain sensitive data.
+
+### Cookies
+
+By default the Sentry SDK does not send any Cookies.
+
+You can turn on sending of HTTP headers by setting `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+We try to remove all cookies that contain sensitive information (like the Session ID and CSRF Token cookies in Django)
+
+### Information about logged-in user<br/>
+
+By default the Sentry SDK does not send any information about the logged-in user.
+
+You can turn on sending information about the currently logged-in user (information like email address, user id, username) by setting `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+TODO: note on framework implementation
+
+### Users' IP address
+
+By default the Sentry SDK does not send the users IP address.
+
+You can turn on sending the users IP address by setting `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+TODO: note on framework implementation
+
+### Request URL
+
+The full request URL of outgoing and incoming HTTP requests is always sent to Sentry.
+
+### Request query string
+
+The full request query string of outgoing and incoming HTTP requests is always sent to Sentry.
+
+### Request body
+
+Sending of the request body to sentry depends on a couple of things:
+
+- The type of the request body: JSON and form bodies are sent, raw request bodies are always removed. Uploaded files in request bodies are never sent to Sentry.
+- The size of the request body: There is the option ["request_bodies"](https://docs.sentry.io/platforms/python/configuration/options/#request-bodies) that is by default set to `medium` meaning that larger request bodies are removed.
+- You can set `request_bodies` to `"never"` to prevent bodies to be sent to Sentry alltogether.
+
+### Local variables in stack trace
+
+When sending unhandled errors and exceptions to sentry the names and values of local variables that where set when the error occured are sent to Sentry.
+
+You can prevent local variables to be sent to Sentry by setting `include_local_variables=False` in the `sentry_sdk.init()` call.
+
+(Turn off with ["with_locals"](/platforms/python/configuration/options/#with-locals) option.)
+
+### Performance spans
+
+### Template Content
+
+(In case an error happens in a template, a few lines before and after the line of the error are sent.)
+
+### SQL Queries
