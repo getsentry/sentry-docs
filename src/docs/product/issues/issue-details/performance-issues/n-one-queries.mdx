@@ -21,7 +21,7 @@ If Sentry is not detecting an N+1 issue where you expect one, it's probably beca
 
 ## Span Evidence
 
-The evidence for an N+1 queries problem has four main aspects:
+The evidence for an N+1 queries problem has three main aspects:
 
 - Transaction name
 - Parent span - This can be a view, a serializer, or another span that logically groups the queries.
@@ -64,3 +64,34 @@ def books(request):
 Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query. Instead of a long waterfall, there is a single `SELECT` query:
 
 ![Solved N+1 queries in an example application](n-plus-one-queries-after.png)
+
+## MN+1 Queries
+
+<Include name="early-adopter-note.mdx" />
+
+Sometimes an application might make multiple queries in a loop, or make a query along with performing some other repetitive activities in a loop. To expand on the previous example:
+
+```python
+from django.http import HttpResponse
+
+def books(request):
+    books = Book.objects.select_related("author").all()[:10]
+    book_list = [book.title + " by " + book.author.name + ", " + book.publisher.name for book in books]
+    return HttpResponse((", ").join(book_list))
+```
+
+This code will perform two database queries for each iteration of the loop over books: one to fetch the author, and another to fetch the publisher. Since there are two queries in each iteration of the loop, we could call this a 2N+1 issue. Sentry will find and report these issues, too. They are categorized in the application as N+1 Queries, but may involve multiple repeating spans. MN+1 queries can be solved using similar strategies to N+1s, as [described above](#example).
+
+### Detection Criteria
+
+The detector for performance issues looks for a set of sequential spans that includes at least one database span and follows a recurring pattern. It also uses the following criteria:
+
+- Total duration of involved spans must exceed a threshold (usually 100 ms)
+- Total count of involved spans must exceed a threshold (usually ten spans)
+- At least one involved spans must be a database span with a full query as its descriptions (some SDKs truncate queries and add an ellipsis to the end)
+
+If Sentry is not detecting an MN+1 issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
+
+### Fingerprinting
+
+Sentry computes the fingerprint for MN+1 issues similarly to standard N+1s [described above](#fingerprinting). MN+1s do not require or use a source span in their fingerprints - instead they are based only on the parent span and the repeating spans. Repeating spans may be a combination of `db` and non-`db` spans. `db` spans are fingerprinted by their operation and the query in their span description, while non-`db` spans are fingerprinted by their span operation.
