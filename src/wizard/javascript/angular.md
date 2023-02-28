@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-To use Sentry with your Angular application, you will need to use `@sentry/angular-ivy` or `@sentry/angular`, Sentry’s Browser Angular SDKs:
+To use Sentry with your Angular application, you'll need `@sentry/angular-ivy` or `@sentry/angular`, Sentry’s Browser Angular SDKs:
 
 - If you're using Angular 12 or newer, use `@sentry/angular-ivy`
 - If you're using Angular 10 or 11, use `@sentry/angular`
