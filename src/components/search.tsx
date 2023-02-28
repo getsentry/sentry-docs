@@ -99,7 +99,7 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
           platforms: platforms.map(platform => standardSDKSlug(platform).slug),
           searchAllIndexes: showOffsiteResults,
           ...args,
-        }, {clickAnalytics: true})
+        }, {clickAnalytics: true, analyticsTags: ["source:documentation"]})
         .then((results: Result[], ) => {
           if (loading) setLoading(false);
 
