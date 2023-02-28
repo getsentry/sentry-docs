@@ -23,20 +23,18 @@ npm install --save @sentry/react @sentry/tracing
 ## Configure
 Initialise Sentry as early as possible in your application's lifecycle.
 
-Next, import and initialize the Sentry module as early as possible, before initializing React:
-
 ```javascript
 import { createRoot } React from "react-dom/client";
-import React from "react";   
-import * as Sentry from "@sentry/react"; 
-import { BrowserTracing } from "@sentry/tracing"; 
-import App from "./App"; 
+import React from "react";  
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
+import App from "./App";
 
-Sentry.init({ 
-  dsn: "___PUBLIC_DSN___", 
-  integrations: [new BrowserTracing()], 
-  tracesSampleRate: 1.0, 
-}); 
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new BrowserTracing()],
+  tracesSampleRate: 1.0,
+});
 
 const container = document.getElementById(“app”);
 const root = createRoot(container);
@@ -57,7 +55,7 @@ This snippet includes an intentional error, so you can test that everything is w
 return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 ---
-## Next Steps 
+## Next Steps
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/react/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [React Features](https://docs.sentry.io/platforms/javascript/guides/react/features/): Learn about our first class integration with the React framework.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/react/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
