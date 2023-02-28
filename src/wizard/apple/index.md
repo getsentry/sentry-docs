@@ -34,9 +34,9 @@ func application(_ application: UIApplication,
         options.dsn = "___PUBLIC_DSN___"
         options.debug = true // Enabled debug when first installing is always helpful
 
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-        // We recommend adjusting this value in production.
-        options.tracesSampleRate = 1.0
+        // This will capture 100% of transactions for performance monitoring.
+        // If you want to control the percentage of captured events, we recommend using `options.tracesSampleRate`.
+        options.enableTracing = true
     }
 
     return true
