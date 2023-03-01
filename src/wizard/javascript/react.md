@@ -7,6 +7,7 @@ type: framework
 In this quick guide you’ll set up:
 - `@sentry/react` for [error monitoring](https://docs.sentry.io/platforms/javascript/guides/react/)
 - `@sentry/tracing` for [performance monitoring](https://docs.sentry.io/platforms/javascript/guides/react/performance/)
+
 ---
 
 ## Install
@@ -40,13 +41,8 @@ const container = document.getElementById(“app”);
 const root = createRoot(container);
 root.render(<App />)
 ```
-
-<div class="alert alert-info" role="alert">
-	<h5 class="no_toc"><code>tracesSampleRate: 1.0</code></h5>
-	<div class="alert-body content-flush-bottom">
-		The example above ensures every transaction will be to Sentry, but we recommend lowering this value in production.  
-	</div>
-</div>
+> ** tracesSampleRate: 1.0**
+> The example above ensures every transaction will be to Sentry, but we recommend lowering this value in production.
 
 ## Verify
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
@@ -54,6 +50,7 @@ This snippet includes an intentional error, so you can test that everything is w
 ```javascript
 return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
+
 ---
 ## Next Steps
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/react/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
