@@ -41,7 +41,8 @@ const container = document.getElementById(“app”);
 const root = createRoot(container);
 root.render(<App />)
 ```
-> ** tracesSampleRate: 1.0**
+
+> **tracesSampleRate: 1.0**
 > The example above ensures every transaction will be to Sentry, but we recommend lowering this value in production.
 
 ## Verify
