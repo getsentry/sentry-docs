@@ -100,10 +100,3 @@ app.mount("#app");
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
-
-<div class="alert alert-warning" role="alert"><h5 class="no_toc">Vue Error Handling</h5><div class="alert-body content-flush-bottom">
-Please note that if you enable this integration, by default Vue will not call its `logError` internally.
-This means that errors occurring in the Vue renderer will not show up in the developer console.
-If you want to preserve this functionality, make sure to pass the `logErrors: true` option.
-</div>
-</div>
