@@ -22,7 +22,7 @@ npm install --save @sentry/react @sentry/tracing
 ```
 
 ## Configure
-Initialise Sentry as early as possible in your application's lifecycle.
+Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
 import { createRoot } React from "react-dom/client";
