@@ -9,7 +9,7 @@ const SHOW_BANNER = true;
 const BANNER_TEXT =
   "Livestream AMA: Chat with the team to learn how Sentry automatically detects performance issues, making APM actually helpful.";
 const BANNER_LINK_URL =
-  "bit.ly/perf-issues-ama-7";
+  "https://bit.ly/perf-issues-ama-7";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
