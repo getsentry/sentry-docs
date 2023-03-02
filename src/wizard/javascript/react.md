@@ -43,7 +43,7 @@ root.render(<App />)
 ```
 
 > **tracesSampleRate: 1.0**
-> The example above ensures every transaction will be to Sentry, but we recommend lowering this value in production.
+> The above setting ensures that 100% of transactions will be sent to Sentry, but we recommend lowering this number in production.
 
 ## Verify
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
