@@ -46,7 +46,7 @@ root.render(<App />)
 > The above setting ensures that 100% of transactions will be sent to Sentry, but we recommend lowering this number in production.
 
 ## Verify
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
 return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
