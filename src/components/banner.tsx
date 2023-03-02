@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Join our upcoming Jetpack Compose livestream on Feb. 28th at 8:30 AM PT.";
+  "Livestream AMA: Chat with the team to learn how Sentry automatically detects performance issues, making APM actually helpful.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/jetpack-compose-ama/";
+  "bit.ly/perf-issues-ama-7";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
