@@ -64,17 +64,19 @@ pytest tests/snuba/api/endpoints/test_organization_events_distribution.py::Organ
 # Run all tests in a file that match a substring
 pytest tests/snuba/api/endpoints/test_organization_events_distribution.py -k method_name
 
-# When running tests Django rebuilds the database on every run, which can make your test startup time slow. To avoid this you can use
-# the `--reuse-db` flag, so that the database will persist between runs. This should significantly improve your test startup time after
-# the first time you use it.
-# Note: If the schema changes you may need to run with `--create-db` once so that you have the latest schema.
+# When running tests Django rebuilds the database on every run, which can make
+# your test startup time slow. To avoid this you can use the `--reuse-db` flag,
+# so that the database will persist between runs. This should significantly
+# improve your test startup time after the first time you use it.
+# Note: If the schema changes you may need to run with `--create-db` once so
+# that you have the latest schema.
 pytest --reuse-db tests/sentry/api/endpoints/
 ```
 
 Some frequently used options for pytest are:
 
-* `-k` Filter test methods/classes by a substring.
-* `-s` Don't capture stdout when running tests.
+- `-k` Filter test methods/classes by a substring.
+- `-s` Don't capture stdout when running tests.
 
 Refer to the [pytest](http://doc.pytest.org/en/latest/usage.html) docs for more usage options.
 
@@ -86,10 +88,9 @@ to build up the required organization, projects and other postgres based state.
 
 You should also use `store_event()` to store events in a similar way that the
 application does in production. Storing events requires your test to inherit
-from `SnubaTestCase`.  When using `store_event()` take care to set a timestamp
-*in the past* on the event. When omitted, the timestamp is uses 'now' which can
+from `SnubaTestCase`. When using `store_event()` take care to set a timestamp
+_in the past_ on the event. When omitted, the timestamp is uses 'now' which can
 result in events not being picked due to timestamp boundaries.
-
 
 ```python
 from sentry.testutils.helpers.datetime import before_now
@@ -118,13 +119,13 @@ def test_success(self):
 
 ### Notes on Database Tests
 
-For the love of god please stop writing tests using the Django test case.  However
-if for whatever reason you are extending on of them and you do not feel motivated
-enough to convert them into function style tests be extra careful about using it
-for non database related functionality.
+For the love of god, please stop writing tests using the Django test case. However,
+if for whatever reason you are extending one of them and you do not feel motivated
+enough to convert them into function style tests, be extra careful about using it
+for non-database-related functionality.
 
-The django `TestCase` class incurs an incredibly high cost due to database management
-and we have some tests that do not require the database.  To check if your new tests
+The Django `TestCase` class incurs an incredibly high cost due to database management,
+and not all tests require the database. To check if your new tests
 are unnecessarily using the database export the `SENTRY_DETECT_TESTCASE_MISUSE`
 environment variable and set it to `1`:
 
@@ -133,7 +134,7 @@ SENTRY_DETECT_TESTCASE_MISUSE=1 pytest my_new_test.py
 ```
 
 If the test runner detects that you used the Django `TestCase` class but you did not
-end up needing it, it will yell at you.  This is protects you against other
+end up needing it, it will yell at you. This protects you against other
 developers yelling at you later for slowing down CI.
 
 ### External Services
@@ -257,9 +258,9 @@ baselines.
 While we have fairly wide coverage with visual regressions there are a few
 important blind spots:
 
-* Hover cards and hover states
-* Modal windows
-* Charts and data visualizations
+- Hover cards and hover states
+- Modal windows
+- Charts and data visualizations
 
 All of these components and interactions are generally not included in visual snapshots, and you should take care
 when working on any of them.
