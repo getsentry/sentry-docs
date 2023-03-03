@@ -13,7 +13,7 @@ The FastAPI integration adds support for the [FastAPI Framework](https://fastapi
 pip install --upgrade 'sentry-sdk[fastapi]'
 ```
 
-2. To configure the SDK, initialize it before your app has been initialized. The Sentry SDK automatically enables support for FastAPI if you have the `fastapi` Python package installed in your project. There are no configuration options you need to add when initializing the Sentry SDK as everything works out of the box:
+2. To configure the Sentry SDK, initialize it before your app has been initialized:
 
 ```python
 from fastapi import FastAPI

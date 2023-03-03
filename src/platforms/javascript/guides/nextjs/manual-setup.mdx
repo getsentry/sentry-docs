@@ -8,11 +8,11 @@ If you can't (or prefer not to) run the [configuration step](/platforms/javascri
 
 ## Create Initialization Config Files
 
-Create two files in the root directory of your project, `sentry.client.config.js` and `sentry.server.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
+Create three files in the root directory of your project, `sentry.client.config.js`, `sentry.server.config.js` and `sentry.edge.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
 
 For each configuration:
 
-```javascript {filename:sentry.server.config.js/sentry.client.config.js}
+```javascript {filename:sentry.server.config.js/sentry.client.config.js/sentry.edge.config.js}
 import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -29,7 +29,7 @@ Sentry.init({
 });
 ```
 
-```typescript {filename:sentry.server.config.ts/sentry.client.config.ts}
+```typescript {filename:sentry.server.config.ts/sentry.client.config.ts/sentry.edge.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -46,7 +46,7 @@ Sentry.init({
 });
 ```
 
-You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
+You can include your DSN directly in these three files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
 ## Create a Custom `_error` Page
 
@@ -93,7 +93,7 @@ CustomErrorComponent.getInitialProps = async contextData => {
 export default CustomErrorComponent;
 ```
 
-```typescript {filename:pages/_error.ts}
+```typescript {filename:pages/_error.tsx}
 /**
  * NOTE: This requires `@sentry/nextjs` version 7.3.0 or higher.
  *
@@ -156,14 +156,19 @@ const moduleExports = {
 
   // Optional build-time configuration options
   sentry: {
-    // See the 'Configure Source Maps' and 'Configure Legacy Browser Support'
-    // sections below for information on the following options:
-    //   - disableServerWebpackPlugin
-    //   - disableClientWebpackPlugin
-    //   - autoInstrumentServerFunctions
-    //   - hideSourceMaps
-    //   - widenClientFileUpload
-    //   - transpileClientSDK
+    // See the sections below for information on the following options:
+    //   'Configure Source Maps':
+    //     - disableServerWebpackPlugin
+    //     - disableClientWebpackPlugin
+    //     - hideSourceMaps
+    //     - widenClientFileUpload
+    //   'Configure Legacy Browser Support':
+    //     - transpileClientSDK
+    //   'Configure Serverside Auto-instrumentation':
+    //     - autoInstrumentServerFunctions
+    //     - excludeServerRoutes
+    //   'Configure Tunneling to avoid Ad-Blockers':
+    //     - tunnelRoute
   },
 };
 
@@ -194,13 +199,13 @@ Make sure to add the Sentry config last; otherwise, the source maps the plugin r
 
 ## Configure Source Maps
 
-By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), `sentry-cli` will automatically detect and upload your source files, source maps, and bundles to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), because otherwise the full upload process would reoccur on each file change.)
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), certain tasks will be handled for you automatically: the `release` value in `Sentry.init()` will be set, and sourcemaps will be generated and uploaded to Sentry, so that your stacktraces can be demangled. (This behavior is disabled when running the dev server (`next dev`), to prevent the full upload process from reoccurring on each file change.)
 
 To configure the plugin, pass a `sentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
 
 ### Disable `SentryWebpackPlugin`
 
-If you want or need to handle source map uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
+If you choose to handle source map generation and uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `moduleExports` above, and set the relevant options there:
 
 ```javascript {filename:next.config.js}
 const moduleExports = {
@@ -211,6 +216,8 @@ const moduleExports = {
 };
 ```
 
+Note that you'll also have to explicitly set a `release` value in your `Sentry.init()`.
+
 If you disable the plugin for both server and client builds, it's safe to omit the `sentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
 
 ```javascript {filename:next.config.js}
@@ -218,54 +225,6 @@ module.exports = withSentryConfig(moduleExports);
 ```
 
 In that case you can also skip the `sentry-cli` configuration step below.
-
-### Automatic Instrumentation of API Routes and Data Fetching Methods
-
-_(New in version 7.14.0)_
-
-The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring To disable it, set the `autoInstrumentServerFunctions` to `false`.
-
-```javascript {filename:next.config.js}
-const moduleExports = {
-  sentry: {
-    autoInstrumentServerFunctions: false,
-  },
-};
-```
-
-Under the hood, when using this option, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
-
-If the automatic instrumentation doesn't work for your use case, API routes can also be wrapped manually using the `withSentry` function:
-
-```javascript {filename:pages/api/*}
-import { withSentry } from "@sentry/nextjs";
-
-const handler = (req, res) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default withSentry(handler);
-```
-
-```typescript {filename:pages/api/*}
-import type { NextApiRequest, NextApiResponse } from "next"
-import { withSentry } from "@sentry/nextjs";
-
-const handler = (req: NextApiRequest, res: NextApiResponse) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default withSentry(handler);
-```
-
-Data fetching methods can also be manually wrapped using the following functions:
-
-- `withSentryServerSideGetInitialProps` for `getInitialProps`
-- `withSentryGetServerSideProps` for `getServerSideProps`
-- `withSentryGetStaticProps` for `getStaticProps`
-- `withSentryServerSideErrorGetInitialProps` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
-- `withSentryServerSideAppGetInitialProps` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
-- `withSentryServerSideDocumentGetInitialProps` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
 
 ### Use `hidden-source-map`
 
@@ -355,3 +314,126 @@ const moduleExports = {
 ```
 
 (This assumes you are using [the `next.config.js` setup shown above](#extend-nextjs-configuration).)
+
+## Configure Server-side Auto-instrumentation
+
+The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring.
+
+### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
+
+_(New in version 7.14.0)_
+
+To disable the automatic instrumentation of API route handlers and server-side data fetching functions, set the `autoInstrumentServerFunctions` to `false`.
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    autoInstrumentServerFunctions: false,
+  },
+};
+```
+
+With this option, under the hood, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
+
+### Opt In to Auto-instrumentation on Specific Routes
+
+_(New in version 7.14.0)_
+
+If the automatic instrumentation doesn't work for your use case, you can turn it off globally and choose to only wrap specific API route handlers or data fetching functions instead.
+
+For API routes, use the `wrapApiHandlerWithSentry` function:
+
+```javascript {filename:pages/api/*}
+import { withSentry } from "@sentry/nextjs";
+
+const handler = (req, res) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
+```
+
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next"
+import { withSentry } from "@sentry/nextjs";
+
+const handler = (req: NextApiRequest, res: NextApiResponse) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
+```
+
+For data fetching methods, use the following functions:
+
+- `wrapGetInitialPropsWithSentry` for `getInitialProps`
+- `wrapGetServerSidePropsWithSentry` for `getServerSideProps`
+- `wrapGetStaticPropsWithSentry` for `getStaticProps`
+- `wrapErrorGetInitialPropsWithSentry` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
+- `wrapAppGetInitialPropsWithSentry` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
+- `wrapDocumentGetInitialPropsWithSentry` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
+
+### Opt Out of Auto-instrumentation on Specific Routes
+
+_(New in version 7.20.0)_
+
+If you want auto-instrumentation to apply by default, but want to exclude certain routes, use the `excludeServerRoutes` option in the `sentry` object in your `next.config.js`:
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    excludeServerRoutes: [
+      "/some/excluded/route",
+      "/excluded/route/with/[parameter]",
+      /^\/route\/beginning\/with\/some\/prefix/,
+      /\/routeContainingASpecificPathSegment\/?/,
+    ],
+  },
+};
+```
+
+Excluded routes can be specified either as regexes or strings. When using a string, make sure that it matches the route exactly, and has a leading slash but no trailing one.
+
+### Opt Out of Auto-instrumentation on Middleware
+
+_(New in version 7.31.0)_
+
+To disable the automatic instrumentation of Next.js middleware, set the `autoInstrumentMiddleware` option to `false`.
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    autoInstrumentMiddleware: false,
+  },
+};
+```
+
+## Configure Tunneling to avoid Ad-Blockers
+
+_(New in version 7.26.0)_
+
+You might notice that Sentry events are sometimes blocked by Ad-Blockers.
+Ad-blockers can be circumvented by using **tunneling**.
+
+The Sentry Next.js SDK provides an easy way to set up tunneling for your application.
+Use the `tunnelRoute` option in the `sentry` object in your `next.config.js` to provide a route the SDK will use to tunnel events to Sentry:
+
+```javascript {filename:next.config.js}
+const moduleExports = {
+  sentry: {
+    tunnelRoute: "/monitoring-tunnel",
+  },
+};
+```
+
+Please note that this option will tunnel Sentry events through your Next.js application so you might experience increased server usage.
+
+The `tunnelRoute` option does not work with self-hosted Sentry instances.
+
+Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.
+
+### Opt Out of Sentry SDK bundling in Client or Server side
+
+If you want the `sentry` to be available in your server side & not in client side, you can make your `sentry.client.config.js` empty. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle. The same goes the opposite for opting out of server side bundle by emptying `sentry.server.config.js`.
+
+You cannot delete the respective config files because the SDK requires you to have it.

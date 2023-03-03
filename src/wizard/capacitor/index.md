@@ -12,7 +12,7 @@ Install the Sentry Capacitor SDK alongside the sibling Sentry Angular SDK:
 npm install --save @sentry/capacitor @sentry/angular
 
 # yarn
-yarn add @sentry/capacitor @sentry/angular @sentry/tracing
+yarn add @sentry/capacitor @sentry/angular @sentry/tracing --exact
 ```
 
 Or install the standalone Sentry Capacitor SDK if you don't use Ionic/Angular:
@@ -24,6 +24,12 @@ npm install --save @sentry/capacitor @sentry/tracing
 # yarn
 yarn add @sentry/capacitor
 ```
+
+<Note>
+
+The version of the sibling SDK must match with the version referred by Sentry Capacitor. To check which version of the sibling SDK is installed, use the following command: `npm info @sentry/capacitor peerDependencies`
+
+</Note>
 
 ## Capacitor 2 - Android Installation
 

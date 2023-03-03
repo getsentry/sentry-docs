@@ -56,7 +56,7 @@ function verifySignature(request, secret = "") {
   const hmac = crypto.createHmac("sha256", secret);
   hmac.update(JSON.stringify(request.body), "utf8");
   const digest = hmac.digest("hex");
-  return digest === request.headers["Sentry-Hook-Signature"];
+  return digest === request.headers["sentry-hook-signature"];
 }
 ```
 
@@ -65,7 +65,7 @@ import hashlib
 import hmac
 import json
 
-expected_digest = request.headers['sentry-hook-signature']
+expected_digest = request.headers.get('sentry-hook-signature')  # returns None if header is missing
 body = json.dumps(request.body)
 
 digest = hmac.new(
@@ -74,8 +74,10 @@ digest = hmac.new(
     digestmod=hashlib.sha256,
 ).hexdigest()
 
+if not expected_digest:  # The signature is missing
+    raise UnauthorizedError
 
-if digest != expected_digest:
+if not hmac.compare_digest(digest, expected_digest):
     raise UnauthorizedError
 ```
 

@@ -30,7 +30,10 @@ module.exports = async function(context, req) {
   try {
     await notExistFunction();
   } catch (e) {
-    Sentry.captureException(e);
+    Sentry.withScope(scope => {
+      scope.setSDKProcessingMetadata({ request: req });
+      Sentry.captureException(e);
+    });
     await Sentry.flush(2000);
   }
 

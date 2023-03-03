@@ -1,0 +1,41 @@
+Event processors added to the global scope will run on every event sent after they've been added.
+
+```ruby
+Sentry.init do |config|
+  # ...
+end
+
+Sentry.configure_scope do |scope|
+  scope.add_event_processor do |event, hint|
+     # can mutate the event here
+     # returning nil will drop the event
+     event.tags = { foo: 42 }
+     event
+  end
+end
+
+# You can do the same thing using add_global_event_processor
+Sentry.add_global_event_processor do |event, hint|
+  event.tags = { foo: 42 }
+  event
+end
+```
+
+Event processors added to a local scope using `with_scope` will only apply to events captured inside that scope.
+
+```ruby
+Sentry.with_scope do |scope|
+  scope.add_event_processor do |event, hint|
+     # can mutate the event here
+     # returning nil will drop the event
+     event.tags = { foo: 42 }
+     event
+  end
+
+  # The event processor will apply to this event
+  Sentry.captureMessage("Test");
+end
+
+# The event processor will NOT apply to this event
+Sentry.captureMessage("Test2");
+```

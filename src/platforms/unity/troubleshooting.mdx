@@ -35,11 +35,23 @@ If you're still encountering this issue on a version later than 0.7.0, please le
 
 The `Sentry.Unity.Editor.iOS.dll` is responsible for adding native support to your iOS builds. For that, it relies on editor functionality that Unity provides in the form of their iOS module. If you don't have the iOS module installed and, for example, `Assembly.GetTypes()` gets called, this leads to a `ReflectionTypeLoadException`. To resolve this, you can install the iOS module using the Unity Hub or, if you don't intend to build for iOS, you can [embed](https://docs.unity3d.com/Manual/upm-embed.html) the Sentry SDK package and safely remove the `Sentry.Unity.Editor.iOS.dll`.
 
+## IL2CPP Issues 
+
+### No line numbers in iOS events
+
+Sentry relies on debug symbols and line mappings being uploaded to provide line number support. By default, Unity exports an Xcode project with `Bitcode` enabled. This feature is [deprecated in Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes) and disables the automatic symbol upload.
+
+### C++ as part of the stack trace
+
+Your stack traces might contain C++ frames. This might be because:
+- The generated C++ code doesn't contain the `<source_info>` annotation to point back to the C# code it was generated from. This can be due to optimization or the IL2CPP compiler generating code to handle C# specific features.
+- The C++ exception might return an incorrect line number which makes Sentry miss the `<source_info>` annotation. You can try enabling uploading your source code in the debug symbol options to look at the generated C++ code.
+
+![A Sentry event with a mixed stacktrace](unity-cpp-stacktrace.jpg)
+
+This is also why you might end up with very high line numbers (in the several thousands) even though your C# script is very small; the line numbers relate to the generated C++ code.
+
 ## Build Issues
-
-### Incompatibility between Sentry SDK and Unity 2022.1
-
-We are aware of an incompatibility between the SDK and Unity 2022.1 when building with IL2CPP, that is related to `Il2CppFullySharedGenericAny`. We are tracking the (issue)[https://github.com/getsentry/sentry-unity/issues/691] on Github and reported it with (Unity)[https://fogbugz.unity3d.com/default.asp?1419859_qmt0m8hc0mpc1mc5].
 
 ### Disabling the Sentry SDK for selected platforms
 
@@ -101,3 +113,7 @@ Currenty, it is not possible for the SDK to distinguish between the user calling
 ### Universal Windows Platform - Events Not Sent
 
 In order to send events to Sentry, you will need to activate the InternetClient Capability in your Player Settings.
+
+### Mono JIT stack trace is incomplete on crashes
+
+This is a [known limitation](https://github.com/getsentry/sentry-unity/issues/884#issuecomment-1233035296) of the Mono JIT scripting backend, resulting from the native code not being able to see the actual generated code at the time of a crash. There are no debug files we can use to provide more information to stack traces since all code is generated when running the managed code. Using the IL2CPP scripting backend may provide more information, if that's an option for you.

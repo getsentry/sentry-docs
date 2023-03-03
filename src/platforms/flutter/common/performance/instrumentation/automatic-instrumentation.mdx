@@ -12,26 +12,6 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 </Note>
 
-### http.Client Library Instrumentation
-
-The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the `networkTracing` feature, starts a span out of the active transaction bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
-
-The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus`.
-
-When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in sentry.io.
-
-For more information see our [SentryHttpClient integration](/platforms/dart/configuration/integrations/http-integration/#performance-monitoring-for-http-requests).
-
-### Dio HTTP Library Instrumentation
-
-The Dio instrumentation starts a span out of the active transaction bound to the scope for each HTTP request. The SDK sets the span `operation` to `http.client` and the `description` to request `$method $URL`. For example, `GET https://sentry.io`.
-
-The span finishes once the request has been executed. The span `status` depends on either the HTTP response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus` options.
-
-When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in [sentry.io](https://sentry.io).
-
-Learn more in our [Dio integration documentation](/platforms/dart/configuration/integrations/dio/#performance-monitoring-for-http-requests).
-
 ### Routing Instrumentation
 
 Automatic routing instrumentation can be enabled by adding an instance of `SentryNavigationObserver` to your application's `navigatorObservers`. Transactions are started automatically when routing to new pages in your application.
@@ -63,6 +43,8 @@ MaterialPageRoute(
 The SDK sets the span `operation` to `navigation` and the `name` to the one provided in `RouteSettings`.
 
 Transactions will be bound to the scope if no other transaction is currently bound to it.
+
+If the transaction has no spans, the transaction will be dropped and not sent to Sentry, the reason is that there's no callback to identify when the screen has been loaded, so we rely on the child spans.
 
 The started transactions will idle for a fixed amount of time, for which the default is `three seconds`. You can also change this by setting `autoFinishAfter` in the navigators constuctor.
 
@@ -106,6 +88,32 @@ final router = GoRouter(
 ```
 
 Everything else follows the [routing instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#routing-instrumentation) setup.
+
+### User Interaction Instrumentation
+
+The UI instrumentation, once enabled, captures transactions and adds breadcrumbs for a set of different user interactions, which include clicks, long clicks, taps, and so on.
+
+Learn more in our [User Interaction Instrumentation](/platforms/flutter/configuration/integrations/user-interaction-instrumentation/).
+
+### http.Client Library Instrumentation
+
+The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the `networkTracing` feature, starts a span out of the active transaction bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
+
+The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus`.
+
+When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in sentry.io.
+
+For more information see our [SentryHttpClient integration](/platforms/dart/configuration/integrations/http-integration/#performance-monitoring-for-http-requests).
+
+### Dio HTTP Library Instrumentation
+
+The Dio instrumentation starts a span out of the active transaction bound to the scope for each HTTP request. The SDK sets the span `operation` to `http.client` and the `description` to request `$method $URL`. For example, `GET https://sentry.io`.
+
+The span finishes once the request has been executed. The span `status` depends on either the HTTP response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus` options.
+
+When the HTTP request throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in [sentry.io](https://sentry.io).
+
+Learn more in our [Dio integration documentation](/platforms/dart/configuration/integrations/dio/#performance-monitoring-for-http-requests).
 
 ### App Start Instrumentation
 
@@ -207,3 +215,15 @@ The `SentryAssetBundle` instrumentation starts a span out of the active transact
 The `enableStructuredDataTracing` feature is available in Beta. Beta features are still in-progress and may have bugs. We recognize the irony.
 
 </Note>
+
+### File I/O Instrumentation
+
+The Sentry-specific file I/O implementation starts a span out of the active span, bound to the scope for each file I/O operation. The SDK sets the span `operation` to `file.copy`, `file.write`, `file.delete`, `file.open`, `file.read` or `file.rename`, and `description` to `filename` (for example, `file.txt`).
+
+In addition, the span contains other useful information such as `file.size` (raw number of bytes), `file.path` (an absolute path to the file) and `file.async` (`true` if the called method returns a `Future`, or `false` if it's a `Sync` call) as part of the `data` payload.
+
+The span finishes once the operation has been executed. The span `status` is set to `SpanStatus.ok` if successful or `SpanStatus.internalError` if there was any error.
+
+When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the **Issue Details** page in [sentry.io](https://sentry.io).
+
+Learn more about our [file I/O integration](/platforms/dart/configuration/integrations/file/).

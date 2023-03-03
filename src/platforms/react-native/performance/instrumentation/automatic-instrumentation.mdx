@@ -348,7 +348,7 @@ Sentry.init({
 
   integrations: [
     new Sentry.ReactNativeTracing({
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
+      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
       // ... other options
     }),
   ],
@@ -415,17 +415,17 @@ type ReactNavigationTransactionContext = {
 
 If you use **Typescript**, you can type your `beforeNavigate` function with `Sentry.ReactNavigationTransactionContext`.
 
-### tracingOrigins
+### tracePropagationTargets
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+The default value of `tracePropagationTargets` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracePropagationTargets` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
 
-<PlatformContent includePath="performance/tracingOrigins-example" />
+<PlatformContent includePath="performance/tracePropagationTargets-example" />
 
 You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracePropagationTargets`.
 
 <PlatformContent includePath="performance/filter-span-example" />
 
@@ -441,7 +441,7 @@ Currently, by default, the React Native SDK will only create child spans for fet
 
 ### React Profiler
 
-We export the React Profiler from our React Native SDK as well, you can read more at [React Profiler](/platforms/javascript/guides/react/components/profiler/).
+We export the React Profiler from our React Native SDK as well. Learn more in [React Component Tracking](/platforms/javascript/guides/react/features/component-tracking/).
 
 After you instrument your app's routing, if you wrap a component that renders on one of the routes with `withProfiler`, you will be able to track the component's lifecycle as a child span of the route transaction.
 

@@ -104,16 +104,6 @@ Broadly, this lets you isolate problems in order to see which commits might be p
 
 Learn more about [release and commit tracking](/product/releases/).
 
-### Suspect Commits
-
-Once you are tracking the commits, the 'suspect commit' is the commit that likely introduced the error.
-
-One special benefit of using Sentry's Commit Tracking is the ability to know the suspect commit that likely caused the error, with a suggested plan of action for how to rectify the error. For example, after pinpointing the suspect commit, you can also identify the developer who made the commit and assign them the task of fixing the error.
-
-![Issue detail highlighting suspect commits](highlighting-suspect-commits.png)
-
-Here is where you can find info for [suspect commit setup](/product/releases/setup/release-automation/).
-
 ### Resolve via Commit or Pull Request
 
 Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release.
@@ -123,6 +113,12 @@ A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
 ![Issue detail highlighting suspect commits](short-id.png)
 
 ### Stack Trace Linking
+
+<Note>
+
+This feature is currently only supported for Ruby, Python, Php, Node, JavaScript, Go and Elixir.
+
+</Note>
 
 Stack trace linking takes you from a file in your Sentry stack trace to that same file in your source code. If you have commit tracking set up in Sentry, we can take you to the exact version (using the commit associated with the event) of the source code when the error occurred. Otherwise we'll link you to the current state of the source code (using the default **branch**).
 
@@ -135,15 +131,28 @@ Stack trace linking takes you from a file in your Sentry stack trace to that sam
 1. Set up a code mapping for each project for which you want to enable stack trace linking. To create a new code mapping, click **Add Mapping**.
 
 1. Fill out the form, then click **Save Changes**. Each form field is described below:
-   * **project** (required): This is the Sentry project.
-   * **repo** (required): This is the GitLab project associated with the Sentry project above. If you have more than one GitLab project being used per Sentry project, you'll need multiple code mappings.
-   * **branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
-   * **stack trace root** and **source code root** (optional):
-      1. If the file path in your Sentry stack trace frame matches the path to your source code, you do not need to set these values.
-         * ex. For example, everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py` so you don't need to set a **stack trace root** and **source code root**.
 
-      1. If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the **stack_root** part of the file path with your **source_root** to make the file path match the source code path.
-         * ex. For example, to get `src/code.py` to match `code.py` when the source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`, change the **stack trace root** to be set as `src/`, and leave **source code root** empty.
+   - **project** (required): This is the Sentry project.
+   - **repo** (required): This is the GitLab project associated with the Sentry project above. If you have more than one GitLab project being used per Sentry project, you'll need multiple code mappings.
+   - **branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
+   - **stack trace root** and **source code root** (optional):
+
+     1. If the file path in your Sentry stack trace frame matches the path to your source code, you do not need to set these values.
+     
+### Suspect Commits
+
+Once you've set up stack trace linking, Sentry can use information from your source code provider to suggest the commit that likely introduced the error. After pinpointing the suspect commit, you can also identify the developer who made the commit and assign them the task of fixing the error.
+
+![Issue detail highlighting suspect commits](highlighting-suspect-commits.png)
+
+Learn about setting up this functionality in [Suspect Commits](/product/issues/suspect-commits/).
+
+### Code Owners
+
+        - ex. For example, everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py` so you don't need to set a **stack trace root** and **source code root**.
+
+     1. If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the **stack_root** part of the file path with your **source_root** to make the file path match the source code path.
+        - ex. For example, to get `src/code.py` to match `code.py` when the source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`, change the **stack trace root** to be set as `src/`, and leave **source code root** empty.
 
 ### Code Owners
 
@@ -153,11 +162,7 @@ Let us know if you have feedback: [ecosystem-feedback@sentry.io](mailto:ecosyste
 
 </Note>
 
-<Note>
-
-This feature is available only if your organization is on a Business plan.
-
-</Note>
+<Include name="business.mdx" />
 
 Import your existing GitLab CODEOWNERS files to automatically assign Sentry issues and route alerts to the responsible individuals and teams.
 
@@ -189,12 +194,15 @@ For more details, see the full documentation for [Code Owners](/product/issues/i
   - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
 
 - Who has permission to install this?
+
   - You must have both owner/manager/admin permissions in Sentry and owner permissions in GitLab to successfully install this integration.
 
 - Why am I getting a `500` response during installation or configuration?
+
   - First, make sure you’ve allowed our IPs, which can be found [here](/product/security/ip-ranges/). The 500 response is coming from GitLab, so you may need to try again or double-check that your settings and permissions are correct in GitLab. You must have both owner/manager/admin permissions in Sentry as well as owner permissions in GitLab to successfully install this integration.
 
 - Why am I seeing an "Invalid Repository Names" error?
+
   - GitLab takes into account the whitespace before and after the `/` . On the Repositories page (Organization Settings > Repositories), you’ll notice a space (for example, "Owner / Repo" as opposed to "Owner/Repo"), which will need to be included in any command you’re running. If you are using GitLab’s [environment variables](https://docs.gitlab.com/ee/ci/variables/#debug-tracing) to pass the repository as `CI_PROJECT_PATH` in a cURL request for example, it may not include the spaces and you’ll need to hardcode the name in order for it to work.
 
 - Why am I always the reporter?

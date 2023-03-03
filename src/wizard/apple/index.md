@@ -8,7 +8,7 @@ type: language
 We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
 
 ```ruby
-platform :ios, '9.0'
+platform :ios, '11.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
@@ -34,9 +34,9 @@ func application(_ application: UIApplication,
         options.dsn = "___PUBLIC_DSN___"
         options.debug = true // Enabled debug when first installing is always helpful
 
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-        // We recommend adjusting this value in production.
-        options.tracesSampleRate = 1.0
+        // This will capture 100% of transactions for performance monitoring.
+        // If you want to control the percentage of captured events, we recommend using `options.tracesSampleRate`.
+        options.enableTracing = true
     }
 
     return true
@@ -45,10 +45,7 @@ func application(_ application: UIApplication,
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
-
-- [With Bitcode](/platforms/apple/dsym/#dsym-with-bitcode)
-- [Without Bitcode](/platforms/apple/dsym/#dsym-without-bitcode)
+Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
 
 ## Performance Monitoring
 

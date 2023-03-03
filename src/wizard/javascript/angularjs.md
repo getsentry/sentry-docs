@@ -30,7 +30,7 @@ Sentry.init({
   integrations: [
     new AngularIntegration(),
     new BrowserTracing({
-      tracingOrigins: ["localhost", "https://yourserver.io/api"],
+      tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
     }),
   ],
   // Set tracesSampleRate to 1.0 to capture 100%

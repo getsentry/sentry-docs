@@ -5,12 +5,21 @@ func main() {
 	err := sentry.Init(sentry.ClientOptions{
 		// ...
 
+		EnableTracing: true,
 		// Specify a fixed sample rate:
 		// We recommend adjusting this value in production
 		TracesSampleRate: 1.0,
-		// Or provide a custom sampler:
-		TracesSampler: sentry.TracesSamplerFunc(func(ctx sentry.SamplingContext) sentry.Sampled {
-			return sentry.SampledTrue
+		// Or provide a custom sample rate:
+		TracesSampler: sentry.TracesSampler(func(ctx sentry.SamplingContext) float64 {
+			// As an example, this custom sampler does not send some
+			// transactions to Sentry based on their name.
+			hub := sentry.GetHubFromContext(ctx.Span.Context())
+			name := hub.Scope().Transaction()
+			if name == "GET /favicon.ico" {
+				return 0.0
+			}
+			
+			return 1.0
 		}),
 	})
 }

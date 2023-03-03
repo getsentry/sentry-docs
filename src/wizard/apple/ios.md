@@ -8,7 +8,7 @@ type: language
 We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
 
 ```ruby
-platform :ios, '9.0'
+platform :ios, '11.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
@@ -37,11 +37,6 @@ func application(_ application: UIApplication,
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0
-
-        // Features turned off by default, but worth checking out
-        options.enableAppHangTracking = true
-        options.enableFileIOTracking = true
-        options.enableCoreDataTracking = true
     }
 
     return true
@@ -63,11 +58,6 @@ struct SwiftUIApp: App {
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
-
-            // Features turned off by default, but worth checking out
-            options.enableAppHangTracking = true
-            options.enableFileIOTracking = true
-            options.enableCoreDataTracking = true
         }
     }
 }
@@ -75,10 +65,7 @@ struct SwiftUIApp: App {
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
-
-- [With Bitcode](/platforms/apple/dsym/#dsym-with-bitcode)
-- [Without Bitcode](/platforms/apple/dsym/#dsym-without-bitcode)
+Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym).
 
 ## Performance Monitoring
 
@@ -115,8 +102,13 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
-    options.enableUserInteractionTracing = true
+    options.enablePreWarmedAppStartTracing = true
     options.attachScreenshot = true
     options.attachViewHierarchy = true
+    options.enableMetricKit = true
 }
 ```
+
+## Performance Monitoring for SwiftUI
+
+If you want to find out the performance of your Views in a SwiftUI project, [try the SentrySwiftUI library](/platforms/apple/performance/instrumentation/swiftui-instrumentation).

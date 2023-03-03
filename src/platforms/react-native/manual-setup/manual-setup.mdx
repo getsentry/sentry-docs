@@ -6,12 +6,11 @@ redirect_from:
 description: "Learn about manual configuration for iOS and Android."
 ---
 
-If you can’t (or prefer not to) run the [linking step](/platforms/react-native/#linking), you can use the instructions below to configure your application.
+If you can’t (or prefer not to) run the [automatic setup](/platforms/react-native), use the instructions below to configure your application.
 
 <Alert level="info" title="Prerequisite">
 
-Before you begin, you need to have already created a `sentry.properties` file at the root of your React Native project. An example of this properties file can be found in
-[Sentry's GitHub](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
+Before you can begin, you need to created a `sentry.properties` file at the root of your React Native _android_ and _ios_ project directories. Check out these examples of property files for [iOS](https://github.com/getsentry/examples/blob/master/react-native/AwesomeProject/ios/sentry.properties) and [Android](https://github.com/getsentry/examples/blob/master/react-native/AwesomeProject/android/sentry.properties).
 
 </Alert>
 
@@ -19,9 +18,7 @@ Before you begin, you need to have already created a `sentry.properties` file at
 
 ### Linking the Native Library via CocoaPods
 
-You must link to the native module in your Podfile. In React Native versions 0.60 and above the podspec should be automatically linked. In earlier versions calling `react-native link @sentry/react-native` will add the podspec for you.
-
-Otherwise, you can manually link the native module by adding the `RNSentry.podspec` to your podfile like below:
+To link the Native library via CocoaPods, link to the Native module in your Podfile. In React Native versions 0.60 and above, the podspec should be automatically linked, if that's not the case, you can link to the native module manually by adding the `RNSentry.podspec` to your Podfile. See below:
 
 ```rb
 pod 'RNSentry', :path => '../node_modules/@sentry/react-native/RNSentry.podspec'
@@ -29,31 +26,41 @@ pod 'RNSentry', :path => '../node_modules/@sentry/react-native/RNSentry.podspec'
 
 ### Upload Debug Symbols
 
-[Debug symbols](/platforms/native/data-management/debug-files/) provide information that Sentry displays on the Issue Details page to help you triage an issue. With our React Native SDK, debug symbols are used to symbolicate Native layer (iOS/Android) events. When you use Xcode, you can hook directly into the build process to upload debug symbols. When linking, one build phase script is changed and two more are added.
+[Debug symbols](/platforms/native/data-management/debug-files/) help provide you with readable stack traces, which Sentry displays on the **Issue Details** page, to help you triage an issue. With our React Native SDK, debug symbols are used to symbolicate Native layer (iOS/Android) events. When you use Xcode, you can hook directly into the build process to upload debug symbols. When linking, one build phase script is changed and two more are added.
 
 #### Bundle React Native Code and Images
 
 We modify the React Native build phase (“Bundle React Native code and images”) slightly from this:
 
 ```bash
-export NODE_BINARY=node
-../node_modules/react-native/packager/react-native-xcode.sh
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
 ```
 
 To this:
 
 ```bash
-export NODE_BINARY=node
-export EXTRA_PACKAGER_ARGS="--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map"
 export SENTRY_PROPERTIES=../sentry.properties
+export EXTRA_PACKAGER_ARGS="--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map"
+set -e
 
-# If you are using RN 0.46+
-../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
-  ../node_modules/react-native/scripts/react-native-xcode.sh
+# RN 0.69+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+SENTRY_CLI="../node_modules/@sentry/cli/bin/sentry-cli"
 
-# For RN < 0.46
-../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
-  ../node_modules/react-native/packager/react-native-xcode.sh
+/bin/sh -c "$WITH_ENVIRONMENT \"$SENTRY_CLI react-native xcode $REACT_NATIVE_XCODE\""
+
+# RN 0.46 – 0.68
+# ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
+#  ../node_modules/react-native/scripts/react-native-xcode.sh
+
+# All versions
+/bin/sh ../node_modules/@sentry/react-native/scripts/collect-modules.sh
 ```
 
 Additionally, we add a build script named “Upload Debug Symbols to Sentry” to upload debug symbols to Sentry.
@@ -63,9 +70,11 @@ Additionally, we add a build script named “Upload Debug Symbols to Sentry” t
 To upload source maps and symbols to Sentry, create a new Run Script build phase using the following script:
 
 ```bash
-export SENTRY_PROPERTIES=../sentry.properties
+export SENTRY_PROPERTIES=sentry.properties
 
-../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH"
+[[ $SENTRY_INCLUDE_NATIVE_SOURCES == "true" ]] && INCLUDE_SOURCES_FLAG="--include-sources" || INCLUDE_SOURCES_FLAG=""
+SENTRY_CLI="../node_modules/@sentry/cli/bin/sentry-cli"
+$SENTRY_CLI debug-files upload "$INCLUDE_SOURCES_FLAG"
 ```
 
 For bitcode enabled builds via iTunes Connect, additional steps are required.
@@ -79,11 +88,11 @@ If you are using nvm or notion, Xcode has trouble locating the default node bina
 
 ## Android
 
-For Android, we hook into Gradle for the source map build process. When you run `react-native link` or `yarn sentry-wizard -i reactNative -p ios android` (if react-native `> 0.60`), the Gradle files are automatically updated.
+For Android, we hook into Gradle for the source map build process. When you run `npx @sentry/wizard -i reactNative -p ios android`, the Gradle files are automatically updated. If you can't or don't want to do that, you can follow the steps below to update the files.
 
 ### Enable Gradle Integration
 
-We enable the Gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` line:
+We enable the Gradle integration in your `android/app/build.gradle` file by adding the following line before the `android` options:
 
 ```groovy {filename:android/app/build.gradle}
 apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
@@ -97,6 +106,8 @@ You can also enable logging for `sentry-cli` by adding this config before the ab
 project.ext.sentryCli = [
     logLevel: "debug"
 ]
+
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 ```
 
 ### Fetch `sentry.properties`
@@ -108,9 +119,11 @@ project.ext.sentryCli = [
     logLevel: "debug",
     flavorAware: true
 ]
+
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 ```
 
-The corresponding flavor files should also be placed within the specific build type folder where you intend to use them. For example, the "Android release" flavor would be `react-native/android/sentry-release.properties`.
+The corresponding flavor files should also be placed within the specific build type folder where you intend to use them. For example, the "Android demo release" flavor would be `react-native/android/sentry-demo-release.properties`.
 
 We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
 
@@ -123,22 +136,19 @@ dependencies {
 }
 ```
 
-### `MainApplication.java` for React Native < 0.60
-
-For React Native versions < 0.60, make sure your `MainApplication.java` is similar to:
+If you're linking manually, make sure your `MainApplication.java` is similar to:
 
 ```java
 import io.sentry.react.RNSentryPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
-  @Override
-  protected List<ReactPackage> getPackages() {
-    return Arrays.<ReactPackage>asList(
-         new MainReactPackage(),
-         new RNSentryPackage()
-    );
-  }
+    @Override
+    protected List<ReactPackage> getPackages() {
+      List<ReactPackage> packages = new PackageList(this).getPackages();
+      packages.add(new RNSentryPackage());
+      return packages;
+    }
 }
 ```
 
@@ -146,11 +156,10 @@ public class MainApplication extends Application implements ReactApplication {
 import io.sentry.react.RNSentryPackage
 
 class MainApplication() : Application(), ReactApplication {
-  override fun getPackages(): List<ReactPackage> {
-    return listOf(
-      MainReactPackage(),
-      RNSentryPackage()
-    )
+  override fun getPackages():List<ReactPackage> {
+    val packages = new PackageList(this).getPackages();
+    packages.add(new RNSentryPackage());
+    return packages;
   }
 }
 ```

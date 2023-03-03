@@ -7,7 +7,11 @@ import { sortPages } from "~src/utils";
 
 const query = graphql`
   query PageGridQuery {
-    allSitePage {
+    allSitePage(
+      filter: {
+        context: { draft: { ne: true } }
+      }
+    ) {
       nodes {
         path
         context {

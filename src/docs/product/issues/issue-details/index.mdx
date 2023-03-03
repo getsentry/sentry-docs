@@ -4,25 +4,29 @@ sidebar_order: 10
 description: "Learn more about what information displays on the Issue Details page to help you efficiently triage an issue."
 ---
 
-The **Issue Details** page helps you to gain further insight into the source of the issue and the impact it has on your application's users. The main area of the page displays information about a specific error event that's part of an issue. The top panel and right-hand sidebar of the page display a summary of all the events grouped together in this issue.
+The **Issue Details** page helps you to gain further insight into the source of the issue and the impact it has on your application's users. The main area of the page displays information about a specific event that's part of an issue. The top panel and right-hand sidebar of the page display a summary of all the events grouped together in this issue:
 
 ![Issue details](issue-details.png)
 
-While the <SandboxLink scenario="oneIssue" projectSlug="react">Issue Details</SandboxLink> page displays information about a specific error event that's part of an issue, you can navigate between the events of an issue using the "Older" and "Newer" buttons. Subscribe to an issue by clicking the bell icon and fine tune [workflow notifications](/product/alerts/notifications/#workflow-notifications) related to the issue in **User Settings > Notifications**. Just below the issue title, the event description is displayed along with an icon representing the error level of the event:
+While the <SandboxLink scenario="oneIssue" projectSlug="react">Issue Details</SandboxLink> page displays information about a specific event that's part of an issue, you can navigate between the events of an issue using the "Older" and "Newer" buttons.
 
-![Error level icon in issue details](error-level-icon-2.png)
+In the right hand sidebar, [sentry.io](https://sentry.io) reflects a summary that includes information such as how often the <SandboxLink scenario="oneIssue" projectSlug="react">issue</SandboxLink> has occurred in the last 24 hours and the last 30 days, as well as the last time and the first time the issue was seen. If the issue is linked to any GitHub or Jira issues, that's displayed here as well. Lastly, there is a facet map, which shows the distribution of values for the tags for all events included in the issue. All of these values are based on the environment that you've selected in the environment dropdown.
 
-The level can be:
+## Issue Categories & Page Details
 
-- Error - orange
-- Info - blue
-- Warning - yellow
-- Fatal - red
-- Debug  - gray
-- Sample - purple
+There are two categories of issues: [error issues](/product/issues/issue-details/error-issues/) and [performance issues](/product/issues/issue-details/performance-issues/). Depending on the issue category and available event data, the **Issue Details** page displays a combination of the some of the following sections:
 
-In the right hand sidebar, [sentry.io](https://sentry.io) reflects a summary that includes information such as how often the <SandboxLink scenario="oneIssue" projectSlug="react">issue</SandboxLink> has occurred in the last 24 hours and the last 30 days, as well as the last time and the first time the issue was seen. If the issue is linked to any GitHub or Jira issues, that's displayed here as well. You can also use this section to link to existing GitHub or Jira issues. Learn more about linking issues in [Integrations](/product/integrations/). Lastly, there is a facet map, which shows the distribution of values for the tags for all events included in the issue. All of these values are based on the environment that you've selected in the environment dropdown.
+- **Trace Navigator** - An abbreviated view of the related [trace](/product/sentry-basics/tracing/distributed-tracing) for the current transaction.
+- **Suspect Commits** - A commit that's been identified as potentially having caused an error event.
+- **Tags** - Searchable key/value string pairs providing information such as the browser or device.
+- **Screenshot** - Screenshot taken when a user experiences an error, an exception or a crash; only available on [certain SDKs](/product/issues/issue-details/error-issues/#screenshots).
+- **Exception (Stack Trace)** - Shows you the line of code that the event errored on.
+- **Span Evidence** - Information about the performance problem in the context of the current event
+- **Breadcrumbs** - Provide a history and timeline leading up to the error event and are customizable.
+- **Trace Details** - Augments existing error data by capturing interactions between your projects.
+- **Event Grouping Information** - Provides details of how Sentry fingerprinted the event into the group.
 
+Learn more about what's included an issue detail for each of these in [Error Issues](/product/issues/issue-details/error-issues/) and [Performance Issues](/product/issues/issue-details/performance-issues/).
 In addition, this page provides several other key pieces of information.
 
 ## Trace Navigator
@@ -41,7 +45,7 @@ Click "View Full Trace" to display the [Trace View](/product/sentry-basics/traci
 
 ## Suspect Commits
 
-A _suspect commit_ is a commit that's been identified as potentially having caused the error event. If you've configured [suspect commits](/product/releases/suspect-commits/), these are displayed. This allows you to immediately investigate commits that are likely to have generated the issue. The author of the suspect commit is also suggested as an assignee for the issue.
+A _suspect commit_ is a commit that's been identified as potentially having caused the error event. If you've configured [suspect commits](/product/issues/suspect-commits/), these are displayed. This allows you to immediately investigate commits that are likely to have generated the issue. The author of the suspect commit is also suggested as an assignee for the issue.
 
 ## Tags
 
@@ -53,7 +57,7 @@ The tags displayed in the main section of this page are specific to the event th
 
 The Exception section of the page displays the stack trace, which shows you the line of code that the event errored on.
 
-![Exception](issue-exception.png)
+![Exception](error-issues/issue-exception.png)
 
 It's the most important piece of information that the Sentry grouping algorithm uses to group events into one issue. You can also customize how events are grouped. Learn more about customized grouping in [Issue Grouping](/product/data-management-settings/event-grouping/).
 
@@ -61,9 +65,11 @@ It's the most important piece of information that the Sentry grouping algorithm 
 
 [Breadcrumbs](/product/issues/issue-details/breadcrumbs/) provide a history and timeline leading up to the error event. These can include things like HTTP requests, log statements from the console or server, and DOM (document object model) events in JavaScript.
 
-![Breadcrumbs](issue-breadcrumbs.png)
+![Breadcrumbs](error-issues/issue-breadcrumbs.png)
 
 You can set your own <PlatformLink to="/enriching-events/breadcrumbs/">breadcrumbs</PlatformLink> to make them more useful for debugging.
+
+If you’ve enabled [Session Replay](/product/session-replay/), you’ll see a replay preview under Breadcrumbs if there’s one associated with the event you’re viewing. This will lead you to the [Replay Details](/product/session-replay/replay-details/) page when you click it.
 
 ## Trace Details
 
@@ -71,12 +77,13 @@ You can set your own <PlatformLink to="/enriching-events/breadcrumbs/">breadcrum
 
 ## Tabs
 
-This page displays the Details tab when it first opens, but several other tabs are available:
+This page displays the "Details" tab when it first opens, but several other tabs are available depending on issue category:
 
-- Activity: A history of activity for the event where team members can share comments.
-- User Feedback: Any feedback collected from users through the <PlatformLink to="/enriching-events/user-feedback/">SDK's user feedback</PlatformLink>.
-- <PlatformLink to="/enriching-events/attachments/">Attachments</PlatformLink>: Stored additional files, such as config or log files that are attached to the event.
-- Tags: More detailed information about the tags across all the events included in the issue.
-- Events: A list of all the events included in the issue.
-- Merged Issues: A list of issues that have been merged with this one.
-- Similar Issues: A list of issues that have a similar stack trace [that you can merge](/product/data-management-settings/event-grouping/merging-issues/).
+- **Activity** - A history of activity for the event where team members can share comments.
+- **User Feedback** - Any feedback collected from users through the <PlatformLink to="/enriching-events/user-feedback/">SDK's user feedback</PlatformLink>.
+- **<PlatformLink to="/enriching-events/attachments/">Attachments</PlatformLink>** - Stored additional files, such as config, log or screenshot files that are related to the error event.
+- **Tags** - More detailed information about the tags across all the events included in the issue.
+- **All Events** - A list of all the error events included in the issue.
+- **Merged Issues** - A list of error issues that have been merged with this one.
+- **Similar Issues** - A list of error issues that have a similar stack trace [that you can merge](/product/data-management-settings/event-grouping/merging-issues/).
+- **Replays** – A list of [replays](/product/session-replay/) tied to error events included in the issue.

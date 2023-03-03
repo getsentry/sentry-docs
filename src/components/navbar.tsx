@@ -22,13 +22,18 @@ export default ({ platforms }: Props): JSX.Element => {
         <Nav className="justify-content-end" style={{ flex: 1 }}>
           <NavbarPlatformDropdown />
           <Nav.Item>
+            <SmartLink className="nav-link" to="/product/">
+              Product
+            </SmartLink>
+          </Nav.Item>
+          <Nav.Item>
             <SmartLink className="nav-link" to="/api/">
               API
             </SmartLink>
           </Nav.Item>
           <SandboxOnly>
             <Nav.Item>
-              <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Demo</Nav.Link>
+              <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Sandbox</Nav.Link>
             </Nav.Item>
           </SandboxOnly>
           <Nav.Item>

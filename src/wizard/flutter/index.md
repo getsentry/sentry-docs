@@ -85,3 +85,5 @@ Future<void> processOrderBatch(ISentrySpan span) async {
   }
 }
 ```
+
+Check out [the documentation](https://docs.sentry.io/platforms/flutter/performance/instrumentation/) to learn more about the API and automatic instrumentations.
