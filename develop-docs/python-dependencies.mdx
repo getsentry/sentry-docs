@@ -9,11 +9,24 @@ project no longer supports our version of Python.
 Additionally, all these dependencies run on the server, making them riskier as they have direct access to customer
 data if they turn out to be malicious.
 
-So here are the rules:
+## Adding a new dependency
 
-1. Any new dependency needs to be thoroughly reviewed and approved by [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members).
-2. Dependency URLs need to go into getsentry's requirements. They aren't allowed in sentry because PyPI does not accept URLs.
+Any new dependency needs to be thoroughly reviewed and approved by [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members).
 
+This group is already automatically tagged in your PR to `sentry` or `getsentry` as soon as you edit relevant files. For other repos you might need to do it manually.
+
+## Depending on forks
+
+If you need to make modifications to a dependency and need to deploy the result
+before it is accepted upstream, you can fork the dependency.
+
+Depending on forks is generally discouraged unless necessary, and you should
+make sure that the changes in your fork are **not required for self-hosted to
+function,** because they won't be included in the PyPI distribution of Sentry.
+
+1. Fork into the `getsentry` organization.
+2. Depend on the fork using `library-name @ https://github.com/getsentry/<repo>/archive/<40 char sha>.zip` in `getsentry`'s `requirements-base.txt`.
+3. The requirement in `sentry` stays the same, because we upload `sentry` to PyPI, and PyPI does not allow us to depend on URLs.
 
 ## Updating Dependencies
 
