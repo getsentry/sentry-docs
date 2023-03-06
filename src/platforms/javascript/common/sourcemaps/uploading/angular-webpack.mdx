@@ -7,9 +7,18 @@ supported:
 ---
 
 You can use the Angular CLI together with our Sentry Webpack plugin to automatically create releases and upload source maps to Sentry when building your app (with `ng build`, for example).
-Due to Angular's closed build system, to register the Webpack plugin, you'll first need to configure a custom builder .
+Due to Angular's closed build system, to register the Webpack plugin, you'll first need to configure a custom builder.
+In the end, you'll be able to automatically upload source maps whenever you're creating a production build of your app.
 
-## Installation
+<Alert level="warning">
+
+Before you start configuring the source maps upload, make sure that you're [generating source maps](../../.#generating-source-maps) in your Angular project.
+
+  </Alert>
+
+## Install
+
+Install the custom Webpack builder for Angular and the Sentry Webpack plugin:
 
 ```shell {tabTitle:npm}
 npm install --save-dev @angular-builders/custom-webpack @sentry/webpack-plugin
@@ -19,10 +28,9 @@ npm install --save-dev @angular-builders/custom-webpack @sentry/webpack-plugin
 yarn add --dev @angular-builders/custom-webpack @sentry/webpack-plugin
 ```
 
-## Configuration
+## Configure
 
-First, make sure that you're [generating source maps](../../.#generating-source-maps) in your Angular project.
-Then, set up a [custom Angular builder](https://www.npmjs.com/package/@angular-builders/custom-webpack), to which you add the Sentry Webpack plugin.
+With these packages installed, configure your app to upload source maps in three steps:
 
 ### 1. Set up custom Angular builder
 
@@ -51,7 +59,13 @@ In your `angular.json`, replace the default builder (`@angular-devkit/build-angu
 }
 ```
 
-Note: This will have no effect on your development server by using `ng serve`. Only `ng build` is configured to use the custom builder and the Webpack plugin. If you're using an Angular version below 13
+<Alert>
+
+This configuration has no effect on your development server if you're running `ng serve`.
+Only `ng build` is configured to use the custom builder and the Webpack plugin.
+If you're using an Angular version below 13, only `ng build --prod` will leverage the custom builder.
+
+</Alert>
 
 ### 2. Register the Sentry Webpack Plugin
 
@@ -70,10 +84,12 @@ module.exports = {
       project: "___PROJECT_SLUG___",
 
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and needs the `project:releases` and `org:read` scopes
+      // and need the `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
 
       // Specify the directory containing build artifacts
+      // By default, Angular emits build files in the `dist` directory but your
+      // configuration may vary
       include: "./dist/my-project",
 
       // Optionally uncomment the line below to override automatic release name detection
@@ -85,18 +101,13 @@ module.exports = {
 
 Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
 
-<Note>
-
-If you're using [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) to get more fine-grained control over source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
-
-</Note>
-
 ### 3. Upload
 
-To upload, build your Angular application:
+To upload the source maps, build your Angular application:
 
 ```bash
-ng build
+ng build # add --prod for Angular versions below 13
+```
 
 ### Releases
 
