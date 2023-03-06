@@ -1,6 +1,6 @@
 ---
-name: JavaScript
-doc_link: https://docs.sentry.io/platforms/javascript/
+name: Browser JavaScript
+doc_link: https://docs.sentry.io/platforms/guides/javascript/
 support_level: production
 type: language
 ---
@@ -35,7 +35,7 @@ Sentry.init({
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
+Then create an intentional error, so you can test that everything is working:
 
 ```javascript
 myUndefinedFunction();
