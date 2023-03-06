@@ -76,23 +76,44 @@ If _both_ MSBuild properties and environment variables are provided, the MSBuild
 
 ### Setting MSBuild Properties
 
-MSBuild properties can be set in any MSBuild project file, such as those that are created by Visual Studio or the `dotnet` CLI
-(`YourProject.csproj`, `YourProject.vbproj`, `Directory.Build.props`, etc.).
+Sentry's MSBuild properties can be set in any MSBuild project file, such as those that are created by Visual Studio
+or the `dotnet` CLI (`YourProject.csproj`, `YourProject.vbproj`, `Directory.Build.props`, etc.).
+We recommend using a dedicated property group, so that you can control when these features are used.
 
-You can add Sentry's MSBuild properties to any property group. For example:
+In the following example, `Condition="'$(Configuration)' == 'Release'"` ensures that these features are enabled
+only for release builds.  This is the usual recommendation, because sending data to Sentry during debug builds
+can slow down your development workflow.
+
+Alternatively, you could control this using any MSBuild property or environment variable you like.  For example,
+if you only want these features enabled in a GitHub Actions CI workflow, you could use `Condition="'$(GITHUB_ACTIONS)' == 'true'"`.
 
 ```xml
-<PropertyGroup>
+<!-- We recommend only using these features for release builds. -->
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+
+  <!-- Configure Sentry org and project -->
   <SentryOrg>___ORG_SLUG___</SentryOrg>
   <SentryProject>___PROJECT_SLUG___</SentryProject>
+
+  <!--
+    Each of the below features are opt-in.
+    Enable the features you wish to use.
+  -->
+
+  <!-- Sends symbols to Sentry, enabling symbolication of stack traces. -->
+  <SentryUploadSymbols>true</SentryUploadSymbols>
+
+  <!-- Sends sources to Sentry, enabling display of source context. -->
   <SentryUploadSources>true</SentryUploadSources>
+
 </PropertyGroup>
+
 ```
 
 Alternatively, they could be passed as parameters when building your project.  For example:
 
 ```shell
-dotnet build YourProject.csproj -c Release -p:SentryOrg=___ORG_SLUG___ -p:SentryProject=___PROJECT_SLUG___ -p:SentryUploadSources=true
+dotnet build YourProject.csproj -c Release -p:SentryOrg=___ORG_SLUG___ -p:SentryProject=___PROJECT_SLUG___ -p:SentryUploadSymbols=true -p:SentryUploadSources=true
 ```
 
 <Alert title="Tip">
@@ -131,16 +152,20 @@ There are a few additional properties available to control the Sentry CLI:
 
 <ConfigKey name="SentryUploadSymbols">
 
-Controls uploading symbols to Sentry during the build.  Defaults to `true` for builds in release configuration,
-or `false` otherwise.
+Controls uploading symbols to Sentry during the build.  Defaults to `false` (disabled).
+
+Set this property to `true` to opt-in to sending symbols to Sentry as [debug information files](../../data-management/debug-files/),
+which are used to perform symbolication of stack traces.  This will allow you to view file names and line numbers within
+a stack trace, instead of just a function name.
 
 </ConfigKey>
 
 <ConfigKey name="SentryUploadSources">
 
-Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false`.
+Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false` (disabled).
 
-Set this property to `true` to opt-in to enable [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
+Set this property to `true` to opt-in to sending source code to Sentry.
+This enables the display of [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
 
 <Note>
 
@@ -153,8 +178,9 @@ you do not need to upload them to Sentry separately.  In other words, use *eithe
 
 <ConfigKey name="UseSentryCLI">
 
-Controls whether the Sentry CLI is enabled in your build.  `true` by default.
-Set to `false` to disable the Sentry CLI completely, ignoring all other properties.
+Controls whether the Sentry CLI is enabled in your build.
+Defaults to `true` if any of the individual features are enabled.
+Set to `false` to disable the Sentry CLI completely, ignoring the settings of each feature.
 
 </ConfigKey>
 
