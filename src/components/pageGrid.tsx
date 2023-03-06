@@ -25,7 +25,7 @@ type Props = {
   header?: string;
   /**
    * A list of pages to exclude from the grid.
-   * Specify the file name of the page, e.g. "index" for "index.mdx"
+   * Specify the file name of the page, for example, "index" for "index.mdx"
    */
   exclude?: string[];
 };
