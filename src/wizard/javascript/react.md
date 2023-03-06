@@ -4,8 +4,14 @@ doc_link: https://docs.sentry.io/platforms/javascript/guides/react/
 support_level: production
 type: framework
 ---
+In this quick guide you’ll set up:
+- `@sentry/react` for [error monitoring](https://docs.sentry.io/platforms/javascript/guides/react/)
+- `@sentry/tracing` for [performance monitoring](https://docs.sentry.io/platforms/javascript/guides/react/performance/)
 
-To instrument your React application with Sentry, first install the `@sentry/react` and `@sentry/tracing` packages:
+---
+
+## Install
+Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
 # Using yarn
@@ -15,11 +21,12 @@ yarn add @sentry/react @sentry/tracing
 npm install --save @sentry/react @sentry/tracing
 ```
 
-Next, import and initialize the Sentry module as early as possible, before initializing React:
+## Configure
+Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
-import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } React from "react-dom/client";
+import React from "react";  
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import App from "./App";
@@ -27,27 +34,26 @@ import App from "./App";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [new BrowserTracing()],
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
-ReactDOM.render(<App />, document.getElementById("root"));
-
-// Can also use with React Concurrent Mode
-// ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+const container = document.getElementById(“app”);
+const root = createRoot(container);
+root.render(<App />)
 ```
 
-The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
+> **tracesSampleRate: 1.0**
+> The above setting ensures that 100% of transactions will be sent to Sentry, but we recommend lowering this number in production.
 
-After this step, Sentry will report any uncaught exceptions triggered by your application.
-
-You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
+## Verify
+This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
 return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 
-Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete React docs](https://docs.sentry.io/platforms/javascript/guides/react/). There you'll find additional instructions for surfacing valuable context from React error boundaries, React Router, Redux, and more.
+---
+## Next Steps
+- [Source Maps](https://docs.sentry.io/platforms/javascript/guides/react/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
+- [React Features](https://docs.sentry.io/platforms/javascript/guides/react/features/): Learn about our first class integration with the React framework.
+- [Session Replay](https://docs.sentry.io/platforms/javascript/guides/react/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
