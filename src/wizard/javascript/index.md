@@ -1,6 +1,6 @@
 ---
 name: Browser JavaScript
-doc_link: https://docs.sentry.io/platforms/guides/javascript/
+doc_link: https://docs.sentry.io/platforms/javascript/
 support_level: production
 type: language
 ---
