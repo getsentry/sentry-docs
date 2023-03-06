@@ -83,9 +83,26 @@ You can add Sentry's MSBuild properties to any property group. For example:
 
 ```xml
 <PropertyGroup>
+
+  <!-- Configure Sentry org and project -->
   <SentryOrg>___ORG_SLUG___</SentryOrg>
   <SentryProject>___PROJECT_SLUG___</SentryProject>
-  <SentryUploadSources>true</SentryUploadSources>
+
+  <!--
+    Optionally, you can upload sources to Sentry - enabling Source Context.
+    Note, symbols are sent by default for Release configuration, but sending sources is always an opt-in feature.
+  -->
+  <SentryUploadSources Condition="'$(Configuration)' == 'Release'">true</SentryUploadSources>
+
+  <!--
+    If you *always* want to send symbols and sources to Sentry, you can uncoment the lines below instead.
+    (But note that this will slow down your local dev builds.)
+  -->
+  <!--
+  <SentryUploadSymbols>true</<SentryUploadSymbols>
+  <SentryUploadSources>true</<SentryUploadSources>
+  -->
+
 </PropertyGroup>
 ```
 
@@ -138,7 +155,7 @@ or `false` otherwise.
 
 <ConfigKey name="SentryUploadSources">
 
-Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false`.
+Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false`, regardless of build configuration.
 
 Set this property to `true` to opt-in to enable [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
 
