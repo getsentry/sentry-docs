@@ -85,23 +85,23 @@ Scenario: Don't overwrite existing status of UI event transactions
     Then it keeps the status 
     And doesn't overwrite it
 
-Scenario: Same UI element with same event
-    Given an ongoing UI event transaction
-    When the user triggers the same UI event with the same type for the same
-        UI element
-    Then the SDK reschedule the idle timeout
-    And doesn't create a new transaction
-
 # If your SDK binds auto-generated transactions to the scope see binding
 # to scope
-Scenario: Same UI element with different event
+Scenario: Event on same UI element with child spans
     Given an ongoing UI event transaction
-    When the user triggers the same UI element with a different event
+    When the user triggers the same UI element with a new event
     Or the user triggers a different UI element
     Then the SDK finishes the ongoing transaction
     And sets the status to OK
     And waits for the children to finish
     And cancels the idle timeout
+    And starts a new transaction
+
+Scenario: Event on same UI element without child spans
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a new event
+    Or the user triggers a different UI element
+    Then the SDK discards the transaction 
     And starts a new transaction
 ```
 
