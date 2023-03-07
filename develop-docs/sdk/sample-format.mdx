@@ -1,0 +1,386 @@
+---
+title: Sample format
+sidebar_order: 20
+---
+
+This document defines the Sample format used by Sentry to ingest profiles. This
+document is meant for Sentry SDK developers and maintainers of the profile
+ingestion pipeline.
+
+This format is meant to be cross platform and allow to represent samples
+collected by a profiler.
+
+A profile should always be associated with a transaction.
+
+## Data Model
+
+### Example
+
+```json
+{
+  "debug_meta": {
+    "images": [
+      {
+        "debug_id": "32420279-25E2-34E6-8BC7-8A006A8F2425",
+        "image_addr": "0x000000010258c000",
+        "code_file": "/private/var/containers/Bundle/Application/C3511752-DD67-4FE8-9DA2-ACE18ADFAA61/TrendingMovies.app/TrendingMovies",
+        "type": "macho",
+        "image_size": 1720320,
+        "image_vmaddr": "0x0000000100000000"
+      }
+    ]
+  },
+  "device": {
+    "architecture": "arm64e",
+    "is_emulator": true,
+    "locale": "en_US",
+    "manufacturer": "Apple",
+    "model": "iPhone14,8"
+  },
+  "environment": "development",
+  "event_id": "41fed0925670468bb0457f61a74688ec",
+  "measurements": { ... },
+  "os": {
+    "build_number": "20D47",
+    "name": "iOS",
+    "version": "16.3",
+  },
+  "platform": "cocoa",
+  "release": "1.0 (9999)",
+  "runtime": {
+    "name": "",
+    "version": ""
+  },
+  "timestamp": "2023-01-01T00:00:00.000Z",
+  "transaction": {
+    "active_thread_id": "259",
+    "id": "30976f2ddbe04ac9b6bffe6e35d4710c",
+    "name": "example_ios_movies_sources.MoviesViewController",
+    "trace_id": "4b25bc58f14243d8b208d1e22a054164",
+  },
+  "version": "1",
+  "profile": {
+    "samples": [
+      {
+        "elapsed_since_start_ns": 1234567890,
+        "stack_id": 0,
+        "thread_id": "259"
+      }
+    ],
+    "stacks": [
+      [ 0 ]
+    ],
+    "frames": [
+      {
+        "instruction_addr": "0xa722447ffffffffc"
+      }
+    ],
+    "thread_metadata": {
+      "259": {
+        "priority": 31
+      }
+    }
+  },
+}
+```
+
+### Profile metadata
+
+`debug_meta`
+
+: *Object, required on native platforms.* This carry the same payload as <Link
+to="/sdk/event-payloads/sdk/">`debug_meta` interface</Link>. It is required to
+have it for native platforms in order to symbolicate, otherwise you can omit it.
+
+`device`
+
+: *Object, required.* This contains a few fields to describe the device the
+profiler is running on.
+
+It can have the following attributes:
+- `architecture`: *String, required.*
+- `is_emulator`: *Boolean, optional.* Indicates if the application is running in an emulator. Usually only set for mobile platforms.
+- `locale`: *String, optional.* Contains the local of the system. Usually only set for a mobile platforms.
+- `manufacturer`: *String, optional.* Contains the manufacturer of the device. Usually only set for a mobile platforms.
+- `model`: *String, optional.* Contains the model of the device. Usually only set for a mobile platforms.
+
+```json
+{
+  "device": {
+    "architecture": "arm64e",
+    "is_emulator": true,
+    "locale": "en_US",
+    "manufacturer": "Apple",
+    "model": "iPhone14,8"
+  }
+}
+```
+
+`environment`
+
+: *String, recommended.* The environment name, such as `production` or
+`staging`. The default value should be `production`.
+
+`event_id`
+
+: *String, required.* Hexadecimal string representing a uuid4 value. The length
+is exactly 32 characters. Dashes are not allowed. Has to be lowercase.
+
+`measurements`
+
+: *Object, optional.* This field contains various metrics measured during the profile collection.
+
+A measurement is a collection of measurement values and a unit for those values.
+It will only be shown in the UI if it's been integrated. Right now, we only
+support 2 metrics:
+- `frozen_frame_renders`: when a frozen frame was detected.
+- `slow_frame_renders`: when a slow frame was detected.
+
+A measurement value can contain the following attributes:
+- `elapsed_since_start_ns`: number of nanoseconds since the start of the profile
+  (stored in `timestamp`).
+- `value`: value for the measurement, as a `float64`. We accept `float64`
+  formatted as `string` as well.
+
+These are the values accepted for `unit`:
+- `nanosecond
+- `ns`
+- `hertz`
+- `hz`
+- `byte`
+- `percent`
+
+```json
+{
+  "cpu_0": {
+    "unit": "percent",
+    "values": {
+      "elapsed_since_start_ns: "1234567890",
+      "value": 12.64,
+    }
+  }
+}
+```
+
+`os`
+
+: *Object, required.* Contains information about the OS.
+
+
+It can have the following attributes:
+- `name`: *String, required.* Contains the OS name.
+- `version`: *String, required.* Contains the OS version.
+- `build_number`: *String, optional.* Only set it for `cocoa` platform.
+
+```json
+{
+ "os": {
+    "build_number": "20D47",
+    "name": "iOS",
+    "version": "16.3",
+  }
+}
+```
+
+`platform`
+
+: *String, required.* This value represents the platform the SDK is submitting
+from.
+
+Acceptable values are:
+- `cocoa`
+- `node`
+- `python`
+- `rust`
+
+`profile`
+
+: *Object, required.* It contains all the raw data collected when profiling. See
+[profile data](#profile-data).
+
+`release`
+
+: *String, required.* The release version of the application.
+
+**Release versions must be unique across all projects in your organization**.
+This value can be the git SHA for the given project, or a product identifier
+with a semantic version (suggested format `my-project-name@1.0.0`).
+
+`runtime`
+
+: *Object, optional.* Contains information about the runtime. Usually only used
+for platforms allowing several runtimes.
+
+It can have the following attributes:
+- `name`
+- `version`
+
+```json
+{
+  "runtime": {
+    "name": "CPython",
+    "version": "3.11.2"
+  }
+}
+```
+
+`timestamp`
+
+: *String, recommended.* The timestamp when the profile was captured by the SDK
+as [RFC 3339](https://tools.ietf.org/html/rfc3339) format. This is meant to be
+the anchor for all relative timestamps captured for the profile.
+
+Ideally, this will be the same as the field `start_timestamp` on the transaction
+so all relative timestamps for transaction and profile can be both from the same
+reference point and we don't need to correct relative timestamps.
+
+If for some reasons, the profiler implementation doesn't allow that, set it to
+the closest time to the profiler start (or to whatever the profiler gives you as
+a profile start timestamp) and it will be used to align with the transaction
+later on.
+
+`transaction`
+
+: *Object, required.* Contains information about the transaction it is
+associated with.
+
+It can have the following attributes:
+- `id`: *String, required.* Contains the transaction ID.
+- `name`: *String, required.* Contains the name of the transaction.
+- `trace_id`: *String, required.* Contains the trace ID the transaction is part
+  of.
+- `active_thread_id`: *String, required.* Contains the thread ID the transaction
+  was started on as `uint64` converted to a string. On mobile, this is usually
+  the main thread.
+
+`version`
+
+: *String, required.* Represents the version of the Sample format.
+
+Acceptable values are:
+- `"1"`
+
+### Profile data
+
+The profile data consists of
+- sample, which specifies the start time, their corresponding thread and a stack,
+- stacks, which are lists of frames,
+- frames, which identify the function and/or line of code for each item in a stacktrace,
+- thread metadata, with info about threads.
+
+The selected format is trying to keep the amount of data we transfer to the server as limited as possible.
+
+```json
+{
+  "profile": {
+    "samples": [
+      { ... },
+      ...
+    ],
+    "stacks": [
+      [ ... ],
+      ...
+    ],
+    "frames": [
+      { ... },
+      ...
+    ],
+    "thread_metadata": {
+      "259": {
+        ...
+      }
+    }
+  }
+}
+```
+
+When collecting a stack trace, you will:
+1. Capture the stack trace.
+2. Capture a timestamp relative to the start of the profile (set in the
+`timestamp` field).
+3. Capture the thread ID where this stack trace was captured.
+4. Create a list of indices for each frames (add it to the frame list if needed
+or use the existing frame's index).
+5. Check if that stack exists in the list of stacks and if it doesn't, add it to the list of stacks
+6. Create a sample containing the thread ID, the relative timestamp and the
+stack ID.
+
+You should collect samples at a frequency of 101 Hz, or roughly once every 10
+milliseconds.
+
+`samples`
+
+: *List, required* Contains a list of sample object captured during execution.
+Each sample can contain the following attributes:
+
+- `elapsed_since_start_ns`: *String, required.* Contains the relative timestamp
+  in nanoseconds since the value contained in the `timestamp` field when the
+  sample was captured. It's meant to be a `uint64` formatted as a `string`, a `float` won't be accepted.
+- `stack_id`: *Integer, required.* Contains the stack index from the `stacks` list.
+- `thread_id`: *String, required.* Contains the thread ID on which the sample was captured.
+
+```json
+{
+  "elapsed_since_start_ns": "1234567890",
+  "stack_id": 1,
+  "thread_id": "259",
+}
+```
+
+`stacks`
+
+: *List, required*. Contains a list of frame indices forming a stack trace.
+
+Stacks should be ordered from outermost to innermost frame.
+
+`frames`
+
+: *List, required*. Contains a list of frame objects (see [Frame
+Attributes](/sdk/event-payloads/stacktrace/#frame-attributes)).
+
+Each object should contain at least a `filename`, `function` or
+`instruction_addr` attribute. All values are optional, but recommended.
+
+For native platforms (`cocoa` or `rust` for example), `instruction_addr` is
+required in order to be able to symbolicate and get more info about the frame.
+
+For the rest of the platforms, whatever is passed here will travel to the
+frontend and whatever is available can be used to show more or less information.
+
+`thread_metadata`
+
+: *Object, required.* Contains an object with a field for each thread ID
+detected during runtime.
+
+This object can contain these attributes:
+- `name`: name of the thread.
+- `priority`: the priority of the thread.
+
+This information will be used on the flamechart to power the thread selector.
+
+```json
+{
+  "thread_metadata": {
+    "259": {
+      "name": "com.apple.main-thread",
+      "priority": 31
+    }
+  }
+}
+```
+
+## Validation
+
+We will reject a profile in Relay for several reasons:
+- profile data is missing (no frame, no sample, no stack)
+- not enough samples (we need at least 2 samples)
+- no transaction associated with the profile
+- any of the metadata required is missing
+- size of the profile exceeds 50MB
+
+It is suggested to validate these conditions before sending the profile.
+
+## Ingestion
+
+After this payload is generated, serialize it as JSON, pack it into an
+Envelope as an ItemType `"profile"` and send it to Relay.
