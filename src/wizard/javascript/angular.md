@@ -14,14 +14,14 @@ Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
 # Using yarn (Angular 12+)
-yarn add @sentry/angular-ivy @sentry/tracing
+yarn add @sentry/angular-ivy
 # Using yarn (Angular 10 and 11)
-yarn add @sentry/angular @sentry/tracing
+yarn add @sentry/angular
 
 # Using npm (Angular 12+)
-npm install --save @sentry/angular-ivy @sentry/tracing
+npm install --save @sentry/angular-ivy
 # Using npm (Angular 10 and 11)
-npm install --save @sentry/angular @sentry/tracing
+npm install --save @sentry/angular
 ```
 
 You should `init` the Sentry browser SDK in your `main.ts` file as soon as possible during application load up, before initializing Angular:
@@ -31,14 +31,13 @@ import { enableProdMode } from "@angular/core";
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 // import * as Sentry from "@sentry/angular" // for Angular 10/11 instead
 import * as Sentry from "@sentry/angular-ivy";
-import { BrowserTracing } from "@sentry/tracing";
 
 import { AppModule } from "./app/app.module";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
