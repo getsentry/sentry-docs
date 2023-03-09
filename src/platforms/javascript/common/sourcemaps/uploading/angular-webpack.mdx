@@ -1,0 +1,125 @@
+---
+title: Angular CLI
+description: "Upload your source maps using the Angular CLI, a custom Angular builder and the Sentry Webpack plugin."
+sidebar_order: 0
+supported:
+  - javascript.angular
+---
+
+You can use the Angular CLI together with our Sentry Webpack plugin to automatically create releases and upload source maps to Sentry when building your app (with `ng build`, for example).
+Due to Angular's closed build system, to register the Webpack plugin, you'll first need to configure a custom builder.
+In the end, you'll be able to automatically upload source maps whenever you're creating a production build of your app.
+
+<Alert level="warning">
+
+Before you start configuring the source maps upload, make sure that you're [generating source maps](../../.#generating-source-maps) in your Angular project.
+
+  </Alert>
+
+## Install
+
+Install the custom Webpack builder for Angular and the Sentry Webpack plugin:
+
+```shell {tabTitle:npm}
+npm install --save-dev @angular-builders/custom-webpack @sentry/webpack-plugin
+```
+
+```shell {tabTitle:yarn}
+yarn add --dev @angular-builders/custom-webpack @sentry/webpack-plugin
+```
+
+## Configure
+
+With these packages installed, configure your app to upload source maps in three steps:
+
+### 1. Set up custom Angular builder
+
+In your `angular.json`, replace the default builder (`@angular-devkit/build-angular`) with `@angular-builders/custom-webpack`:
+
+```javascript {filename:angular.json}
+{
+  "projects": {
+    "my-project": {
+      "architect": {
+        "build": {
+          "builder": "@angular-builders/custom-webpack:browser",
+          "options": {
+            "customWebpackConfig": {
+              "path": "./webpack.config.js"
+            },
+            // ... other options
+          },
+          // ... other options
+        },
+        // ... other options
+      },
+      // ... other options
+    }
+  }
+}
+```
+
+<Alert>
+
+This configuration has no effect on your development server if you're running `ng serve`.
+Only `ng build` is configured to use the custom builder and the Webpack plugin.
+If you're using an Angular version below 13, only `ng build --prod` will leverage the custom builder.
+
+</Alert>
+
+### 2. Register the Sentry Webpack Plugin
+
+Register the Sentry Webpack plugin in your `webpack.config.js`:
+
+```javascript {filename:webpack.config.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // ... other config above ...
+
+  devtool: "source-map", // Source map generation must be turned on
+  plugins: [
+    new SentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and need the `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Specify the directory containing build artifacts
+      // By default, Angular emits build files in the `dist` directory but your
+      // configuration may vary
+      include: "./dist/my-project",
+
+      // Optionally uncomment the line below to override automatic release name detection
+      // release: process.env.RELEASE,
+    }),
+  ],
+};
+```
+
+Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
+
+### 3. Upload
+
+To upload the source maps, build your Angular application:
+
+```bash
+ng build # add --prod for Angular versions below 13
+```
+
+### Releases
+
+The Sentry Webpack plugin will automatically inject a release value into the SDK, so you should either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // When using the plugin, either remove the `release`` property here entirely or
+  // make sure that the plugin's release option and the Sentry.init()'s release
+  // option match exactly.
+  // release: "my-example-release-1"
+});
+```

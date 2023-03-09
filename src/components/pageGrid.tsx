@@ -7,11 +7,7 @@ import { sortPages } from "~src/utils";
 
 const query = graphql`
   query PageGridQuery {
-    allSitePage(
-      filter: {
-        context: { draft: { ne: true } }
-      }
-    ) {
+    allSitePage(filter: { context: { draft: { ne: true } } }) {
       nodes {
         path
         context {
@@ -27,9 +23,14 @@ const query = graphql`
 type Props = {
   nextPages: boolean;
   header?: string;
+  /**
+   * A list of pages to exclude from the grid.
+   * Specify the file name of the page, for example, "index" for "index.mdx"
+   */
+  exclude?: string[];
 };
 
-export default ({ nextPages = false, header }: Props): JSX.Element => {
+export default ({ nextPages = false, header, exclude }: Props): JSX.Element => {
   const data = useStaticQuery(query);
   const location = useLocation();
 
@@ -53,6 +54,12 @@ export default ({ nextPages = false, header }: Props): JSX.Element => {
     }
   } else {
     matches = matches.filter(n => n.path !== currentPath);
+  }
+
+  if (exclude && exclude.length) {
+    exclude.forEach(e => {
+      matches = matches.filter(n => !n.path.endsWith(`${e}/`));
+    });
   }
 
   if (!matches.length) return null;
