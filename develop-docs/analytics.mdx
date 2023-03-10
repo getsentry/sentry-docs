@@ -6,7 +6,7 @@ This guide steps you through instrumenting your code with Sentry's 3rd-party ana
 
 ## Big Query
 
-[BigQuery](https://cloud.google.com/bigquery/) is a Google data warehouse that a lot of our data calls home. This includes all our analytics data and some (not all) production data that might be of interest when joins are necessary for answering richer more complex questions. From sentry/getsentry, our data goes through [reload](https://github.com/getsentry/reload), our ETL for BigQuery.
+[BigQuery](https://cloud.google.com/bigquery/) is a Google data warehouse that a lot of our data calls home. This includes all our analytics data and some (not all) production data that might be of interest when joins are necessary for answering richer, more complex questions. From sentry/getsentry, our data goes through [reload](https://github.com/getsentry/reload), our ETL for BigQuery.
 
 ## Amplitude
 
@@ -112,9 +112,9 @@ To also send the analytics event in Amplitude, add the event to this file: [http
 
 Note that in the future this will change so that by default, all events will go to Amplitude.
 
-## Route Based Frontend Analytics
+## Route-Based Frontend Analytics
 
-All in-app page loads will generate analytics events by default (both Reload and Amplitude). All analytics related to page load should be handled within the route based analytics system instead of manually instruming front-end events. The default names are based on the parameterized path and are prefixed with `Page View`. Here is an example event name:
+All in-app page loads will generate analytics events by default (both Reload and Amplitude). All analytics related to page load should be handled within the route-based analytics system instead of manually instrumenting front-end events. The default names are based on the parameterized path and are prefixed with `Page View`. Here is an example event name:
 
 ```
 Page View: :OrgId :ProjectId Releases
@@ -124,9 +124,9 @@ Any field that has a `:` at the front is a parameterized field. The value of the
 
 ### Customization
 
-Route based analytics can be customized to have different event names and parameters. For functional components, the following hooks can be used:
+Route-based analytics can be customized to have different event names and parameters. For functional components, the following hooks can be used:
 
-- `useDisableRouteAnalytics`: Disables route based analytics for the component.
+- `useDisableRouteAnalytics`: Disables route-based analytics for the component.
 - `useRouteAnalyticsEventNames`: Customizes the event name. First argument is the Reload `eventKey` and second argument is the Amplitude `eventName`.
 - `useRouteAnalyticsParams`: Customizes the parameters.
 
@@ -151,7 +151,7 @@ The main purpose of customizing the event names is to create more readable event
 
 For class based components, the following functions can be used:
 
-- `setDisableRouteAnalytics`: Disables route based analytics for the component.
+- `setDisableRouteAnalytics`: Disables route-based analytics for the component.
 - `setEventNames`: Customizes the event name. First argument is the Reload `eventKey` and second argument is the Amplitude `eventName`.
 - `setRouteAnalyticsParams`: Customizes the parameters.
 
@@ -171,7 +171,7 @@ class Monitors extends AsyncView<Props, State> {
 
 All in-app button clicks will generate analytics events by default for Reload. As of now, they are not automatically being sent to Amplitude, but you can set it up so that the events are sent there.
 
-Out of the box, each click on a button will track the `text` (aria-label), `priority`, `href`, and `parameterized_path` of the button. You might encounter an issue where some of the data will be an empty string which is a known bug. The event name will be based on the parameterized path , similar to route based analytics (see above for more information) but will be prefixed with `button_click`.
+Out of the box, each click on a button will track the `text` (aria-label), `priority`, `href`, and `parameterized_path` of the button. You might encounter an issue where some of the data will be an empty string which is a known bug. The event name will be based on the parameterized path , similar to route-based analytics (see above for more information) but will be prefixed with `button_click`.
 
 ### Customization
 
@@ -295,10 +295,9 @@ class ExampleComponent extends React.Component {
 
 ### Add the events to Reload
 
-We have a repo called [https://github.com/getsentry/reload](https://github.com/getsentry/reload). The [https://github.com/getsentry/reload/blob/master/reload_app/events.py](https://github.com/getsentry/reload/blob/master/reload_app/events.py) is a legacy list that specifies an optional schema for events. Newer front-end analytics events don't need to be added to this reload Schema (anything going through `trackAnalyticsEventV2`).
-file holds a list of all accepted events.
+We have a repo called [https://github.com/getsentry/reload](https://github.com/getsentry/reload). The [https://github.com/getsentry/reload/blob/master/reload_app/events.py](https://github.com/getsentry/reload/blob/master/reload_app/events.py) is a legacy list that specifies an optional schema for events. Newer front-end analytics events don't need to be added to this Reload schema (anything going through `trackAnalyticsEventV2`).
 
-Here's an example of what that schema looks like:
+The file holds a list of all accepted events. Here's an example of what that schema looks like:
 
 ```python
 'example_tutorial.created': {
