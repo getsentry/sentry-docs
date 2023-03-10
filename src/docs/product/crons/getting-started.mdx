@@ -57,18 +57,17 @@ org_slug = '___ORG_SLUG___' # Write your organization slug here
 
 # Create the check-in
 json_data = {'status': 'in_progress'}
-response = requests.post(f'https://sentry.io/api/0/organizations/{org_slug}/monitors/{monitor_id}/checkins/', headers=headers, json=json_data)
-checkin_id = response.json()['id']
+requests.post(f'https://sentry.io/api/0/organizations/{org_slug}/monitors/{monitor_id}/checkins/', headers=headers, json=json_data)
 
 # Execute your scheduled task code here...
 
 # Update the check-in status (required) and duration (optional)
 json_data = {'status': 'ok', 'duration': 3000}
-response = requests.put(f'https://sentry.io/api/0/organizations/{org_slug}/monitors/{monitor_id}/checkins/{checkin_id}/', headers=headers, json=json_data)
+requests.put(f'https://sentry.io/api/0/organizations/{org_slug}/monitors/{monitor_id}/checkins/latest/', headers=headers, json=json_data)
 ```
 
 ```bash {tabTitle: curl}
-# Create the check-in and save the returned CHECKIN_ID
+# Create the check-in
 $ curl -X POST \
     'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/{MONITOR_ID}/checkins/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
@@ -79,7 +78,7 @@ $ curl -X POST \
 
 # Update the check-in status (required) and duration (optional)
 $ curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/{MONITOR_ID}/checkins/{CHECKIN_ID}/' \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/{MONITOR_ID}/checkins/latest/' \
     --header 'Authorization: DSN ___PUBLIC_DSN___' \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "ok", "duration": 3000}'
