@@ -1,14 +1,15 @@
 ```kotlin
 import io.sentry.kotlin.multiplatform.Sentry
 
-Sentry.init { options ->
-    options.beforeBreadcrumb = { breadcrumb ->
-        breadcrumb.apply {
-            if (this.category == "navigation") {
-                this.message = "Add message to navigation breadcrumb"
-            }
-        }
+// Application context is only needed for Android targets
+Sentry.init(context) { options ->
+  options.beforeBreadcrumb = { breadcrumb ->
+    if ("a.spammy.Logger" == breadcrumb.category) {
+      null
+    } else {
+      breadcrumb
     }
+  }
 }
 ```
 
@@ -35,4 +36,3 @@ If you want to disable the automatic collection of breadcrumbs on Android, pleas
     <meta-data android:name="io.sentry.breadcrumbs.user-interaction" android:value="false" />
 </application>
 ```
-// TODO: cant drop breadcrumbs
