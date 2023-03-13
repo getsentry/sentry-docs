@@ -65,7 +65,7 @@ struct SwiftUIApp: App {
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
+Before capturing crashes, you need to provide debug information to Sentry. Furthermore, Sentry can display snippets of your code next to the event stacktraces. This feature is called source context. To enable it use the `include-sources` option when uploading your debug information files. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
 
 ## Performance Monitoring
 
