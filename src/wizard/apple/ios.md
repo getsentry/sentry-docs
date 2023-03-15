@@ -42,6 +42,11 @@ func application(_ application: UIApplication,
     return true
 }
 ```
+<Note>
+
+If your project still initializes a UIWindow during application(_:didFinishLaunchingWithOptions:) and you plan to use automatic UIViewController performance tracker, make sure to initialize your window, set the root view controller, and then initialize SentrySDK.
+
+</Note>
 
 When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
 
