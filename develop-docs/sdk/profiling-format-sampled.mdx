@@ -10,7 +10,8 @@ ingestion pipeline.
 This format is meant to be cross platform and allow to represent samples
 collected by a profiler.
 
-A profile should always be associated with a transaction.
+A profile should always be associated with a transaction and it should be sent
+in the same envelope as the associated transaction.
 
 ## Data Model
 
@@ -305,7 +306,7 @@ or use the existing frame's index).
 6. Create a sample containing the thread ID, the relative timestamp and the
 stack ID.
 
-You should collect samples at a frequency of 101 Hz, or roughly once every 10
+You should collect samples at a frequency of 101Hz, or roughly once every 10
 milliseconds.
 
 `samples`
@@ -333,6 +334,9 @@ Each sample can contain the following attributes:
 
 Stacks should be ordered from outermost to innermost frame.
 
+It's encouraged to de-duplicate stacks by only storing them once and referring to
+the same `stack_id` for each sample that needs it.
+
 `frames`
 
 : *List, required*. Contains a list of frame objects (see [Frame
@@ -346,6 +350,17 @@ required in order to be able to symbolicate and get more info about the frame.
 
 For the rest of the platforms, whatever is passed here will travel to the
 frontend and whatever is available can be used to show more or less information.
+
+We will use `module` or `package` (in that order) to group frames when needed. 
+
+Some attributes are not used at the moment:
+- `raw_function`
+- `pre_context`
+- `post_context`
+- `stack_start`
+- `vars`
+- `addr_mode`
+- `platform`
 
 `thread_metadata`
 
@@ -377,10 +392,16 @@ We will reject a profile in Relay for several reasons:
 - no transaction associated with the profile
 - any of the metadata required is missing
 - size of the profile exceeds 50MB
+- a profile exceeds 30 seconds (delta between last and first sample
+  timestamp)
 
 It is suggested to validate these conditions before sending the profile.
 
+It's suggested to remove unnecessary data like thread data without samples from
+`thread_metadata`.
+
 ## Ingestion
 
-After this payload is generated, serialize it as JSON, pack it into an
-Envelope as an ItemType `"profile"` and send it to Relay.
+After this payload is generated, serialize it as JSON, pack it into the same
+envelope as the associated transaction with the `ItemType` `"profile"` and send
+it to Relay.
