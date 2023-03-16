@@ -46,6 +46,10 @@ try {
 }
 ```
 
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.
+
 ## Performance
 
 You'll be able to monitor the performance of your app using the SDK.
@@ -79,3 +83,5 @@ Future<void> processOrderBatch(ISentrySpan span) async {
   }
 }
 ```
+
+Check out [the documentation](https://docs.sentry.io/platforms/dart/performance/instrumentation/) to learn more about the API and automatic instrumentations.
