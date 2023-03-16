@@ -78,6 +78,57 @@ The parameter `traces_sample_rate` needs to be set when initializing the Sentry 
 
 </Note>
 
+## Options
+
+If you add the `DjangoIntegration()` explictly to your Sentry `init()` call you can set options when you instantiate `DjangoIntegration()` to change the behavior of the integration:
+
+Explicityl enabling `DjangoIntegration`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
+
+    integrations=[
+        DjangoIntegration(
+            transaction_style='url',
+            middleware_spans=True,
+            signals_spans=False,
+        ),
+    ]
+)
+```
+
+You can pass the following keyword arguments to `DjangoIntegration()`:
+
+- `transaction_style`:
+
+  How to name transactions showing up in Sentry performance monitoring.
+
+  - `"/myproject/myview/<foo>"` if you set `transaction_style="url"`.
+  - `"myproject.myview"` if you set `transaction_style="endpoint"`
+
+  The default is `"endpoint"`.
+
+- `middleware_spans`:
+
+  Create spans and track performance of all middleware in your Django project. Set to `False` to disable.
+
+  The default is `True`.
+
+- `signals_spans`:
+
+  Create spans and track performance of all signal handlers in your Django project. Set to `False` to disable.
+
+  The default is `True`.
+
 ## Supported Versions
 
 - Django 1.8-1.11 (Python: 2.7+)
