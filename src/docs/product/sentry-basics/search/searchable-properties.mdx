@@ -102,6 +102,7 @@ Release properties overlap with event and issue search properties, so they don't
 | device.brand | Brand of the device | x | x | x | string |
 | device.charging | Whether the device was charging or not. Not a boolean. | x |  |  | string |
 | device.family | Family of the device. Typically, the common part of a model name across generations. For example, iPhone, Samsung Galaxy. | x | x | x | string |
+| device.class | The estimated performance class of the client device, estimated `high`, `medium`, or `low`. For more details, see the [Device Classification](#device-classification) section below. | x |  |  | string |
 | device.locale | Deprecated | x | x |  | string |
 | device.model_id | Internal hardware revision to identify the device exactly. |  | x | x | n/a |
 | device.name | Details of the device | x |  | x | string |
@@ -233,3 +234,23 @@ Several common uses for tags include:
 - The hostname of the server
 - The version of your platform (for example, iOS 5.0)
 - The user’s language
+
+## Device Classification
+
+`device.class` provides a simple way for developers to understand the performance level of an event's client device in a single searchable property. This is particularly useful for projects that serve a large range of mobile devices, in which case developers would typically have had to parse through a vast range of specs and models across iOS and Android.
+
+Possible values for `device.class` are `high`, `medium`, and `low`, indicating the estimated performance level of the device. This is a calculated property that is based on the following specs:
+
+| `device.class` for iOS| `processor_frequency` |
+|---|---|
+| high | >= 3000 MHz |
+| medium | >= 2000 MHz |
+| low | < 2000 MHz |
+
+| `device.class` for Android | `processor_count` | `processor_frequency` | `memory_size` |
+|---|---|---|---|
+| high | >= 8 | >= 2500 MHz | >= 6 GiB |
+| medium | >= 8 | >= 2000 MHz | >= 4 GiB |
+| low | < 8 | < 2000 MHz | < 4 GiB |
+
+These classifications are based on an analysis of the mobile devices available in the market today and are subject to change as the market evolves.
