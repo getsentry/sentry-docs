@@ -24,8 +24,12 @@ Future<void> main() async {
       // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
     });
+
+  // or define SENTRY_DSN via Dart environment variable (--dart-define)
 }
 ```
+
+You can configure the `SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_DIST` and `SENTRY_ENVIRONMENT` via the Dart environment variables passing the `--dart-define` flag to the compiler as noted in the code sample.
 
 Then create an intentional error, so you can test that everything is working:
 
