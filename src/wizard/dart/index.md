@@ -24,8 +24,12 @@ Future<void> main() async {
       // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
     });
+
+  // or define SENTRY_DSN via Dart environment variable (--dart-define)
 }
 ```
+
+You can configure the `SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_DIST`, and `SENTRY_ENVIRONMENT` via the Dart environment variables passing the `--dart-define` flag to the compiler, as noted in the code sample.
 
 Then create an intentional error, so you can test that everything is working:
 
@@ -41,6 +45,10 @@ try {
   );
 }
 ```
+
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.
 
 ## Performance
 
@@ -75,3 +83,5 @@ Future<void> processOrderBatch(ISentrySpan span) async {
   }
 }
 ```
+
+Check out [the documentation](https://docs.sentry.io/platforms/dart/performance/instrumentation/) to learn more about the API and automatic instrumentations.

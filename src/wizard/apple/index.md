@@ -45,7 +45,7 @@ func application(_ application: UIApplication,
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
+To capture crashes, you need to provide debug information to Sentry. You can also use our source context feature to display code snippets next to the event stack traces by enabling the `include-sources` option when uploading your debug information files. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
 
 ## Performance Monitoring
 
