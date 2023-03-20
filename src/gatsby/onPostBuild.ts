@@ -93,10 +93,28 @@ const parsePathSlug = (slug: string) => {
         ? `${product}-onboarding-${step}`
         : `${sub_platform}-${product}-onboarding-${step}`;
 
+  
     return {
       platform,
       sub,
     };
+  }
+  
+  if (slug.includes("/react/")) {
+    const pathMatch = slug.match(
+      /^\/(?<platform>[^/]+)\/(?<sub_platform>[^/]+)\/(?<product>with-error-monitoring|with-error-monitoring-and-performance|with-error-monitoring-and-replay|with-error-monitoring-performance-and-replay)\/$/
+    );
+
+    if (!pathMatch) {
+      throw new Error(`Unable to parse react doc paths from slug: ${slug}`);
+    }
+    
+    const { platform, product, sub_platform } = pathMatch.groups;
+        
+   return {
+    platform,
+    sub: `${sub_platform}-${product}`
+   }
   }
 
   const pathMatch = slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
@@ -126,6 +144,7 @@ const writeJson = async (
       return;
     }
     const key = sub ? `${main}.${sub}` : `${main}`;
+   
     const data = {
       key,
       type: node.frontmatter.type,
