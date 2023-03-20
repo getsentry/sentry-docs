@@ -1,6 +1,6 @@
 ---
 name: React
-doc_link: https://docs.sentry.io/platforms/javascript/guides/react-with-error-monitoring-and-performance/
+doc_link: https://docs.sentry.io/platforms/javascript/guides/react/
 support_level: production
 type: framework
 ---
