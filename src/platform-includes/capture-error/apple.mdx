@@ -36,9 +36,23 @@ By default, Sentry will display the error code as the error description. For cus
 This can be particularly useful for Swift enum error types that conform to `Error`, where the error code can be hard to match with an enum case. To customize the description for Swift `Error` types, you should conform to the `CustomNSError` protocol and return a user info dictionary:
 
 ```swift {tabTitle:Swift}
+enum MyCustomError: Error {
+    case indexOutOfBounds
+    case enumeratingWhileMutating
+}
+
 extension MyCustomError: CustomNSError {
     var errorUserInfo: [String : Any] {
-        [NSDebugDescriptionErrorKey: "Custom error description"]
+        func getDebugDescription() -> String {
+            switch self {
+            case .indexOutOfBounds:
+                return  "indexOutOfBounds"
+            case .enumeratingWhileMutating:
+                return "enumeratingWhileMutating"
+            }
+        }
+        
+        return [NSDebugDescriptionErrorKey: getDebugDescription()]
     }
 }
 ```
