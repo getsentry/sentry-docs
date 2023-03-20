@@ -11,8 +11,10 @@ You can find a list of features available by looking at
 `sentry/features/__init__.py`. They're declared on the `FeatureManager` like so:
 
 ```python
-# Don't set entity_feature, or set it to False if you don't plan to use Flagr
-default_manager.add("organizations:onboarding", OrganizationFeature, entity_feature=True)
+# pass FeatureHandlerStrategy.REMOTE to use flagr:
+default_manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
+# pass FeatureHandlerStrategy.INTERNAL if you don't plan to use flagr:
+default_manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
 ```
 
 The feature can be enabled with the following in your `sentry.conf.py`, usually located at `~/.sentry/`:
@@ -63,16 +65,16 @@ to the `FeatureManager`, including the type of feature we want to add to the
 file `/src/sentry/features/__init__.py`.
 
 If you plan to use [flagr in production](#enabling-your-feature-in-production)
-add a third optional boolean parameter when adding the feature, for example:
+add the feature to the `FeatureManager` like so using the `REMOTE` enum.:
 
 ```python
-default_manager.add('organizations:test-feature', OrganizationFeature, True)
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.REMOTE)
 ```
 
-If you don't plan to use flagr don't pass this third parameter, for example:
+If you don't plan to use flagr, use `FeatureHandlerStrategy.INTERNAL`, for example:
 
 ```python
-default_manager.add('organizations:test-feature', OrganizationFeature)
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
 ```
 
 Flagr has significant latency, and is somewhat flakey. If you're working in
@@ -198,11 +200,10 @@ Flagr is used to configure flags in production.
 
 If you want to enable your feature for a subset of production users, you will
 need to set up your feature in Flagr. If you haven't already make sure that
-when you add your flag in sentry that you passed the third option so that Flagr
-knows to check this feature in production.
+when you add your flag in sentry, you use the `REMOTE` enum. For example:
 
 ```python
-default_manager.add("organizations:onboarding", OrganizationFeature, True)  # NOQA
+default_manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.REMOTE)  # NOQA
 ```
 
 ## Building your feature in Flagr
