@@ -1,7 +1,28 @@
 ```php
-\Sentry\withScope(function (\Sentry\State\Scope $scope): void {
-    $scope->setLevel(\Sentry\Severity::warning());
+app('sentry')->captureMessage("this is a debug message", \Sentry\Severity::debug());
+```
 
-    \Sentry\captureMessage('This is now a warning!');
+Available levels are `"fatal"`, `"critical"`, `"error"`, `"warning"`, `"log"`, `"info"`, and `"debug"`.
+
+To set the level within scope, you can call `setLevel()`:
+
+```php
+app('sentry')->configureScope(function (\Sentry\State\Scope $scope): void {
+    $scope->setLevel(\Sentry\Severity::debug());
 });
+```
+
+or per event:
+
+```php
+app('sentry')->withScope(function (\Sentry\State\Scope $scope): void {
+   $scope->setLevel(\Sentry\Severity::info());
+   
+  // The exception has the event level set by the scope (info)
+  \Sentry\captureMessage('This is now a warning!');
+});
+
+// Outside of withScope, the Event level will have their previous value restored.
+// The exception has the event level set (error).
+app('sentry')->captureException(new Error("custom error 2"));
 ```
