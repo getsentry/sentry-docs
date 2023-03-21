@@ -97,7 +97,7 @@ Learn more in our [User Interaction Instrumentation](/platforms/flutter/configur
 
 ### http.Client Library Instrumentation
 
-The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the `networkTracing` feature, starts a span out of the active transaction bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
+The `http.Client` instrumentation, once added the `SentryHttpClient` and enabled the [performance](/platforms/flutter/performance/) feature, starts a span out of the active transaction bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$METHOD $url`; for example, `GET https://sentry.io`.
 
 The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus`.
 
@@ -107,7 +107,7 @@ For more information see our [SentryHttpClient integration](/platforms/dart/conf
 
 ### Dio HTTP Library Instrumentation
 
-The Dio instrumentation starts a span out of the active transaction bound to the scope for each HTTP request. The SDK sets the span `operation` to `http.client` and the `description` to request `$method $URL`. For example, `GET https://sentry.io`.
+The Dio instrumentation starts a span out of the active transaction bound to the scope for each HTTP request. The SDK sets the span `operation` to `http.client` and the `description` to request `$METHOD $url`. For example, `GET https://sentry.io`.
 
 The span finishes once the request has been executed. The span `status` depends on either the HTTP response `code` or `SpanStatus.internalError()` if the `code` does not match any of Sentry's `SpanStatus` options.
 
@@ -139,7 +139,7 @@ Future<void> main() async {
 SentryFlutter.setAppStartEnd(DateTime.now().toUtc());
 ```
 
-If you want to opt out, you can flip the `enableAutoPerformanceTracking` flag:
+To opt out, flip the `enableAutoPerformanceTracing` flag:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -147,7 +147,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
-    (options) => options.enableAutoPerformanceTracking = false,
+    (options) => options.enableAutoPerformanceTracing = false,
     appRunner: () => runApp(MyApp()),
   );
 }
@@ -161,7 +161,7 @@ Unresponsive UI and animation hitches annoy users and degrade the user experienc
 
 To start getting the Mobile Vitals data, you have to set up the [routing instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#routing-instrumentation) or the [GoRouter instrumentation](/platforms/flutter/performance/instrumentation/automatic-instrumentation/#gorouter-instrumentation).
 
-If you want to opt out, you can flip the `enableAutoPerformanceTracking` flag:
+To opt out, flip the `enableAutoPerformanceTracing` flag:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -169,7 +169,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
-    (options) => options.enableAutoPerformanceTracking = false,
+    (options) => options.enableAutoPerformanceTracing = false,
     appRunner: () => runApp(MyApp()),
   );
 }
@@ -200,21 +200,15 @@ Future<void> main() async {
 
 The `SentryAssetBundle` instrumentation starts a span out of the active transaction bound to the scope for each `load` and `loadString` call. The SDK sets the span `operation` to `file.read`.
 
-You can also enable the instrumentation for the `loadStructuredData` method by providing the `enableStructuredDataTracing` flag.
+The `SentryAssetBundle` instrumentation starts a span out of the active transaction bound to the scope for each `loadStructuredData` call. The SDK sets the span `operation` to `serialize`.
+
+The `loadStructuredData` is an opt-out feature. The following example shows how to disable it:
 
 ```dart
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-SentryAssetBundle(enableStructuredDataTracing: true)
+SentryAssetBundle(enableStructuredDataTracing: false)
 ```
-
-The `SentryAssetBundle` instrumentation starts a span out of the active transaction bound to the scope for each `loadStructuredData` call. The SDK sets the span `operation` to `serialize`.
-
-<Note>
-
-The `enableStructuredDataTracing` feature is available in Beta. Beta features are still in-progress and may have bugs. We recognize the irony.
-
-</Note>
 
 ### File I/O Instrumentation
 
