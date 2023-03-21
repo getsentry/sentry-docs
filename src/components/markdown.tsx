@@ -12,6 +12,7 @@ import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
 import GuideGrid from "./guideGrid";
 import Include from "./include";
+import IncludePlatformContent from "./includePlatformContent";
 import JsCdnTag from "./jsCdnTag";
 import LambdaLayerDetail from "./lambdaLayerDetail";
 import Note from "./note";
@@ -37,6 +38,7 @@ const mdxComponents = {
   Expandable,
   GuideGrid,
   Include,
+  IncludePlatformContent,
   JsCdnTag,
   Link: SmartLink,
   Note,

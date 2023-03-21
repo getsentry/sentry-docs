@@ -1,0 +1,28 @@
+```php
+<?php
+
+# Execute your scheduled task...
+
+# 🟢 Notify Sentry your job completed successfully:
+$event = Event::createCheckIn();
+$checkIn = new CheckIn(
+    monitorSlug: 'monitor-slug',
+    status: CheckInStatus::ok(),
+);
+$event->setCheckIn($checkIn);
+$this->hub->captureEvent($event);
+
+```
+
+If your job execution fails, you can do:
+
+```php
+# 🔴 Notify Sentry your job has failed:
+$event = Event::createCheckIn();
+$event->setCheckIn(new CheckIn(
+    id: $checkIn->getId(),
+    monitorSlug: 'monitor-slug',
+    status: CheckInStatus::failed(),
+));
+$this->hub->captureEvent($event);
+```
