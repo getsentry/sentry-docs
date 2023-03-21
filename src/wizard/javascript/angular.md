@@ -31,14 +31,13 @@ import { enableProdMode } from "@angular/core";
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 // import * as Sentry from "@sentry/angular" // for Angular 10/11 instead
 import * as Sentry from "@sentry/angular-ivy";
-import { BrowserTracing } from "@sentry/tracing";
 
 import { AppModule } from "./app/app.module";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),

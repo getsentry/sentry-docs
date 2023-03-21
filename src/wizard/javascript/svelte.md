@@ -22,12 +22,11 @@ import "./app.css";
 import App from "./App.svelte";
 
 import * as Sentry from "@sentry/svelte";
-import { BrowserTracing } from "@sentry/tracing";
 
 // Initialize the Sentry SDK here
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new BrowserTracing()],
+  integrations: [new Sentry.BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
