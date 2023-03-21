@@ -1,0 +1,80 @@
+---
+title: Profiling
+description: "Learn more about how to configure our Profiling integration and start profiling your code."
+---
+
+<Note>
+
+Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony. If you have any questions or feedback, please email us at [profiling@sentry.io](mailto:profiling@sentry.io).
+
+</Note>
+
+With [profiling](/product/profiling/), Sentry allows you to collect and analyze performance profiles from real users in production to give you a complete picture of how your application performs in a variety of environments.
+
+Under the hood, we're using Wikipedia's sampling profiler [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
+The Excimer PHP extension does support PHP 7.2 and up, for PHP 8.2 support, make sure to use Excimer version 1.1.0.
+There is currently no support for either Windows or macOS.
+
+## Installation
+
+### Linux package manager
+
+```bash
+apt-get install php-excimer
+```
+
+See https://www.mediawiki.org/wiki/Excimer for additional distributions.
+
+### PECL
+
+```bash
+pecl install excimer
+```
+
+See https://pecl.php.net/package/excimer for more information.
+
+### Build from source
+
+```bash
+git clone https://github.com/wikimedia/mediawiki-php-excimer.git
+
+cd excimer/
+phpize && ./configure && make && sudo make install
+```
+
+Depending on your environment, you may need to enable the Excimer extension afterwards.
+
+```
+phpenmod -s fpm excimer
+# or
+phpenmod -s apache2 excimer
+```
+
+## Enable Performance Monitoring
+
+Profiling depends on Sentry's performance monitoring product being enabled beforehand.
+Check out the <PlatformLink to="/performance/">performance setup</PlatformLink> and <PlatformLink to="/performance/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink> documentation for more detailed information.
+
+```php
+\Sentry\init([
+    'dsn' => '__DSN__',
+    'traces_sample_rate' => 1.0,
+]);
+```
+
+## Enabling Profiling
+
+<Note>
+  
+Profiling for PHP is supported from Sentry PHP SDK version 3.15.0 and above.
+
+</Note>
+
+```php
+\Sentry\init([
+    'dsn' => '__DSN__',
+    'traces_sample_rate' => 1.0,
+    // Set a sampling rate for profiling - this is relative to traces_sample_rate
+    'profiles_sample_rate' => 1.0,
+]);
+```
