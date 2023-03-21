@@ -14,14 +14,14 @@ Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
 # Using yarn (Angular 12+)
-yarn add @sentry/angular-ivy @sentry/tracing
+yarn add @sentry/angular-ivy
 # Using yarn (Angular 10 and 11)
-yarn add @sentry/angular @sentry/tracing
+yarn add @sentry/angular
 
 # Using npm (Angular 12+)
-npm install --save @sentry/angular-ivy @sentry/tracing
+npm install --save @sentry/angular-ivy
 # Using npm (Angular 10 and 11)
-npm install --save @sentry/angular @sentry/tracing
+npm install --save @sentry/angular
 ```
 
 You should `init` the Sentry browser SDK in your `main.ts` file as soon as possible during application load up, before initializing Angular:

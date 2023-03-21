@@ -5,10 +5,7 @@ support_level: production
 type: framework
 ---
 
-In this quick guide you’ll set up:
-
-- `@sentry/react` for [error monitoring](https://docs.sentry.io/platforms/javascript/guides/react/)
-- `@sentry/tracing` for [performance monitoring](https://docs.sentry.io/platforms/javascript/guides/react/performance/)
+In this quick guide you’ll set up `@sentry/react` for [error monitoring](https://docs.sentry.io/platforms/javascript/guides/react/) and [performance monitoring](https://docs.sentry.io/platforms/javascript/guides/react/performance/)
 
 ---
 
@@ -18,10 +15,10 @@ Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
 # Using yarn
-yarn add @sentry/react @sentry/tracing
+yarn add @sentry/react
 
 # Using npm
-npm install --save @sentry/react @sentry/tracing
+npm install --save @sentry/react
 ```
 
 ## Configure

@@ -5,14 +5,14 @@ support_level: production
 type: framework
 ---
 
-To instrument your Svelte application with Sentry, first install the `@sentry/svelte` and `@sentry/tracing` packages:
+To instrument your Svelte application with Sentry, first install the `@sentry/svelte` package:
 
 ```bash
 # Using yarn
-yarn add @sentry/svelte @sentry/tracing
+yarn add @sentry/svelte
 
 # Using npm
-npm install --save @sentry/svelte @sentry/tracing
+npm install --save @sentry/svelte
 ```
 
 Next, import and initialize initialize Sentry in your Svelte app's entry point (`main.ts/js`):

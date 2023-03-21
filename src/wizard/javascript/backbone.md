@@ -9,9 +9,9 @@ Install our JavaScript browser SDK using either `yarn` or `npm`:
 
 ```bash {tabTitle: ESM}
 # Using yarn
-yarn add @sentry/browser @sentry/tracing
+yarn add @sentry/browser
 # Using npm
-npm install --save @sentry/browser @sentry/tracing
+npm install --save @sentry/browser
 ```
 
 We also support alternate [installation methods](/platforms/javascript/install/).

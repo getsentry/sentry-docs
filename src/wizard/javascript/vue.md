@@ -7,12 +7,7 @@ type: framework
 
 ## Instrument your application
 
-To begin collecting error and performance data from your Vue application, you'll need the following packages:
-
-- `@sentry/vue` (Sentry's Vue SDK)
-- `@sentry/tracing` (instruments performance data)
-
-Below are instructions for using your favorite package manager, or alternatively loaded directly from our CDN.
+To begin collecting error and performance data from your Vue application, you'll need to install the `@sentry/vue` package (Sentry's Vue SDK).
 
 ### Using yarn or npm
 
@@ -20,10 +15,10 @@ Install the dependencies:
 
 ```bash
 # Using yarn
-yarn add @sentry/vue @sentry/tracing
+yarn add @sentry/vue
 
 # Using npm
-npm install --save @sentry/vue @sentry/tracing
+npm install --save @sentry/vue
 ```
 
 Next, initialize Sentry in your app entry point before you initialize your root component.
