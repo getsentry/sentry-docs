@@ -3,22 +3,20 @@ title: User Interaction Instrumentation
 sidebar_order: 20
 sdk: sentry.javascript.react-native
 
-description: "Learn what kind of user interaction can be captured"
+description: "Learn what kinds of user interactions may be captured"
 ---
 
-The UI instrumentation, once enabled, captures transactions and adds breadcrumbs for touch interactions. Gesture support using React Native Gesture Handler is available using the `traceGesture` wrapper. 
+The UI instrumentation captures transactions and adds breadcrumbs for touch interactions. Gesture support using React Native Gesture Handler is also available with the `sentryTraceGesture` wrapper. 
 
 ## Touch Events
 
-The SDK composes the transaction name from the name of a displayed screen (for example `LoginScreen`) and a label of the element user interacted with (for example `login_button`).
-
-If the element doesn't have `sentry-label` or a user-defined label, the transaction won't be captured.
+Transaction names are composed from a combination of displayed screen names, (for example, `LoginScreen`), and the labels of the element users interacted with, (for example, `login_button`). If the element doesn't have `sentry-label` or a user-defined label, the transaction won't be captured.
 
 <Note>
-Capturing UI transactions requires that you first set up <Link to="/platforms/react-native/performance/instrumentation/automatic-instrumentation/#enable-routing-instrumentation">routing instrumentation</Link> if you haven't already.
+Capturing UI transactions requires that you first set up <Link to="/platforms/react-native/performance/instrumentation/automatic-instrumentation/#enable-routing-instrumentation">routing instrumentation</Link>.
 </Note>
 
-The UI instrumentation tracing is disabled by default, but you can enable it by setting the `enableUserInteractionTracing` options to `true` and wrapping your root component.
+The UI instrumentation tracing is disabled by default, but you can enable it by setting the `enableUserInteractionTracing` options to `true` and wrapping your root component:
 
 ```js
 import * as Sentry from '@sentry/react-native'
@@ -39,27 +37,26 @@ const App = () => <View>Your App</View>
 export default Sentry.wrap(App)
 ```
 
-The label by which UI elements are identified is set by `labelName` option in `Sentry.wrap`. If no value is supplied `sentry-label` is used. If an element can't be identified the transaction won't be captured.
+The label by which UI elements are identified is set by the `labelName` option in `Sentry.wrap`. If no value is supplied, `sentry-label` will be used instead. If an element can't be identified, the transaction won't be captured.
 
 ```js
 export default Sentry.wrap(App, { touchEventBoundaryProps: { labelName: 'my-label' } });
 ```
 
 <Note>
-If the UI transaction has idled, but didn't have any child spans added, it will be dropped.
+If the UI transaction idled, but didn't have any child spans, it'll be dropped.
 </Note>
 
 Transactions are always bound to the Scope automatically if there's none set. Because of that, you can create spans using [manual instrumentation](/platforms/react-native/performance/instrumentation/custom-instrumentation/#retrieve-a-transaction), and those spans will be automatically associated with the running UI transaction. The `idleTimeoout` defaults to `1000` milliseconds (one second).
 
 ## Gesture Events
 
-To create UI transactions from React Native Gesture Handler you need to wrap the gestures using `traceGesture`. This will also automatically create breadcrumbs from the gestures. 
+To create UI transactions from React Native Gesture Handler, you need to wrap individual gestures using `traceGesture`. This will also automatically create breadcrumbs. 
 
 <Note>
 Only <Link to="https://docs.swmansion.com/react-native-gesture-handler/docs/api/gestures/gesture">RNGH API v2</Link> is supported.
 </Note>
 
-For gesture composition, the individual gestures need to be wrapped.
 
 ```js
 import React from 'react'
