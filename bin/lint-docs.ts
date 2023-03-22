@@ -13,7 +13,7 @@ type Violation = {
   context: string;
 };
 
-const hasWizardContent = (platformName, guideName = null) => {
+const hasWizardContent = (platformName: string, guideName = null) => {
   const path = guideName
     ? `src/wizard/${platformName}/${guideName}.md`
     : `src/wizard/${platformName}/index.md`;
@@ -42,6 +42,7 @@ const testConfig = config => {
 const main = async () => {
   const platformRegistry = new PlatformRegistry();
   await platformRegistry.init();
+  
 
   const violations: Violation[] = [];
   platformRegistry.platforms.forEach(platform => {
