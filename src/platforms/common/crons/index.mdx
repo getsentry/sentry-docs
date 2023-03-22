@@ -62,12 +62,6 @@ curl -X PUT \
     --data-raw '{"status": "ok"}'
 ```
 
-<Note>
-
-If you expect your scheduled jobs to overlap, read about [Overlapping Jobs](#overlapping-jobs-optional) below.
-
-</Note>
-
 If your job execution fails:
 
 ```bash {tabTitle: curl}
@@ -78,6 +72,12 @@ curl -X PUT \
     --header 'Content-Type: application/json' \
     --data-raw '{"status": "failed"}'
 ```
+
+<Note>
+
+If you expect your scheduled jobs to overlap, read about [Overlapping Jobs](#overlapping-jobs-optional) below.
+
+</Note>
 
 ### Creating or Updating a Monitor Through a Check-In (Optional)
 
@@ -91,6 +91,36 @@ curl -X POST \
     --header 'Content-Type: application/json' \
     --data-raw '{"config": {"schedule": "0 * * * *", "schedule_type": "crontab"}, "status": "in_progress"}'
 ```
+
+Monitor `config` parameters:
+
+`schedule_type`:
+
+: The schedule representation for your monitor, either `crontab` or `interval`.
+
+`schedule`:
+
+: The job's schedule based on the `schedule_type`:
+- `crontab`: a string crontab expression with five fields, such as ` "0 * * * *"`.
+- `interval`: a tuple for your interval such as `[2, "hour"]`.
+
+`checkin_margin`:
+
+: Time (in minutes) of how long Sentry should wait for your check-in until it is considered missed ("grace period"). Optional.
+
+<Note>
+
+We recommend that your check-in margin to be less or equal to your interval.
+
+</Note>
+
+`max_runtime`:
+
+: Time (in minutes) your job is allowed to run before it is considered failed. Optional.
+
+`timezone`
+
+: The `tz` where your job is running. This is usually your server's timezone, such as `America/Los_Angeles`. See [list of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Optional.
 
 ### Check-in Attachment (Optional)
 
