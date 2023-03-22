@@ -8,15 +8,25 @@ categories:
   - mobile
 ---
 
-The `sentry-compose-android` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) support for the following interactions:
-* Jetpack Compose performance metrics
-* User interactions like clicks, swipes and scroll gestures
-* Jetpack Compose navigation
+The `sentry-compose-android` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) support in the following areas:
+* `@Composable` performance metrics
+* Transaction and breadcrumb support for User interactions (clicks, swipes and scroll gestures)
+* Transaction and breadcrumb support for Navigation events
 
-## Jetpack Compose performance metrics
+## Performance Metrics
 _(New in version 6.16.0)_
 
-With Jetpack Compose performance metrics the Sentry Android SDK can automatically measure the initial `composition` and `rendering` time of your `@Composable` UI elements.
+With Jetpack Compose performance metrics the Sentry Android SDK can automatically measure the initial `composition` and `rendering` time as performance spans of your `@Composable` UI elements.
+
+<Note>
+
+This feature relies on Automatic Activity Instrumentation, check the <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">performance documentation</PlatformLink> on how to get started first.
+
+</Note>
+
+Once enabled you'll see two spans inside your transactions:
+* `ui.compose.composition`, describing the time it took to execute your `@Composable`
+* `ui.compose.rendering`, describing the time it took to render your `@Composable` onto the canvas
 
 ![Jetpack Compose Performance Metrics](jetpack-compose-performance-metrics.png)
 
@@ -38,7 +48,7 @@ fun LoginScreen() {
 }
 ```
 
-The `SentryTraced` function also provides a `enableUserInteractionTracing` argument, which automatically applies a `Modifier.testTag()`, thus automatically enabling the User Interaction feature mentioned below as well.
+The `SentryTraced` function also provides a `enableUserInteractionTracing` argument, which automatically applies a `Modifier.testTag()`, thus automatically enabling the _User Interactions_ feature mentioned below as well.
 
 ### Installation
 
@@ -51,6 +61,10 @@ implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.jav
 
 ## User Interactions
 _(New in version 6.10.0)_
+
+The Sentry User Interactions feature for Jetpack Compose can detect click, scroll and swipe gestures. For every gesture the SDK can automatically collects breadcrumbs and launch transactions.
+
+![Jetpack Compose User Interactions](jetpack-compose-user-interactions.png)
 
 ### Installation
 
@@ -88,6 +102,7 @@ The Sentry SDK utilizes the built-in `Modifier.testTag("<tag>")` of a Composable
 
 ```kotlin
 import androidx.compose.ui.platform.testTag
+
 @Composable
 fun LoginScreen() {
   Column {
