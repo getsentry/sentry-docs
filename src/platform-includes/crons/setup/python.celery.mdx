@@ -1,0 +1,46 @@
+## Job Monitoring
+
+Use the Celery Beat integration to monitor and notify you if your job is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
+
+First, set up your Celery beat configuration:
+
+```python
+from celery import Celery, signals
+from celery.schedules import crontab
+
+import sentry_sdk
+from sentry_sdk.crons import monitor
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+app = Celery('mytasks', broker='redis://localhost:6379/0')
+app.conf.beat_schedule = {
+    'set-in-beat-schedule': {
+        'task': 'tasks.tell_the_world',
+        'schedule': crontab(hour='10', minute='15'),
+        'args': ("in beat_schedule set", ),
+    },
+}
+```
+
+Initialize Sentry either in `celeryd_init` or `beat_init` signal:
+
+```python
+#@signals.celeryd_init.connect
+@signals.beat_init.connect
+def init_sentry(**kwargs):
+    sentry_sdk.init(
+        dsn='___PUBLIC_DSN___',
+        integrations=[CeleryIntegration()],
+        environment="local.dev.grace",
+        release="v1.0.7-a1",
+    )
+```
+
+Finally, link your Celery task to a Sentry Cron Monitor:
+
+```python
+@app.task
+@monitor(monitor_slug='<monitor-slug>')
+def tell_the_world(msg):
+    print(msg)
+```
