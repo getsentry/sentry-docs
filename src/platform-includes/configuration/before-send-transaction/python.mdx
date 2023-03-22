@@ -17,18 +17,19 @@ sentry_sdk.init(
 Addtionally, you may filter out transaction events based on the request URL, like `/healthcheck`.
 
 ```python
+from urllib.parse import urlparse
+
 def filter_transactions(event, hint):
-    from urllib.parse import urlparse
     url_string = event["request"]["url"]
     parsed_url = urlparse(url_string)
 
     if parsed_url.path == "/healthcheck":
         return None
+
     return event
 
 sentry_sdk.init(
     # ...
-
     before_send_transaction=filter_transactions,
 )
 ```
