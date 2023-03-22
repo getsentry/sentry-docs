@@ -17,9 +17,11 @@ This feature is only available on the latest version of our plans, starting from
 
 </Note>
 
-Just because you don’t record a problem, that doesn’t mean it didn’t happen. Sentry ensures that you get complete insight into the performance of your application in a way that scales affordably with your traffic, so you never miss a critical issue.
+_Just because you don’t record a problem, that doesn’t mean it didn’t happen._ Sentry ensures that you get complete insight into the performance of your application in a way that scales affordably with your traffic, so you never miss a critical issue.
 
-When data reaches high volumes, Sentry begins to automatically prioritize retaining certain transactions, using server-side data retention strategies called **retention priorities**. We’ll continue to provide performance metrics based on your total transactions and ensure that we can provide the right transactions in full detail so you can troubleshoot and fix any performance issue.
+At low volumes, storing all your data is feasible and reasonable, but as your application scales, storing a raw copy of everything has diminishing returns. When data reaches high volumes, Sentry begins to automatically prioritize retaining certain transactions, using server-side data retention strategies called **retention priorities**. 
+
+We’ll continue to provide performance metrics based on all of the transactions you send to Sentry and ensure that we can provide enough of the right sample events in full detail so you can troubleshoot and fix any performance issue.
 
 ## Retention Priorities
 
@@ -34,11 +36,6 @@ Retention priorities are enabled by default, but can be disabled individually in
 | Starred Transactions |               |
 
 <!-- prettier-ignore-end -->
-
-
-Because every project is different, you can set these toggles differently for different projects. For example, you may have a project where retaining transactions from the latest release is not a priority for you.
-
-![The Retention Priorities section with toggles enabled.](dynamic-sampling.png)
 
 
 ### Latest Release
@@ -61,6 +58,14 @@ Typically, for most projects there are only a few transactions that you really c
 
 _Health check_ type transactions, while important for checking the stability of your application, don't have any value for you beyond the task associated with them. For this reason, we keep fewer samples of these types of transactions and instead prioritize retaining more samples of your other more valuable transactions.
 
+
+## Performance Metrics at any Scale
+
+Sentry's Performance Monitoring product offers a series of top level [metrics](product/performance/metrics/) out-of-the-box to provide you with instant insights into your application's performance. While we apply retention priorities at high volumes to only store high value transaction samples, we continue to offer a full view of your application, can accurately show performance metrics and detect trends and performance issues from all the events you send to Sentry.
+
+If you have configured sampling in your SDK options, only a subset of your transaction events are sent to Sentry. We can only calculate performance metrics and insights from the data we see, so if feasible we recommend sending us 100% of your data in order to have full visibility.
+
+
 ## Retention Priorities & SDK Sampling
 
 <Note>
@@ -69,9 +74,13 @@ When we talk about SDK sample rates in this section, we're only referring to you
 
 </Note>
 
+Sentry offers SDK sampling configuration options: using `tracesSampleRate` enables you to control the amount of transactions you send to Sentry and the `TracesSampler` function (where available) allows you to manually target specific transactions to send. While these are great tools for managing overhead concerns and controlling costs, SDK sampling effectively means compromising on full visibility. By choosing a random sample of events to send, one can assume it to be representative of the whole application, however this is still an approximation. 
+
 Retention priorities and your SDK sampling configuration act independently of each other, but work best when you send us as much data as you can. The more complete a picture of your application we have, the more accurately we can monitor your application health, detect problems faster, surface issues, and make better decisions about data retention on your behalf.
 
-If it's feasible, send us 100% of your data (that is, set your [tracesSampleRate](/platform-redirect/?next=/performance/) in the SDK to 1.0). If you can't do so initially, the system will operate on what it can see and when you purchase more transaction volume, we'll adapt automatically. As a bonus, your per-transaction pricing goes down accordingly. Learn more in [Benefits of Performance at Scale](/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/).
+In order to send us 100% of your transaction events, set your [tracesSampleRate](/platform-redirect/?next=/performance/) in the SDK to 1.0. If you can't do so initially, the system will operate on what it can see and when you purchase more transaction volume, we'll adapt automatically. As your transaction volume goes up, the per-transaction pricing goes down accordingly, so you can truly scale affordably. Learn more in [Benefits of Performance at Scale](product/performance/performance-at-scale/benefits-performance-at-scale/).
+
+
 
 ## Next Steps
 
