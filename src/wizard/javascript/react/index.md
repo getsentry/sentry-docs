@@ -3,6 +3,10 @@ name: React
 doc_link: https://docs.sentry.io/platforms/javascript/guides/react/
 support_level: production
 type: framework
+---
+In this quick guide you’ll set up:
+- `@sentry/react` for [error monitoring](https://docs.sentry.io/platforms/javascript/guides/react/)
+- `@sentry/tracing` for [performance monitoring](https://docs.sentry.io/platforms/javascript/guides/react/performance/)
 
 ---
 
@@ -30,14 +34,16 @@ import App from "./App";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [new BrowserTracing()],
-  // Performance Monitoring
-  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+  tracesSampleRate: 1.0,
 });
 
 const container = document.getElementById(“app”);
 const root = createRoot(container);
 root.render(<App />)
 ```
+
+> **tracesSampleRate: 1.0**
+> The above setting ensures that 100% of transactions will be sent to Sentry, but we recommend lowering this number in production.
 
 ## Verify
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.

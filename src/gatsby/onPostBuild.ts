@@ -100,9 +100,10 @@ const parsePathSlug = (slug: string) => {
     };
   }
   
-  if (slug.includes("/react/")) {
+  if (slug.includes("/react/") && slug !== "/javascript/react/") {
+ 
     const pathMatch = slug.match(
-      /^\/(?<platform>[^/]+)\/(?<sub_platform>[^/]+)\/(?<product>with-error-monitoring|with-error-monitoring-and-performance|with-error-monitoring-and-replay|with-error-monitoring-performance-and-replay)\/$/
+      /^\/(?<platform>[^/]+)\/(?<sub_platform>[^/]+)\/(?<product>index|with-error-monitoring|with-error-monitoring-and-performance|with-error-monitoring-and-replay|with-error-monitoring-performance-and-replay)\/$/
     );
 
     if (!pathMatch) {
