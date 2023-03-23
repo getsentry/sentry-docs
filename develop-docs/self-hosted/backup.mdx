@@ -4,12 +4,15 @@ title: "Self-Hosted Backup & Restore"
 
 ## Quick Backup
 
-If you need a quick way to backup and restore your Sentry instance and you don't need historical event data, you can use the built in `export` and `import` commands. These commands will save and load all project and user data, but will not contain any event data. Run these from your `self-hosted` directory.
+If you need a quick way to backup and restore your Sentry instance and you don't need historical event data, you can use the included backup and restore scripts in the `self-hosted/scripts` directory. These commands will save and load all project and user data, but will not contain any event data. Run these from your `self-hosted` directory.
+As of 23.3.1, we're enabling users to opt in/out of error reporting for these scripts.
 
 ### Backup
 
+This script creates a `backup.json` file in the `sentry` directory in your main `self-hosted` repo.
+
 ```shell
-docker-compose run -v $(pwd)/sentry:/sentry-data/backup  --rm -T -e SENTRY_LOG_LEVEL=CRITICAL web export /sentry-data/backup/backup.json
+./scripts/backup.sh
 ```
 
 <Alert title="Note" level="info"><markdown>
@@ -18,10 +21,10 @@ If you omit the `-T` or `-e SENTRY_LOG_LEVEL=CRITICAL` parts, your backup file w
 
 ### Restore
 
-Once you have a backup by using the `export` command, the easiest way to restore it is to place it under the `sentry` directory in your main `self-hosted` repo, next to the config files. This directory automatically gets mounted to `/etc/sentry` so you can run the following to restore your backup:
+Once you have a backup by using the backup script, the easiest way to restore it is to place it under the `sentry` directory in your main `self-hosted` repo, next to the config files. This directory automatically gets mounted to `/etc/sentry` so you can run the following to restore your backup:
 
 ```shell
-docker-compose run --rm -T web import /etc/sentry/backup.json
+./scripts/restore.sh
 ```
 
 If you don't see any errors and the process exits with code `0`, congratulations, you have just restored your backup.
@@ -29,6 +32,20 @@ If you don't see any errors and the process exits with code `0`, congratulations
 <Alert level="warning">
 We strongly recommended that you restore your backup on the <strong>same version of Sentry</strong> on a fresh install (empty database but migrations are run). Otherwise, you are very likely to hit errors and may corrupt your database.
 </Alert>
+
+### Legacy Backup and Restore
+
+If you're running on a version of self-hosted Sentry that is below 23.3.1, you'll need to use the built in `import` and `export` commands instead.
+
+#### Backup
+```shell
+docker-compose run -v $(pwd)/sentry:/sentry-data/backup  --rm -T -e SENTRY_LOG_LEVEL=CRITICAL web export /sentry-data/backup/backup.json
+```
+
+#### Restore
+```shell
+docker-compose run --rm -T web import /etc/sentry/backup.json
+```
 
 ## Full Backup
 
