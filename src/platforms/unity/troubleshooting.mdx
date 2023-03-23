@@ -106,6 +106,19 @@ You can resolve this issue by installing the SDK with UPM.
 
 ## Events
 
+### Stack traces in messages, without line numbers
+
+This can happen when calling: 
+
+👎 `Debug.LogError("something wrong happened: + ex");` 
+
+Where ex is the exception instance. 
+Instead, make sure the exception instance is passed as a separate parameter: 
+
+👍 `Debug.LogError("error getting matches", ex);`
+
+This way Sentry can work with the instance to extract the stack trace. Use the symbols uploaded to get line numbers and properly group issues. Reducing noise.
+
 ### Unhandled Exceptions - Debug.LogException
 
 Currenty, it is not possible for the SDK to distinguish between the user calling `Debug.LogException` and the SDK capturing an unhandled exception. To capture an exception and mark it as handled you can call `SentrySDK.CaptureException` instead.
