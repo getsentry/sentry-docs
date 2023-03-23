@@ -31,7 +31,8 @@ By default, macOS applications do not crash whenever an uncaught exception occur
 
 This feature is available on [sentry-cocoa 7.25.0](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md#7250) and above.
 
-By default, Sentry will display the error code as the error description. For custom error types, you may want to provide a custom description that makes it easier to identify the error in the **Issues** page. You can provide a custom description for `NSError` values by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
+By default, Sentry will display the error code as the error description. For custom error types, you may want to provide a custom description that makes it easier to identify the error in the **Issues** page. You can provide a custom description for `NSError` values by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`. Customizing error descriptions doesn't impact grouping. Sentry will still group errors based on the error domain and code and for
+Swift enum types by enum value.
 
 This can be particularly useful for Swift enum error types that conform to `Error`, where the error code can be hard to match with an enum case. To customize the description for Swift `Error` types, you should conform to the `CustomNSError` protocol and return a user info dictionary:
 
@@ -51,7 +52,7 @@ extension MyCustomError: CustomNSError {
                 return "enumeratingWhileMutating"
             }
         }
-        
+
         return [NSDebugDescriptionErrorKey: getDebugDescription()]
     }
 }
