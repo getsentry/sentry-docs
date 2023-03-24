@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Livestream AMA: Achieving code reliability across the release cycle.";
+  "AMA: Chat with the team bringing Codecov’s code coverage to Sentry stack traces so you can fill gaps in test coverage and avoid regressions.";
 const BANNER_LINK_URL =
   "https://sentry.io/resources/ama-code-reliability-across-release/";
 const BANNER_LINK_TEXT = "Register here.";
