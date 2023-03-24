@@ -1,46 +1,92 @@
-## Job Monitoring
+## Celery Beat Auto Discovery
 
-Use the Celery Beat integration to monitor and notify you if your job is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
+Use the Celery integration to monitor your [Celery periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html) and get notified when a task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
 
-First, set up your Celery beat configuration:
+First, set up your Celery beat schedule:
 
 ```python
-from celery import Celery, signals
+# tasks.py
+from celery import Celery
 from celery.schedules import crontab
 
-import sentry_sdk
-from sentry_sdk.crons import monitor
-from sentry_sdk.integrations.celery import CeleryIntegration
 
-app = Celery('mytasks', broker='redis://localhost:6379/0')
+app = Celery('tasks', broker='...')
 app.conf.beat_schedule = {
     'set-in-beat-schedule': {
         'task': 'tasks.tell_the_world',
         'schedule': crontab(hour='10', minute='15'),
-        'args': ("in beat_schedule set", ),
+        'args': ("Some important message!", ),
     },
 }
 ```
 
-Initialize Sentry either in `celeryd_init` or `beat_init` signal:
+Initialize Sentry in the `celeryd_init` or `beat_init` signal. Make sure to pass your Celery `app` variable to the `CeleryIntegration`:
 
 ```python
-#@signals.celeryd_init.connect
-@signals.beat_init.connect
+# tasks.py
+from celery import signals
+
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+
+#@signals.beat_init.connect
+@signals.celeryd_init.connect
+def init_sentry(**kwargs):
+    sentry_sdk.init(
+        dsn='___PUBLIC_DSN___',
+        integrations=[CeleryIntegration(celery_app=app)],  # 👈 pass Celery app.
+        environment="local.dev.grace",
+        release="v1.0",
+    )
+```
+
+This will now auto discover all the tasks in your Celery Beat schedule and will capture telemetry data when the task is started, when it finishes or fails.
+
+<Note>
+
+You **do not need to create Cron Monitors** for your tasks on Sentry.io, we will do this for you.
+
+</Note>
+
+Start your Celery Beat and workers and see your tasks being monitored at [https://sentry.io/crons/](https://sentry.io/crons/).
+
+## Manual Task monitoring
+
+We provide a lightweight decorator to make it easy to monitor individual tasks.
+
+Add the `@sentry_sdk.monitor` decorator to your Celery task (or really just any function) and supply a `monitor_slug` of a monitor created previously on Sentry.io.
+Every time the task (or function) is now executed telemetry data will be captured when the task is started, when it finishes or fails.
+
+<Note>
+
+Make sure the Sentry `@sentry_sdk.monitor` decorator is **below** Celery's `@app.task` decorator.
+
+</Note>
+
+```python
+# tasks.py
+from celery import Celery, signals
+
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+
+app = Celery('tasks', broker='...')
+
+
+@signals.celeryd_init.connect
 def init_sentry(**kwargs):
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
         integrations=[CeleryIntegration()],
         environment="local.dev.grace",
-        release="v1.0.7-a1",
+        release="v1.0",
     )
-```
 
-Finally, link your Celery task to a Sentry Cron Monitor:
 
-```python
 @app.task
-@monitor(monitor_slug='<monitor-slug>')
+@sentry_sdk.monitor(monitor_slug='<monitor-slug>')  # 👈 this is the new line.
 def tell_the_world(msg):
     print(msg)
 ```
