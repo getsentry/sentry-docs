@@ -17,24 +17,24 @@ Once [Profiling](/product/profiling/) has been enabled, Sentry will be able to d
 
 ## Function Evidence
 
-On the issue details page, the **“Function Evidence”** section shows you more details about what caused the issue to be detected, including the following key information:
+You can find additional information about your Image Decoding on Main Thread problem by looking at four main aspects in the "Function Evidence" section:
 
-- **Transaction Name:** The name of the transaction that the issue was detected on
-- **Suspect function:** The function that triggered the issue detection (in this case, an image decoding function)
-- **Duration:** How long the function took to execute
-- **Sample count:** How many consecutive samples collected by the profiler contained the function
+- **Transaction Name:** The name of the transaction where the issue was detected.
+- **Suspect function:** The function that triggered the issue detection (in this case, an image decoding function).
+- **Duration:** How long the function took to execute.
+- **Sample count:** The number of consecutive samples collected by the profiler that contained the function.
 
-To view the entire profile associated with the issue, click the **“View Profile”** button:
+View it by going to the **Issues** page in Sentry, clicking on the issue you want to examine, then scrolling down to the "Function Evidence" section in the "Details" tab. To view the entire profile associated with the issue, click the “View Profile” button:
 
 ![Image Decoding on Main Thread Function Evidence](image-decoding-function-evidence.png)
 
-The profile will indicate where the suspect function was called from and the other functions that are called *by* the suspect function:
+The profile will indicate where the suspect function was called from, along with other functions being called *by* the suspect function:
 
 ![Image Decoding on Main Thread Profile](image-decoding-profile.png)
 
 ## Stack Trace
 
-The **“Stack Trace”** section shows a full stack trace for where the detected image decoding function was called from:
+The “Stack Trace” section shows a full stack trace for where the detected image decoding function was called from:
 
 ![Image Decoding on Main Thread Stack Trace](image-decoding-stack-trace.png)
 
@@ -42,7 +42,7 @@ The **“Stack Trace”** section shows a full stack trace for where the detecte
 
 ### iOS
 
-The following code renders an image by setting the `image` property of `UIImageView` . The image is not decoded when `UIImage.init(data:)` is called — the decoding occurs when the image is rendered on screen, which happens on the main thread. 
+The following code renders an image by setting the `image` property of `UIImageView` . The image isn't decoded when `UIImage.init(data:)` is called, but when the image is rendered on screen, which happens on the main thread. 
 
 ```swift
 func showImage(data: Data) {
@@ -50,7 +50,7 @@ func showImage(data: Data) {
 }
 ```
 
-The performance could be improved by using `[UIImage.preparingForDisplay()](https://developer.apple.com/documentation/uikit/uiimage/3750834-preparingfordisplay)` to prepare the image for display on a background queue before assigning the image to the image view on the main queue:
+Performance could be improved by using `[UIImage.preparingForDisplay()](https://developer.apple.com/documentation/uikit/uiimage/3750834-preparingfordisplay)` to prepare the image for display on a background queue, before assigning the image to the image view on the main queue:
 
 ```swift
 func showImage(data: Data) {
