@@ -14,28 +14,29 @@ Decoding a JSON blob into a data structure can be a long running operation, espe
 
 ## Detection Criteria
 
-This issue is detected when profiling is enabled, and we detect a function related to JSON decoding running on the main thread for at least 40ms. This threshold was chosen so that we see the function appear in a sufficient number of samples collected by the profile (~10ms per sample x 4 = ~40ms total) before we detect the issue.
+Once [Profiling](/product/profiling/) has been enabled, Sentry will be able to detect JSON Decoding on Main Thread issues by looking for functions related to JSON decoding that have been running on the main thread for at least 40ms. This threshold has been chosen so that we can see the function appear in a sufficient number of samples collected by the profile, (~10ms per sample x 4 = ~40ms total), before we detect the issue.
+
 
 ## Function Evidence
 
-On the issue details page, the **“Function Evidence”** section shows you more details about what caused the issue to be detected, including the following key information:
+You can find additional information about your JSON Decoding on Main Thread problem by looking at four main aspects in the "Function Evidence" section:
 
-- **Transaction Name:** The name of the transaction that the issue was detected on
-- **Suspect function:** The function that triggered the issue detection (in this case, a JSON decoding function)
-- **Duration:** How long the function took to execute
-- **Sample count:** How many consecutive samples collected by the profiler contained the function
+- **Transaction Name:** The name of the transaction where the issue was detected.
+- **Suspect function:** The function that triggered the issue detection (in this case, a JSON decoding function).
+- **Duration:** How long the function took to execute.
+- **Sample count:** The number of consecutive samples collected by the profiler that contained the function.
 
-To view the entire profile associated with the issue, click the **“View Profile”** button:
+View it by going to the **Issues** page in Sentry, clicking on the issue you want to examine, then scrolling down to the "Function Evidence" section in the "Details" tab. To view the entire profile associated with the issue, click the “View Profile” button:
 
 ![JSON Decoding on Main Thread Function Evidence](json-decoding-function-evidence.png)
 
-The profile will indicate where the suspect function was called from and the other functions that are called *by* the suspect function:
+The profile will indicate where the suspect function was called from, along with other functions being called *by* the suspect function:
 
 ![JSON Decoding on Main Thread Profile](json-decoding-profile.png)
 
 ## Stack Trace
 
-The **“Stack Trace”** section shows a full stack trace for where the detected JSON decoding function was called from:
+The “Stack Trace” section shows a full stack trace for where the detected JSON decoding function was called from:
 
 ![Image Decoding on Main Thread Stack Trace](json-decoding-stack-trace.png)
 
@@ -51,7 +52,7 @@ func updatePersonView(json: Data) throws {
 }
 ```
 
-The performance could be improved by moving the JSON decoding to a background queue:
+Performance could be improved by moving the JSON decoding to a background queue:
 
 ```swift
 func updatePersonView(json: Data) {
