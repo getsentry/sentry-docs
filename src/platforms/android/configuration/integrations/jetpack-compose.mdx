@@ -10,27 +10,41 @@ categories:
 
 The `sentry-compose-android` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) support in the following areas:
 * `@Composable` performance metrics
-* Transaction and breadcrumb support for User interactions (clicks, swipes and scroll gestures)
-* Transaction and breadcrumb support for Navigation events
+* Transaction and breadcrumb support for user interactions (clicks, swipes and scroll gestures)
+* Transaction and breadcrumb support for navigation events
 
 ## Performance Metrics
 _(New in version 6.16.0)_
 
 With Jetpack Compose performance metrics the Sentry Android SDK can automatically measure the initial `composition` and `rendering` time as performance spans of your `@Composable` UI elements.
 
+![Jetpack Compose Performance Metrics](jetpack-compose-performance-metrics.png)
+
 <Note>
 
-This feature relies on Automatic Activity Instrumentation, check the <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">performance documentation</PlatformLink> on how to get started first.
+This feature requires an underlying transaction to attach it's spans to. Transactions can be created manually or automatically by configuring
+* <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">Android's Activity instrumentation</PlatformLink>
+* [Navigation Instrumentation](#jetpack-compose-navigation)
+* [User Interactions](#user-interactions)
 
 </Note>
 
-Once enabled you'll see two spans inside your transactions:
+Once performance metrics have been enabled, you'll see two spans inside your transactions:
 * `ui.compose.composition`, describing the time it took to execute your `@Composable`
-* `ui.compose.rendering`, describing the time it took to render your `@Composable` onto the canvas
+* `ui.compose.rendering`, describing the time it took to render your `@Composable` to the canvas
 
-![Jetpack Compose Performance Metrics](jetpack-compose-performance-metrics.png)
+The `SentryTraced` function also provides an `enableUserInteractionTracing` argument, which automatically applies a `Modifier.testTag()` and enables the _User Interactions_ feature mentioned below.
 
-In order to use it, you need to decorate your `@Composable` body with the `SentryTraced` function.
+### Installation
+
+To add the Jetpack Compose integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose-android` dependency using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose', '6.2.0') }}'
+```
+
+Once installed, you need to wrap your `@Composable` body with the `SentryTraced` function.
 ```kotlin
 import io.sentry.compose.SentryTraced
 
@@ -48,21 +62,10 @@ fun LoginScreen() {
 }
 ```
 
-The `SentryTraced` function also provides a `enableUserInteractionTracing` argument, which automatically applies a `Modifier.testTag()`, thus automatically enabling the _User Interactions_ feature mentioned below as well.
-
-### Installation
-
-To add the Jetpack Compose integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose-android` dependency using Gradle:
-
-```groovy
-implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
-implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose', '6.2.0') }}'
-```
-
 ## User Interactions
 _(New in version 6.10.0)_
 
-The Sentry User Interactions feature for Jetpack Compose can detect click, scroll and swipe gestures. For every gesture the SDK can automatically collects breadcrumbs and launch transactions.
+The Sentry User Interactions feature for Jetpack Compose can detect click, scroll, and swipe gestures. For every gesture, the SDK can automatically collect breadcrumbs and launch transactions.
 
 ![Jetpack Compose User Interactions](jetpack-compose-user-interactions.png)
 
