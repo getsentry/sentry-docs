@@ -2,7 +2,7 @@
 
 ## Pre-merge checklist
 
-*If you work at Sentry, you are able to merge your own PR without review, but please don't unless there's a good reason.*
+*If you work at Sentry, you're able to merge your own PR without review, but please don't unless there's a good reason.*
 
 - [ ] Checked Vercel preview for correctness, including links
 - [ ] PR was reviewed and approved by any necessary SMEs
@@ -10,7 +10,7 @@
 
 ## Description of changes
 
-*Describe your changes here. If your PR relates to or resolves an issue, link that here.*
+*Describe your changes here. If your PR relates to or resolves an issue, add a link to that too.*
 
 ## Legal Boilerplate
 
