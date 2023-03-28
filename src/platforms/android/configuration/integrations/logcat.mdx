@@ -15,9 +15,10 @@ Supported in Sentry Android Gradle Plugin version `3.5.0` and above.
 
 </Note>
 
-The Sentry Logcat integration adds support for automatically attaching breadcrumbs to events above a minimum logging level. Only explicit log calls are captured as breadcrumbs, logs that were created by any third party aren't captured.
+The Sentry Logcat integration adds support for automatically reporting log calls above a minimum logging level as breadcrumbs.
+Any matching `android.Log.*` calls inside your app package are captured as breadcrumbs, including `android.Log.*` calls originating from bundled third party libraries.
 
-## Auto-Installation With the Sentry Android Gradle Plugin
+## Installation With the Sentry Android Gradle Plugin
 
 ### Install
 
@@ -57,9 +58,9 @@ dependencies {
 
 ### Configure
 
-Auto-instrumentation is enabled by default, so no further configuration is required. If you'd like to disable the Logcat instrumentation feature, we expose a configuration option for that:
+Auto-instrumentation is enabled by default, so no further configuration is required. If you'd like to disable the Logcat instrumentation feature, or change the minimum log level the following options are provided:
 
-```groovy
+```groovy {filename:app/build.gradle}
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
 
@@ -75,7 +76,7 @@ sentry {
 }
 ```
 
-```kotlin
+```kotlin {filename:app/build.gradle.kts}
 import java.util.EnumSet
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
@@ -99,8 +100,8 @@ This snippet captures an intentional error, so you can test that everything is w
 ```kotlin
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import java.lang.Exception
 import io.sentry.Sentry
+import android.util.Log
 
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,7 +117,8 @@ class MyActivity : AppCompatActivity() {
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import java.lang.Exception;
-import timber.log.Timber;
+import io.sentry.Sentry;
+import android.util.Log;
 
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
