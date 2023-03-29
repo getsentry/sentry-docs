@@ -1,20 +1,12 @@
-If you choose [`sentry-cli`](/product/cli/) as the method to upload your source files, we assume you already know how to generate source maps within your build tool chain.
+If you choose [`sentry-cli`](/product/cli/) as the method to upload your artifacts, we assume you already know how to generate source maps within your build toolchain.
 
-Sentry uses [releases](/product/releases/) to match the correct uploaded source maps to your events. You can use `sentry-cli` to create releases and upload source maps to Sentry.
+Sentry has now two ways of matching the correct uploaded source maps to your events:
 
-## 1. Update SDK Options
+1. The first, and preferred way, is to use Debug IDs, a custom implementation that allows Sentry to automatically associate minified sources with their respective source maps _without the need of a release_.
 
-To be able to match Sentry errors with the correct release, you must provide a `release` property in the SDK options:
+2. The second is to use a [release](/product/releases/) to identify the artifatcs you uploaded containing all your source files. _This method will require the creation of a release._
 
-```javascript
-Sentry.init({
-  // Make sure this value is identical to the name you give the release that you
-  // create below using Sentry CLI
-  release: "<release_name>",
-});
-```
-
-## 2. Upload Source Maps Using Sentry CLI
+## Configure Sentry CLI
 
 <Note>
 
@@ -47,7 +39,108 @@ export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 ```
 
-Then, create a release with Sentry CLI. The release name must be unique within your organization:
+## Upload with Debug ID
+
+Debug IDs are a new feature we have released since we noticed that our current release-based system is prone to errors that will lead to non-symbolicated errors. Since this is a big problem for Sentry and our customers, we designed Debug IDs to provide a reliable system that would reduce all the problems people were incurring.
+
+### 1. Prepare Your Bundle
+
+In order to use Debug IDs you will have to bundle your code with the `sourcesContent` field in the source map. This is required by Sentry when processing your events and will lead to problems in the case of absence since the context lines will not be computed.
+
+### 2. Enable The Debug IDs In Sentry CLI
+
+Since Debug IDs are currently opt-in only, you should enable the following environment variable, which will tell the CLI to use the new Debug IDs system for uploading your source files.
+
+```bash
+export SENTRY_FORCE_ARTIFACT_BUNDLES=1
+```
+
+### 2. Inject Debug IDs Using Sentry CLI
+
+Debug IDs require an additional but very important step, the injection. In this step, [`sentry-cli`](/product/cli/) will go over all the minified sources and their respective source maps by adding custom metadata that will be needed by Sentry while processing the event.
+
+<Note>
+
+Debug IDs injection will modify the content of both your minified sources and source maps which will create issues if you have integrity checks in place or you check for file changes before upload (e.g., on a CDN) based uniquely on their filename. _We are currently working on improving the injection system in order to circumvent these problems._
+
+</Note>
+
+In order to inject Debug IDs you will have to use the new `inject` command:
+
+```bash
+sentry-cli sourcemaps inject /path/to/file
+```
+
+<Note>
+
+You can verify your injected artifact files by looking at their contents and searching for `debugId` in the minified sources and `debug_id` in the source maps.
+
+</Note>
+
+### 3. Upload Artifacts Using Sentry CLI
+
+Once your artifact files are injected you can proceed to upload them to Sentry, with the `upload` command:
+
+```bash
+sentry-cli sourcemaps upload /path/to/file
+```
+
+<Note>
+
+You can verify your uploaded artifacts by navigating to **Project Settings -> Source Maps (left sidebar) -> Debug ID Bundles** on Sentry.
+
+</Note>
+
+<Note>
+
+Sentry CLI will notify you in case there are files that don't contain Debug IDs (e.g., you forgot to run the `inject` command). In that case, it will prompt you to weakly associate a release to the artifact. This weakly association is done in order to allow Sentry to properly symbolicate events without Debug IDs.
+
+</Note>
+
+#### Weak Release Association
+
+Since Debug IDs might cause issues for some users, we extended the new Debug IDs system with the concept of _Weak Release Association_. With such system you are able to tell Sentry to weakly associate the artifacts you upload with a `release`, and optionally `dist`.
+
+It is important that the name of the `release` you specified during upload will match exactly the name of the `release` in your SDK:
+```javascript
+Sentry.init({
+  // Make sure this value is identical to the name you give the release that specify during upload using Sentry CLI
+  release: "<release_name>",
+});
+```
+
+
+In order to associate an upload with a `release` and optionally `dist` you can add new parameters to the `upload` command:
+
+```bash
+sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/file
+```
+
+<Note>
+
+The difference between the old release-based system and the new system with weak release association is that in the new one we don't require you to create a release but you can just optimistically tell Sentry the name of your "future" release.
+
+</Note>
+
+## Upload with Release
+
+During this transition phase, we are keeping the old release-based system in place. For that system, Sentry uses [releases](/product/releases/) to match the correct uploaded source maps to your events. You can use `sentry-cli` to create releases and upload source maps to Sentry.
+
+### 1. Update SDK Options
+
+To be able to match Sentry errors with the correct release, you must provide a `release` property in the SDK options:
+
+```javascript
+Sentry.init({
+  // Make sure this value is identical to the name you give the release that you
+  // create below using Sentry CLI
+  release: "<release_name>",
+});
+```
+
+### 2. Upload Source Maps Using Sentry CLI
+
+You must first create a release with Sentry CLI. The release name must be unique within your organization:
 
 ```bash
 sentry-cli releases new <release_name>
