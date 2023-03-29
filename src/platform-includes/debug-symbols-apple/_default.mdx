@@ -1,13 +1,16 @@
 
 Sentry requires dSYMs (debug information files) to symbolicate your stacktraces. The symbolication process unscrambles the stacktraces to reveal the function, file names, and line numbers of the crash.
-Every solution requires a Sentry Auth Token with the [correct permissions](/product/cli/dif/#permissions). You can [create one here](https://sentry.io/api/). To view uploaded dSYMs in your project, select an existing project from the "Projects" page, then go to **Settings > Debug Files**.
 
-You can upload dSYMs using:
+Every solution requires a __Sentry Auth Token__. We recommend [using internal integrations](https://sentry.io/settings/developer-settings/) for managing Auth Tokens. [Create a new internal integration](https://sentry.io/settings/developer-settings/new-internal/) with the permission `project:read&write`, if you don't have one already. After saving it, you can copy the Auth Token from the integration page.
+
+![Integration Auth Token](integration-tokens.png)
+
+To view uploaded dSYMs in your project, select an existing project from the "Projects" page, then go to **Settings > Debug Files**. You can upload dSYMs using:
 
 * [sentry-cli](#sentry-cli)
 * [Sentry Fastlane Plugin](#fastlane)
 * [Xcode Build Phase](#xcode-build-phase)
-* [App Store Connect Integration](#bitcode-appstore)
+* [App Store Connect Integration](#appstore-connect)
 
 <Note>
 
@@ -123,7 +126,7 @@ export SENTRY_URL=https://mysentry.invalid/
 
 </Alert>
 
-## App Store Connect {#appstore-connect} Integration
+## App Store Connect Integration {#appstore-connect}
 
 <Alert level="" title="Source Context">
 
@@ -169,7 +172,13 @@ When using Fastlane's _upload_to_testflight_ action, it's recommended to pass th
 
 ## Bitcode {#dsym-with-bitcode}
 
-The App Store will not accept bitcode submissions from [Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes). If you’re using Xcode 13, you’ll need to download the dSYMs from App Store Connect after it finishes processing your build, and then upload them to Sentry using one of the methods below:
+<Note>
+
+The App Store will not accept bitcode submissions from [Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes).
+
+</Note>
+
+If you’re using Xcode 13, you’ll need to download the dSYMs from App Store Connect after it finishes processing your build, and then upload them to Sentry using one of the methods below:
 
 - Download Fastlane's [download_dsyms](https://docs.fastlane.tools/actions/download_dsyms/) action and then upload the dSYMs with the [Sentry Fastlane plugin](#fastlane).
 - Use the [Sentry App Store Connect integration](#appstore-connect), which fetches the dSYMS directly from App Store Connect.
