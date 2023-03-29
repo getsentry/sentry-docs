@@ -6,6 +6,8 @@ Sentry has two ways of matching the correct uploaded source maps to your events:
 
 2. The second is to use a [release](/product/releases/) to identify the artifacts you uploaded containing all your source files. _This method will require the creation of a release._
 
+The implications of having to create a release are mainly related to the fact that sometimes you don't want to create a release for a change in your application. For example, if you want to release a development build to test internally, you would like to have the errors symbolicated but you may not want to create a release that is going to be shown in the UI.
+
 ## Configure Sentry CLI
 
 Make sure Sentry CLI is configured for your project. You can use a `.sentryclirc` file or environment variables:
@@ -41,11 +43,29 @@ Visit the [auth token user settings page](https://sentry.io/settings/account/api
 
 ## Upload with Debug ID (Preferred)
 
-Debug IDs are a new feature we have released to account for most of the problems that users were incurring in with the release-based system. Since having events not symbolicated is big problem for our users, we designed Debug IDs to provide a reliable system that would solve the problems people were incurring.
+Debug IDs are unique identifiers, generated at random by the Sentry CLI, that bind together minified sources and their respective source maps. Each pair of _(minified source, source map)_ will contain the same Debug ID, which will be injected into specific parts of each file.
 
-### 1. Prepare Your Bundle
+The generated Debug IDs will be then used by Sentry during processing to understand which source map file to use to symbolicate the stackframes of your event.
 
-In order to use Debug IDs you will have to bundle your code with the `sourcesContent` field in the source map. This is required by Sentry when processing your events and will lead to problems in the case of absence since the context lines will not be computed.
+### 1. Generate Your Artifacts
+
+To use Debug IDs, you'll have to bundle your code with the `sourcesContent` field in the source map. The generation of the `sourcesContent` will depend on your bundler configuration. Therefore, we recommend looking at the official docs of the bundler your application uses.
+
+Here's an example of what this looks like for webpack:
+
+```javascript {filename:webpack.config.js}
+module.exports = {
+  ...
+  entry: "./src/index.js",
+  output: {
+    filename: "main.js",
+    path: path.resolve(__dirname, "build"),
+  },
+  // Enable "sourcesContent".
+  devtool: "source-map",
+  ...
+};
+```
 
 <Note>
 
@@ -63,11 +83,11 @@ export SENTRY_FORCE_ARTIFACT_BUNDLES=1
 
 ### 3. Inject Debug IDs Using Sentry CLI
 
-Debug IDs require an additional but very important step, the injection. In this step, [`sentry-cli`](/product/cli/) will go over all the minified sources and their respective source maps and it will start adding custom metadata that is required by Sentry for correctly symbolicating the event.
+During injection, [`sentry-cli`](/product/cli/) will go over all the minified sources and their respective source maps and it will start adding Debug IDs that are required by Sentry for correctly symbolicating the event.
 
 <Note>
 
-Debug IDs injection will modify the content of both your minified sources and source maps which will create issues if you have integrity checks in place or you check for file changes before upload (e.g., on a CDN) based uniquely on their filename. _We are currently working on improving the injection system in order to circumvent these problems._
+Since Sentry CLI modifies your source files after they are bundled, we currently don't recommend using Debug ID's if your application has [integrity checks](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) in place, or you check for file changes before upload (e.g., on a CDN) based uniquely on their filename.
 
 </Note>
 
@@ -105,7 +125,7 @@ Sentry CLI will notify you in case there are files that don't contain Debug IDs 
 
 #### Weak Release Association
 
-Since Debug IDs might cause issues for some users, we extended the new Debug IDs system with the concept of _Weak Release Association_. With such system you are able to tell Sentry to weakly associate the artifacts you upload with a `release`, and optionally `dist`.
+Sentry requires Debug IDs for fetching the sources used for symbolication but considering that Debug IDs are currently not usable with certain setups (e.g. integrity checks), we extended the new Debug IDs system with the concept of _Weak Release Association_. With such system Sentry will be able to lookup the sources by the `release`, and optionally `dist`, to which they are weakly associated.
 
 The reasoning for the association being weak is that we will not create a release in Sentry under the assumption that you will create the _actual_ release with the same name further on in the pipeline. For this reason, it is important that the name of the `release` you specified during upload will match exactly the name of `release` created via Sentry CLI and/or the `release` in your SDK:
 ```javascript
@@ -120,6 +140,12 @@ In order to weakly associate artifacts with a `release` and optionally `dist` yo
 ```bash
 sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/file
 ```
+
+<Note>
+
+If you want to use only the weak release association, there is no need for Debug IDs injection through the `inject` command. However, we strongly reccomend to use the injection if it doesn't cause issues with your existing setup.
+
+</Note>
 
 ## Upload with Release (Old)
 
