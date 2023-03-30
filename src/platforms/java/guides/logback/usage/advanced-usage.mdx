@@ -137,3 +137,20 @@ class MyClass {
   }
 }
 ```
+
+## Context Tags
+Since Sentry 6.0.0, it is possible to define a list of `MDC tags` that will show up as `Tags` in the Sentry UI. `MDC Tags` not in this list are shown as `Context Data` in the UI, just like before.
+To define such tags add a `context-tag` xml tag to the options tag of the Sentry appender configuration in `logback.xml`
+
+```xml {tabTitle:XML}
+  <appender name="sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+      <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+      <dsn>ttps://examplePublicKey@o0.ingest.sentry.io/0</dsn>
+      <contextTag>userId</contextTag>
+      <contextTag>requestId</contextTag>
+    </options>
+  </appender>
+  ```
+
+  When calling `MDC.put("userId", "myUserId")` with above Appender configuration in place, the `userId` will show up as a `tag` on the event in the Sentry UI.
