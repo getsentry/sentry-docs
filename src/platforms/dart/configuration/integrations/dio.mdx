@@ -45,16 +45,31 @@ dio.addSentry(...);
 ## Reporting Bad HTTP Requests as Errors
 
 The `Interceptors` can also catch exceptions that may occur during requests — for example [DioError](https://pub.dev/documentation/dio/latest/dio/DioError-class.html).
-This is currently an opt-in feature. The following example shows how to enable it.
 
 ```dart
 import 'package:sentry_dio/sentry_dio.dart';
 
 final dio = Dio();
 
-dio.addSentry(captureFailedRequests: true);
+dio.addSentry();
 
 final response = await dio.get<String>('https://wrong-url.dev/');
+```
+
+This is an opt-out feature. The following example shows how to disable it:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.captureFailedRequests = false;
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
 ```
 
 ## Performance Monitoring for HTTP Requests
@@ -66,12 +81,11 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 </Note>
 
 The Dio integration starts a span out of the active span bound to the scope for each HTTP request.
-This is currently enabled by default. The following example shows how to disable it.
 
 ```dart
 import 'package:sentry_dio/sentry_dio.dart';
 
 final dio = Dio();
 
-dio.addSentry(networkTracing: false);
+dio.addSentry();
 ```

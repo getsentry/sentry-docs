@@ -8,7 +8,7 @@ type: language
 We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
 
 ```ruby
-platform :ios, '9.0'
+platform :ios, '11.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
@@ -65,7 +65,7 @@ struct SwiftUIApp: App {
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym).
+To capture crashes, you need to provide debug information to Sentry. You can also use our source context feature to display code snippets next to the event stack traces by enabling the `include-sources` option when uploading your debug information files. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
 
 ## Performance Monitoring
 

@@ -154,15 +154,14 @@ If the context is missing on Android NDK events such as breadcrumbs, user, and s
 
 ## Using node with nvm or Volta
 
-If you are using nvm or notion, Xcode has trouble locating the default node binary, which can look similar to this example:
+Xcode has trouble locating the default node binary if you're using nvm or notion. To troubleshoot this, add `node` binary path to the _Bundle React Native code and images_ build phase like this:
 
 ```bash
-dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicui18n.62.dylib
-  Referenced from: /usr/local/bin/node
-  Reason: image not found
+export NODE_BINARY=path/to/your/node
+# ... rest of the script
 ```
 
-In this case, type `ln -s $(which node) /usr/local/bin/node`, which tells your env to use your node binary.
+Or execute this `ln -s $(which node) /usr/local/bin/node` in your terminal.
 
 ## NavigationContainer reset the ref each render
 
@@ -172,11 +171,45 @@ If you're using `React Navigation 5` and you're not receiving transactions anymo
 
 If you experience mismatched line numbers on [sentry.io](https://sentry.io) when using RAM Bundles, this is due to a [bug](https://github.com/facebook/metro/issues/399) on the Metro tooling.
 
-## React Native 0.69 and Higher
+## Uploading source maps from Xcode Could
 
-If you're using React Native v0.69 or higher, the auto-linking has changed and we're working on a fix. Follow the [issue](https://github.com/getsentry/sentry-react-native/issues/2267).
+The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds use `CI_BUILD_NUMBER` variable. Add the following code to `Bundle React Native code and images` build phase to enable correct source maps uploads. 
 
-As a workaround, for now, update Sentry's `react-native.config.js` file, located in `node_modules/@sentry/react-native/react-native.config.js`.
+```
+export SENTRY_DIST=$CI_BUILD_NUMBER
+```
+
+## Set Up SKD v4 With React Native 0.69 or Higher
+
+To install an older version of the `@sentry/react-native`, you'll need to specify it in the install command. Similarly, you'll need to use a compatible `@sentry/wizard`, as shown in the script below.
+
+```bash
+yarn add @sentry/react-native@4
+npx @sentry/wizard@1 -i reactNative -p ios android
+npx pod-install
+```
+
+Before building the app check that the `android/app/build.gradle` was patched with the following Gradle integration:
+
+```groovy
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+While this should work on Android, it will still fail in the `Bundle React Native code and images` build step phase on iOS. To fix this, revert the patched `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file, (where `$projectName` is likely your project's name). Then search for the build step phase `Bundle React Native code and images` and patch the `shellScript`.
+
+_Old_:
+
+```bash
+shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+```
+
+_New_:
+
+```bash
+shellScript = "set -e\nexport SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\nSENTRY_CLI_PATH=\"../node_modules/@sentry/cli/bin/sentry-cli\"\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$SENTRY_CLI_PATH react-native xcode $REACT_NATIVE_XCODE\\\"\"";
+```
+
+If your build is failing because of outdated fields in the `react-native.config.js`, update the config file, located in `node_modules/@sentry/react-native/react-native.config.js`. This is required for React Native, v0.69. For now, newer versions only show a warning.
 
 _Old_:
 
@@ -214,21 +247,6 @@ module.exports = {
     }
   }
 };
-```
-
-This should work on Android, however, on iOS, it will still fail in the `Bundle React Native code and images` build step phase and for that, you have to revert the patched `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file, where `$projectName` is likely your project's name.
-Search for the build step phase `Bundle React Native code and images` and patch the `shellScript`.
-
-_Old_:
-
-```bash
-shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
-```
-
-_New_:
-
-```bash
-shellScript = "set -e\nexport SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\nSENTRY_CLI_PATH=\"../node_modules/@sentry/cli/bin/sentry-cli\"\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"$SENTRY_CLI_PATH react-native xcode $REACT_NATIVE_XCODE\\\"\"";
 ```
 
 ## React Native 0.60.3 Failing Build

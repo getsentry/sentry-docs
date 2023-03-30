@@ -7,12 +7,7 @@ type: framework
 
 ## Instrument your application
 
-To begin collecting error and performance data from your Vue application, you'll need the following packages:
-
-- `@sentry/vue` (Sentry's Vue SDK)
-- `@sentry/tracing` (instruments performance data)
-
-Below are instructions for using your favorite package manager, or alternatively loaded directly from our CDN.
+To begin collecting error and performance data from your Vue application, you'll need to install the `@sentry/vue` package (Sentry's Vue SDK).
 
 ### Using yarn or npm
 
@@ -20,10 +15,10 @@ Install the dependencies:
 
 ```bash
 # Using yarn
-yarn add @sentry/vue @sentry/tracing
+yarn add @sentry/vue
 
 # Using npm
-npm install --save @sentry/vue @sentry/tracing
+npm install --save @sentry/vue
 ```
 
 Next, initialize Sentry in your app entry point before you initialize your root component.
@@ -34,7 +29,6 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 import Vue from "vue";
 import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
-import { BrowserTracing } from "@sentry/tracing";
 
 Vue.use(Router);
 
@@ -46,7 +40,7 @@ Sentry.init({
   Vue,
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
       tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
     }),
@@ -71,7 +65,6 @@ new Vue({
 import { createApp } from "vue";
 import { createRouter } from "vue-router";
 import * as Sentry from "@sentry/vue";
-import { BrowserTracing } from "@sentry/tracing";
 
 const app = createApp({
   // ...
@@ -84,7 +77,7 @@ Sentry.init({
   app,
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
       tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
     }),
@@ -100,10 +93,3 @@ app.mount("#app");
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
-
-<div class="alert alert-warning" role="alert"><h5 class="no_toc">Vue Error Handling</h5><div class="alert-body content-flush-bottom">
-Please note that if you enable this integration, by default Vue will not call its `logError` internally.
-This means that errors occurring in the Vue renderer will not show up in the developer console.
-If you want to preserve this functionality, make sure to pass the `logErrors: true` option.
-</div>
-</div>

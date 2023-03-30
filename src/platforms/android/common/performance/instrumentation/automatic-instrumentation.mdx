@@ -178,7 +178,7 @@ Note that by removing this transitive dependency, slow and frozen frames won't b
 
 ### OkHttp Library Instrumentation
 
-The OkHttp's instrumentation, once added the `SentryOkHttpInterceptor`, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$method and $URL`; for example, `GET https://sentry.io`.
+The OkHttp's instrumentation, once added the `SentryOkHttpInterceptor`, starts a span out of the active span bound to the scope for each HTTP Request. The SDK sets the span `operation` to `http.client` and `description` to request `$METHOD $url`; for example, `GET https://sentry.io`.
 
 The span finishes once the request has been executed. The span `status` depends on either the HTTP Response `code` or `SpanStatus.INTERNAL_ERROR` if the `code` does not match any of Sentry's `SpanStatus`.
 
@@ -342,3 +342,50 @@ fun loadUserDataOnClick() {
 ```
 
 When the UI transaction is not finished yet, but the user makes a new interaction, the SDK automatically finishes the previous UI transaction. This is because only one transaction can be bound to the scope at a time. However, if the same view has been interacted with (for example, a `RecyclerView` was scrolled again within the `idleTimeout` window), the idle timer will be reset and the transaction duration will be extended with the `idleTimeout` value.
+
+### Time to Initial Display
+
+_(New in version 6.10.0)_
+
+Time to initial display provides insight into how long it takes your Activities to launch and draw their first frame, by adding a span for each launch of an Activity. The SDK sets the span operation to `ui.load.initial-display` and the span description to the Activity's name followed by `initial display`, for example, `MainActivity initial display`.
+
+The span starts when each Activity is launched, which is defined as an application launch for the first Activity, and the `onPause` method of the previous Activity for each subsequent Activity launched.
+
+The span finishes after the Activity draws its first frame.
+
+Time to initial display is dependent on having an active transaction bound to the scope. Ideally, it should be used along with [Android's Activity Instrumentation](/platforms/android/performance/instrumentation/automatic-instrumentation/#androids-activity-instrumentation), which starts a transaction and binds it to the scope automatically.
+
+### Time to Full Display
+
+_(New in version 6.14.0)_
+
+Time to full display provides insight into how long it would take your Activities to launch and load all of their content, by adding a span for each launch of an Activity. The SDK sets the span operation to `ui.load.full-display` and the span description to the Activity's name followed by `full display`, for example, `MainActivity full display`.
+
+The span starts when each Activity is launched, which is defined as the application launch for the first Activity, and the `onPause` method of the previous Activity for each subsequent Activity launched.
+
+_Time to full display is disabled by default, but you can enable it by setting:_
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.time-to-full-display.enable" android:value="true" />
+</application>
+```
+
+_The span has to be finished manually, by using:_
+
+```java
+import io.sentry.Sentry;
+
+Sentry.reportFullyDisplayed();
+```
+
+```kotlin
+import io.sentry.Sentry
+
+Sentry.reportFullyDisplayed()
+```
+
+Time to initial display is dependent on having an active transaction bound to the scope. Ideally, it should be used along with [Android's Activity Instrumentation](/platforms/android/performance/instrumentation/automatic-instrumentation/#androids-activity-instrumentation), which starts a transaction and binds it to the scope automatically.
+
+If the span finishes through the API, its `status` is set to `SpanStatus.OK`. If the span doesn't finish after 30 seconds, it is finished by the SDK automatically, and its `status` is set to `SpanStatus.DEADLINE_EXCEEDED`.
+If the span finishes before the Activity is first drawn and displayed as measured by the `Time to initial display`, the reported time will be shifted to `Time to initial display` measured time.

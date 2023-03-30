@@ -6,7 +6,6 @@ To initialize Sentry in your Vue application, add this to your `app.js`:
 import Vue from "vue";
 import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
-import { BrowserTracing } from "@sentry/tracing";
 
 Vue.use(Router);
 
@@ -18,7 +17,7 @@ Sentry.init({
   Vue,
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
       tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
     }),
@@ -43,7 +42,6 @@ new Vue({
 import { createApp } from "vue";
 import { createRouter } from "vue-router";
 import * as Sentry from "@sentry/vue";
-import { BrowserTracing } from "@sentry/tracing";
 
 const app = createApp({
   // ...
@@ -56,7 +54,7 @@ Sentry.init({
   app,
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
       tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
     }),
@@ -100,17 +98,11 @@ Sentry.init({
 
 const miscApp = createApp(MiscApp);
 miscApp.mixin(Sentry.createTracingMixins({ trackComponents: true }));
-Sentry.attachErrorHandler(miscApp, { logErrors: true });
+Sentry.attachErrorHandler(miscApp);
 ```
 
 The SDK accepts a few different configuration options that let you change its behavior:
 
 - `attachProps` (defaults to `true`) - Includes all Vue components' props with the events.
-- `logErrors` (defaults to `false`) - Decides whether SDK should call Vue's original `logError` function as well.
+- `logErrors` (defaults to `true`) - Decides whether SDK should call Vue's original `logError` function as well.
 - `trackComponents` (defaults to `false`) - Track your app's components. Learn more about [component tracking](./features/component-tracking) and all its options.
-
-<Note>
-
-If you enable the SDK, Vue will not call its `logError` internally. As a result, errors occurring in the Vue renderer will not display in the developer console. To preserve this functionality, pass the `logErrors: true` option.
-
-</Note>

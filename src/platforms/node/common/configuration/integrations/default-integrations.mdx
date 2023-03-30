@@ -66,6 +66,7 @@ Available options:
 ```
 
 Where `TracingOptions` is:
+
 ```javascript
 {
   /**
@@ -143,7 +144,7 @@ Available options:
 
 _Import name: `Sentry.Integrations.LocalVariables`_
 
-_(Available in version 7.32.0 and above)_
+_(Available in version 7.46.0 and above)_
 
 This integration adds stack local variables to stack frames for uncaught exceptions.
 
@@ -159,6 +160,34 @@ Available options:
   captureAllExceptions?: boolean;
 }
 ```
+
+<Alert level="warning">
+
+Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we
+are currently unable to capture local variables for unhandled errors when using
+JavaScript modules (ESM).
+
+You can work around this issue by wrapping your code in try/catch and
+enabling the `captureAllExceptions` option:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.Integrations.LocalVariables({
+      captureAllExceptions: true,
+    }),
+  ],
+});
+
+try {
+  mainCode();
+} catch (e) {
+  Sentry.captureException(e);
+}
+```
+
+</Alert>
 
 ### Modules
 
@@ -209,7 +238,7 @@ To override an integration's settings, provide a new instance to the `integratio
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.Integrations.OnUncaughtException({
       onFatalError: () => {
@@ -230,7 +259,7 @@ Sentry.init({
 
   integrations: function(integrations) {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.name !== 'Console');
+    return integrations.filter(integration => integration.name !== "Console");
   },
 });
 ```

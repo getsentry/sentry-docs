@@ -12,6 +12,7 @@ import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
 import GuideGrid from "./guideGrid";
 import Include from "./include";
+import IncludePlatformContent from "./includePlatformContent";
 import JsCdnTag from "./jsCdnTag";
 import LambdaLayerDetail from "./lambdaLayerDetail";
 import Note from "./note";
@@ -25,6 +26,7 @@ import PlatformIdentifier from "./platformIdentifier";
 import RelayMetrics from "./relayMetrics";
 import SandboxLink, { SandboxOnly } from "./sandboxLink";
 import { VimeoEmbed, YouTubeEmbed } from "./video";
+import Expandable from "./expandable";
 
 const mdxComponents = {
   Alert,
@@ -33,8 +35,10 @@ const mdxComponents = {
   CodeBlock,
   CodeTabs,
   ConfigKey,
+  Expandable,
   GuideGrid,
   Include,
+  IncludePlatformContent,
   JsCdnTag,
   Link: SmartLink,
   Note,

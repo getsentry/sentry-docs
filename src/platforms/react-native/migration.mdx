@@ -4,6 +4,57 @@ sidebar_order: 100
 description: "Learn about migrating from 1.x to 2.x to enable release health tracking and native stack traces by default."
 ---
 
+## From 4.x to 5.x
+
+The React Native SDK version 5 supports both Legacy (from RN 0.65 and above) and New Architecture (from RN 0.69 and above) as well as the new React Native Gradle Plugin (introduced in RN 0.71).
+
+### Naming and behavior changes
+
+Rename the following `Sentry.init` options:
+- `enableAutoPerformanceTracking` to `enableAutoPerformanceTracing`
+- `enableOutOfMemoryTracking` to `enableWatchdogTerminationTracking`
+- `ReactNativeTracingOptions.idleTimeout` to `ReactNativeTracingOptions.idleTimeoutMs`
+- `ReactNativeTracingOptions.maxTransactionDuration` to `ReactNativeTracingOptions.finalTimeoutMs`
+
+If you are using `TouchEventBoundary` and `accessibilityLabel` set the following:
+```javascript
+Sentry.wrap(App, { touchEventBoundaryProps: { labelName: 'accessibilityLabel' } })
+```
+
+Current stack trace for `Sentry.captureMessage` has been moved from `event.exception` to `event.threads`.
+
+Default `breadcrumb.level` is `info`, value `critical` has been removed and `log` is transformed to `debug` on iOS and Android.
+
+The bundled `sentry-cli` version has been bumped to [v2.10.0](https://github.com/getsentry/sentry-cli/releases/tag/2.10.0). Check your usage of `sentry-cli` to reflect [breaking changes](https://github.com/getsentry/sentry-cli/releases/tag/2.0.0). Note, that `upload-dsym` has been replaced by `debug-files upload` and requires a path. Make sure to check your `Upload Debug Symbols` build step in your Xcode project. The command should look like the example below:
+
+```bash
+# Before
+../node_modules/@sentry/cli/bin/sentry-cli upload-dsym
+
+# After
+../node_modules/@sentry/cli/bin/sentry-cli debug-files upload "$DWARF_DSYM_FOLDER_PATH"
+```
+
+### iOS specific changes
+
+The following metadata are synchronized from `sentry-cocoa` to `react-native`:
+- `tags`
+- `extra`
+- `fingerprint`
+- `level`
+- `environment`
+- `breadcrumbs`
+
+The synchronized `fingerprint` might affect grouping of issues in Sentry. React Native `event.fingerprint` is merged with iOS `fingerprint` without duplicates with RN items being first in the order.
+
+`sentry-cocoa` has been bumped to v8.0.0, please follow the related migration [here](/platforms/apple/migration/#migrating-from-7x-to-8x).
+
+`sentry-wizard` doesn't patch iOS projects for React Native 0.65 to 0.68. These versions have to be [patched manually](/platforms/react-native/manual-setup/manual-setup/#bundle-react-native-code-and-images).
+
+### Changes to Minimum Supported Versions
+
+The minimum supported iOS version has been bumped iOS 11. The minimum Android API has been bumped to 21. The minimum supported React Native version is 0.65.0.
+
 ## From 4.8.x to 4.9.x
 
 A new feature that enables sending runtime JavaScript dependencies in events for React Native apps was added in release `4.9.0`. No manual steps are required to enable this on Android builds. For iOS, you need to patch the `shellScript` in the `ios/$projectName.xcodeproj/project.pbxproj` file, where `$projectName` is likely your project's name. To do this, search for the `Bundle React Native code and images` phase and patch the `shellScript`.

@@ -51,11 +51,11 @@ Once you know where your quota is being used, you can start taking the steps bel
 
 ## Grace Period
 
-We include a one-time grace period for error events on all paid accounts. This means that if an account depletes its error event volume and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10,000 events per hour. If you choose not to increase your error volume, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your volume, error events accepted during the grace period will be counted as consumed volume.
+All accounts have access to a one-time grace period. This means that if an account depletes its error event volume and has never previously triggered a grace period, we continue to accept events for the next three days at a maximum rate of 10,000 events per hour. If you choose not to increase your error volume, Sentry will stop accepting events for the remainder of the current billing month. However, if you increase your volume, error events accepted during the grace period will be counted as consumed volume.
 
 While this grace period isn't dependent on the [Spike Protection feature](#7-spike-protection), you'll probably get a notification that you've entered a grace period along with a notification of a spike.
 
-## 1. Spike Protection {#7-spike-protection}
+## Spike Protection {#7-spike-protection}
 
 A spike is both a **large** and **temporary** increase in error event volume. Sentry applies a dynamic rate limit to your account designed to protect you from short-term spikes.
 
@@ -179,7 +179,7 @@ There may be instances where a project routinely accepts a high volume of events
 
 If this is expected behavior for a given project in your organization, you may want to consider turning off spike protection in the project settings to ensure necessary events aren't dropped.
 
-## 2. Adjusting Quotas
+## Adjusting Quotas
 
 <Note>
 
@@ -215,7 +215,7 @@ You shouldn't increase your reserved volume if you think your need for more even
 
 ### On-Demand Budget
 
-If you need to increase your event quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
+If you need to increase your event quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, replays, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
 
 ### Decreasing Quotas
 
@@ -239,7 +239,7 @@ We strongly recommend that you make subscription changes **before** the last day
 
 </Note>
 
-## 3. Rate Limiting {#6-rate-limiting}
+## Rate Limiting {#6-rate-limiting}
 
 <Include name="business.mdx" />
 
@@ -268,7 +268,7 @@ You should periodically go back and check the graph to see the number of events 
 
 ![Revisit rate limits](manage-event-stream-15-new.png)
 
-## 4. Review Event Repetition {#5-applying-workflows}
+## Review Event Repetition {#5-applying-workflows}
 
 The following rules apply for error event repetition and your quota:
 
@@ -290,7 +290,7 @@ You can find a list of deleted and discarded issues in the "Discarded Issues" ta
 
 Once you've identified a set of discarded issues, it might make sense to go back to your SDK configuration and add the related errors into your `beforeSend` client-side filtering.
 
-## 5. Inbound Data Filters {#3-inbound-data-filters}
+## Inbound Data Filters {#3-inbound-data-filters}
 
 While SDK configuration requires changes to your source code and depends on your next deployment, server-side filters can be easily configured per project in the "Data Filters" section of **[Project] > Settings > Inbound Filters**.
 
@@ -330,17 +330,17 @@ Sentry supports filtering out a specific or certain kind of error as well. Navig
 
 To ensure you’re adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the `title` field near the end of the file.
 
-## 6. SDK Sample Rate
+## SDK Sample Rate
 
 If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is [documented for each SDK](/platform-redirect/?next=/configuration/sampling/).
 
 The SDK sample rate is not dynamic; changing it requires re-deployment. Also, keep in mind that setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
 
-## 7. SDK Filtering: beforeSend {#1-sdk-filtering-beforesend}
+## SDK Filtering: beforeSend {#1-sdk-filtering-beforesend}
 
 All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an error event, right before sending it to your Sentry account. It receives the event object as a parameter, so you can use that to modify the event's data or drop it completely (by returning `null`) based on your custom logic and the data available on the event, like _tags_, _environment_, _release version_, _error attributes_, and so on. Note that only error and message events pass through `beforeSend`. Tansaction events have a separate method, `beforeSendTransaction`, though it's not yet supported in all SDKs. Learn more about both methods in [Filtering Events](/platform-redirect/?next=/configuration/filtering/).
 
-## 8. SDK Configuration {#2-sdk-configuration}
+## SDK Configuration {#2-sdk-configuration}
 
 The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our platform docs under [Configuration](/platform-redirect/?next=/configuration/). Following are some configuration examples for JavaScript and other SDKs.
 

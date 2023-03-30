@@ -5,10 +5,10 @@ support_level: production
 type: framework
 ---
 
-Add `@sentry/node` and `@sentry/tracing` as dependencies:
+Add `@sentry/node` as a dependency:
 
 ```bash
-cloud install @sentry/node @sentry/tracing
+cloud install @sentry/node:
 ```
 
 Sentry should be initialized as early in your app as possible.
@@ -16,12 +16,10 @@ Sentry should be initialized as early in your app as possible.
 ```javascript
 import api from "@serverless/cloud";
 import * as Sentry from "@sentry/node";
-import * as Tracing from "@sentry/tracing";
 
 // or using CommonJS
 // const api = require("@serverless/cloud");
 // const Sentry = require('@sentry/node');
-// const Tracing = require("@sentry/tracing");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -33,6 +31,8 @@ Sentry.init({
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
     new Tracing.Integrations.Express({ app }),
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%

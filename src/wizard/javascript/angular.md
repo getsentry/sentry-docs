@@ -5,32 +5,39 @@ support_level: production
 type: framework
 ---
 
-To use Sentry with your Angular application, you will need to use `@sentry/angular` (Sentry’s Browser Angular SDK).
+To use Sentry with your Angular application, you'll need `@sentry/angular-ivy` or `@sentry/angular`, Sentry’s Browser Angular SDKs:
+
+- If you're using Angular 12 or newer, use `@sentry/angular-ivy`
+- If you're using Angular 10 or 11, use `@sentry/angular`
 
 Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
-# Using yarn
-yarn add @sentry/angular @sentry/tracing
+# Using yarn (Angular 12+)
+yarn add @sentry/angular-ivy
+# Using yarn (Angular 10 and 11)
+yarn add @sentry/angular
 
-# Using npm
-npm install --save @sentry/angular @sentry/tracing
+# Using npm (Angular 12+)
+npm install --save @sentry/angular-ivy
+# Using npm (Angular 10 and 11)
+npm install --save @sentry/angular
 ```
 
-You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing Angular:
+You should `init` the Sentry browser SDK in your `main.ts` file as soon as possible during application load up, before initializing Angular:
 
 ```javascript
 import { enableProdMode } from "@angular/core";
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
-import * as Sentry from "@sentry/angular";
-import { BrowserTracing } from "@sentry/tracing";
+// import * as Sentry from "@sentry/angular" // for Angular 10/11 instead
+import * as Sentry from "@sentry/angular-ivy";
 
 import { AppModule } from "./app/app.module";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
@@ -51,16 +58,17 @@ platformBrowserDynamic()
 
 The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
 
-On its own, `@sentry/angular` will report any uncaught exceptions triggered by your application. Additionally, you can configure `@sentry/angular` to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) provider.
+On its own, the Angular SDK will report any uncaught exceptions triggered by your application. Additionally, you can configure the SDK to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) provider.
 
 ### ErrorHandler and Tracer
 
-`@sentry/angular` exports a function to instantiate `ErrorHandler` provider that will automatically send JavaScript errors captured by the Angular's error handler.
+The Sentry Angular SDK exports a function to instantiate `ErrorHandler` provider that will automatically send JavaScript errors captured by the Angular's error handler.
 
 ```javascript
 import { APP_INITIALIZER, ErrorHandler, NgModule } from "@angular/core";
 import { Router } from "@angular/router";
-import * as Sentry from "@sentry/angular";
+// import * as Sentry from "@sentry/angular" // for Angular 10/11 instead
+import * as Sentry from "@sentry/angular-ivy";
 
 @NgModule({
   // ...
