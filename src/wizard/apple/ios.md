@@ -46,7 +46,7 @@ To integrate Sentry into your Xcode project using Carthage, specify it in your `
 github "getsentry/sentry-cocoa" "{{ packages.version('sentry.cocoa') }}"
 ```
 
-Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project. For more information visit the [docs](/platforms/apple/install/carthage/).
+Run `carthage update` to download the framework and drag the built `Sentry.framework` into your Xcode project. For more information visit the [docs](/platforms/apple/install/carthage/).
 
 ## Configuration
 
