@@ -1,0 +1,48 @@
+---
+title: SDK - Sample Rate, Filtering, and Configuration
+sidebar_order: 800
+description: "Learn how to use inbound data filters to manage errors in Sentry."
+---
+
+If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. Setting a sample rate is [documented for each SDK](/platform-redirect/?next=/configuration/sampling/).
+
+The SDK sample rate is not dynamic; changing it requires re-deployment. Also, keep in mind that setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
+
+## SDK Filtering: beforeSend {#1-sdk-filtering-beforesend}
+
+All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an error event, right before sending it to your Sentry account. It receives the event object as a parameter, so you can use that to modify the event's data or drop it completely (by returning `null`) based on your custom logic and the data available on the event, like _tags_, _environment_, _release version_, _error attributes_, and so on. Note that only error and message events pass through `beforeSend`. Tansaction events have a separate method, `beforeSendTransaction`, though it's not yet supported in all SDKs. Learn more about both methods in [Filtering Events](/platform-redirect/?next=/configuration/filtering/).
+
+## SDK Configuration {#2-sdk-configuration}
+
+The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our platform docs under [Configuration](/platform-redirect/?next=/configuration/). Following are some configuration examples for JavaScript and other SDKs.
+
+### JavaScript
+
+The JavaScript SDK includes multiple integrations: functional plugins that you can configure, enable, or disable. Learn more in [JavaScript SDK Integrations](/platforms/javascript/configuration/integrations/). Several integrations allow you to configure the types of events you want Sentry to monitor; two of them, InboundFilters and GlobalHandlers are explained below:
+
+#### InboundFilters
+
+The integration is enabled by default and adds the following configuration options to the SDK:
+
+- `allowUrls`: Domains that might raise acceptable exceptions represented in a regex pattern format.
+- `denyUrls`: A list of strings or regex patterns which match error URLs that should be blocked from sending events. Configuring both `allowUrls` and `denyUrls` on the SDK can be used to block subdomains of the domains listed in `allowUrls`.
+- `ignoreErrors`: Instructs the SDK to never send an error to Sentry if it matches any of the listed error messages or regular expressions. The SDK will try to match against the message or, if there is no message, a string containing the exception type and value formatted like so: `ExceptionType: value`.
+
+To learn more and see code samples, check out:
+
+- [Filtering](/platforms/javascript/configuration/filtering/)
+- [Enriching Events: Add Context](/platforms/javascript/enriching-events/context/)
+
+#### GlobalHandlers
+
+This integration attaches global handlers to capture uncaught exceptions (`onerror`) and unhandled rejections (`onunhandledrejection`). Both handlers are enabled by default, but can be disabled through configuration. Learn more in [GlobalHandlers Integration](/platforms/javascript/configuration/integrations/default/#globalhandlers).
+
+Check out additional configuration options with the [tryCatch](/platforms/javascript/configuration/integrations/default/#trycatch) and [ReportingObserver](/platforms/javascript/configuration/integrations/plugin/#reportingobserver) integrations.
+
+### Other SDKs
+
+**Java** - Sentry's [Java SDK](/platforms/java/) provides integrations with common Java logging libraries. The configuration allows you to set a logging threshold determining the minimum level to capture a log message as breadcrumb. It also provides a setting to configure the minimum log level to capture an event.
+
+**PHP** - The `error_types` configuration option allows you to set the error types you want Sentry to monitor. Learn more in PHP [Basic Options](/platforms/php/configuration/options/#common-options).
+
+**Ruby** - The `excluded_exceptions` configuration option allows you to set the exception types you wish to suppress. Learn more in the [Ruby configuration docs](/platforms/ruby/configuration/options/#optional-settings)
