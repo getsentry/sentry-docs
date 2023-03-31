@@ -306,3 +306,60 @@ SentrySDK.start { options in
 
 [UIWindow]: https://developer.apple.com/documentation/uikit/uiwindowdidbecomevisiblenotification
 [didFinishLaunching]: https://developer.apple.com/documentation/uikit/uiapplication/1622971-didfinishlaunchingnotification
+
+
+### Time to Initial Display
+
+_(New in version 8.4.0)_
+
+Time to initial display provides insight into how long it takes to your view controller to launch and draw their first frame, by adding a span for a view controller when it is loaded. The SDK sets the span operation to `ui.load.initial-display` and the span description to the view controllers's name followed by `initial display`, for example, `MainViewController initial display`.
+
+The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment.
+
+The span finishes after the view appeared on the screen.
+
+### Time to Full Display
+
+_(New in version 8.4.0)_
+
+Time to full display provides insight into how long it takes your view controller to launch and load all of its content, by adding a span for each launch of a view controller. The SDK sets the span operation to `ui.load.full-display` and the span description to the view controllers' name followed by `full display`, for example, `MainActivity full display`.
+
+The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment.
+
+_Time to full display is disabled by default, but you can enable it by setting:_
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableTimeToFullDisplay = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableTimeToFullDisplay = YES;
+}];
+```
+
+We can't detect when your UIViewController is fully loaded. Only you, the user, can achieve this. Therefore, you have to manually call the API to get proper statistics.
+_You can achieve this by using the following code:_
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.reportFullyDisplayed()
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK reportFullyDisplayed];
+```
+
+If the span finishes through the API, its `status` is set to `SpanStatus.OK`. If the span doesn't finish after 30 seconds, it will be finished by the SDK automatically, and its `status` will be set to `SpanStatus.DEADLINE_EXCEEDED`, also its duration will match the same of the `Time to initial display` span and the description will contain `Deadline Exceeded` suffix.
+If a call to `reportFullyDisplayed()` happens before the view controller appears, the reported time will be shifted to `Time to initial display` measured time.
