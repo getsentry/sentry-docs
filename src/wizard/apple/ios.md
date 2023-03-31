@@ -24,7 +24,7 @@ Afterwards run `pod install`. For more information visit the [docs](/platforms/a
 
 ### Swift Package Manager
 
-To integrate Sentry into your Xcode project using Swift Package Manager (SPM), open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the git repo url in the top right search field:
+To integrate Sentry into your Xcode project using Swift Package Manager (SPM), open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the Git repo url in the top right search field:
 
 ```text
 https://github.com/getsentry/sentry-cocoa.git
