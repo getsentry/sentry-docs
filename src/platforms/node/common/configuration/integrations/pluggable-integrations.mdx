@@ -24,10 +24,10 @@ npm install --save @sentry/integrations
 After installation, you can import the integration and provide a new instance with your config to the `integrations` option.
 
 ```javascript
-import { CaptureConsole } from '@sentry/integrations';
+import { CaptureConsole } from "@sentry/integrations";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new CaptureConsole()],
 });
 ```
@@ -108,3 +108,38 @@ For example, `C:\\Program Files\\Apache\\www` won't work, however, `/Program Fil
 _Import name: `Transaction`_
 
 This integration tries to extract useful transaction names that will be used to distinguish the event from the rest. It walks through all stack trace frames and reads the first in-app frame's module and function name.
+
+### Undici
+
+_(New in version 7.46.0)_
+
+_Import name: `Sentry.Integrations.Undici`_
+
+Instruments outgoing HTTP requests made with [undici](https://github.com/nodejs/undici) and [Node 18's Node Fetch](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch) by adding breadcrumbs and spans.
+
+Supports Undici `v4.7.0` or higher and requires Node `v16.7.0` or higher.
+
+Available options:
+
+```typescript
+{
+  /**
+   * If breadcrumbs should be created for outgoing requests.
+   * Defaults to true.
+   */
+  breadcrumbs?: boolean;
+  /**
+   * Function determining whether or not to create spans to track outgoing requests to the given URL.
+   * By default, spans will be created for all outgoing requests.
+   */
+  shouldCreateSpanForRequest?: (url: string) => boolean;
+}
+```
+
+To change what requests get the `sentry-trace` and `baggage` headers attached (for use in distributed tracing), use the top level `tracePropagationTargets` option.
+
+```typescript
+Sentry.init({
+  tracePropagationTargets: ["my-site-url.com"],
+});
+```

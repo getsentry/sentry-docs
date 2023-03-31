@@ -9,11 +9,11 @@ description: "Learn about using Sentry with Koa."
 Add `@sentry/node` as a dependency:
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/node
+npm install --save @sentry/node @sentry/utils
 ```
 
 ```bash {tabTitle:Yarn}
-yarn add @sentry/node
+yarn add @sentry/node @sentry/utils
 ```
 
 Initialize the Sentry SDK and install the on error hook:
@@ -42,23 +42,11 @@ app.listen(3000);
 
 ## Monitor Performance
 
-```bash {tabTitle:npm}
-npm install --save @sentry/node @sentry/tracing
-```
-
-```bash {tabTitle:Yarn}
-yarn add @sentry/node @sentry/tracing
-```
-
 Create and attach a transaction to each request:
 
 ```javascript
 const Sentry = require("@sentry/node");
-const {
-  extractTraceparentData,
-  Span,
-  stripUrlQueryAndFragment,
-} = require("@sentry/tracing");
+const { stripUrlQueryAndFragment } = require("@sentry/utils");
 const Koa = require("koa");
 const app = new Koa();
 const domain = require("domain");
@@ -69,6 +57,11 @@ Sentry.init({
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
   tracesSampleRate: 1.0,
+
+  integrations: [
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+  ],
 });
 
 // not mandatory, but adding domains does help a lot with breadcrumbs
@@ -106,7 +99,7 @@ const tracingMiddleWare = async (ctx, next) => {
   // connect to trace of upstream app
   let traceparentData;
   if (ctx.request.get("sentry-trace")) {
-    traceparentData = extractTraceparentData(ctx.request.get("sentry-trace"));
+    traceparentData = Sentry.extractTraceparentData(ctx.request.get("sentry-trace"));
   }
 
   const transaction = Sentry.startTransaction({

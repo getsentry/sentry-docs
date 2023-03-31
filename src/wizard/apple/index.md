@@ -5,7 +5,11 @@ support_level: production
 type: language
 ---
 
-We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
+We support installing the SDK with [CocoaPods](/platforms/apple/install/cocoapods/), [Swift Package Manager](/platforms/apple/install/swift-package-manager/), and [Carthage](/platforms/apple/install/carthage/).
+
+### CocoaPods
+
+To integrate Sentry into your Xcode project, specify it in your `Podfile`:
 
 ```ruby
 platform :ios, '11.0'
@@ -16,7 +20,33 @@ target 'YourApp' do
 end
 ```
 
-Afterwards run `pod install`.
+Afterwards run `pod install`. For more information visit the [docs](/platforms/apple/install/cocoapods/).
+
+### Swift Package Manager
+
+To integrate Sentry into your Xcode project using Swift Package Manager (SPM), open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the git repo url in the top right search field:
+
+```text
+https://github.com/getsentry/sentry-cocoa.git
+```
+
+Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
+
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{ packages.version('sentry.cocoa') }}"),
+```
+
+For more information visit the [docs](/platforms/apple/install/swift-package-manager/).
+
+### Carthage
+
+To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
+
+```ruby
+github "getsentry/sentry-cocoa" "{{ packages.version('sentry.cocoa') }}"
+```
+
+Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project. For more information visit the [docs](/platforms/apple/install/carthage/).
 
 ## Configuration
 

@@ -9,10 +9,10 @@ Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-yarn add @sentry/node @sentry/tracing
+yarn add @sentry/node
 
 # Using npm
-npm install --save @sentry/node @sentry/tracing
+npm install --save @sentry/node
 ```
 
 Sentry should be initialized as early in your app as possible.
@@ -20,12 +20,10 @@ Sentry should be initialized as early in your app as possible.
 ```javascript
 import express from "express";
 import * as Sentry from "@sentry/node";
-import * as Tracing from "@sentry/tracing";
 
 // or using CommonJS
 // const express = require('express');
 // const Sentry = require('@sentry/node');
-// const Tracing = require("@sentry/tracing");
 
 const app = express();
 
@@ -36,6 +34,8 @@ Sentry.init({
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
     new Tracing.Integrations.Express({ app }),
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%

@@ -13,7 +13,6 @@ If you’re adopting Performance in a high-throughput environment, we recommend 
 
 ```javascript
 const Sentry = require("@sentry/node");
-const SentryTracing = require("@sentry/tracing");
 const express = require("express");
 const app = express();
 
@@ -23,7 +22,7 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
-    new SentryTracing.Integrations.Express({
+    new Sentry.Integrations.Express({
       // to trace all requests to the default router
       app,
       // alternatively, you can specify the routes you want to trace:
@@ -112,13 +111,11 @@ app.use(function processItems(req, res, next) {
 
 ### Retrieving a Transaction
 
-In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getActiveTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
 
 ```javascript
 app.get("/success", function successHandler(req, res) {
-  const transaction = Sentry.getCurrentHub()
-    .getScope()
-    .getTransaction();
+  const transaction = Sentry.getActiveTransaction();
 
   if (transaction) {
     let span = transaction.startChild({

@@ -9,10 +9,10 @@ Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-yarn add @sentry/node @sentry/tracing
+yarn add @sentry/node
 
 # Using npm
-npm install --save @sentry/node @sentry/tracing
+npm install --save @sentry/node
 ```
 
 You need to inform the Sentry Node SDK about your DSN:
@@ -21,10 +21,6 @@ You need to inform the Sentry Node SDK about your DSN:
 const Sentry = require("@sentry/node");
 // or use es6 import statements
 // import * as Sentry from '@sentry/node';
-
-const Tracing = require("@sentry/tracing");
-// or use es6 import statements
-// import * as Tracing from '@sentry/tracing';
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",

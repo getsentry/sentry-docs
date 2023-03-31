@@ -51,18 +51,6 @@
   },
   {
     "type": "Histogram",
-    "name": "event.size_bytes.raw",
-    "description": "The size of the HTTP request body as seen by Relay after it is extracted from a request in\nbytes.\n\n- For envelope requests, this is the full size of the envelope.\n- For JSON store requests, this is the size of the JSON body.\n- For multipart uploads of crash reports and attachments, this is the size of the multipart\nbody including boundaries.\n\nIf this request contains a base64 zlib compressed payload without a proper\n`content-encoding` header, then this is the size before decompression.\n\nThe maximum request body size can be configured with `limits.max_envelope_size`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "event.size_bytes.uncompressed",
-    "description": "The size of the request body as seen by Relay after decompression and decoding in bytes.\n\nJSON store requests may contain a base64 zlib compressed payload without proper\n`content-encoding` header. In this case, this metric contains the size after decoding.\nOtherwise, it is always equal to `event.size_bytes.raw`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
     "name": "event.spans",
     "description": "The number of spans per processed transaction event.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
     "features": []
@@ -71,6 +59,12 @@
     "type": "Timer",
     "name": "event.total_time",
     "description": "Total time in milliseconds an envelope spends in Relay from the time it is received until it\nfinishes processing and has been submitted to the upstream.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.transaction_name_changes",
+    "description": "The number of transaction events processed grouped by transaction name modifications.\nThis metric is tagged with:\n- `source_in`: The source of the transaction name before normalization.\nSee the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `change`: The mechanism that changed the transaction name.\nEither `\"none\"`, `\"pattern\"`, `\"rule\"`, or `\"both\"`.\n- `source_out`: The source of the transaction name after normalization.",
     "features": []
   },
   {
