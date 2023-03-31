@@ -1,0 +1,33 @@
+## Connect Errors with Spans
+
+Sentry errors can be linked with transactions and spans.
+
+Errors reported to Sentry while transaction or span **bound to the scope** is running are linked automatically:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(name: "Transaction Name", operation: "operation", bindToScope: true)
+
+do {
+  try processItem()
+  span.finish()
+} catch {
+  SentrySDK.capture(error: error)
+  span.finish(status: .internalError)
+}
+```
+
+```objc {tabTitle:Objective-C}
+#import <Sentry/Sentry.h>
+
+id<SentrySpan> transaction = [SentrySDK startTransactionWithName:@"Transaction Name" operation:@"operation" bindToScope:YES];
+NSError * error;
+
+if (processItem(error: &error)) {
+  [transaction finish];
+} else {
+  [SentrySDK captureError:error];
+  [transaction finishWithStatus:kSentrySpanStatusInternalError];
+}
+```
