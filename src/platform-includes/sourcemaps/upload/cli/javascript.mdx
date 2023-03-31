@@ -6,6 +6,12 @@ Uploading source maps using Debug IDs is the more modern, flexible method. In co
 
 This doc describes both options for uploading source maps.
 
+<Note>
+
+For the best user experience we reccomend to setup `sentry-cli` in your CI/CD pipeline.
+
+</Note>
+
 ## Configure Sentry CLI
 
 Make sure `sentry-cli` is configured for your project. You can use a `.sentryclirc` file or environment variables:
@@ -86,12 +92,29 @@ During injection, `sentry-cli` will go over all the minified sources and their r
 To inject Debug IDs, use the new `inject` command:
 
 ```bash
-sentry-cli sourcemaps inject /path/to/file
+sentry-cli sourcemaps inject /path/to/folder
 ```
 
 <Note>
 
-You can verify your injected artifact files by looking at their contents and searching for `debugId` in the minified sources and `debug_id` in the source maps.
+You can verify your injected artifact files by looking at their contents.
+
+The minified source should contain at the end a comment named `debugId` like:
+```javascript {filename:minified-file.js}
+...
+//# debugId=<debug_id>
+//# sourceMappingURL=<sourcemap_url>
+```
+
+The source map should contain a field named `debug_id` like:
+```json {filename:source-map.js.map}
+{
+    "debug_id":"<debug_id>",
+    ...
+}
+```
+
+The source map
 
 </Note>
 
@@ -100,7 +123,7 @@ You can verify your injected artifact files by looking at their contents and sea
 Once your artifact files are injected, upload them to Sentry with the `upload` command:
 
 ```bash
-sentry-cli sourcemaps upload /path/to/file
+sentry-cli sourcemaps upload /path/to/folder
 ```
 
 You can verify your uploaded artifacts by navigating to **Project Settings -> Source Maps (left sidebar) -> Debug ID Bundles** on Sentry.
@@ -124,7 +147,8 @@ Sentry.init({
 Add these parameters to the `upload` command to weakly associate artifacts with a `release` and optionally `dist`:
 
 ```bash
-sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/file
+# --dist is optional.
+sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/folder
 ```
 
 <Note>
@@ -166,7 +190,7 @@ sentry-cli releases new <release_name>
 Next, upload your release artifacts (source files and source maps):
 
 ```bash
-sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
+sentry-cli releases files <release_name> upload-sourcemaps /path/to/folder
 ```
 
 You can verify your uploaded artifacts by navigating to **Releases -> [latest release] -> Source Maps (right sidebar)** on Sentry.
