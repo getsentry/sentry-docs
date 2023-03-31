@@ -139,7 +139,7 @@ support 2 metrics:
 
 A measurement value can contain the following attributes:
 - `elapsed_since_start_ns`: number of nanoseconds since the start of the profile
-  (stored in `timestamp`).
+  (stored in `timestamp`). It should be wall time.
 - `value`: value for the measurement, as a `float64`. We accept `float64`
   formatted as `string` as well.
 
@@ -316,7 +316,8 @@ Each sample can contain the following attributes:
 
 - `elapsed_since_start_ns`: *String, required.* Contains the relative timestamp
   in nanoseconds since the value contained in the `timestamp` field when the
-  sample was captured. It's meant to be a `uint64` formatted as a `string`, a `float` won't be accepted.
+  sample was captured. It's meant to be a `uint64` formatted as a `string`, a
+  `float` won't be accepted. It should be wall time.
 - `stack_id`: *Integer, required.* Contains the stack index from the `stacks` list.
 - `thread_id`: *String, required.* Contains the thread ID on which the sample was captured.
 
@@ -332,7 +333,8 @@ Each sample can contain the following attributes:
 
 : *List, required*. Contains a list of frame indices forming a stack trace.
 
-Stacks should be ordered from outermost to innermost frame.
+Frames in a stack should be ordered from leaf to root. It means your main frame
+should be at the end of the list.
 
 It's encouraged to deduplicate stacks by only storing it once and referring to
 the same `stack_id` for each sample that needs it.
