@@ -9,7 +9,7 @@ We support installing the SDK with [CocoaPods](/platforms/apple/install/cocoapod
 
 ### CocoaPods
 
-To integrate Sentry into your Xcode project, specify it in your _Podfile_:
+To integrate Sentry into your Xcode project, specify it in your `Podfile`:
 
 ```ruby
 platform :ios, '11.0'
