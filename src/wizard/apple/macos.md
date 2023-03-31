@@ -40,7 +40,7 @@ For more information visit the [docs](/platforms/apple/install/swift-package-man
 
 ### Carthage
 
-To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
+To integrate Sentry into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ruby
 github "getsentry/sentry-cocoa" "{{ packages.version('sentry.cocoa') }}"
