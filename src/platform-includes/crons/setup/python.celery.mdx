@@ -20,7 +20,7 @@ app.conf.beat_schedule = {
 }
 ```
 
-Initialize Sentry in the `celeryd_init` or `beat_init` signal. Make sure to pass your Celery `app` variable to the `CeleryIntegration`:
+Initialize Sentry in the `celeryd_init` or `beat_init` signal. Make sure to set `monitor_beat_tasks=True` in `CeleryIntegration`:
 
 ```python
 # tasks.py
@@ -35,7 +35,7 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 def init_sentry(**kwargs):
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
-        integrations=[CeleryIntegration(celery_app=app)],  # 👈 pass Celery app.
+        integrations=[CeleryIntegration(monitor_beat_tasks=True)],  # 👈 pass Celery app.
         environment="local.dev.grace",
         release="v1.0",
     )
