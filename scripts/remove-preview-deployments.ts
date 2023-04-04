@@ -191,8 +191,7 @@ async function run(next: number): Promise<void> {
     }
   );
 
-  // defaults to 60 seconds
-  let timeout = 60 * 1000;
+  let rateLimit: number | undefined = undefined;
 
   const { deployments, pagination } = (await res.json()) as Response;
   if (!deployments.length) {
@@ -217,8 +216,8 @@ async function run(next: number): Promise<void> {
       );
       if (deleteRes.status === 429) {
         const { error } = (await deleteRes.json()) as RateLimitError;
-        timeout = error.limit.reset * 1000 - Date.now();
-        break;
+        rateLimit = error.limit.reset * 1000 - Date.now();
+        return;
       }
     } catch (e) {
       console.log(
@@ -230,10 +229,11 @@ async function run(next: number): Promise<void> {
 
   // We need to wait for the rate limit to reset or default 60
   // to avoid hitting the rate limit again.
+  const timeout = rateLimit ? rateLimit : 60 * 1000;
   console.log(`Waiting for ${Math.round(timeout / 1000)} seconds`);
   await new Promise(resolve => setTimeout(resolve, timeout));
 
-  run(pagination.next);
+  run(rateLimit ? next : pagination.next);
 }
 
 // Start the script with a date 30 days ago
