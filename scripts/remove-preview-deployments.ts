@@ -217,7 +217,7 @@ async function run(next: number): Promise<void> {
       if (deleteRes.status === 429) {
         const { error } = (await deleteRes.json()) as RateLimitError;
         rateLimit = error.limit.reset * 1000 - Date.now();
-        return;
+        break;
       }
     } catch (e) {
       console.log(
