@@ -75,31 +75,35 @@ module.exports = {
 };
 ```
 
-### 2. Inject Debug IDs Using Sentry CLI
+### 2. Inject Debug IDs Into Artifacts
 
-During injection, `sentry-cli` will go over all the minified sources and their respective source maps and add the Debug IDs required by Sentry to correctly symbolicate the event.
+During injection, `sentry-cli` will evaluate all minified sources and respective source maps (known as build artifacts), adding the Debug IDs required to correctly symbolicate an event.
 
 To inject Debug IDs, use the new `inject` command:
 
 ```bash
-sentry-cli sourcemaps inject /path/to/folder
+sentry-cli sourcemaps inject /path/to/directory
 ```
-
-Please note that the `inject` command **injects code at the end of your bundle**, thus if an error occurs before that code, resolving with Debug IDs won't work. _This more commonly occurs if an error is thrown during application initialization._ (We are currently working to overcome this limitation)
 
 <Note>
 
-You can verify your injected artifact files by looking at their contents.
+Please note that the `inject` command **injects code at the end of your bundle**, thus if an error occurs before that code, resolving with Debug IDs won't work. This more commonly occurs if an error is thrown during application initialization. _(We are currently working to overcome this limitation)_
 
-The minified source should contain at the end a comment named `debugId` like:
-```javascript {filename:minified-file.js}
+</Note>
+
+#### Verify Debug IDs Were Injected in Artifacts
+
+Minified source files should contain at the end a comment named `debugId` like:
+
+```javascript {filename:example_minified_file.js}
 ...
 //# debugId=<debug_id>
 //# sourceMappingURL=<sourcemap_url>
 ```
 
-The source map should contain a field named `debug_id` like:
-```json {filename:source-map.js.map}
+Source maps should contain a field named `debug_id` like:
+
+```json {filename:example_source_map.js.map}
 {
     ...
     "debug_id":"<debug_id>",
@@ -107,49 +111,51 @@ The source map should contain a field named `debug_id` like:
 }
 ```
 
-</Note>
+### 3. Upload Artifact Bundle
 
-### 3. Upload Artifacts Using Sentry CLI
-
-Once your artifact files are injected, upload them to Sentry with the `upload` command and the `--use-artifact-bundle` flag:
+After you've injected your artifact files, upload them using the new `--use-artifact-bundle` option.
 
 ```bash
-# The --use-artifact-bundle flag is used to tell `sentry-cli` to
-# upload your artifacts with the new format.
-sentry-cli sourcemaps upload --use-artifact-bundle /path/to/folder
+sentry-cli sourcemaps upload --use-artifact-bundle /path/to/directory
 ```
 
-You can verify your uploaded artifacts by navigating to **Project Settings -> Source Maps (left sidebar) -> Artifact Bundles** on Sentry.
+#### Verify That Artifact Bundles Were Uploaded
 
-At this point, the `sentry-cli` will notify you if there are files that don't contain Debug IDs (because for example, you forgot to run the `inject` command). The CLI will then prompt you to create a _Weak Release Association_ to connect a release to this artifact. This connection allows Sentry to properly symbolicate events without Debug IDs.
+Open up Sentry and navigate to **Project Settings > Source Maps**. If you choose “Artifact Bundles” in the tabbed navigation, you'll see all the artifact bundles that have been successfully uploaded to Sentry.
 
-#### Weak Release Associations
+#### Associating `release` with Artifact Bundle (Optional)
 
-_Weak Release Associations_ are an extension of the Debug ID system. By weakly associating artifacts with a `release`, and optionally a `dist`, Sentry can look up sources for symbolication, even if Debug IDs are missing.
+If you are having troubles with Debug IDs, we suggest that you associate a release to an artifact bundle. _The release association will help Sentry figure out which artifact bundle(s) to use for symbolication when Debug IDs are not present._
 
-Creating a Weak Release Association doesn't create a release in Sentry. You must create a release with the same name you specified in the Weak Release Association as a separate step in your pipeline.
+First, you must provide a `release` property in your SDK options.
 
-It's important that the name of the `release` you specify during upload exactly matches the name of the `release` you create with the `sentry-cli` and/or the `release` in your SDK, e.g.:
 ```javascript
 Sentry.init({
-  // This value must be identical to the release name specified during upload
-  // with the `sentry-cli`.
-  release: "<release_name>",
+// This value must be identical to the release name specified during upload
+// with the `sentry-cli`.
+release: "<release_name>",
 });
 ```
 
-Add these parameters to the `upload` command to weakly associate artifacts with a `release` and optionally `dist`:
+After that, run the `sourcemaps upload` command with the additional `--release` option. Please ensure that the value specified for `<release_name>` is the same value specified in your SDK options.
 
 ```bash
-# --dist is optional.
-sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/folder
+sentry-cli sourcemaps upload --use-artifact-bundle --release=<release_name> /path/to/directory
 ```
 
 <Note>
 
-While it's possible to only use Weak Release Associations and skip Debug ID injection via the `inject` command, we strongly recommend using Debug ID injection if it works with your project setup.
+Running `upload` with `--release` **doesn't automatically create a release in Sentry**. For that, you should create a release with the same name as a separate step in your pipeline or send the first event to Sentry with that release.
 
 </Note>
+
+#### Associating `dist` with Artifact Bundle (Optional)
+
+In addition to `release`, you can also add a `dist` to your uploaded artifacts. For that, run the `sourcemaps upload` command with the additional  `--dist` option.
+
+```bash
+sentry-cli sourcemaps upload --use-artifact-bundle --release=<release_name> --dist=<dist_name> /path/to/directory
+```
 
 ## Option 2: Upload a Release Bundle (Legacy)
 
@@ -184,7 +190,7 @@ sentry-cli releases new <release_name>
 Next, upload your release artifacts (source files and source maps):
 
 ```bash
-sentry-cli releases files <release_name> upload-sourcemaps /path/to/folder
+sentry-cli releases files <release_name> upload-sourcemaps /path/to/directory
 ```
 
 You can verify your uploaded artifacts by navigating to **Releases -> [latest release] -> Source Maps (right sidebar)** on Sentry.
