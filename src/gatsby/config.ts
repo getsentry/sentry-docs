@@ -47,6 +47,7 @@ const getPlugins = () => {
       options: {
         maxWidth: 1200,
         linkImagesToOriginal: true,
+        wrapperStyle: `margin-bottom: 1.5rem`,
       },
     },
     {

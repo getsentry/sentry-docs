@@ -11,3 +11,21 @@ try {
   Sentry.captureException(err);
 }
 ```
+
+Sentry calls like `captureException` or `captureMessage` are side effects, so they should be wrapped in a `useEffect` hook to avoid triggering them on every render.
+
+```javascript
+import * as Sentry from "@sentry/react";
+import { useEffect } from "react";
+
+function App() {
+  const [info, error] = useQuery("/api/info");
+  useEffect(() => {
+    if (error) {
+      Sentry.captureException(error);
+    }
+  }, [error]);
+
+  // ...
+}
+```
