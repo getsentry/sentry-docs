@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "AMA: Chat with the team bringing Codecov’s code coverage to Sentry stack traces so you can fill gaps in test coverage and avoid regressions.";
+  "AMA: Join the Codecov team to learn how to see untested coded in your stack trace.";
 const BANNER_LINK_URL =
   "https://sentry.io/resources/ama-code-reliability-across-release/";
 const BANNER_LINK_TEXT = "Register here.";
