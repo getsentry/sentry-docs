@@ -143,3 +143,26 @@ Sentry.init({
   tracePropagationTargets: ["my-site-url.com"],
 });
 ```
+
+## Frameworks
+
+### tRPC Middleware
+
+_(New in version TODO)_
+
+The Sentry tRPC middleware guarantees your transactions related to RPCs are well-named.
+Additionally, it can attach RPC input via the `attachRpcInput` option.
+
+```typescript
+import { initTRPC } from "@trpc/server";
+import * as Sentry from "@sentry/node";
+
+const t = initTRPC.context().create();
+const sentryMiddleware = t.middleware(
+  Sentry.Handlers.trpcMiddleware({
+    attachRpcInput: true,
+  })
+);
+
+const sentrifiedProcedure = t.procedure.use(sentryMiddleware);
+```
