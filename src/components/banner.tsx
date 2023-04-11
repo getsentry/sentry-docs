@@ -9,7 +9,7 @@ const SHOW_BANNER = true;
 const BANNER_TEXT =
   "AMA: Join the Codecov team to learn how to see untested code in your stack trace.";
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/ama-code-reliability-across-release/";
+  "https://bit.ly/codecov-ama-8";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
