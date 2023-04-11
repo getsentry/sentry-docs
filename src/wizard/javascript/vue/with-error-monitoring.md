@@ -3,7 +3,6 @@ name: Vue
 doc_link: https://docs.sentry.io/platforms/javascript/guides/vue/
 support_level: production
 type: framework
-
 ---
 
 ## Install
