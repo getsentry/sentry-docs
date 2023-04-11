@@ -15,7 +15,7 @@ yarn add @sentry/remix
 npm install --save @sentry/remix
 ```
 
-Next, import and initialize initialize Sentry in your Remix entry points for both the client and server:
+Next, import and initialize Sentry in your Remix entry points for both the client and server:
 
 ```javascript
 import { useLocation, useMatches } from "@remix-run/react";
