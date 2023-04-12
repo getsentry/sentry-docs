@@ -1,0 +1,41 @@
+---
+title: "Large HTTP Payload"
+sidebar_order: 30
+redirect_from:
+  - /product/issues/performance-issues/large-http-payload/
+description: "Learn more about Large HTTP Payload issues, how to diagnose and fix them."
+---
+
+<Include name="early-adopter-note.mdx" />
+
+Large HTTP payload issues are created when an http span has an encoded body size that exceeds a threhsold.
+
+## Detection Criteria
+
+The detector for this performance issue looks for a single http span that meets the following criteria
+
+- The http method must be a GET, POST, DELETE, PUT, PATCH
+- The http url must not begin with _next/static/ or _next/data/
+- The http url must not end with the extensions .js, .css, .svg, .png, .mp3, .jpg, .jpeg
+
+Once an http span that meets this criteria is found, the encoded body size is checked against a threshold.
+
+If Sentry isn't detecting a large http payload issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
+
+## Span Evidence
+
+You can identify a Consecutive http problem by four main aspects in the "Span Evidence" section:
+
+- Transaction name
+- Slow resource span - The large http span, usually containing the asset url
+
+![Large HTTP payload span evidence](span-evidence.png)
+
+View it by going to the **Issues** page in Sentry, selecting your project, clicking on the Large HTTP Payload error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+
+## Fixing Large HTTP Payload Issues
+
+The reasons for a consecutive large http payload issue varies, but here are some suggestions to help you resolve them.
+- If you have control over the backend, check if you are sending more data then you need or if the data can be processed further before being sent to the client.
+- If all the data is needed from the endpoint, consider methods such as pagination in order to split up the data across views.
+- Check if any changes were made to your serializer, resuling in a large body size then necessary.
