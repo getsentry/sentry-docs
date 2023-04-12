@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Syntax is joining Sentry. Checkout the post and listen to the tasty 600th episode to learn more and grab limited edition swag.";
+  "Syntax is joining Sentry. Check out the post and listen to the tasty 600th episode to learn more and grab limited edition swag.";
 const BANNER_LINK_URL =
   "https://blog.sentry.io/2023/04/12/syntax-sentry-mmxxiii/?utm_source=web&utm_medium=docs&utm_campaign=sentry+syntax&utm_term=link";
 const BANNER_LINK_TEXT = "Read more.";
