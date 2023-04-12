@@ -5,14 +5,14 @@ support_level: production
 type: framework
 ---
 
-To instrument your Svelte application with Sentry, first install the `@sentry/svelte` and `@sentry/tracing` packages:
+To instrument your Svelte application with Sentry, first install the `@sentry/svelte` package:
 
 ```bash
 # Using yarn
-yarn add @sentry/svelte @sentry/tracing
+yarn add @sentry/svelte
 
 # Using npm
-npm install --save @sentry/svelte @sentry/tracing
+npm install --save @sentry/svelte
 ```
 
 Next, import and initialize initialize Sentry in your Svelte app's entry point (`main.ts/js`):
@@ -22,12 +22,11 @@ import "./app.css";
 import App from "./App.svelte";
 
 import * as Sentry from "@sentry/svelte";
-import { BrowserTracing } from "@sentry/tracing";
 
 // Initialize the Sentry SDK here
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new BrowserTracing()],
+  integrations: [new Sentry.BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.

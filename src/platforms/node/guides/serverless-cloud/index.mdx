@@ -113,13 +113,8 @@ api.use(
 
 ## Monitor Performance
 
-```bash {tabTitle:npm}
-cloud install --save @sentry/node @sentry/tracing
-```
-
 ```javascript
 const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
 const api = require("@serverless/cloud");
 
 Sentry.init({
@@ -130,12 +125,14 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
-    new Tracing.Integrations.Express({
+    new Sentry.Integrations.Express({
       // to trace all requests to the default router
       api,
       // alternatively, you can specify the routes you want to trace:
       // router: someRouter,
     }),
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
   ],
 
   // We recommend adjusting this value in production, or using tracesSampler

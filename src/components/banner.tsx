@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Livestream AMA: Chat with the team to learn how Sentry automatically detects performance issues, making APM actually helpful.";
+  "AMA: Join the Codecov team to learn how to see untested code in your stack trace.";
 const BANNER_LINK_URL =
-  "https://bit.ly/perf-issues-ama-7";
+  "https://bit.ly/codecov-ama-8";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
