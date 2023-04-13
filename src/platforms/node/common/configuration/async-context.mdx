@@ -15,6 +15,8 @@ function requestHandlerMiddleware(req, res, next) {
     () => {
       return next(req, res);
     },
+    // emitters are event emitters that need to be tracked by async
+    // context since they emit async events
     { emitters: [req, res] }
   );
 }
@@ -30,6 +32,7 @@ const domain = require("domain");
 function myRequestHandler(req, res, next) {
   const localDomain = domain.create();
 
+  // track event emitters in domain
   localDomain.add(req);
   localDomain.add(res);
 
