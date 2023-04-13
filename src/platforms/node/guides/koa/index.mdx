@@ -65,23 +65,21 @@ Sentry.init({
 
 const requestHandler = (ctx, next) => {
   return new Promise((resolve, reject) => {
-    Sentry.runWithAsyncContext(
-      async hub => {
-        hub.configureScope(scope =>
-          scope.addEventProcessor(event =>
-            Sentry.addRequestDataToEvent(event, ctx.request, {
-              include: {
-                user: false,
-              },
-            })
-          )
-        );
+    Sentry.runWithAsyncContext(async () => {
+      const hub = Sentry.getCurrentHub();
+      hub.configureScope(scope =>
+        scope.addEventProcessor(event =>
+          Sentry.addRequestDataToEvent(event, ctx.request, {
+            include: {
+              user: false,
+            },
+          })
+        )
+      );
 
-        await next();
-        resolve();
-      },
-      { emitters: [ctx] }
-    );
+      await next();
+      resolve();
+    });
   });
 };
 

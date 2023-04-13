@@ -11,14 +11,9 @@ const Sentry = require("@sentry/node");
 
 function requestHandlerMiddleware(req, res, next) {
   // Any breadcrumbs or tags added will be isolated to the request
-  return Sentry.runWithAsyncContext(
-    () => {
-      return next(req, res);
-    },
-    // emitters are event emitters that need to be tracked by async
-    // context since they emit async events
-    { emitters: [req, res] }
-  );
+  return Sentry.runWithAsyncContext(() => {
+    return next(req, res);
+  });
 }
 ```
 
@@ -31,11 +26,6 @@ const domain = require("domain");
 
 function myRequestHandler(req, res, next) {
   const localDomain = domain.create();
-
-  // track event emitters in domain
-  localDomain.add(req);
-  localDomain.add(res);
-
   return localDomain.bind(() => {
     return next(req, res);
   })();
