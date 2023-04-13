@@ -8,12 +8,11 @@ redirect_from:
 description: "Learn about the Sentry JavaScript Loader Script"
 ---
 
-The Loader is a small script that takes care for you initializing the SDK for you, as well as keep it up-to-date. It is desgined as a drop in solution that you don't have to think about a lot.
+The Loader Script is the easiest way to initialize the Sentry SDK. The Loader Script also automatically keeps your Sentry SDK up to date and offers configuration for different Sentry features.
 
 ## Using the Loader
 
-
-To use the loader, go in the Sentry UI to _Settings -> Projects -> Client Keys (DSN)_, and then press the _Configure_ button. Copy the script tag from the _JavaScript Loader_ section, and include it as the first script on your page. (By including it first, you allow it to catch and buffer events from any subsequent scripts, while still ensuring the full SDK doesn't load until after everything else has run.)
+To use the loader, go in the Sentry UI to **Settings > Projects > (select project) > Client Keys (DSN)**, and then press the "Configure" button. Copy the script tag from the "JavaScript Loader" section and include it as the first script on your page. By including it first, you allow it to catch and buffer events from any subsequent scripts, while still ensuring the full SDK doesn't load until after everything else has run.
 
 ```html
 <script
@@ -35,11 +34,11 @@ The loader has a few configuration options:
 - What version of the SDK to load
 - Using Performance Monitoring
 - Using Session Replay
-- Show debug logs
+- Showing debug logs
 
 ### SDK Version
 
-To configure the version, use the dropdown in the _JavaScript Loader_ settings, directly beneath the script tag you copied earlier.
+To configure the version, use the dropdown in the "JavaScript Loader" settings, directly beneath the script tag you copied earlier.
 
 ![JavaScript Loader Settings](js-loader-settings.png)
 
@@ -69,7 +68,7 @@ Alternatively, you can set the loader to request the full SDK earlier: still as 
 
 Finally, if you want to control the timing yourself, you can call `Sentry.forceLoad()`. You can do this as early as immediately after the loader runs (which has the same effect as setting `data-lazy="no"`) and as late as the first unhandled error, unhandled promise rejection, or call to `Sentry.captureMessage` or `Sentry.captureEvent` (which has the same effect as not calling it at all). Note that you can't delay loading past one of the aforementioned triggering events.
 
-If Performance Monitoring and/or Session Replay is enabled, we immediately need to fetch and initialize the bundle to make sure we are able to capture transactions/replays when the page loaded.
+If Performance Monitoring and/or Session Replay is enabled, the SDK will immediately fetch and initialize the bundle to make sure it can capture transactions and/or replays once the page loads.
 
 ## SDK Configuration
 
@@ -83,7 +82,7 @@ You can configure the release by adding the following to your page:
 </script>
 ```
 
-The loader script always includes a call to `Sentry.init` with some default configuration, including your DSN. If you want to [configure your SDK](../../configuration/options/) beyond that, you'll need a second script tag, in which you'll call `Sentry.onLoad`. This script must come _after_ the main loader script.
+The loader script always includes a call to `Sentry.init` with a default configuration, including your DSN. If you want to [configure your SDK](../../configuration/options/) beyond that, you'll need a second script tag, in which you'll call `Sentry.onLoad`. This script must come _after_ the main loader script.
 
 ```html
 <script
@@ -112,11 +111,13 @@ The loader script always includes a call to `Sentry.init` with some default conf
 </script>
 ```
 
-For Performance Monitoring, by default the SDK will be initialized with `tracesSampleRate: 1` and for Session Replay `replaysSessionSampleRate: 0.1` and `replaysOnErrorSampleRate: 1`. Put it words, we capture all pages with Performance Monitoring, Replays of 10% of all sessions as well as Replays for all sessions with an error.
+For Performance Monitoring, by default, the SDK will be initialized with `tracesSampleRate: 1`. This means that the SDK will capture all traces.
 
-## **Limitations for error-only capturing**
+For Session Replay, the defaults are set to `replaysSessionSampleRate: 0.1` and `replaysOnErrorSampleRate: 1`. This means Replays will be captured for 10% of all normal sessions and for all sessions with an error.
 
-Because the loader injects the SDK asynchronously (only for errors), only _unhandled errors_ and _unhandled promise rejections_ will be caught and buffered before the SDK is fully loaded. Specifically, the capturing of any [breadcrumb data](../../enriching-events/breadcrumbs/) will not be available until the SDK is fully loaded and initialized. To reduce the amount of time these features are unavailable, set `data-lazy="no"` or call `forceLoad()` as described above.
+## **Limitations of error-only capturing**
+
+When using the Loader Script with just errors, the script injects the SDK asynchronously. This means that only _unhandled errors_ and _unhandled promise rejections_ will be caught and buffered before the SDK is fully loaded. Specifically, capturing [breadcrumb data](../../enriching-events/breadcrumbs/) will not be available until the SDK is fully loaded and initialized. To reduce the amount of time these features are unavailable, set `data-lazy="no"` or call `forceLoad()` as described above.
 
 If you want to understand the inner workings of the loader itself, you can read the documented source code in all its glory over at the [sentry repository](https://github.com/getsentry/sentry/blob/master/src/sentry/templates/sentry/js-sdk-loader.ts).
 
