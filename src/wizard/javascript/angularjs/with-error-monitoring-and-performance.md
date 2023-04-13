@@ -30,11 +30,6 @@ Sentry.init({
     new AngularIntegration(),
     new Sentry.BrowserTracing({
       tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
-      routingInstrumentation: Sentry.remixRouterInstrumentation(
-        useEffect,
-        useLocation,
-        useMatches
-      ),
     }),
   ],
   // Performance Monitoring
