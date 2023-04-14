@@ -19,7 +19,7 @@ npm install --save @sentry/svelte
 
 ## Configure
 
-Initialize Sentry as early as possible in your application's lifecycle.
+Initialize Sentry as early as possible in your application's lifecycle, usually your Svelte app's entry point (`main.ts/js`):
 
 ```javascript
 import "./app.css";
