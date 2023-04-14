@@ -6,6 +6,7 @@ type: framework
 ---
 
 ## Install
+
 Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
@@ -17,6 +18,7 @@ npm install --save @sentry/remix
 ```
 
 ## Configure
+
 Import and initialize Sentry in your Remix entry points for both the client and server:
 
 ```javascript
@@ -36,7 +38,7 @@ Sentry.init({
     }),
   ],
   // Performance Monitoring
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
 ```
 
@@ -49,11 +51,9 @@ import * as Sentry from "@sentry/remix";
 
 Sentry.init({
   dsn: "___DSN___",
-  integrations: [
-    new Sentry.Integrations.Prisma({ client: prisma }),
-  ],
+  integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
   // Performance Monitoring
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
 ```
 
@@ -92,18 +92,19 @@ export default withSentry(App);
 ```
 
 ## Verify
+
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
 ```javascript
-<button onClick={() => methodDoesNotExist()}>
-  Break the world
-</button>
+<button onClick={() => methodDoesNotExist()}>Break the world</button>
 ```
 
 ---
+
 ## Next Steps
+
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Remix Features](https://docs.sentry.io/platforms/javascript/guides/remix/features/): Learn about our first class integration with the Remix framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/remix/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.

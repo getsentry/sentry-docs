@@ -6,6 +6,7 @@ type: framework
 ---
 
 ## Install
+
 Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
@@ -17,6 +18,7 @@ npm install --save @sentry/vue
 ```
 
 ## Configure
+
 Initialize Sentry as early as possible in your application's lifecycle.
 
 #### Vue 2
@@ -77,6 +79,7 @@ app.mount("#app");
 ```
 
 ## Verify
+
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
@@ -84,7 +87,9 @@ myUndefinedFunction();
 ```
 
 ---
+
 ## Next Steps
+
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/vue/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Vue Features](https://docs.sentry.io/platforms/javascript/guides/vue/features/): Learn about our first class integration with the Vue framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/vue/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.

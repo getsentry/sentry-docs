@@ -6,6 +6,7 @@ type: framework
 ---
 
 ## Install
+
 Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
@@ -17,6 +18,7 @@ npm install --save @sentry/browser @sentry/integrations
 ```
 
 ## Configure
+
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
@@ -33,7 +35,7 @@ Sentry.init({
     }),
   ],
   // Performance Monitoring
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
 
 // Finally require ngSentry as a dependency in your application module.
@@ -41,6 +43,7 @@ angular.module("yourApplicationModule", ["ngSentry"]);
 ```
 
 ## Verify
+
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
@@ -48,7 +51,9 @@ myUndefinedFunction();
 ```
 
 ---
+
 ## Next Steps
+
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/angular/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [AngularJS Features](https://docs.sentry.io/platforms/javascript/guides/angular/angular1/): Learn about our first class integration with the AngularJS framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/angular/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
