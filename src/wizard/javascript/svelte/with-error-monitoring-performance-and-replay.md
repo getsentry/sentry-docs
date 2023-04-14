@@ -6,6 +6,7 @@ type: framework
 ---
 
 ## Install
+
 Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
@@ -17,6 +18,7 @@ npm install --save @sentry/svelte
 ```
 
 ## Configure
+
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
@@ -27,12 +29,7 @@ import * as Sentry from "@sentry/svelte";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.BrowserTracing({
-      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
-    }),
-    new Sentry.Replay(),
-  ],
+  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
   // Session Replay
@@ -48,6 +45,7 @@ export default app;
 ```
 
 ## Verify
+
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```html
@@ -59,7 +57,9 @@ This snippet contains an intentional error and can be used as a test to make sur
 ```
 
 ---
+
 ## Next Steps
+
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/svelte/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Svelte Features](https://docs.sentry.io/platforms/javascript/guides/svelte/features/): Learn about our first class integration with the Svelte framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/svelte/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.

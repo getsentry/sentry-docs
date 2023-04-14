@@ -6,6 +6,7 @@ type: framework
 ---
 
 ## Install
+
 To use Sentry with your Angular application, you'll need `@sentry/angular-ivy` or `@sentry/angular`, Sentry’s Browser Angular SDKs:
 
 - If you're using Angular 12 or newer, use `@sentry/angular-ivy`
@@ -26,6 +27,7 @@ npm install --save @sentry/angular
 ```
 
 ## Configure
+
 You should `init` the Sentry browser SDK in your `main.ts` file as soon as possible during application load up, before initializing Angular:
 
 ```javascript
@@ -40,7 +42,6 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
-      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
   ],
@@ -91,6 +92,7 @@ export class AppModule {}
 ```
 
 ## Verify
+
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
@@ -98,7 +100,9 @@ myUndefinedFunction();
 ```
 
 ---
+
 ## Next Steps
+
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/angular/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Angular Features](https://docs.sentry.io/platforms/javascript/guides/angular/features/): Learn about our first class integration with the Angular framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/angular/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
