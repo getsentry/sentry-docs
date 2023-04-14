@@ -7,10 +7,10 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "AMA: Join the Codecov team to learn how to see untested code in your stack trace.";
+  "Syntax is joining Sentry. Check out the post and listen to the tasty 600th episode to learn more and grab limited edition swag.";
 const BANNER_LINK_URL =
-  "https://bit.ly/codecov-ama-8";
-const BANNER_LINK_TEXT = "Register here.";
+  "https://blog.sentry.io/2023/04/12/syntax-sentry-mmxxiii/?utm_source=web&utm_medium=docs&utm_campaign=sentry+syntax&utm_term=link";
+const BANNER_LINK_TEXT = "Read more.";
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
