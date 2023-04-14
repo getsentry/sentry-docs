@@ -53,7 +53,7 @@ platformBrowserDynamic()
   .catch(err => console.error(err));
 ```
 
-### ErrorHandler and Tracer
+### ErrorHandler
 
 The Sentry Angular SDK exports a function to instantiate `ErrorHandler` provider that will automatically send JavaScript errors captured by the Angular's error handler.
 
@@ -71,16 +71,6 @@ import * as Sentry from "@sentry/angular-ivy";
       useValue: Sentry.createErrorHandler({
         showDialog: true,
       }),
-    },
-    {
-      provide: Sentry.TraceService,
-      deps: [Router],
-    },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: () => () => {},
-      deps: [Sentry.TraceService],
-      multi: true,
     },
   ],
   // ...
