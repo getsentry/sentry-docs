@@ -15,7 +15,7 @@ Concepts we will cover:
 
 Flamecharts are a common data visualization used to visualize a series of stack samples in **chronological order** collected during the duration of a **single** profile. The X axis on a flamechart represents **time**, while the Y axis represents the current execution stack - this enables us to see what our program was executing at any point in time during our profile.
 
-@TODO flamechart.png
+![Flamechart example](flamechart.png)
 
 There are two main things to look at when interpreting flamecharts - the color and width of each function. Color represents if a frame is a system or application frame. System functions are colored in red and application functions are colored in blue. There is usually little you can do about system frames, but you can, however, influence the execution of any blue frames in your code.
 
@@ -25,7 +25,7 @@ The next thing to keep an eye out for is the width of each function as it repres
 
 Let's look at an example to learn the differences.
 
-@TODO flamechart weights.png
+![Flamechart weights](flamechart-weights.png)
 
 From our call stack above we can see that `OffsetPaginator.get_result` takes 2.14s to execute - this is the total time. If we look down the stack however, we can see that all of the time is actually spent in `CursorWrapper.execute` which is the function that actually executes our DB query - the self-time of this function is close to 2.14s. In other words, total time is how long it takes for a function and all its children to execute while self-time is only the time it takes for a function to execute without any of the time spent in its child functions.
 
@@ -41,11 +41,12 @@ Flamegraphs represent stack populations of your profiled program - they optimize
 
 Let’s take a look at an example of a flamechart on the left, and a flamegraph on the right - see how the stacks were merged? Visualizing the stacks this way allows you to focus on finding performance optimizations by visualizing the code that is most often occupying your program’s call stack.
 
-@TODO flamechar chronog vs merged.png
+<img src="flamechart-chronological.png" width="45%"/>
+<img src="flamechart-merged.png" width="45%"/>
 
 In Sentry, you will find aggregated flamegraphs on your profile summary page. The flamegraphs on this page are created using data from many different profiles so that you can focus on the most common performance bottlenecks in your program.
 
-@todo flamegraph.png
+![Flamegraph example](flamegraph.png)
 
 Now that we covered the topic of flamecharts and flamegraphs, lets look at some of the way you can use Sentry to identify and fix performance bottlenecks.
 
@@ -53,15 +54,15 @@ Now that we covered the topic of flamecharts and flamegraphs, lets look at some 
 
 In Sentry, we don't want you to spend time on manual performance issue detection, so we built issues that are backed by profiling data that catch some of the most common performance problems we see. For example on mobile applications, a common problem is serializing and deserializing JSON on the main thread - thus causing jank and dropping frames, all of which are a point of frustration for your users.
 
-@todo profiling-issue.png
+![Profiling issue](profiling-issue.png)
 
 Once a performance issue is detected, you can visualize all of its occurrences and see how many users it impacts - this enables you to determine the severity and prioritize the problem accordingly. Each performance issue is associated with a stack trace which leads to the performance problem so that you don't need to spend time trying to identify how the issue occurred in the first place, it’s a great way to visualize the caller functions without having to even look at any flamecharts.
 
-@todo json-decoding.png
+![JSON decoding problem](json-decoding.png)
 
 If you still wish to see the profile associated with this issue occurrence, you can click the view profile button under function evidence, and a flamechart will open zoomed in at the section where the problematic function was called.
 
-@todo json-decoding-profile.png
+![JSON decoding profile](json-decoding-profile.png)
 
 ## Performance issue from missing instrumentation spans
 
@@ -77,17 +78,21 @@ When looking at the span waterfall view in one of our transactions, we noticed t
 
 With profiling information, however, we can click into that span and see that there is a profile associated with the transaction - clicking on the spans opens the flamechart preview that shows the code that was executed during that span. We can hover the frames to see what was executed.
 
-@todo missing-instrumentation.vid
+<video width="100%" height="auto" controls={true} autoplay muted>
+  <source src="missing-instrumentation.mp4" type="video/mp4"/>
+</video>
 
 You can see a lot of calls to parser.parse which belongs to the dateutil module. Let’s open up the profile and find the application code that calls this - to do this, right click on a frame to open up the context menu and click open in GitHub.
 
-@todo instrumentation-preview.vid
+<video width="100%" height="auto" controls={true} autoplay muted>
+  <source src="missing-preview.mp4" type="video/mp4"/>
+</video>
 
 Voila, we have arrived at our first performance bottleneck. The code which queries data in our data store parses the returned JSON and spends a significant amount of time parsing dates…
 
 Since dateutil is a 3rd party dependency, the current functionality cannot easily be optimized without patching the module. So we are left with two choices - write our own date parser or swap the parser for a faster one. Custom parsers are brittle and date formats are not something we want to tackle, but we can swap the parser with a faster one. As it turns out, Python 3.7 has us covered with datetime.fromisoformat which is a python built-in and in our case, a drop-in replacement.
 
-@todo tony-da-boss.png
+![Tony da boss](tony-da-boss.png)
 
 ## Different tools and options to aid your investigation:
 
@@ -95,13 +100,13 @@ A critical component of a good profiling tool is its ability to adapt to the cur
 
 We will walk through some of the options briefly, most of them should be self-explanatory, but you are likely to discover these as you go. We’ll start at the top with the toolbar hear reading the UI top down and left to right.
 
-@todo toolbar.png
+![Toolbar](toolbar.png)
 
 The topmost section Profiling > Profile Summary > api/0/customers shows the current sentry navigation breadcrumbs (you are probably used to these already). The Go to Transaction link on the right will take you to the Sentry transaction associated with this profile.
 
 The section below is where we get into the good stuff, starting with the thread selector. A current limitation of our UI is that we only ever surface a single thread at a time (we are working on improving this), so as of now, if you want to answer questions of what other threads were executing at what point in time, use the thread selector to switch between threads.
 
-@todo options.png
+![Thread selector](options.png)
 
 The options to the right of the thread selector labeled as call order, alphabetical, or left heavy are the different sorting options to visualize the chart. By default, samples are displayed in chronological order. Left heavy and alphabetical sorting options will sort the chart so that stacks are ordered by their weight from highest weight (on the left) to lowest weight on the right. Alphabetical sorting applies similar sorting, except that it orders stacks based on their frame names.
 
@@ -109,13 +114,14 @@ When you use alphabetical or left heavy, identical stacks are merged and their d
 
 Example of a nodejs flamechart with a lot of “hair” vs the merged visualization - notice how the right side of the chart now exposes the sum durations for loading our modules.
 
-@todo flamechart hair vs hair-merged
+![Hair chart](flamechart-hair.png)
+![Hair chart](flamechart-hair-merged.png)
 
 We have for the large part referred to flamecharts as what you see above and while that is true, there are people out there who may have been eager to correct us that what we are displaying is in fact an icicle charts. In “icicle charts”, the stacks are represented as icicles hanging from the top whereas, in flamecharts, they are represented as flames that grow. Technicality aside, we found that different people are used to different representations and whichever choice you prefer, the dashboard will remember and respect it.
 
 This brings us to the search component which does exactly what you would expect it to do, the default search is fuzzy, but we also support regular expressions if that's your jam.
 
-@todo flamechart-search.png
+![Search](flamechart-search.png)
 
 The last option from the view is the ability to color the chart using different modes, we currently support:
 
@@ -131,13 +137,16 @@ By now, you may have noticed that there are areas between the toolbar and the Pr
 
 Example of the waterfall vs tree span view
 
-@todo spans-waterfall vs spans-condensed.png
+![Span waterfall view](spans-waterfall.png)
+![Span condensed view](spans-condensed.png)
 
 The area below the minimap labeled as `Transaction` renders the tree of spans, it is the same view you see on the performance waterfall chart but condensed to minimize white space. This view is helpful for cross-referencing profiler stack frames with span data.
 
 At the bottom of the screen, you will find a table representation of the flamechart - this provides an alternative view that enables you to see and sort functions by name, time spent in them, and their type (application or system).
 
-@todo tree-drawer.mp4
+<video width="100%" height="auto" controls={true} autoplay muted>
+  <source src="tree-drawer.mp4" type="video/mp4"/>
+</video>
 
 The default representation is to display all functions in bottom-up view, this means that the functions you see in the table are the leafmost functions that are spending the most time at the top of your call stacks and preventing other functions to run. Long-running leaf functions are a good first indicator of performance bottlenecks.
 
