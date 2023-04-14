@@ -109,6 +109,42 @@ If you expect your scheduled jobs to overlap, read about [Overlapping Jobs](#ove
 
 </Note>
 
+### Specifying monitor environments (Optional)
+
+When sending check-ins to your monitor you may specify the `environment` of the
+check-in. This allows you to monitor a single schedule across multiple
+environments.
+
+If you don't specify an environment with your check-ins the default is `production`.
+
+<Alert level="info">
+
+Monitor environments are still early in development. Currently, after a check-in
+occurs for a specified environment you must continue sending check-ins on
+schedule or the monitor environment will be marked as missed.
+
+In the future it will be possible to delete environments for a specified monitor.
+
+</Alert>
+
+```bash {tabTitle: cURL}
+# 🟡 Notify Sentry your job is running in the dev environment:
+curl -X POST \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "in_progress", "environment": "dev"}'
+
+# Execute your scheduled task here...
+
+# 🟢 Notify Sentry your dev environment job has completed successfully:
+curl -X PUT \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "ok", "environment": "dev"}'
+```
+
 ### Creating or Updating a Monitor Through a Check-In (Optional)
 
 Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
