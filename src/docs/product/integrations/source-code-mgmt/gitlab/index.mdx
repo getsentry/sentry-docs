@@ -136,9 +136,11 @@ Stack trace linking takes you from a file in your Sentry stack trace to that sam
    - **repo** (required): This is the GitLab project associated with the Sentry project above. If you have more than one GitLab project being used per Sentry project, you'll need multiple code mappings.
    - **branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
    - **stack trace root** and **source code root** (optional):
+     - If the file path in your Sentry stack trace frame matches the path to your source code, you don't need to set these values.
+         - For example, if everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`, you don't need to set either `stack trace root` or `source code root`
+     - If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the `stack_root` part of the file path with your `source_root` to make the file path match the source code path.
+         - For example, to get `src/code.py` to match `code.py` when the source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`, change the `stack trace root` to be set as `src/`, and leave `source code root` empty.
 
-     1. If the file path in your Sentry stack trace frame matches the path to your source code, you do not need to set these values.
-     
 ### Suspect Commits
 
 Once you've set up stack trace linking, Sentry can use information from your source code provider to suggest the commit that likely introduced the error. After pinpointing the suspect commit, you can also identify the developer who made the commit and assign them the task of fixing the error.
@@ -146,13 +148,6 @@ Once you've set up stack trace linking, Sentry can use information from your sou
 ![Issue detail highlighting suspect commits](highlighting-suspect-commits.png)
 
 Learn about setting up this functionality in [Suspect Commits](/product/issues/suspect-commits/).
-
-### Code Owners
-
-        - ex. For example, everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py` so you don't need to set a **stack trace root** and **source code root**.
-
-     1. If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the **stack_root** part of the file path with your **source_root** to make the file path match the source code path.
-        - ex. For example, to get `src/code.py` to match `code.py` when the source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`, change the **stack trace root** to be set as `src/`, and leave **source code root** empty.
 
 ### Code Owners
 
@@ -166,7 +161,7 @@ Let us know if you have feedback: [ecosystem-feedback@sentry.io](mailto:ecosyste
 
 Import your existing GitLab CODEOWNERS files to automatically assign Sentry issues and route alerts to the responsible individuals and teams.
 
-For more details, see the full documentation for [Code Owners](/product/issues/issue-owners/#code-owners).
+For more details, see the full documentation for [Code Owners](/product/issues/ownership-rules/#code-owners).
 
 ## Troubleshooting
 

@@ -26,6 +26,12 @@ You can search by event properties in the following [sentry.io](https://sentry.i
 - Issues - as indicated in the table below
 - Alerts - when creating a metric alert
 
+<Note>
+
+Please note that in Alerts only a limited number of properties are available for [filtering transaction events](/product/alerts/create-alerts/metric-alert-config/#tags--properties).
+
+</Note>
+
 When searching on event properties within the **Issues** page, the search will return any issue that has _one or more events_ matching the supplied event properties filter.
 
 ### Replay Properties
@@ -81,9 +87,9 @@ Release properties overlap with event and issue search properties, so they don't
 | activity | Replay activity is calculated based on the number of errors, the number of ui events, and the duration of the replay. It's represented as a number from `1` to `10`. | | | x | number |
 | age | Returns issues created since the time defined by the value. The syntax is similar to the Unix find command. Supported suffixes: `m - minutes`, `h - hours`, `d - days`, `w - weeks`. For example, `age:-24h` returns isssues that are new in the last 24 hours, while `age:+12h` returns ones that are older than 12 hours. Entering `age:+12h age:-24h` would return issues created between 12 and 24 hours ago. |  | x |  | relative time |
 | apdex(threshold) | Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Higher apdex values indicate higher user satisfaction. | x |  |  | number |
-| app.in_foreground | Indicates if the app is in the foreground or background. | x | x |  | boolean |
+| app.in_foreground | Indicates if the app is in the foreground or background. Values are `1/0` or `true/false` | x | x |  | boolean |
 | assigned | Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or # followed by the team name, that is `#team-name`. |  | x |  | team or org user |
-| assigned_<br></br>or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/issues/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or # followed by the team name, that is `#team-name`. |  | x |  | team or org user |
+| assigned_<br></br>or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/issues/ownership-rules/) and [suspect commits](/product/issues/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or # followed by the team name, that is `#team-name`. |  | x |  | team or org user |
 | avg(field) | Returns results with matching averages for the field selected. The field can be either a number or a duration. Typically used with a comparison operator. | x |  |  | matches field |
 | bookmarks | Returns issues bookmarked by the defined user. Values can be your user ID (your email address) or `me` for yourself. |  | x |  | team or org user |
 | browser.name | Name of the users' web browser. For example, `Chrome`, `Firefox`, or `Safari` |  |  | x | string |
@@ -101,6 +107,7 @@ Release properties overlap with event and issue search properties, so they don't
 | device.battery_level | If the device has a battery, this can be a floating point value defining the battery level (in the range 0-100). | x |  |  | string |
 | device.brand | Brand of the device | x | x | x | string |
 | device.charging | Whether the device was charging or not. Not a boolean. | x |  |  | string |
+| device.class | The estimated performance class of the client device, estimated `high`, `medium`, or `low`. For more details, see the [Device Classification](#device-classification) section below. | x |  |  | string |
 | device.family | Family of the device. Typically, the common part of a model name across generations. For example, iPhone, Samsung Galaxy. | x | x | x | string |
 | device.locale | Deprecated | x | x |  | string |
 | device.model_id | Internal hardware revision to identify the device exactly. |  | x | x | n/a |
@@ -120,6 +127,7 @@ Release properties overlap with event and issue search properties, so they don't
 | eps() | Returns results with a matching events-per-second count. Doesn't take a parameter. | x |  |  | number |
 | error_id | Error instances that have occurred within a replay. |  |  | x | array |
 | error.handled | Indicates whether the user has handled the exception — for example, using try...catch. An error is considered handled if all stack traces handle the error. Values are `1/0` or `true/false` | x | x |  | boolean |
+| error.main_thread | Indicates if the error occurred on the main thread. Values are `1/0` or `true/false` | x | x |  | boolean |
 | error.mechanism | An object describing the mechanism that created this exception. | x | x |  | array |
 | error.type | The type of exception. For example, `ValueError`. | x | x |  | array |
 | error.unhandled | The inversion of `error.handled`. | x | x |  | boolean |
@@ -233,3 +241,23 @@ Several common uses for tags include:
 - The hostname of the server
 - The version of your platform (for example, iOS 5.0)
 - The user’s language
+
+## Device Classification
+
+`device.class` provides a simple way for developers to understand the performance level of an event's client device in a single searchable property. This is particularly useful for projects that serve a large range of mobile devices, in which case developers would typically have had to parse through a vast range of specs and models across iOS and Android.
+
+Possible values for `device.class` are `high`, `medium`, and `low`, indicating the estimated performance level of the device. This is a calculated property that is based on the following specs:
+
+| `device.class` for iOS| `model` |
+|---|---|
+| high | iPhone 12 series or higher |
+| medium | iPhone 7 series to iPhone 11 series |
+| low | iPhone 6 series or lower |
+
+| `device.class` for Android | `processor_count` | `processor_frequency` | `memory_size` |
+|---|---|---|---|
+| high | >= 8 | >= 2500 MHz | >= 6 GiB |
+| medium | >= 8 | >= 2000 MHz | >= 4 GiB |
+| low | < 8 | < 2000 MHz | < 4 GiB |
+
+These classifications are based on an analysis of the mobile devices available in the market today and are subject to change as the market evolves.

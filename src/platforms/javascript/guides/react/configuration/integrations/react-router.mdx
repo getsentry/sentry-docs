@@ -11,13 +11,14 @@ React Router support is included in the `@sentry/react` package since version `5
 
 <Alert level="info" title="Note">
 
-The React Router integration is designed to work with our Tracing SDK, `@sentry/tracing`. Please see [Getting Started with React Performance](/product/performance/getting-started/?platform=react) for more details on how to set up and install the SDK.
+The React Router integration is designed to work with Sentry Performance Monitoring. Please see [Getting Started with React Performance](/product/performance/getting-started/?platform=react) for more details on how to set up and install the SDK.
 
 </Alert>
 
 We support integrations for React Router 3, 4, 5, and 6.
 
 ## React Router v6
+
 _(Available in version 7 and above)_
 
 To use React Router v6 with Sentry:
@@ -30,37 +31,35 @@ Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation
 
 <Alert level="warning">
 
-Make sure `Sentry.reactRouterV6Instrumentation` is initialized by your `Sentry.init` call, before you wrap `<Routes />` component  or `useRoutes` hook. Otherwise, the routing instrumentation may not work properly.
+Make sure `Sentry.reactRouterV6Instrumentation` is initialized by your `Sentry.init` call, before you wrap `<Routes />` component or `useRoutes` hook. Otherwise, the routing instrumentation may not work properly.
 
 </Alert>
 
 ### Usage with React Router 6.4 Data API
-_(Available in version 7.21.0 and above)_
 
+_(Available in version 7.21.0 and above)_
 
 If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) from the `react-router-dom` package, you can use `Sentry.wrapCreateBrowserRouter` to wrap it with the instrumentation:
 
 ```javascript
-import { createBrowserRouter } from 'react-router-dom';
-import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
+import { createBrowserRouter } from "react-router-dom";
+import * as Sentry from "@sentry/react";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-          React.useEffect,
-          useLocation,
-          useNavigationType,
-          createRoutesFromChildren,
-          matchRoutes,
+        React.useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes
       ),
     }),
   ],
   tracesSampleRate: 1.0,
 });
-
 
 const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
   createBrowserRouter
@@ -69,7 +68,6 @@ const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
 const router = sentryCreateBrowserRouter([
   // ...
 ]);
-
 ```
 
 <Alert level="warning" title="Note">
@@ -78,16 +76,16 @@ While [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-r
 
 </Alert>
 
-
 ### Usage With `<Routes />` Component
 
 If you use the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context, as in the example below:
 
 ```javascript
-import React from 'react';
+import React from "react";
 import ReactDOM from "react-dom";
 import {
     Routes,
+    Route,
     BrowserRouter,
     useLocation,
     useNavigationType,
@@ -95,35 +93,37 @@ import {
     matchRoutes,
 } from "react-router-dom";
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 
 Sentry.init({
-    integrations: [
-        new BrowserTracing({
-            routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-                React.useEffect,
-                useLocation,
-                useNavigationType,
-                createRoutesFromChildren,
-                matchRoutes,
-            ),
-        }),
-    ],
-    tracesSampleRate: 1.0,
+  integrations: [
+    new Sentry.BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+        React.useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes
+      ),
+    }),
+  ],
+  tracesSampleRate: 1.0,
 });
 
-const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes)
+const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes);
 
 ReactDOM.render(
-    <BrowserRouter>
-        <SentryRoutes>
-            <Route path="/" element={<div>Home</div>} />
-        </SentryRoutes>
-    </BrowserRouter>,
+  <BrowserRouter>
+    <SentryRoutes>
+      <Route path="/" element={<div>Home</div>} />
+    </SentryRoutes>
+  </BrowserRouter>
 );
 ```
 
+This is only needed at the top level of your app, rather than how v4/v5 required wrapping every `<Route/>` you wanted parametrized.
+
 ### Usage With `useRoutes` Hook
+
 _(Available in version 7.12.1 and above)_
 
 If you specify your route definitions as an object to the [`useRoutes` hook](https://reactrouter.com/en/main/hooks/use-routes), use `Sentry.wrapUseRoutes` to create a patched `useRoutes` hook that instruments your routes with Sentry.
@@ -136,51 +136,48 @@ If you specify your route definitions as an object to the [`useRoutes` hook](htt
 
 ```javascript
 import {
-    createRoutesFromChildren,
-    matchRoutes,
-    useLocation,
-    useNavigationType,
-    useRoutes,
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+  useRoutes,
 } from "react-router-dom";
 import { wrapUseRoutes } from "@sentry/react";
 import { useEffect } from "react";
-import { BrowserTracing } from "@sentry/tracing";
 
 Sentry.init({
-    dsn: "___DSN___",
-    integrations: [
-        new BrowserTracing({
-            routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-                useEffect,
-                useLocation,
-                useNavigationType,
-                createRoutesFromChildren,
-                matchRoutes,
-            ),
-        }),
-    ],
-    tracesSampleRate: 1.0,
+  dsn: "___DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+        useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes
+      ),
+    }),
+  ],
+  tracesSampleRate: 1.0,
 });
 
 const useSentryRoutes = wrapUseRoutes(useRoutes);
 
 function App() {
-    return useSentryRoutes([
-        // ...
-    ]);
+  return useSentryRoutes([
+    // ...
+  ]);
 }
 
 ReactDOM.render(
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>,
-    document.getElementById("root"),
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
 );
 ```
 
-
-Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable.
-
+Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable. This is only needed at the top level of your app, rather than how v4/v5 required wrapping every `<Route/>` you wanted parametrized.
 
 ## React Router v4/v5
 
@@ -197,7 +194,6 @@ import {Route, Router, Switch } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 
 // Create Custom Sentry Route component
 const SentryRoute = Sentry.withSentryRouting(Route);
@@ -206,7 +202,7 @@ const history = createBrowserHistory();
 
 Sentry.init({
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
     }),
   ],
@@ -236,7 +232,6 @@ import { Route, Router, Switch, matchPath } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 
 const history = createBrowserHistory();
 
@@ -246,7 +241,7 @@ const routes = [{ path: '/users/:userid' }, { path: '/users' }, { path: '/' }];
 
 Sentry.init({
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV5Instrumentation(history, routes, matchPath),
     }),
   ],
@@ -278,7 +273,6 @@ To use the router integration, import and set a custom routing instrumentation a
 import * as Router from "react-router";
 
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 
 // Routes looks like this:
 const routes = (
@@ -292,7 +286,7 @@ const routes = (
 
 Sentry.init({
   integrations: [
-    new BrowserTracing({
+    new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV3Instrumentation(
         Router.browserHistory,
         // Must be Plain Routes.

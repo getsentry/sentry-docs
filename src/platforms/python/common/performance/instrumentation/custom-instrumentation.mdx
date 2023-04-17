@@ -8,7 +8,7 @@ The Sentry SDK for Python does a very good job of auto instrumenting your applic
 
 ## Add a Transaction
 
-Adding transactions will allow you to instrument and capture certain regions of your code. 
+Adding transactions will allow you to instrument and capture certain regions of your code.
 
 <Note>
 
@@ -106,6 +106,35 @@ def eat_slice(slice):
     swallow()
 ```
 
+## Define Span Creation in a Central Place
+
+To avoid having custom performance instrumentation code scattered all over your code base, pass a parameter <PlatformIdentifier name="functions-to-trace" /> to your `sentry_sdk.init()` call.
+
+```python
+import sentry_sdk
+
+functions_to_trace = [
+    "myrootmodule.eat_slice",
+    "myrootmodule.swallow",
+    "myrootmodule.chew",
+    "myrootmodule.someothermodule.another.some_function",
+    "myrootmodule.SomePizzaClass.some_method",
+]
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    functions_to_trace=functions_to_trace,
+)
+```
+
+Now, whenever a function specified in `functions_to_trace` will be executed, a span will be created and attached as a child to the currently running span.
+
+<Alert level="warning" title="Important">
+
+To enable performance monitoring for the functions specified in `functions_to_trace`, the SDK needs to load the function modules. Be aware, there may be code being executed in modules during module loading. To avoid this, use the method described above to trace your functions.
+
+</Alert>
+
 ## Accessing the Current Transaction
 
 To change data in an already ongoing transaction, use `Hub.current.scope.transaction`. This property will return a transaction if there's one running, otherwise it will return `None`.
@@ -136,7 +165,7 @@ import sentry_sdk
 def eat_slice(slice):
     span = sentry_sdk.Hub.current.scope.span
 
-    if span is None:
+    if span is not None:
         span.set_tag("slice_id", slice.id)
 
     ...

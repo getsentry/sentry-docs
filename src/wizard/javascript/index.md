@@ -7,11 +7,11 @@ type: language
 
 Install our JavaScript browser SDK using either `yarn` or `npm`:
 
-```bash {tabTitle: ESM}
+```bash
 # Using yarn
-yarn add @sentry/browser @sentry/tracing
+yarn add @sentry/browser
 # Using npm
-npm install --save @sentry/browser @sentry/tracing
+npm install --save @sentry/browser
 ```
 
 We also support alternate [installation methods](/platforms/javascript/install/).
@@ -20,11 +20,10 @@ We also support alternate [installation methods](/platforms/javascript/install/)
 
 ```javascript
 import * as Sentry from "@sentry/browser";
-import { BrowserTracing } from "@sentry/tracing";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new BrowserTracing()],
+  integrations: [new Sentry.BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.

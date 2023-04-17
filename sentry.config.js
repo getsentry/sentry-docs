@@ -10,6 +10,7 @@ Sentry.init({
     new Sentry.Replay({
       maskAllText: true,
       blockAllMedia: true,
+      unmask: [".hover-card-link"],
     }),
   ],
   tracesSampleRate: activeEnv === "development" ? 0 : 1,

@@ -82,6 +82,7 @@ export const PlatformSidebar = ({
           `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
+          `/${pathRoot}/crons/`,
         ]}
       />
       <DynamicNav
@@ -97,6 +98,13 @@ export const PlatformSidebar = ({
         prependLinks={[
           [`/${pathRoot}/session-replay/`, "Set Up Session Replay"],
         ]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/crons`}
+        title="Crons"
+        prependLinks={[[`/${pathRoot}/crons/`, "Set Up Crons"]]}
         suppressMissing
         tree={tree}
       />

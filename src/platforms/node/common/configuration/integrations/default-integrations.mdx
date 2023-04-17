@@ -17,7 +17,7 @@ _Import name: `Sentry.Integrations.InboundFilters`_
 
 This integration allows you to ignore specific errors based on the error message or the URL from which the exception originated.
 
-To configure it, use the `ignoreErrors`, `denyUrls`, and `allowUrls` SDK options directly.
+To configure it, use the `ignoreErrors`, `ignoreTransactions`, `denyUrls`, and `allowUrls` SDK options directly.
 Keep in mind that `denyUrls` and `allowUrls` only work for captured exceptions, not raw message events.
 
 ### FunctionToString
@@ -66,6 +66,7 @@ Available options:
 ```
 
 Where `TracingOptions` is:
+
 ```javascript
 {
   /**
@@ -143,9 +144,9 @@ Available options:
 
 _Import name: `Sentry.Integrations.LocalVariables`_
 
-_(Available in version 7.32.0 and above)_
+_(Available in version 7.46.0 and above)_
 
-This integration adds stack local variables to stack frames for uncaught exceptions.
+This integration adds stack local variables to stack frames for uncaught exceptions. Only works with Node 18+.
 
 To enable this integration, set the <PlatformLink to="/configuration/options/#include-local-variables">includeLocalVariables</PlatformLink>
 `init` option to `true`.
@@ -159,6 +160,7 @@ Available options:
   captureAllExceptions?: boolean;
 }
 ```
+
 <Alert level="warning">
 
 Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we
@@ -170,7 +172,7 @@ enabling the `captureAllExceptions` option:
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.Integrations.LocalVariables({
       captureAllExceptions: true,
@@ -186,7 +188,6 @@ try {
 ```
 
 </Alert>
-
 
 ### Modules
 
@@ -237,7 +238,7 @@ To override an integration's settings, provide a new instance to the `integratio
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.Integrations.OnUncaughtException({
       onFatalError: () => {
@@ -258,7 +259,7 @@ Sentry.init({
 
   integrations: function(integrations) {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.name !== 'Console');
+    return integrations.filter(integration => integration.name !== "Console");
   },
 });
 ```

@@ -11,7 +11,6 @@ notSupported:
   - dart
   - flutter
   - native
-  - php
   - ruby
   - javascript
   - javascript.vue
@@ -122,7 +121,7 @@ SentrySDK.start { options in
 
 <Note>
 
-The <PlatformIdentifier name="profiles-sample-rate" /> setting is *relative* to the <PlatformIdentifier name="traces-sample-rate" /> setting.
+The <PlatformIdentifier name="profiles-sample-rate" /> setting is _relative_ to the <PlatformIdentifier name="traces-sample-rate" /> setting.
 
 </Note>
 
@@ -142,7 +141,7 @@ In `AndroidManifest.xml`:
 
 <Note>
 
-The `io.sentry.traces.profiling.sample-rate` setting is *relative* to the `io.sentry.traces.sample-rate` setting.
+The `io.sentry.traces.profiling.sample-rate` setting is _relative_ to the `io.sentry.traces.sample-rate` setting.
 
 </Note>
 
@@ -152,47 +151,71 @@ The `io.sentry.traces.profiling.sample-rate` setting is *relative* to the `io.se
 
 <Note>
 
-Python profiling beta is available starting in SDK version `1.16.0`.
+Python profiling beta is available starting in SDK version `1.18.0`.
 
 </Note>
 
 ```python
+import sentry_sdk
+
+def profiles_sampler(sampling_context):
+    # ...
+    # return a number between 0 and 1 or a boolean
+
 sentry_sdk.init(
-  dsn="___DSN___",
-  traces_sample_rate=1.0,
-  _experiments={
-    "profiles_sample_rate": 1.0,
-  },
+    dsn="___DSN___",
+    traces_sample_rate=1.0,
+
+    # To set a uniform sample rate
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production,
+    profiles_sample_rate=1.0,
+
+    # Alternatively, to control sampling dynamically
+    profiles_sampler=profiles_sampler
 )
 ```
 
 <Note>
 
-The <PlatformIdentifier name="profiles_sample_rate" /> setting is *relative* to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
 
 </Note>
 
-</PlatformSection>
+### Upgrading from older SDK versions
 
+The feature was experimental prior to version `1.17.0`. To update to the latest SDK, remove `profiles_sample_rate` from `_experiments` and set it in the top-level options.
+
+```python
+sentry_sdk.init(
+    dsn="___DSN___",
+    traces_sample_rate=1.0,
+    _experiments={
+      "profiles_sample_rate": 1.0,  # for versions before 1.17.0
+    },
+)
+```
+
+</PlatformSection>
 
 <PlatformSection supported={["node"]}>
 
 ```javascript
-import * as Sentry from '@sentry/node';
-import '@sentry/tracing';
-import { ProfilingIntegration } from '@sentry/profiling-node';
+import * as Sentry from "@sentry/node";
+import { ProfilingIntegration } from "@sentry/profiling-node";
 
 Sentry.init({
-  dsn: '___DSN___',
+  dsn: "___DSN___",
   tracesSampleRate: 1,
   profilesSampleRate: 1,
-  integrations: [new ProfilingIntegration()]
+  integrations: [new ProfilingIntegration()],
 });
 ```
 
 <Note>
 
-The <PlatformIdentifier name="profilesSampleRate" /> setting is *relative* to the <PlatformIdentifier name="tracesSampleRate" /> setting.
+The <PlatformIdentifier name="profilesSampleRate" /> setting is _relative_ to the <PlatformIdentifier name="tracesSampleRate" /> setting.
 
 </Note>
 
@@ -230,7 +253,7 @@ sentry::init((
 
 <Note>
 
-The <PlatformIdentifier name="profiles_sample_rate" /> setting is *relative* to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
 
 </Note>
 

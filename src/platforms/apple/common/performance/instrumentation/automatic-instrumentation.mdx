@@ -81,7 +81,7 @@ Cold and warm start are Mobile Vitals, which you can learn about in the [full do
 
 ### Prewarmed App Start Tracing
 
-Starting with iOS 15, the system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. In these cases, we won’t be able to reliably measure the app start. However, with [sentry-cocoa 7.31.0](https://github.com/getsentry/sentry-cocoa/releases/tag/7.31.0), we’ve introduced an `enablePreWarmedAppStartTracking` feature (still in its experimental phase), which allows us to collect prewarmed app starts.
+Starting with iOS 15, the system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. In these cases, we won’t be able to reliably measure the app start. However, with [sentry-cocoa 7.31.0](https://github.com/getsentry/sentry-cocoa/releases/tag/7.31.0), we’ve introduced an `enablePreWarmedAppStartTracing` feature (still in its experimental phase), which allows us to collect prewarmed app starts.
 
 Once enabled, the SDK drops the first app start span if prewarming pauses. This approach shortens the app start duration, but it accurately represents the span of time from when a user clicks the app icon to when the app is responsive.
 With this feature, the SDK differentiates between four different app start types:
@@ -100,10 +100,10 @@ import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enablePreWarmedAppStartTracking = true
+    options.enablePreWarmedAppStartTracing = true
 
     // Before 8.0.0
-    options.enablePreWarmedAppStartTracing = true
+    options.enablePreWarmedAppStartTracking = true
 }
 ```
 
@@ -133,7 +133,7 @@ Slow and frozen frames are Mobile Vitals, which you can learn about in the [full
 
 ## Network Tracking
 
-Network Tracking is enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. The Sentry SDK adds spans for outgoing HTTP requests to ongoing transactions bound to the Scope. Currently, the SDK supports requests with [NSURLSession][NSURLSession], but not the legacy [NSURLConnection][NSURLConnection] yet.
+Network Tracking is enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. The Sentry SDK adds spans for outgoing HTTP requests to ongoing transactions bound to the Scope. Currently, the SDK supports requests with [NSURLSession][NSURLSession], but not the legacy [NSURLConnection][NSURLConnection].
 
 To disable the HTTP instrumentation:
 
@@ -306,3 +306,60 @@ SentrySDK.start { options in
 
 [UIWindow]: https://developer.apple.com/documentation/uikit/uiwindowdidbecomevisiblenotification
 [didFinishLaunching]: https://developer.apple.com/documentation/uikit/uiapplication/1622971-didfinishlaunchingnotification
+
+
+### Time to Initial Display
+
+_(New in version 8.4.0)_
+
+Time to initial display provides insight into how long it takes to your view controller to launch and draw their first frame, by adding a span for a view controller when it is loaded. The SDK sets the span operation to `ui.load.initial-display` and the span description to the view controllers's name followed by `initial display`, for example, `MainViewController initial display`.
+
+The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment.
+
+The span finishes after the view appeared on the screen.
+
+### Time to Full Display
+
+_(New in version 8.4.0)_
+
+Time to full display provides insight into how long it takes your view controller to launch and load all of its content, by adding a span for each launch of a view controller. The SDK sets the span operation to `ui.load.full-display` and the span description to the view controllers' name followed by `full display`, for example, `MainActivity full display`.
+
+The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment.
+
+_Time to full display is disabled by default, but you can enable it by setting:_
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableTimeToFullDisplay = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableTimeToFullDisplay = YES;
+}];
+```
+
+We can't detect when your UIViewController is fully loaded. Only you, the user, can achieve this. Therefore, you have to manually call the API to get proper statistics.
+_You can achieve this by using the following code:_
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.reportFullyDisplayed()
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK reportFullyDisplayed];
+```
+
+If the span finishes through the API, its `status` is set to `SpanStatus.OK`. If the span doesn't finish after 30 seconds, it will be finished by the SDK automatically, and its `status` will be set to `SpanStatus.DEADLINE_EXCEEDED`, also its duration will match the same of the `Time to initial display` span and the description will contain `Deadline Exceeded` suffix.
+If a call to `reportFullyDisplayed()` happens before the view controller appears, the reported time will be shifted to `Time to initial display` measured time.
