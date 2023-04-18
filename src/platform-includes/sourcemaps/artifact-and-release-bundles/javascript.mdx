@@ -1,10 +1,18 @@
-Sentry currently supports two methods of uploading sourcemaps: release bundles and artifact bundles. A bundle, at a higher level, includes all the build artifacts for your application and is necessary for Sentry to symbolicate incoming errors accurately.
+Sentry currently supports two methods of uploading sourcemaps: **release bundles** and **artifact bundles**. A bundle, at a higher level, includes all the build artifacts for your application and is necessary for Sentry to symbolicate incoming errors accurately.
 
-This article will provide a detailed explanation of how release and artifact bundles function, their distinctions, and the advantages of using one over the other.
+This article will provide a detailed explanation of how release and artifact bundles work, their distinctions, and the advantages of using one over the other.
+
+<Note>
+
+The knowledge contained in this article is **not** required for setting up sourcemaps. If you want to learn more on how to do it, go to [Uploading Source Maps](/platforms/javascript/guides/react/sourcemaps/uploading/).
+
+</Note>
 
 ## Uploading a Bundle
 
-Irrespectively of which bundle format you decide to use, `sentry-cli` will be responsible of taking your artifacts, packing them and uploading them to Sentry. Whenever the `upload` command is called, `sentry-cli` will create a special `.zip` file that contains metadata used by Sentry to index the bundle.
+Irrespectively of which bundle format you decide to use, `sentry-cli` will be responsible of taking your artifacts, packing them and uploading them to Sentry.
+
+Whenever the `upload` command is called, `sentry-cli` will create a special `.zip` file that contains metadata used by Sentry to index the bundle.
 
 <Note>
 
@@ -14,56 +22,58 @@ Irrespectively of which bundle format you decide to use, `sentry-cli` will be re
 
 ## What are Release Bundles
 
-A release bundle is a bundle format that must be connected to an existing release in Sentry. For this reason **the creation of a release is required** before uploading your artifacts.
+A release bundle is a bundle format that must be connected to an existing release in Sentry. For this reason **the creation of a `release` is required** before uploading your artifacts.
 
-### Pros and Cons
-
-Pros:
-- Works with almost every SDK
-
-Cons:
-- Hard to properly setup
-- Requires you to create a release in Sentry
+| Pros                        | Cons                                       |
+|-----------------------------|--------------------------------------------|
+| Work with almost every SDK | Hard to properly setup                     |
+|                             | Require you to create a release in Sentry |
 
 ### How Do They Work
 
 If you are using release bundles and a JavaScript error is ingested by Sentry the following steps are performed during processing:
-- The `release` is extracted from the error.
-- The release bundle connected to `release` is loaded into memory (in case multiple bundles are bound to the same release, an arbitrary bundle will be chosen).
+- The `release` and optionally `dist` are extracted from the error.
+- The release bundle connected to `release` and `dist` is loaded into memory (in case multiple bundles are bound to the same release, an arbitrary bundle will be chosen).
 - For each stack frame in the error, the corresponding `minified source` and `source map` are discovered.
-- When both the `minified source` and `source map` are discovered, they will be processed and the context lines of each stack frame will be computed.
+- When both the `minified source` and `source map` are discovered, they will be used for deriving the context lines of each stack frame.
 
 ## What are Artifact Bundles
 
-An artifact bundle is a new bundle format that aims to address the shortcomings of release bundles by **adding the support for Debug IDs** and **removing the need to create a release**.
+An artifact bundle is a new bundle format that aims to address the shortcomings of release bundles by **adding the support for Debug IDs** and **removing the need to create a `release`**.
 
-### Pros and Cons
+| Pros                                                 | Cons                                     |
+|------------------------------------------------------|------------------------------------------|
+| Support Debug IDs making the setup trivial          | Require SDKs and bundlers upgrade       |
+| Support an optional weak association with a release | May cause problems with integrity checks |
+|                                                      | Might have some maturity problems        |
 
-Pros:
-- Support Debug IDs making the setup trivial
-- Support an optional weak association with a release
-
-Cons:
-- Requires SDKs and bundlers upgrade
-- May cause problems with integrity checks
-- Might have some maturity problems
-
-### Debug IDs
+### Introducing Debug IDs
 
 The idea of Debug IDs emerged after the need of having a more reliable way to associate a `minified source` and its corresponding `source map`. The existing way of using a `//# sourceMappingURL=someurl` at the end of the `source map`, coupled with the necessity of having the same base path in the uploaded and served bundle, created lots of complexities for users.
 
 Debug IDs are unique identifiers generated by the `sentry-cli` or the bundler that bind together minified sources and their respective source maps. Each pair of `(minified source, source map)` contain the same Debug ID, which is injected into specific parts of each file. Debug IDs make the lookup process of sources much easier and less prone to errors, which translates into a better end user experience.
 
+<Note>
+
+If you want to learn more about the rationale behind Debug IDs, we suggested to take a look at our [engineering blog](https://sentry.engineering/blog/the-case-for-debug-ids).
+
+</Note>
+
 ### Weak Release Association
 
-The new artifact bundle format supports
+The new artifact bundle format supports a new kind of association to a `release` and optionally `dist`, known as weak release association. This type of association **will not require the creation of a `release`** before uploading sourcemaps and will consequentely allow the creation of a `release` as a separate step down the pipeline.
 
 ### Rationale Behind Artifact Bundles
 
-The main rationale behind the creation of artifact bundles was the need to remove the requirement for a strong association with a `release`. This association created problems for users who wanted to upload artifacts as part of their CI pipeline since it would create a release even if the bundle wasn't going to be deployed in that step.
+The main rationale behind the creation of artifact bundles was the need to remove the strong association with a `release`. This association created problems for users who wanted to upload artifacts as part of their CI pipeline since it would create a release even if the bundle wasn't going to be deployed in that step.
 
 Another issue we encountered was the imprecision of employing a URL-based lookup that was used to discover both the `minified source` and the `source map`. This led to a complicated implementation that used a best-effort algorithm to increase the likelihood of finding the correct URL. However, this added complexity and confusion for the user because the configuration of the bundle path needed to match precisely (e.g., `/static/chunks/somefile` instead of `/chunks/somefile` configured in the uploaded bundle).
 
-### Symbolication with Artifact Bundles
+### How Do They Work
 
-...
+If you are using artifact bundles and a JavaScript error is ingested by Sentry the following steps are performed during processing:
+- The `debug-id`(s) and `release` are extracted from the error.
+- The artifact bundle contaning the `debug-id`(s) in the stack frames is loaded (in case multiple bundles are bound to the same `debug-id`, the latest bundle will be chosen).
+- If the lookup via `debug-id`(s) failed or there are no `debug-id`(s) into the stack frames, the release bundle connected to `release` is loaded into memory (in case multiple bundles are bound to the same release, the latest bundle will be chosen).
+- For each stack frame in the error, the corresponding `minified source` and `source map` are discovered.
+- When both the `minified source` and `source map` are discovered, they will be used for deriving the context lines of each stack frame.
