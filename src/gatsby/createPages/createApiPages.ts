@@ -28,7 +28,7 @@ export default async ({ actions, graphql, reporter }) => {
         context: {
           id: node.id,
           title: node.path.operationId,
-          notoc: true
+          notoc: true,
         },
       });
     })

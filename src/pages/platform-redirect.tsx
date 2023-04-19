@@ -24,7 +24,7 @@ const PlatformRedirect = ({ path = "/" }: Props) => {
       </p>
 
       <ul>
-        {platformList.map((platform) => (
+        {platformList.map(platform => (
           <li key={platform.key}>
             <SmartLink to={`/platforms/${platform.key}${path}`}>
               <PlatformIcon
@@ -53,7 +53,7 @@ export default () => {
   const requestedPlatform = queryString.platform as string | null;
 
   const isValidPlatform = platformList.some(
-    (p) => p.key === requestedPlatform?.toLowerCase()
+    p => p.key === requestedPlatform?.toLowerCase()
   );
 
   if (isValidPlatform && requestedPlatform) {

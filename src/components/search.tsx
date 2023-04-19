@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import algoliaInsights from 'search-insights';
+import algoliaInsights from "search-insights";
 
 import Logo from "./logo";
 
@@ -13,26 +13,28 @@ import {
 import DOMPurify from "dompurify";
 
 // https://stackoverflow.com/a/2117523/115146
-function uuidv4(){
+function uuidv4() {
   let dt = new Date().getTime();
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = (dt + Math.random()*16)%16 | 0;
-      dt = Math.floor(dt/16);
-      return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+  const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(
+    c
+  ) {
+    const r = (dt + Math.random() * 16) % 16 | 0;
+    dt = Math.floor(dt / 16);
+    return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
   return uuid;
 }
 
 // Initialize Algolia Insights
-algoliaInsights('init', {
-  appId: 'OOK48W9UCL',
-  apiKey: '2d64ec1106519cbc672d863b0d200782',
-})
+algoliaInsights("init", {
+  appId: "OOK48W9UCL",
+  apiKey: "2d64ec1106519cbc672d863b0d200782",
+});
 
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
-const randomUserToken = uuidv4()
+const randomUserToken = uuidv4();
 
 const MAX_HITS = 10;
 
@@ -94,13 +96,19 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
       // Only search when we have more than two characters. Ideally we'd do three, but
       // we want to make sure people can search for Go and RQ
       search
-        .query(query, {
-          path,
-          platforms: platforms.map(platform => standardSDKSlug(platform).slug),
-          searchAllIndexes: showOffsiteResults,
-          ...args,
-        }, {clickAnalytics: true, analyticsTags: ["source:documentation"]})
-        .then((results: Result[], ) => {
+        .query(
+          query,
+          {
+            path,
+            platforms: platforms.map(
+              platform => standardSDKSlug(platform).slug
+            ),
+            searchAllIndexes: showOffsiteResults,
+            ...args,
+          },
+          { clickAnalytics: true, analyticsTags: ["source:documentation"] }
+        )
+        .then((results: Result[]) => {
           if (loading) setLoading(false);
 
           if (results.length === 1 && results[0].hits.length === 0) {
@@ -119,21 +127,24 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
-  const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
-    if(hit.id === undefined){
-      return
-    }
+  const trackSearchResultClick = useCallback(
+    (hit: Hit, position: number): void => {
+      if (hit.id === undefined) {
+        return;
+      }
 
-    algoliaInsights("clickedObjectIDsAfterSearch", {
-      eventName: "documentation_search_result_click",
-      userToken: randomUserToken,
-      index: hit.index,
-      objectIDs: [hit.id],
-      // Positions in Algolia are 1 indexed
-      queryID:  hit.queryID,
-      positions: [position + 1]
-    })
-  },[])
+      algoliaInsights("clickedObjectIDsAfterSearch", {
+        eventName: "documentation_search_result_click",
+        userToken: randomUserToken,
+        index: hit.index,
+        objectIDs: [hit.id],
+        // Positions in Algolia are 1 indexed
+        queryID: hit.queryID,
+        positions: [position + 1],
+      });
+    },
+    []
+  );
 
   return (
     <div ref={ref}>
@@ -175,7 +186,12 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
                         >
                           {hits.map((hit, index) => (
                             <li key={hit.id} className="sgs-hit-item">
-                              <a href={hit.url} onClick={() => trackSearchResultClick(hit, index)}>
+                              <a
+                                href={hit.url}
+                                onClick={() =>
+                                  trackSearchResultClick(hit, index)
+                                }
+                              >
                                 {hit.title && (
                                   <h6>
                                     <span

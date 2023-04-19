@@ -7,14 +7,7 @@ type Props = {
   platform?: string;
 };
 
-export default ({
-  name,
-  platform,
-}: Props): JSX.Element => {
+export default ({ name, platform }: Props): JSX.Element => {
   const [currentPlatform] = usePlatform(platform);
-  return (
-    <code>
-      {formatCaseStyle(currentPlatform.caseStyle, name)}
-    </code>
-  );
+  return <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>;
 };

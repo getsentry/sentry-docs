@@ -33,7 +33,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "javascript.nextjs",
   "ruby.rails",
   "flutter",
-  "unity"
+  "unity",
 ];
 
 const IndexPage = () => {

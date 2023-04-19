@@ -5,7 +5,7 @@ import styled from "@emotion/styled";
 const query = graphql`
   query CliExecutableChecksums {
     app(id: { eq: "sentry-cli" }) {
-      version,
+      version
       files {
         name
         checksums {
