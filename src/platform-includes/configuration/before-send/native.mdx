@@ -17,7 +17,6 @@ int main(void) {
 
 The callback is executed in the same thread as the call to `sentry_capture_event`. Work performed by the function may thus block the executing thread. For this reason, consider avoiding heavy work in `before_send`.
 
-
 #### Using `on_crash`
 
 The `before_send` callback implementation in `sentry-native` makes it hard to distinguish between normal events and crashes. For this reason, we introduced another callback, `on_crash`, which - at this point - only exists in `sentry_native`:
@@ -28,14 +27,14 @@ The `before_send` callback implementation in `sentry-native` makes it hard to di
 static sentry_value_t
 crash_cleanup(
     const sentry_ucontext_t *uctx, // provides the user-space context of the crash
-    sentry_value_t event,          // used the same way as in `before_send` 
+    sentry_value_t event,          // used the same way as in `before_send`
     void *closure                  // user-data that you can provide at configuration time
 )
 {
     // Do contextual clean-up before the crash is sent to sentry's backend infrastructure
-    
+
     /* ... */
-    
+
     // tell the backend to retain the event (+ dump)
     // or to discard it, you could free the event and return a `null`:
     //       sentry_value_decref(event);
@@ -56,14 +55,14 @@ The `on_crash` callback replaces `before_send` as a callback for crash events on
 
 - If you have a `before_send` implementation and do not define an `on_crash`
   callback `before_send` will receive both normal and crash events as before
-- If you only want to pre-process normal events with `before_send`, then 
-  you can define an "empty" `on_crash` callback that returns the 
+- If you only want to pre-process normal events with `before_send`, then
+  you can define an "empty" `on_crash` callback that returns the
   passed-in event and does nothing else.
-- If you are not interested in pre-processing normal events but only want 
-  to act on crashes, then only define an `on_crash` callback with the option 
-  to filter (available for all backends) or enrich (only for `inproc`) the 
+- If you are not interested in pre-processing normal events but only want
+  to act on crashes, then only define an `on_crash` callback with the option
+  to filter (available for all backends) or enrich (only for `inproc`) the
   crash event.
-  
+
 <Alert level="warning" title="Not Supported in Crashpad on macOS">
 
 The Crashpad backend on macOS doesn't currently support notifying the crashing process and thus can't correctly terminate sessions or call the registered `before_send` or `on_crash` hooks. It will also lose any events queued for sending at the time of the crash.

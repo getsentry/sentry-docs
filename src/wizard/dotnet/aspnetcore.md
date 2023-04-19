@@ -21,7 +21,6 @@ dotnet add package Sentry.AspNetCore -v {{ packages.version('sentry.dotnet.aspne
 
 Add Sentry to `Program.cs` through the `WebHostBuilder`:
 
-
 ```csharp
 public static IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)

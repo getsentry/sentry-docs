@@ -20,8 +20,8 @@ Install-Package Sentry.Xamarin -Version {{ packages.version('sentry.dotnet.xamar
 
 Initialize the SDK as early as possible, like in the constructor of the `App`, and Add `SentryXamarinFormsIntegration` as a new Integration to `SentryXamarinOptions` if you are going to run your app with Xamarin Forms:
 
-
 ### Android
+
 Initialize the SDK on your `MainActivity`.
 
 ```csharp
@@ -44,6 +44,7 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
 ```
 
 ### iOS
+
 Initialize the SDK on your `AppDelegate.cs`
 
 ```csharp
@@ -64,6 +65,7 @@ public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsAppli
 ```
 
 ### UWP
+
 Initialize the SDK on `App.xaml.cs`.
 
 NOTE: It's recommended to not setup the CacheDirectory for UWP.

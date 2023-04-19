@@ -42,6 +42,7 @@ For **SBT**:
 ```scala
 libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '4.0.0') }}"
 ```
+
 ## Configure
 
 Configure Sentry as soon as possible in your application's lifecycle:

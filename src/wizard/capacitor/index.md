@@ -35,8 +35,8 @@ The version of the sibling SDK must match with the version referred by Sentry Ca
 
 <Note>
 
- This step is not needed if you are using Capacitor 3
- 
+This step is not needed if you are using Capacitor 3
+
 </Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.
@@ -132,15 +132,15 @@ Standalone:
 
 ```javascript
 // App.js
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 
   // Set your release version, such as 'getsentry@1.0.0'
-  release: 'my-project-name@<release-name>',
+  release: "my-project-name@<release-name>",
   // Set your dist version, such as "1"
-  dist: '<dist>',
+  dist: "<dist>",
 });
 ```
 
@@ -149,22 +149,22 @@ Sentry.init({
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
-Sentry.captureException('Test Captured Exception');
+Sentry.captureException("Test Captured Exception");
 ```
 
 You can also throw an error anywhere in your application:
 
 ```javascript
 // Must be thrown after Sentry.init is called to be captured.
-throw new Error('Test Thrown Error');
+throw new Error("Test Thrown Error");
 ```
 
 Or trigger a native crash:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
 Sentry.nativeCrash();
 ```
