@@ -4,7 +4,7 @@ import { graphql } from "gatsby";
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
 import ApiSidebar from "~src/components/apiSidebar";
-import Content from "~src/components/content"
+import Content from "~src/components/content";
 
 export default props => {
   const {
@@ -47,7 +47,7 @@ export const pageQuery = graphql`
         }
       }
     }
-    apiDescription(name: {in: $tag}) {
+    apiDescription(name: { in: $tag }) {
       childMdx {
         body
       }

@@ -229,7 +229,7 @@ const KeywordIndicator = styled(ArrowDown)<{ isOpen: boolean }>`
   user-select: none;
   margin-right: 2px;
   transition: transform 200ms ease-in-out;
-  transform: rotate(${(p) => (p.isOpen ? "180deg" : "0")});
+  transform: rotate(${p => (p.isOpen ? "180deg" : "0")});
   stroke-width: 3px;
   position: relative;
   top: -1px;
@@ -313,7 +313,7 @@ const ItemButton = styled("button")<{ isActive: boolean }>`
     background: #eee;
   }
 
-  ${(p) =>
+  ${p =>
     p.isActive
       ? `
     background-color: #6C5FC7;
