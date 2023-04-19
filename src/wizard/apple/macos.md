@@ -73,7 +73,7 @@ func application(_ application: UIApplication,
 }
 ```
 
-When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry

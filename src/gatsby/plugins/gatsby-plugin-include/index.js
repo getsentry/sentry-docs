@@ -1,10 +1,10 @@
-const visit = require("unist-util-visit");
+const visit = require('unist-util-visit');
 
-module.exports = ({ markdownAST }) => {
+module.exports = ({markdownAST}) => {
   const imports = {};
   let idx = 0;
 
-  visit(markdownAST, "import", node => {
+  visit(markdownAST, 'import', node => {
     const match = node.value.match(/^\s*import\s"([^"]*\.mdx)"\s*;?\s*$/);
     let componentName = null;
     if (match) {
@@ -20,7 +20,7 @@ module.exports = ({ markdownAST }) => {
     }
 
     if (componentName) {
-      node.type = "jsx";
+      node.type = 'jsx';
       node.value = `<${componentName}/>`;
     }
   });
@@ -28,9 +28,9 @@ module.exports = ({ markdownAST }) => {
   const importList = Object.entries(imports);
   if (importList.length > 0) {
     markdownAST.children = importList
-      .map(([path, { componentName, position }]) => {
+      .map(([path, {componentName, position}]) => {
         return {
-          type: "import",
+          type: 'import',
           value: `import ${componentName} from "${path}";`,
           position,
         };

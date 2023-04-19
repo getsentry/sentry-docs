@@ -13,7 +13,7 @@ The following example creates a transaction for a part of the code that contains
 app.use(function processItems(req, res, next) {
   const item = getFromQueue();
   const transaction = Sentry.startTransaction({
-    op: "task",
+    op: 'task',
     name: item.getTransaction(),
   });
 

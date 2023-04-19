@@ -16,25 +16,25 @@ npm install --save @sentry/node
 ```
 
 ```javascript
-import connect from "connect";
-import * as Sentry from "@sentry/node";
+import connect from 'connect';
+import * as Sentry from '@sentry/node';
 
 // or using CommonJS
 // const connect = require('connect');
 // const Sentry = require('@sentry/node');
 
 // Must configure Sentry before doing anything else with it
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+Sentry.init({dsn: '___PUBLIC_DSN___'});
 
 function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
+  throw new Error('My first Sentry error!');
 }
 
 function onError(err, req, res, next) {
   // The error id is attached to `res.sentry` to be returned
   // and optionally displayed to the user for support.
   res.statusCode = 500;
-  res.end(res.sentry + "\n");
+  res.end(res.sentry + '\n');
 }
 
 connect(
@@ -83,7 +83,7 @@ For example, if you want to skip the server name and add just user, you would us
 app.use(
   Sentry.Handlers.requestHandler({
     serverName: false,
-    user: ["email"],
+    user: ['email'],
   })
 );
 ```

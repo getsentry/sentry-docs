@@ -1,10 +1,10 @@
 ---
-title: "Attachment Scrubbing"
+title: 'Attachment Scrubbing'
 sidebar_order: 4
 redirect_from:
   - /data-management-settings/attachment-datascrubbing/
-keywords: ["pii", "gdpr", "personally identifiable data", "compliance", "minidump"]
-description: "Learn about scrubbing attachments if they contain PII."
+keywords: ['pii', 'gdpr', 'personally identifiable data', 'compliance', 'minidump']
+description: 'Learn about scrubbing attachments if they contain PII.'
 ---
 
 PII can be included in attachments which are included in events.
@@ -22,11 +22,10 @@ When modifying data in the file, Sentry cannot modify the length of the file. Th
 
 Here is how this works specifically for each method:
 
-- *Remove*: As the entire field is removed, it is essentially replaced with the padding character.
-- *Mask*: This behaves as normal, all data is replaced with `*` masking character.
-- *Hash*: Hashing happens as usual, however the **binary representation** of the match is hashed, regardless of the encoding in which the match was made.  The resulting hash is padded or truncated as described above.
-- *Replace*: This behaves like normal, with the replacement being padded or truncated as described above.
-
+- _Remove_: As the entire field is removed, it is essentially replaced with the padding character.
+- _Mask_: This behaves as normal, all data is replaced with `*` masking character.
+- _Hash_: Hashing happens as usual, however the **binary representation** of the match is hashed, regardless of the encoding in which the match was made. The resulting hash is padded or truncated as described above.
+- _Replace_: This behaves like normal, with the replacement being padded or truncated as described above.
 
 ## Attachment Source Selectors
 
@@ -35,7 +34,6 @@ The filename must be in quotes to write a specific filename, but wildcards can a
 
 For example, for the filename `minidump.dmp`, you can select all fields to be scrubbed using `$attachments.'minidump.dmp'.**`.
 To write the same using a wildcard to select all attachments, you would write `$attachments.*.**` or even simply `$attachments.**`.
-
 
 ### Minidump Selectors
 
@@ -59,7 +57,7 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
   Additionally the regular expression is applied to any valid UTF-16LE strings found within the binary data.
 
 - The **heap memory**: This is considered to be any memory region which is not used as stack memory.
-  This means these memory regions could include other non-stack regions, such as files that are mapped to the process' memory using  `mmap`.
+  This means these memory regions could include other non-stack regions, such as files that are mapped to the process' memory using `mmap`.
   All these memory regions can be selected using the `heap_memory` path item selector.
   Additionally these regions also have `$binary` as a [value type](../advanced-datascrubbing/#value-types) selector, allowing you to write more generic rules.
 
@@ -67,15 +65,15 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
 
   Similar to stack memory, all [data types](../advanced-datascrubbing/#data-types) are matched as a binary UTF-8 regular expression as well as in any valid UTF-16LE strings found within the binary memory region.
 
-- A minidump also contains a list of **code modules**,  which are loaded at the time the minidump is created.
+- A minidump also contains a list of **code modules**, which are loaded at the time the minidump is created.
   This module list contains information about each module, including two fields that may contain file paths: the path of the code file and the path of the associated debug file.
 
   Since these fields are pathnames, they have the potential to contain a user's home directory.
-  As a result, it makes sense to apply the *Usernames in filepaths* [data type](../advanced-datascrubbing/#data-types) to these fields.
+  As a result, it makes sense to apply the _Usernames in filepaths_ [data type](../advanced-datascrubbing/#data-types) to these fields.
   The fields can be selected individually by their respective field names:
 
-  * `code_file`
-  * `debug_file`
+  - `code_file`
+  - `debug_file`
 
   Both fields have a [value type](../advanced-datascrubbing/#value-types) of `$string`. Any modification will exclude the basename of the pathnames to ensure the event processing pipeline can still operate correctly on the minidump.
 
@@ -103,7 +101,6 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
 
   Note the syntax to denote a string delimited by NULL in the regular expression: any sequence of characters not containing NULL, but ending in NULL. Here, NULL itself is represented by its unicode codepoint: `\u0000`.
 
-
 ## Malformed Minidumps
 
 If a minidump fails to be parsed because it is malformed it could still contain PII.
@@ -111,7 +108,6 @@ For this reason the minidump attachment is also scrubbed as one binary field if 
 
 In this case the entire attachment can be selected as normal using a filename selector or a wildcard: `$attachments.'minidump.dmp'` or `$attachments.*`.
 Additionally since the entire attachment is now a single field it can be selected using the `$binary` [value type](../advanced-datascrubbing/#value-types).
-
 
 ## Example
 

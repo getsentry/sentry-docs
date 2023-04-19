@@ -1,10 +1,10 @@
-const visit = require("unist-util-visit");
+const visit = require('unist-util-visit');
 
 function scopedEval(expr, context = {}) {
   const evaluator = Function.apply(null, [
     ...Object.keys(context),
-    "expr",
-    "return eval(expr)",
+    'expr',
+    'return eval(expr)',
   ]);
   return evaluator.apply(null, [...Object.values(context), expr]);
 }
@@ -21,7 +21,7 @@ const matchEach = (text, pattern, callback) => {
   return Promise.all(promises);
 };
 
-module.exports = async ({ markdownAST, markdownNode }, options) => {
+module.exports = async ({markdownAST, markdownNode}, options) => {
   const page = markdownNode.frontmatter;
 
   visit(
@@ -37,7 +37,7 @@ module.exports = async ({ markdownAST, markdownNode }, options) => {
       // TODO(dcramer): this could be improved by parsing the string piece by piece so you can
       // safely quote template literals e.g. {{ '{{ foo }}' }}
       matchEach(node.value, /\{\{\s*([^}]+)\s*\}\}/gi, async match => {
-        const expr = match[1].replace(/\s+$/, "");
+        const expr = match[1].replace(/\s+$/, '');
 
         // Known common value, lets just make life easy
         if (options.excludeExpr.indexOf(expr) !== -1) {

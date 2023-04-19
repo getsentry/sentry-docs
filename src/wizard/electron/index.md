@@ -19,9 +19,9 @@ You need to call `init` in the `main` process and every `renderer` process you s
 For more details about Electron [click here](/platforms/electron/)
 
 ```javascript
-import * as Sentry from "@sentry/electron";
+import * as Sentry from '@sentry/electron';
 
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+Sentry.init({dsn: '___PUBLIC_DSN___'});
 ```
 
 One way to verify your setup is by intentionally causing an error that breaks your application.
