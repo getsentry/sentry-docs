@@ -127,6 +127,6 @@ If you're new to Sentry, use the email alert to access your account and complete
 
 If you're an existing user and have disabled alerts, you won't receive this email.
 
-### Measure Performance  
+### Measure Performance
 
 Check out [the documentation](https://docs.sentry.io/platforms/java/guides/spring/performance/) to learn how to configure and use Sentry Performance Monitoring with Spring.

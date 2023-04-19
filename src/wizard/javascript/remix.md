@@ -90,9 +90,7 @@ After this step, Sentry will report any uncaught exceptions triggered by your ap
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
 ```javascript
-<button onClick={() => methodDoesNotExist()}>
-  Break the world
-</button>
+<button onClick={() => methodDoesNotExist()}>Break the world</button>
 ```
 
 Once you've verified the SDK is initialized properly and sent a test event, check out our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/)for additional configuration instructions.

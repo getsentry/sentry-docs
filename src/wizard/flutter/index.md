@@ -30,7 +30,7 @@ Future<void> main() async {
   );
 
   // or define SENTRY_DSN via Dart environment variable (--dart-define)
-}  
+}
 ```
 
 You can configure the `SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_DIST`, and `SENTRY_ENVIRONMENT` via the Dart environment variables passing the `--dart-define` flag to the compiler, as noted in the code sample.
