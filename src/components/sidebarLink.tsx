@@ -1,29 +1,29 @@
-import { withPrefix } from "gatsby";
-import React from "react";
-import { useLocation } from "@reach/router";
+import React from 'react';
+import {useLocation} from '@reach/router';
+import {withPrefix} from 'gatsby';
 
-import SmartLink from "./smartLink";
+import SmartLink from './smartLink';
 
 type Props = {
   to: string;
-  title?: string;
   children?: React.ReactNode;
   className?: string;
   collapsed?: boolean | null;
+  title?: string;
 };
 
-export default ({
+export default function SidebarLink({
   to,
   title,
   children,
   collapsed = null,
-  className = "",
-}: Props): JSX.Element => {
+  className = '',
+}: Props): JSX.Element {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
   const showSubtree = isActive || collapsed === false;
-  className += "toc-item";
+  className += 'toc-item';
 
   return (
     <li className={className} data-sidebar-branch>
@@ -37,4 +37,4 @@ export default ({
       )}
     </li>
   );
-};
+}

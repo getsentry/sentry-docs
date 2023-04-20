@@ -1,7 +1,9 @@
-import * as Sentry from "@sentry/gatsby";
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
 
-const activeEnv =
-  process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
+import * as Sentry from '@sentry/gatsby';
+
+const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
 Sentry.init({
   dsn: process.env.GATSBY_SENTRY_DSN,
@@ -10,10 +12,10 @@ Sentry.init({
     new Sentry.Replay({
       maskAllText: true,
       blockAllMedia: true,
-      unmask: [".hover-card-link"],
+      unmask: ['.hover-card-link'],
     }),
   ],
-  tracesSampleRate: activeEnv === "development" ? 0 : 1,
-  replaysSessionSampleRate: activeEnv === "development" ? 0 : 0.1,
-  replaysOnErrorSampleRate: activeEnv === "development" ? 0 : 1,
+  tracesSampleRate: activeEnv === 'development' ? 0 : 1,
+  replaysSessionSampleRate: activeEnv === 'development' ? 0 : 0.1,
+  replaysOnErrorSampleRate: activeEnv === 'development' ? 0 : 1,
 });
