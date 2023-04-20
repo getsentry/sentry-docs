@@ -1,18 +1,14 @@
-import metrics from "../../data/relay_metrics.json";
+import metrics from '../../data/relay_metrics.json';
 
-export const relayMetricsNodes = async ({
-  actions,
-  createNodeId,
-  createContentDigest,
-}) => {
-  const { createNode, createParentChildLink } = actions;
+export const relayMetricsNodes = ({actions, createNodeId, createContentDigest}) => {
+  const {createNode, createParentChildLink} = actions;
 
   metrics.forEach(metric => {
     const metricNode = {
       ...metric,
       id: createNodeId(metric.name),
       internal: {
-        type: "RelayMetric",
+        type: 'RelayMetric',
         contentDigest: createContentDigest(metric),
       },
     };
@@ -20,13 +16,13 @@ export const relayMetricsNodes = async ({
     createNode(metricNode);
 
     const descriptionNode = {
-      id: createNodeId(metric.name + "_description"),
+      id: createNodeId(metric.name + '_description'),
       parent: metricNode.id,
       internal: {
         content: metric.description,
         contentDigest: createContentDigest(metric.description),
-        mediaType: "text/markdown",
-        type: "RelayMetricDescription",
+        mediaType: 'text/markdown',
+        type: 'RelayMetricDescription',
       },
     };
 

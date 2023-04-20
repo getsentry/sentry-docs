@@ -1,58 +1,57 @@
-import fs from "fs";
-import yaml from "js-yaml";
-import * as matter from "gray-matter";
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
+
+import fs from 'fs';
+
+import * as matter from 'gray-matter';
+import yaml from 'js-yaml';
 
 const frontmatterConfig = new Set([
-  "title",
-  "caseStyle",
-  "supportLevel",
-  "sdk",
-  "fallbackPlatform",
-  "categories",
-  "aliases",
+  'title',
+  'caseStyle',
+  'supportLevel',
+  'sdk',
+  'fallbackPlatform',
+  'categories',
+  'aliases',
 ]);
 
-const shareableConfig = new Set([
-  "caseStyle",
-  "supportLevel",
-  "sdk",
-  "categories",
-]);
+const shareableConfig = new Set(['caseStyle', 'supportLevel', 'sdk', 'categories']);
 
 const DEFAULTS = {
-  caseStyle: "canonical",
-  supportLevel: "production",
+  caseStyle: 'canonical',
+  supportLevel: 'production',
 };
 
 type Config = {
-  title?: string;
-  caseStyle?: string;
-  supportLevel?: string;
-  sdk?: string;
-  fallbackPlatform?: string;
-  categories?: string[];
   aliases?: string[];
+  caseStyle?: string;
+  categories?: string[];
+  fallbackPlatform?: string;
+  sdk?: string;
+  supportLevel?: string;
+  title?: string;
 };
 
 export type Platform = Config & {
+  guides: Guide[];
   key: string;
   name: string;
   path: string;
   url: string;
-  guides: Guide[];
 };
 
 export type Guide = Config & {
+  fallbackPlatform: string;
   key: string;
   name: string;
-  platform: string;
   path: string;
+  platform: string;
   url: string;
-  fallbackPlatform: string;
 };
 
-const parseConfigFrontmatter = async (path: string) => {
-  const { data: frontmatter } = matter.read(path);
+const parseConfigFrontmatter = (path: string) => {
+  const {data: frontmatter} = matter.read(path);
   return Object.fromEntries(
     Object.entries(frontmatter).filter(([key]) => frontmatterConfig.has(key))
   );
@@ -62,12 +61,16 @@ const parseConfig = async (path: string): Promise<Config> => {
   let config = {};
   try {
     config = await parseConfigFrontmatter(`${path}/index.mdx`);
-  } catch (err) {}
+  } catch (err) {
+    // Do nothing
+  }
 
   try {
-    const fp = fs.readFileSync(`${path}/config.yml`, "utf8");
+    const fp = fs.readFileSync(`${path}/config.yml`, 'utf8');
     Object.assign(config, yaml.safeLoad(fp));
-  } catch (err) {}
+  } catch (err) {
+    // Do nothing
+  }
   return config;
 };
 
@@ -84,7 +87,7 @@ const fetchGuideList = async (
     return results;
   }
   for await (const dirent of dir) {
-    if (dirent.isDirectory() && dirent.name !== "common") {
+    if (dirent.isDirectory() && dirent.name !== 'common') {
       results.push({
         fallbackPlatform: platformName,
         ...DEFAULTS,
@@ -105,7 +108,7 @@ const fetchPlatformList = async (path: string): Promise<Platform[]> => {
   const results: Platform[] = [];
   const dir = fs.opendirSync(path);
   for await (const dirent of dir) {
-    if (dirent.isDirectory() && dirent.name !== "common") {
+    if (dirent.isDirectory() && dirent.name !== 'common') {
       const config = await parseConfig(`${path}/${dirent.name}`);
       const defaultConfig = Object.fromEntries(
         Object.entries(config).filter(([key]) => shareableConfig.has(key))
@@ -117,9 +120,9 @@ const fetchPlatformList = async (path: string): Promise<Platform[]> => {
         name: dirent.name,
         path: `${path}/${dirent.name}`,
         url: `/platforms/${dirent.name}/`,
-        guides: (
-          await fetchGuideList(dirent.name, defaultConfig)
-        ).sort((a, b) => a.name.localeCompare(b.name)),
+        guides: (await fetchGuideList(dirent.name, defaultConfig)).sort((a, b) =>
+          a.name.localeCompare(b.name)
+        ),
       });
     }
   }
@@ -134,30 +137,25 @@ const fetchPlatformList = async (path: string): Promise<Platform[]> => {
   return results;
 };
 
-const fillFallback = (
-  config: Platform | Guide,
-  results: (Platform | Guide)[]
-) => {
+const fillFallback = (config: Platform | Guide, results: (Platform | Guide)[]) => {
   if (config.fallbackPlatform) {
     const fallback = results.find(p => p.name === config.fallbackPlatform);
     if (!fallback) {
-      throw new Error(
-        `Unable to find fallbackPlatform: ${config.fallbackPlatform}`
-      );
+      throw new Error(`Unable to find fallbackPlatform: ${config.fallbackPlatform}`);
     }
     const defaultConfig = Object.fromEntries(
       Object.entries(fallback).filter(([key]) => shareableConfig.has(key))
     );
-    Object.assign(config, { ...defaultConfig, ...config });
+    Object.assign(config, {...defaultConfig, ...config});
   }
 };
 
 export default class PlatformRegistry {
   platforms: Platform[];
   path: string;
-  _keyMap: { [key: string]: Platform | Guide };
+  _keyMap: {[key: string]: Platform | Guide};
 
-  constructor(path = "src/platforms") {
+  constructor(path = 'src/platforms') {
     this.platforms = [];
     this.path = path;
     this._keyMap = {};

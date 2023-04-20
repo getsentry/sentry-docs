@@ -1,4 +1,4 @@
-const visit = require("unist-util-visit");
+const visit = require('unist-util-visit');
 
 function getFullMeta(node) {
   if (node.lang && node.meta) {
@@ -9,18 +9,18 @@ function getFullMeta(node) {
 
 function getFilename(node) {
   const meta = getFullMeta(node);
-  const match = (meta || "").match(/\{filename:\s*([^}]+)\}/);
-  return (match && match[1]) || "";
+  const match = (meta || '').match(/\{filename:\s*([^}]+)\}/);
+  return (match && match[1]) || '';
 }
 
 function getTabTitle(node) {
   const meta = getFullMeta(node);
-  const match = (meta || "").match(/\{tabTitle:\s*([^}]+)\}/);
-  return (match && match[1]) || "";
+  const match = (meta || '').match(/\{tabTitle:\s*([^}]+)\}/);
+  return (match && match[1]) || '';
 }
 
 // TODO(dcramer): this should only operate on MDX
-module.exports = ({ markdownAST }, { className = "code-tabs-wrapper" }) => {
+module.exports = ({markdownAST}, {className = 'code-tabs-wrapper'}) => {
   let lastParent = null;
   let pendingCode = [];
   let toRemove = [];
@@ -35,37 +35,36 @@ module.exports = ({ markdownAST }, { className = "code-tabs-wrapper" }) => {
       (arr, [node]) =>
         arr.concat([
           {
-            type: "jsx",
-            value: `<CodeBlock language="${node.lang ||
-              ""}" title="${getTabTitle(node)}" filename="${getFilename(
+            type: 'jsx',
+            value: `<CodeBlock language="${node.lang || ''}" title="${getTabTitle(
               node
-            )}">`,
+            )}" filename="${getFilename(node)}">`,
           },
           Object.assign({}, node),
           {
-            type: "jsx",
-            value: "</CodeBlock>",
+            type: 'jsx',
+            value: '</CodeBlock>',
           },
         ]),
       []
     );
 
-    rootNode.type = "element";
+    rootNode.type = 'element';
     rootNode.data = {
-      hName: "div",
+      hName: 'div',
       hProperties: {
         className,
       },
     };
     rootNode.children = [
       {
-        type: "jsx",
+        type: 'jsx',
         value: `<CodeTabs>`,
       },
       ...children,
       {
-        type: "jsx",
-        value: "</CodeTabs>",
+        type: 'jsx',
+        value: '</CodeTabs>',
       },
     ];
 
@@ -76,12 +75,12 @@ module.exports = ({ markdownAST }, { className = "code-tabs-wrapper" }) => {
     markdownAST,
     () => true,
     (node, _index, parent) => {
-      if (node.type !== "code" || parent !== lastParent) {
+      if (node.type !== 'code' || parent !== lastParent) {
         flushPendingCode();
         pendingCode = [];
         lastParent = parent;
       }
-      if (node.type === "code") {
+      if (node.type === 'code') {
         pendingCode.push([node, parent]);
       }
     }

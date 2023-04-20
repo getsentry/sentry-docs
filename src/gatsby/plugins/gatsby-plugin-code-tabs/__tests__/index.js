@@ -1,15 +1,15 @@
-const Remark = require("remark");
+const Remark = require('remark');
 
-const plugin = require("../");
+const plugin = require('../');
 
-const remark = new Remark().data("settings", {
+const remark = new Remark().data('settings', {
   commonmark: true,
   footnotes: true,
   pedantic: true,
 });
 
-describe("gatsby-plugin-code-tabs", () => {
-  it("folds two code blocks", () => {
+describe('gatsby-plugin-code-tabs', () => {
+  it('folds two code blocks', () => {
     const markdownAST = remark.parse(`
 ~~~python
 print "Hello World!"
@@ -19,11 +19,11 @@ print "Hello World!"
 console.log("Hello World!");
 ~~~
 `);
-    const transformed = plugin({ markdownAST }, {});
+    const transformed = plugin({markdownAST}, {});
     expect(transformed).toMatchSnapshot();
   });
 
-  it("does not fold code blocks split by a paragraph", () => {
+  it('does not fold code blocks split by a paragraph', () => {
     const markdownAST = remark.parse(`
 ~~~python
 print "Hello World!"
@@ -35,11 +35,11 @@ some text here:
 console.log("Hello World!");
 ~~~
 `);
-    const transformed = plugin({ markdownAST }, {});
+    const transformed = plugin({markdownAST}, {});
     expect(transformed).toMatchSnapshot();
   });
 
-  it("does not fold code blocks on different levels", () => {
+  it('does not fold code blocks on different levels', () => {
     const markdownAST = remark.parse(`
 1. a list here
    ~~~plain
@@ -50,11 +50,11 @@ console.log("Hello World!");
 outside list
 ~~~
 `);
-    const transformed = plugin({ markdownAST }, {});
+    const transformed = plugin({markdownAST}, {});
     expect(transformed).toMatchSnapshot();
   });
 
-  it("supports tab titles", () => {
+  it('supports tab titles', () => {
     const markdownAST = remark.parse(`
 ~~~plain {tabTitle: Hello}
 first
@@ -64,11 +64,11 @@ first
 second
 ~~~
 `);
-    const transformed = plugin({ markdownAST }, {});
+    const transformed = plugin({markdownAST}, {});
     expect(transformed).toMatchSnapshot();
   });
 
-  it("supports filenames", () => {
+  it('supports filenames', () => {
     const markdownAST = remark.parse(`
 ~~~plain {tabTitle: Hello} {filename: hello.txt}
 first
@@ -78,7 +78,7 @@ first
 second
 ~~~
 `);
-    const transformed = plugin({ markdownAST }, {});
+    const transformed = plugin({markdownAST}, {});
     expect(transformed).toMatchSnapshot();
   });
 });
