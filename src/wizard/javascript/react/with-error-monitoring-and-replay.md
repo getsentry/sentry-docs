@@ -19,7 +19,7 @@ Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
 import { createRoot } React from "react-dom/client";
-import React from "react";  
+import React from "react";
 import * as Sentry from "@sentry/react";
 import App from "./App";
 
