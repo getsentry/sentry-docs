@@ -7,7 +7,7 @@ type: framework
 
 Install our JavaScript browser SDK using either `yarn` or `npm`:
 
-```bash {tabTitle: ESM}
+```bash
 # Using yarn
 yarn add @sentry/browser
 # Using npm

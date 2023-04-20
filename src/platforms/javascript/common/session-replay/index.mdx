@@ -51,6 +51,20 @@ We’re investigating possible performance degradation in <b>some</b> Angular ap
 
 <PlatformContent includePath="session-replay/setup" />
 
+### Content Security Policy (CSP)
+Session Replay uses a WebWorker to perform work (e.g. compression) off the main UI thread so as not to degrade the performance of your application. Add the below entry to make sure that workers can be loaded:
+
+
+```
+worker-src 'self' blob:
+```
+
+[Safari versions <= 15.4](https://caniuse.com/?search=worker-src) do not support `worker-src`, you will need to additionally add an entry for `child-src`:
+
+```
+child-src 'self' blob:
+```
+
 ## User Session
 
 A user session starts when the Session Replay SDK is first loaded and initialized. The session will continue until 5 minutes passes without any user interactions with the application **or** until a maximum of 60 minutes have elapsed. Closing the browser tab will end the session immediately according to the rules for [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
