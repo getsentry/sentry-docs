@@ -1,22 +1,22 @@
-import React from "react";
-import { graphql } from "gatsby";
+import React from 'react';
+import {graphql} from 'gatsby';
 
-import Content from "~src/components/content";
+import Content from '~src/components/content';
 
-export default ({ data: { file } }) => {
-  const { frontmatter } = file.childMarkdownRemark;
+export default function WizardDebug({data: {file}}) {
+  const {frontmatter} = file.childMarkdownRemark;
   return (
-    <div style={{ margin: "2rem" }}>
+    <div style={{margin: '2rem'}}>
       <div
         style={{
-          border: "1px solid #ccc",
-          marginBottom: "2rem",
-          padding: "1rem",
-          background: "#f0f0f0",
+          border: '1px solid #ccc',
+          marginBottom: '2rem',
+          padding: '1rem',
+          background: '#f0f0f0',
         }}
       >
         <h2>Wizard Preview</h2>
-        <dl style={{ marginBottom: 0 }}>
+        <dl style={{marginBottom: 0}}>
           <dt>Name</dt>
           <dd>{frontmatter.name}</dd>
           <dt>Link</dt>
@@ -32,11 +32,11 @@ export default ({ data: { file } }) => {
       <Content file={file} />
     </div>
   );
-};
+}
 
 export const pageQuery = graphql`
   query WizardDebugQuery($id: String) {
-    file(id: { eq: $id }) {
+    file(id: {eq: $id}) {
       id
       relativePath
       sourceInstanceName

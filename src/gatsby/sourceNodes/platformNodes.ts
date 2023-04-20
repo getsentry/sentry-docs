@@ -1,4 +1,4 @@
-import PlatformRegistry from "../../shared/platformRegistry";
+import PlatformRegistry from '../../shared/platformRegistry';
 
 export const sourcePlatformNodes = async ({
   actions,
@@ -6,7 +6,7 @@ export const sourcePlatformNodes = async ({
   createNodeId,
   createContentDigest,
 }) => {
-  const { createNode } = actions;
+  const {createNode} = actions;
 
   const platformRegistry = new PlatformRegistry();
   await platformRegistry.init();

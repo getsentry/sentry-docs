@@ -1,37 +1,40 @@
-import { createFilePath } from "gatsby-source-filesystem";
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
 
-export default ({
+import {createFilePath} from 'gatsby-source-filesystem';
+
+export default function onCreateNode({
   node,
   actions,
   getNode,
   createContentDigest,
   createNodeId,
-}) => {
-  const { createNodeField, createNode } = actions;
+}) {
+  const {createNodeField, createNode} = actions;
   if (
-    (node.internal.type === "Mdx" || node.internal.type === "MarkdownRemark") &&
+    (node.internal.type === 'Mdx' || node.internal.type === 'MarkdownRemark') &&
     node.fileAbsolutePath
   ) {
-    const value = createFilePath({ node, getNode });
+    const value = createFilePath({node, getNode});
     createNodeField({
-      name: "slug",
+      name: 'slug',
       node,
       value,
     });
     createNodeField({
-      name: "legacy",
+      name: 'legacy',
       node,
-      value: value.indexOf("/clients/") === 0,
+      value: value.indexOf('/clients/') === 0,
     });
-  } else if (node.internal.type === "ApiEndpoint") {
-    const value = createFilePath({ node, getNode });
+  } else if (node.internal.type === 'ApiEndpoint') {
+    const value = createFilePath({node, getNode});
     createNodeField({
-      name: "slug",
+      name: 'slug',
       node,
       value: `/api${value}`,
     });
     createNodeField({
-      name: "legacy",
+      name: 'legacy',
       node,
       value: false,
     });
@@ -51,8 +54,8 @@ export default ({
 
     createNodeField({
       node,
-      name: "description___NODE",
+      name: 'description___NODE',
       value: markdownNode.id,
     });
   }
-};
+}
