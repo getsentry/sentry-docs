@@ -1,18 +1,18 @@
-import axios from "axios";
-import { promises as fs } from "fs";
+import {promises as fs} from 'fs';
+
+import axios from 'axios';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = "2e7fb04951d8be47c87db5991307c501af24adab";
+const SENTRY_API_SCHEMA_SHA = '2e7fb04951d8be47c87db5991307c501af24adab';
 
-const activeEnv =
-  process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
+const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
 export default async () => {
-  if (activeEnv === "development" && process.env.OPENAPI_LOCAL_PATH) {
+  if (activeEnv === 'development' && process.env.OPENAPI_LOCAL_PATH) {
     try {
       console.log(`Fetching from ${process.env.OPENAPI_LOCAL_PATH}`);
-      const data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, "utf8");
+      const data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, 'utf8');
       return data;
     } catch (error) {
       console.log(

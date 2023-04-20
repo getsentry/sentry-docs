@@ -7,39 +7,41 @@
 // remark-abbr is Copyright (c) Zeste de Savoir (https://zestedesavoir.com)
 // https://github.com/zestedesavoir/zmarkdown/tree/master/packages/remark-abbr
 
-const visit = require("unist-util-visit");
+const visit = require('unist-util-visit');
 
 const TERMS = {
-  fingerprint: "The set of characteristics that define an event.",
-  quota: "The monthly number of events that you pay Sentry to track.",
+  fingerprint: 'The set of characteristics that define an event.',
+  quota: 'The monthly number of events that you pay Sentry to track.',
   SaaS: "Sentry's cloud-based, software-as-a-service solution.",
   token:
-    "In search, a key-value pair or raw search term. Also, a value used for authorization.",
+    'In search, a key-value pair or raw search term. Also, a value used for authorization.',
   tracing:
-    "The process of logging the events that took place during a request, often across multiple services.",
+    'The process of logging the events that took place during a request, often across multiple services.',
 };
 
 function escapeRegExp(str) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"); // eslint-disable-line no-useless-escape
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&'); // eslint-disable-line no-useless-escape
 }
 
-const PATTERN = Object.keys(TERMS)
-  .map(escapeRegExp)
-  .join("|");
+const PATTERN = Object.keys(TERMS).map(escapeRegExp).join('|');
 const REGEX = new RegExp(`(\\b|\\W)(${PATTERN})(\\b|\\W)`);
-const CUSTOM_LINK_START = new RegExp("^<([a-zA-Z]+Link|a) ");
-const CUSTOM_LINK_END = new RegExp("^</([a-zA-Z]+Link|a)>");
+const CUSTOM_LINK_START = new RegExp('^<([a-zA-Z]+Link|a) ');
+const CUSTOM_LINK_END = new RegExp('^</([a-zA-Z]+Link|a)>');
 
 function replace(state, node) {
-  if (node.type == "root") return;
+  if (node.type === 'root') {
+    return undefined;
+  }
 
   // If this is an empty node there's nothing to consider.
-  if (!node.children) return "skip";
+  if (!node.children) {
+    return 'skip';
+  }
 
   // Do not replace abbreviations in headings because that appears to break the heading anchors.
-  if (node.type == "heading") {
+  if (node.type === 'heading') {
     state.alreadyExplained = {};
-    return "skip";
+    return 'skip';
   }
 
   // Do not replace abbreviations in links because that's two interactive
@@ -48,7 +50,9 @@ function replace(state, node) {
   //
   // This currently doesn't handle nesting of e.g.
   // <a><strong><abbr>... but we don't have that in docs.
-  if (node.type == "link") return "skip";
+  if (node.type === 'link') {
+    return 'skip';
+  }
 
   let insideCustomLink = false;
 
@@ -90,7 +94,7 @@ function replace(state, node) {
     // So in short, MDX defines an AST layout, remark-mdx defines an AST
     // layout, both packages are part of our dependency tree, and somehow in
     // our build process we end up with neither format.
-    if (child.type == "jsx" && child.value) {
+    if (child.type === 'jsx' && child.value) {
       if (CUSTOM_LINK_START.test(child.value)) {
         insideCustomLink = true;
       } else if (CUSTOM_LINK_END.test(child.value)) {
@@ -98,7 +102,7 @@ function replace(state, node) {
       }
     }
 
-    if (insideCustomLink || child.type !== "text" || !REGEX.test(child.value)) {
+    if (insideCustomLink || child.type !== 'text' || !REGEX.test(child.value)) {
       newChildren.push(child);
       continue;
     }
@@ -113,12 +117,12 @@ function replace(state, node) {
       if (TERMS[content] && !state.alreadyExplained[content]) {
         state.alreadyExplained[content] = true;
         newNode = {
-          type: "html",
+          type: 'html',
           value: `<div class="term-wrapper"><span class="term">${content}</span><span class="description" role="tooltip" aria-label="${content} definition">${TERMS[content]}</span></div>`,
         };
       } else {
         newNode = {
-          type: "text",
+          type: 'text',
           value: content,
         };
       }
@@ -128,9 +132,11 @@ function replace(state, node) {
   }
 
   node.children = newChildren;
+
+  return undefined;
 }
 
-module.exports = async ({ markdownAST }) => {
+module.exports = ({markdownAST}) => {
   const state = {
     alreadyExplained: {},
   };

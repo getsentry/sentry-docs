@@ -1,6 +1,6 @@
-import { getDataOrPanic } from "../helpers";
+import {getDataOrPanic} from '../helpers';
 
-export default async ({ actions, graphql, reporter }) => {
+async function main({actions, graphql, reporter}) {
   const data = await getDataOrPanic(
     `
       query {
@@ -18,7 +18,7 @@ export default async ({ actions, graphql, reporter }) => {
 
   const component = require.resolve(`../../templates/apiDoc.tsx`);
   await Promise.all(
-    data.openApi.tags.map(async (node: any) => {
+    data.openApi.tags.forEach((node: any) => {
       const name = node.x_sidebar_name || node.name;
       actions.createPage({
         path: `/api/${node.name.toLowerCase()}/`,
@@ -30,4 +30,6 @@ export default async ({ actions, graphql, reporter }) => {
       });
     })
   );
-};
+}
+
+export default main;

@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, {useEffect, useState} from 'react';
 
 type ProjectCodeKeywords = {
+  API_URL: string;
   DSN: string;
+  MINIDUMP_URL: string;
+  ORG_ID: number;
+  ORG_INGEST_DOMAIN: string;
+  ORG_SLUG: string;
+  PROJECT_ID: number;
+  PROJECT_SLUG: string;
   PUBLIC_DSN: string;
   PUBLIC_KEY: string;
   SECRET_KEY: string;
-  API_URL: string;
-  PROJECT_ID: number;
-  PROJECT_SLUG: string;
-  ORG_ID: number;
-  ORG_SLUG: string;
-  ORG_INGEST_DOMAIN: string;
-  MINIDUMP_URL: string;
   UNREAL_URL: string;
   title: string;
 };
@@ -21,21 +21,21 @@ type CodeKeywords = {
 };
 
 type Dsn = {
-  scheme: string;
-  publicKey: string;
-  secretKey?: string;
   host: string;
   pathname: string;
+  publicKey: string;
+  scheme: string;
+  secretKey?: string;
 };
 
 type ProjectApiResult = {
   dsn: string;
   dsnPublic: string;
   id: string;
-  slug: string;
   organizationId: string;
   organizationSlug: string;
   projectSlug: string;
+  slug: string;
 };
 
 // only fetch them once
@@ -44,19 +44,19 @@ let cachedCodeKeywords = null;
 const DEFAULTS: CodeKeywords = {
   PROJECT: [
     {
-      DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
-      PUBLIC_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
-      PUBLIC_KEY: "examplePublicKey",
-      SECRET_KEY: "exampleSecretKey",
-      API_URL: "https://sentry.io/api",
+      DSN: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+      PUBLIC_DSN: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+      PUBLIC_KEY: 'examplePublicKey',
+      SECRET_KEY: 'exampleSecretKey',
+      API_URL: 'https://sentry.io/api',
       PROJECT_ID: 0,
-      PROJECT_SLUG: "example-project",
+      PROJECT_SLUG: 'example-project',
       ORG_ID: 0,
-      ORG_SLUG: "example-org",
-      ORG_INGEST_DOMAIN: "o0.ingest.sentry.io",
+      ORG_SLUG: 'example-org',
+      ORG_INGEST_DOMAIN: 'o0.ingest.sentry.io',
       MINIDUMP_URL:
-        "https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey",
-      UNREAL_URL: "https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/",
+        'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
+      UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
       title: `example-org / example-project`,
     },
   ],
@@ -70,7 +70,7 @@ type CodeContextType = {
 
 const CodeContext = React.createContext<CodeContextType | null>(null);
 
-const parseDsn = function(dsn: string): Dsn {
+const parseDsn = function (dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
 
   return {
@@ -82,17 +82,16 @@ const parseDsn = function(dsn: string): Dsn {
   };
 };
 
-const formatMinidumpURL = ({ scheme, host, pathname, publicKey }: Dsn) => {
+const formatMinidumpURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/minidump/?sentry_key=${publicKey}`;
 };
 
-const formatUnrealEngineURL = ({ scheme, host, pathname, publicKey }: Dsn) => {
+const formatUnrealEngineURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/unreal/${publicKey}/`;
 };
 
-const formatApiUrl = ({ scheme, host }: Dsn) => {
-  const apiHost =
-    host.indexOf(".ingest.") >= 0 ? host.split(".ingest.")[1] : host;
+const formatApiUrl = ({scheme, host}: Dsn) => {
+  const apiHost = host.indexOf('.ingest.') >= 0 ? host.split('.ingest.')[1] : host;
 
   return `${scheme}${apiHost}/api`;
 };
@@ -101,34 +100,35 @@ const formatApiUrl = ({ scheme, host }: Dsn) => {
  * Fetch project details from sentry
  */
 export async function fetchCodeKeywords() {
-  let json: { projects: ProjectApiResult[] } | null = null;
+  let json: {projects: ProjectApiResult[]} | null = null;
 
   const url =
-    process.env.NODE_ENV === "development"
-      ? "http://dev.getsentry.net:8000/docs/api/user/"
-      : "https://sentry.io/docs/api/user/";
+    process.env.NODE_ENV === 'development'
+      ? 'http://dev.getsentry.net:8000/docs/api/user/'
+      : 'https://sentry.io/docs/api/user/';
 
-  const useDefaults = () => {
-    console.warn("Unable to fetch codeContext - using defaults.");
+  const makeDefaults = () => {
+    // eslint-disable-next-line no-console
+    console.warn('Unable to fetch codeContext - using defaults.');
     return DEFAULTS;
   };
 
   try {
-    const resp = await fetch(url, { credentials: "include" });
+    const resp = await fetch(url, {credentials: 'include'});
 
     if (!resp.ok) {
-      return useDefaults();
+      return makeDefaults();
     }
 
     json = await resp.json();
   } catch {
-    return useDefaults();
+    return makeDefaults();
   }
 
-  const { projects } = json;
+  const {projects} = json;
 
   if (projects?.length === 0) {
-    return useDefaults();
+    return makeDefaults();
   }
 
   return {
@@ -156,11 +156,7 @@ export async function fetchCodeKeywords() {
 export default CodeContext;
 
 export function useCodeContextState(fetcher = fetchCodeKeywords) {
-  let [codeKeywords, setCodeKeywords] = useState(DEFAULTS);
-  if (codeKeywords === null && cachedCodeKeywords !== null) {
-    setCodeKeywords(cachedCodeKeywords);
-    codeKeywords = cachedCodeKeywords;
-  }
+  const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
