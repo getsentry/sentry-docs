@@ -76,7 +76,6 @@ const useClickOutside = (
 };
 
 function relativizeUrl(url: string) {
-  console.log(url);
   return url.replace(/^.*:\/\/docs\.sentry\.io/, "");
 }
 
