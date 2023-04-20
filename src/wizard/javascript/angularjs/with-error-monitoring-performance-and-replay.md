@@ -22,16 +22,16 @@ npm install --save @sentry/browser @sentry/integrations
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
-import angular from "angular";
-import * as Sentry from "@sentry/browser";
-import { Angular as AngularIntegration } from "@sentry/integrations";
+import angular from 'angular';
+import * as Sentry from '@sentry/browser';
+import {Angular as AngularIntegration} from '@sentry/integrations';
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [
     new AngularIntegration(),
     new Sentry.BrowserTracing({
-      tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
+      tracePropagationTargets: ['localhost', 'https://yourserver.io/api'],
     }),
     new Sentry.Replay(),
   ],
@@ -43,7 +43,7 @@ Sentry.init({
 });
 
 // Finally require ngSentry as a dependency in your application module.
-angular.module("yourApplicationModule", ["ngSentry"]);
+angular.module('yourApplicationModule', ['ngSentry']);
 ```
 
 ## Verify
@@ -60,5 +60,3 @@ myUndefinedFunction();
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/angular/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [AngularJS Features](https://docs.sentry.io/platforms/javascript/guides/angular/angular1/): Learn about our first class integration with the AngularJS framework.
-- [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/angular/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
-- [Session Replay](https://docs.sentry.io/platforms/javascript/guides/angular/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.

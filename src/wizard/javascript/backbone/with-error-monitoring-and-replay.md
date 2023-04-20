@@ -21,10 +21,10 @@ npm install --save @sentry/browser
 You should `init` the Sentry SDK as soon as possible during your application:
 
 ```javascript
-import * as Sentry from "@sentry/browser";
+import * as Sentry from '@sentry/browser';
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -47,4 +47,3 @@ myUndefinedFunction();
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/backbone/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Backbone Features](https://docs.sentry.io/platforms/javascript/guides/backbone/features/): Learn about our first class integration with the Backbone framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/backbone/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
-- [Session Replay](https://docs.sentry.io/platforms/javascript/guides/backbone/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.

@@ -35,7 +35,7 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.BrowserTracing()],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
@@ -47,14 +47,7 @@ Sentry.init({
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
-<button
-  type="button"
-  onClick={() => {
-    throw new Error("Sentry Frontend Error");
-  }}
->
-  Throw error
-</button>
+return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 
 ---
@@ -63,5 +56,4 @@ This snippet contains an intentional error and can be used as a test to make sur
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/nextjs/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Next.js Features](https://docs.sentry.io/platforms/javascript/guides/nextjs/features/): Learn about our first class integration with the Next.js framework.
-- [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/nextjs/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/nextjs/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.

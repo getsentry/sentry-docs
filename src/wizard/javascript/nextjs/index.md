@@ -45,14 +45,7 @@ The above configuration has automatic error tracking with source maps for both J
 Then create an intentional error, so you can test that everything is working from your development environment. For example, a button whose `onClick` handler throws an error:
 
 ```javascript
-<button
-  type="button"
-  onClick={() => {
-    throw new Error('Sentry Frontend Error');
-  }}
->
-  Throw error
-</button>
+return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 
 If you're new to Sentry, use the email alert to access your account and complete a product tour.

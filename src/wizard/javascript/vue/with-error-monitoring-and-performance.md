@@ -24,9 +24,9 @@ Initialize Sentry as early as possible in your application's lifecycle.
 #### Vue 2
 
 ```javascript
-import Vue from "vue";
-import Router from "vue-router";
-import * as Sentry from "@sentry/vue";
+import Vue from 'vue';
+import Router from 'vue-router';
+import * as Sentry from '@sentry/vue';
 
 Vue.use(Router);
 
@@ -36,7 +36,7 @@ const router = new Router({
 
 Sentry.init({
   Vue,
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
@@ -51,15 +51,15 @@ Sentry.init({
 new Vue({
   router,
   render: h => h(App),
-}).$mount("#app");
+}).$mount('#app');
 ```
 
 #### Vue 3
 
 ```javascript
-import { createApp } from "vue";
-import { createRouter } from "vue-router";
-import * as Sentry from "@sentry/vue";
+import {createApp} from 'vue';
+import {createRouter} from 'vue-router';
+import * as Sentry from '@sentry/vue';
 
 const app = createApp({
   // ...
@@ -70,7 +70,7 @@ const router = createRouter({
 
 Sentry.init({
   app,
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
@@ -81,7 +81,7 @@ Sentry.init({
 });
 
 app.use(router);
-app.mount("#app");
+app.mount('#app');
 ```
 
 ## Verify
@@ -98,5 +98,4 @@ myUndefinedFunction();
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/vue/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Vue Features](https://docs.sentry.io/platforms/javascript/guides/vue/features/): Learn about our first class integration with the Vue framework.
-- [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/vue/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/vue/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.

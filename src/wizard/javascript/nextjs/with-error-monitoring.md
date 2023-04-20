@@ -6,6 +6,7 @@ type: framework
 ---
 
 ## Install
+
 Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
 
 ```bash
@@ -13,6 +14,7 @@ npx @sentry/wizard -i nextjs
 ```
 
 ## Configure
+
 Sentry wizard will automatically patch your application:
 
 - create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
@@ -33,26 +35,22 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
 });
 ```
 
 ## Verify
+
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 ```javascript
-<button
-  type="button"
-  onClick={() => {
-    throw new Error("Sentry Frontend Error");
-  }}
->
-  Throw error
-</button>
+return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 
 ---
+
 ## Next Steps
+
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/nextjs/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
 - [Next.js Features](https://docs.sentry.io/platforms/javascript/guides/nextjs/features/): Learn about our first class integration with the Next.js framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/nextjs/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
