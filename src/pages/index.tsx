@@ -115,7 +115,7 @@ const IndexPage = () => {
           <h1>Sentry Documentation</h1>
 
           <div className="index-search">
-            <Search />
+            <Search autoFocus />
           </div>
 
           <div className="integrations-logo-row">
