@@ -3,7 +3,6 @@ name: Next.js
 doc_link: https://docs.sentry.io/platforms/javascript/guides/nextjs/
 support_level: production
 type: framework
-wizard_setup: "./nextjs_wizard.md"
 ---
 
 Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
@@ -32,7 +31,7 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
@@ -49,7 +48,7 @@ Then create an intentional error, so you can test that everything is working fro
 <button
   type="button"
   onClick={() => {
-    throw new Error("Sentry Frontend Error");
+    throw new Error('Sentry Frontend Error');
   }}
 >
   Throw error
