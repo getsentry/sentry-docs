@@ -62,36 +62,38 @@ const Banner = ({ isModule = false }) => {
     if (manifest.indexOf(hash) === -1) enablebanner();
   });
 
-  return SHOW_BANNER
-    ? isVisible && (
-        <div
-          className={["promo-banner", isModule && "banner-module"]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <div className="promo-banner-message">
-            {OPTIONAL_BANNER_IMAGE ? <img src={OPTIONAL_BANNER_IMAGE} /> : ""}
-            <span>
-              {BANNER_TEXT}
-              <a href={BANNER_LINK_URL}>{BANNER_LINK_TEXT}</a>
-            </span>
-          </div>
-          <button
-            className="promo-banner-dismiss"
-            role="button"
-            onClick={() => {
-              const manifest = readOrResetLocalStorage() || [];
-              const payload = JSON.stringify([...manifest, hash]);
-              localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
-              setIsVisible(false);
-              document.body.classList.remove("banner-active");
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )
-    : null;
+  if (!SHOW_BANNER || !isVisible) {
+    return null;
+  }
+
+  return (
+    <div
+      className={["promo-banner", isModule && "banner-module"]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div className="promo-banner-message">
+        {OPTIONAL_BANNER_IMAGE ? <img src={OPTIONAL_BANNER_IMAGE} /> : ""}
+        <span>
+          {BANNER_TEXT}
+          <a href={BANNER_LINK_URL}>{BANNER_LINK_TEXT}</a>
+        </span>
+      </div>
+      <button
+        className="promo-banner-dismiss"
+        type="button"
+        onClick={() => {
+          const manifest = readOrResetLocalStorage() || [];
+          const payload = JSON.stringify([...manifest, hash]);
+          localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
+          setIsVisible(false);
+          document.body.classList.remove("banner-active");
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
 };
 
 export default Banner;
