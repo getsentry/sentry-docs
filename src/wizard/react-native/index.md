@@ -13,7 +13,7 @@ Sentry captures data by using an SDK within your application’s runtime.
 Run `@sentry/wizard`:
 
 ```bash
-yarn sentry-wizard -s -i reactNative
+npx @sentry/wizard -s -i reactNative
 ```
 
 [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [setup manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer.
