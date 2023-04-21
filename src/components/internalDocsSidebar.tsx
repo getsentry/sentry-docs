@@ -1,16 +1,11 @@
-import React from "react";
-import { useStaticQuery, graphql } from "gatsby";
+import React from 'react';
+import {graphql, useStaticQuery} from 'gatsby';
 
-import DynamicNav, { toTree } from "./dynamicNav";
+import DynamicNav, {toTree} from './dynamicNav';
 
 const query = graphql`
   query InternalDocsSidebarQuery {
-    allSitePage(
-      filter: {
-        path: { regex: "/contributing/" }
-        context: { draft: { ne: true } }
-      }
-    ) {
+    allSitePage(filter: {path: {regex: "/contributing/"}, context: {draft: {ne: true}}}) {
       nodes {
         path
         context {
@@ -23,7 +18,7 @@ const query = graphql`
   }
 `;
 
-export default (): JSX.Element => {
+export default function InternalDocsSidebar(): JSX.Element {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   return (
@@ -36,4 +31,4 @@ export default (): JSX.Element => {
       />
     </ul>
   );
-};
+}

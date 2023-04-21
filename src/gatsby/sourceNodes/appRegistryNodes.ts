@@ -1,10 +1,7 @@
-import AppRegistry from "../utils/appRegistry";
+import AppRegistry from '../utils/appRegistry';
 
-export const sourceAppRegistryNodes = async ({
-  actions,
-  createContentDigest,
-}) => {
-  const { createNode } = actions;
+export const sourceAppRegistryNodes = async ({actions, createContentDigest}) => {
+  const {createNode} = actions;
 
   const registry = new AppRegistry();
   const allApps = await registry.getList();
@@ -19,19 +16,16 @@ export const sourceAppRegistryNodes = async ({
       url: sdkData.package_url,
       repoUrl: sdkData.repo_url,
       files: sdkData.files
-        ? Object.entries(sdkData.files).map(
-            ([fileName, fileData]: [string, any]) =>
-              fileData.checksums
-                ? {
-                    name: fileName,
-                    checksums: Object.entries(fileData.checksums).map(
-                      ([key, value]) => ({
-                        name: key,
-                        value: value,
-                      })
-                    ),
-                  }
-                : {}
+        ? Object.entries(sdkData.files).map(([fileName, fileData]: [string, any]) =>
+            fileData.checksums
+              ? {
+                  name: fileName,
+                  checksums: Object.entries(fileData.checksums).map(([key, value]) => ({
+                    name: key,
+                    value,
+                  })),
+                }
+              : {}
           )
         : [],
     };
