@@ -33,6 +33,7 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
   tracesSampleRate: 1.0,
@@ -188,15 +189,15 @@ const nextConfig = {
 
 ## Configure `sentry-cli`
 
-The `SentryWebpackPlugin` uses `sentry-cli` to manage releases and source maps, which can be configured in one of two ways - using configuration files, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](/product/cli/configuration/).
+The `SentryWebpackPlugin` uses the `Sentry CLI` to manage releases and source maps, which can be configured in one of two ways - using a configuration file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](/product/cli/configuration/).
 
-If you choose to combine the two approaches, the environment variables will take precedence over values set in the configuration files. One common approach is to set sensitive data (like tokens) in the environment and include everything else in the configuration files added to your VCS.
+If you choose to combine the two approaches, the environment variables will take precedence over values set in the configuration file. One common approach is to set sensitive data (like tokens) in the environment and include everything else in the configuration file added to your VCS.
 
 The URL, organization, and project properties identify your organization and project, and the auth token authenticates your user account.
 
 ### Use Configuration Files for Source Map Upload
 
-You should commit all the properties to your VCS, except the auth token. You can accomplish this by using the `.sentryclirc` file and including your auth token:
+You can commit all the properties to your VCS, except the auth token. You can accomplish this by using the `.sentryclirc` file and including your auth token:
 
 ```ini {filename:.sentryclirc}
 [auth]
@@ -231,6 +232,30 @@ const nextConfig = {
 ```
 
 (This assumes you are using [the `next.config.(js|mjs)` setup shown above](#extend-nextjs-configuration).)
+
+## Configure Tunneling to avoid Ad-Blockers
+
+_(New in version 7.26.0)_
+
+You might notice that Sentry events are sometimes blocked by Ad-Blockers.
+Ad-blockers can be circumvented by using **tunneling**.
+
+The Sentry Next.js SDK provides an easy way to set up tunneling for your application.
+Use the `tunnelRoute` option in the `sentry` object in your `next.config.js` or `next.config.mjs` to provide a route the SDK will use to tunnel events to Sentry:
+
+```javascript {filename:next.config.(js|mjs)}
+const nextConfig = {
+  sentry: {
+    tunnelRoute: "/monitoring-tunnel",
+  },
+};
+```
+
+Please note that this option will tunnel Sentry events through your Next.js application so you might experience increased server usage.
+
+The `tunnelRoute` option does currently not work with self-hosted Sentry instances.
+
+Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.
 
 ## Configure Server-side Auto-instrumentation
 
@@ -324,30 +349,6 @@ const nextConfig = {
   },
 };
 ```
-
-## Configure Tunneling to avoid Ad-Blockers
-
-_(New in version 7.26.0)_
-
-You might notice that Sentry events are sometimes blocked by Ad-Blockers.
-Ad-blockers can be circumvented by using **tunneling**.
-
-The Sentry Next.js SDK provides an easy way to set up tunneling for your application.
-Use the `tunnelRoute` option in the `sentry` object in your `next.config.js` or `next.config.mjs` to provide a route the SDK will use to tunnel events to Sentry:
-
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    tunnelRoute: "/monitoring-tunnel",
-  },
-};
-```
-
-Please note that this option will tunnel Sentry events through your Next.js application so you might experience increased server usage.
-
-The `tunnelRoute` option does currently not work with self-hosted Sentry instances.
-
-Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.
 
 ### Opt Out of Sentry SDK bundling in Client or Server side
 
