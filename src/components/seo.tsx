@@ -1,6 +1,6 @@
-import React from "react";
-import Helmet from "react-helmet";
-import { StaticQuery, graphql } from "gatsby";
+import React from 'react';
+import Helmet from 'react-helmet';
+import {graphql, StaticQuery} from 'gatsby';
 
 const detailsQuery = graphql`
   query DefaultSEOQuery {
@@ -17,10 +17,10 @@ const detailsQuery = graphql`
 
 type Props = {
   title: string;
-  lang?: string;
   description?: string;
-  meta?: any[];
   keywords?: string[];
+  lang?: string;
+  meta?: any[];
   noindex?: boolean;
 };
 
@@ -28,16 +28,16 @@ type ChildProps = Props & {
   data: {
     site: {
       siteMetadata: {
-        title: string;
-        description?: string;
-        author?: string;
         sitePath: string;
+        title: string;
+        author?: string;
+        description?: string;
       };
     };
   };
 };
 
-export const SEO = ({
+export function BaseSEO({
   data,
   description,
   lang,
@@ -45,7 +45,7 @@ export const SEO = ({
   keywords = [],
   title,
   noindex,
-}: ChildProps): JSX.Element => {
+}: ChildProps): JSX.Element {
   const metaDescription = description || data.site.siteMetadata.description;
 
   return (
@@ -57,81 +57,81 @@ export const SEO = ({
       titleTemplate={`%s | ${data.site.siteMetadata.title}`}
       meta={[
         {
-          name: "description",
+          name: 'description',
           content: metaDescription,
         },
         {
-          property: "og:title",
+          property: 'og:title',
           content: title,
         },
         {
-          property: "og:description",
+          property: 'og:description',
           content: metaDescription,
         },
         {
-          property: "og:type",
-          content: "website",
+          property: 'og:type',
+          content: 'website',
         },
         {
-          property: "og:image",
+          property: 'og:image',
           content: `https://${data.site.siteMetadata.sitePath}/meta.png`,
         },
         {
-          property: "og:image:width",
-          content: "1200",
+          property: 'og:image:width',
+          content: '1200',
         },
         {
-          property: "og:image:height",
-          content: "630",
+          property: 'og:image:height',
+          content: '630',
         },
         {
-          name: "twitter:card",
-          content: "summary",
+          name: 'twitter:card',
+          content: 'summary',
         },
         {
-          name: "twitter:creator",
+          name: 'twitter:creator',
           content: data.site.siteMetadata.author,
         },
         {
-          name: "twitter:title",
+          name: 'twitter:title',
           content: title,
         },
         {
-          name: "twitter:image",
+          name: 'twitter:image',
           content: `https://${data.site.siteMetadata.sitePath}/meta-avatar.png`,
         },
         {
-          name: "twitter:description",
+          name: 'twitter:description',
           content: metaDescription,
         },
-        { rel: "icon", type: "image/png", href: "favicon.ico" },
+        {rel: 'icon', type: 'image/png', href: 'favicon.ico'},
       ]
         .concat(
           keywords.length > 0
             ? {
-                name: "keywords",
-                content: keywords.join(", "),
+                name: 'keywords',
+                content: keywords.join(', '),
               }
             : []
         )
         .concat(
           noindex
             ? {
-                property: "robots",
-                content: "noindex",
+                property: 'robots',
+                content: 'noindex',
               }
             : []
         )
         .concat(meta)}
     />
   );
-};
+}
 
-export default (props: Props): JSX.Element => {
+export default function SEO(props: Props): JSX.Element {
   return (
     <StaticQuery
       query={detailsQuery}
-      render={data => <SEO data={data} {...props} />}
+      render={data => <BaseSEO data={data} {...props} />}
     />
   );
-};
+}

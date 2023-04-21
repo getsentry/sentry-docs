@@ -6,12 +6,12 @@ supported:
   - apple
   - python
   - rust
+  - ruby
 notSupported:
   - unity
   - dart
   - flutter
   - native
-  - ruby
   - javascript
   - javascript.vue
   - react-native
@@ -26,10 +26,10 @@ notSupported:
   - native.minidumps
   - unreal
   - native.wasm
-description: "Learn how to enable profiling in your app if it is not already set up."
+description: 'Learn how to enable profiling in your app if it is not already set up.'
 ---
 
-<PlatformSection supported={["apple", "android", "python", "node"]}>
+<PlatformSection supported={["apple", "android", "python", "node", "ruby"]}>
 
 <Note>
 
@@ -86,6 +86,17 @@ sentry_sdk.init(
   dsn="___DSN___",
   traces_sample_rate=1.0,
 )
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["ruby"]}>
+
+```ruby
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  config.traces_sample_rate = 1.0
+end
 ```
 
 </PlatformSection>
@@ -199,6 +210,45 @@ sentry_sdk.init(
 
 </PlatformSection>
 
+<PlatformSection supported={["ruby"]}>
+
+<Note>
+
+Ruby profiling beta is available starting in SDK version `5.9.0`.
+
+</Note>
+
+We use the [`stackprof` gem](https://github.com/tmm1/stackprof) to collect profiles for Ruby.
+
+First add `stackprof` to your `Gemfile` and make sure it is loaded before `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'stackprof'
+gem 'sentry-ruby'
+```
+
+Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your sentry initializer.
+
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "<dsn>"
+  config.traces_sample_rate = 1.0
+  config.profiles_sample_rate = 1.0
+end
+```
+
+<Note>
+
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+
+</Note>
+
+</PlatformSection>
+
 <PlatformSection supported={["node"]}>
 
 ```javascript
@@ -267,3 +317,11 @@ If you don't see any profiling data in [sentry.io](https://sentry.io), you can t
 - Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
 - If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
 - Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
+
+<PlatformSection supported={["ruby"]}>
+
+### Limitations
+
+Profiles for multi-threaded servers like `puma` might not capture frames correctly when async I/O is happening. This is a limitation of `stackprof`.
+
+</PlatformSection>

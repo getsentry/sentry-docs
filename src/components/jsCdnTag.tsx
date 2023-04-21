@@ -1,17 +1,17 @@
-import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
+import React from 'react';
+import {graphql, useStaticQuery} from 'gatsby';
 
-import CodeBlock from "./codeBlock";
-import CodeTabs from "./codeTabs";
+import CodeBlock from './codeBlock';
+import CodeTabs from './codeTabs';
 
 type Props = {
-  tracing?: boolean;
   name?: string;
+  tracing?: boolean;
 };
 
 const query = graphql`
   query JsCdnPackage {
-    package(id: { eq: "sentry.javascript.browser" }) {
+    package(id: {eq: "sentry.javascript.browser"}) {
       version
       files {
         name
@@ -24,12 +24,10 @@ const query = graphql`
   }
 `;
 
-export default ({ tracing = false, name = "" }: Props): JSX.Element => {
-  const { package: packageData } = useStaticQuery(query);
+export default function JsCdnTag({tracing = false, name = ''}: Props): JSX.Element {
+  const {package: packageData} = useStaticQuery(query);
 
-  const bundleName = tracing
-    ? "bundle.tracing.min.js"
-    : name || "bundle.min.js";
+  const bundleName = tracing ? 'bundle.tracing.min.js' : name || 'bundle.min.js';
 
   return (
     <CodeTabs>
@@ -41,11 +39,11 @@ export default ({ tracing = false, name = "" }: Props): JSX.Element => {
             }/${bundleName}" integrity="sha384-${
               packageData.files
                 .find(f => f.name === bundleName)
-                .checksums.find(c => c.name === "sha384-base64").value
+                .checksums.find(c => c.name === 'sha384-base64').value
             }" crossorigin="anonymous"></script>`}</code>
           </pre>
         </div>
       </CodeBlock>
     </CodeTabs>
   );
-};
+}

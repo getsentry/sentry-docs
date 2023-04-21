@@ -1,10 +1,10 @@
-import AwsLambdaLayerRegistry from "../utils/awsLambdaLayerRegistry";
+import AwsLambdaLayerRegistry from '../utils/awsLambdaLayerRegistry';
 
 export const sourceAwsLambdaLayerRegistryNodes = async ({
   actions,
   createContentDigest,
 }) => {
-  const { createNode } = actions;
+  const {createNode} = actions;
 
   const registry = new AwsLambdaLayerRegistry();
   const layerMap = await registry.getLayerMap();
