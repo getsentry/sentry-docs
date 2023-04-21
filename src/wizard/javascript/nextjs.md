@@ -9,7 +9,7 @@ wizard_setup: "./nextjs_wizard.md"
 Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
 
 ```bash
-npx @sentry/wizard -i nextjs
+npx @sentry/wizard@latest -i nextjs
 ```
 
 Sentry wizard will automatically patch your application:
