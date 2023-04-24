@@ -9,7 +9,9 @@ This integration tracks app hangs. This feature is available on iOS, tvOS, and m
 There are many reasons an app can become unresponsive, from long running code to an infinite loop bug, and this can be frustrating to the end user.
 With app hang tracking, you can detect and fix this problem.
 
-The app hang detection integration has a default timeout of two (2) seconds. This means, that if the app is unresponsive for two seconds or more, the SDK creates an error event. With 7.24.0, we've improved the algorithm to detect app hangs sooner, decreasing it from `appHangTimeoutInterval * 2` to `appHangTimeoutInterval * 1.2`.
+The app hang detection integration has a default timeout of two (2) seconds. With 7.24.0, we've improved the algorithm to detect app hangs sooner, decreasing it from `appHangTimeoutInterval * 2` to `appHangTimeoutInterval * 1.2`. The SDK creates an error event if the app is unresponsive for two seconds or more.
+For detection, the SDK launches a dedicated watchdog thread, periodically enqueues work items on the main thread, and checks if the main thread executes them within the timeout.
+Recording the stacktrace precisely when the app hang occurs works reliably if the app is completely stuck. If the main thread is extremely busy with different code spots, our app hang detection might fire a bit too late, and the SDK might record a stacktrace that isn't 100% related to the code causing the app to hang.
 
 The event has the stack trace of all running threads so you can easily detect where the problem occurred. The SDK reports an app hang immediately but doesn't report the exact duration because the [watchdog](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) could kill the app any time when blocking the main thread.
 
