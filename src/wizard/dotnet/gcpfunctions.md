@@ -25,9 +25,7 @@ Or, manually add the Sentry dependency into your csproj file:
   </ItemGroup>
 ```
 
-
-Then, add Sentry to the  `Function` class through `FunctionsStartup`:
-
+Then, add Sentry to the `Function` class through `FunctionsStartup`:
 
 ```csharp
 // Add the following line:
