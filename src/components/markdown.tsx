@@ -1,8 +1,8 @@
 import 'prism-sentry/index.css';
 
 import React from 'react';
-import {MDXProvider} from '@mdx-js/react';
-import {MDXRenderer} from 'gatsby-plugin-mdx';
+import { MDXProvider } from '@mdx-js/react';
+import { MDXRenderer } from 'gatsby-plugin-mdx';
 
 import Alert from './alert';
 import Break from './break';
@@ -24,9 +24,10 @@ import PlatformIdentifier from './platformIdentifier';
 import PlatformLink from './platformLink';
 import PlatformSection from './platformSection';
 import RelayMetrics from './relayMetrics';
-import SandboxLink, {SandboxOnly} from './sandboxLink';
+import PiiFields from './relayPiifields';
+import SandboxLink, { SandboxOnly } from './sandboxLink';
 import SmartLink from './smartLink';
-import {VimeoEmbed, YouTubeEmbed} from './video';
+import { VimeoEmbed, YouTubeEmbed } from './video';
 
 const mdxComponents = {
   Alert,
@@ -45,6 +46,7 @@ const mdxComponents = {
   PageGrid,
   ParamTable,
   DefinitionList,
+  PiiFields,
   PlatformContent,
   PlatformLink,
   PlatformSection,
@@ -57,7 +59,7 @@ const mdxComponents = {
   SandboxOnly,
 };
 
-export default function Markdown({value}) {
+export default function Markdown({ value }) {
   return (
     <MDXProvider components={mdxComponents}>
       <MDXRenderer>{value}</MDXRenderer>
