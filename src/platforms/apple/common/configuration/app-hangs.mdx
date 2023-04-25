@@ -13,11 +13,11 @@ The app hang detection integration has a default timeout of two (2) seconds. Thi
 
 The event has the stack trace of all running threads so you can easily detect where the problem occurred. The SDK reports an app hang immediately but doesn't report the exact duration because the [watchdog](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) could kill the app any time when blocking the main thread.
 
-The app hangs code runs in the background when disabled when keeping watchdog termination tracking enabled, but it won't report app hangs. The watchdog termination tracking otherwise would report false errors if the OS kills your app caused by an app hang.
+When watchdog termination tracking is enabled, the app hang code is disabled, runs in the background, and won’t report app hangs. This is done to minimize the number of false errors being reported by watchdog termination tracking, (such as if the OS kills an app causing an app hang).
 
-Because the app hang detection integration uses SentryCrashIntegration to capture the stack trace when creating app hang events, if SentryCrashIntegration is disabled, the integration won’t work.
+Because the app hang detection integration uses SentryCrashIntegration to capture the stack trace when creating app hang events,  SentryCrashIntegration has to be enabled for the integration to work. 
 
-Since 8.0.0, this feature has been enabled by default. To disable it:
+Starting with version 8.0.0, this feature has been enabled by default. To disable it:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -38,7 +38,7 @@ SentrySDK.start { options in
 
 ```
 
-If you want to change the timeout, you can do so by changing the `appHangTimeoutInterval` option:
+You can change the timeout by changing the `appHangTimeoutInterval` option:
 
 ```swift {tabTitle:Swift}
 import Sentry
