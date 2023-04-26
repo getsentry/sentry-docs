@@ -13,7 +13,7 @@ async function main(params) {
     sourcePackageRegistryNodes(params),
     sourceAppRegistryNodes(params),
     sourceAwsLambdaLayerRegistryNodes(params),
-    piiFieldsNodes(params), // Add this line
+    piiFieldsNodes(params),
   ]);
 }
 
