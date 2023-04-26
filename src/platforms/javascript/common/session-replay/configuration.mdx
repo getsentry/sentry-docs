@@ -21,19 +21,54 @@ The following options can be configured on the root level of your browser-based 
 
 The following options can be configured as options to the integration, in `new Replay({})`:
 
-| Key           | Type    | Default | Description                                                                                                                                                                        |
-| ------------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stickySession | boolean | `true`  | Keep track of the user across page loads. Note, a single user using multiple tabs will result in multiple sessions. Closing a tab will result in the session being closed as well. |
+| Key                    | Type                 | Default | Description                                                                                                                                                                        |
+| ---------------------- | -------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| stickySession          | boolean              | `true`  | Keep track of the user across page loads. Note, a single user using multiple tabs will result in multiple sessions. Closing a tab will result in the session being closed as well. |
+| networkDetailAllowUrls | (string \| RegExp)[] | `[]`    | Capture request/response details for XHR/Fetch requests that match the given URLs.                                                                                                 |
+| networkCaptureBodies   | boolean              | `true`  | If request/response bodies should be captured.                                                                                                                                     |
+| networkRequestHeaders  | string[]             | `[]`    | Request headers to capture in addition to default headers.                                                                                                                         |
+| networkResponseHeaders | string[]             | `[]`    | Response headers to capture in addition to default headers.                                                                                                                        |
+
+### Sampling
+
+When Replay is initialized, we check the `replaysSessionSampleRate`.
+If it is sampled, then we start recording & sending Replay data immediately.
+
+Else, if `replaysOnErrorSampleRate > 0`, we'll start recording in buffering mode.
+In this mode, whenever an error occurs we'll check `replaysOnErrorSampleRate`.
+If it is sampled, when we'll upload the Replay to Sentry and continue recording normally.
+
+When both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, recording will _not_ start.
+In this case, you can manually start recording. TODO
+
+### Network Details
+
+By default, Replay will capture all outgoing fetch/xhr requests in your application. This includes the URL, request/response body size, and status code.
+
+If you want to capture additional information like headers or bodies, you need to opt-in for this via `networkDetailAllowUrls`.
+Any URL matching the given pattern(s) will be captured with additional detail:
+
+```javascript
+new Replay({
+   networkDetailAllowUrls: ['https://sentry.io/api']
+});
+```
+
+When provided a string, we will match any URL that contains the given string. You can use a Regex to handle exact matches or more complex matching.
+
+Any request to a matching URL will by default be enhanced with the request/response body, as well as the default headers `content-type`, `content-length` and `accept`. If you want to capture additional headers, you have to configure them via `networkRequestHeaders` and `networkResponseHeaders`.
+
+Note that captured bodies will be truncated to a max. size of about 150k characters. Content in bodies will be PII sanitized based on object keys & values.
 
 ## Identifying Users
 
 You can use the Sentry SDK to set the user of a session. To associate a user identity to a session replay, refer to the <PlatformLink to="/enriching-events/identify-user">Identifying User Docs</PlatformLink>.
 
 ```javascript
-Sentry.setUser({ email: "jane.doe@example.com" });
+Sentry.setUser({email: 'jane.doe@example.com'});
 ```
 
-## Start and Stop Recording
+## Starting Recording
 
 Replay recording starts if it's included in the `integrations` array when calling `Sentry.init` or, when `addIntegration` is called from a Sentry client instance. To stop recording, call `stop()`:
 
@@ -46,16 +81,10 @@ Sentry.init({
 });
 
 // Or if you want to defer loading Replay
-getCurrentHub()
-  .getClient()
-  .addIntegration(replay);
-
-// sometime later
-await replay.flush(); // wait for any pending recording data to be sent
-replay.stop();
-
-replay.start();
+getCurrentHub().getClient().addIntegration(replay);
 ```
+
+Learn more about manually starting & stopping Replay in <PlatformLink to="/session-replay/understanding-sessions/">Understanding Sessions</PlatformLink>.
 
 ## Privacy
 
