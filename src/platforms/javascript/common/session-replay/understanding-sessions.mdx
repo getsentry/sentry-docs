@@ -13,22 +13,21 @@ description: 'Learn about customizing sessions with the Session Replay SDK.'
 By default, Replay will immediately start a session in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
 
 When Replay is initialized, we check the `replaysSessionSampleRate`.
-If it is sampled, then we start recording in `session` mode & sending Replay data immediately.
+If it is sampled, it will start recording in `session` mode and begin sending Replay data immediately.
 
-Else, if `replaysOnErrorSampleRate > 0`, we'll start recording in `buffer` mode.
-In this mode, whenever an error occurs we'll check `replaysOnErrorSampleRate`.
-If it is sampled, when we'll upload the Replay to Sentry and continue recording normally.
+Else, if `replaysOnErrorSampleRate > 0`, it will start recording in `buffer` mode.
+In this mode, when an error occurs, `replaysOnErrorSampleRate` is used to check if it should be sampled. If it is sampled, then the Replay will be uploaded to Sentry and continue recording normally.
 
 When both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, recording will _not_ start.
 In this case, you can manually start recording.
 
 ## Session Mode
 
-In `session` mode, Replay will continuously record & send data to Sentry. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and a new session will be initialized based on the rules from the section above.
+In `session` mode, Replay will continuously record and send data to Sentry. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and a new session will be initialized based on the rules from the section above.
 
 ## Buffer Mode
 
-In `buffer` mode, Replay will continuously record data, but only keep up to the last 60 seconds of data in memory. When an error occurs, Replay will check `replaysOnErrorSampleRate` and if it is sampled, Replay will upload the data to Sentry and continue recording normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and Replay will stop.
+In `buffer` mode, Replay will continuously record data, but only keep up to the last 60 seconds of data in memory. When an error occurs, `replaysOnErrorSampleRate` is checked and if it is sampled, the replay will be uploaded to Sentry and continue recording normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
 
 ## Manually Starting Recording
 
@@ -44,6 +43,8 @@ const replay = new Sentry.Replay({
 // This starts in `session` mode, regardless of sample rates
 replay.start();
 
+// OR
+
 // This starts in `buffer` mode, regardless of sample rates
 replay.startBuffering();
 ```
@@ -56,7 +57,7 @@ You can always stop a running session:
 await replay.stop();
 ```
 
-This will flush any pending recording data, and then stop the replay.
+This will flush any pending recording data, stop the replay, and end the session.
 
 ## Manually Flushing Recording Data
 
