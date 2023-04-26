@@ -1,15 +1,15 @@
 In this guide, you'll learn how to successfully upload source maps using our `sentry-cli` tool.
 
-## Introduction
+<Note>
 
-You can use two methods of uploading source maps:
+This guide assumes the following:
 
-1. Artifact Bundles (Preferred): Upload source maps whenever you need
-2. Release Bundles: Upload source maps when you create a new [Sentry release](/product/releases/)
+- `sentry-cli` version >= `2.17.0`
+- Sentry Javascript SDK version >= `7.47.0`
 
-Visit [Artifact vs. Release bundles](/platforms/javascript/sourcemaps/artifact-and-release-bundles/) if you want to learn more about Artifact Bundles and Debug IDs.
+</Note>
 
-## Configure Sentry CLI
+## 1. Configure Sentry CLI
 
 <Note>
 
@@ -42,18 +42,7 @@ export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 ```
 
-## Option 1: Upload an Artifact Bundle (Preferred)
-
-<Note>
-
-Uploading artifact bundles requires:
-
-- `sentry-cli` version >= `2.17.0`
-- Sentry Javascript SDK version >= `7.47.0`
-
-</Note>
-
-### 1. Generate Artifacts
+## 2. Generate Source Maps
 
 First, configure the bundler to output source maps. Here's an example of what this looks like for Webpack:
 
@@ -71,9 +60,33 @@ module.exports = {
 };
 ```
 
-### 2. Inject Debug IDs Into Artifacts
+```ìni {filename:.sentryclirc}
+[auth]
+token=your-auth-token
 
-Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file.
+[defaults]
+org=___ORG_SLUG___
+project=___PROJECT_SLUG___
+```
+
+```bash
+export SENTRY_AUTH_TOKEN=your-auth-token
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+```
+
+<Note>
+
+This guide requires:
+
+- `sentry-cli` version >= `2.17.0`
+- Sentry Javascript SDK version >= `7.47.0`
+
+</Note>
+
+## 3. Inject Debug IDs Into Artifacts
+
+Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file. Visit [Artifact vs. Release bundles](/platforms/javascript/sourcemaps/artifact-and-release-bundles/) if you want to learn more about Artifact Bundles and Debug IDs.
 
 To inject Debug IDs, use the following command:
 
@@ -81,7 +94,7 @@ To inject Debug IDs, use the following command:
 sentry-cli sourcemaps inject /path/to/directory
 ```
 
-#### Verify Debug IDs Were Injected in Artifacts
+### Verify Debug IDs Were Injected in Artifacts
 
 Minified source files should contain at the end a comment named `debugId` like:
 
@@ -101,7 +114,7 @@ Source maps should contain a field named `debug_id` like:
 }
 ```
 
-### 3. Upload Artifact Bundle
+## 4. Upload Artifact Bundle
 
 After you've injected Debug IDs into your artifacts, upload them using the following command.
 
@@ -109,11 +122,13 @@ After you've injected Debug IDs into your artifacts, upload them using the follo
 sentry-cli sourcemaps upload --use-artifact-bundle /path/to/directory
 ```
 
-#### Verify That Artifact Bundles Were Uploaded
+### Verify That Artifact Bundles Were Uploaded
 
 Open up Sentry and navigate to **Project Settings > Source Maps**. If you choose “Artifact Bundles” in the tabbed navigation, you'll see all the artifact bundles that have been successfully uploaded to Sentry.
 
-#### Associating `release` with Artifact Bundle (Optional)
+## Optional Steps
+
+### Associating `release` with Artifact Bundle
 
 Provide a `release` property in your SDK options.
 
@@ -137,7 +152,7 @@ Running `upload` with `--release` **doesn't automatically create a release in Se
 
 </Note>
 
-#### Associating `dist` with Artifact Bundle (Optional)
+### Associating `dist` with Artifact Bundle
 
 In addition to `release`, you can also add a `dist` to your uploaded artifacts. For that, run the `sourcemaps upload` command with the additional `--dist` option.
 
@@ -145,7 +160,7 @@ In addition to `release`, you can also add a `dist` to your uploaded artifacts. 
 sentry-cli sourcemaps upload --use-artifact-bundle --release=<release_name> --dist=<dist_name> /path/to/directory
 ```
 
-### 4. Deploy your Application
+## 5. Deploy your Application
 
 If you're following this guide from your local machine, then you've successfully:
 
@@ -154,49 +169,3 @@ If you're following this guide from your local machine, then you've successfully
 3. Uploaded those artifacts to Sentry with our upload command
 
 The last step is deploying a new version of your application using the generated artifacts you created in step one. **We strongly recommend that you integrate `sentry-cli` into your CI/CD Pipeline**, to ensure each subsequent deploy will automatically inject debug IDs into each artifact and upload them directly to Sentry.
-
-## Option 2: Upload a Release Bundle (Legacy)
-
-Sentry can also use [releases](/product/releases/) to match uploaded source maps to events. You can use `sentry-cli` to create releases and upload their source maps to Sentry.
-
-<Note>
-
-We strongly suggest that you use the new Debug ID system for uploading your artifacts since it provides more reliable unminification and the old release-based system will be faded out in the future.
-
-</Note>
-
-### 1. Update SDK Options
-
-To match Sentry errors with the correct release, you must provide a `release` property in the SDK options:
-
-```javascript
-Sentry.init({
-  // This value must be identical to the name you give the release that you
-  // create below using `sentry-cli`.
-  release: '<release_name>',
-});
-```
-
-### 2. Upload Source Maps Using Sentry CLI
-
-You must first create a release with `sentry-cli`. The release name must be unique within your organization:
-
-```bash
-sentry-cli releases new <release_name>
-```
-
-Next, upload your release artifacts (source files and source maps):
-
-```bash
-sentry-cli releases files <release_name> upload-sourcemaps /path/to/directory
-```
-
-You can verify your uploaded artifacts by navigating to **Releases -> [latest release] -> Source Maps (right sidebar)** on Sentry.
-
-At this point, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded and your app has been published successfully, finalize the release with the following command:
-
-```bash
-sentry-cli releases finalize <release_name>
-```
-
-For more information on how to configure releases via Sentry CLI, see our [Sentry CLI release management docs](/product/cli/releases/).
