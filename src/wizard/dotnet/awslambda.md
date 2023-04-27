@@ -21,7 +21,6 @@ dotnet add package Sentry.AspNetCore -v {{ packages.version('sentry.dotnet.aspne
 
 You can combine this integration with a logging library like `log4net`, `NLog`, or `Serilog` to include both request data as well as your logs as breadcrumbs. The logging ingrations also capture events when an error is logged.
 
-
 ### Configuring
 
 All `ASP.NET Core` configurations are valid here. But one configuration in particular is relevant.
@@ -66,9 +65,8 @@ public class BadController
 
 And make a request to that lambda:
 
-```sh
+```shell
 curl -X GET -I https://url.of.server.aws/api/bad
 ```
-
 
 Check out the [Sentry ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) documentation for the complete set of options.
