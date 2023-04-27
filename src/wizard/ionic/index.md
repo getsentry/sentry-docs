@@ -9,21 +9,25 @@ To use Sentry in your Ionic app, install the Sentry Capacitor SDK alongside the 
 The supported siblings are: Angular `@sentry/angular`, React `@sentry/react` and Vue `@sentry/vue`.
 
 Heres an example of installing Sentry Capacitor along with Sentry Angular:
+
 ```
 npm install --save @sentry/capacitor @sentry/angular
 ```
+
 or
+
 ```
 yarn add @sentry/capacitor @sentry/angular
 ```
+
 The same installation process applies to the other siblings, all you need to do is to replace `@sentry/angular` by the desired sibling.
 
 ## Capacitor 2 - Android Installation
 
 <Note>
 
- This step is not needed if you are using Capacitor 3
- 
+This step is not needed if you are using Capacitor 3
+
 </Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.

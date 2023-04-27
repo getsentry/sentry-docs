@@ -8,19 +8,17 @@ This integration tracks app hangs. This feature is available on iOS, tvOS, and m
 
 Trying to use an unresponsive app is extremely frustrating for users. There are many reasons why an app may become unresponsive, such as long- running code, infinite loop bugs, and so on. With app hang tracking you can detect and fix them.
 
+The app hang detection integration has a default timeout of two (2) seconds, but with version 7.24.0, we’ve improved the algorithm to detect app hangs sooner, decreasing from `appHangTimeoutInterval * 2` to `appHangTimeoutInterval * 1.2`.
 
-The app hang detection integration has a default timeout of two (2) seconds, but with version 7.24.0, we’ve improved the algorithm to detect app hangs sooner, decreasing from `appHangTimeoutInterval * 2` to `appHangTimeoutInterval * 1.2`. 
-
-To detect app hangs, the SDK launches a dedicated watchdog thread, periodically enqueues work items on the main thread, and checks if the main thread is executing them within the timeout. If the app is unresponsive for two seconds or more, it creates an error event. 
+To detect app hangs, the SDK launches a dedicated watchdog thread, periodically enqueues work items on the main thread, and checks if the main thread is executing them within the timeout. If the app is unresponsive for two seconds or more, it creates an error event.
 
 Recording the stack trace precisely when the app hang occurs works reliably if the app is completely stuck, but if the main thread is extremely busy with different code spots, the app hang detection might fire a bit too late. If this happens, the SDK may record a stack trace that isn’t 100% related to the code, causing the app to hang. Each event has a stack trace of all running threads so you can easily detect where the problem occurred.
-
 
 The SDK reports an app hang immediately, but doesn’t report the exact duration because the [watchdog](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) could kill the app anytime if it's blocking the main thread.
 
 When watchdog termination tracking is enabled, the app hang code is disabled, runs in the background, and won’t report app hangs. This is done to minimize the number of false errors being reported by watchdog termination tracking, (such as if the OS kills an app causing an app hang).
 
-Because the app hang detection integration uses SentryCrashIntegration to capture the stack trace when creating app hang events,  SentryCrashIntegration has to be enabled for the integration to work. 
+Because the app hang detection integration uses SentryCrashIntegration to capture the stack trace when creating app hang events, SentryCrashIntegration has to be enabled for the integration to work.
 
 Starting with version 8.0.0, this feature has been enabled by default. To disable it:
 

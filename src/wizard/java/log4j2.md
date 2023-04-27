@@ -68,7 +68,6 @@ Next, set your log levels. You can learn more about <a href=https://docs.sentry.
 />
 ```
 
-
 Last, create an intentional error, so you can test that everything is working:
 
 ### Java
