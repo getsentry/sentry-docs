@@ -8,18 +8,18 @@ notSupported:
 description: 'Learn about customizing sessions with the Session Replay SDK.'
 ---
 
+In most cases, setting the Replay sample rates will be all you need to do in order to capture recording data.
+For more complex cases, it is helpful to understand how sessions work and how to manually control them.
+
 ## Default Session Initialization
 
 By default, Replay will immediately start a session in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
 
-When Replay is initialized, we check the `replaysSessionSampleRate`.
-If it is sampled, it will start recording in `session` mode and begin sending Replay data immediately.
+When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sampled, we start recording and sending Replay data immediately.
 
-Else, if `replaysOnErrorSampleRate > 0`, it will start recording in `buffer` mode.
-In this mode, when an error occurs, `replaysOnErrorSampleRate` is used to check if it should be sampled. If it is sampled, then the Replay will be uploaded to Sentry and continue recording normally.
+If `replaysOnErrorSampleRate > 0`, we'll start recording in buffering mode and keep checking `replaysOnErrorSampleRate` whenever an error occurs. Once we see that it's sampled, we'll upload the Replay to Sentry and continue recording normally.
 
-When both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, recording will _not_ start.
-In this case, you can manually start recording.
+If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-recording">record manually</PlatformLink>.
 
 ## Session Mode
 
@@ -29,9 +29,9 @@ In `session` mode, Replay will continuously record and send data to Sentry. Afte
 
 In `buffer` mode, Replay will continuously record data, but will only keep up to the last 60 seconds in memory. When an error occurs, `replaysOnErrorSampleRate` will be checked and if it's sampled, the replay will be uploaded to Sentry and continue recording normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
 
-## Manually Starting Recording
+## Manually Starting Replay
 
-If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to record manually: 
+If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to record manually:
 
 ```javascript
 // This initializes Replay without starting any session
@@ -49,7 +49,7 @@ replay.start();
 replay.startBuffering();
 ```
 
-## Manually Stopping Recording
+## Manually Stopping Replay
 
 You can always stop a running session with:
 
