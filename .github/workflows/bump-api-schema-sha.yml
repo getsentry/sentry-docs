@@ -1,6 +1,5 @@
 name: Bump API Schema SHA
 on:
-
   # This could be run manually, but the general expectation is that this fires
   # from GHA in getsentry/sentry-api-schema on changes there. See:
   #
@@ -10,10 +9,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: "Bump API Schema SHA"
+    name: 'Bump API Schema SHA'
     steps:
       - uses: actions/checkout@v2
-      - name: "Bump API Schema SHA"
+      - name: 'Bump API Schema SHA'
         shell: bash
         env:
           # An elevated token is necessary because with plain github.token
@@ -26,7 +25,8 @@ jobs:
 
           filepath="src/gatsby/utils/resolveOpenAPI.ts"
           sha="$(curl -sSL 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main' | awk 'BEGIN { RS=",|:{\n"; FS="\""; } $2 == "sha" { print $4 }')"
-          sed -i -e 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "'$sha'"|g' "$filepath"
+          sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"
+          eslint --fix "$filepath"
 
           branch="bot/bump-api-schema-to-${sha:0:8}"
           git checkout -b "$branch"
