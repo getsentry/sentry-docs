@@ -4,7 +4,6 @@ import {ArrowDown, Clipboard} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
 import {MDXProvider} from '@mdx-js/react';
-import copy from 'copy-to-clipboard';
 import {AnimatePresence, motion} from 'framer-motion';
 import memoize from 'lodash/memoize';
 
@@ -344,7 +343,7 @@ export default function CodeBlock({filename, language, children}: Props): JSX.El
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 
-  function copyCode() {
+  async function copyCode() {
     let code = codeRef.current.innerText;
     // don't copy leading prompt for bash
     if (language === 'bash' || language === 'shell') {
@@ -353,7 +352,7 @@ export default function CodeBlock({filename, language, children}: Props): JSX.El
         code = code.substr(match[0].length);
       }
     }
-    copy(code);
+    await navigator.clipboard.writeText(code);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 1200);
   }
