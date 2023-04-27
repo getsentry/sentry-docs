@@ -19,7 +19,7 @@ yarn add @sentry/react
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
-import { createRoot } React from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import React from "react";
 import * as Sentry from "@sentry/react";
 import App from "./App";
@@ -32,7 +32,7 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 });
 
-const container = document.getElementById(“app”);
+const container = document.getElementById("app");
 const root = createRoot(container);
 root.render(<App />)
 ```

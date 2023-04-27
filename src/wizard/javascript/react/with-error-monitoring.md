@@ -21,7 +21,7 @@ npm install --save @sentry/react
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
-import { createRoot } React from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import React from "react";
 import * as Sentry from "@sentry/react";
 import App from "./App";
@@ -30,7 +30,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 });
 
-const container = document.getElementById(“app”);
+const container = document.getElementById("app");
 const root = createRoot(container);
 root.render(<App />)
 ```
