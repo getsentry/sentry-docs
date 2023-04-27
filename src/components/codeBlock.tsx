@@ -261,6 +261,7 @@ const Selections = styled('div')`
   background: #fff;
   border-radius: 3px;
   overflow: scroll;
+  overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
