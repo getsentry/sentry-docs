@@ -8,17 +8,17 @@ Sentry currently supports two methods of uploading sourcemaps: **Release bundles
 
 A release bundle is a bundle format that's connected to an existing `release` in Sentry. That's why you **have to create a `release`** before uploading your artifacts.
 
-| Pros                                    | Cons                                                                                              |
-| :-------------------------------------- | :------------------------------------------------------------------------------------------------ |
-| Currently works with every SDK version. | Configuring your build pipeline to upload artifacts can be very challenging.                      |
-|                                         | Requires your project to use Sentry Releases.                                                     |
-|                                         | **In the near future, our bundler plugins and `sentry-cli` will use artifact bundles by default** |
+| Pros                                    | Cons                                                                                                     |
+| :-------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| Currently works with every SDK version. | Configuring your build pipeline to upload artifacts can be very challenging.                             |
+|                                         | Requires your project to use Sentry Releases.                                                            |
+|                                         | **The current versions of our bundler plugins or `sentry-cli` tool don't use this option as a default.** |
 
 ### How Do They Work?
 
-![How Release Bundles Work](release-bundles-updated.png)
+![How Release Bundles Work](release-bundle.png)
 
-Release bundles get their name from using a `release` as a way to index a specific bundle. The `release` is extracted from an incoming error and used to look up the most recent bundle. When a bundle is found, we use the value of `abs_path` in each frame to find the corresponding minified source in the retrieved bundle. Once the minified source is found, we try to discover its source map with a series of heuristics, such as looking at the value of `sourceURLMapping`.
+Release bundles get their name from using a `release` as a way to index a specific bundle. The `release` is extracted from an incoming error and used to look up the most recent bundle. When a bundle is found, we use the value of `abs_path` in each frame to find the corresponding minified source in the retrieved bundle. Once the minified source is found, we try to discover its source map with a series of heuristics, such as looking at the value of `sourceMappingURL`.
 
 Based on user feedback, we've found that using a stack frames `abs_path` to find its relevant artifacts to be **very unreliable**. Dynamic paths (For example: `https://www.site.com/{some_value}/scripts/script.js`) will likely require addition SDK configuration to unminify stack frames.
 
@@ -26,14 +26,14 @@ Based on user feedback, we've found that using a stack frames `abs_path` to find
 
 An artifact bundle is our new format that addresses the shortcomings of release bundles by **adding support for Debug IDs** and **removing the need to create a `release`**.
 
-| Pros                                                                                    | Cons                                                                                                                                                           |
-| :-------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| With Debug IDs, configuring your build pipeline to upload artifacts is straightforward. | **Requires you to update the version of our Javascript SDK and bundler plugin ( or `sentry-cli`).**                                                            |
-| Associating a release is still possible, but not required.                              | May cause problems if your application relies on [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) checks . |
+| Pros                                                                                    | Cons                                                                                                |
+| :-------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| With Debug IDs, configuring your build pipeline to upload artifacts is straightforward. | **Requires you to update the version of our Javascript SDK and bundler plugin ( or `sentry-cli`).** |
+| Associating a release is still possible, but not required.                              |                                                                                                     |
 
 ### How Do They Work?
 
-![How Release Bundles Work](artifact-bundles-updated.png)
+![How Release Bundles Work](artifact-bundle.png)
 
 Artifact Bundles solve the challenge of matching paths by using a new identification mechanism known as Debug IDs. Rather than relying on paths we uniquely identify and bind pairs of minified sources and source maps with an Debug ID (UUID). With this, we are able to quickly identify the minified source and corresponding source map without ever needing to check any paths.
 
