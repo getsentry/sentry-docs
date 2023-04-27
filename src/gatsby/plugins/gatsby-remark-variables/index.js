@@ -62,7 +62,7 @@ module.exports = ({markdownAST, markdownNode}, options) => {
           }
         } catch (err) {
           // no-op. We previously had a warning here, but the we have so many
-          // "variable-like" cosntructs in our codeblocks that this becomes
+          // "variable-like" constructs in our codeblocks that this becomes
           // very spammy.
         }
         if (result) {
