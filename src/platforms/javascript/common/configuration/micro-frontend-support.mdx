@@ -1,0 +1,123 @@
+---
+title: Micro Frontend Support
+sidebar_order: 200
+description: ''
+keywords: ['micro frontend', 'multiplexed transport']
+---
+
+The recommended way to use the Sentry SDK with Micro Frontend is to set up a multiplexed transport when calling `Sentry.init`. The multiplexed transport will send events to different Sentry projects based on the attributes on that event, which is how you can isolate events from a specific micro-frontend to a specific Sentry project.
+
+In the example below, we use the `feature` tag to determine which Sentry project to send the event to by using different DSNs. If the event does not have a `feature` tag, we send it to the fallback DSN defined in `Sentry.init`.
+
+```ts
+import { makeMultiplexedTransport } from '@sentry/core';
+import { init, captureException, makeFetchTransport } from '@sentry/browser';
+
+function dsnFromFeature({ getEvent }) {
+  const event = getEvent();
+  switch(event?.tags?.feature) {
+    case 'cart':
+      return ['__CART_DSN__'];
+    case 'gallery':
+      return ['__GALLERY_DSN__'];
+  }
+  return []
+}
+
+init({
+  dsn: '__FALLBACK_DSN__',
+  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromFeature)
+});
+
+captureException(new Error('oh no!', scope => {
+  scope.addTag('feature', 'cart');
+  return scope;
+});
+```
+
+You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to.
+
+<Alert level="warning" title="Note">
+
+Currently there is no way to isolate tags/contexts/breadcrumbs/spans to events sent to a specific Sentry project. This is because browsers do not have support for async contexts, which is required for this functionality to work. Once the [tc39 Async Context](https://github.com/tc39/proposal-async-context) proposal is implemented in all browsers, we will be able to add this functionality.
+
+</Alert>
+
+### makeMultiplexedTransport API
+
+`makeMultiplexedTransport` takes an instance of a transport (we recommend `makeFetchTransport`) and a matcher function that returns an array of DSNs.
+
+```typescript
+type EnvelopeItemType =
+  | 'client_report'
+  | 'user_report'
+  | 'session'
+  | 'sessions'
+  | 'transaction'
+  | 'attachment'
+  | 'event'
+  | 'profile'
+  | 'replay_event'
+  | 'replay_recording'
+  | 'check_in';
+
+interface MatchParam {
+  /** The envelope to be sent */
+  envelope: Envelope;
+  /**
+   * A function that returns an event from the envelope if one exists. You can optionally pass an array of envelope item
+   * types to filter by - only envelopes matching the given types will be multiplexed.
+   *
+   * @param types Defaults to ['event'] (only error events will be matched)
+   */
+  getEvent(types?: EnvelopeItemType[]): Event | undefined;
+}
+
+type Matcher = (param: MatchParam) => string[];
+
+declare function makeMultiplexedTransport(
+  transport: (options: TransportOptions) => Transport,
+  matcher: Matcher
+): (options: TransportOptions) => Transport;
+```
+
+### Examples
+
+#### Allowing individual Micro Frontends to add their own DSNs
+
+In the example below, we have a list of DSNs and tags. We use the `tags` attribute on the event to determine which Sentry project to send the event to by using different DSNs. If the event does not have a `tags` attribute, we send it to the fallback DSN defined in `Sentry.init`. Individual micro-frontends can then mutate the `myDsns` variable to add their own DSNs and tags.
+
+```ts
+const myDsns = [
+  { dsn: 'https://...', tag: 'my-tag' },
+  { dsn: 'https://...', tag: 'other-tag' },
+];
+
+function dsnFromTag({ getEvent }) {
+  const event = getEvent();
+  const opt = myDsns.find(({tag} => event?.tags?.includes(tag));
+  return opt ? [opt.dsn] : [];
+}
+
+init({
+  dsn: '__FALLBACK_DSN__',
+  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromTag)
+});
+```
+
+#### Sending the same event to multiple DSNs
+
+Since the matcher returns an array, you can enforce that an event is sent to
+
+```ts
+import {makeMultiplexedTransport} from '@sentry/core';
+import {init, makeFetchTransport} from '@sentry/browser';
+
+const DSN1 = '__DSN1__';
+const DSN2 = '__DSN2__';
+
+init({
+  dsn: DSN1, // <- init dsn never gets used but need to be valid
+  transport: makeMultiplexedTransport(makeFetchTransport, () => [DSN1, DSN2]),
+});
+```
