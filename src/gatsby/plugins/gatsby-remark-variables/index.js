@@ -61,7 +61,9 @@ module.exports = ({markdownAST, markdownNode}, options) => {
             result = await result;
           }
         } catch (err) {
-          console.warn(`Error executing variable-like construct: ${match[0]}`);
+          // no-op. We previously had a warning here, but the we have so many
+          // "variable-like" cosntructs in our codeblocks that this becomes
+          // very spammy.
         }
         if (result) {
           node.value = node.value.replace(match[0], result);
