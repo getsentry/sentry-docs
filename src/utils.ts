@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import qs from "query-string";
+import {useEffect} from 'react';
+import qs from 'query-string';
 
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
@@ -69,13 +69,10 @@ const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
 
 export const marketingUrlParams = (): URLQueryObject => {
   const query = qs.parse(window.location.search);
-  const marketingParams: Record<string, string> = Object.keys(query).reduce(
-    (a, k) => {
-      const matcher = paramsToSync.find(matcher => matcher.test(k));
-      return matcher ? { ...a, [k]: query[k] } : a;
-    },
-    {}
-  );
+  const marketingParams: Record<string, string> = Object.keys(query).reduce((a, k) => {
+    const matcher = paramsToSync.find(matcher => matcher.test(k));
+    return matcher ? {...a, [k]: query[k]} : a;
+  }, {});
 
   // add in original_referrer
   if (document.referrer && !marketingParams.original_referrer) {
