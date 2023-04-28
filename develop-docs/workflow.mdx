@@ -32,3 +32,13 @@ If a merged PR in `sentry` or `getsentry` needs to be reverted immediately
 (such as during an incident or to un-break CI) the **`[Trigger: Revert]`**
 label can be applied to the PR.  A GitHub action will process the label and
 apply the revert directly to the primary branch.
+
+## Python typechecking
+
+We're slowing working to add typing to our Python codebase, using `mypy` to check types. While we do that, there are a few useful things to know:
+
+- As you create or work on Python files, please add typing where you can. If possible, try to follow the [Python typing best practices](https://typing.readthedocs.io/en/latest/source/best_practices.html), which may mean you also have to add `from __future__ import annotations` as the first line of your file. For more information about using types in Python, see [the typing docs](https://typing.readthedocs.io/en/latest/index.html).
+
+- In some repos not all files currently pass a typecheck, so in those repos we're enabling checking on a file-by-file basis. (Look for a `files` entry in the `[mypy]` section of the repo's `mypy.ini` file to see if that's the case for a given repo.) This means that in those repos, adding new files and/or moving or renaming existing files may necessitate a change in the `mypy.ini` file, to add or update the files' paths. Also, if you update a file to include typing, please add it to the list!
+
+- To test types locally, many repos have a `make` command you can run. (The exact command varies by repo. In both `sentry` and `getsentry` it is `make backend-typing`.) In repos which don't have a make command, you can run `mypy --strict --warn-unreachable --config-file mypy.ini` at the root level of the repo.
