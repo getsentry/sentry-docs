@@ -42,7 +42,7 @@ export default function SmartLink({
     const newParams = {...marketingParams, ...linkParams};
     const urlWithoutQuery = realTo.replace(/\?.*/, '');
     setForcedUrl(`${urlWithoutQuery}?${qs.stringify(newParams)}`);
-  }, []);
+  }, [realTo]);
 
   if (realTo.indexOf('://') !== -1) {
     return (
