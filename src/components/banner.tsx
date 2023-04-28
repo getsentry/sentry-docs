@@ -7,7 +7,7 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Join Sentry engineers as they discuss how to use Profiling to see the exact lines of code or functions causing slowdowns in your application. ';
+  'Join Sentry engineers as they discuss how to use Profiling to see the exact lines of code or functions causing slowdowns in your application.';
 const BANNER_LINK_URL =
   'https://bit.ly/profiling-ama-reg-7';
 const BANNER_LINK_TEXT = 'Sign up now.';
