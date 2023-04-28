@@ -34,9 +34,11 @@ export default function SmartLink({
   // because they're made outside of React, so we keep track of them ourselves.
   React.useEffect(() => {
     const marketingParams = marketingUrlParams();
-    if (!marketingParams) return;
+    if (!marketingParams)  {
+      return;
+    }
 
-    const linkParams = qs.parse(to.split('?')[1]);
+    const linkParams = qs.parse(realTo.split('?')[1]);
     // Merge the new params *before* the old to ensure the old ones
     // don't get clobbered. If they're set, they should stay.
     const newParams = {...marketingParams, ...linkParams};
