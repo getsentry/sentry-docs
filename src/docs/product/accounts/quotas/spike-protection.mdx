@@ -1,15 +1,21 @@
 ---
 title: Spike Protection
-keywords: ["quota management"]
+keywords: ['quota management']
 sidebar_order: 10
 description: "Learn how to manage your quota and make sure that your volume isn't consumed all at once with Spike Protection."
 ---
 
 A spike is a significant, temporary increase in your error event volume. Because Sentry bills based on the number of monthly events sent, spikes can quickly consume your quota for an entire month. Spike Protection guards against this by establishing a spike threshold for the average number of error events each of your projects sends and then dropping them after that threshold is reached.
 
+<Note>
+
+Notifications for Spike Protection are turned off by default to avoid excessive noise for users. Read the [notification](/product/accounts/quotas/spike-protection/#notifications) section below to learn how to turn them on for key projects.
+
+</Note>
+
 ## How Spike Protection Works {#spike-protection}
 
-Spike Protection can be enabled on a per-project basis for your organization by any team member with either **Billing or Owner-level permissions**. To select which project to set it up for, go to **Settings > Spike Protection**. You'll be able to toggle it on for individual projects or click “Enable All” to set it up for all your projects at once.
+Spike Protection can be enabled on a per-project basis for your organization by any team member with **Manager, Billing or Owner-level permissions**. To select which project to set it up for, go to **Settings > Spike Protection**. You'll be able to toggle it on for individual projects or click “Enable All” to set it up for all your projects at once.
 
 <Note>
 
@@ -29,11 +35,21 @@ In order to adjust for certain patterns in the number of events your application
 
 It's done this way so that new projects without 7 days' worth of data can benefit from spike protection. Additionally, the minimum event calculation can be used to minimize false positives in smaller or newer projects so that spikes aren't flagged incorrectly. Read on to learn about our Spike Protection algorithm in detail.
 
+## Notifications {#notifications}
+
+While Spike Protection notifications are turned off by default, you can turn them on for key projects you want to monitor in two ways:
+
+- By adding the email “Notification Actions”. This will notify users with Owner, Manager, and Billing roles who are connected with that project via email.
+
+![spike-protection-notification-email](https://user-images.githubusercontent.com/26800704/233509719-cacf233a-5618-43f8-9fd4-068f5c5217b3.png)
+
+- By adding Slack or Pagerduty “Notification Actions” (if you have these integrations installed). This will notify users who are connected with the project via Slack or Pagerduty.
+
+![spike-protection-notification-slack-pagerduty](https://user-images.githubusercontent.com/26800704/233509795-23825efb-a448-47e3-9b6c-f0d6aec0ecaa.png)
+
 ## Managing a Spike {#managing-spikes}
 
-When a spike is detected, team members with Billing or Owner-level permissions in Sentry will be notified via email:
-
-**We recommend taking the following steps for managing your spikes:**
+We recommend taking the following steps to manage your spikes:
 
 - Check to see which issues are [consuming your quota](https://sentry.sentry.io/stats/).
 - Set [rate limits](/product/accounts/quotas/manage-event-stream-guide/#6-rate-limiting) on the DSN keys for the projects related to the spike.
@@ -45,18 +61,6 @@ When a spike is detected, team members with Billing or Owner-level permissions i
 To review the error events that were dropped to save your quota with Spike Protection, go to the "Usage Stats" tab of the **Stats** page for your Sentry org and select "Errors" in the "Category" dropdown. You can see project-level details of your stats by using the project selector. Sentry can show the spike threshold for a time duration greater than 6hrs and less than 30 days.
 
 ![Spike limit threshold](spike-limit-threshold.png)
-
-### Notifications
-
-By default, all team members with Billing or Owner-level permissions will receive email notifications for projects that have Spike Protection turned on. To disable this, go to **Organization Settings > Spike protection > Delete**.
-
-![Delete a spike protection notification](spike-protection-delete-notification.png)
-
-You can also add an action to send spike protection notifications for a project to Slack or PagerDuty from this page.
-
-![Send spike protection notifications to Slack or PagerDuty](spike-protection-slack-pagerduty.png)
-
-To turn off notifications only for yourself, go to **User Settings > Notifications > Spike Protection**. You can choose to turn off notifications for all projects, or customize notifications on a per-project basis.
 
 ## How the Spike Protection Algorithm Works
 

@@ -1,6 +1,6 @@
-import { getChild, getDataOrPanic } from "../helpers";
+import {getChild, getDataOrPanic} from '../helpers';
 
-export default async ({ actions, graphql, reporter }) => {
+async function main({actions, graphql, reporter}) {
   const data = await getDataOrPanic(
     `
           query {
@@ -52,7 +52,7 @@ export default async ({ actions, graphql, reporter }) => {
   );
 
   const component = require.resolve(`../../templates/doc.tsx`);
-  data.allFile.nodes.map((node: any) => {
+  data.allFile.nodes.forEach((node: any) => {
     const child = getChild(node);
     if (child && child.fields) {
       actions.createPage({
@@ -67,4 +67,6 @@ export default async ({ actions, graphql, reporter }) => {
       });
     }
   });
-};
+}
+
+export default main;

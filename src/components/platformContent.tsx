@@ -1,17 +1,17 @@
-import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
+import React from 'react';
+import {graphql, useStaticQuery} from 'gatsby';
 
 import usePlatform, {
   getPlatform,
   getPlatformsWithFallback,
   Platform,
-} from "./hooks/usePlatform";
-import Content from "./content";
-import SmartLink from "./smartLink";
+} from './hooks/usePlatform';
+import Content from './content';
+import SmartLink from './smartLink';
 
 const includeQuery = graphql`
   query PlatformContentQuery {
-    allFile(filter: { sourceInstanceName: { eq: "platform-includes" } }) {
+    allFile(filter: {sourceInstanceName: {eq: "platform-includes"}}) {
       nodes {
         id
         relativePath
@@ -25,34 +25,37 @@ const includeQuery = graphql`
 `;
 
 const slugMatches = (slug1: string, slug2: string): boolean => {
-  if (slug1 === "browser") slug1 = "javascript";
-  if (slug2 === "browser") slug2 = "javascript";
+  if (slug1 === 'browser') {
+    slug1 = 'javascript';
+  }
+  if (slug2 === 'browser') {
+    slug2 = 'javascript';
+  }
   return slug1 === slug2;
 };
 
 type FileNode = {
-  id: string;
-  relativePath: string;
-  name: string;
   childMdx: {
     body: any;
   };
+  id: string;
+  name: string;
+  relativePath: string;
 };
 
 type Props = {
   includePath: string;
-  platform?: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
+  platform?: string;
 };
 
 const getFileForPlatform = (
-  includePath: string,
   fileList: FileNode[],
   platform: Platform
 ): FileNode | null => {
   const platformsToSearch = getPlatformsWithFallback(platform);
-  platformsToSearch.push("_default");
+  platformsToSearch.push('_default');
 
   const contentMatch = platformsToSearch
     .map(name => name && fileList.find(m => slugMatches(m.name, name)))
@@ -60,27 +63,21 @@ const getFileForPlatform = (
   return contentMatch;
 };
 
-export default ({
+export default function PlatformContent({
   includePath,
   platform,
   children,
-}: Props): JSX.Element => {
+}: Props): JSX.Element {
   const {
-    allFile: { nodes: files },
+    allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
   const [dropdown, setDropdown] = React.useState(null);
   const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
 
-  const matches = files.filter(
-    node => node.relativePath.indexOf(includePath) === 0
-  );
+  const matches = files.filter(node => node.relativePath.indexOf(includePath) === 0);
 
-  const contentMatch = getFileForPlatform(
-    includePath,
-    matches,
-    currentPlatform
-  );
+  const contentMatch = getFileForPlatform(matches, currentPlatform);
 
   if (!contentMatch && !children) {
     // children is used to conditionally show introductory paragraph if the
@@ -115,11 +112,12 @@ export default ({
             <div
               className="nav dropdown-menu"
               role="tablist"
-              style={{ display: dropdown ? "block" : "none" }}
+              style={{display: dropdown ? 'block' : 'none'}}
             >
               {matches.map(node => {
-                const platform = getPlatform(node.name);
-                if (!platform) {
+                const nodePlatform = getPlatform(node.name);
+                if (!nodePlatform) {
+                  // eslint-disable-next-line no-console
                   console.warn(`Cannot find platform for ${node.name}`);
                   return null;
                 }
@@ -127,16 +125,16 @@ export default ({
                   <a
                     className="dropdown-item"
                     role="tab"
-                    key={platform.key}
-                    style={{ cursor: "pointer" }}
+                    key={nodePlatform.key}
+                    style={{cursor: 'pointer'}}
                     onClick={() => {
                       setDropdown(false);
-                      setPlatform(platform.key);
+                      setPlatform(nodePlatform.key);
                       // TODO: retain scroll
                       // window.scrollTo(window.scrollX, window.scrollY);
                     }}
                   >
-                    {platform.title}
+                    {nodePlatform.title}
                   </a>
                 );
               })}
@@ -158,4 +156,4 @@ export default ({
       </div>
     </section>
   );
-};
+}

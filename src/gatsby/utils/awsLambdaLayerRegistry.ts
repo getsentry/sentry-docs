@@ -1,20 +1,20 @@
-import axios from "axios";
+import axios from 'axios';
 
-import { BASE_REGISTRY_URL } from "./shared";
+import {BASE_REGISTRY_URL} from './shared';
 
 type LayerData = {
+  account_number: string;
   canonical: string;
+  layer_name: string;
   main_docs_url: string;
   name: string;
+  regions: Array<{region: string; version: string}>;
   repo_url: string;
-  account_number: string;
-  layer_name: string;
   sdk_version: string;
-  regions: Array<{ region: string; version: string }>;
 };
 
 export default class AwsLambdaLayerRegistry {
-  indexCache: { [cannonical: string]: LayerData } | null;
+  indexCache: {[cannonical: string]: LayerData} | null;
 
   constructor() {
     this.indexCache = null;
@@ -28,9 +28,8 @@ export default class AwsLambdaLayerRegistry {
         });
         this.indexCache = result.data;
       } catch (err) {
-        console.error(
-          `Unable to fetch index for aws lambda layers: ${err.message}`
-        );
+        // eslint-disable-next-line no-console
+        console.error(`Unable to fetch index for aws lambda layers: ${err.message}`);
         this.indexCache = {};
       }
     }

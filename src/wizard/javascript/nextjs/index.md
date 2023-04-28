@@ -3,13 +3,12 @@ name: Next.js
 doc_link: https://docs.sentry.io/platforms/javascript/guides/nextjs/
 support_level: production
 type: framework
-wizard_setup: "./nextjs_wizard.md"
 ---
 
 Configure your app automatically with <Link to="https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure">Sentry wizard</Link>
 
 ```bash
-npx @sentry/wizard -i nextjs
+npx @sentry/wizard@latest -i nextjs
 ```
 
 Sentry wizard will automatically patch your application:
@@ -32,7 +31,7 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
@@ -46,14 +45,7 @@ The above configuration has automatic error tracking with source maps for both J
 Then create an intentional error, so you can test that everything is working from your development environment. For example, a button whose `onClick` handler throws an error:
 
 ```javascript
-<button
-  type="button"
-  onClick={() => {
-    throw new Error("Sentry Frontend Error");
-  }}
->
-  Throw error
-</button>
+return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ```
 
 If you're new to Sentry, use the email alert to access your account and complete a product tour.

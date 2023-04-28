@@ -1,15 +1,15 @@
-import React from "react";
+import React from 'react';
 
 type Props = {
   loading?: boolean;
 };
 
-export default ({ loading }: Props): JSX.Element => {
+export default function Logo({loading}: Props): JSX.Element {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 85 85"
-      className={`logo ${loading ? "loading" : ""}`}
+      className={`logo ${loading ? 'loading' : ''}`}
     >
       <g height="75" width="75" className="loader-spin">
         <path
@@ -23,4 +23,4 @@ export default ({ loading }: Props): JSX.Element => {
       </g>
     </svg>
   );
-};
+}

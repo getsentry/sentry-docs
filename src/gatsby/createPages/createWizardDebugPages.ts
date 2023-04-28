@@ -1,6 +1,6 @@
-import { getChild, getDataOrPanic } from "../helpers";
+import {getChild, getDataOrPanic} from '../helpers';
 
-export default async ({ actions, graphql, reporter }) => {
+async function main({actions, graphql, reporter}) {
   const data = await getDataOrPanic(
     `
       query {
@@ -32,17 +32,15 @@ export default async ({ actions, graphql, reporter }) => {
     component: require.resolve(`../../templates/wizardDebugIndex.tsx`),
     context: {
       noindex: true,
-      title: "Wizard Previews",
+      title: 'Wizard Previews',
     },
   });
 
   const component = require.resolve(`../../templates/wizardDebug.tsx`);
-  data.allFile.nodes.map((node: any) => {
+  data.allFile.nodes.forEach((node: any) => {
     const child = getChild(node);
     if (!child) {
-      throw new Error(
-        `Wziard cannot find child for ${node.id} = ${node.relativePath}`
-      );
+      throw new Error(`Wziard cannot find child for ${node.id} = ${node.relativePath}`);
     }
     actions.createPage({
       path: `/_debug/wizard${child.fields.slug}`,
@@ -55,4 +53,6 @@ export default async ({ actions, graphql, reporter }) => {
       },
     });
   });
-};
+}
+
+export default main;

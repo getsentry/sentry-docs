@@ -23,7 +23,7 @@ export const getApiTypeDefs = () => {
         query_parameters: [ApiParam]
         warning: String
       }
-      
+
       type ApiParamItems {
         enum: [String]
         type: String

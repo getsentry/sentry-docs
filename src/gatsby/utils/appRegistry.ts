@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 
-import { BASE_REGISTRY_URL } from "./shared";
+import {BASE_REGISTRY_URL} from './shared';
 
 type FileData = {
   checksums: {
@@ -10,18 +10,18 @@ type FileData = {
 
 type VersionData = {
   canonical: string;
+  main_docs_url: string;
+  name: string;
+  repo_url: string;
+  version: string;
   files?: {
     [name: string]: FileData;
   };
-  main_docs_url: string;
-  name: string;
   package_url?: string;
-  repo_url: string;
-  version: string;
 };
 
 export default class AppRegistry {
-  indexCache: { [name: string]: VersionData } | null;
+  indexCache: {[name: string]: VersionData} | null;
 
   constructor() {
     this.indexCache = null;
@@ -35,6 +35,7 @@ export default class AppRegistry {
         });
         this.indexCache = result.data;
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error(`Unable to fetch index for app registry: ${err.message}`);
         this.indexCache = {};
       }
@@ -47,14 +48,16 @@ export default class AppRegistry {
     return this.indexCache[name];
   };
 
-  version = async (name: string, defaultValue: string = "") => {
+  version = async (name: string, defaultValue: string = '') => {
     const data = (await this.getData(name)) as VersionData;
     return (data && data.version) || defaultValue;
   };
 
   checksum = async (name: string, fileName: string, checksum: string) => {
     const data = (await this.getData(name)) as VersionData;
-    if (!data.files) return "";
-    return data.files[fileName].checksums[checksum] || "";
+    if (!data.files) {
+      return '';
+    }
+    return data.files[fileName].checksums[checksum] || '';
   };
 }

@@ -87,7 +87,7 @@ plug Sentry.PlugContext
 
 ### Capture Crashed Process Exceptions
 
-This library comes with an extension to capture all error messages that the Plug handler might not.  This is based on [Logger.Backend](https://hexdocs.pm/logger/Logger.html#module-backends). You can add it as a backend when your application starts:
+This library comes with an extension to capture all error messages that the Plug handler might not. This is based on [Logger.Backend](https://hexdocs.pm/logger/Logger.html#module-backends). You can add it as a backend when your application starts:
 
 ```elixir
 # lib/my_app/application.ex

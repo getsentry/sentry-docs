@@ -18,14 +18,14 @@ npm install --save @sentry/svelte
 Next, import and initialize initialize Sentry in your Svelte app's entry point (`main.ts/js`):
 
 ```javascript
-import "./app.css";
-import App from "./App.svelte";
+import './app.css';
+import App from './App.svelte';
 
-import * as Sentry from "@sentry/svelte";
+import * as Sentry from '@sentry/svelte';
 
 // Initialize the Sentry SDK here
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -35,7 +35,7 @@ Sentry.init({
 });
 
 const app = new App({
-  target: document.getElementById("app"),
+  target: document.getElementById('app'),
 });
 
 export default app;
@@ -49,10 +49,7 @@ You can trigger your first event from your development environment by raising an
 
 ```html
 // SomeComponent.svelte
-
-<button type="button" on:click="{unknownFunction}">
-  Throw error
-</button>
+<button type="button" on:click="{unknownFunction}">Break the world</button>
 ```
 
 Once you've verified the SDK is initialized properly and you've sent a test event, check out our [complete Svelte docs](https://docs.sentry.io/platforms/javascript/guides/svelte/) for additional configuration instructions.

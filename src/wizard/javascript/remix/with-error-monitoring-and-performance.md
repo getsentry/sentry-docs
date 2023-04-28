@@ -5,7 +5,9 @@ support_level: production
 type: framework
 ---
 
-To instrument your Remix application with Sentry, first install the `@sentry/remix` package:
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime.
 
 ```bash
 # Using yarn
@@ -15,16 +17,17 @@ yarn add @sentry/remix
 npm install --save @sentry/remix
 ```
 
-Next, import and initialize initialize Sentry in your Remix entry points for both the client and server:
+## Configure
+
+Import and initialize Sentry in your Remix entry points for both the client and server:
 
 ```javascript
-import { useLocation, useMatches } from "@remix-run/react";
-import * as Sentry from "@sentry/remix";
-import { useEffect } from "react";
+import {useLocation, useMatches} from '@remix-run/react';
+import * as Sentry from '@sentry/remix';
+import {useEffect} from 'react';
 
 Sentry.init({
-  dsn: "___DSN___",
-  tracesSampleRate: 1,
+  dsn: '___DSN___',
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.remixRouterInstrumentation(
@@ -34,20 +37,23 @@ Sentry.init({
       ),
     }),
   ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
 ```
 
 Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as Prisma, to get spans for your database calls:
 
 ```javascript
-import { prisma } from "~/db.server";
+import {prisma} from '~/db.server';
 
-import * as Sentry from "@sentry/remix";
+import * as Sentry from '@sentry/remix';
 
 Sentry.init({
-  dsn: "___DSN___",
-  tracesSampleRate: 1,
-  integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
+  dsn: '___DSN___',
+  integrations: [new Sentry.Integrations.Prisma({client: prisma})],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
 ```
 
@@ -61,9 +67,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "@remix-run/react";
+} from '@remix-run/react';
 
-import { withSentry } from "@sentry/remix";
+import {withSentry} from '@sentry/remix';
 
 function App() {
   return (
@@ -85,14 +91,20 @@ function App() {
 export default withSentry(App);
 ```
 
-After this step, Sentry will report any uncaught exceptions triggered by your application.
+## Verify
+
+This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
 ```javascript
-<button onClick={() => methodDoesNotExist()}>
-  Break the world
-</button>
+<button onClick={() => methodDoesNotExist()}>Break the world</button>
 ```
 
-Once you've verified the SDK is initialized properly and sent a test event, check out our [complete Remix docs](https://docs.sentry.io/platforms/javascript/guides/remix/)for additional configuration instructions.
+---
+
+## Next Steps
+
+- [Source Maps](https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
+- [Remix Features](https://docs.sentry.io/platforms/javascript/guides/remix/features/): Learn about our first class integration with the Remix framework.
+- [Session Replay](https://docs.sentry.io/platforms/javascript/guides/remix/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
