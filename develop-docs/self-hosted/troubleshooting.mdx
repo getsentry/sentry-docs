@@ -6,7 +6,7 @@ Please keep in mind that the [self-hosted repository](https://github.com/getsent
 
 ## General
 
-You can see the logs of each service by running `docker-compose logs <service_name>`. You can use the `-f` flag to "follow" the logs as they come in, and use the `-t` flag for timestamps. If you don't pass any service names, you will get the logs for all running services. See the [reference for the logs command](https://docs.docker.com/compose/reference/logs/) for more info.
+You can see the logs of each service by running `docker compose logs <service_name>`. You can use the `-f` flag to "follow" the logs as they come in, and use the `-t` flag for timestamps. If you don't pass any service names, you will get the logs for all running services. See the [reference for the logs command](https://docs.docker.com/compose/reference/logs/) for more info.
 
 ## Kafka
 
@@ -32,19 +32,19 @@ The _proper_ solution is as follows ([reported](https://github.com/getsentry/sel
 
 1. Receive consumers list:
    ```shell
-   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
    ```
 2. Get group info:
    ```shell
-   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers -describe
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers -describe
    ```
 3. Watching what is going to happen with offset by using dry-run (optional):
    ```shell
-   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
    ```
 4. Set offset to latest and execute:
    ```shell
-   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
    ```
 
 <Alert title="Tip" level="info">
@@ -57,7 +57,7 @@ This option is as follows ([reported](https://github.com/getsentry/self-hosted/i
 
 1. Set offset to latest and execute:
    ```shell
-   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
    ```
 
 Unlike the proper solution, this involves resetting the offsets of all consumer groups and all topics.
@@ -68,7 +68,7 @@ The _nuclear option_ is removing all Kafka-related volumes and recreating them w
 
 1. Stop the instance:
    ```shell
-   docker-compose down --volumes
+   docker compose down --volumes
    ```
 2. Remove the Kafka & Zookeeper related volumes:
    ```shell
@@ -82,7 +82,7 @@ The _nuclear option_ is removing all Kafka-related volumes and recreating them w
     ```
  4. Start the instance:
     ```shell
-    docker-compose up -d
+    docker compose up -d
     ```
 ### Reducing disk usage
 
@@ -122,9 +122,9 @@ An example script below:
 
 ```shell
 # Only keep the last 7 days of nodestore data. We heavily use performance monitoring.
-docker-compose run -T web cleanup --days 7 -m nodestore -l debug
+docker compose run --rm -T web cleanup --days 7 -m nodestore -l debug
 # This ensures pg-repack exists before running as the container gets recreated on upgrades
-docker-compose run -T postgres bash -c "apt update && apt install -y --no-install-recommends postgresql-9.6-repack && su postgres -c 'pg_repack -E info -t nodestore_node'"
+docker compose run --rm -T postgres bash -c "apt update && apt install -y --no-install-recommends postgresql-14-repack && su postgres -c 'pg_repack -E info -t nodestore_node'"
 ```
 
 If the script above still does not clear up enough disk space, you can try the following in Postgres. This will lead to data loss in event details. _SENTRY_RETENTION_DAYS_ will need to be filled in manually.
