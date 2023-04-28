@@ -70,7 +70,7 @@ const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
 export const marketingUrlParams = (): URLQueryObject => {
   const query = qs.parse(window.location.search);
   const marketingParams: Record<string, string> = Object.keys(query).reduce((a, k) => {
-    const matcher = paramsToSync.find(matcher => matcher.test(k));
+    const matcher = paramsToSync.find(m => m.test(k));
     return matcher ? {...a, [k]: query[k]} : a;
   }, {});
 
