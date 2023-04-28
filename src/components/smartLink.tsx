@@ -34,7 +34,7 @@ export default function SmartLink({
   // because they're made outside of React, so we keep track of them ourselves.
   React.useEffect(() => {
     const marketingParams = marketingUrlParams();
-    if (!marketingParams)  {
+    if (!marketingParams) {
       return;
     }
 
