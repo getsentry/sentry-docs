@@ -9,7 +9,6 @@ Sentry captures data by using an SDK within your application’s runtime.
 
 > If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
 
-
 Run `@sentry/wizard`:
 
 ```bash
