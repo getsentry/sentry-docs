@@ -1,13 +1,13 @@
 ---
-title: Manage Your Transaction Quota
+title: Manage Your Performance Units Quota
 keywords: ['best practices']
 sidebar_order: 40
 description: 'Learn how to use the tools Sentry provides to control the type and amount of transactions that you pay for.'
 ---
 
-In most cases, sending all [transaction](/product/performance/transaction-summary/#what-is-a-transaction) events to Sentry could generate more performance data than you'd find useful and might use up your transactions quota too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have transaction data that's actionable and meaningful, and to manage your quota.
+In most cases, sending all Transaction and Transaction with Profiling events to Sentry could generate more performance data than you'd find useful and might use up your performance units too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions and transactions with profiling that are monitored. This allows you to have performance data that's actionable and meaningful, and to manage your quota.
 
-Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first two options are things you can do in [sentry.io](https://sentry.io), whereas the remaining ones are things you'll do in the SDK.
+Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction and transactions with profiling events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first two options are things you can do in [sentry.io](https://sentry.io), whereas the remaining ones are things you'll do in the SDK.
 
 ## Before You Begin: Check Your Quota Usage {#3-event-usage-stats}
 
@@ -39,13 +39,15 @@ You can only update the columns of the Results table in **Discover** if your org
 
 </Note>
 
-You can set up [a query](<https://sentry.io/orgredirect/organizations/:orgslug/discover/results/?field=title&field=project&field=count()&name=All+Events&query=event.type%3Atransaction&sort=-count&statsPeriod=14d&yAxis=count()>) in **Discover** to see which transactions you're receiving the most and if you want to adjust that. When you're building the query, search for `event.type:transaction` and then set the columns to `title`, `project`, and `count`, as shown below:
+You can set up [a query](<https://sentry.io/orgredirect/organizations/:orgslug/discover/results/?field=title&field=project&field=count()&name=All+Events&query=event.type%3Atransaction&sort=-count&statsPeriod=14d&yAxis=count()>) in **Discover** to see which transactions or transactions with profiling you're receiving the most and if you want to adjust that. When you're building the query, search for `event.type:transaction` and then set the columns to `title`, `project`, and `count`, as shown below:
 
 ![Busiest Projects](manage-trans-quota-01.png)
 
 Once the changes are applied, sort the "Results" table by the "COUNT()" column to display your busiest transactions:
 
 ![Busiest Issues](manage-trans-quota-02.png)
+
+You can look for transactions with profiling using  `has:profile.id`. Adding a `profile.id` column to the query will give you a link to the profile.
 
 ## Adjusting Quotas
 
@@ -55,7 +57,7 @@ Quotas can only be updated by a Billing or Owner member of your Sentry organizat
 
 </Note>
 
-Once your event volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
+Once your performance units volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
 
 If this is your first time exceeding quota and you're on a paid plan, however, you'll be entered into a one-time grace period. Learn more about the grace period in this [Help article](https://help.sentry.io/account/billing/what-happens-when-i-run-out-of-event-capacity-and-a-grace-period-is-triggered/).
 
@@ -67,7 +69,7 @@ When you exceed your quota threshold, the server will respond with a 429 HTTP st
 
 To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
 
-If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more event volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more performance units volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
 
 <Alert>
 
@@ -77,13 +79,13 @@ If you upgrade from Team to Business mid-billing period, your on-demand pricing 
 
 ### Reserved Volume
 
-If the number of events you need is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than on-demand volume since you prepay for it. It also allows you to choose the number of events that you want to have available beforehand rather than just setting an arbitrary on-demand budget. Learn more about [reserved volume](/product/accounts/pricing/#prepaid-reserved-capacity) in our pricing documentation.
+If the number of events you need is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than on-demand volume since you prepay for it. It also allows you to choose the number of performance units that you want to have available beforehand, rather than just setting an arbitrary on-demand budget. Learn more about [reserved volume](/product/accounts/pricing/#prepaid-reserved-capacity) in our pricing documentation.
 
 You shouldn't increase your reserved volume if you think your need for more events is temporary, since [reducing your reserved volume is tied to your billing period](#decreasing-quotas).
 
 ### On-Demand Budget
 
-If you need to increase your event quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
+If you need to increase your performance units quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, performance units, replays, and attachments) basis. Learn more about [on-demand volume](/product/accounts/pricing/#on-demand-capacity) in our pricing documentation.
 
 ### Decreasing Quotas
 
@@ -117,7 +119,7 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 <Note>
 
-The **Inbound Data Filters** page in [sentry.io](https://sentry.io) only refers to errors, but it applies to transactions and attachments as well.
+The **Inbound Data Filters** page in [sentry.io](https://sentry.io) only refers to errors, but it applies to transactions, transactions with profiling, and attachments as well.
 
 </Note>
 
