@@ -28,7 +28,7 @@ export default function SmartLink({
 }: Props): JSX.Element {
   const realTo = to || href || '';
 
-  const [forcedUrl, setForcedUrl] = React.useState('');
+  const [forcedUrl, setForcedUrl] = React.useState(realTo);
 
   // Google Tag Manager syncs certain query parameters to all links on the page.
   // Since Gatsby's Link is a React component, it doesn't catch these updates
@@ -44,7 +44,9 @@ export default function SmartLink({
     // don't get clobbered. If they're set, they should stay.
     const newParams = {...marketingParams, ...linkParams};
     const urlWithoutQuery = realTo.replace(/\?.*/, '');
-    setForcedUrl(`${urlWithoutQuery}?${qs.stringify(newParams)}`);
+    if (Object.keys(newParams).length > 0) {
+      setForcedUrl(`${urlWithoutQuery}?${qs.stringify(newParams)}`);
+    }
   }, [realTo]);
 
   if (realTo.indexOf('://') !== -1) {
