@@ -3,6 +3,7 @@ import {Link} from 'gatsby';
 import qs from 'query-string';
 
 import {marketingUrlParams} from '../utils';
+
 import ExternalLink from './externalLink';
 
 type Props = {
