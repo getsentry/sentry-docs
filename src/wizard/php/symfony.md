@@ -40,7 +40,7 @@ sentry:
 
 And in your `.env` file:
 
-```env {filename:.env}
+```plain {filename:.env}
 ###> sentry/sentry-symfony ###
 SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
