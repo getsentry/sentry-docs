@@ -20,15 +20,19 @@ export default function SidebarLink({
   className = '',
 }: Props): JSX.Element {
   const location = useLocation();
-  const bathPath = to.split('?')[0];
-  const isActive = location && location.pathname.indexOf(withPrefix(bathPath)) === 0;
+  const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
   const showSubtree = isActive || collapsed === false;
   className += 'toc-item';
 
   return (
     <li className={className} data-sidebar-branch>
-      <SmartLink to={to} className="d-block" data-sidebar-link>
+      <SmartLink
+        to={to}
+        className="d-block"
+        data-sidebar-link
+        isActive={to === location?.pathname}
+      >
         {title || children}
       </SmartLink>
       {title && children && (

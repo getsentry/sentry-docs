@@ -11,6 +11,7 @@ type Props = {
   children?: React.ReactNode;
   className?: string;
   href?: string;
+  isActive?: boolean;
   remote?: boolean;
   target?: string;
   title?: string;
@@ -24,6 +25,7 @@ export default function SmartLink({
   activeClassName = 'active',
   remote = false,
   className = '',
+  isActive,
   ...props
 }: Props): JSX.Element {
   const realTo = to || href || '';
@@ -78,11 +80,13 @@ export default function SmartLink({
       </a>
     );
   }
+
   return (
     <Link
       to={forcedUrl ?? realTo}
       activeClassName={activeClassName}
-      className={className}
+      // We need to manually set class to active because Gatsby doesn't highlight correclty with the original_referrer query param
+      className={isActive ? activeClassName : className}
       {...props}
     >
       {children || to || href}
