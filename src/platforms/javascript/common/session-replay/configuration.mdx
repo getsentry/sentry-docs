@@ -24,7 +24,7 @@ The following can be configured as integration options in `new Replay({})`:
 | ---------------------- | -------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | stickySession          | boolean              | `true`  | Keep track of users across page loads. Note, because closing a tab ends the session, a single user using multiple tabs will be recorded as multiple sessions. |
 | networkDetailAllowUrls | (string \| RegExp)[] | `[]`    | Capture request and response details for XHR and Fetch requests that match the given URLs.                                                                                                 |
-| networkCaptureBodies   | boolean              | `true`  | Decide whether to capture request and response bodies for URLs defined in `networkDetailAllowUrls`                                                                                                |
+| networkCaptureBodies   | boolean              | `true`  | Decide whether to capture request and response bodies for URLs defined in `networkDetailAllowUrls`.                                                                                                |
 | networkRequestHeaders  | string[]             | `[]`    | Capture request headers in addition to default headers.                                                                                                                         |
 | networkResponseHeaders | string[]             | `[]`    | Capture response headers in addition to default headers.                                                                                                                        |
 
@@ -34,25 +34,27 @@ If you want to understand how exactly our session sampling works, check out our 
 
 ### Network Details
 
-By default, Replay will capture basic information about all outgoing fetch and XHR requests in your application. This includes the URL, request and response body size, method, and status code. The intention is to limit the chance of collecting private data by default.
+By default, Replay will capture basic information about all outgoing fetch and XHR requests in your application. This includes the URL, request and response body size, method, and status code. The intention is to limit the chance of collecting private data.
 
-To capture additional information such as headers or bodies, you'll need to opt-in via `networkDetailAllowUrls`. This gives you control to add only URLs that are safe to capture bodies, avoiding any endpoints that can contain personal identifiable information.
+To capture additional information such as request and response headers or bodies, you'll need to opt-in via `networkDetailAllowUrls`. This gives you control to add only URLs that are safe to capture bodies, avoiding any endpoints that can contain personal identifiable information (i.e., PII).
 
 Any URL matching the given pattern(s) will then be captured with additional details:
 
 ```javascript
 new Replay({
-   networkDetailAllowUrls: ['https://sentry.io/api']
+   networkDetailAllowUrls: ['https://my-website.com/api']
 });
 ```
 
-If you give us a string, we'll match any URL that contains that string. You can use a Regex to handle exact or more complex matches.
+If you give us a string, we'll match any URL that contains that string. You can use a regex to handle exact or more complex matches.
 
-Requests to a URL matched by the configured patterns will be enhanced with the request and response body, as well as the default headers `content-type`, `content-length`, and `accept, by default. If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`.
+Requests to a URL matched by the configured patterns will be enhanced with the request and response body, as well as the default headers `content-type`, `content-length`, and `accept`, by default. If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`.
 
-Note that captured bodies will be truncated to a maximum size of 150k characters. Content in bodies will be PII sanitized server-side, based on object keys and values.
+<Note>
+Captured bodies will be truncated to a maximum size of 150k characters. Content in bodies will be PII sanitized server-side, based on object keys and values.
+</Note>
 
-### Sensitive data in request and response bodies
+### Sensitive Data in Request and Response Bodies
 
 Sentry attempts to scrub certain types of sensitive data from request and response bodies, if you accidentally opt-in to a URL that includes sensitive data. This mechanism happens on our ingestion service, before data hits our disks. This is a best effort approach. Pattern matching the content with things like credit card information, social security numbers and [passwords](https://github.com/search?q=repo%3Agetsentry%2Frelay%20PASSWORD_KEY_REGEX&type=code). The best way to avoid PII getting into Sentry is to avoid adding the URL of endpoints that can contain PII.
 
