@@ -1,3 +1,6 @@
+// Not sure why but this rule does not get inherited from the eslint config
+/* eslint import/no-unresolved: ['error', { ignore: ['@reach'] }] */
+
 import React from 'react';
 import {useLocation, useNavigate} from '@reach/router';
 import {act, renderHook} from '@testing-library/react-hooks';

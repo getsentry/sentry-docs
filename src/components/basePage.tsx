@@ -103,6 +103,8 @@ export default function BasePage({
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
   return (
+    // @ts-expect-error TODO(epurkhiser): Understand why these types are
+    // totally different
     <Layout {...{sidebar, pageContext}}>
       <SEO
         title={seoTitle || title}

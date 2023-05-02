@@ -1,9 +1,9 @@
 ---
 title: 'Profiling'
-sidebar_order: 3
+sidebar_order: 1
 redirect_from:
   - /profiling/
-description: 'Sentry Profiling is the next-generation performance monitoring platform for your apps. It allows you to collect and analyze performance profiles from real user devices in production to give you a complete picture of how your application performs in a variety of environments.'
+description: 'Profiling offers a deeper level of visibility on top of traditional tracing, removing the need for manual instrumentation and enabling precise code-level visibility into your application in a production environment.'
 ---
 
 <Note>
@@ -20,25 +20,47 @@ description: 'Sentry Profiling is the next-generation performance monitoring pla
 
 </Note>
 
-Profiling allows you to collect and analyze performance profiles from real user devices in production to give you a complete picture of how your application performs in a variety of environments. It's the next-generation performance monitoring feature for your apps, removing the limitations of manually created tests, by looking at real user experiences. With profiling, you're building in [performance as a feature](https://blog.codinghorror.com/performance-is-a-feature/) from day one.
+Profiling offers a deeper level of visibility on top of traditional tracing, removing the need for manual instrumentation and enabling you to build in [performance as a feature](https://blog.codinghorror.com/performance-is-a-feature/) from day one. Sentry's profiling feature builds upon our established [Performance Monitoring](/product/performance) capabilities to provide precise code-level visibility into application execution in a production environment. This allows you to quickly identify potential performance bottlenecks and visualize the call stack to find hot paths in your code.
 
-![Profiling dashboard displaying a flamegraph](profiling-dashboard.png)
+Sentry profiling supports common platforms for both Mobile and Backend applications:
 
-The typical approach to measuring app performance involves setting up automated performance tests for various user flows that run during continuous integration (CI), or manually profiling hot paths in your app using tools like Apple Instruments or Android Profiler. These are excellent tools, but they have numerous drawbacks:
+- [Mobile app profiling](/product/profiling/mobile-app-profiling/) makes it possible to collect **profiles from real devices in production**, providing a complete picture of how the app performs in a variety of environments.
+- Backend platform profiling makes it possible to easily target the essential code that yields the biggest improvements in backend throughput and resource utilization.
 
-- **The environment is near-optimal and highly controlled.** Developers often use the latest, most powerful devices, and are testing apps on excellent network conditions. These conditions do not always reflect real world performance scenarios — users may be running your app on low-end hardware, older operating system versions, or poor network conditions. These conditions can be simulated to some extent, but the complete matrix of variables is too large to be able to test every case on a regular basis.
-- **Only a subset of user flows are being tested.** Performance tests are typically set up for the most common user flows, but it's impractical to build and maintain tests for every possible way someone might be using your app.
-- **Metrics are calculated based on a small number of samples.** Performance metrics are often calculated by aggregating the results from a small number of runs. While this can be sufficient in some cases, it may not be enough data to give you an accurate, statistically significant measurement, especially if you need to account for different hardware, thermal conditions, and so on.
-- **The process is difficult and time consuming.** Manually conducting extensive performance tests on your app before every release is time consuming. Building and maintaining automated performance tests is also time consuming. Interpreting the results can be difficult and frustrating for someone who's not a performance specialist and is unfamiliar with the tools or the process.
+## Zooming In From Performance to Profiling
 
-Profiling is designed to address all of these issues:
+Sentry profiling data is structured as an extension of performance transactions. This means you can "zoom in" on transactions to see their profiles directly by clicking on any transaction on the **Performance** page.
 
-- **The environments are diverse and reflect real world conditions.** We collect performance data automatically from every environment that your app is running on in the real world, accounting for different device hardware, OS versions, app versions, network conditions, and more.
-- **We cover the widest possible set of user flows.** Since the data is collected from actual users using your app as they normally would, we can capture all kinds of usage patterns that you may not have thought about when building your own performance tests.
-- **Metrics are calculated using a large number of samples.** We can collect data from up to 100% of your user population in production, allowing us to compute more accurate metrics.
-- **The process is simple.** Integrate the Sentry SDK, enable profiling, ship your app, and let us worry about analyzing performance and detecting regressions between versions. We encourage _testing in production_, which improves developer velocity and reduces the overhead of having to maintain your own tests and tooling. Our dashboard is designed to be approachable to all engineers, and not just people who have a performance engineering background.
-- **The overhead is minimal.** Depending on the platform, the overhead can be lower than 1% of your app’s CPU time.
+![Performance page](performance-page.png)
+
+This will take you to the **Transaction Summary** page where you'll see a list of transaction events.
+
+![Transaction Summary page](transaction-summary-page.png)
+
+Transaction events that have a profile contain a link in the "Profile" column which will take you to a flame chart with details about that event. Learn how to read [Flame Charts and Flame Graphs](/product/profiling/flame-charts-graphs).
+
+![Profile details page showing a flame chart](profile-details-flame-chart.png)
+
+Alternatively, if you click on the "Event ID" for a transaction, you'll see a span waterfall where you'll can identify suspect spans - operations that may be impacting performance, including slow DB queries and HTTP requests. You can click on a span to see profile information, including the most frequently occurring code path (call stack with with exact line numbers), along with the approximate percentage of time required for that code path.
+
+![Transaction showing call stack data from a profile](call-stack-transaction.png)
+
+From this view, you can also click "View Profile" to zoom in on the flame chart.
+
+## Profiling Page
+
+The **Profiling** page shows a list of transactions in descending order of execution time for your selected project(s). It also shows details about the three "Slowest Transactions" including a list of the slowest identified functions in that transaction. The "Profiles by Percentiles" timeline chart can be used to filter the transaction data by highlighting the desired time period. Using the Profiling page is typically an advanced workflow, enabling you to directly select transactions of interest and examine detailed profiling data.
+
+![Profiling page](profiling-page-view.png)
+
+To zoom in further, select from the list of "Slowest App Functions" and see the associated flame chart for the profile.
+
+Selecting one of the transactions will take you to the **Profile Summary** page below. On this page, you can examine the consolidated [flame graph](/product/profiling/flame-charts-graphs) that presents aggregated sample data for the selected transaction.
+
+![Transaction Profile summary page](transaction-profile-view.png)
 
 ## Learn More
+
+To learn more about profiling tools, read the docs about [Flame Charts and Flame Graphs](/product/profiling/flame-charts-graphs).
 
 <PageGrid />
