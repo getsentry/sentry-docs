@@ -30,17 +30,17 @@ By default we will patch the global `Promise` instance to ensure it matches exac
 If you use a polyfilling library that patches the global `Promise` instance, you'll need to make sure you run the polyfill **after** `Sentry.init` is called.
 
 ```js
-import allSettled from "promise.allsettled";
+import allSettled from 'promise.allsettled';
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
 });
 // Any Promise polyfilling must occur AFTER Sentry.init
 // This step globally patches Promise.
 allSettled.shim();
 
 // Separate core-js example
-import "core-js/stable/promise/all-settled";
+import 'core-js/stable/promise/all-settled';
 ```
 
 Your linter might throw some errors here, but this step is necessary.
@@ -218,19 +218,19 @@ module.exports = {
   dependency: {
     platforms: {
       ios: {
-        sharedLibraries: ['libz']
+        sharedLibraries: ['libz'],
       },
       android: {
-        packageInstance: 'new RNSentryPackage()'
-      }
+        packageInstance: 'new RNSentryPackage()',
+      },
     },
     hooks: {
       postlink:
         'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android',
       postunlink:
-        'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android --uninstall'
-    }
-  }
+        'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android --uninstall',
+    },
+  },
 };
 ```
 
@@ -242,10 +242,10 @@ module.exports = {
     platforms: {
       ios: {},
       android: {
-        packageInstance: 'new RNSentryPackage()'
-      }
-    }
-  }
+        packageInstance: 'new RNSentryPackage()',
+      },
+    },
+  },
 };
 ```
 
@@ -283,14 +283,19 @@ import * as Network from 'expo-network';
 
 const devServerPort = 8081;
 let devServerIpAddress: string | null = null;
-Network.getIpAddressAsync().then((ip) => {devServerIpAddress = ip});
+Network.getIpAddressAsync().then(ip => {
+  devServerIpAddress = ip;
+});
 
 Sentry.init({
   tracesSampleRate: 1.0,
   integrations: [
     new Sentry.Native.ReactNativeTracing({
-      shouldCreateSpanForRequest: (url) => {
-        return !__DEV__ || !url.startsWith(`http://${devServerIpAddress}:${devServerPort}/logs`);
+      shouldCreateSpanForRequest: url => {
+        return (
+          !__DEV__ ||
+          !url.startsWith(`http://${devServerIpAddress}:${devServerPort}/logs`)
+        );
       },
     }),
   ],

@@ -19,10 +19,10 @@ We also support alternate [installation methods](/platforms/javascript/install/)
 `init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
-import * as Sentry from "@sentry/browser";
+import * as Sentry from '@sentry/browser';
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%

@@ -19,8 +19,8 @@ yarn add @sentry/node @sentry/utils
 Initialize the Sentry SDK and install the on error hook:
 
 ```javascript
-import Koa from "koa";
-import * as Sentry from "@sentry/node";
+import Koa from 'koa';
+import * as Sentry from '@sentry/node';
 
 // or using CommonJS
 // const Koa = require('koa');
@@ -28,11 +28,11 @@ import * as Sentry from "@sentry/node";
 
 const app = new Koa();
 
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+Sentry.init({dsn: '___PUBLIC_DSN___'});
 
-app.on("error", (err, ctx) => {
+app.on('error', (err, ctx) => {
   Sentry.withScope(scope => {
-    scope.setSDKProcessingMetadata({ request: ctx.request });
+    scope.setSDKProcessingMetadata({request: ctx.request});
     Sentry.captureException(err);
   });
 });
@@ -45,13 +45,13 @@ app.listen(3000);
 Create and attach a transaction to each request:
 
 ```javascript
-const Sentry = require("@sentry/node");
-const { stripUrlQueryAndFragment } = require("@sentry/utils");
-const Koa = require("koa");
+const Sentry = require('@sentry/node');
+const {stripUrlQueryAndFragment} = require('@sentry/utils');
+const Koa = require('koa');
 const app = new Koa();
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: '___PUBLIC_DSN___',
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
@@ -89,20 +89,18 @@ const requestHandler = (ctx, next) => {
 
 // this tracing middleware creates a transaction per request
 const tracingMiddleWare = async (ctx, next) => {
-  const reqMethod = (ctx.method || "").toUpperCase();
+  const reqMethod = (ctx.method || '').toUpperCase();
   const reqUrl = ctx.url && stripUrlQueryAndFragment(ctx.url);
 
   // connect to trace of upstream app
   let traceparentData;
-  if (ctx.request.get("sentry-trace")) {
-    traceparentData = Sentry.extractTraceparentData(
-      ctx.request.get("sentry-trace")
-    );
+  if (ctx.request.get('sentry-trace')) {
+    traceparentData = Sentry.extractTraceparentData(ctx.request.get('sentry-trace'));
   }
 
   const transaction = Sentry.startTransaction({
     name: `${reqMethod} ${reqUrl}`,
-    op: "http.server",
+    op: 'http.server',
     ...traceparentData,
   });
 
@@ -113,12 +111,12 @@ const tracingMiddleWare = async (ctx, next) => {
     scope.setSpan(transaction);
   });
 
-  ctx.res.on("finish", () => {
+  ctx.res.on('finish', () => {
     // Push `transaction.finish` to the next event loop so open spans have a chance to finish before the transaction closes
     setImmediate(() => {
       // if using koa router, a nicer way to capture transaction using the matched route
       if (ctx._matchedRoute) {
-        const mountPath = ctx.mountPath || "";
+        const mountPath = ctx.mountPath || '';
         transaction.setName(`${reqMethod} ${mountPath}${ctx._matchedRoute}`);
       }
       transaction.setHttpStatus(ctx.status);
@@ -133,7 +131,7 @@ app.use(requestHandler);
 app.use(tracingMiddleWare);
 
 // usual error handler
-app.on("error", (err, ctx) => {
+app.on('error', (err, ctx) => {
   Sentry.withScope(scope => {
     scope.addEventProcessor(event => {
       return Sentry.addRequestDataToEvent(event, ctx.request);
@@ -157,7 +155,7 @@ const myMiddleware = async (ctx, next) => {
   if (transaction) {
     span = transaction.startChild({
       description: route,
-      op: "myMiddleware",
+      op: 'myMiddleware',
     });
   }
   await myExpensiveOperation();

@@ -82,7 +82,7 @@ import * as Sentry from '@sentry/capacitor';
 // The example is using Angular, Import '@sentry/vue' or '@sentry/react' when using a Sibling different than Angular.
 import * as SentrySibling from '@sentry/angular';
 // For automatic instrumentation (highly recommended)
-import { BrowserTracing } from '@sentry/tracing';
+import {BrowserTracing} from '@sentry/tracing';
 
 Sentry.init(
   {
@@ -97,7 +97,7 @@ Sentry.init(
       new BrowserTracing({
         tracingOrigins: ['localhost', 'https://yourserver.io/api'],
       }),
-    ]
+    ],
   },
   // Forward the init method to the sibling Framework.
   SentrySibling.init

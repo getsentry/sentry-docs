@@ -37,14 +37,15 @@ You can identify a Consecutive DB queries problem by four main aspects in the "S
 ![Consecutive DB Queries span evidence](span-evidence.png)
 
 View it by going to the **Issues** page in Sentry, selecting your project, clicking on the Consecutive DB Queries error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+
 ## Example
 
 Consider using this Node.js code when counting and retrieving all the users from a database
 
 ```javascript
-  const result = await db.query("SELECT * FROM USERS");
-  const count = await db.query("SELECT COUNT(*) FROM USERS");
-  processMyData({ result, count });
+const result = await db.query('SELECT * FROM USERS');
+const count = await db.query('SELECT COUNT(*) FROM USERS');
+processMyData({result, count});
 ```
 
 This results in a consecutive DB performance issue. You'll notice these queries occur sequentially in the span tree,
@@ -52,15 +53,14 @@ but they aren't interdependent because the result of one doesn't affect the othe
 
 ![Consecutive DB Queries example](consecutive-example.png)
 
-
 To fix this performance issue, you could use Promise.all():
 
 ```javascript
-  const [result, count] = await Promise.all([
-    db.query("SELECT * FROM USERS"),
-    db.query("SELECT COUNT(*) FROM USERS"),
-  ]);
-  processMyData({ result, count });
+const [result, count] = await Promise.all([
+  db.query('SELECT * FROM USERS'),
+  db.query('SELECT COUNT(*) FROM USERS'),
+]);
+processMyData({result, count});
 ```
 
 This makes the queries execute in parallel, which in this case, reduced the transaction duration by almost half!
