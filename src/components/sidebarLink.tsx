@@ -20,7 +20,8 @@ export default function SidebarLink({
   className = '',
 }: Props): JSX.Element {
   const location = useLocation();
-  const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
+  const bathPath = to.split('?')[0];
+  const isActive = location && location.pathname.indexOf(withPrefix(bathPath)) === 0;
 
   const showSubtree = isActive || collapsed === false;
   className += 'toc-item';
