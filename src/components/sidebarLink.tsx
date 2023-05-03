@@ -27,7 +27,12 @@ export default function SidebarLink({
 
   return (
     <li className={className} data-sidebar-branch>
-      <SmartLink to={to} className="d-block" data-sidebar-link>
+      <SmartLink
+        to={to}
+        className="d-block"
+        data-sidebar-link
+        isActive={to === location?.pathname}
+      >
         {title || children}
       </SmartLink>
       {title && children && (

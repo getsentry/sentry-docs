@@ -1,5 +1,8 @@
 import React from 'react';
 import {Link} from 'gatsby';
+import qs from 'query-string';
+
+import {marketingUrlParams} from '../utils';
 
 import ExternalLink from './externalLink';
 
@@ -8,6 +11,7 @@ type Props = {
   children?: React.ReactNode;
   className?: string;
   href?: string;
+  isActive?: boolean;
   remote?: boolean;
   target?: string;
   title?: string;
@@ -21,9 +25,32 @@ export default function SmartLink({
   activeClassName = 'active',
   remote = false,
   className = '',
+  isActive,
   ...props
 }: Props): JSX.Element {
   const realTo = to || href || '';
+
+  const [forcedUrl, setForcedUrl] = React.useState(realTo);
+
+  // Google Tag Manager syncs certain query parameters to all links on the page.
+  // Since Gatsby's Link is a React component, it doesn't catch these updates
+  // because they're made outside of React, so we keep track of them ourselves.
+  React.useEffect(() => {
+    const marketingParams = marketingUrlParams();
+    if (!marketingParams) {
+      return;
+    }
+
+    const linkParams = qs.parse(realTo.split('?')[1]);
+    // Merge the new params *before* the old to ensure the old ones
+    // don't get clobbered. If they're set, they should stay.
+    const newParams = {...marketingParams, ...linkParams};
+    const urlWithoutQuery = realTo.replace(/\?.*/, '');
+    if (Object.keys(newParams).length > 0) {
+      setForcedUrl(`${urlWithoutQuery}?${qs.stringify(newParams)}`);
+    }
+  }, [realTo]);
+
   if (realTo.indexOf('://') !== -1) {
     return (
       <ExternalLink href={realTo} className={className} {...props}>
@@ -53,8 +80,15 @@ export default function SmartLink({
       </a>
     );
   }
+
   return (
-    <Link to={realTo} activeClassName={activeClassName} className={className} {...props}>
+    <Link
+      to={forcedUrl ?? realTo}
+      activeClassName={activeClassName}
+      // We need to manually set class to active because Gatsby doesn't highlight correclty with the original_referrer query param
+      className={isActive ? activeClassName : className}
+      {...props}
+    >
       {children || to || href}
     </Link>
   );
