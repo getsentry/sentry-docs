@@ -50,11 +50,23 @@ If you give us a string, we'll match any URL that contains that string. You can 
 
 Requests to a URL matched by the configured patterns will be enhanced with the request and response body, as well as the following default headers:
 
-* `content-type`
-* `content-length`
-* `accept`
+* `Content-Type`
+* `Content-Length`
+* `Accept`
 
-If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`.
+If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`, for example:
+
+```javascript
+new Replay({
+  networkDetailAllowUrls: ['https://my-website.com/api'],
+  networkRequestHeaders: [
+    "Cache-Control",
+    ],
+  networkResponseHeaders: [
+    "Referrer-Policy",
+    ],
+});
+```
 
 <Note>
   Captured bodies will be truncated to 150k characters max. Content in
@@ -63,7 +75,7 @@ If you want to capture additional headers, you'll have to configure them with th
 
 ### Sensitive Data in Request and Response Bodies
 
-Sentry attempts to scrub certain types of sensitive data from request and response bodies, if you accidentally opt-in to a URL that includes this type of data. This mechanism happens on our ingestion service, before data hits our disks. This is a best effort approach which pattern-matches the content with things like credit card information, social security numbers, and [passwords](https://github.com/search?q=repo%3Agetsentry%2Frelay%20PASSWORD_KEY_REGEX&type=code). The best way to avoid getting PII into Sentry is by not adding URLs of endpoints that may contain PII.
+<Include name="replay-network-sensitive-data.mdx" />
 
 ## Identifying Users
 
