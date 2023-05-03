@@ -23,8 +23,8 @@ Due to a bug in all versions below `6.0` of the [`SensioFrameworkExtraBundle`](h
 
 ```yaml
 sensio_framework_extra:
-   psr_message:
-      enabled: false
+  psr_message:
+    enabled: false
 ```
 
 For more details about the issue see [https://github.com/sensiolabs/SensioFrameworkExtraBundle/pull/710](https://github.com/sensiolabs/SensioFrameworkExtraBundle/pull/710).
@@ -37,7 +37,7 @@ Add your DSN to `config/packages/sentry.yaml`:
 
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
-    dsn: "%env(SENTRY_DSN)%"
+  dsn: '%env(SENTRY_DSN)%'
 ```
 
 And in your `.env` file:
@@ -73,15 +73,15 @@ If you are using [Monolog](https://github.com/Seldaek/monolog) to report events 
 
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
-    register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
-    register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
+  register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
+  register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
 
 monolog:
-    handlers:
-        sentry:
-            type: sentry
-            level: !php/const Monolog\Logger::ERROR
-            hub_id: Sentry\State\HubInterface
+  handlers:
+    sentry:
+      type: sentry
+      level: !php/const Monolog\Logger::ERROR
+      hub_id: Sentry\State\HubInterface
 ```
 
 If you are using a version of [MonologBundle](https://github.com/symfony/monolog-bundle) prior to `3.7`, you need to
@@ -89,24 +89,24 @@ configure the handler as a service instead:
 
 ```yaml {filename:config/packages/sentry.yaml}
 monolog:
-    handlers:
-        sentry:
-            type: service
-            id: Sentry\Monolog\Handler
+  handlers:
+    sentry:
+      type: service
+      id: Sentry\Monolog\Handler
 
 services:
-    Sentry\Monolog\Handler:
-        arguments:
-            $hub: '@Sentry\State\HubInterface'
-            $level: !php/const Monolog\Logger::ERROR
+  Sentry\Monolog\Handler:
+    arguments:
+      $hub: '@Sentry\State\HubInterface'
+      $level: !php/const Monolog\Logger::ERROR
 ```
 
 Additionally, you can register the `PsrLogMessageProcessor` to resolve PSR-3 placeholders in reported messages:
 
 ```yaml {filename:config/packages/sentry.yaml}
 services:
-    Monolog\Processor\PsrLogMessageProcessor:
-        tags: { name: monolog.processor, handler: sentry }
+  Monolog\Processor\PsrLogMessageProcessor:
+    tags: {name: monolog.processor, handler: sentry}
 ```
 
 ## Test the implementation
