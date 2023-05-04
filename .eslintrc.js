@@ -1,37 +1,22 @@
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
+
 module.exports = {
-  env: {
-    browser: true,
-    es6: true,
-    node: true,
-  },
-  extends: [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:mdx/recommended",
-    "plugin:jest/recommended",
-  ],
+  extends: ['sentry-docs'],
   globals: {
-    Atomics: "readonly",
-    SharedArrayBuffer: "readonly",
+    jest: true,
+    Atomics: 'readonly',
+    SharedArrayBuffer: 'readonly',
   },
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
+
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+      rules: {
+        // Reach is vendored into gatsby. They have their own webpack
+        // resolution for it which this eslint plugin can't seem to detect
+        'import/no-unresolved': ['error', {ignore: ['@reach']}],
+      },
     },
-    ecmaVersion: 2018,
-    sourceType: "module",
-  },
-  plugins: ["react", "@typescript-eslint"],
-  rules: {
-    "react/display-name": "off",
-    "react/prop-types": "off",
-    "no-unused-vars": "warn",
-  },
-  settings: {
-    react: {
-      version: "detect",
-    },
-  },
+  ],
 };

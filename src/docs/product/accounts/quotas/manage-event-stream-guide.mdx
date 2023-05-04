@@ -1,10 +1,10 @@
 ---
 title: Manage Your Error Quota
-keywords: ["best practices"]
-sidebar_order: 10
+keywords: ['best practices']
+sidebar_order: 30
 redirect_from:
   - /guides/manage-event-stream/
-description: "Learn how to use the tools Sentry provides to control the type and amount of errors that you pay for."
+description: 'Learn how to use the tools Sentry provides to control the type and amount of errors that you pay for.'
 ---
 
 Sending all your application errors to Sentry ensures you'll be notified in real-time when errors occur in your code. However, with a basic setup, you may consume your error quota too rapidly and trigger more notifications than you can use. Sentry provides tools to control the _type_ and _amount_ of errors that are monitored. These tools allow you to:
@@ -57,127 +57,7 @@ While this grace period isn't dependent on the [Spike Protection feature](#7-spi
 
 ## Spike Protection {#7-spike-protection}
 
-A spike is both a **large** and **temporary** increase in error event volume. Sentry applies a dynamic rate limit to your account designed to protect you from short-term spikes.
-
-Spike protection is enabled for your organization by default, and when it's enabled, Sentry continually monitors for spikes. You can confirm that it's enabled in **Settings > Subscription**. This page can only be accessed by a Billing or Owner member of your Sentry organization.
-
-### How Does Spike Protection Work?
-
-Because Sentry bills based on monthly event volume, spikes can easily consume your quota for the rest of the month. Sentry's spike protection prevents these types of overages from consuming your error event quota by dropping error events during the spike.
-
-We use your historical error event volume to implement a dynamic rate limit, and then discard error events when you hit its threshold. When spike protection is activated, we limit the number of error events accepted in any minute to:
-
-```
-maximum(20, 6 x average error events per minute over the last 24 hours)
-```
-
-<Note>
-
-The 24-hour window ends at the beginning of the current hour, not at the current minute.
-
-</Note>
-
-This means if you experience a spike, we'll temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually **increase until Sentry accepts all events**.
-
-For example, in the last 24 hours, your organization has been receiving, on average, 10 events per minute (after any inbound filters have been applied). That means your current per-minute limit is 6 \* 10 or 60 events. There have been no spikes in that time, so spike control is "inactive". Something breaks, and in the next minute, your organization sends Sentry 100 events. When we see the 61st event, three things happen:
-
-1. Spike protection becomes "active".
-
-1. If your organization has used more than 25% of your monthly quota, Sentry sends the organization owner a [notification](/product/alerts/notifications/#quota-notifications) including which project the 61st event came from. This is likely, but not guaranteed to be, the project in which something broke.
-
-1. Events 61-100 are dropped with a 429 error code.
-
-When the next minute begins, we again record up to 60 events, dropping the rest until the minute is up. It continues like this for the remainder of the hour. After an hour, we re-calculate your per-minute limit, and for the next hour use that limit to decide whether events get dropped each minute. We repeat this process every hour until Sentry eventually accepts all events.
-
-If, instead of a single big spike (or an overall, permanent, increase in traffic), you experience many small spikes, there may be many days in a row when at least a few events are dropped. In that scenario, spike protection remains active the entire time.
-
-Spike protection is an organization-level setting, so once it's triggered, it affects all the projects in the organization, regardless of which project triggered the spike.
-
-### Managing a Spike {#-spike-protection-was-activated----what-should-i-do}
-
-If spike protection has been triggered for your account, you'll receive an email notifying you:
-
-![Spike Protection Email](spike-email.jpg)
-
-To manage the current spike and avoid future spikes, we recommend taking the following steps:
-
-- Set up an [on-demand budget](#on-demand-budget) to ensure you have time to adjust your volume in the event of a future spike in errors.
-- Set better [rate limits](#6-rate-limiting) on the DSN keys for the projects related to the spike.
-- If it's a specific release version that has caused the spike, add the version identifier to the project's [inbound filters](#3-inbound-data-filters) to avoid accepting events from that release.
-
-To review the error events dropped because of spike protection, go to the "Usage Stats" tab of **Stats** for your Sentry org and select "Errors" in the "Category" dropdown.
-
-### When Does Spike Protection Become "Inactive?"
-
-Events will not be dropped during any minute in which you don't send more than the hourly limit that Sentry has calculated for you. After 24 hours without any dropped events, spike protection becomes "inactive" again. This means that it is no longer dropping events, but _it does not mean the system has stopped paying attention._ The next time events are dropped, spike protection will be "reactivated".
-
-### New Spike Protection Calculations
-
-<Include name="limited-avail-note.mdx" />
-
-Limited availability spike protection is a project-level tool that helps prevent quota overconsumption. It's enabled for every project by default, and when it's enabled, Sentry continually monitors for spikes. You can confirm that it's enabled in **[Project] > Settings > General Settings**.
-
-Our spike protection algorithm does the following:
-
-- Uses a weighted average of your events over the past 168 hours (seven days)
-- Applies a multiplier to that number
-- Compares this final number against a minimum number of events, determined using your quota, to trigger a spike
-- Sets this as your spike limit
-
-#### Setting the Spike Limit
-
-There are two ways that we can set your spike limit, or the number of events that trigger a spike:
-
-- [Minimum Event Calculation](#minimum-event-calculation) - A calculation that determines a minimum number of events
-- [Usage-Based Calculation](#usage-based-calculation) - A projection based on your past usage
-
-The spike limit for each hour is set using either the minimum event or usage-based calculation — whichever is higher. This is done for a number of reasons. Firstly, using a minimum event calculation protects smaller or new projects. New projects that don't have a week’s worth of data to use to calibrate spike limits can use this minimum number of events, an adaptation of the organization’s quota, to approximate appropriate limits. Additionally, this calculation can be used to minimize false positives in smaller or new projects so that spikes aren’t flagged incorrectly.
-
-Spike limits are recalculated in real time throughout the duration of the spike to adjust for the increasing volume of incoming events. This allows the limit to grow at a steady rate such that quota is protected from being quickly consumed. [An example](#example) of how this works during a spike is shown below.
-
-##### Minimum Event Calculation
-
-This calculation, which is the first step of our algorithm, identifies a minimum number of events, using your quota as a guide. This number takes the maximum of either 500 events or the result of the following formula `(3 \* your quota)/(720 \* number of projects)`. The equation represents your project using up three times your overall quota in 30 days if events are continually ingested at this hourly rate, thus flagging the project for a potential spike.
-
-##### Usage-Based Calculation
-
-This calculation, which is the second step of our algorithm, calculates hourly data from the past seven days to determine spike limit projections for the next seven days. This data is used to calculate weighted averages, which takes into account weekly and hourly seasonality. For example, the weighted average calculated for Monday at 3 pm is more heavily influenced by data points on Monday or the hours around 3 pm. This weighted average is then multiplied by a multiplier that is `5` times the overall standard deviation of the past week — this multiplier is bounded between `3` and `6`.
-
-#### Example
-
-In this example, the project usually ingests 100-200 events per hour. There's been a spike that’s reached 50,000 events, as shown in the graph below:
-![Spike zoomed out](spike-protection-zoomed-out.png)
-
-In the following graph, we can see a zoomed in perspective of the 12-hour period of the spike, along with a line indicating the spike limit as it’s being recalculated over the course of the spike:
-![Spike zoomed in plotted with spike limits](spike-protection-zoomed-in.png)
-
-Throughout the spike, the recalulating limit has the following effect:
-
-- 1st hour: 6k events ingested, limit is recalculated to 2083, 3917 events dropped
-- 2nd hour: 34k events ingested, limit is recalculated to 2873, 31217 events dropped
-- 3rd hour: 55k events ingested, limit is recalculated to 5452, ~49k events dropped
-- 4th hour: 49k events ingested, limit is recalculated to 7628, ~41k events dropped
-- 5th hour: 41k events ingested, limit is recalculated to 9371, ~31k events dropped
-
-For this particular example:
-
-- Org quota: 500k
-- Events ingested during the spike: ~478k
-- Events accepted overall: ~157k
-
-Here's an example of spike limit projections for a week, taking into account seasonality:
-
-![Spike limit projections with seasonality](spike-protection-steady-state.png)
-
-These regular differences in event ingestion don't cause a spike to occur.
-
-#### Bursty Projects
-
-There may be instances where a project routinely accepts a high volume of events in a very short period of time by design — for example projects that orchestrate cron/Airflow jobs or task runners. The screenshot below shows an example of this kind of behavior:
-
-![A "bursty" project with intentional spikes.](bursty_projects.png)
-
-If this is expected behavior for a given project in your organization, you may want to consider turning off spike protection in the project settings to ensure necessary events aren't dropped.
+Sentry's Spike Protection checks for significant overages in error events, (as compared to an established spike threshold), on a per-project basis. If a spike is detected, Spike Protection kicks in, dropping events once they've reached the spike threshold. Spike Protection can be enabled on a per-project basis for your organization by any team member with either Billing or Owner-level permissions. To select which project to set it up for, go to Settings > Spike Protection. You'll be able to toggle it on for individual projects or click “Enable All” to set it up for all your projects at once. Learn more about how Spike Protection works and how to manage spikes in [Spike Protection](/product/accounts/quotas/spike-protection/).
 
 ## Adjusting Quotas
 
@@ -355,6 +235,7 @@ The integration is enabled by default and adds the following configuration optio
 - `allowUrls`: Domains that might raise acceptable exceptions represented in a regex pattern format.
 - `denyUrls`: A list of strings or regex patterns which match error URLs that should be blocked from sending events. Configuring both `allowUrls` and `denyUrls` on the SDK can be used to block subdomains of the domains listed in `allowUrls`.
 - `ignoreErrors`: Instructs the SDK to never send an error to Sentry if it matches any of the listed error messages or regular expressions. The SDK will try to match against the message or, if there is no message, a string containing the exception type and value formatted like so: `ExceptionType: value`.
+- `ignoreTransactions`: Instructs the SDK to never send a transaction to Sentry if it matches any of the listed transaction names or regular expressions.
 
 To learn more and see code samples, check out:
 

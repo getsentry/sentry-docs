@@ -9,24 +9,10 @@ Sentry captures data by using an SDK within your application’s runtime.
 
 > If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
 
-
-Install our React Native SDK using either `yarn` or `npm`:
-
-```bash
-npm install --save @sentry/react-native
-# or
-yarn add @sentry/react-native
-```
-
-Run `@sentry/wizard` to setup automatic source maps upload:
+Run `@sentry/wizard`:
 
 ```bash
-npx @sentry/wizard -i reactNative -p ios android
-# or
-yarn sentry-wizard -i reactNative -p ios android
-
-cd ios
-pod install
+npx @sentry/wizard -s -i reactNative
 ```
 
 [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [setup manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer.

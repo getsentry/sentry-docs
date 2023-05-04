@@ -1,7 +1,7 @@
 ---
 title: Searchable Properties
 sidebar_order: 10
-description: "Learn more about searchable issue and event properties."
+description: 'Learn more about searchable issue and event properties.'
 ---
 
 Sentry's search provides you with reserved keywords, like `is`, `user`, `server`, and `browser`, that you can use to search on the properties of issues and events (as well as the special case of releases). You can also create [custom tags](#custom-tags) on which to search. This page includes [a canonical list of all available issue and event search properties](#properties-table) as well as guidance for how to use these properties.
@@ -23,6 +23,7 @@ You can search by event properties in the following [sentry.io](https://sentry.i
 - Discover - in the query builder
 - Dashboards - within the widget builder, depending on dataset selection
 - Performance - only in transaction summaries
+- Replay - on the **Replay** page
 - Issues - as indicated in the table below
 - Alerts - when creating a metric alert
 
@@ -38,7 +39,7 @@ When searching on event properties within the **Issues** page, the search will r
 
 [Session Replay](/product/session-replay/) provides a video-like reproduction of user interactions on a site or web app. All user interactions, including page visits, mouse movements, clicks, and scrolls, are captured, helping developers connect the dots between a known issue and how a user experienced it in the UI.
 
-You can search by session replay properties (indicated with an R in the properties table below) on the **Replays** page.
+You can search by session replay properties (indicated with an R in the properties table below) on the **Replay** page.
 
 ### Release Properties
 
@@ -87,7 +88,7 @@ Release properties overlap with event and issue search properties, so they don't
 | activity | Replay activity is calculated based on the number of errors, the number of ui events, and the duration of the replay. It's represented as a number from `1` to `10`. | | | x | number |
 | age | Returns issues created since the time defined by the value. The syntax is similar to the Unix find command. Supported suffixes: `m - minutes`, `h - hours`, `d - days`, `w - weeks`. For example, `age:-24h` returns isssues that are new in the last 24 hours, while `age:+12h` returns ones that are older than 12 hours. Entering `age:+12h age:-24h` would return issues created between 12 and 24 hours ago. |  | x |  | relative time |
 | apdex(threshold) | Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Higher apdex values indicate higher user satisfaction. | x |  |  | number |
-| app.in_foreground | Indicates if the app is in the foreground or background. | x | x |  | boolean |
+| app.in_foreground | Indicates if the app is in the foreground or background. Values are `1/0` or `true/false` | x | x |  | boolean |
 | assigned | Returns issues assigned to the defined user. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or # followed by the team name, that is `#team-name`. |  | x |  | team or org user |
 | assigned_<br></br>or_suggested | Returns issues assigned to or suggested to be assigned to the defined user. Suggested assignees are determined by matching [ownership rules](/product/issues/ownership-rules/) and [suspect commits](/product/issues/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or # followed by the team name, that is `#team-name`. |  | x |  | team or org user |
 | avg(field) | Returns results with matching averages for the field selected. The field can be either a number or a duration. Typically used with a comparison operator. | x |  |  | matches field |
@@ -127,6 +128,7 @@ Release properties overlap with event and issue search properties, so they don't
 | eps() | Returns results with a matching events-per-second count. Doesn't take a parameter. | x |  |  | number |
 | error_id | Error instances that have occurred within a replay. |  |  | x | array |
 | error.handled | Indicates whether the user has handled the exception — for example, using try...catch. An error is considered handled if all stack traces handle the error. Values are `1/0` or `true/false` | x | x |  | boolean |
+| error.main_thread | Indicates if the error occurred on the main thread. Values are `1/0` or `true/false` | x | x |  | boolean |
 | error.mechanism | An object describing the mechanism that created this exception. | x | x |  | array |
 | error.type | The type of exception. For example, `ValueError`. | x | x |  | array |
 | error.unhandled | The inversion of `error.handled`. | x | x |  | boolean |
@@ -191,6 +193,16 @@ Release properties overlap with event and issue search properties, so they don't
 | release.stage | The usage your release is seeing relative to other releases. Values can be `adopted`, `low`, or `replaced`. [Learn more](/product/releases/health/#adoption-stages). | x | x |  | string |
 | release.version | A shorter version of the name; name without the package or short version of the hash. [Learn more](/product/releases/usage/sorting-filtering/). | x | x |  | string |
 | replayType | The reason a replay was triggered. For example, `session` when `replaysSessionSampleRate` takes effect, or `error` when `replaysOnErrorSampleRate` is sampled instead of `session`. |  |  | x | string |
+| click.alt | The `alt` of an element that was clicked. For example, `"a good dog"` would match the element `<img src="/lassie.jpeg" alt="a good dog" />` | | | x | string |
+| click.class | The `class` of an element that was clicked. No leading `.` is necessary. For example, `btn-primary` would match the element `<a class="btn btn-primary">Save</a>` | | | x | string |
+| click.id | The `id` of an element that was clicked. No leading `#` is necessary. For example, `reset-password` would match the element `<a id="reset-password">Reset</a>` | | | x | string |
+| click.label | The `aria-label` of an element that was clicked. For example, `Expand` would match the element `<button aria-label="Expand"><img src="/icons/expand.png"/></button>` | | | x | string |
+| click.role | The `role` of an element that was clicked. For example, `button` would match both `<button>Save</button>` and `<a role="button">Submit</a>` | | | x | string |
+| click.selector | An element identified using a subset of CSS selector syntax. For example, `span#section-1` or `span.active` or `span[role=button]` or `span#section-1.active[role=button]` would all match the element `<span id="section-1" class="active" role="button"/>`. Note that, CSS combinators, pseudo selectors, and attr selectors other than `=` are not supported. | | | x | string |
+| click.tag | The tag name of an element that was clicked. For example, `input` would match `<input name="username" />` | | | x | string |
+| click.testid | The `data-testid` or `data-test-id` of an element that was clicked. For example, `user-name` would match the element `<a data-testid="user-name">User Name</a>` | | | x | string |
+| click.textContent | The immediate `textContent` of an element that was clicked. For example, `Save` would match `<button>Save</button>` but wouldn't match `<button><h1>Save</h1></button>` | | | x | string |
+| click.title | The `title` of an element that was clicked. For example, `Save this comment` would match the element `<a title="Save this comment" class="btn btn-primary">Save</a>` | | | x | string |
 | sdk.name | Name of the Sentry SDK that sent the event. | x | x | x | string |
 | sdk.version | Version of the Sentry SDK that sent the event. | x | x | x | string |
 | spans.browser | Cumulative browser time for a transaction, based on the span operations. | x |  |  | duration |
@@ -243,28 +255,20 @@ Several common uses for tags include:
 
 ## Device Classification
 
-<Note>
-
-This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
-
-If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
-
-</Note>
-
 `device.class` provides a simple way for developers to understand the performance level of an event's client device in a single searchable property. This is particularly useful for projects that serve a large range of mobile devices, in which case developers would typically have had to parse through a vast range of specs and models across iOS and Android.
 
 Possible values for `device.class` are `high`, `medium`, and `low`, indicating the estimated performance level of the device. This is a calculated property that is based on the following specs:
 
-| `device.class` for iOS| `model` |
-|---|---|
-| high | iPhone 12 series or higher |
-| medium | iPhone 7 series to iPhone 11 series |
-| low | iPhone 6 series or lower |
+| `device.class` for iOS | `model`                             |
+| ---------------------- | ----------------------------------- |
+| high                   | iPhone 12 series or higher          |
+| medium                 | iPhone 7 series to iPhone 11 series |
+| low                    | iPhone 6 series or lower            |
 
 | `device.class` for Android | `processor_count` | `processor_frequency` | `memory_size` |
-|---|---|---|---|
-| high | >= 8 | >= 2500 MHz | >= 6 GiB |
-| medium | >= 8 | >= 2000 MHz | >= 4 GiB |
-| low | < 8 | < 2000 MHz | < 4 GiB |
+| -------------------------- | ----------------- | --------------------- | ------------- |
+| high                       | >= 8              | >= 2500 MHz           | >= 6 GiB      |
+| medium                     | >= 8              | >= 2000 MHz           | >= 4 GiB      |
+| low                        | < 8               | < 2000 MHz            | < 4 GiB       |
 
 These classifications are based on an analysis of the mobile devices available in the market today and are subject to change as the market evolves.

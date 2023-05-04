@@ -1,0 +1,235 @@
+---
+title: Loader Script
+sidebar_order: 10
+redirect_from:
+  - /platforms/javascript/loader/
+  - /platforms/javascript/install/lazy-load-sentry/
+  - /platforms/javascript/install/cdn/
+description: 'Learn about the Sentry JavaScript Loader Script'
+---
+
+The Loader Script is the easiest way to initialize the Sentry SDK. The Loader Script also automatically keeps your Sentry SDK up to date and offers configuration for different Sentry features.
+
+## Using the Loader
+
+To use the loader, go in the Sentry UI to **Settings > Projects > (select project) > Client Keys (DSN)**, and then press the "Configure" button. Copy the script tag from the "JavaScript Loader" section and include it as the first script on your page. By including it first, you allow it to catch and buffer events from any subsequent scripts, while still ensuring the full SDK doesn't load until after everything else has run.
+
+```html
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+By default, Performance Monitoring and Session Replay is enabled.
+
+## Source Maps
+
+To have correct stack traces for minified asset files when using the Loader Script, you will have to [upload & host your Source Maps publicly](/platforms/javascript/sourcemaps/uploading/hosting-publicly/).
+
+## Loader Configuration
+
+The loader has a few configuration options:
+
+- What version of the SDK to load
+- Using Performance Monitoring
+- Using Session Replay
+- Showing debug logs
+
+### SDK Version
+
+To configure the version, use the dropdown in the "JavaScript Loader" settings, directly beneath the script tag you copied earlier.
+
+![JavaScript Loader Settings](js-loader-settings.png)
+
+Note that because of caching, it can take a few minutes for version changes made here to take effect.
+
+### Load Timing
+
+If you only use the Loader for errors, the loader won't load the full SDK until triggered by one of the following:
+
+- an unhandled error
+- an unhandled promise rejection
+- a call to `Sentry.captureException`
+- a call to `Sentry.captureMessage`
+- a call to `Sentry.captureEvent`
+
+Once one of those occurs, the loader will buffer that event and immediately request the full SDK from our CDN. Any events that occur between that request being made and the completion of SDK initialization will also be buffered, and all buffered events will be sent to Sentry once the SDK is fully initialized.
+
+Alternatively, you can set the loader to request the full SDK earlier: still as part of page load, but _after_ all of the other JavaScript on the page has run. (In other words, in a subsequent event loop.) To do this, include `data-lazy="no"` in your script tag.
+
+```html
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+  data-lazy="no"
+></script>
+```
+
+Finally, if you want to control the timing yourself, you can call `Sentry.forceLoad()`. You can do this as early as immediately after the loader runs (which has the same effect as setting `data-lazy="no"`) and as late as the first unhandled error, unhandled promise rejection, or call to `Sentry.captureMessage` or `Sentry.captureEvent` (which has the same effect as not calling it at all). Note that you can't delay loading past one of the aforementioned triggering events.
+
+If Performance Monitoring and/or Session Replay is enabled, the SDK will immediately fetch and initialize the bundle to make sure it can capture transactions and/or replays once the page loads.
+
+## SDK Configuration
+
+You can configure the release by adding the following to your page:
+
+```html
+<script>
+  window.SENTRY_RELEASE = {
+    id: "..."
+  };
+</script>
+```
+
+The loader script always includes a call to `Sentry.init` with a default configuration, including your DSN. If you want to [configure your SDK](../../configuration/options/) beyond that, you'll need a second script tag, in which you'll call `Sentry.onLoad`. This script must come _after_ the main loader script.
+
+```html
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Sentry.onLoad(function() { ... });
+</script>
+```
+
+`Sentry.onLoad` is a function that only the loader provides, and - as the name suggests - it sets a function to be run once the full SDK has been loaded. In that function, you can configure your SDK exactly the way you would were you using the CDN, with one difference: your `Sentry.init` call doesn't need to include your DSN, since it's already been set.
+
+```html
+<script>
+  Sentry.onLoad(function() {
+    Sentry.init({
+      release: " ... ",
+      environment: " ... "
+    });
+    Sentry.configureScope(scope => {
+      scope.setTag( ... );
+    });
+    // etc.
+  });
+</script>
+```
+
+For Performance Monitoring, by default, the SDK will be initialized with `tracesSampleRate: 1`. This means that the SDK will capture all traces.
+
+For Session Replay, the defaults are set to `replaysSessionSampleRate: 0.1` and `replaysOnErrorSampleRate: 1`. This means Replays will be captured for 10% of all normal sessions and for all sessions with an error.
+
+## **Limitations of error-only capturing**
+
+When using the Loader Script with just errors, the script injects the SDK asynchronously. This means that only _unhandled errors_ and _unhandled promise rejections_ will be caught and buffered before the SDK is fully loaded. Specifically, capturing [breadcrumb data](../../enriching-events/breadcrumbs/) will not be available until the SDK is fully loaded and initialized. To reduce the amount of time these features are unavailable, set `data-lazy="no"` or call `forceLoad()` as described above.
+
+If you want to understand the inner workings of the loader itself, you can read the documented source code in all its glory over at the [sentry repository](https://github.com/getsentry/sentry/blob/master/src/sentry/templates/sentry/js-sdk-loader.ts).
+
+## CDN
+
+import JsBundleList from "~src/components/jsBundleList";
+
+Sentry supports loading the JavaScript SDK from a CDN. Generally we suggest using our Loader instead. If you _must_ use a CDN, see [Available Bundles](#available-bundles) below.
+
+## Default Bundle
+
+To use Sentry for error and performance monitoring, you can use the following bundle:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+## Performance & Replay Bundle
+
+To use Sentry for error and performance monitoring, as well as for [Session Replay](../../session-replay), you can use the following bundle:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.replay.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.replay.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+## Errors & Replay Bundle
+
+To use Sentry for error monitoring, as well as for [Session Replay](../../session-replay), but **not for performance monitoring**, you can use the following bundle:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.replay.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.replay.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+## Errors-only Bundle
+
+If you only use Sentry for error monitoring, and don't need performance tracing or replay functionality, you can use the following bundle:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+## Usage & Configuration
+
+Once you've included the Sentry SDK bundle in your page, you can use Sentry in your own bundle:
+
+```javascript {tabTitle: CDN}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // this assumes your build process replaces `process.env.npm_package_version` with a value
+  release: "my-project-name@" + process.env.npm_package_version,
+  integrations: [new Sentry.BrowserTracing()],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+## Available Bundles
+
+Our CDN hosts a variety of bundles:
+
+- `@sentry/browser` with error monitoring only (named `bundle.<modifiers>.js`)
+- `@sentry/browser` with error and performance monitoring (named `bundle.tracing.<modifiers>.js`)
+- `@sentry/browser` with error and session replay (named `bundle.replay.<modifiers>.js`)
+- `@sentry/browser` with error, performance monitoring and session replay (named `bundle.tracing.replay.<modifiers>.js`)
+- each of the integrations in `@sentry/integrations` (named `<integration-name>.<modifiers>.js`)
+
+Each bundle is offered in both ES6 and ES5 versions, and for each version there are three bundle varieties: unminified, minified, and minified with debug logging. (That last version can be helpful for times when you need to debug an issue which only occurs in production. In a development environment, it makes most sense to use the unminified bundle, which always includes logging.)
+
+For example:
+
+- `bundle.js` is `@sentry/browser`, compiled to ES6 but not minified, with debug logging included (as it is for all unminified bundles)
+- `rewriteframes.es5.min.js` is the `RewriteFrames` integration, compiled to ES5 and minified, with no debug logging
+- `bundle.tracing.es5.debug.min.js` is `@sentry/browser` with performance monitoring enabled, compiled to ES5 and minified, with debug logging included
+
+<Alert level="info" title="Updates to naming scheme in SDK version 7">
+
+Version 7 of the Sentry JavaScript SDKs changed the bundles to be ES6 by default.
+Previously, the default bundles were compiled to ES5. If you need to support ES5, see [Available Bundles](#available-bundles) or the [Migration Guide to Version 7](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md#upgrading-from-6x-to-7x).
+
+</Alert>
+
+<JsBundleList />
+
+## Additional Configuration
+
+### Using defer
+
+If you use the [`defer` script attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attr-defer), we strongly recommend that you place the script tag for the browser SDK first and mark all of your other scripts with `defer` (but not `async`). This will guarantee that that the Sentry SDK is executed before any of the others.
+
+Without doing this you will find that it's possible for errors to occur before Sentry is loaded, which means you'll be flying blind to those issues.
+
+### Content Security Policy
+
+If you have a Content Security Policy (CSP) set up on your site, you will need to add the `script-src` of wherever you're loading the SDK from, and the origin of your DSN. For example:
+
+- `script-src: https://browser.sentry-cdn.com https://js.sentry-cdn.com`
+- `connect-src: *.sentry.io`

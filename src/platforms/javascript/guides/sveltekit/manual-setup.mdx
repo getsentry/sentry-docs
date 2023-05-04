@@ -1,0 +1,410 @@
+---
+title: Manual Setup
+sidebar_order: 1
+description: 'Learn how to set up the SDK manually.'
+---
+
+If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry SvelteKit SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
+
+## Installation
+
+```bash {tabTitle:npm}
+npm install --save @sentry/sveltekit
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/sveltekit
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/sveltekit
+```
+
+If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
+
+## Client-side Setup
+
+1. If you don't already have a [client hooks](https://kit.svelte.dev/docs/hooks#shared-hooks) file, create a new one in `src/hooks.client.(js|ts)`.
+
+2. At the top of your client hooks file, initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
+
+```javascript {filename:hooks.client.js}
+import * as Sentry from '@sentry/sveltekit';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+
+  // Optional: Initialize Session Replay:
+  integrations: [new Sentry.Replay()],
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+```typescript {filename:hooks.client.ts}
+import * as Sentry from '@sentry/sveltekit';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+
+  // Optional: Initialize Session Replay:
+  integrations: [new Sentry.Replay()],
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+3. Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
+
+```javascript {filename:hooks.client.js}
+const myErrorHandler = ({error, event}) => {
+  console.error('An error occurred on the client side:', error, event);
+};
+
+export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
+
+// or alternatively, if you don't have a custom error handler:
+// export const handleError = handleErrorWithSentry();
+```
+
+```typescript {filename:hooks.server.ts}
+const myErrorHandler = ({error, event}) => {
+  console.error('An error occurred on the client side:', error, event);
+};
+
+export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
+
+// or alternatively, if you don't have a custom error handler:
+// export const handleError = handleErrorWithSentry();
+```
+
+## Server-side Setup
+
+1. If you don't already have a [server hooks](https://kit.svelte.dev/docs/hooks#server-hooks) file, create a new one in `src/hooks.server.(js|ts)`.
+
+2. At the top of your server hooks file, initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
+
+```javascript {filename:hooks.server.js}
+import * as Sentry from '@sentry/sveltekit';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+```typescript {filename:hooks.server.ts}
+import * as Sentry from '@sentry/sveltekit';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+3. Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
+
+```javascript {filename:hooks.server.js}
+const myErrorHandler = ({error, event}) => {
+  console.error('An error occurred on the server side:', error, event);
+};
+
+export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
+// or alternatively, if you don't have a custom error handler:
+// export const handleError = handleErrorWithSentry();
+```
+
+```typescript {filename:hooks.server.ts}
+const myErrorHandler = ({error, event}) => {
+  console.error('An error occurred on the server side:', error, event);
+};
+
+export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
+// or alternatively, if you don't have a custom error handler:
+// export const handleError = handleErrorWithSentry();
+```
+
+4. Add the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+   If you're already using your own handler(s), use SvelteKit's [`sequence`](https://kit.svelte.dev/docs/modules#sveltejs-kit-hooks-sequence) function to add the Sentry handler _before_ your handler(s):
+
+```javascript {filename:hooks.server.js}
+export const handle = Sentry.sentryHandle();
+// Or use `sequence`:
+// export const handle = sequence(Sentry.sentryHandle(), yourHandler());
+```
+
+```typescript {filename:hooks.server.ts}
+export const handle = Sentry.sentryHandle();
+// Or use `sequence`:
+// export const handle = sequence(Sentry.sentryHandle(), yourHandler());
+```
+
+## Vite Setup
+
+Add the `sentrySvelteKit` plugins to your `vite.config.(js|ts)` file so the Sentry SDK can apply build-time features.
+Make sure that it is added _before_ the sveltekit plugin:
+
+```javascript {filename:vite.config.js}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [sentrySvelteKit(), sveltekit()],
+  // ... rest of your Vite config
+};
+```
+
+```typescript {filename:vite.config.ts}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [sentrySvelteKit(), sveltekit()],
+  // ... rest of your Vite config
+};
+```
+
+The `sentrySvelteKit()` function adds Vite plugins to your Vite config to:
+
+- Automatically upload source maps to Sentry
+- Automatically instrument `load` functions for performance monitoring
+
+## Configure Source Maps Upload
+
+By default, `sentrySvelteKit()` will add an instance of the [Sentry Vite Plugin](https://github.com/getsentry/sentry-javascript-bundler-plugins/tree/main/packages/vite-plugin#sentry-vite-plugin), to upload source maps for both server and client builds. This means that when you run a production build (`npm run build`), source maps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
+
+However, you still need to specify your Sentry auth token as well as your org and project slugs. There are two ways to set them.
+
+You can set them as environment variables, for example in a `.env` file:
+
+- `SENTRY_ORG` your Sentry org slug
+- `SENTRY_PROJECT` your Sentry project slug
+- `SENTRY_AUTH_TOKEN` your Sentry auth token
+- `SENTRY_URL` your Sentry instance URL. This is only required if you use your own Sentry instance (as opposed to `https://sentry.io`).
+
+Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. All available options are documented at [the Sentry Vite plugin repo](https://github.com/getsentry/sentry-javascript-bundler-plugins/tree/main/packages/vite-plugin#configuration).
+
+```javascript {filename:vite.config.js}
+import { sveltekit } from '@sveltejs/kit/vite';
+import { sentrySvelteKit } from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      sourceMapsUploadOptions: {
+        org: 'my-org-slug',
+        project: 'my-project-slug',
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        url: 'https://sentry.my-company.com'
+        cleanArtifacts: true,
+        rewrite: false,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+```typescript {filename:vite.config.ts}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      sourceMapsUploadOptions: {
+        org: 'my-org-slug',
+        project: 'my-project-slug',
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        cleanArtifacts: true,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+Using the `sourceMapsUploadOptions` object is useful if the default source maps upload doesn't work out of the box, for instance, if you have a customized build setup or if you're using the SDK with a SvelteKit adapter other than the Node adapter.
+
+### Disable Source Maps Upload
+
+You can disable automatic source maps upload in your Vite config:
+
+```javascript {filename:vite.config.js}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoUploadSourceMaps: false,
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+```typescript {filename:vite.config.ts}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoUploadSourceMaps: false,
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+If you disable automatic source maps upload, you must explicitly set a `release` value in your `Sentry.init()` configs. You can also skip the `sentry-cli` configuration step below.
+
+## Configure Auto-Instrumentation
+
+The SDK primarily uses [SvelteKit's hooks](https://kit.svelte.dev/docs/hooks) to collect error and performance data. However, SvelteKit doesn't yet offer a hook for universal or server-only `load` function calls. Therefore, the SDK uses a Vite plugin to auto-instrument `load` functions so that you don't have to add a Sentry wrapper to each function manually.
+
+Auto-instrumentation is enabled by default when you add the `sentrySvelteKit()` function call to your `vite.config.(js|ts)`. However, you can customize the behavior, or disable it entirely. If you disable it you can still manually wrap specific `load` functions with the `withSentry` function.
+
+<Note>
+
+The SDK will only auto-instrument `load` functions in `+page` or `+layout` files that don't contain any Sentry code.
+If you have custom Sentry code in these files, you'll have to [manually](#instrument-load-functions-manually) add the Sentry wrapper to your `load` functions.
+
+</Note>
+
+### Customize Auto-instrumentation
+
+By passing the `autoInstrument` option to `sentrySvelteKit` you can disable auto-instrumentation entirely, or customize which `load` functions should be instrumented:
+
+```javascript {filename:vite.config.js}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: {
+        load: true,
+        serverLoad: false,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+```typescript {filename:vite.config.ts}
+import {sveltekit} from '@sveltejs/kit/vite';
+import {sentrySvelteKit} from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: {
+        load: true,
+        serverLoad: false,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+### Disable Auto-instrumentation
+
+If you set the `autoInstrument` option to `false`, the SDK won't auto-instrument any `load` functions. You can still [manually instrument](#instrument-load-functions-manually) specific `load` functions.
+
+```javascript {filename:vite.config.js}
+import { sveltekit } from '@sveltejs/kit/vite';
+import { sentrySvelteKit } from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: false;
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+```typescript {filename:vite.config.ts}
+import { sveltekit } from '@sveltejs/kit/vite';
+import { sentrySvelteKit } from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: false;
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+### Instrument `load` Functions Manually
+
+If you don't want to use auto-instrumentation, you can also manually instrument specific `load` functions with the SDK's `load` function wrappers.
+
+#### Universal `load` Functions
+
+Use the `wrapLoadWithSentry` function to wrap universal `load` functions declared in `+page.(js|ts)` or `+layout.(js|ts)`
+
+```javascript {filename:+(page|layout).js}
+import {wrapLoadWithSentry} from '@sentry/sveltekit';
+
+export const load = wrapLoadWithSentry(event => {
+  //... your load code
+});
+```
+
+```typescript {filename:+(page|layout).ts}
+import {wrapLoadWithSentry} from '@sentry/sveltekit';
+
+export const load = wrapLoadWithSentry(event => {
+  //... your load code
+});
+```
+
+#### Server-only `load` Functions
+
+Or use the `wrapServerLoadWithSentry` function to wrap server-only `load` functions declared in `+page.server.(js|ts)` or `+layout.server.(js|ts)`
+
+```javascript {filename:+(page|layout).server.js}
+import {wrapServerLoadWithSentry} from '@sentry/sveltekit';
+
+export const load = wrapServerLoadWithSentry(event => {
+  //... your load code
+});
+```
+
+```typescript {filename:+(page|layout).server.ts}
+import {wrapServerLoadWithSentry} from '@sentry/sveltekit';
+
+export const load = wrapServerLoadWithSentry(event => {
+  //... your load code
+});
+```

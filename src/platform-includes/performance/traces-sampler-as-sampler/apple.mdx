@@ -11,9 +11,9 @@ SentrySDK.start { configureOptions in
     options.tracesSampler = { context in
         guard let url = context.customSamplingContext["url"] as? String else {
             // The desired information does not exists, do not sample.
-            return 0.0    
+            return 0.0
         }
-        
+
         switch url {
             // These are important - take a big sample
             case "/payment": return 0.5
@@ -39,29 +39,29 @@ SentrySDK.start { configureOptions in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions * _Nonnull options) {
     options.dsn = @"___PUBLIC_DSN___";
-    
+
     // To set a uniform sample rate
     options.tracesSampleRate = @1.0;
-    
+
     options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * _Nonnull samplingContext) {
-        
+
         NSString *url = samplingContext.customSamplingContext[@"url"];
-        
+
         //The desired information does not exists, do not sample.
-        if (url == nil) return @0.0; 
-        
-        // These are important - take a big sample 
-        if ([url isEqualToString:@"/payment"]) return @0.5; 
-        
+        if (url == nil) return @0.0;
+
+        // These are important - take a big sample
+        if ([url isEqualToString:@"/payment"]) return @0.5;
+
         // Search is less important and happen much more frequently - only take 1%
-        if ([url isEqualToString:@"/search"]) return @0.01; 
-        
+        if ([url isEqualToString:@"/search"]) return @0.01;
+
         // The health check endpoint is just noise - drop all transactions
         if ([url isEqualToString:@"/health"]) return @0.0
-        
+
         // Default sample rate
         return @0.01;
-        
+
         // Or return nil to fallback to options.TracesSampleRate
         // return nil
     };

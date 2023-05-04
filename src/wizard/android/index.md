@@ -33,6 +33,7 @@ The plugin version `{{ packages.version('sentry.java.android.gradle-plugin', '3.
 Configuration is done via the application `AndroidManifest.xml`. The code snippet below includes the DSN, which tells the SDK to send the events to this project.
 
 Here's an example config which should get you started:
+
 ```xml {filename:AndroidManifest.xml}
 <application>
   <!-- Required: set your sentry.io project identifier (DSN) -->

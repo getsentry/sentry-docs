@@ -102,10 +102,11 @@ Learn more about [how this integration works](/product/integrations/cloud-monito
 
 ## Serverless Framework
 
-Note that this integration will configure your existing lambda functions correctly to use the SDK layer and set the appropriate environment variables as per [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/).  You can check the output `aws lambda get-function-configuration --function-name <yourFunctionName>` and this works.
-However when you perform a subsequent `sls deploy` the environment variables are not maintained but it appears the reference to the layer is retained.  A workaround exists where you can set the layer definition and environment variables in `serverless.yml`.  There are two problems with this, you have to manually add the reference to the SDK layer for every function you want "Sentrified" and you can't maintain the latest layer version automatically.
+Note that this integration will configure your existing lambda functions correctly to use the SDK layer and set the appropriate environment variables as per [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/). You can check the output `aws lambda get-function-configuration --function-name <yourFunctionName>` and this works.
+However when you perform a subsequent `sls deploy` the environment variables are not maintained but it appears the reference to the layer is retained. A workaround exists where you can set the layer definition and environment variables in `serverless.yml`. There are two problems with this, you have to manually add the reference to the SDK layer for every function you want "Sentrified" and you can't maintain the latest layer version automatically.
 
 ### Node
+
 ```
 # other configuration
 
@@ -131,6 +132,7 @@ functions:
 ```
 
 ### Python
+
 ```
 # other configuration
 
@@ -156,7 +158,7 @@ functions:
     layers: ${self:custom.layers}
 ```
 
-Currently there is no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the  lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK has not been given the necessary permissions.
+Currently there is no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK has not been given the necessary permissions.
 It is a relatively new integration but there is definitely a case to write a serverless plugin to make this super-smooth. There is an [older version](https://www.serverless.com/plugins/serverless-sentry-plugin) but it requires code changes to the handler and doesn't use `NODE_OPTIONS`. A new plugin could also add the Sentry layer to every function automatically.
 
 ## SST

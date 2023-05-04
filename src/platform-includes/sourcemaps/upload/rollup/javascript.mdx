@@ -1,13 +1,12 @@
-Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
 You can use the Sentry Rollup plugin to automatically create releases and upload source maps to Sentry when bundling your app.
 
 ## Installation
 
-```npm
+```bash {tabTitle:npm}
 npm install @sentry/rollup-plugin --save-dev
 ```
 
-```yarn
+```bash {tabTitle:Yarn}
 yarn add @sentry/rollup-plugin --dev
 ```
 
@@ -28,12 +27,17 @@ export default {
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Specify the directory containing build artifacts
-      include: "./out",
-
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
       // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // Specify the directory containing build artifacts
+        assets: "./out/**",
+      },
+
+      // Use the following option if you're on an SDK version lower than 7.47.0:
+      // include: "./out",
 
       // Optionally uncomment the line below to override automatic release name detection
       // release: process.env.RELEASE,
@@ -44,17 +48,4 @@ export default {
     dir: "./out",
   },
 };
-```
-
-The Sentry Rollup plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // When using the plugin, either remove the `release`` property here entirely or
-  // make sure that the plugin's release option and the Sentry.init()'s release
-  // option match exactly.
-  // release: "my-example-release-1"
-});
 ```

@@ -5,11 +5,11 @@ You can use the Sentry Vite plugin to automatically create [releases](/product/r
 
 ### Installation
 
-```npm
+```bash {tabTitle:npm}
 npm install @sentry/vite-plugin --save-dev
 ```
 
-```yarn
+```bash {tabTitle:Yarn}
 yarn add @sentry/vite-plugin --dev
 ```
 
@@ -38,12 +38,17 @@ export default defineConfig({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Specify the directory containing build artifacts
-      include: "./dist",
-
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and needs the `project:releases` and `org:read` scopes
+      // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // Specify the directory containing build artifacts
+        assets: "./dist/**",
+      },
+
+      // Use the following option if you're on an SDK version lower than 7.47.0:
+      // include: "./dist",
 
       // Optionally uncomment the line below to override automatic release name detection
       // release: process.env.RELEASE,
@@ -54,19 +59,6 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-});
-```
-
-The Sentry Vite plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // When using the plugin, either remove the `release`` property here entirely or
-  // make sure that the plugin's release option and the Sentry.init()'s release
-  // option match exactly.
-  // release: "my-example-release-1"
 });
 ```
 

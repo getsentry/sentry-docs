@@ -1,0 +1,97 @@
+---
+title: Profiling
+description: 'Learn more about how to configure our Profiling integration and start profiling your code.'
+---
+
+<Note>
+
+Profiling for PHP is supported with Sentry Laravel SDK version `3.3.0` and above.
+
+</Note>
+
+With [Profiling](/product/profiling/), Sentry allows you to collect and analyze performance profiles from real users in production to give you a complete picture of how your application performs in a variety of environments.
+
+Under the hood, we're using Wikipedia's sampling profiler [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
+The Excimer PHP extension supports PHP 7.2 and up. Use Excimer version 1.1.0 and above for PHP 8.2.
+
+<Note>
+
+Excimer requires Linux and doesn't support Windows or macOS.
+
+</Note>
+
+## Installation
+
+Here's how to install Excimer with a Linux package manager, PECL, or build from a source.
+
+### Linux Package Manager
+
+```bash
+apt-get install php-excimer
+```
+
+See https://www.mediawiki.org/wiki/Excimer for additional distributions.
+
+### PECL
+
+```bash
+pecl install excimer
+```
+
+See https://pecl.php.net/package/excimer for more information.
+
+### Build From Source
+
+```bash
+git clone https://github.com/wikimedia/mediawiki-php-excimer.git
+
+cd excimer/
+phpize && ./configure && make && sudo make install
+```
+
+Depending on your environment, you may need to enable the Excimer extension afterwards.
+
+```
+phpenmod -s fpm excimer
+# or
+phpenmod -s apache2 excimer
+```
+
+## Enable Performance Monitoring
+
+Sentry's performance monitoring product has to be enabled in order for Profiling to work.
+Check out the <PlatformLink to="/performance/">performance setup</PlatformLink> documentation for more detailed information.
+
+```php {filename:config/sentry.php}
+'traces_sample_rate' => 1.0,
+```
+
+## Enable Profiling
+
+```php {filename:config/sentry.php}
+'traces_sample_rate' => 1.0,
+// Set a sampling rate for profiling - this is relative to traces_sample_rate
+'profiles_sample_rate' => 1.0,
+```
+
+## Improve Response Time
+
+Response time is somewhat impacted when you use the performance capabilities in your Laravel application, (depending on the `traces_sample_rate` you've configured).
+If your web server is using FastCGI, our SDK utilizes a [`terminable middleware`](https://laravel.com/docs/10.x/middleware#terminable-middleware), which means that the response is sent to the user before the profiling data is sent to Sentry.
+
+If your web server isn't using FastCGI, you can run [Relay](/product/relay/getting-started/) locally on the same machine or a local network that can act as a proxy/agent. Doing this will make the PHP process send requests to your local Relay, which will then forward them to Sentry, instead of sending requests to Sentry directly.
+
+To begin using Relay, check out our docs for [getting started](/product/relay/getting-started/).
+We recommend using Relay in `managed` mode (which is the default).
+
+Follow the instructions in the Relay docs to send a test event through Relay to Sentry.
+Don't forget to update your `DSN` to point to your running Relay instance.
+After you've set up Relay, you should see a dramatic improvement in how much your server is impacted.
+
+## Troubleshooting
+
+If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
+
+- Ensure that performance monitoring <PlatformLink to="/performance/">is enabled</PlatformLink>.
+- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
+- If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.

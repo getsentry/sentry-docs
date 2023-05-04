@@ -1,7 +1,7 @@
 ---
 title: Automatic Instrumentation
 sidebar_order: 10
-description: "Learn what transactions are captured after tracing is enabled."
+description: 'Learn what transactions are captured after tracing is enabled.'
 ---
 
 <Note>
@@ -63,17 +63,20 @@ SentrySDK.start { options in
 This feature is available for iOS, tvOS, and Mac Catalyst.
 
 App Start Tracing is enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. This feature provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
+
+The SDK adds these spans to the first transaction that starts during the app launch with the operation `ui.load`. This is what UIViewController tracing uses. If the duration between the transaction start time and the end timestamp of the app start is more than 5 seconds, the SDK doesn't attach the spans from the app start. This helps prevent attaching spans to unrelated transactions.
 To enable this feature, enable `enableAutoPerformanceTracing`.
 
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
-* __Cold start__: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
-* __Warm start__: App launched at least once, is partially in memory, and no process exists.
+- **Cold start**: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
+- **Warm start**: App launched at least once, is partially in memory, and no process exists.
 
-The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][UIWindow] as the end. The SDK creates the following spans:
-* __Pre Main__: From the process start time to the runtime init.
-* __UIKit and Application Init__: From the runtime init to the [`didFinishLaunchingNotification`][didFinishLaunching].
-* __Initial Frame Render__: From the [`didFinishLaunchingNotification`][didFinishLaunching] to [`UIWindowDidBecomeVisibleNotification`][UIWindow].
+The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][uiwindow] as the end. The SDK creates the following spans:
+
+- **Pre Main**: From the process start time to the runtime init.
+- **UIKit and Application Init**: From the runtime init to the [`didFinishLaunchingNotification`][didfinishlaunching].
+- **Initial Frame Render**: From the [`didFinishLaunchingNotification`][didfinishlaunching] to [`UIWindowDidBecomeVisibleNotification`][uiwindow].
 
 ![App Start Transaction](app-start-transaction.png)
 
@@ -86,10 +89,10 @@ Starting with iOS 15, the system might [prewarm](https://developer.apple.com/doc
 Once enabled, the SDK drops the first app start span if prewarming pauses. This approach shortens the app start duration, but it accurately represents the span of time from when a user clicks the app icon to when the app is responsive.
 With this feature, the SDK differentiates between four different app start types:
 
-* __Non-prewarmed cold start__ (See _cold start_  definition above.)
-* __Non-prewarmed warm start__ (See _warm start_  definition above.)
-* __Prewarmed cold start__
-* __Prewarmed warm start__
+- **Non-prewarmed cold start** (See _cold start_ definition above.)
+- **Non-prewarmed warm start** (See _warm start_ definition above.)
+- **Prewarmed cold start**
+- **Prewarmed warm start**
 
 You can filter for different app start types in [Discover](/product/discover-queries/) with `app_start_type:cold.prewarmed`, `app_start_type:warm.prewarmed`, `app_start_type:cold`, and `app_start_type:warm`.
 
@@ -123,7 +126,7 @@ SentrySDK.start { options in
 
 This feature is available for iOS, tvOS, and Mac Catalyst.
 
-Slow and Frozen Frames are enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are *slow frames* and *frozen frames*. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
+Slow and Frozen Frames are enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are _slow frames_ and _frozen frames_. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
 
 The detail view of the transaction displays the slow, frozen, and total frames:
 
@@ -187,6 +190,7 @@ SentrySDK.start { options in
     options.enableFileIOTracking = NO;
 }];
 ```
+
 [NSData]: https://developer.apple.com/documentation/foundation/nsdata
 [NSFileManager]: https://developer.apple.com/documentation/foundation/nsfilemanager
 [NSString]: https://developer.apple.com/documentation/foundation/nsstring
@@ -223,7 +227,7 @@ SentrySDK.start { options in
 
 ## User Interaction Tracing
 
-User interaction tracing, once enabled, captures transactions for clicks. Since 8.0.0, this feature has been enabled by default. To disable it:
+User interaction tracing, once enabled, captures transactions for clicks. This feature is unavailable for SwiftUI. Since 8.0.0, this feature has been enabled by default. To disable it:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -233,6 +237,7 @@ SentrySDK.start { options in
     options.enableUserInteractionTracing = false
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
@@ -306,7 +311,6 @@ SentrySDK.start { options in
 
 [UIWindow]: https://developer.apple.com/documentation/uikit/uiwindowdidbecomevisiblenotification
 [didFinishLaunching]: https://developer.apple.com/documentation/uikit/uiapplication/1622971-didfinishlaunchingnotification
-
 
 ### Time to Initial Display
 

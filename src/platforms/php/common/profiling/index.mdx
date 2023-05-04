@@ -1,24 +1,30 @@
 ---
 title: Profiling
-description: "Learn more about how to configure our Profiling integration and start profiling your code."
+description: 'Learn more about how to configure our Profiling integration and start profiling your code.'
 ---
 
 <Note>
 
-Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony. If you have any questions or feedback, please email us at [profiling@sentry.io](mailto:profiling@sentry.io).
+Profiling for PHP is supported with Sentry PHP SDK version `3.15.0` and above.
 
 </Note>
 
 With [profiling](/product/profiling/), Sentry allows you to collect and analyze performance profiles from real users in production to give you a complete picture of how your application performs in a variety of environments.
 
 Under the hood, we're using Wikipedia's sampling profiler [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
-The Excimer PHP extension does support PHP 7.2 and up, for PHP 8.2 support, make sure to use Excimer version 1.1.0.
+The Excimer PHP extension supports PHP 7.2 and up. Use Excimer version 1.1.0 and above for PHP 8.2.
 
-**Excimer requires Linux and does not support Windows or macOS.**
+<Note>
+
+Excimer requires Linux and doesn't support Windows or macOS.
+
+</Note>
 
 ## Installation
 
-### Linux package manager
+Here's how to install Excimer with a Linux package manager, PECL, or build from a source.
+
+### Linux Package Manager
 
 ```bash
 apt-get install php-excimer
@@ -53,37 +59,44 @@ phpenmod -s apache2 excimer
 
 ## Enable Performance Monitoring
 
-Profiling depends on Sentry's performance monitoring product being enabled beforehand.
+Sentry's performance monitoring product has to be enabled in order for Profiling to work.
+To begin capturing profiling data, you first need to start a transaction.
 Check out the <PlatformLink to="/performance/">performance setup</PlatformLink> and <PlatformLink to="/performance/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink> documentation for more detailed information.
 
 ```php
 \Sentry\init([
-    'dsn' => '__DSN__',
+    'dsn' => '___DSN___',
     'traces_sample_rate' => 1.0,
 ]);
 ```
 
 ## Enabling Profiling
 
-<Note>
-  
-Profiling for PHP is supported from Sentry PHP SDK version 3.15.0 and above.
-
-</Note>
-
 ```php
 \Sentry\init([
-    'dsn' => '__DSN__',
+    'dsn' => '___DSN___',
     'traces_sample_rate' => 1.0,
     // Set a sampling rate for profiling - this is relative to traces_sample_rate
     'profiles_sample_rate' => 1.0,
 ]);
 ```
 
+## Improve Response Time
+
+Response time is somewhat impacted when you use the performance capabilities in your PHP application, (depending on the `traces_sample_rate` you've configured). This is due to the nature of PHP, where requests are usually sent as part of the process in which you serve your users' response. This affects the time it takes to send a request to Sentry because it's added to your servers' response time.
+
+To offset this and make the addition close to zero, run [Relay](/product/relay/getting-started/) locally on the same machine or a local network that can act as a proxy/agent. Doing this will make the PHP process send requests to your local Relay, which will then forward them to Sentry, instead of sending requests to Sentry directly.
+
+To begin using Relay, check out our docs for [getting started](/product/relay/getting-started/).
+We recommend using Relay in `managed` mode (which is the default).
+
+Follow the instructions in the Relay docs to send a test event through Relay to Sentry.
+Don't forget to update your `DSN` to point to your running Relay instance.
+After you've set up Relay, you should see a dramatic improvement in how much your server is impacted.
+
 ## Troubleshooting
 
 If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
 
 - Ensure that performance monitoring <PlatformLink to="/performance/">is enabled</PlatformLink>.
-- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
-- If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
+- Ensure that the <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink> is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).

@@ -35,8 +35,8 @@ The version of the sibling SDK must match with the version referred by Sentry Ca
 
 <Note>
 
- This step is not needed if you are using Capacitor 3
- 
+This step is not needed if you are using Capacitor 3
+
 </Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.

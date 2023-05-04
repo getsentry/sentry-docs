@@ -1,10 +1,10 @@
-import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
-import styled from "@emotion/styled";
+import React from 'react';
+import styled from '@emotion/styled';
+import {graphql, useStaticQuery} from 'gatsby';
 
 const query = graphql`
   query JsBundleList {
-    package(id: { eq: "sentry.javascript.browser" }) {
+    package(id: {eq: "sentry.javascript.browser"}) {
       files {
         name
         checksums {
@@ -21,13 +21,13 @@ const ChecksumValue = styled.code`
   white-space: nowrap;
 `;
 
-export default (): JSX.Element => {
+export default function JsBundleList(): JSX.Element {
   const {
-    package: { files },
+    package: {files},
   } = useStaticQuery(query);
 
   return (
-    <table style={{ display: "block", overflow: "scroll" }}>
+    <table style={{display: 'block', overflow: 'scroll'}}>
       <thead>
         <tr>
           <th>File</th>
@@ -36,23 +36,21 @@ export default (): JSX.Element => {
       </thead>
       <tbody>
         {files
-          .filter(file => file.name.endsWith(".js"))
+          .filter(file => file.name.endsWith('.js'))
           .map(file => (
             <tr key={file.name}>
               <td
                 style={{
-                  fontSize: "0.9em",
-                  verticalAlign: "middle",
-                  whiteSpace: "nowrap",
+                  fontSize: '0.9em',
+                  verticalAlign: 'middle',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {file.name}
               </td>
-              <td style={{ verticalAlign: "middle", width: "100%" }}>
+              <td style={{verticalAlign: 'middle', width: '100%'}}>
                 <ChecksumValue>
-                  {`sha384-${
-                    file.checksums.find(c => c.name === "sha384-base64").value
-                  }`}
+                  {`sha384-${file.checksums.find(c => c.name === 'sha384-base64').value}`}
                 </ChecksumValue>
               </td>
             </tr>
@@ -60,4 +58,4 @@ export default (): JSX.Element => {
       </tbody>
     </table>
   );
-};
+}

@@ -4,7 +4,7 @@ sidebar_order: 5000
 supported:
   - python
   - php
-description: "Learn how to enable Cron Monitoring in your app"
+description: 'Learn how to enable Cron Monitoring in your app'
 ---
 
 <Include name="beta-alert-crons.mdx" />
@@ -41,7 +41,6 @@ Optionally, you can skip the first step and [create or update (upsert) a monitor
 ## Check-Ins (Recommended)
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
-
 
 ```bash {tabTitle: cURL}
 # 🟡 Notify Sentry your job is running:
@@ -109,6 +108,42 @@ If you expect your scheduled jobs to overlap, read about [Overlapping Jobs](#ove
 
 </Note>
 
+### Specifying monitor environments (Optional)
+
+When sending check-ins to your monitor you may specify the `environment` of the
+check-in. This allows you to monitor a single schedule across multiple
+environments.
+
+If you don't specify an environment with your check-ins the default is `production`.
+
+<Alert level="info">
+
+Monitor environments are still early in development. Currently, after a check-in
+occurs for a specified environment you must continue sending check-ins on
+schedule or the monitor environment will be marked as missed.
+
+In the future it will be possible to delete environments for a specified monitor.
+
+</Alert>
+
+```bash {tabTitle: cURL}
+# 🟡 Notify Sentry your job is running in the dev environment:
+curl -X POST \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "in_progress", "environment": "dev"}'
+
+# Execute your scheduled task here...
+
+# 🟢 Notify Sentry your dev environment job has completed successfully:
+curl -X PUT \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "ok", "environment": "dev"}'
+```
+
 ### Creating or Updating a Monitor Through a Check-In (Optional)
 
 Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
@@ -149,6 +184,7 @@ Monitor `monitor_config` parameters:
 `schedule`:
 
 : The job's schedule based on the `schedule_type`:
+
 - `crontab`: a string crontab expression with five fields, such as ` "0 * * * *"`.
 - `interval`: a tuple for your interval such as `[2, "hour"]`.
 
@@ -202,12 +238,13 @@ Content-Disposition: form-data; name="file"
 ```
 
 <Note>
-We recommend uploading your attachment before you complete your second check-in.
+  We recommend uploading your attachment before you complete your second check-in.
 </Note>
 
 Attachments can be downloaded in each corresponding check-in on your “Monitor Details” page.
 
 Current attachment limitations:
+
 1. Each job is limited to one attachment.
 2. The maximum file size is 100kb.
 3. Attachments aren't currently supported by our CLI or SDKs.
@@ -320,6 +357,7 @@ See [additional context examples](/platform-redirect/?next=/enriching-events/con
 When your recurring job fails to check in (missed), runs beyond its configured maximum runtime (failed), or manually reports a failure, Sentry will create an error event with a tag to your monitor.
 
 To receive alerts about these events:
+
 1. Navigate to **Alerts** in the sidebar.
 2. Create a new alert and select "Issues" under "Errors" as the alert type.
 3. Configure your alert and define a filter match to use: `The event's tags match {key} {match} {value}`.
