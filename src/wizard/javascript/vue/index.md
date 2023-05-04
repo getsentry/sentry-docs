@@ -26,9 +26,9 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 #### Vue 2
 
 ```javascript
-import Vue from 'vue';
-import Router from 'vue-router';
-import * as Sentry from '@sentry/vue';
+import Vue from "vue";
+import Router from "vue-router";
+import * as Sentry from "@sentry/vue";
 
 Vue.use(Router);
 
@@ -38,7 +38,7 @@ const router = new Router({
 
 Sentry.init({
   Vue,
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
@@ -55,15 +55,15 @@ Sentry.init({
 new Vue({
   router,
   render: h => h(App),
-}).$mount('#app');
+}).$mount("#app");
 ```
 
 #### Vue 3
 
 ```javascript
-import {createApp} from 'vue';
-import {createRouter} from 'vue-router';
-import * as Sentry from '@sentry/vue';
+import { createApp } from "vue";
+import { createRouter } from "vue-router";
+import * as Sentry from "@sentry/vue";
 
 const app = createApp({
   // ...
@@ -74,7 +74,7 @@ const router = createRouter({
 
 Sentry.init({
   app,
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
@@ -87,7 +87,7 @@ Sentry.init({
 });
 
 app.use(router);
-app.mount('#app');
+app.mount("#app");
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).

@@ -23,10 +23,10 @@ npx @sentry/wizard -s -i reactNative
 ### Initialize the SDK
 
 ```javascript
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
   // We recommend adjusting this value in production.
   tracesSampleRate: 1.0,
@@ -50,7 +50,7 @@ You do not need to do this for Sentry to work or if your app does not have a sin
 Then create an intentional error, so you can test that everything is working:
 
 ```javascript
-throw new Error('My first Sentry error!');
+throw new Error("My first Sentry error!");
 ```
 
 Or, try a native crash with:
@@ -58,7 +58,6 @@ Or, try a native crash with:
 ```javascript
 Sentry.nativeCrash();
 ```
-
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
 If you're an existing user and have disabled alerts, you won't receive this email.

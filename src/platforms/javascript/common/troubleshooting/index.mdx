@@ -94,8 +94,8 @@ To enable the `tunnel` option, provide either a relative or an absolute URL in y
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  tunnel: '/tunnel',
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "/tunnel",
 });
 ```
 
@@ -224,12 +224,12 @@ The last option is to use `Proxy` guard, which will make sure that your code won
 Place this snippet immediately **above** the `<script>` tag containing our CDN bundle. The snippet in a readable format presents like this:
 
 ```javascript
-if ('Proxy' in window) {
+if ("Proxy" in window) {
   var handler = {
-    get: function (_, key) {
-      return new Proxy(function (cb) {
-        if (key === 'flush' || key === 'close') return Promise.resolve();
-        if (typeof cb === 'function') return cb(window.Sentry);
+    get: function(_, key) {
+      return new Proxy(function(cb) {
+        if (key === "flush" || key === "close") return Promise.resolve();
+        if (typeof cb === "function") return cb(window.Sentry);
         return window.Sentry;
       }, handler);
     },
@@ -242,13 +242,13 @@ If you would like to copy and paste the snippet directly, here it is minified:
 
 ```html
 <script>
-  if ('Proxy' in window) {
+  if ("Proxy" in window) {
     var n = {
-      get: function (o, e) {
-        return new Proxy(function (n) {
-          return 'flush' === e || 'close' === e
+      get: function(o, e) {
+        return new Proxy(function(n) {
+          return "flush" === e || "close" === e
             ? Promise.resolve()
-            : 'function' == typeof n
+            : "function" == typeof n
             ? n(window.Sentry)
             : window.Sentry;
         }, n);
@@ -271,16 +271,16 @@ import {
   defaultStackParser,
   defaultIntegrations,
   makeFetchTransport,
-} from '@sentry/browser';
+} from "@sentry/browser";
 
 const client = new BrowserClient({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
   integrations: defaultIntegrations,
 });
 
-client.captureException(new Error('example'));
+client.captureException(new Error("example"));
 ```
 
 While the above sample should work perfectly fine, some methods like `configureScope` and `withScope` are missing on the `Client` because the `Hub` takes care of the state management. That's why it may be easier to create a new `Hub` and bind your `Client` to it. The result is the same but you will also get state management with it.
@@ -291,10 +291,10 @@ import {
   defaultStackParser,
   defaultIntegrations,
   makeFetchTransport,
-} from '@sentry/browser';
+} from "@sentry/browser";
 
 const client = new BrowserClient({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
   integrations: defaultIntegrations,
@@ -302,12 +302,12 @@ const client = new BrowserClient({
 
 const hub = new Hub(client);
 
-hub.configureScope(function (scope) {
-  scope.setTag('a', 'b');
+hub.configureScope(function(scope) {
+  scope.setTag("a", "b");
 });
 
-hub.addBreadcrumb({message: 'crumb 1'});
-hub.captureMessage('test');
+hub.addBreadcrumb({ message: "crumb 1" });
+hub.captureMessage("test");
 
 try {
   a = b;
@@ -315,9 +315,9 @@ try {
   hub.captureException(e);
 }
 
-hub.withScope(function (scope) {
-  hub.addBreadcrumb({message: 'crumb 2'});
-  hub.captureMessage('test2');
+hub.withScope(function(scope) {
+  hub.addBreadcrumb({ message: "crumb 2" });
+  hub.captureMessage("test2");
 });
 ```
 
@@ -327,12 +327,12 @@ Integrations are setup on the `Client`, if you need to deal with multiple client
 Here is a working example of how to use multiple clients with multiple hubs running global integrations.
 
 ```javascript
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 // Very happy integration that'll prepend and append very happy stick figure to the message
 class HappyIntegration {
   constructor() {
-    this.name = 'HappyIntegration';
+    this.name = "HappyIntegration";
   }
 
   setupOnce() {
@@ -347,27 +347,27 @@ class HappyIntegration {
   }
 }
 
-HappyIntegration.id = 'HappyIntegration';
+HappyIntegration.id = "HappyIntegration";
 
 const client1 = new Sentry.BrowserClient({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
   integrations: [...Sentry.defaultIntegrations, new HappyIntegration()],
   beforeSend(event) {
-    console.log('client 1', event);
+    console.log("client 1", event);
     return null; // Returning `null` prevents the event from being sent
   },
 });
 const hub1 = new Sentry.Hub(client1);
 
 const client2 = new Sentry.BrowserClient({
-  dsn: '___PUBLIC_DSN___', // Can be a different DSN
+  dsn: "___PUBLIC_DSN___", // Can be a different DSN
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
   integrations: [...Sentry.defaultIntegrations, new HappyIntegration()],
   beforeSend(event) {
-    console.log('client 2', event);
+    console.log("client 2", event);
     return null; // Returning `null` prevents the event from being sent
   },
 });
@@ -375,17 +375,17 @@ const hub2 = new Sentry.Hub(client2);
 
 hub1.run(currentHub => {
   // The `hub.run` method makes sure that `Sentry.getCurrentHub()` returns this hub during the callback
-  currentHub.captureMessage('a');
-  currentHub.configureScope(function (scope) {
-    scope.setTag('a', 'b');
+  currentHub.captureMessage("a");
+  currentHub.configureScope(function(scope) {
+    scope.setTag("a", "b");
   });
 });
 
 hub2.run(currentHub => {
   // The `hub.run` method makes sure that `Sentry.getCurrentHub()` returns this hub during the callback
-  currentHub.captureMessage('x');
-  currentHub.configureScope(function (scope) {
-    scope.setTag('c', 'd');
+  currentHub.captureMessage("x");
+  currentHub.configureScope(function(scope) {
+    scope.setTag("c", "d");
   });
 });
 ```
@@ -410,14 +410,20 @@ By default, Sentry does not capture errors when a resource (like an image or a c
 
 ```javascript
 document.body.addEventListener(
-  'error',
+  "error",
   event => {
     if (!event.target) return;
 
-    if (event.target.tagName === 'IMG') {
-      Sentry.captureMessage(`Failed to load image: ${event.target.src}`, 'warning');
-    } else if (event.target.tagName === 'LINK') {
-      Sentry.captureMessage(`Failed to load css: ${event.target.href}`, 'warning');
+    if (event.target.tagName === "IMG") {
+      Sentry.captureMessage(
+        `Failed to load image: ${event.target.src}`,
+        "warning"
+      );
+    } else if (event.target.tagName === "LINK") {
+      Sentry.captureMessage(
+        `Failed to load css: ${event.target.href}`,
+        "warning"
+      );
     }
   },
   true // useCapture - necessary for resource loading errors

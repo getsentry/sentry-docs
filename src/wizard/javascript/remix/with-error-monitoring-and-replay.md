@@ -94,5 +94,4 @@ You can trigger your first event from your development environment by raising an
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Remix Features](https://docs.sentry.io/platforms/javascript/guides/remix/features/): Learn about our first class integration with the Remix framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/remix/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
