@@ -19,6 +19,7 @@ composer require sentry/sentry-symfony
 
 Due to a bug in all versions below `6.0` of the [`SensioFrameworkExtraBundle`](https://github.com/sensiolabs/SensioFrameworkExtraBundle) bundle, you will likely receive an error during the execution of the command above related to the missing `Nyholm\Psr7\Factory\Psr17Factory` class. To workaround the issue, if you are not using the PSR-7 bridge, please change the configuration of that bundle as follows:
 
+<!-- prettier-ignore -->
 ```yaml
 sensio_framework_extra:
    psr_message:
@@ -33,6 +34,7 @@ For more details about the issue see [https://github.com/sensiolabs/SensioFramew
 
 Add your DSN to `config/packages/sentry.yaml`:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     dsn: "%env(SENTRY_DSN)%"
@@ -69,6 +71,7 @@ return [
 
 If you are using [Monolog](https://github.com/Seldaek/monolog) to report events instead of the typical error listener approach, you need this additional configuration to log the errors correctly:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
@@ -85,6 +88,7 @@ monolog:
 If you are using a version of [MonologBundle](https://github.com/symfony/monolog-bundle) prior to `3.7`, you need to
 configure the handler as a service instead:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 monolog:
     handlers:
@@ -101,6 +105,7 @@ services:
 
 Additionally, you can register the `PsrLogMessageProcessor` to resolve PSR-3 placeholders in reported messages:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 services:
     Monolog\Processor\PsrLogMessageProcessor:
