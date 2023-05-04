@@ -14,23 +14,23 @@ cloud install @sentry/node:
 Sentry should be initialized as early in your app as possible.
 
 ```javascript
-import api from '@serverless/cloud';
-import * as Sentry from '@sentry/node';
+import api from "@serverless/cloud";
+import * as Sentry from "@sentry/node";
 
 // or using CommonJS
 // const api = require("@serverless/cloud");
 // const Sentry = require('@sentry/node');
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   // or pull from params
   // dsn: params.SENTRY_DSN,
   environment: params.INSTANCE_NAME,
   integrations: [
     // enable HTTP calls tracing
-    new Sentry.Integrations.Http({tracing: true}),
+    new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
-    new Tracing.Integrations.Express({app}),
+    new Tracing.Integrations.Express({ app }),
     // Automatically instrument Node.js libraries and frameworks
     ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
   ],
@@ -50,8 +50,8 @@ api.use(Sentry.Handlers.requestHandler());
 api.use(Sentry.Handlers.tracingHandler());
 
 // All controllers should live here
-api.get('/', function rootHandler(req, res) {
-  res.end('Hello world!');
+api.get("/", function rootHandler(req, res) {
+  res.end("Hello world!");
 });
 
 // The error handler must be before any other error middleware and after all controllers
@@ -62,7 +62,7 @@ api.use(function onError(err, req, res, next) {
   // The error id is attached to `res.sentry` to be returned
   // and optionally displayed to the user for support.
   res.statusCode = 500;
-  res.end(res.sentry + '\n');
+  res.end(res.sentry + "\n");
 });
 ```
 
@@ -71,8 +71,8 @@ The above configuration captures both error and performance data. To reduce the 
 You can verify the Sentry integration is working by creating a route that will throw an error:
 
 ```javascript
-api.get('/debug-sentry', function mainHandler(req, res) {
-  throw new Error('My first Sentry error!');
+api.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
 });
 ```
 
@@ -106,7 +106,7 @@ For example, if you want to skip the server name and add just user, you would us
 api.use(
   Sentry.Handlers.requestHandler({
     serverName: false,
-    user: ['email'],
+    user: ["email"],
   })
 );
 ```

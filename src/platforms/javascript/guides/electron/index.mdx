@@ -47,11 +47,11 @@ If you are using preload scripts, have `contextIsolation` enabled and want to ca
 If you change the `userData` directory used by your app, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
 
 ```javascript
-import {app} from 'electron';
-import * as Sentry from '@sentry/electron';
+import { app } from "electron";
+import * as Sentry from "@sentry/electron";
 
-app.setPath('userData', '~/.config/my-app');
-Sentry.init({dsn: '___PUBLIC_DSN___'});
+app.setPath("userData", "~/.config/my-app");
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
 
 ## Bundler Configuration
@@ -61,30 +61,25 @@ The SDK attempts to ensure JavaScript bundlers pick up the correct entry point f
 In the main process:
 
 ```javascript
-import * as Sentry from '@sentry/electron/main';
+import * as Sentry from "@sentry/electron/main";
 ```
 
 In the renderer processes:
 
 ```javascript
-import * as Sentry from '@sentry/electron/renderer';
+import * as Sentry from "@sentry/electron/renderer";
 ```
 
 ## Framework-Specific SDKs
 
 If you're using a framework-specific Sentry SDK in the Electron renderers, you
 can pass that `init` function as the second parameter and the two SDKs functionalities will be combined:
-
 ```javascript
-import {init} from '@sentry/electron/renderer';
-import {init as reactInit} from '@sentry/react';
+import { init } from '@sentry/electron/renderer';
+import { init as reactInit } from '@sentry/react';
 
-init(
-  {
-    /* config */
-  },
-  reactInit
-);
+init({ /* config */ }, reactInit);
+
 ```
 
 ## Offline Support
@@ -93,24 +88,24 @@ The default transport automatically handles offline events caching. Following, a
 number of options that allow you to customize queueing behavior:
 
 ```javascript
-import * as Sentry from '@sentry/electron/main';
+import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   transportOptions: {
     // The maximum number of days to keep an event in the queue.
     maxQueueAgeDays: 30,
     // The maximum number of events to keep in the queue.
     maxQueueCount: 30,
     // Called every time the number of requests in the queue changes.
-    queuedLengthChanged: length => {},
+    queuedLengthChanged: (length) => { },
     // Called before attempting to send an event to Sentry. Used to override queuing behavior.
     //
     // Return 'send' to attempt to send the event.
     // Return 'queue' to queue and persist the event for sending later.
     // Return 'drop' to drop the event.
-    beforeSend: request => (isOnline() ? 'send' : 'queue'),
-  },
+    beforeSend: (request) => isOnline() ? 'send' : 'queue'
+  }
 });
 ```
 
@@ -121,10 +116,10 @@ To give detailed information for all events including native crashes, the SDK me
 By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
 
 ```javascript
-const {init, IPCMode} = require('@sentry/electron');
+const { init, IPCMode } = require("@sentry/electron");
 
 init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   debug: true,
   ipcMode: IPCMode.Protocol,
 });
@@ -135,14 +130,14 @@ init({
 The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads) and by default only does this for the `defaultSession`. If you are using other sessions, you can pass custom sessions via the `getSessions` option in the `main` process:
 
 ```javascript
-import {session} from 'electron';
-import * as Sentry from '@sentry/electron';
+import { session } from "electron";
+import * as Sentry from "@sentry/electron";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   getSessions: () => [
     session.defaultSession,
-    session.fromPartition('persist:my-session'),
+    session.fromPartition("persist:my-session"),
   ],
 });
 ```
@@ -154,7 +149,7 @@ If your app bundles the `main` process JavaScript, the SDK cannot automatically 
 If you would like to manually bundle and configure the preload script, you should import the SDK preload code into your own preload script:
 
 ```javascript
-import '@sentry/electron/preload';
+import "@sentry/electron/preload";
 ```
 
 This script exposes IPC to the isolated renderer via Electrons `contextBridge` API.
@@ -227,12 +222,12 @@ It currently not possible create breadcrumbs or other event meta data from nativ
 You can also capture native crashes by starting the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) manually. Sentry is able to provide symbolicated stack traces and show system information, but no Electron-specific metadata, breadcrumbs or context information will be present. This is useful in cases where you cannot use the full Electron SDK:
 
 ```javascript
-const {crashReporter} = require('electron');
+const { crashReporter } = require("electron");
 crashReporter.start({
-  companyName: 'YourCompany',
-  productName: 'YourApp',
+  companyName: "YourCompany",
+  productName: "YourApp",
   ignoreSystemCrashHandler: true,
-  submitURL: '___MINIDUMP_URL___',
+  submitURL: "___MINIDUMP_URL___",
 });
 ```
 

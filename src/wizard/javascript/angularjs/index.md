@@ -20,16 +20,16 @@ npm install --save @sentry/browser @sentry/integrations
 `init` the Sentry Browser SDK as soon as possible during your page load, before initializing Angular:
 
 ```javascript
-import angular from 'angular';
-import * as Sentry from '@sentry/browser';
-import {Angular as AngularIntegration} from '@sentry/integrations';
+import angular from "angular";
+import * as Sentry from "@sentry/browser";
+import { Angular as AngularIntegration } from "@sentry/integrations";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new AngularIntegration(),
     new Sentry.BrowserTracing({
-      tracePropagationTargets: ['localhost', 'https://yourserver.io/api'],
+      tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
     }),
   ],
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -39,7 +39,7 @@ Sentry.init({
 });
 
 // Finally require ngSentry as a dependency in your application module.
-angular.module('yourApplicationModule', ['ngSentry']);
+angular.module("yourApplicationModule", ["ngSentry"]);
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring <PlatformLink to="/configuration/sampling/">sampling</PlatformLink>.
