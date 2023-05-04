@@ -10,6 +10,7 @@ function main({actions, schema}) {
     `
     type PageContext {
       title: String
+      description: String
       sidebar_order: Int
       sidebar_title: String
       draft: Boolean
@@ -53,6 +54,9 @@ function main({actions, schema}) {
       fields: {
         title: {
           type: 'String!',
+        },
+        description: {
+          type: 'String',
         },
         keywords: {
           type: '[String!]',
