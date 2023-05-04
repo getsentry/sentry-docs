@@ -7,8 +7,8 @@ description: 'Learn how the React SDK exports an error boundary component that l
 The React SDK exports an error boundary component that leverages [React component APIs](https://reactjs.org/docs/error-boundaries.html) to automatically catch and send JavaScript errors from inside a React component tree to Sentry.
 
 ```javascript
-import React from 'react';
-import * as Sentry from '@sentry/react';
+import React from "react";
+import * as Sentry from "@sentry/react";
 
 <Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}>
   <Example />
@@ -18,10 +18,10 @@ import * as Sentry from '@sentry/react';
 The Sentry Error Boundary is also available as a higher order component.
 
 ```javascript
-import React from 'react';
-import * as Sentry from '@sentry/react';
+import React from "react";
+import * as Sentry from "@sentry/react";
 
-Sentry.withErrorBoundary(Example, {fallback: <p>an error has occurred</p>});
+Sentry.withErrorBoundary(Example, { fallback: <p>an error has occurred</p> });
 ```
 
 <Alert level="warning" title="Note">
@@ -33,10 +33,10 @@ In development mode, React will rethrow errors caught within an error boundary. 
 In the example below, when the `<Example />` component hits an error, the `<Sentry.ErrorBoundary>` component will send data about that error and the component tree to Sentry, open a user feedback dialog, and render a fallback UI.
 
 ```javascript
-import React from 'react';
-import * as Sentry from '@sentry/react';
+import React from "react";
+import * as Sentry from "@sentry/react";
 
-import {Example} from '../example';
+import { Example } from "../example";
 
 function FallbackComponent() {
   return <div>An error has occurred</div>;
@@ -100,28 +100,28 @@ _(Available in version 5.20.0 and above)_
 Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error. The fallback UI returns to a standard component state when reset using the `resetError()` API provided by the component through render props.
 
 ```javascript
-import React from 'react';
-import * as Sentry from '@sentry/react';
+import React from "react";
+import * as Sentry from "@sentry/react";
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      message: 'This is my app',
+      message: "This is my app",
     };
   }
 
   render() {
     return (
       <Sentry.ErrorBoundary
-        fallback={({error, componentStack, resetError}) => (
+        fallback={({ error, componentStack, resetError }) => (
           <React.Fragment>
             <div>You have encountered an error</div>
             <div>{error.toString()}</div>
             <div>{componentStack}</div>
             <button
               onClick={() => {
-                this.setState({message: 'This is my app'});
+                this.setState({ message: "This is my app" });
                 {
                   /* When resetError() is called it will remove the Fallback component */
                 }
@@ -139,7 +139,9 @@ class App extends React.Component {
         <div>{this.state.message}</div>
         {/* on click, this button sets an Object as a message, not a string. */}
         {/* which will cause an error to occur in the component tree */}
-        <button onClick={() => this.setState({message: {text: 'Hello World'}})}>
+        <button
+          onClick={() => this.setState({ message: { text: "Hello World" } })}
+        >
           Click here to change message!
         </button>
       </Sentry.ErrorBoundary>
@@ -157,23 +159,23 @@ _(Available in version 5.20.0 and above)_
 When using multiple error boundaries, we recommend using `beforeCapture` to set tags/context so that you can tell which error boundary the error occurred from. In the example below, we attach tags to errors based on what route they rendered in.
 
 ```javascript
-import React from 'react';
-import * as Sentry from '@sentry/react';
+import React from "react";
+import * as Sentry from "@sentry/react";
 
-function App({props}) {
+function App({ props }) {
   return (
     <React.Fragment>
       <Sentry.ErrorBoundary
         beforeCapture={scope => {
-          scope.setTag('location', 'first');
-          scope.setTag('anotherTag', 'anotherValue');
+          scope.setTag("location", "first");
+          scope.setTag("anotherTag", "anotherValue");
         }}
       >
         <Route to="path/to/first" component={First} />
       </Sentry.ErrorBoundary>
       <Sentry.ErrorBoundary
         beforeCapture={scope => {
-          scope.setTag('location', 'second');
+          scope.setTag("location", "second");
         }}
       >
         <Route to="path/to/second" component={Second} />

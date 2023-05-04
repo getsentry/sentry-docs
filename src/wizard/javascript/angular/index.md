@@ -27,18 +27,18 @@ npm install --save @sentry/angular
 You should `init` the Sentry browser SDK in your `main.ts` file as soon as possible during application load up, before initializing Angular:
 
 ```javascript
-import {enableProdMode} from '@angular/core';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import { enableProdMode } from "@angular/core";
+import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 // import * as Sentry from "@sentry/angular" // for Angular 10/11 instead
-import * as Sentry from '@sentry/angular-ivy';
+import * as Sentry from "@sentry/angular-ivy";
 
-import {AppModule} from './app/app.module';
+import { AppModule } from "./app/app.module";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
-      tracePropagationTargets: ['localhost', 'https://yourserver.io/api'],
+      tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
   ],
@@ -65,10 +65,10 @@ On its own, the Angular SDK will report any uncaught exceptions triggered by you
 The Sentry Angular SDK exports a function to instantiate `ErrorHandler` provider that will automatically send JavaScript errors captured by the Angular's error handler.
 
 ```javascript
-import {APP_INITIALIZER, ErrorHandler, NgModule} from '@angular/core';
-import {Router} from '@angular/router';
+import { APP_INITIALIZER, ErrorHandler, NgModule } from "@angular/core";
+import { Router } from "@angular/router";
 // import * as Sentry from "@sentry/angular" // for Angular 10/11 instead
-import * as Sentry from '@sentry/angular-ivy';
+import * as Sentry from "@sentry/angular-ivy";
 
 @NgModule({
   // ...
