@@ -1,0 +1,73 @@
+We've recently updated all our guides to help users upload source maps using Artifact Bundles with Debug IDs. We think that users who have failed to upload source maps in the past will get a much better experience if they follow our current guides.
+
+However, this does require your application to use a very recent SDK and bundler plugin (or sentry-cli) version. We know that this isn't always possible, so here we'll explain what to expect when uploading source maps without Debug IDs.
+
+## Artifact Bundle & Debug ID Requirements
+
+You need a valid version of our SDK and the bundler plugin (or sentry-cli) to use Artifact Bundles with Debug IDs.
+
+- JavaScript SDK: `>=` `7.47.0`
+- Bundler Plugins
+	- esbuild: `>=` `0.7.2`
+	- rollup: `>=` `0.7.2`
+	- vite: `>=` `0.7.2`
+	- webpack: **Currently doesn't support Debug IDs**
+    sentry-cli: `>=` `2.17.0`
+
+## What happens, if my application can't meet those requirements?
+
+If your application uses an older version of our SDK or bundler plugin (or sentry-cli), the result will roughly be the same. You can still upload source maps; however, the process will differ. Instead of using Debug IDs, you'll be using releases, to match an events stack frame with its corresponding minified source and source map file (known as artifacts).
+
+<Note>
+
+Visit [Artifact vs. Release Bundles](/platforms/javascript/sourcemaps/artifact-and-release-bundles/) for more information on Artifact Bundles and Debug IDs.
+
+</Note>
+
+## Uploading Source maps using our Bundler Plugin
+
+Our guides on uploading source maps with our bundler plugins are applicable to any version your application might use. Visit [Uploading Source Maps](/platforms/javascript/guides/react/sourcemaps/uploading/) to find an applicable guide.
+
+## Uploading Source Maps using `sentry-cli`
+Here is our guide to uploading artifacts using [releases](/product/releases/)
+
+### 1. Update SDK Options
+To match events with the correct release, you must provide a `release` property in the SDK options:
+
+```javascript
+Sentry.init({
+  // This value must be identical to the name you give the release that you
+  // create below using `sentry-cli`.
+  release: '<release_name>',
+});
+```
+
+### 2. Create a New Release
+You must first create a release with `sentry-cli`. The release name must be unique within your organization:
+
+```bash
+sentry-cli releases new <release_name>
+```
+
+### 3. Upload Artifacts
+Next, upload your artifacts (minified sources and source maps):
+
+```bash
+sentry-cli sourcemaps upload --release=<release_name> /path/to/directory
+```
+
+#### Verify Artifacts Were Uploaded
+Open up Sentry and navigate to **Releases -> [latest release] -> Source Maps (right sidebar)** on Sentry.
+
+### Finalize Release
+At this point, the release is in a draft state (“_unreleased_”). Once all artifacts have been uploaded and your app has been published successfully, finalize the release with the following command:
+
+```bash
+sentry-cli releases finalize <release_name>
+```
+
+For more information on how to configure releases via Sentry CLI, see our [Sentry CLI release management docs](/product/cli/releases/).
+
+## Summary
+
+It can come with some headaches, but you can still upload source maps regardless of what version of our SDK or bundler plugin (or sentry-cli) your application depends on. Visit [Troubleshooting Source Maps](/platforms/javascript/sourcemaps/troubleshooting_js/) if you experience any problems following our guides.
