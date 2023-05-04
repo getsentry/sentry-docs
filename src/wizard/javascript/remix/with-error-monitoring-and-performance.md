@@ -22,12 +22,12 @@ npm install --save @sentry/remix
 Import and initialize Sentry in your Remix entry points for both the client and server:
 
 ```javascript
-import {useLocation, useMatches} from '@remix-run/react';
-import * as Sentry from '@sentry/remix';
-import {useEffect} from 'react';
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
 
 Sentry.init({
-  dsn: '___DSN___',
+  dsn: "___DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.remixRouterInstrumentation(
@@ -45,13 +45,13 @@ Sentry.init({
 Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as Prisma, to get spans for your database calls:
 
 ```javascript
-import {prisma} from '~/db.server';
+import { prisma } from "~/db.server";
 
-import * as Sentry from '@sentry/remix';
+import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: '___DSN___',
-  integrations: [new Sentry.Integrations.Prisma({client: prisma})],
+  dsn: "___DSN___",
+  integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
@@ -67,9 +67,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from '@remix-run/react';
+} from "@remix-run/react";
 
-import {withSentry} from '@sentry/remix';
+import { withSentry } from "@sentry/remix";
 
 function App() {
   return (

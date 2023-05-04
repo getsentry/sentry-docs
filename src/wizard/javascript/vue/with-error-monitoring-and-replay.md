@@ -24,9 +24,9 @@ Initialize Sentry as early as possible in your application's lifecycle.
 #### Vue 2
 
 ```javascript
-import Vue from 'vue';
-import Router from 'vue-router';
-import * as Sentry from '@sentry/vue';
+import Vue from "vue";
+import Router from "vue-router";
+import * as Sentry from "@sentry/vue";
 
 Vue.use(Router);
 
@@ -36,7 +36,7 @@ const router = new Router({
 
 Sentry.init({
   Vue,
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -47,16 +47,16 @@ Sentry.init({
 
 new Vue({
   router,
-  render: h => h(App),
-}).$mount('#app');
+  render: (h) => h(App),
+}).$mount("#app");
 ```
 
 #### Vue 3
 
 ```javascript
-import {createApp} from 'vue';
-import {createRouter} from 'vue-router';
-import * as Sentry from '@sentry/vue';
+import { createApp } from "vue";
+import { createRouter } from "vue-router";
+import * as Sentry from "@sentry/vue";
 
 const app = createApp({
   // ...
@@ -67,7 +67,7 @@ const router = createRouter({
 
 Sentry.init({
   app,
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -75,7 +75,7 @@ Sentry.init({
 });
 
 app.use(router);
-app.mount('#app');
+app.mount("#app");
 ```
 
 ## Verify

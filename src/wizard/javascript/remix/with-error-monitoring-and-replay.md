@@ -22,12 +22,12 @@ npm install --save @sentry/remix
 Import and initialize Sentry in your Remix entry points for both the client and server:
 
 ```javascript
-import {useLocation, useMatches} from '@remix-run/react';
-import * as Sentry from '@sentry/remix';
-import {useEffect} from 'react';
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
 
 Sentry.init({
-  dsn: '___DSN___',
+  dsn: "___DSN___",
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -38,10 +38,10 @@ Sentry.init({
 Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions:
 
 ```javascript
-import * as Sentry from '@sentry/remix';
+import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: '___DSN___',
+  dsn: "___DSN___",
 });
 ```
 
@@ -55,9 +55,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from '@remix-run/react';
+} from "@remix-run/react";
 
-import {withSentry} from '@sentry/remix';
+import { withSentry } from "@sentry/remix";
 
 function App() {
   return (
