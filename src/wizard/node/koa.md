@@ -18,8 +18,8 @@ npm install --save @sentry/node
 Initialize the Sentry SDK and install the on error hook:
 
 ```javascript
-import Koa from 'koa';
-import * as Sentry from '@sentry/node';
+import Koa from "koa";
+import * as Sentry from "@sentry/node";
 
 // or using CommonJS
 // const Koa = require('koa');
@@ -27,11 +27,11 @@ import * as Sentry from '@sentry/node';
 
 const app = new Koa();
 
-Sentry.init({dsn: '___PUBLIC_DSN___'});
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
-app.on('error', (err, ctx) => {
-  Sentry.withScope(function (scope) {
-    scope.addEventProcessor(function (event) {
+app.on("error", (err, ctx) => {
+  Sentry.withScope(function(scope) {
+    scope.addEventProcessor(function(event) {
       return Sentry.addRequestDataToEvent(event, ctx.request);
     });
     Sentry.captureException(err);

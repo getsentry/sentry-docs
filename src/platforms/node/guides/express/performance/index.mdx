@@ -12,15 +12,15 @@ If you’re adopting Performance in a high-throughput environment, we recommend 
 </Note>
 
 ```javascript
-const Sentry = require('@sentry/node');
-const express = require('express');
+const Sentry = require("@sentry/node");
+const express = require("express");
 const app = express();
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     // enable HTTP calls tracing
-    new Sentry.Integrations.Http({tracing: true}),
+    new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
     new Sentry.Integrations.Express({
       // to trace all requests to the default router
@@ -52,12 +52,12 @@ app.listen(3000);
 You can also manually create transactions in your app:
 
 ```js
-const Sentry = require('@sentry/node');
-const http = require('http');
+const Sentry = require("@sentry/node");
+const http = require("http");
 
 const transaction = Sentry.startTransaction({
-  op: 'transaction',
-  name: 'My Transaction',
+  op: "transaction",
+  name: "My Transaction",
 });
 
 // Note that we set the transaction as the span on the scope.
@@ -71,7 +71,7 @@ let request;
 
 try {
   // this should generate an http span
-  request = http.get('http://sentry.io', res => {
+  request = http.get("http://sentry.io", res => {
     console.log(`STATUS: ${res.statusCode}`);
     console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
   });
@@ -82,7 +82,7 @@ try {
   Sentry.captureException(err);
 }
 
-request.on('close', () => {
+request.on("close", () => {
   transaction.finish();
 });
 ```
@@ -97,7 +97,7 @@ The following example creates a transaction for a part of the code that contains
 app.use(function processItems(req, res, next) {
   const item = getFromQueue();
   const transaction = Sentry.startTransaction({
-    op: 'task',
+    op: "task",
     name: item.getTransaction(),
   });
 
@@ -114,7 +114,7 @@ app.use(function processItems(req, res, next) {
 In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getActiveTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
 
 ```javascript
-app.get('/success', function successHandler(req, res) {
+app.get("/success", function successHandler(req, res) {
   const transaction = Sentry.getActiveTransaction();
 
   if (transaction) {
