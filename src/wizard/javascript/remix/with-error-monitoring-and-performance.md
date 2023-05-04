@@ -106,5 +106,4 @@ You can trigger your first event from your development environment by raising an
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Remix Features](https://docs.sentry.io/platforms/javascript/guides/remix/features/): Learn about our first class integration with the Remix framework.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/remix/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
