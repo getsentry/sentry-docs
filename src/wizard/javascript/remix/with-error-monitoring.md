@@ -90,6 +90,5 @@ return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Remix Features](https://docs.sentry.io/platforms/javascript/guides/remix/features/): Learn about our first class integration with the Remix framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/remix/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/remix/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
