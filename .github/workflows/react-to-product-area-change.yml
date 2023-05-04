@@ -1,0 +1,44 @@
+name: React to product-owners.yml changes
+on:
+  # This could be run manually, but the general expectation is that this fires
+  # from GHA in getsentry/security-as-code on changes there.
+
+  workflow_dispatch:
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: React to product-owners.yml changes
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: getsentry/action-setup-venv@v1.0.5
+        with:
+          python-version: 3.11.3
+
+      - name: Get an auth token
+        id: token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.SENTRY_INTERNAL_APP_ID }}
+          private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+
+      - name: React to product-owners.yml changes
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh repo clone https://github.com/getsentry/security-as-code /tmp/security-as-code
+          cd /tmp/security-as-code
+          sha=$(git rev-parse @)
+
+          pip3 install pyyaml=6.0
+          ./bin/react-to-product-owners-yml-changes.py /tmp/security-as-code/rbac/lib/product-owners.yml
+
+          branch="getsantry/update-product-area-labels-${sha:0:8}"
+          git checkout -b "$branch"
+          git add "$filepath"
+          git commit -m "Sync with product-owners.yml in security-as-code@${sha:0:8}"
+          git push --set-upstream origin "$branch"
+
+          gh pr create --fill
+          gh pr merge --squash --auto
