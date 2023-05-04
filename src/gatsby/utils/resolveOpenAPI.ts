@@ -8,7 +8,7 @@ import axios from 'axios';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '0ac5ab937273fb7235b4b9304affc1dde3ff3c2b';
+const SENTRY_API_SCHEMA_SHA = 'd8c2c3ea3111309ce91f6e1eda786cfc0706e1b7';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
