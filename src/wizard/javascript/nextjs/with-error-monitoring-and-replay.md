@@ -7,7 +7,7 @@ type: framework
 
 ## Install
 
-Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
+Add Sentry automatically to your app with the [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#install):
 
 ```bash
 npx @sentry/wizard -i nextjs
