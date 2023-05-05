@@ -34,8 +34,7 @@ Sentry.init({
   dsn: '___PUBLIC_DSN___',
   // Performance Monitoring
   integrations: [new Sentry.BrowserTracing()],
-  // Capture 100% of the transactions. Adjust this value in production as necessary:
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 1.0, // Capture 100% of the transactions. Adjust this value in production as necessary.
 });
 ```
 
@@ -46,8 +45,7 @@ import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  // Capture 100% of the transactions. Adjust this value in production as necessary:
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 1.0, // Capture 100% of the transactions. Adjust this value in production as necessary.
 });
 ```
 
