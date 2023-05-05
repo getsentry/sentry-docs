@@ -53,7 +53,6 @@ import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-
   // Capture 100% of the transactions. Adjust this value in production as necessary:
   tracesSampleRate: 1.0,
 });
