@@ -36,28 +36,21 @@ module.exports = {
 
 Then, configure your `Sentry.init`:
 
-```javascript {filename:sentry.config.js}
+```javascript {filename:sentry.config.(js|ts)}
 import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  integrations: [new Sentry.Replay()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-});
-```
-
-```typescript {filename:sentry.config.ts}
-import * as Sentry from "@sentry/gatsby";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
+  
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
 });
 ```

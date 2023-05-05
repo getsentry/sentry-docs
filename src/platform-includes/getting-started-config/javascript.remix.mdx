@@ -1,13 +1,47 @@
 To use this SDK, initialize Sentry in your Remix entry points for both the client and server.
 
-```typescript {filename: entry.client.tsx}
+Create two files in the root directory of your project, `entry.client.tsx` and `entry.server.tsx` (if they don't exist yet). In these files, add your initialization code for the client-side SDK and server-side SDK, respectively.
+
+The two configuration types are mostly the same, except that some configuration, like the one for Session Replay, only works in `entry.client.tsx`.
+
+```typescript {tabTitle:Client} {filename: entry.client.tsx}
 import { useLocation, useMatches } from "@remix-run/react";
 import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
   dsn: "___DSN___",
-  tracesSampleRate: 1,
+  integrations: [
+    new Sentry.BrowserTracing({
+      routingInstrumentation: Sentry.remixRouterInstrumentation(
+        useEffect,
+        useLocation,
+        useMatches
+      ),
+    }),
+    // Replay is only available in the client
+    new Sentry.Replay(),
+  ],
+  
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+```typescript {tabTitle:Server} {filename: entry.server.tsx}
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
+
+Sentry.init({
+  dsn: "___DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.remixRouterInstrumentation(
@@ -17,7 +51,11 @@ Sentry.init({
       ),
     }),
   ],
-  // ...
+  
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
 });
 ```
 
