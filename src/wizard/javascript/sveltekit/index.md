@@ -29,7 +29,6 @@ import * as Sentry from '@sentry/sveltekit';
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.BrowserTracing()],
-
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production

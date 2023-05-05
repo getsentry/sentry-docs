@@ -35,7 +35,6 @@ Sentry.init({
 
   // Performance Monitoring and Replay integrations
   integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
-
   // Capture 100% of the transactions. Adjust this value in production as necessary:
   tracesSampleRate: 1.0,
   // This sets the Replay sample rate at 10%. You may want to change it to 100% while in
@@ -74,5 +73,3 @@ This snippet contains an intentional error and can be used as a test to make sur
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/sveltekit/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/sveltekit/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
-- [Session Replay](https://docs.sentry.io/platforms/javascript/guides/sveltekit/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
