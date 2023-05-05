@@ -22,12 +22,12 @@ npm install --save @sentry/browser @sentry/integrations
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
-import angular from 'angular';
-import * as Sentry from '@sentry/browser';
-import {Angular as AngularIntegration} from '@sentry/integrations';
+import angular from "angular";
+import * as Sentry from "@sentry/browser";
+import { Angular as AngularIntegration } from "@sentry/integrations";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new AngularIntegration(), new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -35,7 +35,7 @@ Sentry.init({
 });
 
 // Finally require ngSentry as a dependency in your application module.
-angular.module('yourApplicationModule', ['ngSentry']);
+angular.module("yourApplicationModule", ["ngSentry"]);
 ```
 
 ## Verify

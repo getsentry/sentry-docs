@@ -31,7 +31,7 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.

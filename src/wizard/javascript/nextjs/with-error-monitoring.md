@@ -35,7 +35,7 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 });
 ```
 
