@@ -25,7 +25,7 @@ Alternatively, you can also [set up the SDK manually](https://docs.sentry.io/pla
 
 **Configure the Sentry SDK**:
 
-To configure the Sentry SDK, edit the `Sentry.init` options in `hooks.(client|server).(js|ts)`:
+To configure the Sentry SDK, edit the `Sentry.init` options in `hooks.client.(js|ts)`:
 
 ```javascript
 import * as Sentry from '@sentry/sveltekit';

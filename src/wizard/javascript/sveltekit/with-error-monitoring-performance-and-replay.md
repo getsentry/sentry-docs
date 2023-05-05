@@ -25,7 +25,7 @@ Alternatively, you can also [set up the SDK manually](https://docs.sentry.io/pla
 
 **Configure the Sentry SDK**:
 
-To configure the Sentry SDK, edit the `Sentry.init` options in `hooks.(client|server).(js|ts)`:
+To configure the Sentry SDK on the client-side, edit the `Sentry.init` options in `hooks.client.(js|ts)`:
 
 ```javascript
 import * as Sentry from '@sentry/sveltekit';
@@ -33,7 +33,7 @@ import * as Sentry from '@sentry/sveltekit';
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
 
-  // Performance Monitoring and Replay
+  // Performance Monitoring and Replay integrations
   integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
 
   // Capture 100% of the transactions. Adjust this value in production as necessary:
@@ -44,6 +44,19 @@ Sentry.init({
   // If you're not already sampling the entire session, change the sample rate to 100% when
   // sampling sessions where errors occur:
   replaysOnErrorSampleRate: 1.0,
+});
+```
+
+For the server-side, edit the `Sentry.init` options in `hooks.server.(js|ts)`:
+
+```javascript
+import * as Sentry from '@sentry/sveltekit';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+
+  // Capture 100% of the transactions. Adjust this value in production as necessary:
+  tracesSampleRate: 1.0,
 });
 ```
 
