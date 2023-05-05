@@ -10,7 +10,7 @@ branch="getsantry/update-product-area-labels-${sha:0:8}"
 git config user.email "getsantry[bot]@users.noreply.github.com"
 git config user.name "getsantry[bot]"
 git checkout -b "$branch"
-git add .
+git add .github/labels.yml
 git commit -m "Sync with product-owners.yml in security-as-code@${sha:0:8}"
 git push --set-upstream origin "$branch"
 gh pr create --fill
