@@ -5,13 +5,13 @@ support_level: production
 type: framework
 ---
 
-Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
+Add Sentry automatically to your app with the [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#install):
 
 ```bash
 npx @sentry/wizard@latest -i nextjs
 ```
 
-Sentry wizard will automatically patch your application:
+The Sentry wizard will automatically patch your application:
 
 - create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
 - create `next.config.js` with the default configuration.
