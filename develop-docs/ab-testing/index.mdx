@@ -1,0 +1,121 @@
+# A/B Tests with Amplitude
+
+## Why AB testing?
+
+1. It's a direct, easy-to-understand way to validate your hypothesis or product change
+2. Even when you know your change is an improvement, it allows you to quantify the impact
+
+[Learn more](https://www.optimizely.com/optimization-glossary/ab-testing/)
+
+## Example
+
+- Adding a "signup with github” button to the sign up page
+- Hypothesis: signup rate will increase because there's an easier way to sign up
+
+We showed half the visitors the new signup page, and the other half the old page. Turns out there was no effect on the signup rate, i.e. people do use GitHub to sign up, but if it isn't available they will use the regular form instead.
+
+## Details
+
+Our A/B testing framework is built on [Facebook's planout library](https://github.com/facebookarchive/planout).
+
+Let's say you want to optimize the clickthrough rate for Sentry links and decide to test whether to show Plugins in the Integration Directory.
+
+For any experiment, there are 2 events of interest:
+
+- Exposure: when the user is subjected to the experiment. In this case it is when a link is shown.
+- Action: the behavior we're trying to observe, which should always be tied to a metric. In this case the action is a click and the metric is the clickthrough rate.
+
+## Adding an A/B Test
+
+To launch the A/B test you will need to do the following:
+
+1. Set up an A/B test in Getsentry to place users/organizations into different test groups.
+2. Adding the experiment to the list of experiments in Sentry for Typescript definitions
+3. Add the logic where you have to control the in-app behavior
+
+### Changes to `getsentry/getsentry`
+
+In **getsentry/getsentry**, locate the  `getsentry/experiments/config.py` file. In this file, you will define an experiment class that inherits from either `OrgExperiment` or `UserExperiment`. Choose one depending on whether you want to assign the experiment across each user or each organization.
+
+For this example, we will use the `OrgExperiment` , this way everyone in the organization will be given the same experiment assignment.
+
+```python
+# In getsentry/experiments/config.py
+
+from __future__ import absolute_import
+
+from django.conf import settings
+
+from .base import OrgExperiment
+from planout.ops.random import WeightedChoice
+
+WEIGHT_VARIANT = 0.5
+
+class ShowPluginsExperiment(OrgExperiment):
+    def default_value(self):
+        return "0"
+
+    def assign(self, params, org, actor):
+        if settings.IS_TEST or org.slug == "sentry":
+            params.variant = "1"
+        else:
+            params.variant = WeightedChoice(
+                choices=["0", "1"], weights=[1 - WEIGHT_VARIANT, WEIGHT_VARIANT], unit=org.id
+            )
+```
+
+
+- You can set the assignment value to whatever is necessary for your experiment.
+- Assignment logic: The `assign` function on the experiment class determines which group an entity falls into. In the most simple case, you have just two groups: a control and test group. If that's the case, you can use `BernoulliTrial` to generate the test value. If you have three or more groups, you can use `UniformChoice`. You can also insert whatever custom logic you want, such as enabling an experiment if a particular feature flag is set.
+- You can use other random assignment operators.
+
+We are setting the values to "0" or "1" and giving a 50% chance an organization sees the plugins in the Integration Directory
+
+Initialize the experiment in `getsentry/web/apps.py` :
+
+```python
+class Config(AppConfig):
+		from getsentry.planout.show_plugins_experiment import ShowPluginsExperiment
+    expt_manager.add(ShowPluginsExperiment, "variant")
+```
+
+### Changes to **`getsentry/sentry`**
+
+In `src/sentry/static/sentry/app/types/index.tsx` :
+
+```tsx
+export type ActiveExperiments = {
+  ShowPluginsExperiment: '1' | '0';
+};
+```
+
+Now the experiment is available to you in the `organization` props. You can access it with:
+
+`organization?.experiments?.ShowPluginsExperiment`.
+
+Now you can build conditional logic to show whichever view you want, depending on if they are part of the experiment or the control group.
+
+### Adding Logic
+
+To use the experiment to drive in-app logic on the front-end you should use the `withExperiment` HoC. Here's an [example](https://github.com/getsentry/sentry/blob/76acba78e8bbd730873bb46e04f7930bb748d371/src/sentry/static/sentry/app/views/organizationIntegrations/integrationListDirectory.tsx#L491-L495) of it. It will add a prop called `experimentAssignment` which you can use to determine which experience to show.
+
+### Logging the Experiment
+
+In order to measure the result of the experiment, we need to log the experiment. This generates a `Triggered Experiment (Deduped)` event in Amplitude which you can use as the first step in your funnel (example [here](https://analytics.amplitude.com/sentry/chart/u5gt3z8)). If you use `withExperiment`, it will log the experiment automatically when the component mounts. If you want to only log the experiment under certain conditions (ex: org shouldn't qualify for the experiment). If you set `injectLogExperiment` to `true`, the child of the HoC is responsible for calling `logExperiment`.
+
+### Backend A/B Testing
+
+It is possible to run backend-only A/B testing where the experiment values have to be read in a different way than the FE. To do this, you need to do the following:
+
+```python
+from sentry.experiments import manager as expt_manager
+
+# gets the value of assigned for ExampleMultiChoiceExperiment
+exposed = expt_manager.get("ExampleMultiChoiceExperiment", org=org, actor=user)
+```
+
+You can then add checks on the value of `exposed` to drive your in-app logic.
+
+### Logging the Experiment on the Backend
+
+Logging the experiment on the backend can be tricky because it creates an analytics event each time it's triggered. That might be too many events depending on how often it's called. Refer to the implementation of the [log experiment endpoint](https://github.com/getsentry/getsentry/blob/master/getsentry/web/experiment.py) to see how to log the experiment on the backend.
