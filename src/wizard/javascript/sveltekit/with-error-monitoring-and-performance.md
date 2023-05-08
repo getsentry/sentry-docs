@@ -28,10 +28,10 @@ Alternatively, you can also [set up the SDK manually](https://docs.sentry.io/pla
 To configure the Sentry SDK on the client-side, edit the `Sentry.init` options in `hooks.client.(js|ts)`:
 
 ```javascript
-import * as Sentry from '@sentry/sveltekit';
+import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   // Performance Monitoring
   integrations: [new Sentry.BrowserTracing()],
   tracesSampleRate: 1.0, // Capture 100% of the transactions. Adjust this value in production as necessary.
@@ -41,10 +41,10 @@ Sentry.init({
 For the server-side, edit the `Sentry.init` options in `hooks.server.(js|ts)`:
 
 ```javascript
-import * as Sentry from '@sentry/sveltekit';
+import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0, // Capture 100% of the transactions. Adjust this value in production as necessary.
 });
 ```
@@ -55,7 +55,7 @@ This snippet contains an intentional error and can be used as a test to make sur
 
 ```html
 <!-- +page.svelte -->
-<button type="button" on:click={unknownFunction}>Break the world</button>
+<button type="button" on:click="{unknownFunction}">Break the world</button>
 ```
 
 ---
