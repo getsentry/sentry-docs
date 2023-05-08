@@ -15,7 +15,7 @@ npx @sentry/wizard -i sveltekit
 
 ## Configure
 
-Sentry wizard will automatically patch your application to configure the Sentry SDK:
+The Sentry wizard will automatically patch your application to configure the Sentry SDK:
 
 - Create or update `src/hooks.client.js` and `src/hooks.server.js` with the default `Sentry.init` call and SvelteKit hooks handlers.
 - Update `vite.config.js` to add source maps upload and auto-instrumentation via Vite plugins.
@@ -39,9 +39,9 @@ Sentry.init({
 
 This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected.
 
-```html
+```svelte
 <!-- +page.svelte -->
-<button type="button" on:click="{unknownFunction}">Break the world</button>
+<button type="button" on:click={unknownFunction}>Break the world</button>
 ```
 
 ---
