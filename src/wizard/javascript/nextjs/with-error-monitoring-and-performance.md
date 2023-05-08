@@ -15,7 +15,7 @@ npx @sentry/wizard -i nextjs
 
 ## Configure
 
-Sentry wizard will automatically patch your application:
+The Sentry wizard will automatically patch your application:
 
 - create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
 - create `next.config.js` with the default configuration.

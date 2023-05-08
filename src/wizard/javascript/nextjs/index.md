@@ -11,7 +11,7 @@ Add Sentry automatically to your app with the [Sentry wizard](https://docs.sentr
 npx @sentry/wizard@latest -i nextjs
 ```
 
-Sentry wizard will automatically patch your application:
+The Sentry wizard will automatically patch your application:
 
 - create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
 - create `next.config.js` with the default configuration.
