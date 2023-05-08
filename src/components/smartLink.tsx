@@ -1,6 +1,5 @@
 import React from 'react';
 import {Link} from 'gatsby';
-import qs from 'query-string';
 
 import {marketingUrlParams} from '../utils';
 
