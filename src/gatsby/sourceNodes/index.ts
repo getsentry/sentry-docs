@@ -1,10 +1,10 @@
-import { sourcePlatformNodes } from "./platformNodes";
-import { sourcePackageRegistryNodes } from "./packageRegistryNodes";
-import { sourceAppRegistryNodes } from "./appRegistryNodes";
-import { sourceAwsLambdaLayerRegistryNodes } from "./awsLambdLayerRegistryNodes";
-import { relayMetricsNodes } from "./relayMetricsNodes";
+import {sourceAppRegistryNodes} from './appRegistryNodes';
+import {sourceAwsLambdaLayerRegistryNodes} from './awsLambdLayerRegistryNodes';
+import {sourcePackageRegistryNodes} from './packageRegistryNodes';
+import {sourcePlatformNodes} from './platformNodes';
+import {relayMetricsNodes} from './relayMetricsNodes';
 
-export default async params => {
+async function main(params) {
   await Promise.all([
     relayMetricsNodes(params),
     sourcePlatformNodes(params),
@@ -12,4 +12,6 @@ export default async params => {
     sourceAppRegistryNodes(params),
     sourceAwsLambdaLayerRegistryNodes(params),
   ]);
-};
+}
+
+export default main;

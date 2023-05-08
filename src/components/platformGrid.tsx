@@ -1,9 +1,9 @@
-import React from "react";
-import styled from "@emotion/styled";
-import { PlatformIcon } from "platformicons";
+import React from 'react';
+import styled from '@emotion/styled';
+import {PlatformIcon} from 'platformicons';
 
-import SmartLink from "./smartLink";
-import { usePlatformList } from "./hooks/usePlatform";
+import {usePlatformList} from './hooks/usePlatform';
+import SmartLink from './smartLink';
 
 const PlatformCell = styled.div`
   display: flex;
@@ -47,11 +47,11 @@ const GuideList = styled.div`
     display: inline-block;
 
     &:after {
-      content: ", ";
+      content: ', ';
       padding: 0 5px 0 0;
     }
     &:last-child:after {
-      content: "";
+      content: '';
       margin: 0;
     }
   }
@@ -61,7 +61,7 @@ type Props = {
   noGuides: boolean;
 };
 
-export default ({ noGuides = false }: Props): JSX.Element => {
+export default function PlatformGrid({noGuides = false}: Props): JSX.Element {
   const platformList = usePlatformList();
   return (
     <div className="row">
@@ -69,10 +69,7 @@ export default ({ noGuides = false }: Props): JSX.Element => {
         .sort((a, b) => a.title.localeCompare(b.title))
         .map(platform => {
           return (
-            <div
-              className="col-lg-6 col-md-12 platform-link mb-3"
-              key={platform.key}
-            >
+            <div className="col-lg-6 col-md-12 platform-link mb-3" key={platform.key}>
               <PlatformCell>
                 <PlatformCellIcon>
                   <SmartLink to={platform.url}>
@@ -80,7 +77,7 @@ export default ({ noGuides = false }: Props): JSX.Element => {
                       size={82}
                       platform={platform.key}
                       format="lg"
-                      style={{ maxWidth: "none", border: 0, boxShadow: "none" }}
+                      style={{maxWidth: 'none', border: 0, boxShadow: 'none'}}
                     />
                   </SmartLink>
                 </PlatformCellIcon>
@@ -107,4 +104,4 @@ export default ({ noGuides = false }: Props): JSX.Element => {
         })}
     </div>
   );
-};
+}

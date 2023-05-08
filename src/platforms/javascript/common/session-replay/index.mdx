@@ -32,16 +32,27 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
 <PlatformContent includePath="session-replay/pre-requisites" />
 
 <PlatformSection supported={["javascript.angular"]}>
-<Alert level="warning" title="Warning">
-We’re investigating possible performance degradation in <b>some</b> Angular applications. We recommend testing your application before releasing. Please reach out via <a href="https://github.com/getsentry/sentry-javascript/issues/6946">this GitHub ticket</a> if you have issues.
-</Alert>
+  <Alert level="warning" title="Warning">
+    We’re investigating possible performance degradation in <b>some</b> Angular
+    applications. We recommend testing your application before releasing. Please
+    reach out via{" "}
+    <a href="https://github.com/getsentry/sentry-javascript/issues/6946">
+      this GitHub ticket
+    </a>{" "}
+    if you have issues.
+  </Alert>
 </PlatformSection>
 
 <PlatformSection supported={["javascript.capacitor"]}>
- <Alert level="warning" title="Warning">
- Session Replay is generally available for all Browser SDKs. Capacitor support is still in Beta. Feel free to reach <a href="https://github.com/getsentry/sentry-capacitor/issues/319">out on GitHub</a> if you experience issues.
- </Alert>
- </PlatformSection>
+  <Alert level="warning" title="Warning">
+    Session Replay is generally available for all Browser SDKs. Capacitor
+    support is still in Beta. Feel free to reach{" "}
+    <a href="https://github.com/getsentry/sentry-capacitor/issues/319">
+      out on GitHub
+    </a>{" "}
+    if you experience issues.
+  </Alert>
+</PlatformSection>
 
 ## Install
 
@@ -50,6 +61,20 @@ We’re investigating possible performance degradation in <b>some</b> Angular ap
 ## Set Up
 
 <PlatformContent includePath="session-replay/setup" />
+
+### Content Security Policy (CSP)
+
+Session Replay uses a WebWorker to perform work (e.g. compression) off the main UI thread so as not to degrade the performance of your application. Add the below entry to make sure that workers can be loaded:
+
+```
+worker-src 'self' blob:
+```
+
+[Safari versions <= 15.4](https://caniuse.com/?search=worker-src) do not support `worker-src`, you will need to additionally add an entry for `child-src`:
+
+```
+child-src 'self' blob:
+```
 
 ## User Session
 
@@ -69,8 +94,12 @@ Alternatively, rather than recording an entire session, you can capture a replay
 
 Sampling allows you to control how much of your website's traffic will result in a session replay. There are two sample rates you can adjust to get the replays relevant to your interests:
 
-1. <PlatformIdentifier name="replays-session-sample-rate" /> - The sample rate for replays that begin recording immediately and last the entirety of the user's session.
-2. <PlatformIdentifier name="replays-on-error-sample-rate" /> - The sample rate for replays that are recorded when an error happens. This type of replay will record up to a minute of events prior to the error and continue recording until the session ends.
+1. <PlatformIdentifier name="replays-session-sample-rate" /> - The sample rate for
+   replays that begin recording immediately and last the entirety of the user's session.
+2. <PlatformIdentifier name="replays-on-error-sample-rate" /> - The sample rate for
+   replays that are recorded when an error happens. This type of replay will record
+   up to a minute of events prior to the error and continue recording until the session
+   ends.
 
 Sampling occurs when the session is first started. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it is sampled, then the replay recording begins. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it is sampled, the integration will begin buffering the replay and will only upload a replay to Sentry when an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
 

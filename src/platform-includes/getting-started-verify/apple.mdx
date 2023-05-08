@@ -1,15 +1,22 @@
 ```swift {tabTitle:Swift}
 import Sentry
 
-let error = NSError(domain: "YourErrorDomain", code: 0, userInfo: nil)
-SentrySDK.capture(error: error)
+do {
+    try aMethodThatMightFail()
+} catch {
+    SentrySDK.capture(error: error)
+}
 ```
 
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
-NSError *error = [NSError errorWithDomain:@"YourErrorDomain"
-                                   code:0
-                               userInfo: nil];
-[SentrySDK captureError:error];
+@import Sentry;
+
+NSError *error = nil;
+[self aMethodThatMightFail:&error]
+
+if (error) {
+    [SentrySDK captureError:error];
+}
 ```

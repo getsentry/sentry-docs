@@ -13,13 +13,13 @@ description: "Learn about how Sentry prioritizes retaining most important transa
 
 <Note>
 
-This feature is only available on the latest version of our plans, starting from 5M reserved transactions. Anyone in your org with owner or billing-level permissions can update your plan by going to Settings > Subscription, and clicking the "Manage Subscription" button.
+This feature is only available on the latest version of our plans, starting from 1M reserved transactions. Anyone in your org with owner or billing-level permissions can update your plan by going to Settings > Subscription, and clicking the "Manage Subscription" button.
 
 </Note>
 
 _Just because you don’t record a problem, that doesn’t mean it didn’t happen._ Sentry ensures that you get complete insight into the performance of your application in a way that scales affordably with your traffic, so you never miss a critical issue.
 
-At low volumes, storing all your data is feasible and reasonable, but as your application scales, storing a raw copy of everything has diminishing returns. When data reaches high volumes, Sentry begins to automatically prioritize retaining certain transactions, using server-side data retention strategies called **retention priorities**. 
+At low volumes, storing all your data is feasible and reasonable, but as your application scales, storing a raw copy of everything has diminishing returns. When data reaches high volumes, Sentry begins to automatically prioritize retaining certain transactions, using server-side data retention strategies called **retention priorities**.
 
 We’ll continue to provide performance metrics based on all of the transactions you send to Sentry and ensure that we can provide enough of the right sample events in full detail so you can troubleshoot and fix any performance issue.
 
@@ -33,12 +33,10 @@ Retention priorities are enabled by default, but can be disabled individually in
 |-------------------------|---------------|
 | Latest Release          | Health Checks |
 | Dev Environments        |               |
-| Starred Transactions    |               |
 | Low Volume Projects *   |               |
 | Low Volume Transactions |               |
 
 <!-- prettier-ignore-end -->
-
 
 ### Latest Release
 
@@ -50,22 +48,23 @@ While prioritizing data from the latest release, we also take into consideration
 
 We prioritize data from development environments because these environments typically generate a relatively small number of transactions compared to your production environments. As a result, to gain meaningful insights during your testing phase, we prioritize transaction data from these environments.
 
-### Starred Transactions
-
-Typically, for most projects there are only a few transactions that you really care about. We prioritize [starred transactions](/product/performance/transaction-summary/#starring-key-transactions) over others, so you can have more visibility into your important data.
-
-![Starred Transactions](starred_transactions.png)
-
 ### Health Checks
 
-_Health check_ type transactions, while important for checking the stability of your application, don't have any value for you beyond the task associated with them. For this reason, we keep fewer samples of these types of transactions and instead prioritize retaining more samples of your other more valuable transactions.
+_Health check_ type transactions, while important for checking the stability of your application, don't have any value for you beyond the task associated with them. For this reason, we keep fewer samples of these types of transactions and instead prioritize retaining more samples of your other more valuable transactions. We consider a transaction to be a health check if its name matches one of the following glob patterns:
 
+- `*healthcheck*`
+- `*healthy*`
+- `*live*`
+- `*ready*`
+- `*heartbeat*`
+- `*/health`
+- `*/healthz`
 
 ### Low Volume Projects
 
 <Note>
 
-(*) Unlike the other retention priorities, it is not possible to disable this one on a project level, because it applies across the entire organisation.
+(\*) Unlike the other retention priorities, it is not possible to disable this one on a project level, because it applies across the entire organisation.
 
 </Note>
 
@@ -73,20 +72,18 @@ Some projects within your organisation are very high volume compared to others a
 
 ### Low Volume Transactions
 
-Within a project transactions can be logically grouped by their name. Two transactions with the same name probably indicate the same operation while two transactions with different names probably indicate two differnt operations, or code paths. 
+Within a project transactions can be logically grouped by their name. Two transactions with the same name probably indicate the same operation while two transactions with different names probably indicate two differnt operations, or code paths.
 
 Similar to the problem above where we wanted to make sure we capture low volume projects we would like to make sure that transactions representing low volume code paths are sampled in enough
-quantities to generate a complete view of the system. 
+quantities to generate a complete view of the system.
 
 During processing we take care to sample more of the low volume tranasctions in order to try to ensure that all code paths regardless of how infrequent they are executed are covered by the samples we retain.
-
 
 ## Performance Metrics at any Scale
 
 Sentry's Performance Monitoring product offers a series of top level [metrics](/product/performance/metrics/) out-of-the-box to provide you with instant insights into your application's performance. While we apply retention priorities at high volumes to only store high value transaction samples, we continue to offer a full view of your application, can accurately show performance metrics and detect trends and performance issues from all the events you send to Sentry.
 
 If you have configured sampling in your SDK options, only a subset of your transaction events are sent to Sentry. We can only calculate performance metrics and insights from the data we see, so if feasible we recommend sending us 100% of your data in order to have full visibility.
-
 
 ## Retention Priorities & SDK Sampling
 
@@ -96,13 +93,11 @@ When we talk about SDK sample rates in this section, we're only referring to you
 
 </Note>
 
-Sentry offers SDK sampling configuration options: using `tracesSampleRate` enables you to control the amount of transactions you send to Sentry and the `TracesSampler` function (where available) allows you to manually target specific transactions to send. While these are great tools for managing overhead concerns and controlling costs, SDK sampling effectively means compromising on full visibility. By choosing a random sample of events to send, one can assume it to be representative of the whole application, however this is still an approximation. 
+Sentry offers SDK sampling configuration options: using `tracesSampleRate` enables you to control the amount of transactions you send to Sentry and the `TracesSampler` function (where available) allows you to manually target specific transactions to send. While these are great tools for managing overhead concerns and controlling costs, SDK sampling effectively means compromising on full visibility. By choosing a random sample of events to send, one can assume it to be representative of the whole application, however this is still an approximation.
 
 Retention priorities and your SDK sampling configuration act independently of each other, but work best when you send us as much data as you can. The more complete a picture of your application we have, the more accurately we can monitor your application health, detect problems faster, surface issues, and make better decisions about data retention on your behalf.
 
 In order to send us 100% of your transaction events, set your [tracesSampleRate](/platform-redirect/?next=/performance/) in the SDK to 1.0. If you can't do so initially, the system will operate on what it can see and when you purchase more transaction volume, we'll adapt automatically. As your transaction volume goes up, the per-transaction pricing goes down accordingly, so you can truly scale affordably. Learn more in [Benefits of Performance at Scale](/product/performance/performance-at-scale/benefits-performance-at-scale/).
-
-
 
 ## Next Steps
 

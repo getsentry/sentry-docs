@@ -1,15 +1,15 @@
-import React from "react";
-import { PlatformIcon } from "platformicons";
+import React from 'react';
+import {PlatformIcon} from 'platformicons';
 
-import SmartLink from "./smartLink";
-import usePlatform, { Platform } from "./hooks/usePlatform";
+import usePlatform, {Platform} from './hooks/usePlatform';
+import SmartLink from './smartLink';
 
 type Props = {
-  platform?: string;
   className?: string;
+  platform?: string;
 };
 
-export default ({ platform, className }: Props): JSX.Element => {
+export default function GuideGrid({platform, className}: Props): JSX.Element {
   const [currentPlatform] = usePlatform(platform);
   // platform might actually not be a platform, so lets handle that case gracefully
   if (!(currentPlatform as Platform).guides) {
@@ -24,13 +24,13 @@ export default ({ platform, className }: Props): JSX.Element => {
             <PlatformIcon
               size={16}
               platform={guide.key}
-              style={{ marginRight: "0.5rem", border: 0, boxShadow: "none" }}
+              style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
               format="lg"
             />
-            <h4 style={{ display: "inline-block" }}>{guide.title}</h4>
+            <h4 style={{display: 'inline-block'}}>{guide.title}</h4>
           </SmartLink>
         </li>
       ))}
     </ul>
   );
-};
+}

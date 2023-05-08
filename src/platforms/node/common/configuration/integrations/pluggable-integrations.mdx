@@ -12,11 +12,12 @@ Pluggable integrations are integrations that can be additionally enabled to prov
 
 To enable pluggable integrations, install the package `@sentry/integrations`.
 
-```shell
-# Using yarn
-yarn add @sentry/integrations
-# Using npm
+```bash {tabTitle:npm}
 npm install --save @sentry/integrations
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/integrations
 ```
 
 ## Configure
@@ -111,7 +112,7 @@ _Import name: `Sentry.Integrations.Undici`_
 
 Instruments outgoing HTTP requests made with [undici](https://github.com/nodejs/undici) and [Node 18's Node Fetch](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch) by adding breadcrumbs and spans.
 
-Supports Undici `v4.7.0` or higher and requires Node `v16.7.0` or higher.
+Supports Undici `v4.7.0` or higher and requires Node `v16.7.0` or higher. There have been [reported issues with Node.js `v19`](https://github.com/getsentry/sentry-javascript/issues/7958) and the Undici integration so we recommend you use an [LTS version of Node.js](https://nodejs.dev/en/about/releases/) with this integration.
 
 Available options:
 
@@ -136,4 +137,27 @@ To change what requests get the `sentry-trace` and `baggage` headers attached (f
 Sentry.init({
   tracePropagationTargets: ["my-site-url.com"],
 });
+```
+
+## Frameworks
+
+### tRPC Middleware
+
+_(New in version 7.48.0)_
+
+The Sentry tRPC middleware helps make sure your transactions related to RPCs are well-named.
+Additionally, it can attach RPC input via the `attachRpcInput` option.
+
+```typescript
+import { initTRPC } from "@trpc/server";
+import * as Sentry from "@sentry/node";
+
+const t = initTRPC.context().create();
+const sentryMiddleware = t.middleware(
+  Sentry.Handlers.trpcMiddleware({
+    attachRpcInput: true,
+  })
+);
+
+const sentrifiedProcedure = t.procedure.use(sentryMiddleware);
 ```

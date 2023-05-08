@@ -1,15 +1,15 @@
-import React, { useState, useRef, useContext } from "react";
-import styled from "@emotion/styled";
-import copy from "copy-to-clipboard";
-import { MDXProvider } from "@mdx-js/react";
-import { Clipboard, ArrowDown } from "react-feather";
-import { AnimatePresence, motion } from "framer-motion";
-import { usePopper } from "react-popper";
-import memoize from "lodash/memoize";
+import React, {useContext, useRef, useState} from 'react';
+import ReactDOM from 'react-dom';
+import {ArrowDown, Clipboard} from 'react-feather';
+import {usePopper} from 'react-popper';
+import styled from '@emotion/styled';
+import {MDXProvider} from '@mdx-js/react';
+import {AnimatePresence, motion} from 'framer-motion';
+import memoize from 'lodash/memoize';
 
-import { useOnClickOutside } from "../utils";
-import CodeContext from "./codeContext";
-import ReactDOM from "react-dom";
+import {useOnClickOutside} from '../utils';
+
+import CodeContext from './codeContext';
 
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
@@ -19,13 +19,14 @@ function makeKeywordsClickable(children: React.ReactChildren) {
   KEYWORDS_REGEX.lastIndex = 0;
 
   return items.reduce((arr: any[], child) => {
-    if (typeof child !== "string") {
+    if (typeof child !== 'string') {
       arr.push(child);
       return arr;
     }
 
     let match;
     let lastIndex = 0;
+    // eslint-disable-next-line no-cond-assign
     while ((match = KEYWORDS_REGEX.exec(child)) !== null) {
       const afterMatch = KEYWORDS_REGEX.lastIndex - match[0].length;
       const before = child.substring(lastIndex, afterMatch);
@@ -34,7 +35,7 @@ function makeKeywordsClickable(children: React.ReactChildren) {
       }
       arr.push(
         <KeywordSelector
-          group={match[1] || "PROJECT"}
+          group={match[1] || 'PROJECT'}
           keyword={match[2]}
           index={lastIndex}
         />
@@ -51,76 +52,63 @@ function makeKeywordsClickable(children: React.ReactChildren) {
   }, []);
 }
 
-const getPortal = memoize(
-  (): HTMLElement => {
-    if (typeof document === "undefined") {
-      return null;
-    }
-
-    let portal = document.getElementById("selector-portal");
-    if (!portal) {
-      portal = document.createElement("div");
-      portal.setAttribute("id", "selector-portal");
-      document.body.appendChild(portal);
-    }
-    return portal;
+const getPortal = memoize((): HTMLElement => {
+  if (typeof document === 'undefined') {
+    return null;
   }
-);
+
+  let portal = document.getElementById('selector-portal');
+  if (!portal) {
+    portal = document.createElement('div');
+    portal.setAttribute('id', 'selector-portal');
+    document.body.appendChild(portal);
+  }
+  return portal;
+});
 
 type KeywordSelectorProps = {
   group: string;
-  keyword: string;
   index: number;
+  keyword: string;
 };
 
-function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
+function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const codeContext = useContext(CodeContext);
 
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState(null);
   const [dropdownEl, setDropdownEl] = useState(null);
 
-  const { styles, state, attributes } = usePopper(referenceEl, dropdownEl, {
-    placement: "bottom",
+  const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
+    placement: 'bottom',
     modifiers: [
       {
-        name: "offset",
-        options: { offset: [0, 10] },
+        name: 'offset',
+        options: {offset: [0, 10]},
       },
-      { name: "arrow" },
+      {name: 'arrow'},
     ],
   });
 
-  useOnClickOutside({ current: dropdownEl }, () => isOpen && setIsOpen(false));
+  useOnClickOutside({current: dropdownEl}, () => isOpen && setIsOpen(false));
 
-  const [
-    sharedSelection,
-    setSharedSelection,
-  ] = codeContext.sharedKeywordSelection;
+  const [sharedSelection, setSharedSelection] = codeContext.sharedKeywordSelection;
 
-  const { codeKeywords } = useContext(CodeContext);
+  const {codeKeywords} = useContext(CodeContext);
   const choices = codeKeywords?.[group] ?? [];
   const currentSelectionIdx = sharedSelection[group] ?? 0;
   const currentSelection = choices[currentSelectionIdx];
+
+  const [isAnimating, setIsAnimating] = useState(false);
 
   if (!currentSelection) {
     return <React.Fragment>keyword</React.Fragment>;
   }
 
-  const [isAnimating, setIsAnimating] = useState(false);
-
   const selector = isOpen && (
-    <PositionWrapper
-      style={styles.popper}
-      ref={setDropdownEl}
-      {...attributes.popper}
-    >
+    <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
       <AnimatedContainer>
-        <Arrow
-          style={styles.arrow}
-          data-placement={state?.placement}
-          data-popper-arrow
-        />
+        <Arrow style={styles.arrow} data-placement={state?.placement} data-popper-arrow />
         <Selections>
           {choices.map((item, idx) => {
             const isActive = idx === currentSelectionIdx;
@@ -129,7 +117,7 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
                 key={idx}
                 isActive={isActive}
                 onClick={() => {
-                  const newSharedSelection = { ...sharedSelection };
+                  const newSharedSelection = {...sharedSelection};
                   newSharedSelection[group] = idx;
                   setSharedSelection(newSharedSelection);
                   setIsOpen(false);
@@ -155,7 +143,7 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
         tabIndex={0}
         title={currentSelection?.title}
         onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={e => e.key === "Enter" && setIsOpen(!isOpen)}
+        onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
       >
         <KeywordIndicator isOpen={isOpen} />
         <span
@@ -163,7 +151,7 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
             // We set inline-grid only when animating the keyword so they
             // correctly overlap during animations, but this must be removed
             // after so copy-paste correctly works.
-            display: isAnimating ? "inline-grid" : undefined,
+            display: isAnimating ? 'inline-grid' : undefined,
           }}
         >
           <AnimatePresence initial={false}>
@@ -178,10 +166,7 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
         </span>
       </KeywordDropdown>
       {portal &&
-        ReactDOM.createPortal(
-          <AnimatePresence>{selector}</AnimatePresence>,
-          portal
-        )}
+        ReactDOM.createPortal(<AnimatePresence>{selector}</AnimatePresence>, portal)}
     </React.Fragment>
   );
 }
@@ -192,21 +177,21 @@ const Keyword = styled(motion.span)`
 `;
 
 Keyword.defaultProps = {
-  initial: { position: "absolute", opacity: 0, y: -10 },
+  initial: {position: 'absolute', opacity: 0, y: -10},
   animate: {
-    position: "relative",
+    position: 'relative',
     opacity: 1,
     y: 0,
-    transition: { delay: 0.1 },
+    transition: {delay: 0.1},
   },
-  exit: { opacity: 0, y: 20 },
+  exit: {opacity: 0, y: 20},
   transition: {
-    opacity: { duration: 0.15 },
-    y: { duration: 0.25 },
+    opacity: {duration: 0.15},
+    y: {duration: 0.25},
   },
 };
 
-const KeywordDropdown = styled("span")`
+const KeywordDropdown = styled('span')`
   border-radius: 3px;
   margin: 0 2px;
   padding: 0 4px;
@@ -225,43 +210,43 @@ const KeywordDropdown = styled("span")`
   }
 `;
 
-const KeywordIndicator = styled(ArrowDown)<{ isOpen: boolean }>`
+const KeywordIndicator = styled(ArrowDown)<{isOpen: boolean}>`
   user-select: none;
   margin-right: 2px;
   transition: transform 200ms ease-in-out;
-  transform: rotate(${(p) => (p.isOpen ? "180deg" : "0")});
+  transform: rotate(${p => (p.isOpen ? '180deg' : '0')});
   stroke-width: 3px;
   position: relative;
   top: -1px;
 `;
 
 KeywordIndicator.defaultProps = {
-  size: "12px",
+  size: '12px',
 };
 
-const PositionWrapper = styled("div")`
+const PositionWrapper = styled('div')`
   z-index: 100;
 `;
 
-const Arrow = styled("div")`
+const Arrow = styled('div')`
   position: absolute;
   width: 10px;
   height: 5px;
   margin-top: -10px;
 
   &::before {
-    content: "";
+    content: '';
     display: block;
     border: 5px solid transparent;
   }
 
-  &[data-placement*="bottom"] {
+  &[data-placement*='bottom'] {
     &::before {
       border-bottom-color: #fff;
     }
   }
 
-  &[data-placement*="top"] {
+  &[data-placement*='top'] {
     bottom: -5px;
     &::before {
       border-top-color: #fff;
@@ -269,12 +254,13 @@ const Arrow = styled("div")`
   }
 `;
 
-const Selections = styled("div")`
+const Selections = styled('div')`
   padding: 4px 0;
   margin-top: -2px;
   background: #fff;
   border-radius: 3px;
   overflow: scroll;
+  overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -283,18 +269,18 @@ const Selections = styled("div")`
 const AnimatedContainer = styled(motion.div)``;
 
 AnimatedContainer.defaultProps = {
-  initial: { opacity: 0, y: 5 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, scale: 0.95 },
+  initial: {opacity: 0, y: 5},
+  animate: {opacity: 1, y: 0},
+  exit: {opacity: 0, scale: 0.95},
   transition: {
-    opacity: { duration: 0.15 },
-    y: { duration: 0.3 },
-    scale: { duration: 0.3 },
+    opacity: {duration: 0.15},
+    y: {duration: 0.3},
+    scale: {duration: 0.3},
   },
 };
 
-const ItemButton = styled("button")<{ isActive: boolean }>`
-  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI";
+const ItemButton = styled('button')<{isActive: boolean}>`
+  font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI';
   font-size: 0.85rem;
   text-align: left;
   padding: 2px 8px;
@@ -313,7 +299,7 @@ const ItemButton = styled("button")<{ isActive: boolean }>`
     background: #eee;
   }
 
-  ${(p) =>
+  ${p =>
     p.isActive
       ? `
     background-color: #6C5FC7;
@@ -328,50 +314,45 @@ const ItemButton = styled("button")<{ isActive: boolean }>`
 `;
 
 function CodeWrapper(props): JSX.Element {
-  let { children, class: className, ...rest } = props;
-  if (children) {
-    children = makeKeywordsClickable(children);
-  }
+  const {children, class: className, ...rest} = props;
+
   return (
     <code className={className} {...rest}>
-      {children}
+      {children ? makeKeywordsClickable(children) : children}
     </code>
   );
 }
 
 function SpanWrapper(props): JSX.Element {
-  let { children, class: className, ...rest } = props;
-  if (children) {
-    children = makeKeywordsClickable(children);
-  }
+  const {children, class: className, ...rest} = props;
   return (
     <span className={className} {...rest}>
-      {children}
+      {children ? makeKeywordsClickable(children) : children}
     </span>
   );
 }
 
 type Props = {
+  children: JSX.Element;
   filename?: string;
   language?: string;
   title?: string;
-  children: JSX.Element;
 };
 
-export default ({ filename, language, children }: Props): JSX.Element => {
+export default function CodeBlock({filename, language, children}: Props): JSX.Element {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 
-  function copyCode() {
+  async function copyCode() {
     let code = codeRef.current.innerText;
     // don't copy leading prompt for bash
-    if (language === "bash" || language === "shell") {
+    if (language === 'bash' || language === 'shell') {
       const match = code.match(/^\$\s*/);
       if (match) {
         code = code.substr(match[0].length);
       }
     }
-    copy(code);
+    await navigator.clipboard.writeText(code);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 1200);
   }
@@ -384,7 +365,7 @@ export default ({ filename, language, children }: Props): JSX.Element => {
           <Clipboard size={16} />
         </button>
       </div>
-      <div className="copied" style={{ opacity: showCopied ? 1 : 0 }}>
+      <div className="copied" style={{opacity: showCopied ? 1 : 0}}>
         Copied
       </div>
       <div ref={codeRef}>
@@ -399,4 +380,4 @@ export default ({ filename, language, children }: Props): JSX.Element => {
       </div>
     </div>
   );
-};
+}

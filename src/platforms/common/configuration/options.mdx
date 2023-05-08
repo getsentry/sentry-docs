@@ -266,6 +266,18 @@ For ASP.NET and ASP.NET Core applications, the value will default to the server'
 
 </ConfigKey>
 
+<ConfigKey name="ignore-errors" supported={["javascript", "node"]} notSupported={[]}>
+
+A list of strings or regex patterns that match error messages that shouldn't be sent to Sentry. Messages that match these strings or regular expressions will be filtered out before they're sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. By default, all errors are sent.
+
+</ConfigKey>
+
+<ConfigKey name="ignore-transactions" supported={["javascript", "node"]} notSupported={[]}>
+
+A list of strings or regex patterns that match transaction names that shouldn't be sent to Sentry. Transactions that match these strings or regular expressions will be filtered out before they're sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. By default, all transactions are sent.
+
+</ConfigKey>
+
 <ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
 
 A list of strings or regex patterns that match error URLs that should not be sent to Sentry. Errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will not be sent. As a result, if you add `'foo.com'` to the list, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
@@ -402,7 +414,7 @@ Callback function:
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   debug: true,
-  initialScope: scope => {
+  initialScope: (scope) => {
     scope.setTags({ a: "b" });
     return scope;
   },
@@ -424,8 +436,6 @@ Sentry SDKs normalize any contextual data to a given depth. Any data beyond this
 </ConfigKey>
 
 <ConfigKey name="normalize-max-breadth" supported={["javascript", "node"]} notSupported={["electron"]}>
-
-_(New in version 6.19.1)_
 
 This is the maximum number of properties or entries that will be included in any given object or array when the SDK is normalizing contextual data. Any data beyond this depth will be dropped. (defaults to 1000)
 
@@ -574,7 +584,7 @@ For many platform SDKs integrations can be configured alongside it. On some plat
 
 In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
 
-<ConfigKey name="default-integrations" notSupported={["java", "dart"]}/>
+<ConfigKey name="default-integrations" notSupported={["java", "dart"]} />
 
 This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
 
@@ -602,8 +612,6 @@ This function is called with an SDK-specific message or error event object, and 
 This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
 
 <PlatformSection supported={["javascript", "node"]}>
-
-_(New in version 7.18.0)_
 
 </PlatformSection>
 
@@ -658,7 +666,10 @@ Options used to configure the transport. This is an object with the following po
 </ConfigKey>
 
 <ConfigKey name="proxy" supported={["native"]}>
-Configures an HTTP proxy for outgoing requests to the backend, (HTTPS requests tunneled through that proxy). The Native SDK doesn't pick up the `http_proxy` environment variable. You can find more details on the [transport page](/platforms/native/configuration/transports/#using-an-http-proxy).
+  Configures an HTTP proxy for outgoing requests to the backend, (HTTPS requests
+  tunneled through that proxy). The Native SDK doesn't pick up the `http_proxy`
+  environment variable. You can find more details on the [transport
+  page](/platforms/native/configuration/transports/#using-an-http-proxy).
 </ConfigKey>
 
 <ConfigKey name="http-proxy" supported={["php", "python", "java", "dotnet", "rust"]}>
@@ -877,6 +888,7 @@ Set this boolean to `false` to disable the scope sync from Java to NDK on Androi
 <ConfigKey name="attachThreads">
 
 Set this boolean to `true` to automatically attach all threads to all logged events on Android.
+
 </ConfigKey>
 
 <ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
@@ -904,7 +916,8 @@ Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/i
 <ConfigKey name="enableWatchdogTerminationTracking" supported={["apple", "flutter"]}>
 
 <Note>
-Available since version 8.0.0 of Sentry Apple SDK. It was named `enableOutOfMemoryTracking` before the 8.0.0 release.
+  Available since version 8.0.0 of Sentry Apple SDK. It was named
+  `enableOutOfMemoryTracking` before the 8.0.0 release.
 </Note>
 
 Set this boolean to `false` to disable [watchdog termination](/platforms/apple/guides/ios/configuration/watchdog-terminations/) tracking on iOS.

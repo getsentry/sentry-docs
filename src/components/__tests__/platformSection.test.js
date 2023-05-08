@@ -1,164 +1,160 @@
-import React from "react";
-import renderer from "react-test-renderer";
+import React from 'react';
+import renderer from 'react-test-renderer';
 
-import PlatformSection from "../platformSection";
-import usePlatform, { getPlatformsWithFallback } from "../hooks/usePlatform";
+import usePlatform, {getPlatformsWithFallback} from '../hooks/usePlatform';
+import PlatformSection from '../platformSection';
 
-jest.mock("../hooks/usePlatform");
+jest.mock('../hooks/usePlatform');
 
-describe("PlatformSection", () => {
-  it("hides content without supported platform", () => {
+describe('PlatformSection', () => {
+  it('hides content without supported platform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "ruby",
+        key: 'ruby',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby"]);
+    getPlatformsWithFallback.mockReturnValue(['ruby']);
 
     const tree = renderer
-      .create(<PlatformSection supported={["python"]}>Test</PlatformSection>)
+      .create(<PlatformSection supported={['python']}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe(null);
   });
 
-  it("shows content with supported platform", () => {
+  it('shows content with supported platform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "python",
+        key: 'python',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["python"]);
+    getPlatformsWithFallback.mockReturnValue(['python']);
     const tree = renderer
-      .create(<PlatformSection supported={["python"]}>Test</PlatformSection>)
+      .create(<PlatformSection supported={['python']}>Test</PlatformSection>)
       .toJSON();
 
-    expect(tree).toBe("Test");
+    expect(tree).toBe('Test');
   });
 
-  it("shows content with supported parent platform", () => {
+  it('shows content with supported parent platform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "ruby.rails",
+        key: 'ruby.rails',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
+    getPlatformsWithFallback.mockReturnValue(['ruby.rails', 'ruby']);
     const tree = renderer
-      .create(<PlatformSection supported={["ruby"]}>Test</PlatformSection>)
+      .create(<PlatformSection supported={['ruby']}>Test</PlatformSection>)
       .toJSON();
 
-    expect(tree).toBe("Test");
+    expect(tree).toBe('Test');
   });
 
-  it("hides content with notSupported platform", () => {
+  it('hides content with notSupported platform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "ruby",
+        key: 'ruby',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby"]);
+    getPlatformsWithFallback.mockReturnValue(['ruby']);
     const tree = renderer
-      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
-      .toJSON();
-
-    expect(tree).toBe(null);
-  });
-
-  it("hides content with notSupported parent platform", () => {
-    usePlatform.mockReturnValue([
-      {
-        key: "ruby.rails",
-      },
-      jest.fn(),
-      false,
-    ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
-    const tree = renderer
-      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
+      .create(<PlatformSection notSupported={['ruby']}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe(null);
   });
 
-  it("shows content without notSupported platform", () => {
+  it('hides content with notSupported parent platform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "python",
+        key: 'ruby.rails',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["python"]);
+    getPlatformsWithFallback.mockReturnValue(['ruby.rails', 'ruby']);
     const tree = renderer
-      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
+      .create(<PlatformSection notSupported={['ruby']}>Test</PlatformSection>)
       .toJSON();
 
-    expect(tree).toBe("Test");
+    expect(tree).toBe(null);
   });
 
-  it("shows content with supported child platform, notSupported parent", () => {
+  it('shows content without notSupported platform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "ruby.rails",
+        key: 'python',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
+    getPlatformsWithFallback.mockReturnValue(['python']);
+    const tree = renderer
+      .create(<PlatformSection notSupported={['ruby']}>Test</PlatformSection>)
+      .toJSON();
+
+    expect(tree).toBe('Test');
+  });
+
+  it('shows content with supported child platform, notSupported parent', () => {
+    usePlatform.mockReturnValue([
+      {
+        key: 'ruby.rails',
+      },
+      jest.fn(),
+      false,
+    ]);
+    getPlatformsWithFallback.mockReturnValue(['ruby.rails', 'ruby']);
     const tree = renderer
       .create(
-        <PlatformSection supported={["ruby.rails"]} notSupported={["ruby"]}>
+        <PlatformSection supported={['ruby.rails']} notSupported={['ruby']}>
           Test
         </PlatformSection>
       )
       .toJSON();
 
-    expect(tree).toBe("Test");
+    expect(tree).toBe('Test');
   });
 
-  it("hides content with notSupported fallbackPlatform", () => {
+  it('hides content with notSupported fallbackPlatform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "ruby.rails",
-        fallbackPlatform: "javascript",
+        key: 'ruby.rails',
+        fallbackPlatform: 'javascript',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "javascript"]);
+    getPlatformsWithFallback.mockReturnValue(['ruby.rails', 'javascript']);
     const tree = renderer
-      .create(
-        <PlatformSection notSupported={["javascript"]}>Test</PlatformSection>
-      )
+      .create(<PlatformSection notSupported={['javascript']}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe(null);
   });
 
-  it("shows content with supported fallbackPlatform", () => {
+  it('shows content with supported fallbackPlatform', () => {
     usePlatform.mockReturnValue([
       {
-        key: "ruby.rails",
-        fallbackPlatform: "javascript",
+        key: 'ruby.rails',
+        fallbackPlatform: 'javascript',
       },
       jest.fn(),
       false,
     ]);
-    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "javascript"]);
+    getPlatformsWithFallback.mockReturnValue(['ruby.rails', 'javascript']);
     const tree = renderer
-      .create(
-        <PlatformSection supported={["javascript"]}>Test</PlatformSection>
-      )
+      .create(<PlatformSection supported={['javascript']}>Test</PlatformSection>)
       .toJSON();
 
-    expect(tree).toBe("Test");
+    expect(tree).toBe('Test');
   });
 });
