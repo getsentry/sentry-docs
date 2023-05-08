@@ -1,28 +1,30 @@
+You can capture errors with the `captureError` method. This method takes an `Error` object as a parameter. The `Error` object can be an `NSError` or a `Swift.Error` object.
+
 ```swift {tabTitle:Swift}
 import Sentry
 
-SentrySDK.capture(error: error)
-
-// Or
-
-SentrySDK.capture(exception: exception)
-
+do {
+    try aMethodThatMightFail()
+} catch {
+    SentrySDK.capture(error: error)
+}
 ```
 
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
-[SentrySDK captureError:error];
+NSError *error = nil;
+[self aMethodThatMightFail:&error]
 
-// Or
-
-[SentrySDK captureException:exception];
+if (error) {
+    [SentrySDK captureError:error];
+}
 ```
 
 ### Swift Errors
 
 For Swift Errors conforming to the [Error Protocol](https://developer.apple.com/documentation/swift/error) the SDK sends the domain, code and the description of the Swift error.
-For older versions of the SDK, prior to [sentry-cocoa 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870) the SDK only sends the domain and error code.
+Before [sentry-cocoa 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870) the SDK sends only the domain and error code.
 
 ```Swift
 enum LoginError: Error {
@@ -32,18 +34,19 @@ enum LoginError: Error {
 
 SentrySDK.capture(error: LoginError.wrongUser("12345678"))
 ```
-For the Swift error above Sentry would display the following, based on SDK version:
 
-| sentry-cocoa SDK | Title | Description |
-| ----------- | ----------- | ----------- |
-| Since 8.7.0 | `LoginError` | `wrongUser(id: "12345678") (Code: 1)` |
-| Before 8.7.0 | `LoginError` | `Code: 1` |
+For the Swift error above Sentry displays:
+
+| sentry-cocoa SDK | Title        | Description                           |
+| ---------------- | ------------ | ------------------------------------- |
+| Since 8.7.0      | `LoginError` | `wrongUser(id: "12345678") (Code: 1)` |
+| Before 8.7.0     | `LoginError` | `Code: 1`                             |
 
 ### Customizing Error Descriptions
 
 This feature is available on [sentry-cocoa 7.25.0](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md#7250) and above.
 
-You may want to provide a custom description to make identifying the error in the **Issues** page easier. For `NSError` values, you can do this by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
+You may want to provide a custom description to make identifying the error in the _Issues_ page easier. For `NSError` values, this can be done by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
 
 Sentry will group errors based on the error domain and code, and by enum value for Swift enum types, so customizing error descriptions won’t impact grouping.
 
