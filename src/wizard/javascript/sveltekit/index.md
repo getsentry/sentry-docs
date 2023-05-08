@@ -24,10 +24,10 @@ Configure the Sentry SDK:
 To configure the Sentry SDK, edit the `Sentry.init` options in `hooks.(client|server).(js|ts)`:
 
 ```javascript
-import * as Sentry from '@sentry/sveltekit';
+import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.BrowserTracing()],
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
