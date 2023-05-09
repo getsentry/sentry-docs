@@ -48,6 +48,7 @@ export default function SmartLink({
         urlObj.searchParams.set(key, value);
       }
     }
+    // make sure we make this a relative URL
     setForcedUrl(urlObj.toString().replace(window.location.origin, ''));
   }, [realTo]);
 
