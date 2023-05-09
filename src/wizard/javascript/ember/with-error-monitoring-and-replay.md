@@ -19,15 +19,15 @@ ember install @sentry/ember
 You should `init` the Sentry SDK as soon as possible during your application load up in `app.js`, before initializing Ember:
 
 ```javascript
-import Application from '@ember/application';
-import Resolver from 'ember-resolver';
-import loadInitializers from 'ember-load-initializers';
-import config from './config/environment';
+import Application from "@ember/application";
+import Resolver from "ember-resolver";
+import loadInitializers from "ember-load-initializers";
+import config from "./config/environment";
 
-import * as Sentry from '@sentry/ember';
+import * as Sentry from "@sentry/ember";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.

@@ -7,7 +7,7 @@ type: framework
 
 ## Install
 
-Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
+Add Sentry automatically to your app with the [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#install):
 
 ```bash
 npx @sentry/wizard -i nextjs
@@ -15,7 +15,7 @@ npx @sentry/wizard -i nextjs
 
 ## Configure
 
-Sentry wizard will automatically patch your application:
+The Sentry wizard will automatically patch your application:
 
 - create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
 - create `next.config.js` with the default configuration.
@@ -35,7 +35,7 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.BrowserTracing()],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!

@@ -4,7 +4,7 @@ sidebar_order: 4100
 notSupported:
   - javascript.cordova
   - javascript.wasm
-description: 'Learn about the general Session Replay configuration fields.'
+description: "Learn about the general Session Replay configuration fields."
 ---
 
 <Include name="beta-note-session-replay.mdx" />
@@ -25,8 +25,8 @@ The following can be configured as integration options in `new Replay({})`:
 | stickySession          | boolean              | `true`  | Keep track of users across page loads. Note, because closing a tab ends the session, a single user using multiple tabs will be recorded as multiple sessions. |
 | networkDetailAllowUrls | (string \| RegExp)[] | `[]`    | Capture request and response details for XHR and fetch requests that match the given URLs.                                                                    |
 | networkCaptureBodies   | boolean              | `true`  | Decide whether to capture request and response bodies for URLs defined in `networkDetailAllowUrls`.                                                           |
-| networkRequestHeaders  | string[]             | `[]`    | Capture request headers for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                                                               |
-| networkResponseHeaders | string[]             | `[]`    | Capture response headers for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                                                              |
+| networkRequestHeaders  | string[]             | `[]`    | Capture request headers for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                  |
+| networkResponseHeaders | string[]             | `[]`    | Capture response headers for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                 |
 
 ### Sampling
 
@@ -42,7 +42,7 @@ Any URL matching the given pattern(s) will then be captured with additional deta
 
 ```javascript
 new Replay({
-  networkDetailAllowUrls: ['https://my-website.com/api'],
+  networkDetailAllowUrls: ["https://my-website.com/api"],
 });
 ```
 
@@ -50,27 +50,31 @@ If you give us a string, we'll match any URL that contains that string. You can 
 
 Requests to a URL matched by the configured patterns will be enhanced with the request and response body, as well as the following default headers:
 
-* `content-type`
-* `content-length`
-* `accept`
+- `content-type`
+- `content-length`
+- `accept`
 
-If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`.
+If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`, for example:
+
+```javascript
+new Replay({
+  networkDetailAllowUrls: ["https://my-website.com/api"],
+  networkRequestHeaders: ["Cache-Control"],
+  networkResponseHeaders: ["Referrer-Policy"],
+});
+```
 
 <Note>
-  Captured bodies will be truncated to 150k characters max. Content in
-  bodies will be PII-sanitized server-side, based on object keys and values.
+  Captured bodies will be truncated to 150k characters max. Content in bodies
+  will be PII-sanitized server-side, based on object keys and values.
 </Note>
-
-### Sensitive Data in Request and Response Bodies
-
-Sentry attempts to scrub certain types of sensitive data from request and response bodies, if you accidentally opt-in to a URL that includes this type of data. This mechanism happens on our ingestion service, before data hits our disks. This is a best effort approach which pattern-matches the content with things like credit card information, social security numbers, and [passwords](https://github.com/search?q=repo%3Agetsentry%2Frelay%20PASSWORD_KEY_REGEX&type=code). The best way to avoid getting PII into Sentry is by not adding URLs of endpoints that may contain PII.
 
 ## Identifying Users
 
 You can use the Sentry SDK to link a user to a session. Read more about it in our <PlatformLink to="/enriching-events/identify-user">docs</PlatformLink>.
 
 ```javascript
-Sentry.setUser({email: 'jane.doe@example.com'});
+Sentry.setUser({ email: "jane.doe@example.com" });
 ```
 
 ## Privacy

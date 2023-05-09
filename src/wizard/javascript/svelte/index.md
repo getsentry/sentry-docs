@@ -18,14 +18,14 @@ npm install --save @sentry/svelte
 Next, import and initialize initialize Sentry in your Svelte app's entry point (`main.ts/js`):
 
 ```javascript
-import './app.css';
-import App from './App.svelte';
+import "./app.css";
+import App from "./App.svelte";
 
-import * as Sentry from '@sentry/svelte';
+import * as Sentry from "@sentry/svelte";
 
 // Initialize the Sentry SDK here
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.BrowserTracing()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -35,7 +35,7 @@ Sentry.init({
 });
 
 const app = new App({
-  target: document.getElementById('app'),
+  target: document.getElementById("app"),
 });
 
 export default app;

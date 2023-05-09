@@ -25,7 +25,7 @@ Register the `@sentry/gatsby` plugin in your Gatsby configuration file (typicall
 module.exports = {
   plugins: [
     {
-      resolve: '@sentry/gatsby',
+      resolve: "@sentry/gatsby",
     },
   ],
 };
@@ -34,10 +34,10 @@ module.exports = {
 Then, configure your `Sentry.init`:
 
 ```javascript {filename:sentry.config.js}
-import * as Sentry from '@sentry/gatsby';
+import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.BrowserTracing()],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!

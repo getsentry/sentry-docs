@@ -1,8 +1,8 @@
 ---
 title: Micro Frontend Support
 sidebar_order: 200
-description: ''
-keywords: ['micro frontend', 'multiplexed transport']
+description: ""
+keywords: ["micro frontend", "multiplexed transport"]
 ---
 
 The recommended way to use the Sentry SDK with Micro Frontend is to set up a multiplexed transport when calling `Sentry.init`. The multiplexed transport will send events to different Sentry projects based on the attributes on that event, which is how you can isolate events from a specific micro-frontend to a specific Sentry project.
@@ -12,29 +12,32 @@ Requires SDK version `7.50.0` or higher.
 The example below uses the `feature` tag to determine which Sentry project to send the event to by using different DSNs. If the event does not have a `feature` tag, we send it to the fallback DSN defined in `Sentry.init`.
 
 ```typescript
-import { makeMultiplexedTransport } from '@sentry/core';
-import { init, captureException, makeFetchTransport } from '@sentry/browser';
+import { captureException, init, makeFetchTransport } from "@sentry/browser";
+import { makeMultiplexedTransport } from "@sentry/core";
 
 function dsnFromFeature({ getEvent }) {
   const event = getEvent();
-  switch(event?.tags?.feature) {
-    case 'cart':
-      return ['__CART_DSN__'];
-    case 'gallery':
-      return ['__GALLERY_DSN__'];
+  switch (event?.tags?.feature) {
+    case "cart":
+      return ["__CART_DSN__"];
+    case "gallery":
+      return ["__GALLERY_DSN__"];
+    default:
   }
-  return []
+  return [];
 }
 
 init({
-  dsn: '__FALLBACK_DSN__',
-  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromFeature)
+  dsn: "__FALLBACK_DSN__",
+  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromFeature),
 });
 
-captureException(new Error('oh no!', scope => {
-  scope.addTag('feature', 'cart');
-  return scope;
-});
+captureException(
+  new Error("oh no!", (scope) => {
+    scope.addTag("feature", "cart");
+    return scope;
+  })
+);
 ```
 
 You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to.
@@ -51,17 +54,17 @@ Currently, there is no way to isolate tags/contexts/breadcrumbs/spans to events 
 
 ```typescript
 type EnvelopeItemType =
-  | 'client_report'
-  | 'user_report'
-  | 'session'
-  | 'sessions'
-  | 'transaction'
-  | 'attachment'
-  | 'event'
-  | 'profile'
-  | 'replay_event'
-  | 'replay_recording'
-  | 'check_in';
+  | "client_report"
+  | "user_report"
+  | "session"
+  | "sessions"
+  | "transaction"
+  | "attachment"
+  | "event"
+  | "profile"
+  | "replay_event"
+  | "replay_recording"
+  | "check_in";
 
 interface MatchParam {
   /** The envelope to be sent */
@@ -93,19 +96,19 @@ The example below gives a list of DSNs and tags. It uses the `tags` attribute on
 
 ```typescript
 const myDsns = [
-  { dsn: 'https://...', tag: 'my-tag' },
-  { dsn: 'https://...', tag: 'other-tag' },
+  { dsn: "https://...", tag: "my-tag" },
+  { dsn: "https://...", tag: "other-tag" },
 ];
 
 function dsnFromTag({ getEvent }) {
   const event = getEvent();
-  const opt = myDsns.find(({tag} => event?.tags?.includes(tag));
+  const opt = myDsns.find(({ tag }) => event?.tags?.includes(tag));
   return opt ? [opt.dsn] : [];
 }
 
 init({
-  dsn: '__FALLBACK_DSN__',
-  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromTag)
+  dsn: "__FALLBACK_DSN__",
+  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromTag),
 });
 ```
 
@@ -114,11 +117,11 @@ init({
 Since the matcher returns an array, you can enforce that an event is sent to multiple DSNs.
 
 ```typescript
-import {makeMultiplexedTransport} from '@sentry/core';
-import {init, makeFetchTransport} from '@sentry/browser';
+import { init, makeFetchTransport } from "@sentry/browser";
+import { makeMultiplexedTransport } from "@sentry/core";
 
-const DSN1 = '__DSN1__';
-const DSN2 = '__DSN2__';
+const DSN1 = "__DSN1__";
+const DSN2 = "__DSN2__";
 
 init({
   dsn: DSN1, // <- init dsn never gets used but need to be valid
