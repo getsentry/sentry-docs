@@ -48,7 +48,7 @@ export default function SmartLink({
         urlObj.searchParams.set(key, value);
       }
     }
-    // make sure we make this a relative URL
+    // make sure we make this a relative URL so Gatsby can pre-fetch the page
     setForcedUrl(urlObj.toString().replace(window.location.origin, ''));
   }, [realTo]);
 
