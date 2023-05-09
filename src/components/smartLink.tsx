@@ -48,7 +48,7 @@ export default function SmartLink({
         urlObj.searchParams.set(key, value);
       }
     }
-    setForcedUrl(urlObj.toString());
+    setForcedUrl(urlObj.toString().replace(window.location.origin, ''));
   }, [realTo]);
 
   if (realTo.indexOf('://') !== -1) {
