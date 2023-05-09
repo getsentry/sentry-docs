@@ -39,7 +39,8 @@ function main({actions, schema}) {
       fields: Fields
     }
 
-    type Mdx implements Node {
+    type Mdx implements Node
+      @childOf(types: ["File"], mimeTypes: ["text/markdown", "text/x-markdown"]) {
       frontmatter: Frontmatter
       fields: Fields
     }
@@ -48,7 +49,7 @@ function main({actions, schema}) {
       slug: String!
       legacy: Boolean
     }
-  `,
+    `,
     schema.buildObjectType({
       name: 'Frontmatter',
       fields: {
