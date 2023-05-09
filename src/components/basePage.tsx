@@ -1,5 +1,6 @@
 import React, {useRef} from 'react';
-import * as Sentry from '@sentry/gatsby';
+
+import {getCurrentTransaction} from '../utils';
 
 import Banner from './banner';
 import CodeContext, {useCodeContextState} from './codeContext';
@@ -90,7 +91,7 @@ export default function BasePage({
   children,
   prependToc,
 }: Props): JSX.Element {
-  const tx = Sentry.getCurrentHub().getScope().getTransaction();
+  const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('ok');
   }

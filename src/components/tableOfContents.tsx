@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import * as Sentry from '@sentry/gatsby';
 
 import {PageContext} from './basePage';
 import GuideGrid from './guideGrid';
+
+import {captureException} from '~src/utils';
 
 type Item = {
   items: Item[];
@@ -85,7 +86,7 @@ export default function TableOfContents({contentRef, pageContext}: Props) {
       try {
         setItems(getHeadings(contentRef.current));
       } catch (err) {
-        Sentry.captureException(err);
+        captureException(err);
         setItems([]);
       }
     }
