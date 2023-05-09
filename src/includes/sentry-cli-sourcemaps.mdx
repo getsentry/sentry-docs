@@ -1,0 +1,129 @@
+<Include name="debug-id-requirement.mdx" />
+
+## 1. Configure Sentry CLI
+
+<Note>
+
+You can find installation instructions for Sentry CLI here: https://docs.sentry.io/product/cli/installation/
+
+For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/product/cli/configuration/).
+
+</Note>
+
+Make sure `sentry-cli` is configured for your project. For that you can use environment variables:
+
+<Note>
+
+Visit the [auth token user settings page](https://sentry.io/settings/account/api/auth-tokens/) to find your auth tokens.
+
+</Note>
+
+```bash
+export SENTRY_AUTH_TOKEN=your-auth-token
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+```
+
+## 2. Generate Source Maps
+
+Configure the bundler to output source maps. Here's an example of what this looks like for Webpack:
+
+```javascript {filename:webpack.config.js}
+module.exports = {
+  ...
+  entry: "./src/index.js",
+  output: {
+    filename: "main.js",
+    path: path.resolve(__dirname, "build"),
+  },
+  // Enable "sourcesContent".
+  devtool: "source-map",
+  ...
+};
+```
+
+## 3. Inject Debug IDs Into Artifacts
+
+Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file. Visit [Artifact vs. Release bundles](/platforms/javascript/sourcemaps/artifact-and-release-bundles/) if you want to learn more about Artifact Bundles and Debug IDs.
+
+To inject Debug IDs, use the following command:
+
+```bash
+sentry-cli sourcemaps inject /path/to/directory
+```
+
+### Verify Debug IDs Were Injected in Artifacts
+
+Minified source files should contain at the end a comment named `debugId` like:
+
+```javascript {filename:example_minified_file.js}
+...
+//# debugId=<debug_id>
+//# sourceMappingURL=<sourcemap_url>
+```
+
+Source maps should contain a field named `debug_id` like:
+
+```json {filename:example_source_map.js.map}
+{
+    ...
+    "debug_id":"<debug_id>",
+    ...
+}
+```
+
+## 4. Upload Artifact Bundle
+
+After you've injected Debug IDs into your artifacts, upload them using the following command.
+
+```bash
+sentry-cli sourcemaps upload /path/to/directory
+```
+
+### Verify That Artifact Bundles Were Uploaded
+
+Open up Sentry and navigate to **Project Settings > Source Maps**. If you choose “Artifact Bundles” in the tabbed navigation, you'll see all the artifact bundles that have been successfully uploaded to Sentry.
+
+## Optional Steps
+
+### Associating `release` with Artifact Bundle
+
+Provide a `release` property in your SDK options.
+
+```javascript
+Sentry.init({
+  // This value must be identical to the release name specified during upload
+  // with the `sentry-cli`.
+  release: "<release_name>",
+});
+```
+
+Afterwards, run the `sourcemaps upload` command with the additional `--release` option. Please ensure that the value specified for `<release_name>` is the same value specified in your SDK options.
+
+```bash
+sentry-cli sourcemaps upload --release=<release_name> /path/to/directory
+```
+
+<Note>
+
+Running `upload` with `--release` **doesn't automatically create a release in Sentry**. For that, you should create a release with the same name as a separate step in your pipeline or send the first event to Sentry with that release.
+
+</Note>
+
+### Associating `dist` with Artifact Bundle
+
+In addition to `release`, you can also add a `dist` to your uploaded artifacts. For that, run the `sourcemaps upload` command with the additional `--dist` option.
+
+```bash
+sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/directory
+```
+
+## 5. Deploy your Application
+
+If you're following this guide from your local machine, then you've successfully:
+
+1. Generated minified source and source map files (artifacts) by running your application's build process
+2. Injected Debug IDs into the artifacts you've just generated
+3. Uploaded those artifacts to Sentry with our upload command
+
+The last step is deploying a new version of your application using the generated artifacts you created in step one. **We strongly recommend that you integrate `sentry-cli` into your CI/CD Pipeline**, to ensure each subsequent deploy will automatically inject debug IDs into each artifact and upload them directly to Sentry.
