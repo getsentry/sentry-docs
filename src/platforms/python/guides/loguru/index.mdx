@@ -24,6 +24,7 @@ sentry_loguru = LoguruIntegration(
     level=LoggingLevels.INFO.value,        # Capture info and above as breadcrumbs
     event_level=LoggingLevels.ERROR.value  # Send errors as events
 )
+
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     integrations=[
@@ -65,8 +66,12 @@ from sentry_sdk.integrations.logging import ignore_logger
 
 ignore_logger("a.spammy.logger")
 
+# this will work with `logging`'s logger too
 logger = logging.getLogger("a.spammy.logger")
 logger.error("hi")  # no error sent to sentry
+# and with loguru (in `a.spammy.logger` module)
+from loguru import logger
+logger.error("hi")  # again, no record
 ```
 
 You can also use `before-send` and `before-breadcrumb` to ignore
@@ -74,7 +79,7 @@ only certain messages. See [_Filtering Events_](configuration/filtering/) for mo
 
 ## Options
 
-You can pass the following keyword arguments to `LoggingIntegration()`:
+You can pass the following keyword arguments to `LoguruIntegration()`:
 
 - `level` (default `INFO`): The Sentry Python SDK will record log records with a level higher than or equal to `level` as breadcrumbs. Inversely, the SDK completely ignores any log record with a level lower than this one. If a value of `None` occurs, the SDK won't send log records as breadcrumbs.
 
@@ -90,6 +95,6 @@ Because of the Loguru's architecture, The Sentry Python SDK will log only levels
 
 Instead of using `LoguruIntegration`, you can use two regular logging `logging.Handler` subclasses that the integration exports (`LoguruEventHandler` and `LoguruBreadcrumbHandler`).
 
-**Usually, you don't need this.** You _can_ use this together with `default_integrations=False` if you want to opt into what the Sentry Python SDK captures. However, correctly setting up logging is difficult. Also, an opt-in approach to capturing data will miss errors you may not think of on your own.
+**Usually, you don't need this.** You _can_ use this together with `default_integrations=False` if you want to opt into what the Sentry Python SDK captures.
 
-See the [API documentation](https://getsentry.github.io/sentry-python/integrations.html#module-sentry_sdk.integrations.loguru) for more information.
+See [the source code](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/loguru.py) for more information about API.
