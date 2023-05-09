@@ -1,72 +1,72 @@
-import React, { useState, useEffect, Fragment } from "react";
-import { graphql } from "gatsby";
-import Prism from "prismjs";
+// prismjs must be loaded before loading prism-json
+// eslint-disable-next-line simple-import-sort/imports
+import Prism from 'prismjs';
+import 'prismjs/components/prism-json';
 
-import ApiSidebar from "~src/components/apiSidebar";
-import BasePage from "~src/components/basePage";
-import Content from "~src/components/content";
-import SmartLink from "~src/components/smartLink";
+import React, {Fragment, useEffect, useState} from 'react';
+import {graphql} from 'gatsby';
 
-import {
-  OpenAPI,
-  OpenApiPath,
-} from "~src/gatsby/plugins/gatsby-plugin-openapi/types";
+import ApiSidebar from '~src/components/apiSidebar';
+import BasePage from '~src/components/basePage';
+import Content from '~src/components/content';
+import SmartLink from '~src/components/smartLink';
+import {OpenAPI, OpenApiPath} from '~src/gatsby/plugins/gatsby-plugin-openapi/types';
 
-import "prismjs/components/prism-json";
+function Params({params}) {
+  return (
+    <dl className="api-params">
+      {params.map(param => (
+        <React.Fragment key={param.name}>
+          <dt>
+            <div>
+              <code data-index>{param.name}</code>
+              {!!param.schema?.type && (
+                <em>
+                  {' '}
+                  ({param.schema.type}
+                  {param.schema.items && `(${param.schema.items.type})`})
+                </em>
+              )}
+            </div>
+            {!!param.required && <div className="required">REQUIRED</div>}
+          </dt>
 
-const Params = ({ params }) => (
-  <dl className="api-params">
-    {params.map(param => (
-      <React.Fragment key={param.name}>
-        <dt>
-          <div>
-            <code data-index>{param.name}</code>
-            {!!param.schema?.type && (
-              <em>
-                {" "}
-                ({param.schema.type}
-                {param.schema.items && `(${param.schema.items.type})`})
-              </em>
-            )}
-          </div>
-          {!!param.required && <div className="required">REQUIRED</div>}
-        </dt>
+          {!!param.description && (
+            <dd>
+              {param.schema?.enum && (
+                <Fragment>
+                  <b>choices</b>:
+                  <ul>
+                    <code>
+                      {param.schema?.enum.map(e => {
+                        return <li key={e}>{e}</li>;
+                      })}
+                    </code>
+                  </ul>
+                </Fragment>
+              )}
+              {param.schema?.items?.enum && (
+                <Fragment>
+                  <b>choices</b>:
+                  <ul>
+                    <code>
+                      {param.schema?.items?.enum.map(e => {
+                        return <li key={e}>{e}</li>;
+                      })}
+                    </code>
+                  </ul>
+                </Fragment>
+              )}
+              <Content file={param} />
+            </dd>
+          )}
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+}
 
-        {!!param.description && (
-          <dd>
-            {param.schema?.enum && (
-              <Fragment>
-                <b>choices</b>:
-                <ul>
-                  <code>
-                    {param.schema?.enum.map(e => {
-                      return <li key={e}>{e}</li>;
-                    })}
-                  </code>
-                </ul>
-              </Fragment>
-            )}
-            {param.schema?.items?.enum && (
-              <Fragment>
-                <b>choices</b>:
-                <ul>
-                  <code>
-                    {param.schema?.items?.enum.map(e => {
-                      return <li key={e}>{e}</li>;
-                    })}
-                  </code>
-                </ul>
-              </Fragment>
-            )}
-            <Content file={param} />
-          </dd>
-        )}
-      </React.Fragment>
-    ))}
-  </dl>
-);
-
-const Example = props => {
+function Example(props) {
   const selectedTabView: number = props.selectedTabView;
   const data: OpenApiPath = props.data;
   const selectedResponse: number = props.selectedResponse;
@@ -74,9 +74,9 @@ const Example = props => {
   let exampleJson;
   if (data.responses[selectedResponse].content?.examples) {
     exampleJson = JSON.stringify(
-      Object.values(
+      Object.values<any>(
         JSON.parse(data.responses[selectedResponse].content?.examples)
-      )[0]["value"],
+      )[0].value,
       null,
       2
     );
@@ -89,11 +89,7 @@ const Example = props => {
         (exampleJson ? (
           <code
             dangerouslySetInnerHTML={{
-              __html: Prism.highlight(
-                exampleJson,
-                Prism.languages.json,
-                "json"
-              ),
+              __html: Prism.highlight(exampleJson, Prism.languages.json, 'json'),
             }}
           />
         ) : (
@@ -105,14 +101,14 @@ const Example = props => {
             __html: Prism.highlight(
               data.responses[selectedResponse].content.schema,
               Prism.languages.json,
-              "json"
+              'json'
             ),
           }}
         />
       )}
     </pre>
   );
-};
+}
 
 const getScopes = (data, securityScheme) => {
   const obj = data.security.find(e => e[securityScheme]);
@@ -121,22 +117,22 @@ const getScopes = (data, securityScheme) => {
 
 const strFormat = str => {
   const s = str.trim();
-  if (s.endsWith(".")) {
+  if (s.endsWith('.')) {
     return s;
   }
-  return s + ".";
+  return s + '.';
 };
 
-export default props => {
+export default function ApiPage(props) {
   const openApi: OpenAPI = props.data?.openApi || ({} as any);
   const data = openApi?.path;
   const requestBodyContent = data.requestBody?.content;
   const bodyParameters = openApi.childrenOpenApiBodyParameter || [];
   const pathParameters = (openApi.childrenOpenApiPathParameter || []).filter(
-    param => param.in === "path"
+    param => param.in === 'path'
   );
   const queryParameters = (openApi.childrenOpenApiPathParameter || []).filter(
-    param => param.in === "query"
+    param => param.in === 'query'
   );
   const contentType = requestBodyContent?.content_type;
 
@@ -145,7 +141,7 @@ export default props => {
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
 
-  if (["put", "options", "delete"].includes(data.method.toLowerCase())) {
+  if (['put', 'options', 'delete'].includes(data.method.toLowerCase())) {
     apiExample.push(` -X ${data.method.toUpperCase()}`);
   }
 
@@ -155,13 +151,11 @@ export default props => {
 
   if (bodyParameters.length) {
     const requestBodyExample =
-      (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) ||
-      {};
+      (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) || {};
 
-    if (contentType === "multipart/form-data") {
+    if (contentType === 'multipart/form-data') {
       Object.entries(requestBodyExample).map(
-        ([key, value]) =>
-          value !== undefined && apiExample.push(` -F ${key}=${value}`)
+        ([key, value]) => value !== undefined && apiExample.push(` -F ${key}=${value}`)
       );
     } else {
       apiExample.push(` -d '${JSON.stringify(requestBodyExample)}'`);
@@ -172,8 +166,8 @@ export default props => {
 
   const [selectedTabView, selectTabView] = useState(0);
   const tabViews = data.responses[selectedResponse].content?.schema
-    ? ["RESPONSE", "SCHEMA"]
-    : ["RESPONSE"];
+    ? ['RESPONSE', 'SCHEMA']
+    : ['RESPONSE'];
 
   useEffect(() => {
     Prism.highlightAll();
@@ -184,9 +178,7 @@ export default props => {
         <div className="col-12">
           <div className="api-block">
             <div className="api-block-header request">
-              <span className="api-request-block-verb">
-                {data.method.toUpperCase()}
-              </span>{" "}
+              <span className="api-request-block-verb">{data.method.toUpperCase()}</span>{' '}
               <span>{data.apiPath}</span>
             </div>
           </div>
@@ -229,18 +221,17 @@ export default props => {
 
               <div>
                 <div>
-                  {"You need to "}
-                  <SmartLink to={"/api/auth"}>
+                  {'You need to '}
+                  <SmartLink to="/api/auth">
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
-                <code>{"<auth_token>"}</code> requires one of the following
-                scopes:
+                <code>{'<auth_token>'}</code> requires one of the following scopes:
               </div>
 
               <ul>
-                {getScopes(data, "auth_token").map(scope => (
-                  <li key={scope} style={{ fontWeight: "bold" }}>
+                {getScopes(data, 'auth_token').map(scope => (
+                  <li key={scope} style={{fontWeight: 'bold'}}>
                     <code>{scope}</code>
                   </li>
                 ))}
@@ -250,9 +241,7 @@ export default props => {
         </div>
         <div className="col-6">
           <div className="api-block">
-            <pre className="api-block-example request">
-              {apiExample.join(" \\\n")}
-            </pre>
+            <pre className="api-block-example request">{apiExample.join(' \\\n')}</pre>
           </div>
           <div className="api-block">
             <div className="api-block-header response">
@@ -260,7 +249,7 @@ export default props => {
                 {tabViews.map((view, i) => (
                   <span
                     key={view}
-                    className={`tab ${selectedTabView === i && "selected"}`}
+                    className={`tab ${selectedTabView === i && 'selected'}`}
                     onClick={() => selectTabView(i)}
                   >
                     {view}
@@ -272,8 +261,9 @@ export default props => {
                   (res, i) =>
                     res.status_code && (
                       <button
-                        className={`response-status-btn ${selectedResponse ===
-                          i && "selected"}`}
+                        className={`response-status-btn ${
+                          selectedResponse === i && 'selected'
+                        }`}
                         key={res.status_code}
                         onClick={() => {
                           selectResponse(i);
@@ -290,17 +280,17 @@ export default props => {
               data={data}
               selectedTabView={selectedTabView}
               selectedResponse={selectedResponse}
-            ></Example>
+            />
           </div>
         </div>
       </div>
     </BasePage>
   );
-};
+}
 
 export const pageQuery = graphql`
   query OpenApiQuery($id: String) {
-    openApi(id: { eq: $id }) {
+    openApi(id: {eq: $id}) {
       id
       childOpenApiPathDescription {
         childMdx {

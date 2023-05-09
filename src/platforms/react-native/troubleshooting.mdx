@@ -9,7 +9,7 @@ sidebar_order: 1000
 iOS 15 introduced a feature called pre-warm that affected the calculations the Sentry SDK does.
 This issue was fixed in version [4.1.1](https://github.com/getsentry/sentry-react-native/releases/tag/4.1.1) of the SDK. Please update to this version or a later one.
 
-For more details, [see the troubleshooting page for the iOS SDK](https://docs.sentry.io/platforms/apple/guides/ios/troubleshooting/).
+For more details, [see the troubleshooting page for the iOS SDK](/platforms/apple/troubleshooting/#wrong-app-start-data).
 
 ## Unhandled Promise Rejections
 
@@ -171,9 +171,9 @@ If you're using `React Navigation 5` and you're not receiving transactions anymo
 
 If you experience mismatched line numbers on [sentry.io](https://sentry.io) when using RAM Bundles, this is due to a [bug](https://github.com/facebook/metro/issues/399) on the Metro tooling.
 
-## Uploading source maps from Xcode Could
+## Uploading source maps from Xcode Cloud
 
-The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds use `CI_BUILD_NUMBER` variable. Add the following code to `Bundle React Native code and images` build phase to enable correct source maps uploads. 
+The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds use `CI_BUILD_NUMBER` variable. Add the following code to `Bundle React Native code and images` build phase to enable correct source maps uploads.
 
 ```
 export SENTRY_DIST=$CI_BUILD_NUMBER
@@ -218,19 +218,19 @@ module.exports = {
   dependency: {
     platforms: {
       ios: {
-        sharedLibraries: ['libz']
+        sharedLibraries: ["libz"],
       },
       android: {
-        packageInstance: 'new RNSentryPackage()'
-      }
+        packageInstance: "new RNSentryPackage()",
+      },
     },
     hooks: {
       postlink:
-        'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android',
+        "node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android",
       postunlink:
-        'node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android --uninstall'
-    }
-  }
+        "node node_modules/@sentry/wizard/dist/bin.js -i reactNative -p ios android --uninstall",
+    },
+  },
 };
 ```
 
@@ -242,10 +242,10 @@ module.exports = {
     platforms: {
       ios: {},
       android: {
-        packageInstance: 'new RNSentryPackage()'
-      }
-    }
-  }
+        packageInstance: "new RNSentryPackage()",
+      },
+    },
+  },
 };
 ```
 
@@ -278,19 +278,24 @@ When you remove the environmental variable in front of your build command, your 
 If you're using [expo-dev-client](https://docs.expo.dev/development/introduction/#what-is-an-expo-dev-client), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
 
 ```javascript
-import * as Sentry from 'sentry-expo';
-import * as Network from 'expo-network';
+import * as Sentry from "sentry-expo";
+import * as Network from "expo-network";
 
 const devServerPort = 8081;
 let devServerIpAddress: string | null = null;
-Network.getIpAddressAsync().then((ip) => {devServerIpAddress = ip});
+Network.getIpAddressAsync().then((ip) => {
+  devServerIpAddress = ip;
+});
 
 Sentry.init({
   tracesSampleRate: 1.0,
   integrations: [
     new Sentry.Native.ReactNativeTracing({
       shouldCreateSpanForRequest: (url) => {
-        return !__DEV__ || !url.startsWith(`http://${devServerIpAddress}:${devServerPort}/logs`);
+        return (
+          !__DEV__ ||
+          !url.startsWith(`http://${devServerIpAddress}:${devServerPort}/logs`)
+        );
       },
     }),
   ],

@@ -20,7 +20,7 @@ message, or URLs in a given exception.
 
 It ignores errors that start with `Script error` or `Javascript error: Script error` by default.
 
-To configure this integration, use the `ignoreErrors`, `denyUrls`,
+To configure this integration, use the `ignoreErrors`, `ignoreTransactions`, `denyUrls`,
 and `allowUrls` SDK options directly. Keep in mind that `denyURLs` and `allowURLs`
 only work for captured exceptions, not raw message events.
 
@@ -106,7 +106,7 @@ Here is a code example of how this could be implemented:
 ```javascript
 document
   .querySelector("#get-reviews-btn")
-  .addEventListener("click", async event => {
+  .addEventListener("click", async (event) => {
     const movie = event.target.dataset.title;
     try {
       const reviews = await fetchMovieReviews(movie);
@@ -187,17 +187,17 @@ Available options:
 
 To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
 
-To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls: 
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 
   integrations: [
     new Sentry.Integrations.Breadcrumbs({
-      console: false
-    })
-  ]
+      console: false,
+    }),
+  ],
 });
 ```
 
@@ -208,10 +208,9 @@ This example removes the default-enabled integration for adding breadcrumbs to t
 ```javascript
 Sentry.init({
   // ...
-
-  integrations: function(integrations) {
+  integrations: function (integrations) {
     // integrations will be all default integrations
-    return integrations.filter(function(integration) {
+    return integrations.filter(function (integration) {
       return integration.name !== "Breadcrumbs";
     });
   },

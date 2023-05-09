@@ -31,7 +31,7 @@ const app = new Koa();
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
 app.on("error", (err, ctx) => {
-  Sentry.withScope(scope => {
+  Sentry.withScope((scope) => {
     scope.setSDKProcessingMetadata({ request: ctx.request });
     Sentry.captureException(err);
   });
@@ -49,7 +49,6 @@ const Sentry = require("@sentry/node");
 const { stripUrlQueryAndFragment } = require("@sentry/utils");
 const Koa = require("koa");
 const app = new Koa();
-const domain = require("domain");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -64,28 +63,25 @@ Sentry.init({
   ],
 });
 
-// not mandatory, but adding domains does help a lot with breadcrumbs
 const requestHandler = (ctx, next) => {
   return new Promise((resolve, reject) => {
-    const local = domain.create();
-    local.add(ctx);
-    local.on("error", err => {
-      ctx.status = err.status || 500;
-      ctx.body = err.message;
-      ctx.app.emit("error", err, ctx);
-      reject(err);
-    });
-    local.run(async () => {
-      Sentry.getCurrentHub().configureScope(scope =>
-        scope.addEventProcessor(event =>
+    Sentry.runWithAsyncContext(async () => {
+      const hub = Sentry.getCurrentHub();
+      hub.configureScope((scope) =>
+        scope.addEventProcessor((event) =>
           Sentry.addRequestDataToEvent(event, ctx.request, {
             include: {
               user: false,
             },
-          });
-        );
+          })
+        )
       );
-      await next();
+
+      try {
+        await next();
+      } catch (err) {
+        reject(err);
+      }
       resolve();
     });
   });
@@ -99,7 +95,9 @@ const tracingMiddleWare = async (ctx, next) => {
   // connect to trace of upstream app
   let traceparentData;
   if (ctx.request.get("sentry-trace")) {
-    traceparentData = Sentry.extractTraceparentData(ctx.request.get("sentry-trace"));
+    traceparentData = Sentry.extractTraceparentData(
+      ctx.request.get("sentry-trace")
+    );
   }
 
   const transaction = Sentry.startTransaction({
@@ -111,7 +109,7 @@ const tracingMiddleWare = async (ctx, next) => {
   ctx.__sentry_transaction = transaction;
 
   // We put the transaction on the scope so users can attach children to it
-  Sentry.getCurrentHub().configureScope(scope => {
+  Sentry.getCurrentHub().configureScope((scope) => {
     scope.setSpan(transaction);
   });
 
@@ -137,7 +135,7 @@ app.use(tracingMiddleWare);
 // usual error handler
 app.on("error", (err, ctx) => {
   Sentry.withScope((scope) => {
-    scope.addEventProcessor(event => {
+    scope.addEventProcessor((event) => {
       return Sentry.addRequestDataToEvent(event, ctx.request);
     });
     Sentry.captureException(err);

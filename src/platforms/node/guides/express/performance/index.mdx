@@ -35,8 +35,8 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// RequestHandler creates a separate execution context using domains, so that every
-// transaction/span/breadcrumb is attached to its own Hub instance
+// RequestHandler creates a separate execution context, so that all
+// transactions/spans/breadcrumbs are isolated across requests
 app.use(Sentry.Handlers.requestHandler());
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler());
@@ -63,7 +63,7 @@ const transaction = Sentry.startTransaction({
 // Note that we set the transaction as the span on the scope.
 // This step makes sure that if an error happens during the lifetime of the transaction
 // the transaction context will be attached to the error event
-Sentry.configureScope(scope => {
+Sentry.configureScope((scope) => {
   scope.setSpan(transaction);
 });
 
@@ -71,7 +71,7 @@ let request;
 
 try {
   // this should generate an http span
-  request = http.get("http://sentry.io", res => {
+  request = http.get("http://sentry.io", (res) => {
     console.log(`STATUS: ${res.statusCode}`);
     console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
   });
@@ -132,6 +132,7 @@ app.get("/success", function successHandler(req, res) {
 ## Connecting Services
 
 If you are also using Performance Monitoring for [JavaScript](/platforms/javascript/performance/), depending on where your request originates, you can connect traces:
+
 1. For requests that start in your backend, by [adding a meta tag](/platforms/javascript/performance/connect-services/#pageload) in your HTML template that contains tracing information.
 2. For requests that start in JavaScript, by the SDK [setting a header](/platforms/javascript/performance/connect-services/#navigation-and-other-xhr-requests) on requests to your backend.
 

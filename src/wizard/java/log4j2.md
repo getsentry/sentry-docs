@@ -68,7 +68,6 @@ Next, set your log levels. You can learn more about <a href=https://docs.sentry.
 />
 ```
 
-
 Last, create an intentional error, so you can test that everything is working:
 
 ### Java
@@ -99,4 +98,4 @@ try {
 
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
-If you're an existing user and have disabled alerts, you won't receive this email.  
+If you're an existing user and have disabled alerts, you won't receive this email.

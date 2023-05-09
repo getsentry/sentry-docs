@@ -1,4 +1,4 @@
-```javascript {tabTitle: JavaScript}
+```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
 import { HttpClient as HttpClientIntegration } from "@sentry/integrations";
 
@@ -25,38 +25,76 @@ Sentry.init({
 });
 ```
 
-```javascript {tabTitle: CDN}
+```html {tabTitle: Loader}
 <script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
   crossorigin="anonymous"
 ></script>
-
 <script
   src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/httpclient.min.js"
   integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new HttpClientIntegration({
-      // This array can contain tuples of `[begin, end]` (both inclusive),
-      // single status codes, or a combination of both.
-      // default: [[500, 599]]
-      failedRequestStatusCodes: [[500, 505], 507],
+<script>
+  Sentry.onLoad(function () {
+    Sentry.init({
+      integrations: [
+        new Sentry.Integrations.HttpClientIntegration({
+          // This array can contain tuples of `[begin, end]` (both inclusive),
+          // single status codes, or a combination of both.
+          // default: [[500, 599]]
+          failedRequestStatusCodes: [[500, 505], 507],
 
-      // This array can contain Regexes, strings, or a combination of both.
-      // default: [/.*/]
-      failedRequestTargets: [
-        "http://example.com/api/test",
-        /(staging\.)?mypage\.com/,
+          // This array can contain Regexes, strings, or a combination of both.
+          // default: [/.*/]
+          failedRequestTargets: [
+            "http://example.com/api/test",
+            /(staging\.)?mypage\.com/,
+          ],
+        }),
       ],
-    }),
-  ],
 
-  // This option is required for capturing headers and cookies.
-  sendDefaultPii: true,
-});
+      // This option is required for capturing headers and cookies.
+      sendDefaultPii: true,
+    });
+  });
+</script>
+```
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/httpclient.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      new Sentry.Integrations.HttpClientIntegration({
+        // This array can contain tuples of `[begin, end]` (both inclusive),
+        // single status codes, or a combination of both.
+        // default: [[500, 599]]
+        failedRequestStatusCodes: [[500, 505], 507],
+
+        // This array can contain Regexes, strings, or a combination of both.
+        // default: [/.*/]
+        failedRequestTargets: [
+          "http://example.com/api/test",
+          /(staging\.)?mypage\.com/,
+        ],
+      }),
+    ],
+
+    // This option is required for capturing headers and cookies.
+    sendDefaultPii: true,
+  });
+</script>
 ```

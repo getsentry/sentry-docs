@@ -1,4 +1,3 @@
-
 Sentry's SDK includes its own internal logger to report diagnostics that may be useful when troubleshooting your Sentry configuration. To enable logging, set the `Debug` option to `true`:
 
 ```csharp
@@ -8,6 +7,7 @@ options =>
 
     // Enable debug mode to write diagnostic messages
     options.Debug = true;
+
     // By default it's already the most verbose level: Debug
     // You can use this make this less noisy by changing it to
     // a less verbose level such as `Information` or `Warning`.
@@ -15,69 +15,63 @@ options =>
 });
 ```
 
+Logging details will be written to one of the logger implementations described below and won't be sent to Sentry automatically.
+
 ## Customize Implementation
 
 By default, Sentry will write diagnostic messages to console. This may not be optimal in some circumstances; for example, when running applications that don't have a visible console window attached.
 
-To use a custom implementation of `IDiagnosticLogger`, you can pass it to the `DiagnosticLogger` option. Sentry comes with two implementations out of the box: `ConsoleDiagnosticLogger` and `TraceDiagnosticLogger`.
+To change the diagnostic logger, pass it to the `DiagnosticLogger` option during initialization.
 
 ```csharp
-// Provide a custom logger
+options.Debug = true;
+options.DiagnosticLogger = new ExampleDiagnosticLogger(SentryLevel.Debug);
+```
+
+Sentry comes with several implementations out of the box:
+
+<ConfigKey name="ConsoleDiagnosticLogger">
+
+Writes diagnostic messages to standard output, using `Console.WriteLine`. This is the default logger used if no other logger is specified.
+
+</ConfigKey>
+
+<ConfigKey name="TraceDiagnosticLogger">
+
+Writes diagnostic messages to all registered trace listeners, using `Trace.WriteLine`. This is useful for technologies that don't have a Console to see the log messages, such as Windows Forms, WPF, UWP, and ASP.NET.
+
+```csharp
 options.DiagnosticLogger = new TraceDiagnosticLogger(SentryLevel.Debug);
 ```
 
-The logger `TraceDiagnosticLogger` in the example uses the [.NET's Trace class](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.trace). As a result, you can view the SDK logs inside Visual Studio's Debug log window, which is useful for technologies that don't have a Console to see the log messages, such as `WinForms`, `WPF` and `ASP.NET`.
+Visual Studio and other IDEs will register a trace listener automatically. When running your application in Visual Studio, you can view the SDK's diagnostic logs inside the `Debug` output window.
 
-You can also create your own implementation of `IDiagnosticLogger` to fully customize logging behavior. For example, to naively append diagnostic messages to a file:
+See the [`Trace`](https://learn.microsoft.com/dotnet/api/system.diagnostics.trace) documentation for more information about registering custom trace listeners.
+
+</ConfigKey>
+
+<ConfigKey name="FileDiagnosticLogger">
+
+_New as of Sentry .NET 3.30.0_
+
+Writes diagnostic messages to a file at the path you specify. This is useful when you need to gather SDK diagnostic logs without mixing them with other console or trace messages. It's also useful for technologies that don't have a console, such as Windows Forms, WPF, UWP, and ASP.NET, for seeing the log messages when you're not running in Visual Studio.
+
+If you need to attach diagnostic logs to a GitHub issue or customer support request, this is the easiest way to generate them:
 
 ```csharp
-using System;
-using System.Globalization;
-using System.IO;
-using Sentry.Extensibility;
-using Sentry.Protocol;
-
-public class FileAppenderDiagnosticLogger : IDiagnosticLogger, IDisposable
-{
-    private readonly StreamWriter _writer;
-    private readonly SentryLevel _minimalLevel;
-
-    public FileAppenderDiagnosticLogger(string filePath, SentryLevel minimalLevel)
-    {
-        _writer = new StreamWriter(filePath);
-        _minimalLevel = minimalLevel;
-    }
-
-    public bool IsEnabled(SentryLevel level) => level >= _minimalLevel;
-
-    public void Log(SentryLevel logLevel, string message, Exception exception = null, params object[] args)
-    {
-        lock (_writer)
-        {
-            _writer.Write("{0} - {1}: ", DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.ffffZ", DateTimeFormatInfo.InvariantInfo), logLevel);
-            _writer.Write("");
-            _writer.Write(message, args);
-            if (exception is Exception)
-            {
-                _writer.Write("Exception: ");
-                _writer.Write(exception);
-            }
-            _writer.WriteLine();
-            _writer.Flush();
-        }
-    }
-
-    public void Dispose()
-    {
-        lock (_writer)
-        {
-            _writer.Dispose();
-        }
-    }
-}
+options.DiagnosticLogger = new FileDiagnosticLogger("/path/to/log.txt");
 ```
+
+<Alert level="warning" title="Warning">
+
+The `FileDiagnosticLogger` implementation will overwrite any existing file, and will grow indefinitely. You should avoid using it long-term in a production environment.
+
+</Alert>
+
+</ConfigKey>
+
 <Note>
 
-For a production environment you'd want to extend this so the file doesn't grow indefinitely and is eventually rotated to avoid filling up the disk space.
+You can also create your own diagnostic logger class, either by implementing the `IDiagnosticLogger` interface, or inherting from the `DiagnosticLogger` abstract class and overriding the `LogMessage` method.
 
 </Note>

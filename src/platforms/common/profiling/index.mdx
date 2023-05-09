@@ -6,12 +6,12 @@ supported:
   - apple
   - python
   - rust
+  - ruby
 notSupported:
   - unity
   - dart
   - flutter
   - native
-  - ruby
   - javascript
   - javascript.vue
   - react-native
@@ -29,11 +29,11 @@ notSupported:
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
 
-<PlatformSection supported={["apple", "android", "python", "node"]}>
+<PlatformSection supported={["ruby"]}>
 
 <Note>
 
-Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony. If you have any questions or feedback, please email us at [profiling@sentry.io](mailto:profiling@sentry.io).
+Ruby Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony.
 
 </Note>
 
@@ -43,7 +43,7 @@ Profiling is currently in beta. Beta features are still in-progress and may have
 
 <Note>
 
-Rust Profiling is currently in alpha. Alpha features are still in-progress and may have bugs. We recognize the irony. If you have any questions or feedback, please email us at [profiling@sentry.io](mailto:profiling@sentry.io).
+Rust Profiling is currently in alpha. Alpha features are still in-progress and may have bugs. We recognize the irony.
 
 </Note>
 
@@ -57,11 +57,22 @@ Profiling depends on Sentry’s performance monitoring product being enabled bef
 
 <PlatformSection supported={["apple"]}>
 
-```swift
+```swift {tabTitle:Swift}
+import Sentry
+
 SentrySDK.start { options in
     options.dsn = "___DSN___"
     options.tracesSampleRate = 1.0
 }
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___DSN___";
+    options.tracesSampleRate = @1.0;
+}];
 ```
 
 </PlatformSection>
@@ -86,6 +97,17 @@ sentry_sdk.init(
   dsn="___DSN___",
   traces_sample_rate=1.0,
 )
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["ruby"]}>
+
+```ruby
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  config.traces_sample_rate = 1.0
+end
 ```
 
 </PlatformSection>
@@ -111,12 +133,30 @@ Check out the <PlatformLink to="/performance/">performance setup documentation</
 
 <PlatformSection supported={["apple"]}>
 
-```swift
+<Note>
+
+iOS profiling is available starting in SDK version `8.3.1`.
+
+</Note>
+
+```swift {tabTitle:Swift}
+import Sentry
+
 SentrySDK.start { options in
     options.dsn = "___DSN___"
-    options.tracesSampleRate = 1.0
-    options.profilesSampleRate = 1.0
+    options.tracesSampleRate = 1.0 // tracing must be enabled for profiling
+    options.profilesSampleRate = 1.0 // see also `profilesSampler` if you need custom sampling logic
 }
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___DSN___";
+    options.tracesSampleRate = @1.0; // tracing must be enabled for profiling
+    options.profilesSampleRate = @1.0; // see also `profilesSampler` if you need custom sampling logic
+}];
 ```
 
 <Note>
@@ -128,6 +168,12 @@ The <PlatformIdentifier name="profiles-sample-rate" /> setting is _relative_ to 
 </PlatformSection>
 
 <PlatformSection supported={["android"]}>
+
+<Note>
+
+Android profiling is available starting in SDK version `6.16.0`.
+
+</Note>
 
 In `AndroidManifest.xml`:
 
@@ -151,17 +197,29 @@ The `io.sentry.traces.profiling.sample-rate` setting is _relative_ to the `io.se
 
 <Note>
 
-Python profiling beta is available starting in SDK version `1.16.0`.
+Python profiling is available starting in SDK version `1.18.0`.
 
 </Note>
 
 ```python
+import sentry_sdk
+
+def profiles_sampler(sampling_context):
+    # ...
+    # return a number between 0 and 1 or a boolean
+
 sentry_sdk.init(
-  dsn="___DSN___",
-  traces_sample_rate=1.0,
-  _experiments={
-    "profiles_sample_rate": 1.0,
-  },
+    dsn="___DSN___",
+    traces_sample_rate=1.0,
+
+    # To set a uniform sample rate
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production,
+    profiles_sample_rate=1.0,
+
+    # Alternatively, to control sampling dynamically
+    profiles_sampler=profiles_sampler
 )
 ```
 
@@ -171,25 +229,56 @@ The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to 
 
 </Note>
 
+### Upgrading from older SDK versions
+
+The feature was experimental prior to version `1.17.0`. To update to the latest SDK, remove `profiles_sample_rate` from `_experiments` and set it in the top-level options.
+
+```python
+sentry_sdk.init(
+    dsn="___DSN___",
+    traces_sample_rate=1.0,
+    _experiments={
+      "profiles_sample_rate": 1.0,  # for versions before 1.17.0
+    },
+)
+```
+
 </PlatformSection>
 
-<PlatformSection supported={["node"]}>
+<PlatformSection supported={["ruby"]}>
 
-```javascript
-import * as Sentry from "@sentry/node";
-import { ProfilingIntegration } from "@sentry/profiling-node";
+<Note>
 
-Sentry.init({
-  dsn: "___DSN___",
-  tracesSampleRate: 1,
-  profilesSampleRate: 1,
-  integrations: [new ProfilingIntegration()],
-});
+Ruby profiling beta is available starting in SDK version `5.9.0`.
+
+</Note>
+
+We use the [`stackprof` gem](https://github.com/tmm1/stackprof) to collect profiles for Ruby.
+
+First add `stackprof` to your `Gemfile` and make sure it is loaded before `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'stackprof'
+gem 'sentry-ruby'
+```
+
+Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your sentry initializer.
+
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "___DSN___"
+  config.traces_sample_rate = 1.0
+  config.profiles_sample_rate = 1.0
+end
 ```
 
 <Note>
 
-The <PlatformIdentifier name="profilesSampleRate" /> setting is _relative_ to the <PlatformIdentifier name="tracesSampleRate" /> setting.
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
 
 </Note>
 
@@ -205,7 +294,7 @@ Rust Profiling alpha is available starting in SDK version `0.29.0`.
 
 In order to use Profiling, you first need to enable the `profiling` feature in the `sentry` dependency inside the project `Cargo.toml`:
 
-```cargo
+```toml
 [dependencies]
 sentry = { version = "{{ packages.version('sentry.rust') }}", features = ["profiling"] }
 ```
@@ -241,3 +330,11 @@ If you don't see any profiling data in [sentry.io](https://sentry.io), you can t
 - Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
 - If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
 - Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
+
+<PlatformSection supported={["ruby"]}>
+
+### Limitations
+
+Profiles for multi-threaded servers like `puma` might not capture frames correctly when async I/O is happening. This is a limitation of `stackprof`.
+
+</PlatformSection>
