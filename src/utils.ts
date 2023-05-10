@@ -1,5 +1,4 @@
 import {useEffect} from 'react';
-import type {Transaction} from '@sentry/browser';
 import qs from 'query-string';
 
 type ClickOutsideCallback = (event: MouseEvent) => void;
@@ -82,23 +81,3 @@ export const marketingUrlParams = (): URLQueryObject => {
 
   return marketingParams;
 };
-
-export function getCurrentTransaction(): Transaction | undefined {
-  try {
-    // getCurrentHub() can actually return undefined, as we are using the Loader Script
-    // so we guard defensively against all of these existing.
-    return window.Sentry.getCurrentHub().getScope().getTransaction();
-  } catch {
-    return undefined;
-  }
-}
-
-export function captureException(exception: unknown): void {
-  try {
-    // Sentry may not be available, as we are using the Loader Script
-    // so we guard defensively against all of these existing.
-    window.Sentry.captureException(exception);
-  } catch {
-    // ignore
-  }
-}
