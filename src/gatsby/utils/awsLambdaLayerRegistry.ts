@@ -1,5 +1,6 @@
-import {BASE_REGISTRY_URL} from './shared';
 import axios from 'axios';
+
+import {BASE_REGISTRY_URL} from './shared';
 
 type LayerData = {
   account_number: string;
