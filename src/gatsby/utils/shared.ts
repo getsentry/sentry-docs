@@ -1,1 +1,1 @@
-export const BASE_REGISTRY_URL = 'http://release-registry.services.sentry.io';
+export const BASE_REGISTRY_URL = 'https://release-registry.services.sentry.io';
