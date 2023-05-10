@@ -6,7 +6,7 @@ import React from 'react';
 import PageContext from '~src/components/pageContext';
 
 const sentryEnvironment = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
-const sentryDsn = process.env.GATSBY_SENTRY_DSN;
+const sentryLoaderUrl = process.env.SENTRY_LOADER_URL;
 
 export const wrapPageElement = ({element, props: {pageContext}}) => (
   <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>
@@ -34,11 +34,7 @@ export const onPreRenderHTML = ({getHeadComponents}) => {
 
 function SentryLoaderScript() {
   return (
-    <script
-      key="sentry-loader-script"
-      src={`https://js.sentry-cdn.com/${sentryDsn}.min.js`}
-      crossOrigin="anonymous"
-    />
+    <script key="sentry-loader-script" src={sentryLoaderUrl} crossOrigin="anonymous" />
   );
 }
 
@@ -67,7 +63,7 @@ Sentry.onLoad(function() {
 
 export const onRenderBody = ({setHeadComponents}) => {
   // Sentry SDK setup
-  if (sentryDsn) {
+  if (sentryLoaderUrl) {
     setHeadComponents([SentryLoaderScript(), SentryLoaderConfig()]);
   }
 

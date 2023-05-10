@@ -13,8 +13,8 @@ const getPlugins = reporter => {
   }
   return [
     new SentryWebpackPlugin({
-      org: 'sentry',
-      project: 'docs',
+      org: process.env.SENTRY_PROJECT,
+      project: process.env.SENTRY_ORG,
       authToken,
       include: ['public'],
       stripPrefix: ['public/'],
