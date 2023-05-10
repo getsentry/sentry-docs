@@ -1,11 +1,11 @@
 import React from 'react';
-import * as Sentry from '@sentry/gatsby';
 
 import Layout from '../components/layout';
 import SEO from '../components/seo';
+import {getCurrentTransaction} from '../utils';
 
 function NotFoundPage() {
-  const tx = Sentry.getCurrentHub().getScope().getTransaction();
+  const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('not_found');
   }
