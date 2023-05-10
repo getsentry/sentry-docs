@@ -3,12 +3,12 @@
 /* eslint import/no-nodejs-modules:0 */
 
 import queries from './utils/algolia';
-import AppRegistry from './utils/appRegistry';
-import PackageRegistry from './utils/packageRegistry';
+import appRegistry from './utils/appRegistry';
+import packageRegistry from './utils/packageRegistry';
 import resolveOpenAPI from './utils/resolveOpenAPI';
 
-const packages = new PackageRegistry();
-const apps = new AppRegistry();
+const packages = packageRegistry;
+const apps = appRegistry;
 
 const root = `${__dirname}/../..`;
 
