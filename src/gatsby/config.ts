@@ -86,6 +86,9 @@ const getPlugins = () => {
   ].filter(Boolean);
 
   const plugins = [
+    {
+      resolve: '@sentry/gatsby',
+    },
     'gatsby-plugin-sharp',
     'gatsby-plugin-sass',
     'gatsby-plugin-zeit-now',
