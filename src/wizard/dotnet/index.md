@@ -34,7 +34,7 @@ SentrySdk.Init(options =>
     // When debug is enabled, the Sentry client will emit detailed debugging information to the console.
     // This might be helpful, or might interfere with the normal operation of your application.
     // We enable it here for demonstration purposes when first trying Sentry.
-    // You should not do this in your applications unless you are troubleshooting issues with Sentry.
+    // You shouldn't do this in your applications unless you're troubleshooting issues with Sentry.
     options.Debug = true;
 
     // This option is recommended, which enables Sentry's "Release Health" feature.
