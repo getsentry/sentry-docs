@@ -1,4 +1,5 @@
 import {BASE_REGISTRY_URL} from './shared';
+import axios from 'axios';
 
 type LayerData = {
   account_number: string;
@@ -21,8 +22,8 @@ export default class AwsLambdaLayerRegistry {
   getLayerMap = async () => {
     if (!this.indexCache) {
       try {
-        const result = await fetch(`${BASE_REGISTRY_URL}/aws-lambda-layers`);
-        this.indexCache = await result.json();
+        const result = await axios(`${BASE_REGISTRY_URL}/aws-lambda-layers`);
+        this.indexCache = result.data;
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch index for aws lambda layers: ${err.message}`);
