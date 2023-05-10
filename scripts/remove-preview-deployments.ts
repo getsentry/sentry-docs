@@ -9,7 +9,6 @@
 // Note: That by default, the script will only remove deployments that are older than 30 days.
 
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
