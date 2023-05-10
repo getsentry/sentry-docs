@@ -30,7 +30,7 @@ export default class PackageRegistry {
     if (!this.indexCache) {
       try {
         const result = await axios(`${BASE_REGISTRY_URL}/sdks`);
-        this.indexCache = await result.data;
+        this.indexCache = result.data;
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch index for package registry: ${err.message}`);
