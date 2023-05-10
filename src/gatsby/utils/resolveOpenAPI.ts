@@ -4,8 +4,6 @@
 
 import {promises as fs} from 'fs';
 
-import axios from 'axios';
-
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 const SENTRY_API_SCHEMA_SHA = 'd8c2c3ea3111309ce91f6e1eda786cfc0706e1b7';
@@ -25,10 +23,10 @@ async function main() {
       );
     }
   }
-  const response = await axios.get(
+  const response = await fetch(
     `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
   );
-  return response.data;
+  return await response.json();
 }
 
 export default main;

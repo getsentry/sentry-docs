@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 import {BASE_REGISTRY_URL} from './shared';
 
 type FileData = {
@@ -30,10 +28,8 @@ export default class AppRegistry {
   getList = async () => {
     if (!this.indexCache) {
       try {
-        const result = await axios({
-          url: `${BASE_REGISTRY_URL}/apps`,
-        });
-        this.indexCache = result.data;
+        const result = await fetch(`${BASE_REGISTRY_URL}/apps`);
+        this.indexCache = await result.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch index for app registry: ${err.message}`);
