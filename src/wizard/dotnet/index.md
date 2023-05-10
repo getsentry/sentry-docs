@@ -19,23 +19,34 @@ Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
 dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
 ```
 
-Initialize the SDK as early as possible, like in the `Main` method in `Program.cs`:
+Initialize the SDK as early as possible. For example, call `SentrySdk.Init` in your `Program.cs` file:
 
 ```csharp
-using (SentrySdk.Init(o =>
-    {
-        o.Dsn = "___PUBLIC_DSN___";
-        // When configuring for the first time, to see what the SDK is doing:
-        o.Debug = true;
-        // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
-        // We recommend adjusting this value in production.
-        o.TracesSampleRate = 1.0;
-        // Enable Global Mode if running in a client app
-        o.IsGlobalModeEnabled = true;
-    }))
+using Sentry;
+
+SentrySdk.Init(options =>
 {
-    // App code goes here. Dispose the SDK before exiting to flush events.
-}
+    // A Sentry Data Source Name (DSN) is required.
+    // See https://docs.sentry.io/product/sentry-basics/dsn-explainer/
+    // You can set it in the SENTRY_DSN environment variable, or you can set it in code here.
+    options.Dsn = "___PUBLIC_DSN___";
+
+    // When debug is enabled, the Sentry client will emit detailed debugging information to the console.
+    // This might be helpful, or might interfere with the normal operation of your application.
+    // We enable it here for demonstration purposes when first trying Sentry.
+    // You shouldn't do this in your applications unless you're troubleshooting issues with Sentry.
+    options.Debug = true;
+
+    // This option is recommended. It enables Sentry's "Release Health" feature.
+    options.AutoSessionTracking = true;
+
+    // This option is recommended for client applications only. It ensures all threads use the same global scope.
+    // If you're writing a background service of any kind, you should remove this.
+    options.IsGlobalModeEnabled = true;
+
+    // This option will enable Sentry's tracing features. You still need to start transactions and spans.
+    options.EnableTracing = true;
+});
 ```
 
 Verify Sentry is correctly configured by sending a message:
