@@ -60,7 +60,7 @@ export default function ApiSidebar() {
                             context: {title: contextTitle},
                           },
                         }) => (
-                          <SidebarLink key={childPath} to={path}>
+                          <SidebarLink key={path} to={childPath}>
                             {contextTitle}
                           </SidebarLink>
                         )

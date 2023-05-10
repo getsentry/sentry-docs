@@ -1,4 +1,5 @@
 import {useEffect} from 'react';
+import qs from 'query-string';
 
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
@@ -58,4 +59,25 @@ export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] =>
       b.context.sidebar_title || b.context.title
     );
   });
+};
+
+type URLQueryObject = {
+  [key: string]: string;
+};
+
+const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
+
+export const marketingUrlParams = (): URLQueryObject => {
+  const query = qs.parse(window.location.search);
+  const marketingParams: Record<string, string> = Object.keys(query).reduce((a, k) => {
+    const matcher = paramsToSync.find(m => m.test(k));
+    return matcher ? {...a, [k]: query[k]} : a;
+  }, {});
+
+  // add in original_referrer
+  if (document.referrer && !marketingParams.original_referrer) {
+    marketingParams.original_referrer = document.referrer;
+  }
+
+  return marketingParams;
 };

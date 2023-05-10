@@ -26,6 +26,10 @@ const getPlugins = reporter => {
 function main({actions, reporter}) {
   actions.setWebpackConfig({
     resolve: {
+      fallback: {
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+      },
       alias: {
         '~src': path.join(path.resolve(__dirname, '..')),
       },

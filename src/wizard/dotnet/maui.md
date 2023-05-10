@@ -59,7 +59,7 @@ SentrySdk.CaptureMessage("Hello Sentry");
 
 ### Performance monitoring
 
-We do not yet have automatic performance instrumentation for .NET MAUI.  We will be adding that in a future release.
+We do not yet have automatic performance instrumentation for .NET MAUI. We will be adding that in a future release.
 However, if desired you can still manually instrument parts of your application.
 
 For some parts of your code, [automatic instrumentation](https://docs.sentry.io/platforms/dotnet/guides/maui/performance/instrumentation/automatic-instrumentation/) is available across all of our .NET SDKs, and can be used with MAUI as well:

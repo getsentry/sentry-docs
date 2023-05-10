@@ -1,41 +1,56 @@
+You can capture errors with the `captureError` method. This method takes an `Error` object as a parameter. The `Error` object can be an `NSError` or a `Swift.Error` object.
+
 ```swift {tabTitle:Swift}
 import Sentry
 
-SentrySDK.capture(error: error)
-
-// Or
-
-SentrySDK.capture(exception: exception)
-
+do {
+    try aMethodThatMightFail()
+} catch {
+    SentrySDK.capture(error: error)
+}
 ```
 
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
-[SentrySDK captureError:error];
+NSError *error = nil;
+[self aMethodThatMightFail:&error]
 
-// Or
-
-[SentrySDK captureException:exception];
+if (error) {
+    [SentrySDK captureError:error];
+}
 ```
 
-## Capturing Uncaught Exceptions in macOS
+### Swift Errors
 
-By default, macOS applications do not crash whenever an uncaught exception occurs. To enable this with Sentry:
+For Swift Errors conforming to the [Error Protocol](https://developer.apple.com/documentation/swift/error) the SDK sends the domain, code and the description of the Swift error.
+For older versions of the SDK, prior to [sentry-cocoa 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870) the SDK only sends the domain and error code.
 
-1. Open the application's `Info.plist` file
-2. Search for `Principal class` (the entry is expected to be `NSApplication`)
-3. Replace `NSApplication` with `SentryCrashExceptionApplication`
+```Swift
+enum LoginError: Error {
+    case wrongUser(id: String)
+    case wrongPassword
+}
 
-## Customizing Error Descriptions
+SentrySDK.capture(error: LoginError.wrongUser("12345678"))
+```
+
+For the Swift error above Sentry displays:
+
+| sentry-cocoa SDK | Title        | Description                           |
+| ---------------- | ------------ | ------------------------------------- |
+| Since 8.7.0      | `LoginError` | `wrongUser(id: "12345678") (Code: 1)` |
+| Before 8.7.0     | `LoginError` | `Code: 1`                             |
+
+### Customizing Error Descriptions
 
 This feature is available on [sentry-cocoa 7.25.0](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md#7250) and above.
 
-Sentry will display the error code in the error description field by default. For custom error types, you may want to provide a custom description to make it easier to identify the error in the *Issues* page. For `NSError` values, this can be done by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
+You may want to provide a custom description to make identifying the error in the **Issues** page easier. For `NSError` values, you can do this by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
 
 Sentry will group errors based on the error domain and code, and by enum value for Swift enum types, so customizing error descriptions won’t impact grouping.
 
-This can be particularly useful for Swift enum error types that conform to `Error`, where the error code can be hard to match with an enum case. To customize the description for Swift `Error` types, you should conform to the `CustomNSError` protocol and return a user info dictionary:
+To customize the description for Swift `Error` types, you should conform to the `CustomNSError` protocol and return a user info dictionary:
 
 ```swift {tabTitle:Swift}
 enum MyCustomError: Error {
@@ -58,3 +73,15 @@ extension MyCustomError: CustomNSError {
     }
 }
 ```
+
+<PlatformSection supported={["apple.macos"]}>
+
+## Capturing Uncaught Exceptions in macOS
+
+By default, macOS applications do not crash whenever an uncaught exception occurs. To enable this with Sentry:
+
+1. Open the application's `Info.plist` file
+2. Search for `Principal class` (the entry is expected to be `NSApplication`)
+3. Replace `NSApplication` with `SentryCrashExceptionApplication`
+
+</PlatformSection>

@@ -1,7 +1,7 @@
 ---
 title: Automatic Instrumentation
 sidebar_order: 10
-description: 'Learn what transactions are captured after tracing is enabled.'
+description: "Learn what transactions are captured after tracing is enabled."
 ---
 
 <Note>
@@ -63,6 +63,8 @@ SentrySDK.start { options in
 This feature is available for iOS, tvOS, and Mac Catalyst.
 
 App Start Tracing is enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. This feature provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
+
+The SDK adds these spans to the first transaction that starts during the app launch with the operation `ui.load`. This is what UIViewController tracing uses. If the duration between the transaction start time and the end timestamp of the app start is more than 5 seconds, the SDK doesn't attach the spans from the app start. This helps prevent attaching spans to unrelated transactions.
 To enable this feature, enable `enableAutoPerformanceTracing`.
 
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
@@ -124,7 +126,7 @@ SentrySDK.start { options in
 
 This feature is available for iOS, tvOS, and Mac Catalyst.
 
-Slow and Frozen Frames are enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are *slow frames* and *frozen frames*. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
+Slow and Frozen Frames are enabled by default once you <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are _slow frames_ and _frozen frames_. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
 
 The detail view of the transaction displays the slow, frozen, and total frames:
 
@@ -188,6 +190,7 @@ SentrySDK.start { options in
     options.enableFileIOTracking = NO;
 }];
 ```
+
 [NSData]: https://developer.apple.com/documentation/foundation/nsdata
 [NSFileManager]: https://developer.apple.com/documentation/foundation/nsfilemanager
 [NSString]: https://developer.apple.com/documentation/foundation/nsstring
@@ -224,7 +227,7 @@ SentrySDK.start { options in
 
 ## User Interaction Tracing
 
-User interaction tracing, once enabled, captures transactions for clicks. Since 8.0.0, this feature has been enabled by default. To disable it:
+User interaction tracing, once enabled, captures transactions for clicks. This feature is unavailable for SwiftUI. Since 8.0.0, this feature has been enabled by default. To disable it:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -234,6 +237,7 @@ SentrySDK.start { options in
     options.enableUserInteractionTracing = false
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
@@ -307,7 +311,6 @@ SentrySDK.start { options in
 
 [UIWindow]: https://developer.apple.com/documentation/uikit/uiwindowdidbecomevisiblenotification
 [didFinishLaunching]: https://developer.apple.com/documentation/uikit/uiapplication/1622971-didfinishlaunchingnotification
-
 
 ### Time to Initial Display
 

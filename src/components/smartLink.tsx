@@ -1,6 +1,8 @@
 import React from 'react';
 import {Link} from 'gatsby';
 
+import {marketingUrlParams} from '../utils';
+
 import ExternalLink from './externalLink';
 
 type Props = {
@@ -8,6 +10,7 @@ type Props = {
   children?: React.ReactNode;
   className?: string;
   href?: string;
+  isActive?: boolean;
   remote?: boolean;
   target?: string;
   title?: string;
@@ -21,9 +24,35 @@ export default function SmartLink({
   activeClassName = 'active',
   remote = false,
   className = '',
+  isActive,
   ...props
 }: Props): JSX.Element {
   const realTo = to || href || '';
+
+  const [forcedUrl, setForcedUrl] = React.useState(realTo);
+
+  // Google Tag Manager syncs certain query parameters to all links on the page.
+  // Since Gatsby's Link is a React component, it doesn't catch these updates
+  // because they're made outside of React, so we keep track of them ourselves.
+  React.useEffect(() => {
+    const marketingParams = marketingUrlParams();
+    if (Object.keys(marketingParams).length === 0) {
+      return;
+    }
+    const urlObj = new URL(realTo, window.location.origin);
+    // update params
+    for (const [key, value] of Object.entries(marketingParams)) {
+      // Merge the new params *before* the old to ensure the old ones
+      // don't get clobbered. If they're set, they should stay.
+      if (!urlObj.searchParams.has(key)) {
+        urlObj.searchParams.set(key, value);
+      }
+    }
+    // make sure we make this a relative URL so Gatsby can pre-fetch the page
+    // see: https://github.com/gatsbyjs/gatsby/blob/92845209863bd33907d36b6e4b4293d8b58f8475/packages/gatsby-link/src/index.js#L160-L162
+    setForcedUrl(urlObj.toString().replace(window.location.origin, ''));
+  }, [realTo]);
+
   if (realTo.indexOf('://') !== -1) {
     return (
       <ExternalLink href={realTo} className={className} {...props}>
@@ -53,8 +82,15 @@ export default function SmartLink({
       </a>
     );
   }
+
   return (
-    <Link to={realTo} activeClassName={activeClassName} className={className} {...props}>
+    <Link
+      to={forcedUrl ?? realTo}
+      activeClassName={activeClassName}
+      // We need to manually set class to active because Gatsby doesn't highlight correclty with the original_referrer query param
+      className={isActive ? activeClassName : className}
+      {...props}
+    >
       {children || to || href}
     </Link>
   );

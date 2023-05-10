@@ -7,16 +7,16 @@ function shopCheckout() {
   const transaction = Sentry.startTransaction({ name: "shopCheckout" });
   // Set transaction on scope to associate with errors and get included span instrumentation
   // If there's currently an unfinished transaction, it may be dropped
-  Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
+  Sentry.getCurrentHub().configureScope((scope) => scope.setSpan(transaction));
 
   // Assume this function makes an xhr/fetch call
   const result = validateShoppingCartOnServer();
 
   const span = transaction.startChild({
     data: {
-      result
+      result,
     },
-    op: 'task',
+    op: "task",
     description: `processing shopping cart result`,
   });
   try {
@@ -46,7 +46,7 @@ function processItem(item, transaction) {
   });
 
   return new Promise((resolve, reject) => {
-    http.get(`/items/${item.id}`, response => {
+    http.get(`/items/${item.id}`, (response) => {
       response.on("data", () => {});
       response.on("end", () => {
         span.setTag("http.status_code", response.statusCode);

@@ -45,11 +45,6 @@ export default async function onPostBuild({graphql}) {
                 frontmatter {
                   name
                   doc_link
-                  wizard_setup {
-                    childMarkdownRemark {
-                      html
-                    }
-                  }
                   support_level
                   type
                 }
@@ -108,13 +103,13 @@ const parsePathSlug = (slug: string) => {
     };
   }
 
-  if (slug.includes('/react/') && slug !== '/javascript/react/') {
+  if (slug.match('^/javascript/([A-Za-z]+)/(.*?)/$')) {
     const pathMatch = slug.match(
       /^\/(?<platform>[^/]+)\/(?<sub_platform>[^/]+)\/(?<product>index|with-error-monitoring|with-error-monitoring-and-performance|with-error-monitoring-and-replay|with-error-monitoring-performance-and-replay)\/$/
     );
 
     if (!pathMatch) {
-      throw new Error(`Unable to parse react doc paths from slug: ${slug}`);
+      throw new Error(`Unable to parse javascript doc paths from slug: ${slug}`);
     }
 
     const {platform, product, sub_platform} = pathMatch.groups;
@@ -126,6 +121,7 @@ const parsePathSlug = (slug: string) => {
   }
 
   const pathMatch = slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
+
   if (!pathMatch) {
     throw new Error('cant identify language');
   }
