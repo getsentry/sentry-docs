@@ -1,7 +1,7 @@
 import React from 'react';
 import {Nav} from 'react-bootstrap';
 
-import '~src/css/screen.scss';
+import 'sentry-docs/css/screen.scss';
 
 import Breadcrumbs from './breadcrumbs';
 import Header from './header';

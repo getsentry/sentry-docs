@@ -2,10 +2,10 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {withPrefix} from 'gatsby';
 
+import {sortPages} from 'sentry-docs/utils';
+
 import SidebarLink from './sidebarLink';
 import SmartLink from './smartLink';
-
-import {sortPages} from '~src/utils';
 
 type Node = {
   [key: string]: any;

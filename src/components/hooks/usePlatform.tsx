@@ -3,7 +3,7 @@ import {useLocation, useNavigate, WindowLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 import {parse} from 'query-string';
 
-import PageContext from '../pageContext';
+import PageContext from 'sentry-docs/components/pageContext';
 
 import useLocalStorage from './useLocalStorage';
 

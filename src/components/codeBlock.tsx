@@ -7,7 +7,7 @@ import {MDXProvider} from '@mdx-js/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import memoize from 'lodash/memoize';
 
-import {useOnClickOutside} from '../utils';
+import {useOnClickOutside} from 'sentry-docs/utils';
 
 import CodeContext from './codeContext';
 
