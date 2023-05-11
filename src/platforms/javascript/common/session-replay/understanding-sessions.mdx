@@ -69,3 +69,24 @@ await replay.flush();
 ```
 
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
+
+## Custom Sampling
+
+It is also possible to defer loading of the Replay integration. This is helpful to decouple the SDK initialization from Replay sampling rates. For example, if you have an external sampling service that is not immediately available.
+
+
+```javascript
+async function init(sessionSampleRate, errorSampleRate) {
+  const client = Sentry.getCurrentHub().getClient();
+  const options = client.getOptions() as BrowserClientReplayOptions;
+  options.replaysSessionSampleRate = sessionSampleRate;
+  options.replaysOnErrorSampleRate = errorSampleRate;
+
+  const replay = new Sentry.Replay({
+    maskAllText: true,
+    // additional SDK config, see https://docs.sentry.io/platforms/javascript/session-replay/configuration/
+  });
+
+  client.addIntegration(replay);
+}
+```
