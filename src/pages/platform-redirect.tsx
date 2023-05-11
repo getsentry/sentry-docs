@@ -3,9 +3,9 @@ import {useLocation, useNavigate} from '@reach/router';
 import {PlatformIcon} from 'platformicons';
 import {parse} from 'query-string';
 
-import {usePlatformList} from '../components/hooks/usePlatform';
-import Layout from '../components/layout';
-import SmartLink from '../components/smartLink';
+import {usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
+import Layout from 'sentry-docs/components/layout';
+import SmartLink from 'sentry-docs/components/smartLink';
 
 type Props = {
   path?: string;

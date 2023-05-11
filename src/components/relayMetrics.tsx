@@ -2,7 +2,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import Alert from '~src/components/alert';
+import Alert from './alert';
 
 const query = graphql`
   query RelayMetricsQuery {

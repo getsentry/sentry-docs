@@ -2,9 +2,9 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import SmartLink from './smartLink';
+import {sortPages} from 'sentry-docs/utils';
 
-import {sortPages} from '~src/utils';
+import SmartLink from './smartLink';
 
 const query = graphql`
   query PageGridQuery {

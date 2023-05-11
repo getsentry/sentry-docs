@@ -31,7 +31,7 @@ function main({actions, reporter}) {
         stream: require.resolve('stream-browserify'),
       },
       alias: {
-        '~src': path.join(path.resolve(__dirname, '..')),
+        'sentry-docs': path.join(path.resolve(__dirname, '..')),
       },
     },
     plugins: getPlugins(reporter),
