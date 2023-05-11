@@ -1,5 +1,5 @@
 ---
-name: Express
+name: Serverless (Node)
 doc_link: https://docs.sentry.io/platforms/node/guides/serverless-cloud/
 support_level: production
 type: framework
