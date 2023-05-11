@@ -1,8 +1,8 @@
 interface Options {
   /**
-   * Function that handles making the API request to fetch data
+   * URL to fetch the data from
    */
-  dataFetch: () => Promise<any>;
+  dataUrl: string;
   /**
    * The name of the registry, used for logging messages
    */
@@ -13,7 +13,7 @@ interface Options {
  * Creates a `getData` function that fetches with dataFetch only once.
  * Subsiquent calls will used the already fetched data.
  */
-export function makeFetchCache<DataType>({dataFetch, name}: Options) {
+export function makeFetchCache<DataType>({dataUrl, name}: Options) {
   let activeFetch: Promise<any> | null = null;
   let dataCache: DataType | null = null;
 
@@ -24,8 +24,8 @@ export function makeFetchCache<DataType>({dataFetch, name}: Options) {
 
     async function fetchData() {
       try {
-        const result = await dataFetch();
-        dataCache = result.data;
+        const result = await fetch(dataUrl);
+        dataCache = await result.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);

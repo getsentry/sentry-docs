@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 import {makeFetchCache} from './fetchCache';
 import {BASE_REGISTRY_URL} from './shared';
 
@@ -16,7 +14,7 @@ type LayerData = {
 
 const getLayerMap = makeFetchCache<Record<string, LayerData>>({
   name: 'aws lambda layers',
-  dataFetch: () => axios({url: `${BASE_REGISTRY_URL}/aws-lambda-layers`}),
+  dataUrl: `${BASE_REGISTRY_URL}/aws-lambda-layers`,
 });
 
 const awsLambdaRegistry = {getLayerMap};

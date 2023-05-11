@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 import {makeFetchCache} from './fetchCache';
 import {BASE_REGISTRY_URL} from './shared';
 
@@ -41,7 +39,7 @@ interface Options {
 export function makeGenericRegistry({name, path}: Options) {
   const getList = makeFetchCache<Record<string, VersionData>>({
     name,
-    dataFetch: () => axios({url: `${BASE_REGISTRY_URL}/${path}`}),
+    dataUrl: `${BASE_REGISTRY_URL}/${path}`,
   });
 
   async function getData(key: string) {
