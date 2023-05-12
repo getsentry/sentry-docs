@@ -12,7 +12,7 @@ For more complex cases, it's helpful to understand how sessions work and how to 
 
 ## Default Session Initialization
 
-By default, Replay will immediately start a session in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
+By default, Replay will immediately start a session when the `new Replay()` integration instance is added to the SDK client. The session will be in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
 
 When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sampled, we'll start recording and sending Replay data immediately.
 
@@ -27,6 +27,26 @@ In `session` mode, Replay will continuously record and send data to Sentry. Afte
 ## Buffer Mode
 
 In `buffer` mode, Replay will continuously record data, but won't send any of it. It will instead keep up to the last 60 seconds in memory. When an error occurs, `replaysOnErrorSampleRate` will be checked and if it's sampled, the replay will be uploaded to Sentry and continue recording normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
+
+## Manually Add Replay Integration
+
+It is also possible to defer the initialization and loading of the Replay integration. This is helpful to decouple the SDK initialization from Replay configuration. For example, if you have an external sampling service that is not immediately available.
+
+```javascript
+async function init(sessionSampleRate, errorSampleRate) {
+  const client = Sentry.getCurrentHub().getClient();
+  const options = client.getOptions();
+  options.replaysSessionSampleRate = sessionSampleRate;
+  options.replaysOnErrorSampleRate = errorSampleRate;
+
+  const replay = new Sentry.Replay({
+    maskAllText: true,
+    // additional SDK config, see https://docs.sentry.io/platforms/javascript/session-replay/configuration/
+  });
+
+  client.addIntegration(replay);
+}
+```
 
 ## Manually Starting Replay
 
@@ -48,7 +68,7 @@ replay.start();
 replay.startBuffering();
 ```
 
-This can be used either if both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0` and thus no session has been started automatically, or if you previously stopped a session and want to start a new one (see below). `start` and `startBuffering` will throw an error if a session is currently running.
+This can be used either if both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0` and thus no session has been started automatically, or if you previously stopped a session and want to start a new one (see below). `start()` and `startBuffering()` will throw an error if a session is currently running.
 
 ## Manually Stopping Replay
 
