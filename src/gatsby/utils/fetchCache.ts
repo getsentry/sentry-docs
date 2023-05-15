@@ -1,14 +1,26 @@
+/**
+ * For some reason we sometimes see errors fetching from our registry, because
+ * of that we retry the fetches
+ *
+ * The error was:
+ *
+ *   Client network socket disconnected before secure TLS connection was established
+ */
 async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
-  let retry = (opts && opts.retry) || 3;
+  let retry = opts?.retry ?? 1;
 
   while (retry > 0) {
     try {
       return await fetch(url, opts);
     } catch (e) {
-      retry = retry - 1;
-      if (retry === 0) {
-        throw e;
+      if (retry !== 0) {
+        // eslint-disable-next-line no-console
+        console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
+        retry = retry - 1;
+        continue;
       }
+
+      throw e;
     }
   }
 
