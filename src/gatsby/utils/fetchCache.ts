@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 interface Options {
   /**
    * URL to fetch the data from
@@ -24,8 +26,13 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
-        const result = await fetch(dataUrl);
-        dataCache = await result.json();
+        const result = await axios.get(dataUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        });
+        dataCache = result.data;
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);
