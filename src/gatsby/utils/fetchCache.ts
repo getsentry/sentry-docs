@@ -1,3 +1,20 @@
+async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
+  let retry = (opts && opts.retry) || 3;
+
+  while (retry > 0) {
+    try {
+      return await fetch(url, opts);
+    } catch (e) {
+      retry = retry - 1;
+      if (retry === 0) {
+        throw e;
+      }
+    }
+  }
+
+  return null;
+}
+
 interface Options {
   /**
    * URL to fetch the data from
@@ -24,12 +41,14 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
-        const result = await fetch(dataUrl);
+        const result = await fetchRetry(dataUrl, {retry: 5});
         dataCache = await result.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);
         dataCache = null;
+
+        throw err;
       }
 
       activeFetch = null;
