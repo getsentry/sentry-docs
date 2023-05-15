@@ -53,17 +53,29 @@ logger.exception("An exception happened")
 
 ### Ignoring a logger
 
-Loggers can be noisy. You can ignore a logger by calling `ignore_logger`:
+Loggers can be noisy. You can ignore a logger by calling `ignore_logger`.
+
+Since most of the logic is proxied to `logging` integration, we use it instead of the Loguru integration:
 
 ```python
-# Since most of the logic is proxied to `logging` integration, we use it instead of the Loguru integration.
+# Import form `logging` integration
 from sentry_sdk.integrations.logging import ignore_logger
 
 ignore_logger("a.spammy.logger")
+```
 
-# and with Loguru (in `a.spammy.logger` module)
+In `a.spammy.logger` module:
+
+```python
 from loguru import logger
-logger.error("hi")  # again, no record
+logger.error("hi")  # No error is sent to Sentry
+```
+
+This will work with `logging`'s logger too
+
+```python
+logger = logging.getLogger("a.spammy.logger")
+logger.error("hi") # Again, no error sent to Sentry
 ```
 
 You can also use `before-send` and `before-breadcrumb` to ignore only certain messages. See <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink> for more information.
