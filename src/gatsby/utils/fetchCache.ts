@@ -24,7 +24,10 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
-        const result = await fetch(dataUrl);
+        const result = await fetch(dataUrl, {
+          headers: {'Content-Type': 'application/json'},
+          keepalive: true,
+        });
         dataCache = await result.json();
       } catch (err) {
         // eslint-disable-next-line no-console
