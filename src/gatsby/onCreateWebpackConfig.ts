@@ -22,7 +22,6 @@ function main({actions}) {
         project: 'docs',
         authToken: process.env.SENTRY_WEBPACK_PLUGIN_AUTH_TOKEN,
         sourcemaps: {assets: './public/**'},
-        disable: process.env.NODE_ENV !== 'production',
       }),
     ],
   });
