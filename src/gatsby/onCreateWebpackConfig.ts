@@ -6,7 +6,7 @@ import path from 'path';
 import SentryWebpackPlugin from '@sentry/webpack-plugin';
 
 const getPlugins = reporter => {
-  const authToken = process.env.SENTRY_AUTH_TOKEN;
+  const authToken = process.env.SENTRY_WEBPACK_PLUGIN_AUTH_TOKEN;
   if (!authToken) {
     reporter.warn('SENTRY_AUTH_TOKEN is not set - will not upload source maps');
     return [];
