@@ -24,6 +24,7 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
+        console.log('!!!!!!! DOING FETCH FOR ', dataUrl)
         const result = await fetch(dataUrl);
         dataCache = await result.json();
       } catch (err) {
