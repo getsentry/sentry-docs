@@ -1,0 +1,26 @@
+---
+title: "Self-Hosted Content Security Policy (CSP)"
+---
+
+<Alert level="warning">
+  This is an experimental feature. Use it with caution.
+</Alert>
+
+Starting with Sentry `23.5.0`, it is possible to enable the [CSP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) on self-hosted Sentry installations. The good news is that Sentry itself supports [collecting of CSP reports](https://docs.sentry.io/product/security-policy-reporting/). We recommend creating a separate Sentry project for CSP reports. To enable CSP and reports collection, you'll want to configure the following settings in `sentry.conf.py`:
+
+```python
+if "csp.middleware.CSPMiddleware" not in MIDDLEWARE:
+    MIDDLEWARE = ("csp.middleware.CSPMiddleware",) + MIDDLEWARE
+CSP_REPORT_URI = "https://your-sentry-url-prefix.com/api/{csp-project-id}/security/?sentry_key={sentry-key}"
+CSP_REPORT_ONLY = True
+```
+
+We recommend starting with `CSP_REPORT_ONLY = True`. Once there are no violations under normal use, you can switch it to `CSP_REPORT_ONLY = False`. This will enforce CSP and all unwanted scripts/resources will be blocked.
+
+If you'd like to allow custom sources, extra CSP keywords can be added. We support the [django-csp](https://django-csp.readthedocs.io/en/latest/configuration.html) syntax. For example:
+
+```python
+CSP_SCRIPT_SRC += ["example.com"]
+```
+
+Default `CSP_*` settings are defined in [`server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py).
