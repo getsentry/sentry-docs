@@ -10,7 +10,7 @@ type: framework
 Install the package via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
 
 ```
-https://github.com/getsentry/unity.git#{{ packages.version('sentry.dotnet.unity', '0.1.0') }}
+https://github.com/getsentry/unity.git#{{@inject packages.version('sentry.dotnet.unity', '0.1.0') }}
 ```
 
 ## Configuration

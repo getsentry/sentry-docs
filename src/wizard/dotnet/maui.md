@@ -8,11 +8,11 @@ type: framework
 Install the **NuGet** package:
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry.Maui -v {{ packages.version('sentry.dotnet.maui') }}
+dotnet add package Sentry.Maui -v {{@inject packages.version('sentry.dotnet.maui') }}
 ```
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry.Maui -Version {{ packages.version('sentry.dotnet.maui') }}
+Install-Package Sentry.Maui -Version {{@inject packages.version('sentry.dotnet.maui') }}
 ```
 
 Then add Sentry to `MauiProgram.cs` through the `MauiAppBuilder`:

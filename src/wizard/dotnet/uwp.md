@@ -9,10 +9,10 @@ type: language
 
 ```shell
 # Using Package Manager
-Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
+Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
 
 # Or using .NET Core CLI
-dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
+dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
 ```
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
