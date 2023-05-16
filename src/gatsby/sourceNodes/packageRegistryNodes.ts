@@ -1,9 +1,10 @@
-import packageRegistry from '../utils/packageRegistry';
+import getPackageRegistry from '../utils/packageRegistry';
 
 export const sourcePackageRegistryNodes = async ({actions, createContentDigest}) => {
   const {createNode} = actions;
 
-  const allSdks = await packageRegistry.getList();
+  const packageRegistry = await getPackageRegistry();
+  const allSdks = packageRegistry.data;
 
   Object.entries(allSdks).forEach(([sdkName, sdkData]) => {
     const data = {

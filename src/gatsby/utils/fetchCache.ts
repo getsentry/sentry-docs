@@ -1,32 +1,3 @@
-/**
- * For some reason we sometimes see errors fetching from our registry, because
- * of that we retry the fetches
- *
- * The error was:
- *
- *   Client network socket disconnected before secure TLS connection was established
- */
-async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
-  let retry = opts?.retry ?? 1;
-
-  while (retry > 0) {
-    try {
-      return await fetch(url, opts);
-    } catch (e) {
-      if (retry !== 0) {
-        // eslint-disable-next-line no-console
-        console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
-        retry = retry - 1;
-        continue;
-      }
-
-      throw e;
-    }
-  }
-
-  return null;
-}
-
 interface Options {
   /**
    * URL to fetch the data from
@@ -39,26 +10,26 @@ interface Options {
 }
 
 /**
- * Creates a `getData` function that fetches with dataFetch only once.
- * Subsiquent calls will used the already fetched data.
+ * Creates a `ensureData` function that fetches from a URL only once. Subsequent
+ * calls will used the already fetched data.
  */
 export function makeFetchCache<DataType>({dataUrl, name}: Options) {
   let activeFetch: Promise<any> | null = null;
-  let dataCache: DataType | null = null;
+  let data: DataType | null = null;
 
-  async function getData() {
-    if (dataCache) {
-      return dataCache;
+  async function ensureData() {
+    if (data) {
+      return data;
     }
 
     async function fetchData() {
       try {
-        const result = await fetchRetry(dataUrl, {retry: 5});
-        dataCache = await result.json();
+        const result = await fetch(dataUrl);
+        data = await result.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);
-        dataCache = null;
+        data = null;
 
         throw err;
       }
@@ -73,8 +44,8 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     await activeFetch;
 
-    return dataCache;
+    return data;
   }
 
-  return getData;
+  return ensureData;
 }

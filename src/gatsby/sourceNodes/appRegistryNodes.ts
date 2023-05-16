@@ -1,9 +1,10 @@
-import appRegistry from '../utils/appRegistry';
+import getAppRegistry from '../utils/appRegistry';
 
 export const sourceAppRegistryNodes = async ({actions, createContentDigest}) => {
   const {createNode} = actions;
 
-  const allApps = await appRegistry.getList();
+  const appRegistry = await getAppRegistry();
+  const allApps = appRegistry.data;
 
   Object.entries(allApps).forEach(([appName, appData]) => {
     const data = {

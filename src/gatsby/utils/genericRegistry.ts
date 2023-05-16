@@ -21,7 +21,7 @@ type VersionData = {
 
 interface Options {
   /**
-   * The name of the regsistry
+   * The name of the registry
    */
   name: string;
   /**
@@ -36,31 +36,45 @@ interface Options {
 /**
  * Constructs helper functions for a "generic" registry.
  */
-export function makeGenericRegistry({name, path}: Options) {
-  const getList = makeFetchCache<Record<string, VersionData>>({
+export function makeRegistry({name, path}: Options) {
+  const ensureData = makeFetchCache<Record<string, VersionData>>({
     name,
     dataUrl: `${BASE_REGISTRY_URL}/${path}`,
   });
 
-  async function getData(key: string) {
-    const list = await getList();
-    return list[key];
+  async function resolveRegistry() {
+    const data = await ensureData();
+
+    /**
+     * Note that this will return `null` unless `ensureData` has been called.
+     */
+    function getItem(key: string) {
+      return data?.[key] ?? null;
+    }
+
+    function version(key: string, defaultValue: string = '') {
+      const item = getItem(key);
+      return item?.version || defaultValue;
+    }
+
+    function checksum(key: string, fileName: string, checksumKey: string) {
+      const item = getItem(key);
+      return item?.files?.[fileName]?.checksums?.[checksumKey] || '';
+    }
+
+    /**
+     * Provides a synchronous interface for accessing data from the registry.
+     * `ensureData` must be called first otherwise these will return empty values
+     */
+    const accessors = {
+      data,
+      getItem,
+      version,
+      checksum,
+    };
+
+    return accessors;
   }
 
-  async function version(key: string, defaultValue: string = '') {
-    const data = await getData(key);
-    return data?.version || defaultValue;
-  }
-
-  async function checksum(key: string, fileName: string, checksumKey: string) {
-    const data = await getData(key);
-    return data?.files?.[fileName]?.checksums?.[checksumKey] || '';
-  }
-
-  return {
-    getList,
-    getData,
-    version,
-    checksum,
-  };
+  return resolveRegistry;
 }

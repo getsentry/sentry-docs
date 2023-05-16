@@ -3,12 +3,9 @@
 /* eslint import/no-nodejs-modules:0 */
 
 import queries from './utils/algolia';
-import appRegistry from './utils/appRegistry';
-import packageRegistry from './utils/packageRegistry';
+import getAppRegistry from './utils/appRegistry';
+import getPackageRegistry from './utils/packageRegistry';
 import resolveOpenAPI from './utils/resolveOpenAPI';
-
-const packages = packageRegistry;
-const apps = appRegistry;
 
 const root = `${__dirname}/../..`;
 
@@ -28,9 +25,13 @@ const getPlugins = () => {
     {
       resolve: require.resolve('./plugins/gatsby-remark-variables'),
       options: {
-        scope: {
-          packages,
-          apps,
+        resolveScopeData: async function () {
+          const [apps, packages] = await Promise.all([
+            getAppRegistry,
+            getPackageRegistry,
+          ]);
+
+          return {apps, packages};
         },
         excludeExpr: ['default', 'secrets.SENTRY_AUTH_TOKEN'],
       },
