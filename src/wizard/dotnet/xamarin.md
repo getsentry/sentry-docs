@@ -9,10 +9,10 @@ type: library
 
 ```shell
 # For Xamarin.Forms
-Install-Package Sentry.Xamarin.Forms -Version {{ packages.version('sentry.dotnet.xamarin') }}
+Install-Package Sentry.Xamarin.Forms -Version {{@inject packages.version('sentry.dotnet.xamarin') }}
 
 # If you are not using Xamarin.Forms, but only Xamarin:
-Install-Package Sentry.Xamarin -Version {{ packages.version('sentry.dotnet.xamarin-forms') }}
+Install-Package Sentry.Xamarin -Version {{@inject packages.version('sentry.dotnet.xamarin-forms') }}
 
 ```
 

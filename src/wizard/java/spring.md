@@ -21,7 +21,7 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
-    <version>{{ packages.version('sentry.java.spring', '4.0.0') }}</version>
+    <version>{{@inject packages.version('sentry.java.spring', '4.0.0') }}</version>
 </dependency>
 ```
 
@@ -29,18 +29,18 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring-jakarta</artifactId>
-    <version>{{ packages.version('sentry.java.spring.jakarta', '6.7.0') }}</version>
+    <version>{{@inject packages.version('sentry.java.spring.jakarta', '6.7.0') }}</version>
 </dependency>
 ```
 
 ### Gradle:
 
 ```groovy {tabTitle:Spring 5}{filename:build.gradle}
-implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java.spring', '4.0.0') }}'
+implementation 'io.sentry:sentry-spring:{{@inject packages.version('sentry.java.spring', '4.0.0') }}'
 ```
 
 ```groovy {tabTitle:Spring 6}{filename:build.gradle}
-implementation 'io.sentry:sentry-spring-jakarta:{{ packages.version('sentry.java.spring.jakarta', '6.7.0') }}'
+implementation 'io.sentry:sentry-spring-jakarta:{{@inject packages.version('sentry.java.spring.jakarta', '6.7.0') }}'
 ```
 
 For other dependency managers see the [central Maven repository (Spring 5)](https://search.maven.org/artifact/io.sentry/sentry-spring) and [central Maven repository (Spring 6)](https://search.maven.org/artifact/io.sentry/sentry-spring-jakarta).

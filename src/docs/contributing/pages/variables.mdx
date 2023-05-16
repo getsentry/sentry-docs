@@ -7,25 +7,16 @@ A transformation is exposed to both Markdown and MDX files which supports proces
 
 For example:
 
-```markdown
-JavaScript SDK: {{ packages.version('sentry.browser.javascript') }}
+```markdown {tabTitle:Replacment}
+JavaScript SDK: {{@inject packages.version("sentry.javascript.browser") }}
+```
+```markdown {tabTitle:Source}
+JavaScript SDK: {{\@inject packages.version("sentry.javascript.browser") }}
 ```
 
-In this case, we expose `packages` as an instance of `PackageRegistry` which is why there is a `packages.version` function available. Additional, we expose a default context variable of `page` which contains the frontmatter of the given markdown node. For example, `{{ page.title }}`.
+In this case, we expose `packages` as an accessor in the package registry which is why there is a `packages.version` function available. Additional, we expose a default context variable of `page` which contains the frontmatter of the given markdown node. For example, `{{\@inject page.title }}`.
 
-When a function call is invalid (or errors), or doesn't match something in the known scope, it will simple render it as a literal value instead. So for example:
-
-```markdown
-setFingerprint('{{ default }}')
-```
-
-Will render as:
-
-```markdown
-setFingerprint('{{ default }}')
-```
-
-This is because there is no entity scoped to `default` in the template renderer. Additionally - in this case - we also add the `default` expression to the exclusion list in our configuration, as it is commonly use in our documentation.
+When a variable call is invalid (or errors), or doesn't match something in the known scope, it will produce an error. If you need to escape an expression you can add a leading `\` to the `@inject`.
 
 ## `packages`
 
@@ -35,20 +26,20 @@ The `packages` helper is an instance of `PackageRegistry` and exposes several me
 
 Returns the latest version of the given package.
 
-```javascript
-packages.version("sentry.javacript.browser");
+``` {tabTitle:Source}
+{{\@inject packages.version("sentry.javascript.browser") }}
 ```
 
 You may also optionally specify a fallback for if the package isn't found (or there's an upstream error):
 
-```javascript
-packages.version("sentry.javacript.browser", "1.0.0");
+``` {tabTitle:Source}
+{{\@inject packages.version("sentry.javascript.browser", "1.0.0") }}
 ```
 
 ### `packages.checksum`
 
 Returns the checksum of a given file in a package.
 
-```javascript
-packages.checksum("sentry.javacript.browser", "bundle.min.js", "sha384");
+``` {tabTitle:Source}
+{{\@inject packages.checksum("sentry.javascript.browser", "bundle.min.js", "sha384") }}
 ```

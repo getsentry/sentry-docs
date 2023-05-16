@@ -9,7 +9,7 @@ Sentry captures data by using an SDK within your application’s runtime. Add th
 
 ```yml {filename:pubspec.yaml}
 dependencies:
-  sentry_flutter: ^{{ packages.version('sentry.dart.flutter') }}
+  sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter') }}
 ```
 
 Import `sentry_flutter` and initialize it:

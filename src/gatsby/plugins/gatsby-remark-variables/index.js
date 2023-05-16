@@ -42,13 +42,16 @@ module.exports = async ({markdownAST, markdownNode}, options) => {
         return;
       }
 
+      console.log('SUBSTITUTING!!');
+
       // TODO(dcramer): this could be improved by parsing the string piece by piece so you can
       // safely quote template literals e.g. {{ '{{ foo }}' }}
-      matchEach(node.value, /\{\{\s*([^}]+)\s*\}\}/gi, match => {
-        const expr = match[1].replace(/\s+$/, '');
+      matchEach(node.value, /\{\{\\?@inject (\s*[^}]+) \}\}/gi, match => {
+        const expr = match[1].trim();
 
-        // Known common value, lets just make life easy
-        if (options.excludeExpr.indexOf(expr) !== -1) {
+        // Inject sequence is escaped
+        if (match[0].includes('{{\\@inject')) {
+          node.value = node.value.replace('\\@inject', '@inject');
           return;
         }
 
@@ -57,13 +60,11 @@ module.exports = async ({markdownAST, markdownNode}, options) => {
         try {
           result = scopedEval(expr, {...scope, page});
         } catch (err) {
-          // no-op. We previously had a warning here, but the we have so many
-          // "variable-like" constructs in our codeblocks that this becomes
-          // very spammy.
+          console.error(`Failed to interpolate expression: "${expr}"`);
+          throw err;
         }
-        if (result) {
-          node.value = node.value.replace(match[0], result);
-        }
+
+        node.value = node.value.replace(match[0], result);
       });
     }
   );
