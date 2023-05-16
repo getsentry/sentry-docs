@@ -1,5 +1,5 @@
-import {makeGenericRegistry} from './genericRegistry';
+import {makeRegistry} from './genericRegistry';
 
-const appRegistry = makeGenericRegistry({name: 'app registry', path: 'apps'});
+const getAppRegistry = makeRegistry({name: 'app registry', path: 'apps'});
 
-export default appRegistry;
+export default getAppRegistry;

@@ -1,5 +1,5 @@
-import {makeGenericRegistry} from './genericRegistry';
+import {makeRegistry} from './genericRegistry';
 
-const packageRegistry = makeGenericRegistry({name: 'package registry', path: 'sdks'});
+const getPackageRegistry = makeRegistry({name: 'package registry', path: 'sdks'});
 
-export default packageRegistry;
+export default getPackageRegistry;
