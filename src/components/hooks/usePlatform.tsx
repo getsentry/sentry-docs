@@ -42,13 +42,13 @@ export const formatCaseStyle = (style: string, value: string): string => {
       return value
         .split(/-/g)
         .map((val, idx) =>
-          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
+          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substring(1)
         )
         .join('');
     case 'PascalCase':
       return value
         .split(/-/g)
-        .map(val => val.charAt(0).toUpperCase() + val.substr(1))
+        .map(val => val.charAt(0).toUpperCase() + val.substring(1))
         .join('');
     default:
       return value;

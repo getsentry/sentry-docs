@@ -43,7 +43,7 @@ function makeKeywordsClickable(children: React.ReactChildren) {
       lastIndex = KEYWORDS_REGEX.lastIndex;
     }
 
-    const after = child.substr(lastIndex);
+    const after = child.substring(lastIndex);
     if (after.length > 0) {
       arr.push(after);
     }
@@ -349,7 +349,7 @@ export default function CodeBlock({filename, language, children}: Props): JSX.El
     if (language === 'bash' || language === 'shell') {
       const match = code.match(/^\$\s*/);
       if (match) {
-        code = code.substr(match[0].length);
+        code = code.substring(match[0].length);
       }
     }
     await navigator.clipboard.writeText(code);
