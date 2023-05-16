@@ -42,8 +42,6 @@ module.exports = async ({markdownAST, markdownNode}, options) => {
         return;
       }
 
-      console.log('SUBSTITUTING!!');
-
       // TODO(dcramer): this could be improved by parsing the string piece by piece so you can
       // safely quote template literals e.g. {{ '{{ foo }}' }}
       matchEach(node.value, /\{\{\\?@inject (\s*[^}]+) \}\}/gi, match => {
