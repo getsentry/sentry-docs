@@ -10,13 +10,13 @@ Install the **NuGet** package:
 Package Manager:
 
 ```shell
-Install-Package Sentry.AspNetCore -Version {{ packages.version('sentry.dotnet.aspnetcore') }}
+Install-Package Sentry.AspNetCore -Version {{@inject packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 Or .NET Core CLI:
 
 ```shell
-dotnet add package Sentry.AspNetCore -v {{ packages.version('sentry.dotnet.aspnetcore') }}
+dotnet add package Sentry.AspNetCore -v {{@inject packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 Add Sentry to `Program.cs` through the `WebHostBuilder`:

@@ -11,10 +11,12 @@ function main({actions, schema}) {
     type PageContext {
       title: String
       description: String
-      sidebar_order: Int
-      sidebar_title: String
+      keywords: [String!]
       draft: Boolean
       redirect_from: [String!]
+      noindex: Boolean
+      sidebar_title: String
+      sidebar_order: Int
 
       platform: PlatformContext
       guide: GuideContext

@@ -3,7 +3,7 @@
 
 import React from 'react';
 
-import PageContext from '~src/components/pageContext';
+import PageContext from 'sentry-docs/components/pageContext';
 
 const sentryEnvironment = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 const sentryLoaderUrl = process.env.SENTRY_LOADER_URL;

@@ -1,22 +1,20 @@
-import AppRegistry from '../utils/appRegistry';
+import getAppRegistry from '../utils/appRegistry';
 
 export const sourceAppRegistryNodes = async ({actions, createContentDigest}) => {
   const {createNode} = actions;
 
-  const registry = new AppRegistry();
-  const allApps = await registry.getList();
+  const appRegistry = await getAppRegistry();
+  const allApps = appRegistry.data;
 
-  Object.keys(allApps).forEach(async appName => {
-    const sdkData = (await registry.getData(appName)) as any;
-
+  Object.entries(allApps).forEach(([appName, appData]) => {
     const data = {
-      canonical: sdkData.canonical,
-      name: sdkData.name,
-      version: sdkData.version,
-      url: sdkData.package_url,
-      repoUrl: sdkData.repo_url,
-      files: sdkData.files
-        ? Object.entries(sdkData.files).map(([fileName, fileData]: [string, any]) =>
+      canonical: appData.canonical,
+      name: appData.name,
+      version: appData.version,
+      url: appData.package_url,
+      repoUrl: appData.repo_url,
+      files: appData.files
+        ? Object.entries(appData.files).map(([fileName, fileData]: [string, any]) =>
             fileData.checksums
               ? {
                   name: fileName,
@@ -43,9 +41,6 @@ export const sourceAppRegistryNodes = async ({actions, createContentDigest}) => 
       },
     };
 
-    createNode({
-      ...data,
-      ...nodeMeta,
-    });
+    createNode({...data, ...nodeMeta});
   });
 };

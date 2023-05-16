@@ -1,10 +1,10 @@
 import React from 'react';
 import {graphql} from 'gatsby';
 
-import ApiSidebar from '~src/components/apiSidebar';
-import BasePage from '~src/components/basePage';
-import Content from '~src/components/content';
-import InternalDocsSidebar from '~src/components/internalDocsSidebar';
+import ApiSidebar from 'sentry-docs/components/apiSidebar';
+import BasePage from 'sentry-docs/components/basePage';
+import Content from 'sentry-docs/components/content';
+import InternalDocsSidebar from 'sentry-docs/components/internalDocsSidebar';
 
 export default function Doc(props: any) {
   let sidebar = null;

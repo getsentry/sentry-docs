@@ -3,7 +3,7 @@ import {useLocation, useNavigate, WindowLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 import {parse} from 'query-string';
 
-import PageContext from '../pageContext';
+import PageContext from 'sentry-docs/components/pageContext';
 
 import useLocalStorage from './useLocalStorage';
 
@@ -42,13 +42,13 @@ export const formatCaseStyle = (style: string, value: string): string => {
       return value
         .split(/-/g)
         .map((val, idx) =>
-          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
+          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substring(1)
         )
         .join('');
     case 'PascalCase':
       return value
         .split(/-/g)
-        .map(val => val.charAt(0).toUpperCase() + val.substr(1))
+        .map(val => val.charAt(0).toUpperCase() + val.substring(1))
         .join('');
     default:
       return value;

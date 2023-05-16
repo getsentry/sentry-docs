@@ -2,10 +2,10 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {withPrefix} from 'gatsby';
 
+import {sortPages} from 'sentry-docs/utils';
+
 import SidebarLink from './sidebarLink';
 import SmartLink from './smartLink';
-
-import {sortPages} from '~src/utils';
 
 type Node = {
   [key: string]: any;
@@ -117,8 +117,8 @@ export default function DynamicNav({
 }: Props): JSX.Element | null {
   const location = useLocation();
 
-  if (root.indexOf('/') === 0) {
-    root = root.substr(1);
+  if (root.startsWith('/')) {
+    root = root.substring(1);
   }
 
   let entity: EntityTree;

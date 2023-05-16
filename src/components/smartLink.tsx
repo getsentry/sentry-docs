@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link} from 'gatsby';
 
-import {marketingUrlParams} from '../utils';
+import {marketingUrlParams} from 'sentry-docs/utils';
 
 import ExternalLink from './externalLink';
 

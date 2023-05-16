@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 
+import {captureException} from '../utils';
+
 import {PageContext} from './basePage';
 import GuideGrid from './guideGrid';
-
-import {captureException} from '~src/utils';
 
 type Item = {
   items: Item[];

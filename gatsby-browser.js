@@ -2,8 +2,7 @@
 /* eslint import/no-nodejs-modules:0 */
 
 import React from 'react';
-
-import PageContext from '~src/components/pageContext';
+import PageContext from 'sentry-docs/components/pageContext';
 
 export const wrapPageElement = ({element, props: {pageContext}}) => (
   <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>

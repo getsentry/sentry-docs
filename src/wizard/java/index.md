@@ -23,7 +23,7 @@ repositories {
 
 // Add Sentry's SDK as a dependency.
 dependencies {
-    implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '4.0.0') }}'
+    implementation 'io.sentry:sentry:{{@inject packages.version('sentry.java', '4.0.0') }}'
 }
 ```
 
@@ -33,14 +33,14 @@ For **Maven**, add to your `pom.xml` file:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
+    <version>{{@inject packages.version('sentry.java', '4.0.0') }}</version>
 </dependency>
 ```
 
 For **SBT**:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '4.0.0') }}"
+libraryDependencies += "io.sentry" % "sentry" % "{{@inject packages.version('sentry.java', '4.0.0') }}"
 ```
 
 ## Configure

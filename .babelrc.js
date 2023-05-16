@@ -1,3 +1,6 @@
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
+
 let ignore = [`**/dist`];
 
 // Jest needs to compile this code, but generally we don't want this copied
@@ -8,6 +11,6 @@ if (process.env.NODE_ENV !== `test`) {
 
 module.exports = {
   sourceMaps: true,
-  presets: ["babel-preset-gatsby"],
+  presets: ['babel-preset-gatsby'],
   ignore,
 };

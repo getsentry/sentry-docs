@@ -1,7 +1,8 @@
 import React from 'react';
 
-import Layout from '../components/layout';
-import SEO from '../components/seo';
+import Layout from 'sentry-docs/components/layout';
+import SEO from 'sentry-docs/components/seo';
+
 import {getCurrentTransaction} from '../utils';
 
 function NotFoundPage() {

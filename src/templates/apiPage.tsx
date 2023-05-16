@@ -6,11 +6,14 @@ import 'prismjs/components/prism-json';
 import React, {Fragment, useEffect, useState} from 'react';
 import {graphql} from 'gatsby';
 
-import ApiSidebar from '~src/components/apiSidebar';
-import BasePage from '~src/components/basePage';
-import Content from '~src/components/content';
-import SmartLink from '~src/components/smartLink';
-import {OpenAPI, OpenApiPath} from '~src/gatsby/plugins/gatsby-plugin-openapi/types';
+import ApiSidebar from 'sentry-docs/components/apiSidebar';
+import BasePage from 'sentry-docs/components/basePage';
+import Content from 'sentry-docs/components/content';
+import SmartLink from 'sentry-docs/components/smartLink';
+import {
+  OpenAPI,
+  OpenApiPath,
+} from 'sentry-docs/gatsby/plugins/gatsby-plugin-openapi/types';
 
 function Params({params}) {
   return (

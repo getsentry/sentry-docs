@@ -17,14 +17,14 @@ Install Sentry's integration with Log4j 2.x using either Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j2</artifactId>
-    <version>{{ packages.version('sentry.java.log4j2', '4.0.0') }}</version>
+    <version>{{@inject packages.version('sentry.java.log4j2', '4.0.0') }}</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'io.sentry:sentry-log4j2:{{ packages.version('sentry.java.log4j2', '4.0.0') }}'
+implementation 'io.sentry:sentry-log4j2:{{@inject packages.version('sentry.java.log4j2', '4.0.0') }}'
 ```
 
 Configure Sentry as soon as possible in your application's lifecycle:
