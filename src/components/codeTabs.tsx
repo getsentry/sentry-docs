@@ -50,7 +50,7 @@ export default function CodeTabs({children}: Props): JSX.Element {
     return (
       title ||
       LANGUAGES[language] ||
-      (language ? language[0].toUpperCase() + language.substr(1) : 'Text')
+      (language ? language[0].toUpperCase() + language.substring(1) : 'Text')
     );
   });
 

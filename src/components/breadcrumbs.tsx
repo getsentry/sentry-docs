@@ -49,7 +49,7 @@ export function BaseBreadcrumbs({
 }: Props) {
   const location = useLocation();
   let currentPath = location.pathname;
-  if (currentPath.substr(currentPath.length - 1) !== '/') {
+  if (!currentPath.endsWith('/')) {
     currentPath = currentPath += '/';
   }
   const rootNode = nodes.find(n => n.path === currentPath);

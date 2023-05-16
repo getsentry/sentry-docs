@@ -117,8 +117,8 @@ export default function DynamicNav({
 }: Props): JSX.Element | null {
   const location = useLocation();
 
-  if (root.indexOf('/') === 0) {
-    root = root.substr(1);
+  if (root.startsWith('/')) {
+    root = root.substring(1);
   }
 
   let entity: EntityTree;
