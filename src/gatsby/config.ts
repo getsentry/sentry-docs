@@ -27,8 +27,8 @@ const getPlugins = () => {
       options: {
         resolveScopeData: async function () {
           const [apps, packages] = await Promise.all([
-            getAppRegistry,
-            getPackageRegistry,
+            getAppRegistry(),
+            getPackageRegistry(),
           ]);
 
           return {apps, packages};
