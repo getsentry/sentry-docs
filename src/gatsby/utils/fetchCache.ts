@@ -10,26 +10,28 @@ interface Options {
 }
 
 /**
- * Creates a `getData` function that fetches with dataFetch only once.
- * Subsiquent calls will used the already fetched data.
+ * Creates a `ensureData` function that fetches from a URL only once. Subsequent
+ * calls will used the already fetched data.
  */
 export function makeFetchCache<DataType>({dataUrl, name}: Options) {
   let activeFetch: Promise<any> | null = null;
-  let dataCache: DataType | null = null;
+  let data: DataType | null = null;
 
-  async function getData() {
-    if (dataCache) {
-      return dataCache;
+  async function ensureData() {
+    if (data) {
+      return data;
     }
 
     async function fetchData() {
       try {
         const result = await fetch(dataUrl);
-        dataCache = await result.json();
+        data = await result.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);
-        dataCache = null;
+        data = null;
+
+        throw err;
       }
 
       activeFetch = null;
@@ -42,8 +44,8 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     await activeFetch;
 
-    return dataCache;
+    return data;
   }
 
-  return getData;
+  return ensureData;
 }
