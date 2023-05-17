@@ -5,10 +5,10 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Join Sentry engineers as they discuss how to use Profiling to see the exact lines of code or functions causing slowdowns in your application.';
-const BANNER_LINK_URL = 'https://bit.ly/profiling-ama-reg-7';
+  'Join us on May 25th at 10am PT to learn how to investigate errors and performance issues with Session Replay. Plus, get the latest on new features.';
+const BANNER_LINK_URL = 'https://bit.ly/session-replay-troubleshooting-7';
 const BANNER_LINK_TEXT = 'Sign up now.';
 const OPTIONAL_BANNER_IMAGE = null;
 
