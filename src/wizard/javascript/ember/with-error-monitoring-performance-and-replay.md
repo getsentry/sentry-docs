@@ -56,4 +56,3 @@ myUndefinedFunction();
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/ember/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Ember Features](https://docs.sentry.io/platforms/javascript/guides/ember/features/): Learn about our first class integration with the Ember framework.

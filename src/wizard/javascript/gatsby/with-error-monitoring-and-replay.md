@@ -58,5 +58,4 @@ myUndefinedFunction();
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/gatsby/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Gatsby Features](https://docs.sentry.io/platforms/javascript/guides/gatsby/features/): Learn about our first class integration with the Gatsby framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/gatsby/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
