@@ -1,0 +1,48 @@
+---
+title: Swift Package Manager (SPM)
+description: "Learn about installing the Sentry Kotlin Multiplatform SDK with Swift Package Manager."
+---
+
+<Note>We recommend you to use the Sentry Cocoa version 8.4.0 as we cannot guarantee correctness with other versions.</Note>
+
+Open your iOS App in Xcode and open File > Add Packages. Then add the SDK by entering the git repo url in the top right search field:
+
+```text
+https://github.com/getsentry/sentry-cocoa.git
+```
+
+Afterwards to install the Kotlin Multiplatform SDK and setup your Apple targets, you need to add the following to your `build.gradle.kts` file in your shared module:
+
+```kotlin {filename:shared/build.gradle.kts}
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+  listOf(
+    iosX64(),
+    iosArm64(),
+    iosSimulatorArm64()
+  ).forEach {
+    it.binaries.framework {
+        baseName = "shared"
+        isStatic = true // currently available only as static framework
+    }
+  }
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+      }
+    }
+
+    // Apple targets:
+    val iosMain by getting {
+      dependsOn(commonMain)
+    }
+
+    // Other targets...
+  }
+}
+```

@@ -1,0 +1,65 @@
+---
+title: Native Access to SDK
+sidebar_order: 8
+description: "How to directly access the SDK without the shared module."
+---
+
+If you need to access the SDK directly in your native platform without the shared module, you first need to change the dependency configuration from `implementation(...)` to `api(...)`:
+
+```kotlin {filename:shared/build.gradle.kts}
+val commonMain by getting {
+  dependencies {
+    api("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+  }
+}
+```
+
+If you have Apple targets, you also need to export the framework.
+
+### Cocoapods
+
+```kotlin {filename:shared/build.gradle.kts}
+cocoapods {
+  summary = "Some description for the Shared Module"
+  homepage = "Link to the Shared Module homepage"
+  ios.deploymentTarget = "14.1"
+  podfile = project.file("../iosApp/Podfile")
+  pod("Sentry", "~> 8.4.0")
+  export("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+}
+```
+
+### Swift Package Manager
+```kotlin {filename:shared/build.gradle.kts}
+listOf(
+  iosX64(),
+  iosArm64(),
+  iosSimulatorArm64()
+).forEach {
+  it.binaries.framework {
+      baseName = "shared"
+      isStatic = true
+      export("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+  }
+}
+```
+
+## Usage
+
+Now you can access the SDK directly in your native platform:
+
+### Android
+
+```kotlin
+import io.sentry.kotlin.multiplatform.Sentry
+
+Sentry.captureMessage("My message")
+```
+
+### iOS
+
+```swift
+import shared
+
+Sentry.shared.captureMessage(message: "My message")
+```
