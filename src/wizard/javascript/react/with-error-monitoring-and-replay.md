@@ -12,6 +12,9 @@ Sentry captures data by using an SDK within your application’s runtime.
 ```bash
 # Using yarn
 yarn add @sentry/react
+
+# Using npm
+npm install --save @sentry/react
 ```
 
 ## Configure
