@@ -1,0 +1,53 @@
+---
+title: Uploading Debug Symbols
+sidebar_order: 1
+description: "Learn more about how to upload debug symbols in Sentry Kotlin Multiplatform."
+---
+
+To symbolicate your stacktraces, you need to provide debug information to Sentry.
+The symbolication process unscrambles the stacktraces to reveal the function, file names, and line numbers of the crash.
+
+## Apple
+
+For Apple applications please follow the [official documentation](https://docs.sentry.io/platforms/apple/guides/ios/dsym) on how to setup uploading debug symbols.
+
+## Android
+
+### ProGuard/R8 & DexGuard
+
+In order to upload ProGuard mapping files you will need the [Sentry Android Gradle](https://docs.sentry.io/platforms/android/gradle) plugin installed:
+
+```kotlin {filename:androidApp/build.gradle.kts}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id("com.android.application")
+    id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+
+// Prevent Sentry from being included in the Android app through the AGP.
+configurations {
+    compileOnly {
+        exclude(group = "io.sentry", module = "sentry")
+        exclude(group = "io.sentry", module = "sentry-android")
+    }
+}
+```
+
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded through environment variables or from a `sentry.properties` file in your project root.
+
+If you are using the Guardsquare's ProGuard or DexGuard tooling, you have to enable the `experimentalGuardsquareSupport` flag.
+
+Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+You will need to create a `sentry.properties` file:
+
+```kotlin {filename:androidApp/sentry.properties}
+defaults.project=___PROJECT_SLUG___
+defaults.org=___ORG_SLUG___
+auth.token=YOUR_AUTH_TOKEN
+```
