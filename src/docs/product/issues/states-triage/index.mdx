@@ -1,80 +1,60 @@
 ---
-title: Issue States and Triage
+title: Issue Status
 sidebar_order: 30
-description: "Learn more about issue states and how to triage issues."
+description: "Learn about issue status and how to triage issues."
 ---
 
-To help organize issues for you and your team, you can take actions such as assigning, resolving, or ignoring issues. These actions are referred to as _triaging_.
+You can sort and prioritize Issues on the Issues page in Sentry.io by paying attention to the status tags attached to every Issue. It's important to note that an Issue can only have one status at a time.
 
-An issue can be in one of three states:
+Here's a list of all the statuses and the conditions for creating them:
 
-- Unresolved: The default state for all new issues.
-- Ignored: The issue is ignored permanently or until a condition is met, at which point it becomes Unresolved again. [Issue alerts](/product/alerts-notifications/issue-alerts/) are suppressed for ignored issues.
-- Resolved: The issue is marked resolved (or automatically resolved) because it was fixed or isn't expected to happen again. If the issue is seen again, its state changes to Unresolved.
+| Status | Condition | Custom Search Term |
+|--|--|--|
+| New | An issue that was created in the last 3 days. | is:new |
+| Ongoing | An issue that was created more than 3 days ago. | is:ongoing |
+| Escalating | An issue that's exceeded its forecasted event volume. | is:escalating |
+| Regressed | A resolved issue that's come up again.  | is:regressed |
+| Archived | An issue that's been marked as archived. | is:archived |
+| Resolved | An issue that's been marked as fixed. | is:resolved |
 
-When any of the following conditions occur for an issue, that issue is flagged _for review_, included in the **Review List**, and given a label indicating why it was flagged:
+One way to sort the Issues that you see is by selecting a tab at the top of the page. On the “Unresolved tab” you'll find: New, Ongoing, Escalating, and Regressed issues, but you can also  narrow down what you see by choosing the “For Review”, “New”, “Escalating”, “Ongoing”, or “Archived” tabs.
 
-- A new issue is created; it's labeled "New Issue"
-- A resolved issue re-occurs; it's labeled "Regression"
-- An ignored issue meets its ignore conditions; it's labeled "Unignored"
+![Manual vs. automatic issue status update](issue-status-docs.png)
 
-Issues in the **Review List**, or for-review issues, are a sub-set of all unresolved issues, and you can view these issues in the "For Review" tab of the **Issues** page. By default, they are filtered to display issues relevant to you; that is, issues that are assigned to you or suggested for you.
+## Manually Triaging Issues
 
-![For Review tab of the Issues page.](for-review-page-docs.png)
+While some Issue statuses are added and updated automatically, you can manually Archive or Resolve an Issue, which will also change its status.
 
-When you mark a for-review issue as reviewed, [sentry.io](https://sentry.io) removes the reason label and the issue remains in the Unresolved state.
+### Archive
 
-Resolving or ignoring an issue implicitly marks the issue reviewed.
+You can manually archive Issues that are less pressing or not applicable to you or your team. This will change their status to `Archived` and remove them from the Issues list. Sentry will automatically bring an Issue back to the top of the list and change its status to `Escalating` if the events in that Issue significantly increase over a short period of time. There's also an option to archive an issue for:
 
-To keep the list of issues in the **Review List** fresh, [sentry.io](https://sentry.io) automatically marks issues as reviewed if they haven't already been reviewed after seven days.
-
-The image below shows how issues move through different states with the applicable labels.
-
-![Worklow for triaging issues](issue-workflow.png)
-
-## Triage Actions
-
-Triage typically involves one or more of the following actions.
+- A set period of time
+- Until it occurs a set number of times
+- Until a set number of users are affected
 
 ### Resolve
 
-Resolve an issue when it's fixed or you don't expect it to happen again. You can do this manually or by [including the issue ID in a commit](/product/releases/associate-commits/#resolve-issues-by-commit). In addition, you can resolve issues by setting the auto-resolve value.
+You can manually mark an Issue as Resolved when it’s been fixed. You can also specify further by resolving it in:
 
-The "Auto Resolve" feature allows you to specify an interval after the last occurrence of an issue when it should be automatically resolved. To check if this has been defined for a project, go to **[Project] > Settings > General Settings** and check the "Event Settings" section.
+- Your next release
+- A current release
+- Another release
 
-### Ignore
+or
 
-Ignore an issue **permanently** (the default action when you press the button) if it's just noise and you'll likely never care about it. Or ignore it until a condition is met, at which point it becomes Unresolved. You can also ignore an issue if you're working on it and want to silence alerts in the meantime.
+- By [including the issue ID in a commit](/product/releases/associate-commits/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F#resolve-issues-by-commit)
 
-<Note>
-
-Metric alerts can be triggered by ignored issues.
-
-</Note>
-
-### Mark Reviewed
-
-Mark an issue as reviewed when you want to acknowledge that you've seen the issue but don't want to ignore it; that is, you intend to fix it at some point in the future. Marking an issue reviewed removes the reason label and removes it from the **Review List** in the "For Review" tab. The "Mark Reviewed" action is only available on issues flagged for review.
-
-While you can work to have zero unresolved issues ("Inbox Zero") by resolving or ignoring all issues, this usually isn't feasible for any non-trivial production application. However, it is feasible to have zero for-review issues by triaging the issues in the **Review List**.
-**We recommend triaging these issues once a day to keep your issues manageable.**
-
-### Assign
-
-Assign issues to teams or individuals to route them to the right people and help you and your team see only relevant issues. Typically, assigning an issue to a team indicates that the team owns the issue and that they're responsible for triaging it further. In some cases, you can assign issues manually or automatically using [ownership rules and code owners](/product/issues/ownership-rules/). For error issues, on the issue list, you might also see a list of suggested assignees including the owners of suspect commits.
-
-### Link Issues
-
-Create an issue in an external project management tool like Jira that tracks the Sentry issue, or link an existing one. [Two-way sync](/product/accounts/getting-started/#33-issue-tracking) is available for some tools. Issues linked using [public integrations](/product/integrations/integration-platform/public-integration) or [internal integrations](/product/integrations/integration-platform/internal-integration) are searchable using the terms `is:linked` and `is:unlinked`. You can also set up Sentry issues to be automatically linked to tickets (or issues) in certain integrations using [alert actions](/product/alerts-notifications/issue-alerts/).
+If the same Issue comes back, its status will be automatically changed to `Regressed`.
 
 ### Delete
 
-Delete an issue to remove it from [sentry.io](https://sentry.io). A new issue is created if a new instance of the issue (that is, a new event) occurs.
+You can remove an Issue from the Issue list by deleting it, but it will reappear as a new Issue if it reoccurs.
 
-<Include name="only-error-issues-note.mdx" />
+There's also an option to `Delete and Discard Forever`, which will make it so that the Issue is never seen again, even if it reoccurs. Any future events will be discarded automatically and won't  count towards [your quota](/product/accounts/quotas/).
 
-### Delete and Discard
+<Note>
 
-Delete and discard an issue to remove it from [sentry.io](https://sentry.io). A new issue is not created even if a new instance of the issue (that is, a new event) occurs.
+You can only delete [Error Issues](/product/issues/issue-details/error-issues/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F). Other Issue categories, (such as [Performance Issues](/product/issues/issue-details/performance-issues/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F)), don't support this feature.
 
-<Include name="only-error-issues-note.mdx" />
+</Note>
