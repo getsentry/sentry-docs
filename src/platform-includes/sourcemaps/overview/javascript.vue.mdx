@@ -15,12 +15,11 @@ yarn add @sentry/vite-plugin --dev
 
 ### Configuration
 
-Learn more about configuring the plugin in our [Sentry Vite Plugin documentation](https://github.com/getsentry/sentry-javascript-bundler-plugins/tree/main/packages/vite-plugin).
+Learn more about configuring the plugin in our [Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
 
 Example:
 
 ```javascript {filename:vite.config.js}
-import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -40,12 +39,17 @@ export default defineConfig({
 
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
       // and need `project:releases` and `org:read` scopes
-      authToken: process.env.SENTRY_AUTH_TOKEN,
+      authToken: env.SENTRY_AUTH_TOKEN,
 
       sourcemaps: {
         // Specify the directory containing build artifacts
-        assets: "./dist/**",
+        assets: "./**",
+        // Don't upload the source maps of dependencies
+        ignore: ["./node_modules/**"],
       },
+
+      // Helps troubleshooting - set to false to make plugin less noisy
+      debug: true,
 
       // Use the following option if you're on an SDK version lower than 7.47.0:
       // include: "./dist",
@@ -54,11 +58,6 @@ export default defineConfig({
       // release: process.env.RELEASE,
     }),
   ],
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-    },
-  },
 });
 ```
 

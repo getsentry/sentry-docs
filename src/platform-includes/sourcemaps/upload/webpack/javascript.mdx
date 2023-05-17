@@ -1,42 +1,59 @@
-Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
 You can use the Sentry Webpack plugin to automatically create releases and upload source maps to Sentry when bundling your app.
+
+<Note>
+
+This guide for the Sentry Webpack plugin is for version `2.x` of the plugin.
+If you are using version `1.x` of `@sentry/webpack-plugin` please see the migration guide on how to update:
+https://github.com/getsentry/sentry-javascript-bundler-plugins/blob/main/MIGRATION.md
+
+</Note>
 
 ## Installation
 
-```shell {tabTitle:npm}
-npm install --save-dev @sentry/webpack-plugin
+```bash {tabTitle:npm}
+npm install @sentry/webpack-plugin --save-dev
 ```
 
-```shell {tabTitle:Yarn}
-yarn add --dev @sentry/webpack-plugin
+```bash {tabTitle:Yarn}
+yarn add @sentry/webpack-plugin --dev
 ```
 
 ## Configuration
 
-Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
+Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
 
 Example:
 
 <PlatformSection notSupported={["javascript.gatsby"]}>
 
 ```javascript {filename:webpack.config.js}
-const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 module.exports = {
   // ... other config above ...
 
   devtool: "source-map", // Source map generation must be turned on
   plugins: [
-    new SentryWebpackPlugin({
+    sentryWebpackPlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Specify the directory containing build artifacts
-      include: "./dist",
-
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and needs the `project:releases` and `org:read` scopes
+      // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // Specify the directory containing build artifacts
+        assets: "./**",
+        // Don't upload the source maps of dependencies
+        ignore: ["./node_modules/**"],
+      },
+
+      // Helps troubleshooting - set to false to make plugin less noisy
+      debug: true,
+
+      // Use the following option if you're on an SDK version lower than 7.47.0:
+      // include: "./dist",
 
       // Optionally uncomment the line below to override automatic release name detection
       // release: process.env.RELEASE,
@@ -50,23 +67,31 @@ module.exports = {
 <PlatformSection supported={["javascript.gatsby"]}>
 
 ```javascript {filename:gatsby-node.js}
-const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 exports.onCreateWebpackConfig = ({ actions }) => {
   actions.setWebpackConfig({
     plugins: [
-      new SentryWebpackPlugin({
+      sentryWebpackPlugin({
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
 
-        ignore: ["app-*", "polyfill-*", "framework-*", "webpack-runtime-*"],
-
-        // Specify the directory containing build artifacts
-        include: "public",
-
         // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-        // and needs the `project:releases` and `org:read` scopes
+        // and need `project:releases` and `org:read` scopes
         authToken: process.env.SENTRY_AUTH_TOKEN,
+
+        sourcemaps: {
+          // Specify the directory containing build artifacts
+          assets: "./**",
+          // Don't upload the source maps of dependencies
+          ignore: ["./node_modules/**"],
+        },
+
+        // Helps troubleshooting - set to false to make plugin less noisy
+        debug: true,
+
+        // Use the following option if you're on an SDK version lower than 7.47.0:
+        // include: "./dist",
 
         // Optionally uncomment the line below to override automatic release name detection
         // release: process.env.RELEASE,
@@ -83,16 +108,3 @@ exports.onCreateWebpackConfig = ({ actions }) => {
 If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
 
 </Note>
-
-The Sentry Webpack plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // When using the plugin, either remove the `release`` property here entirely or
-  // make sure that the plugin's release option and the Sentry.init()'s release
-  // option match exactly.
-  // release: "my-example-release-1"
-});
-```

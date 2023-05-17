@@ -12,7 +12,7 @@ yarn add @sentry/rollup-plugin --dev
 
 ## Configuration
 
-Learn more about configuring the plugin in our [Sentry Rollup Plugin documentation](https://github.com/getsentry/sentry-javascript-bundler-plugins/tree/main/packages/rollup-plugin).
+Learn more about configuring the plugin in our [Sentry Rollup Plugin documentation](https://www.npmjs.com/package/@sentry/rollup-plugin).
 
 Example:
 
@@ -20,7 +20,6 @@ Example:
 import { sentryRollupPlugin } from "@sentry/rollup-plugin";
 
 export default {
-  input: "./src/index.js",
   plugins: [
     // Put the Sentry rollup plugin after all other plugins
     sentryRollupPlugin({
@@ -29,23 +28,27 @@ export default {
 
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
       // and need `project:releases` and `org:read` scopes
-      authToken: process.env.SENTRY_AUTH_TOKEN,
+      authToken: env.SENTRY_AUTH_TOKEN,
 
       sourcemaps: {
         // Specify the directory containing build artifacts
-        assets: "./out/**",
+        assets: "./**",
+        // Don't upload the source maps of dependencies
+        ignore: ["./node_modules/**"],
       },
 
+      // Helps troubleshooting - set to false to make plugin less noisy
+      debug: true,
+
       // Use the following option if you're on an SDK version lower than 7.47.0:
-      // include: "./out",
+      // include: "./dist",
 
       // Optionally uncomment the line below to override automatic release name detection
-      // release: process.env.RELEASE,
+      // release: env.RELEASE,
     }),
   ],
   output: {
     sourcemap: true, // Source map generation must be turned on
-    dir: "./out",
   },
 };
 ```
