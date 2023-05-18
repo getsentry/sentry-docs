@@ -23,9 +23,9 @@ redirect_from:
 
 <Include name="beta-note-session-replay.mdx" />
 
-[Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a video-like reproduction of what was happening in the user's browser before, during, and after the issue. Rewind and replay your application's DOM state, key user interactions like mouseclicks and scrolls, network requests, and console entries in a single combined UI inspired by your browser's DevTools.
+[Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a video-like reproduction of what was happening in the user's browser before, during, and after the issue. You can rewind and replay your application's DOM state and see key user interactions, like mouse clicks, scrolls, network requests, and console entries, in a single combined UI inspired by your browser's DevTools.
 
-By default, our Session Replay SDK masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data leaves the browser. To learn more, see <PlatformLink to="/session-replay/privacy">Session Replay Privacy</PlatformLink>.
+By default, our Session Replay SDK masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser. To learn more, see <PlatformLink to="/session-replay/privacy">Session Replay Privacy</PlatformLink>.
 
 ## Pre-requisites
 
@@ -64,7 +64,7 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
 
 ### Content Security Policy (CSP)
 
-Session Replay uses a WebWorker to perform work (e.g. compression) off the main UI thread so as not to degrade the performance of your application. Add the below entry to make sure that workers can be loaded:
+Session Replay uses a WebWorker to perform work (for example, compression) off the main UI thread so as not to degrade the performance of your application. Add the below entry to make sure that workers can be loaded:
 
 ```
 worker-src 'self' blob:
@@ -78,7 +78,7 @@ child-src 'self' blob:
 
 ## User Session
 
-A user session starts when the Session Replay SDK is first loaded and initialized. The session will continue until 5 minutes passes without any user interactions with the application **or** until a maximum of 60 minutes have elapsed. Closing the browser tab will end the session immediately according to the rules for [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+A user session starts when the Session Replay SDK is first loaded and initialized. The session will continue until 5 minutes passes without any user interactions with the application **or** until a maximum of 60 minutes have elapsed. Closing the browser tab will end the session immediately, according to the rules for [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 
 <Note>
 
@@ -88,11 +88,11 @@ An _interaction_ refers to either a mouse click or a browser navigation event.
 
 ### Replay Captures on Errors Only
 
-Alternatively, rather than recording an entire session, you can capture a replay only when an error occurs. In this case, the integration will buffer up to one minute worth of events prior to the error being thrown. It will continue to record the session following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
+If you prefer not to record an entire session, you can elect to capture a replay only if an error occurs. In this case, the integration will buffer up to one minute worth of events prior to the error being thrown. It will continue to record the session, following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
 
 ## Sampling
 
-Sampling allows you to control how much of your website's traffic will result in a session replay. There are two sample rates you can adjust to get the replays relevant to your interests:
+Sampling allows you to control how much of your website's traffic will result in a Session Replay. There are two sample rates you can adjust to get the replays relevant to you:
 
 1. <PlatformIdentifier name="replays-session-sample-rate" /> - The sample rate for
    replays that begin recording immediately and last the entirety of the user's session.
@@ -101,15 +101,19 @@ Sampling allows you to control how much of your website's traffic will result in
    up to a minute of events prior to the error and continue recording until the session
    ends.
 
-Sampling occurs when the session is first started. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it is sampled, then the replay recording begins. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it is sampled, the integration will begin buffering the replay and will only upload a replay to Sentry when an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
+Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it's sampled, the replay recording will begin. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
 
 ## Error Linking
 
-Currently, errors that happen on the page while a replay is running are linked to the Replay, making it as easy as possible to jump between related issues and replays. However, it is **possible** that the error count reported on the **Replays Details** page does not match the actual errors that have been captured. This is because errors can be lost; for example, a network request may fail or similar. This shouldn't happen often, but it's theoretically possible.
+Errors that happen on the page while a replay is running will be linked to the replay, making it possible to jump between related issues and replays. However, it's **possible** that in some cases the error count reported on the **Replays Details** page won't match the actual errors that have been captured. That's because errors can be lost, and while this is uncommon, there are a few reasons why it could happen:
+
+- The replay was rate-imited and couldn't be accepted.
+- The replay was deleted by a member of your org.
+- There were network errors and the replay wasn't saved.
 
 ## Verify
 
-While you're testing, set <PlatformIdentifier name="replays-session-sample-rate" /> to `1.0`, as that ensures that every user session will be sent to Sentry.
+While you're testing, we recommend that you set <PlatformIdentifier name="replays-session-sample-rate" /> to `1.0`. This ensures that every user session will be sent to Sentry.
 
 Once testing is complete, **we recommend lowering this value in production**. We still recommend keeping <PlatformIdentifier name="replays-on-error-sample-rate" /> set to `1.0`.
 
