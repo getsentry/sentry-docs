@@ -73,20 +73,26 @@ We are setting the values to "0" or "1" and giving a 50% chance an organization 
 
 Initialize the experiment in `getsentry/web/apps.py` :
 
+If you add your experiment to `getsentry/experiments/config.py` ACTIVE_EXPERIMENTS then it will be automatically initialized because of this piece of code. So no need to make any edits.
 ```python
 class Config(AppConfig):
-		from getsentry.planout.show_plugins_experiment import ShowPluginsExperiment
-    expt_manager.add(ShowPluginsExperiment, "variant")
+  for experiment in ACTIVE_EXPERIMENTS:
+    expt_manager.add(experiment, experiment.param_name)
 ```
 
 ### Changes to **`getsentry/sentry`**
 
-In `src/sentry/static/sentry/app/types/index.tsx` :
+In `static/app/data/experimentConfig.tsx` :
 
 ```tsx
-export type ActiveExperiments = {
-  ShowPluginsExperiment: '1' | '0';
-};
+export const experimentList = [
+  {
+    key: 'ShowPluginsExperiment',
+    type: ExperimentType.Organization,
+    parameter: 'exposed',
+    assignments: [0, 1],
+  },
+] as const;
 ```
 
 Now the experiment is available to you in the `organization` props. You can access it with:
