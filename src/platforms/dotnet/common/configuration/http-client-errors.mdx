@@ -1,0 +1,62 @@
+---
+title: HTTP Client Errors
+sidebar_order: 25
+description: "This feature, once enabled, automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry"
+---
+
+Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry. The error event will contain the `request` and `response` data, such as `url`, `status_code`, and so on.
+
+To enable it:
+
+```csharp
+// Add this to the SDK initialization callback
+options.CaptureFailedRequests = true;
+```
+
+```fsharp
+// Add this to the SDK initialization callback
+options.CaptureFailedRequests <- true
+```
+
+By default, only HTTP client errors with a response code between `500` and `599` are captured as error events, but you can change this behavior by setting the `FailedRequestStatusCodes` option:
+
+```csharp
+options.FailedRequestStatusCodes = new []{ new HttpStatusCodeRange(400, 599) };
+```
+
+```fsharp
+options.FailedRequestStatusCodes <- ResizeArray<_> [ HttpStatusCodeRange(400, 599) ]
+```
+
+HTTP client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by setting the `failedRequestTargets` option with either a regular expression or a plain `String`. A plain string must contain at least one of the items from the list. Plain strings don't have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option:
+
+```csharp
+options.FailedRequestTargets = new[] {new SubstringOrRegexPattern("www.example.com")};
+```
+
+```fsharp
+options.FailedRequestTargets <- ResizeArray<_> [ SubstringOrRegexPattern("www.example.com") ]
+```
+
+Error events may contain PII data, such as `Headers` and `Cookies`. Sentry already does data scrubbing by default, but you can scrub any data before it is sent. Learn more in [Scrubbing Sensitive Data](/platforms/dotnet/data-management/sensitive-data/).
+
+These events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/product/sentry-basics/search/searchable-properties/) documentation.
+
+### Customize or Drop the Error Event
+
+The captured error event can be customized or dropped with a `beforeSend`:
+
+```csharp
+options.SetBeforeSend((@event, hint) =>
+{
+    // modify event here or return null to discard the event
+    return @event;
+});
+```
+
+```fsharp
+options.SetBeforeSend(fun event hint ->
+    // modify event here or return null to discard the event
+    event;
+)
+```
