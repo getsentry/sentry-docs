@@ -14,7 +14,8 @@ To configure the GitHub integration you'll need to create a GitHub app and obtai
 
 Start by following GitHub's [official guide on creating a GitHub App](https://developer.github.com/apps/building-github-apps/creating-a-github-app/).
 
-If the form above does not work for you, you need the following settings for your GitHub Application:
+If the form above does not work for you, you need the following settings for your GitHub Application. 
+You'll need to come up with come up with your own webhook secret:
 
 | Setting                         | Value                                      |
 | ------------------------------- | ------------------------------------------ |
@@ -22,6 +23,7 @@ If the form above does not work for you, you need the following settings for you
 | User authorization callback URL | `${url-prefix}/auth/sso/`                  |
 | Setup URL (optional)            | `${url-prefix}/extensions/github/setup/`   |
 | Webhook URL                     | `${url-prefix}/extensions/github/webhook/` |
+| Webhook secret                  | "my-super-secret-example-secret"           |
 
 When prompted for permissions, choose the following:
 
@@ -34,6 +36,11 @@ When prompted for permissions, choose the following:
 | Issues                                        | Read & write |
 | Pull requests                                 | Read & write |
 | Repository webhooks                           | Read & write |
+
+When prompted to subscribe to events, choose the following:
+
+ - Pull Request
+ - Push 
 
 <Alert title="Trick" level="info">
   Enabling optional permissions will also enable the <Link to="/self-hosted/sso/#github-auth">GitHub SSO</Link> for your instance.
@@ -50,16 +57,8 @@ github-app.name: "GITHUB_APP_NAME"
 github-app.client-id: "GITHUB_CLIENT_ID"
 # Client Secret
 github-app.client-secret: "GITHUB_CLIENT_SECRET"
-```
-
-Sentry utilizes webhooks for `Push` and `Pull Request` events. Generate a webhook secret and add it to your configuration:
-
-```shell
-$ ruby -rsecurerandom -e 'puts SecureRandom.hex(20)'
-```
-
-```yml
-github-app.webhook-secret: "GITHUB_WEBHOOK_SECRET"
+# Webhook Secret
+github-app.webhook-secret: "my-super-secret-example-secret"
 ```
 
 Last, generate and download the private key, and add it to your configuration for your app:
