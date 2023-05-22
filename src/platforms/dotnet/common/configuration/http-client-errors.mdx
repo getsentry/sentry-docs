@@ -39,21 +39,23 @@ Instead, create your `HttpClient` using the `IHttpClientFactory` pattern, as des
 By default, only HTTP client errors with a response code between `500` and `599` are captured as error events, but you can change this behavior by modifying the `FailedRequestStatusCodes` option:
 
 ```csharp
-options.FailedRequestStatusCodes = new []{ new HttpStatusCodeRange(400, 599) };
+options.FailedRequestStatusCodes.Add((400, 499));
 ```
 
 ```fsharp
-options.FailedRequestStatusCodes <- ResizeArray<_> [ HttpStatusCodeRange(400, 599) ]
+options.FailedRequestStatusCodes.Add(HttpStatusCodeRange(400, 599))
 ```
 
 HTTP client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by updating the `FailedRequestTargets` option with either regular expressions or plain strings. A plain string must contain at least one of the items from the list. Plain strings don't have to be full matches, meaning the URL of a request is matched when it contains a substring provided through the option:
 
 ```csharp
-options.FailedRequestTargets = new[]{ new SubstringOrRegexPattern("www.example.com") };
+options.FailedRequestTargets.Add("foo");      // substring
+options.FailedRequestTargets.Add("foo.*bar"); // regex
 ```
 
 ```fsharp
-options.FailedRequestTargets <- ResizeArray<_> [ SubstringOrRegexPattern("www.example.com") ]
+options.FailedRequestTargets.Add("foo")      // substring
+options.FailedRequestTargets.Add("foo.*bar") // regex
 ```
 
 When the `SendDefaultPii` option is enabled, error events may contain PII data such as `Headers` and `Cookies`. Sentry already does data scrubbing by default, but you can also scrub any data before it is sent. Learn more in [Scrubbing Sensitive Data](/platforms/dotnet/data-management/sensitive-data/).
@@ -67,14 +69,41 @@ The captured error event can be customized or dropped with a `beforeSend`:
 ```csharp
 options.SetBeforeSend((@event, hint) =>
 {
-    // modify event here or return null to discard the event
+    if (hint.Items.TryGetValue(HintTypes.HttpResponseMessage, out var responseHint))
+    {
+        var response = (HttpResponseMessage)responseHint!;
+        var request = response.RequestMessage!;
+
+        // Do something with the request and/or response... for example, you could add
+        // some custom context to the event for specific scenarios
+        var statusCode = response.StatusCode;
+        if (statusCode == HttpStatusCode.Unauthorized)
+        {
+            @event.Contexts["Unauthorized"] = request.RequestUri.GetComponents(
+                UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped
+                );
+        }
+    }
+
+    // return the modified event
     return @event;
 });
 ```
 
 ```fsharp
 options.SetBeforeSend(fun event hint ->
-    // modify event here or return null to discard the event
-    event;
+    let (isHint, responseHint) = hint.Items.TryGetValue(HintTypes.HttpResponseMessage)
+    if isHint then
+        let response = responseHint :?> HttpResponseMessage
+        let request = response.RequestMessage :> HttpRequestMessage
+
+        // Do something with the request and/or response... for example, you could add
+        // some custom context to the event for specific scenarios
+        let statusCode = response.StatusCode
+        if statusCode = HttpStatusCode.Unauthorized then
+            event.Contexts.["Unauthorized"] <- request.RequestUri.GetComponents(UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped)
+
+    // return the modified event
+    event
 )
 ```
