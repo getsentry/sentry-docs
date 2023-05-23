@@ -67,3 +67,49 @@ Sentry uses custom message headers for distributed tracing. For Celery versions 
 The fix for the custom headers propagation issue was introduced to Celery project ([PR](https://github.com/celery/celery/pull/6374)) starting with version 5.0.1. However, the fix was not backported to versions 4.x.
 
 </Alert>
+
+## Options
+
+To set options on `CeleryIntegration` to change its behavior, add it explicitly to your `sentry_sdk.init()`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # ...
+    integrations=[
+        CeleryIntegration(
+            monitor_beat_tasks=True,
+            exclude_beat_tasks=["unimportant-task", "payment-check-.*"],
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `CeleryIntegration()`:
+
+- `propagate_traces`
+
+  Propagate Sentry tracing information to the Celery task. This makes it possible to link errors in Celery tasks to the function that triggered the Celery task. If this is set to `False`, errors in Celery tasks can't be matched to the triggering function.
+
+  The default is `True`.
+
+- `monitor_beat_tasks`:
+
+  Turn auto-instrumentation on or off for Celery Beat tasks using Sentry Crons.
+
+  See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+
+  The default is `False`.
+
+- `exclude_beat_tasks`:
+
+  A list of Celery Beat tasks that should be excluded from auto-instrumentation using Sentry Crons. Only applied if `monitor_beat_tasks` is set to `True`.
+
+  The list can contain strings with the names of tasks in the Celery Beat schedule to be excluded. It can also include regular expressions to match multiple tasks. For example, if you include `"payment-check-.*"` every task starting with `payment-check-` will be excluded from auto-instrumentation.
+
+  See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+
+  The default is `None`.
