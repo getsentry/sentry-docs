@@ -1,0 +1,47 @@
+---
+title: Azure Functions Isolated Worker
+description: "Learn about Sentry's .NET integration with Azure Functions Isolated Worker."
+---
+
+Sentry provides an integration with Azure Functions Isolated Worker through the [Sentry.AzureFunctions.Worker NuGet package](https://www.nuget.org/packages/Sentry.AzureFunctions.Worker).
+All triggers are supported.
+
+## Install
+
+Add the Sentry dependency:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.AzureFunctions.Worker -Version {{@inject packages.version('sentry.dotnet.azurefunctions.worker') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.AzureFunctions.Worker -v {{@inject packages.version('sentry.dotnet.azurefunctions.worker') }}
+```
+
+You can combine this integration with a logging library like `log4net`, `NLog`, or `Serilog`. The logging integration also capture events when an error is logged.
+
+### Configuring
+
+All `ASP.NET Core` configurations are valid here. But one configuration in particular is relevant.
+
+`FlushOnCompletedRequest` ensures all events are flushed out. This is because the general ASP.NET Core hooks for when the process is exiting are not guaranteed to run in a serverless environment. This setting ensures that no event is lost if AWS recycles the process.
+
+```csharp
+var host = new HostBuilder()
+    .ConfigureFunctionsWorkerDefaults((host, builder) =>
+    {
+        builder.UseSentry(host, options =>
+        {
+            // o.Dsn = "<DSN>";
+            options.EnableTracing = true;
+            // When configuring for the first time, to see what the SDK is doing:
+            // options.Debug = true;
+        });
+    })
+    .Build();
+await host.RunAsync();
+```
+
+## Samples
+
+- [Integration with Azure Functions](https://github.com/getsentry/sentry-dotnet/tree/main/src/Sentry.AzureFunctions.Worker) sample demonstrates Sentry with Azure Functions Isolated Worker SDK. (**C#**)
