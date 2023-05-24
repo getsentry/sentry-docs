@@ -1,0 +1,30 @@
+```javascript
+import * as Sentry from "@sentry/react-native";
+import { RewriteFrames as RewriteFramesIntegration } from "@sentry/integrations";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new RewriteFramesIntegration(
+    {
+      // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
+      root: string;
+
+      // a custom prefix that will be used by the default iteratee (default: `app://`)
+      prefix: string;
+
+      // function that takes the frame, applies a transformation, and returns it
+      iteratee: (frame) => frame;
+    }
+  )],
+});
+```
+
+#### Usage Examples
+
+For example, if the full path to your file is `bundles/bundle1.js`:
+
+| Usage                                  | Path in Stack Trace      | Description                                                                                                                        |
+| -------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `RewriteFrames()`                      | `app:///bundle1.js`      | The default behavior is to replace the absolute path, except the filename, and prefix it with the default prefix (`app:///`).      |
+| `RewriteFrames({root: '/bundles'})`    | `app:///bundle1.js`      | `root` is defined as `/bundles`, so only that part is trimmed from beginning of the path.                                          |
+| `RewriteFrames({iteratee: () => {} })` | `app:///bundle.js`       | The number at the end of the bundle can be a file hash, this is common in Expo apps, you can remove it in the `iteratee` callback. |
