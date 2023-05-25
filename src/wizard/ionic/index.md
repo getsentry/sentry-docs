@@ -94,7 +94,10 @@ Sentry.init(
     integrations: [
       new SentrySibling.BrowserTracing({
         // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-        tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+        tracePropagationTargets: [
+          "localhost",
+          /^https:\/\/yourserver\.io\/api/,
+        ],
       }),
     ],
   },
