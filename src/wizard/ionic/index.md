@@ -79,10 +79,8 @@ You must initialize the Sentry SDK as early as you can:
 
 ```javascript
 import * as Sentry from "@sentry/capacitor";
-// The example is using Angular, Import '@sentry/vue' or '@sentry/react' when using a Sibling different than Angular.
-import * as SentrySibling from "@sentry/angular";
-// For automatic instrumentation (highly recommended)
-import { BrowserTracing } from "@sentry/tracing";
+// The example is using Angular 12+. Import '@sentry/angular' for Angular 10 and 11. Import '@sentry/vue' or '@sentry/react' when using a Sibling different than Angular.
+import * as SentrySibling from "@sentry/angular-ivy";
 
 Sentry.init(
   {
@@ -94,8 +92,9 @@ Sentry.init(
     // We recommend adjusting this value in production.
     tracesSampleRate: 1.0,
     integrations: [
-      new BrowserTracing({
-        tracingOrigins: ["localhost", "https://yourserver.io/api"],
+      new SentrySibling.BrowserTracing({
+        // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+        tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       }),
     ],
   },
