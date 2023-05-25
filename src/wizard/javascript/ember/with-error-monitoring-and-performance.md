@@ -28,12 +28,7 @@ import * as Sentry from "@sentry/ember";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.BrowserTracing({
-      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-    }),
-  ],
+
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
 });
