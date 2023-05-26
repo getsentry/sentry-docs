@@ -88,7 +88,7 @@ export function SmartLink({
       to={forcedUrl ?? realTo}
       activeClassName={activeClassName}
       // We need to manually set class to active because Gatsby doesn't highlight correclty with the original_referrer query param
-      className={isActive ? activeClassName : className}
+      className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >
       {children || to || href}
