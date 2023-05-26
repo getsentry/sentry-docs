@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 
 import usePlatform, {getPlatformsWithFallback, Platform} from './hooks/usePlatform';
 
@@ -56,5 +56,5 @@ export default function PlatformSection({
     return null;
   }
 
-  return <React.Fragment>{children}</React.Fragment>;
+  return <Fragment>{children}</Fragment>;
 }

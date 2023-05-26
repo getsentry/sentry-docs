@@ -1,5 +1,5 @@
-import React, {useContext, useRef, useState} from 'react';
-import ReactDOM from 'react-dom';
+import React, {Children, Fragment, useContext, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {ArrowDown, Clipboard} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
@@ -14,7 +14,7 @@ import CodeContext from './codeContext';
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
 function makeKeywordsClickable(children: React.ReactChildren) {
-  const items = React.Children.toArray(children);
+  const items = Children.toArray(children);
 
   KEYWORDS_REGEX.lastIndex = 0;
 
@@ -102,7 +102,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const [isAnimating, setIsAnimating] = useState(false);
 
   if (!currentSelection) {
-    return <React.Fragment>keyword</React.Fragment>;
+    return <Fragment>keyword</Fragment>;
   }
 
   const selector = isOpen && (
@@ -135,7 +135,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const portal = getPortal();
 
   return (
-    <React.Fragment>
+    <Fragment>
       <KeywordDropdown
         key={index}
         ref={setReferenceEl}
@@ -165,9 +165,8 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
           </AnimatePresence>
         </span>
       </KeywordDropdown>
-      {portal &&
-        ReactDOM.createPortal(<AnimatePresence>{selector}</AnimatePresence>, portal)}
-    </React.Fragment>
+      {portal && createPortal(<AnimatePresence>{selector}</AnimatePresence>, portal)}
+    </Fragment>
   );
 }
 

@@ -19,7 +19,7 @@ function Params({params}) {
   return (
     <dl className="api-params">
       {params.map(param => (
-        <React.Fragment key={param.name}>
+        <Fragment key={param.name}>
           <dt>
             <div>
               <code data-index>{param.name}</code>
@@ -63,7 +63,7 @@ function Params({params}) {
               <Content file={param} />
             </dd>
           )}
-        </React.Fragment>
+        </Fragment>
       ))}
     </dl>
   );
