@@ -3,7 +3,7 @@ import {Link} from 'gatsby';
 
 import {marketingUrlParams} from 'sentry-docs/utils';
 
-import ExternalLink from './externalLink';
+import {ExternalLink} from './externalLink';
 
 type Props = {
   activeClassName?: string;
@@ -17,7 +17,7 @@ type Props = {
   to?: string;
 };
 
-export default function SmartLink({
+export function SmartLink({
   to,
   href,
   children,

@@ -1,15 +1,15 @@
 import React from 'react';
 import {PlatformIcon} from 'platformicons';
 
-import usePlatform, {Platform} from './hooks/usePlatform';
-import SmartLink from './smartLink';
+import {Platform, usePlatform} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
 type Props = {
   className?: string;
   platform?: string;
 };
 
-export default function GuideGrid({platform, className}: Props): JSX.Element {
+export function GuideGrid({platform, className}: Props): JSX.Element {
   const [currentPlatform] = usePlatform(platform);
   // platform might actually not be a platform, so lets handle that case gracefully
   if (!(currentPlatform as Platform).guides) {

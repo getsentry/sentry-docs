@@ -2,12 +2,12 @@ import React, {forwardRef, Fragment, useRef} from 'react';
 
 import {getCurrentTransaction} from '../utils';
 
-import Banner from './banner';
-import CodeContext, {useCodeContextState} from './codeContext';
+import {Banner} from './banner';
+import {CodeContext, useCodeContextState} from './codeContext';
 import {GitHubCTA} from './githubCta';
-import Layout from './layout';
-import SEO from './seo';
-import TableOfContents from './tableOfContents';
+import {Layout} from './layout';
+import {SEO} from './seo';
+import {TableOfContents} from './tableOfContents';
 
 export type PageContext = {
   description?: string;
@@ -49,7 +49,7 @@ type Props = {
   sidebar?: JSX.Element;
 };
 
-export default function BasePage({
+export function BasePage({
   data: {file} = {},
   pageContext = {},
   seoTitle,

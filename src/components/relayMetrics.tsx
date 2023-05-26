@@ -2,7 +2,7 @@ import React, {Fragment} from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import Alert from './alert';
+import {Alert} from './alert';
 
 const query = graphql`
   query RelayMetricsQuery {
@@ -62,7 +62,7 @@ function Metric({metric}) {
   );
 }
 
-export default function RelayMetrics(): JSX.Element {
+export function RelayMetrics(): JSX.Element {
   const data = useStaticQuery(query);
   const metrics = data.allRelayMetric.nodes;
 

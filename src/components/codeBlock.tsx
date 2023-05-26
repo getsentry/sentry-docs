@@ -9,7 +9,7 @@ import memoize from 'lodash/memoize';
 
 import {useOnClickOutside} from 'sentry-docs/utils';
 
-import CodeContext from './codeContext';
+import {CodeContext} from './codeContext';
 
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
@@ -338,7 +338,7 @@ type Props = {
   title?: string;
 };
 
-export default function CodeBlock({filename, language, children}: Props): JSX.Element {
+export function CodeBlock({filename, language, children}: Props): JSX.Element {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 

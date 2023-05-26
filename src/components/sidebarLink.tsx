@@ -2,7 +2,7 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {withPrefix} from 'gatsby';
 
-import SmartLink from './smartLink';
+import {SmartLink} from './smartLink';
 
 type Props = {
   /**
@@ -20,12 +20,7 @@ type Props = {
   collapsed?: boolean | null;
 };
 
-export default function SidebarLink({
-  to,
-  title,
-  children,
-  collapsed = null,
-}: Props): JSX.Element {
+export function SidebarLink({to, title, children, collapsed = null}: Props): JSX.Element {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 

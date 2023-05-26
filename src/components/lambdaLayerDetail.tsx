@@ -35,7 +35,7 @@ const toOption = ({region}: RegionData) => {
   };
 };
 
-export default function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element {
+export function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element {
   const {
     allLayer: {nodes: layerList},
   }: {allLayer: {nodes: LayerData[]}} = useStaticQuery(query);

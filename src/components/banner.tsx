@@ -47,7 +47,7 @@ const readOrResetLocalStorage = () => {
   }
 };
 
-function Banner({isModule = false}) {
+export function Banner({isModule = false}) {
   const [isVisible, setIsVisible] = useState(false);
   const hash = fastHash(`${BANNER_TEXT}:${BANNER_LINK_URL}`).toString();
 
@@ -99,5 +99,3 @@ function Banner({isModule = false}) {
       )
     : null;
 }
-
-export default Banner;

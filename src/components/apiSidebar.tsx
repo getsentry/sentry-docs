@@ -2,8 +2,8 @@ import React, {Fragment} from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import DynamicNav, {toTree} from './dynamicNav';
-import SidebarLink from './sidebarLink';
+import {toTree, DynamicNav} from './dynamicNav';
+import {SidebarLink} from './sidebarLink';
 
 const query = graphql`
   query ApiNavQuery {
@@ -18,7 +18,7 @@ const query = graphql`
   }
 `;
 
-export default function ApiSidebar() {
+export function ApiSidebar() {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   const endpoints = tree[0].children.filter(curr => curr.children.length > 1);
