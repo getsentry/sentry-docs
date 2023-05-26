@@ -11,7 +11,7 @@ type Props = {
   title: string;
   to: string;
   /**
-   * Children represnets the additional links nested under this sidebar link
+   * Children represent the additional links nested under this sidebar link
    */
   children?: React.ReactNode;
   /**
