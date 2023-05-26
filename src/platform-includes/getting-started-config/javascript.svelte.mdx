@@ -1,6 +1,6 @@
 To use the SDK, initialize it in your Svelte entry point before bootstrapping your app. In a typical Svelte project, that is your `main.js` or `main.ts` file.
 
-```typescript {filename: main.ts}
+```javascript {filename: main.js}
 import "./app.css";
 import App from "./App.svelte";
 
@@ -9,7 +9,13 @@ import * as Sentry from "@sentry/svelte";
 // Initialize the Sentry SDK here
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+    new Sentry.Replay(),
+  ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
@@ -20,30 +26,6 @@ Sentry.init({
   // plus for 100% of sessions with an error
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-});
-
-const app = new App({
-  target: document.getElementById("app"),
-});
-
-export default app;
-```
-
-```javascript {filename: main.js}
-import "./app.css";
-import App from "./App.svelte";
-
-import * as Sentry from "@sentry/svelte";
-
-// Initialize the Sentry SDK here
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.BrowserTracing()],
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
 });
 
 const app = new App({
