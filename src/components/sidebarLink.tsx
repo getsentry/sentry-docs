@@ -5,11 +5,19 @@ import {withPrefix} from 'gatsby';
 import SmartLink from './smartLink';
 
 type Props = {
+  /**
+   * The text of the link
+   */
+  title: string;
   to: string;
+  /**
+   * Children represnets the additional links nested under this sidebar link
+   */
   children?: React.ReactNode;
-  className?: string;
+  /**
+   * Indicates that the links are currently hidden. Overriden by isActive
+   */
   collapsed?: boolean | null;
-  title?: string;
 };
 
 export default function SidebarLink({
@@ -17,16 +25,14 @@ export default function SidebarLink({
   title,
   children,
   collapsed = null,
-  className = '',
 }: Props): JSX.Element {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
   const showSubtree = isActive || collapsed === false;
-  className += 'toc-item';
 
   return (
-    <li className={className} data-sidebar-branch>
+    <li className="toc-item" data-sidebar-branch>
       <SmartLink
         to={to}
         className="d-block"
