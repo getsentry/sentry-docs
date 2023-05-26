@@ -2,7 +2,7 @@ import React, {Fragment} from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import {toTree, DynamicNav} from './dynamicNav';
+import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink} from './sidebarLink';
 
 const query = graphql`
