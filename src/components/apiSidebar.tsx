@@ -48,7 +48,7 @@ export default function ApiSidebar() {
               children,
             }) => (
               <React.Fragment key={path}>
-                <SidebarLink to={path}>{title}</SidebarLink>
+                <SidebarLink to={path} title={title} />
                 {isActive(path) && (
                   <div style={{paddingLeft: '0.5rem'}}>
                     {children
@@ -60,9 +60,7 @@ export default function ApiSidebar() {
                             context: {title: contextTitle},
                           },
                         }) => (
-                          <SidebarLink key={path} to={childPath}>
-                            {contextTitle}
-                          </SidebarLink>
+                          <SidebarLink key={path} to={childPath} title={contextTitle} />
                         )
                       )}
                   </div>

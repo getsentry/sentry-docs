@@ -70,16 +70,15 @@ export function BaseSidebar({data}: ChildProps): JSX.Element {
           <h6>Additional Resources</h6>
         </div>
         <ul className="list-unstyled" data-sidebar-tree>
-          <SidebarLink to="https://help.sentry.io/">Support</SidebarLink>
-          <SidebarLink to="/platforms/">Platforms</SidebarLink>
-          <SidebarLink to="/api/">API Reference</SidebarLink>
-          <SidebarLink to="/contributing/">Contributing to Docs</SidebarLink>
-          <SidebarLink to="https://develop.sentry.dev">
-            Developer Documentation
-          </SidebarLink>
-          <SidebarLink to="https://develop.sentry.dev/self-hosted/">
-            Self-Hosting Sentry
-          </SidebarLink>
+          <SidebarLink to="https://help.sentry.io/" title="Support" />
+          <SidebarLink to="/platforms/" title="Platforms" />
+          <SidebarLink to="/api/" title="API Reference" />
+          <SidebarLink to="/contributing/" title="Contributing to Docs" />
+          <SidebarLink to="https://develop.sentry.dev" title="Developer Documentation" />
+          <SidebarLink
+            to="https://develop.sentry.dev/self-hosted/"
+            title="Self-Hosting Sentry"
+          />
         </ul>
       </li>
       {process.env.NODE_ENV !== 'production' && (

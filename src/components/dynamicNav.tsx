@@ -171,9 +171,7 @@ export default function DynamicNav({
         <ul className="list-unstyled" data-sidebar-tree>
           {prependLinks &&
             prependLinks.map(link => (
-              <SidebarLink to={link[0]} key={link[0]}>
-                {link[1]}
-              </SidebarLink>
+              <SidebarLink to={link[0]} key={link[0]} title={link[1]} />
             ))}
           <Children tree={entity.children} exclude={exclude} showDepth={showDepth} />
         </ul>
