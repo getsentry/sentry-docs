@@ -2,7 +2,7 @@ import React, {Fragment} from 'react';
 import {NavDropdown} from 'react-bootstrap';
 import {PlatformIcon} from 'platformicons';
 
-import {usePlatformList, usePlatform} from './hooks/usePlatform';
+import {usePlatform, usePlatformList} from './hooks/usePlatform';
 import {SmartLink} from './smartLink';
 
 export function NavbarPlatformDropdown() {
