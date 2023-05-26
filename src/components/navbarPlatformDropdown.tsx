@@ -2,10 +2,10 @@ import React, {Fragment} from 'react';
 import {NavDropdown} from 'react-bootstrap';
 import {PlatformIcon} from 'platformicons';
 
-import usePlatform, {usePlatformList} from './hooks/usePlatform';
-import SmartLink from './smartLink';
+import {usePlatform, usePlatformList} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
-export default function NavbarPlatformDropdown() {
+export function NavbarPlatformDropdown() {
   const platformList = usePlatformList();
   const [currentPlatform] = usePlatform(null, false, false);
   return (

@@ -3,7 +3,7 @@ import React, {Fragment, useEffect, useState} from 'react';
 import {captureException} from '../utils';
 
 import {PageContext} from './basePage';
-import GuideGrid from './guideGrid';
+import {GuideGrid} from './guideGrid';
 
 type Item = {
   items: Item[];
@@ -77,7 +77,7 @@ function recursiveRender(items) {
   });
 }
 
-export default function TableOfContents({contentRef, pageContext}: Props) {
+export function TableOfContents({contentRef, pageContext}: Props) {
   const [items, setItems] = useState<Item[]>(null);
   const {platform} = pageContext;
 

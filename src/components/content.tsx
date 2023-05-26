@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Markdown from './markdown';
+import {Markdown} from './markdown';
 
 type FileNode = {
   childMarkdownRemark?: {
@@ -20,7 +20,7 @@ function RawHtml({html}) {
   return <div dangerouslySetInnerHTML={{__html: html}} />;
 }
 
-export default function Content({file}: Props): JSX.Element | null {
+export function Content({file}: Props): JSX.Element | null {
   if (!file) {
     return null;
   }

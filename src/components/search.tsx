@@ -9,8 +9,8 @@ import DOMPurify from 'dompurify';
 import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
 
-import useKeyboardNavigate from './hooks/useKeyboardNavigate';
-import Logo from './logo';
+import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
+import {Logo} from './logo';
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {
@@ -82,7 +82,7 @@ type Props = {
   platforms?: string[];
 };
 
-function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
+export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -282,5 +282,3 @@ function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
     </div>
   );
 }
-
-export default Search;

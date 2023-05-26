@@ -1,3 +1,3 @@
-export default function Break() {
+export function Break() {
   return null;
 }

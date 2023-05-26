@@ -1,13 +1,14 @@
 import React, {Fragment, useState} from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import usePlatform, {
+import {
   getPlatform,
   getPlatformsWithFallback,
   Platform,
+  usePlatform,
 } from './hooks/usePlatform';
-import Content from './content';
-import SmartLink from './smartLink';
+import {Content} from './content';
+import {SmartLink} from './smartLink';
 
 const includeQuery = graphql`
   query PlatformContentQuery {
@@ -63,11 +64,7 @@ const getFileForPlatform = (
   return contentMatch;
 };
 
-export default function PlatformContent({
-  includePath,
-  platform,
-  children,
-}: Props): JSX.Element {
+export function PlatformContent({includePath, platform, children}: Props): JSX.Element {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);

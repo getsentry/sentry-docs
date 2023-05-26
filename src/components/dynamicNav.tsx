@@ -4,8 +4,8 @@ import {withPrefix} from 'gatsby';
 
 import {sortPages} from 'sentry-docs/utils';
 
-import SidebarLink from './sidebarLink';
-import SmartLink from './smartLink';
+import {SidebarLink} from './sidebarLink';
+import {SmartLink} from './smartLink';
 
 type Node = {
   [key: string]: any;
@@ -104,7 +104,7 @@ type Props = {
   title?: string;
 };
 
-export default function DynamicNav({
+export function DynamicNav({
   root,
   title,
   tree,

@@ -4,8 +4,8 @@ import {PlatformIcon} from 'platformicons';
 import {parse} from 'query-string';
 
 import {usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
-import Layout from 'sentry-docs/components/layout';
-import SmartLink from 'sentry-docs/components/smartLink';
+import {Layout} from 'sentry-docs/components/layout';
+import {SmartLink} from 'sentry-docs/components/smartLink';
 
 type Props = {
   path?: string;

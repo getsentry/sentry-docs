@@ -21,7 +21,7 @@ const ChecksumValue = styled.code`
   white-space: nowrap;
 `;
 
-export default function JsBundleList(): JSX.Element {
+export function JsBundleList(): JSX.Element {
   const {
     package: {files},
   } = useStaticQuery(query);

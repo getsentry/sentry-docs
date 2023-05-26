@@ -68,7 +68,7 @@ type CodeContextType = {
   sharedKeywordSelection: any;
 };
 
-const CodeContext = createContext<CodeContextType | null>(null);
+export const CodeContext = createContext<CodeContextType | null>(null);
 
 const parseDsn = function (dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
@@ -152,8 +152,6 @@ export async function fetchCodeKeywords() {
     }),
   };
 }
-
-export default CodeContext;
 
 export function useCodeContextState(fetcher = fetchCodeKeywords) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);

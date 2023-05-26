@@ -1,6 +1,6 @@
 import React from 'react';
 
-import SmartLink from './smartLink';
+import {SmartLink} from './smartLink';
 
 type GitHubCTAProps = {
   relativePath: string;

@@ -2,7 +2,7 @@ import React from 'react';
 import Select from 'react-select';
 import {graphql, StaticQuery} from 'gatsby';
 
-import usePlatform from './hooks/usePlatform';
+import {usePlatform} from './hooks/usePlatform';
 
 const query = graphql`
   query PlatformSelectorQuery {
@@ -73,7 +73,7 @@ export function BasePlatformSelector({
   );
 }
 
-export default function PlatformSelector(): JSX.Element {
+export function PlatformSelector(): JSX.Element {
   return (
     <StaticQuery query={query} render={data => <BasePlatformSelector data={data} />} />
   );
