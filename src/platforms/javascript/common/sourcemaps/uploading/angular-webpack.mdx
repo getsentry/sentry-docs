@@ -72,34 +72,26 @@ If you're using an Angular version below 13, only `ng build --prod` will leverag
 Register the Sentry Webpack plugin in your `webpack.config.js`:
 
 ```javascript {filename:webpack.config.js}
-const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 module.exports = {
   // ... other config above ...
 
   devtool: "source-map", // Source map generation must be turned on
   plugins: [
-    new SentryWebpackPlugin({
+    sentryWebpackPlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
       // and need the `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
-
-      // Specify the directory containing build artifacts
-      // By default, Angular emits build files in the `dist` directory but your
-      // configuration may vary
-      include: "./dist/my-project",
-
-      // Optionally uncomment the line below to override automatic release name detection
-      // release: process.env.RELEASE,
     }),
   ],
 };
 ```
 
-Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://github.com/getsentry/sentry-webpack-plugin).
+Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
 
 ### 3. Upload
 
@@ -107,19 +99,4 @@ To upload the source maps, build your Angular application:
 
 ```bash
 ng build # add --prod for Angular versions below 13
-```
-
-### Releases
-
-The Sentry Webpack plugin will automatically inject a release value into the SDK, so you should either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // When using the plugin, either remove the `release`` property here entirely or
-  // make sure that the plugin's release option and the Sentry.init()'s release
-  // option match exactly.
-  // release: "my-example-release-1"
-});
 ```
