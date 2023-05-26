@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import {NavDropdown} from 'react-bootstrap';
 import {PlatformIcon} from 'platformicons';
 
@@ -12,7 +12,7 @@ export default function NavbarPlatformDropdown() {
     <NavDropdown
       title={
         currentPlatform ? (
-          <React.Fragment>
+          <Fragment>
             <PlatformIcon
               platform={currentPlatform.key}
               size={16}
@@ -20,7 +20,7 @@ export default function NavbarPlatformDropdown() {
               format="lg"
             />
             {currentPlatform.title}
-          </React.Fragment>
+          </Fragment>
         ) : (
           'Platforms'
         )

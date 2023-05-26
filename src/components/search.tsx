@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {
   Hit,
   Result,
@@ -195,7 +195,7 @@ function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
               {results
                 .filter(x => x.hits.length > 0)
                 .map((result, i) => (
-                  <React.Fragment key={result.site}>
+                  <Fragment key={result.site}>
                     {showOffsiteResults && (
                       <h4 className="sgs-site-result-heading">From {result.name}</h4>
                     )}
@@ -255,7 +255,7 @@ function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
                         </li>
                       ))}
                     </ul>
-                  </React.Fragment>
+                  </Fragment>
                 ))}
             </div>
           )}

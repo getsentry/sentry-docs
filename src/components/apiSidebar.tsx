@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
@@ -47,7 +47,7 @@ export default function ApiSidebar() {
               },
               children,
             }) => (
-              <React.Fragment key={path}>
+              <Fragment key={path}>
                 <SidebarLink to={path} title={title} />
                 {isActive(path) && (
                   <div style={{paddingLeft: '0.5rem'}}>
@@ -65,7 +65,7 @@ export default function ApiSidebar() {
                       )}
                   </div>
                 )}
-              </React.Fragment>
+              </Fragment>
             )
           )}
         </ul>

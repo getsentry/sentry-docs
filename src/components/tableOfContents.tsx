@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 
 import {captureException} from '../utils';
 
@@ -103,12 +103,12 @@ export default function TableOfContents({contentRef, pageContext}: Props) {
       </div>
       <ul className="section-nav">{recursiveRender(items)}</ul>
       {platform && (
-        <React.Fragment>
+        <Fragment>
           <div className="doc-toc-title">
             <h6>Related Guides</h6>
           </div>
           <GuideGrid platform={platform.name} className="section-nav" />
-        </React.Fragment>
+        </Fragment>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
@@ -44,7 +44,7 @@ function Metric({metric}) {
   const descriptionHtml = metric.childRelayMetricDescription.childMarkdownRemark.html;
 
   return (
-    <React.Fragment>
+    <Fragment>
       <dt>
         <code>
           {metric.name} <MetricType>({metric.type})</MetricType>
@@ -58,7 +58,7 @@ function Metric({metric}) {
           }}
         />
       </dd>
-    </React.Fragment>
+    </Fragment>
   );
 }
 

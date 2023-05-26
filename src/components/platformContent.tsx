@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment, useState} from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
 import usePlatform, {
@@ -71,7 +71,7 @@ export default function PlatformContent({
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
-  const [dropdown, setDropdown] = React.useState(null);
+  const [dropdown, setDropdown] = useState(null);
   const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
 
@@ -148,10 +148,10 @@ export default function PlatformContent({
 
       <div className="tab-content">
         <div className="tab-pane show active">
-          <React.Fragment>
+          <Fragment>
             {children || null}
             <Content key={contentMatch.id} file={contentMatch} />
-          </React.Fragment>
+          </Fragment>
         </div>
       </div>
     </section>
