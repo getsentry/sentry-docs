@@ -72,7 +72,6 @@ export function BaseSidebar({data}: ChildProps): JSX.Element {
         <ul className="list-unstyled" data-sidebar-tree>
           <SidebarLink to="https://help.sentry.io/">Support</SidebarLink>
           <SidebarLink to="/platforms/">Platforms</SidebarLink>
-          <SidebarLink to="/clients/">Legacy SDKs</SidebarLink>
           <SidebarLink to="/api/">API Reference</SidebarLink>
           <SidebarLink to="/contributing/">Contributing to Docs</SidebarLink>
           <SidebarLink to="https://develop.sentry.dev">

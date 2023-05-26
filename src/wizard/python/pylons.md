@@ -1,6 +1,6 @@
 ---
 name: Pylons
-doc_link: https://docs.sentry.io/clients/python/integrations/pylons/
+doc_link: https://docs.sentry.io/platforms/python/legacy-sdk/integrations/pylons/
 support_level: production
 type: framework
 ---

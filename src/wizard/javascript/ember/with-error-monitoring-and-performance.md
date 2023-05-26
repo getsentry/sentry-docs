@@ -53,5 +53,4 @@ myUndefinedFunction();
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/ember/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Ember Features](https://docs.sentry.io/platforms/javascript/guides/ember/features/): Learn about our first class integration with the Ember framework.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/ember/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.
