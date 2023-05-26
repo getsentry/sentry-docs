@@ -1,7 +1,7 @@
 import React from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import {toTree, DynamicNav} from './dynamicNav';
+import {DynamicNav, toTree} from './dynamicNav';
 
 const query = graphql`
   query InternalDocsSidebarQuery {
