@@ -55,5 +55,4 @@ return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/nextjs/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Next.js Features](https://docs.sentry.io/platforms/javascript/guides/nextjs/features/): Learn about our first class integration with the Next.js framework.
 - [Session Replay](https://docs.sentry.io/platforms/javascript/guides/nextjs/session-replay/): Get to the root cause of an error or latency issue faster by seeing all the technical details related to that issue in one visual replay on your web application.

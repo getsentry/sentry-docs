@@ -117,7 +117,7 @@ export function BaseSEO({
         .concat(
           noindex
             ? {
-                property: 'robots',
+                name: 'robots',
                 content: 'noindex',
               }
             : []
