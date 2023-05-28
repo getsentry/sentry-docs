@@ -2,8 +2,8 @@ import React from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import usePlatform from './hooks/usePlatform';
-import SmartLink from './smartLink';
+import {usePlatform} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
 const query = graphql`
   query PlatformSdkDetail {
@@ -45,7 +45,7 @@ const PackageDetail = styled.div`
   }
 `;
 
-export default function PlatformSdkDetail(): JSX.Element {
+export function PlatformSdkDetail(): JSX.Element {
   const [platform] = usePlatform();
 
   const {

@@ -1,7 +1,7 @@
 import React from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import Content from './content';
+import {Content} from './content';
 
 const includeQuery = graphql`
   query IncludeQuery {
@@ -22,7 +22,7 @@ type Props = {
   name: string;
 };
 
-export default function Include({name}: Props): JSX.Element {
+export function Include({name}: Props): JSX.Element {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import DynamicNav, {toTree} from './dynamicNav';
-import SidebarLink from './sidebarLink';
+import {DynamicNav, toTree} from './dynamicNav';
+import {SidebarLink} from './sidebarLink';
 
 const query = graphql`
   query ApiNavQuery {
@@ -18,7 +18,7 @@ const query = graphql`
   }
 `;
 
-export default function ApiSidebar() {
+export function ApiSidebar() {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   const endpoints = tree[0].children.filter(curr => curr.children.length > 1);
@@ -47,8 +47,8 @@ export default function ApiSidebar() {
               },
               children,
             }) => (
-              <React.Fragment key={path}>
-                <SidebarLink to={path}>{title}</SidebarLink>
+              <Fragment key={path}>
+                <SidebarLink to={path} title={title} />
                 {isActive(path) && (
                   <div style={{paddingLeft: '0.5rem'}}>
                     {children
@@ -60,14 +60,12 @@ export default function ApiSidebar() {
                             context: {title: contextTitle},
                           },
                         }) => (
-                          <SidebarLink key={path} to={childPath}>
-                            {contextTitle}
-                          </SidebarLink>
+                          <SidebarLink key={path} to={childPath} title={contextTitle} />
                         )
                       )}
                   </div>
                 )}
-              </React.Fragment>
+              </Fragment>
             )
           )}
         </ul>

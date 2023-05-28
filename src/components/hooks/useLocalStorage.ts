@@ -2,7 +2,7 @@ import {useState} from 'react';
 
 type Callback<T> = (value: T) => T;
 
-function useLocalStorage<T>(
+export function useLocalStorage<T>(
   key: string,
   defaultValue: T
 ): [T, (value: T | Callback<T>) => void] {
@@ -36,5 +36,3 @@ function useLocalStorage<T>(
 
   return [storedValue, setValue];
 }
-
-export default useLocalStorage;

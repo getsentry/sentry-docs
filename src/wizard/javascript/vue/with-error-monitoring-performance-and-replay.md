@@ -21,43 +21,6 @@ npm install --save @sentry/vue
 
 Initialize Sentry as early as possible in your application's lifecycle.
 
-#### Vue 2
-
-```javascript
-import Vue from "vue";
-import Router from "vue-router";
-import * as Sentry from "@sentry/vue";
-
-Vue.use(Router);
-
-const router = new Router({
-  // ...
-});
-
-Sentry.init({
-  Vue,
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-    }),
-    new Sentry.Replay(),
-  ],
-  // Performance Monitoring
-  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
-  // Session Replay
-  replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-  replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-});
-
-// ...
-
-new Vue({
-  router,
-  render: (h) => h(App),
-}).$mount("#app");
-```
-
 #### Vue 3
 
 ```javascript
@@ -77,6 +40,8 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
     }),
     new Sentry.Replay(),
@@ -90,6 +55,45 @@ Sentry.init({
 
 app.use(router);
 app.mount("#app");
+```
+
+#### Vue 2
+
+```javascript
+import Vue from "vue";
+import Router from "vue-router";
+import * as Sentry from "@sentry/vue";
+
+Vue.use(Router);
+
+const router = new Router({
+  // ...
+});
+
+Sentry.init({
+  Vue,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+    }),
+    new Sentry.Replay(),
+  ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+  // Session Replay
+  replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+  replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+});
+
+// ...
+
+new Vue({
+  router,
+  render: (h) => h(App),
+}).$mount("#app");
 ```
 
 ## Verify
