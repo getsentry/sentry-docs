@@ -18,7 +18,7 @@ async function main() {
       return data;
     } catch (error) {
       console.log(
-        `Failed to connect to  ${process.env.OPENAPI_LOCAL_PATH}. Continuing to fetch versioned schema from Github.
+        `Failed to connect to  ${process.env.OPENAPI_LOCAL_PATH}. Continuing to fetch versioned schema from GitHub.
         ${error}`
       );
     }
