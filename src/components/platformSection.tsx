@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 
-import usePlatform, {getPlatformsWithFallback, Platform} from './hooks/usePlatform';
+import {getPlatformsWithFallback, Platform, usePlatform} from './hooks/usePlatform';
 
 type Props = {
   children?: React.ReactNode;
@@ -24,7 +24,7 @@ const isSupported = (
   return null;
 };
 
-export default function PlatformSection({
+export function PlatformSection({
   supported = [],
   notSupported = [],
   platform,
@@ -56,5 +56,5 @@ export default function PlatformSection({
     return null;
   }
 
-  return <React.Fragment>{children}</React.Fragment>;
+  return <Fragment>{children}</Fragment>;
 }

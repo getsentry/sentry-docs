@@ -1,8 +1,8 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 
-import usePlatform, {getPlatformsWithFallback} from '../hooks/usePlatform';
-import PlatformSection from '../platformSection';
+import {getPlatformsWithFallback, usePlatform} from '../hooks/usePlatform';
+import {PlatformSection} from '../platformSection';
 
 jest.mock('../hooks/usePlatform');
 

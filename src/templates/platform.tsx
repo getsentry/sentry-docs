@@ -1,10 +1,10 @@
 import React from 'react';
 import {graphql} from 'gatsby';
 
-import BasePage from 'sentry-docs/components/basePage';
-import Content from 'sentry-docs/components/content';
-import PlatformSdkDetail from 'sentry-docs/components/platformSdkDetail';
-import PlatformSidebar from 'sentry-docs/components/platformSidebar';
+import {BasePage} from 'sentry-docs/components/basePage';
+import {Content} from 'sentry-docs/components/content';
+import {PlatformSdkDetail} from 'sentry-docs/components/platformSdkDetail';
+import {PlatformSidebar} from 'sentry-docs/components/platformSidebar';
 
 type Props = {
   data: {

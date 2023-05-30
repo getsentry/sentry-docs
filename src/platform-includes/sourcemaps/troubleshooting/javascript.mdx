@@ -17,13 +17,25 @@ Make sure all of the necessary files are available. For Sentry to de-minify your
 
 ## Verify you are building sourcemaps
 
-## Verify your source files contain debug ID comments
+Bundlers and tools (like `tsc`) that generate code generally require you to manually set options in order for source maps to be generated.
+
+If you followed our tool-specific guides, verify that you configured your tool to emit source maps and that the source maps contain your original source code inside the `sourcesContent` field.
 
 ## Verify your source files contain debug ID injection snippets
 
+Inside the JavaScript files you uploaded to Sentry, search for code that roughly looks like `e._sentryDebugIds=e._sentryDebugIds||{}`. Having this code inside a bundle means that it will be able to be matched to a source file. Every bundle you deploy in your app needs to have this snippet in order to be correctly source mapped.
+
+If your source code does not have the snippet and if you're using a Sentry plugin for your bundler, please check that you are using the latest version and please verify that the plugin is correctly processing your files. You can set the `debug` option to `true` in order to print useful information.
+
+If you are using Sentry CLI, please verify that you are running the `inject` command **before** you're uploading to Sentry and **before** you're deploying your files.
+
 ## Verify your events contain debug metadata
 
----
+When inspecting the event payload JSON data in Sentry, verify that the events have a `debug_meta` property. If this property is missing and you already made sure your source files contain debug ID injection snippets, this likely means that you're using an outdated SDK. We generally recommend upgrading to the latest version, but for source maps to work you need to at least use version `7.47.0`.
+
+When you verified that your event has a `debug_meta` property, the next thing to check is whether all frames inside the `raw_stacktrace` property inside the events have an `abs_path` property that exactly matches one of the `code_file` properties inside the `debug_meta` images.
+
+If a stack frame doesn't match an entry inside `debug_meta`, make sure that the relevant file contains a debug ID injection snippet.
 
 ## Verify artifacts are uploaded before errors occur
 

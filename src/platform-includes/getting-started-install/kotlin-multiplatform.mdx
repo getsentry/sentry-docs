@@ -1,13 +1,3 @@
-### Prerequisites (Android)
-
-Android requires disabling auto-init to not clash with the ContentProvider, which auto-initializes the Sentry Android SDK. To do so, add the following to the AndroidManifest.xml file under your androidMain source set:
-
-```xml
-<application>
-    <meta-data android:name="io.sentry.auto-init" android:value="false" />
-</application>
-```
-
 To install the Kotlin Multiplatform SDK, you need to add the following to your `build.gradle.kts` file in your shared module:
 
 ```kotlin {filename:shared/build.gradle.kts}
@@ -16,20 +6,27 @@ repositories {
 }
 
 kotlin {
-  val commonMain by getting {
-    dependencies {
-      api("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+  android()
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+      }
     }
-  }
 
-  // Android target
-  val androidMain by getting {
-    dependsOn(commonMain)
-  }
+    // Android target
+    val androidMain by getting {
+      dependsOn(commonMain)
+    }
 
-  // Apple targets:
-  val iosMain by getting {
-    dependsOn(commonMain)
+    // Apple targets:
+    val iosMain by getting {
+      dependsOn(commonMain)
+    }
   }
 
   cocoapods {
@@ -41,7 +38,6 @@ kotlin {
 
     framework {
       baseName = "shared"
-      export("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
     }
   }
 }

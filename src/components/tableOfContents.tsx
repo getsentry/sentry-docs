@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 
 import {captureException} from '../utils';
 
 import {PageContext} from './basePage';
-import GuideGrid from './guideGrid';
+import {GuideGrid} from './guideGrid';
 
 type Item = {
   items: Item[];
@@ -77,7 +77,7 @@ function recursiveRender(items) {
   });
 }
 
-export default function TableOfContents({contentRef, pageContext}: Props) {
+export function TableOfContents({contentRef, pageContext}: Props) {
   const [items, setItems] = useState<Item[]>(null);
   const {platform} = pageContext;
 
@@ -103,12 +103,12 @@ export default function TableOfContents({contentRef, pageContext}: Props) {
       </div>
       <ul className="section-nav">{recursiveRender(items)}</ul>
       {platform && (
-        <React.Fragment>
+        <Fragment>
           <div className="doc-toc-title">
             <h6>Related Guides</h6>
           </div>
           <GuideGrid platform={platform.name} className="section-nav" />
-        </React.Fragment>
+        </Fragment>
       )}
     </div>
   );

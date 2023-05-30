@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import {PlatformIcon} from 'platformicons';
 
 import {usePlatformList} from './hooks/usePlatform';
-import SmartLink from './smartLink';
+import {SmartLink} from './smartLink';
 
 const PlatformCell = styled.div`
   display: flex;
@@ -61,7 +61,7 @@ type Props = {
   noGuides: boolean;
 };
 
-export default function PlatformGrid({noGuides = false}: Props): JSX.Element {
+export function PlatformGrid({noGuides = false}: Props): JSX.Element {
   const platformList = usePlatformList();
   return (
     <div className="row">

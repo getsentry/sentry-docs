@@ -2,13 +2,13 @@ import React from 'react';
 import {Nav} from 'react-bootstrap';
 import {PlatformIcon} from 'platformicons';
 
-import Banner from 'sentry-docs/components/banner';
+import {Banner} from 'sentry-docs/components/banner';
 import {usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
-import NavbarPlatformDropdown from 'sentry-docs/components/navbarPlatformDropdown';
+import {NavbarPlatformDropdown} from 'sentry-docs/components/navbarPlatformDropdown';
 import {getSandboxURL, SandboxOnly} from 'sentry-docs/components/sandboxLink';
-import Search from 'sentry-docs/components/search';
-import SEO from 'sentry-docs/components/seo';
-import SmartLink from 'sentry-docs/components/smartLink';
+import {Search} from 'sentry-docs/components/search';
+import {SEO} from 'sentry-docs/components/seo';
+import {SmartLink} from 'sentry-docs/components/smartLink';
 import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 
 import 'sentry-docs/css/screen.scss';
