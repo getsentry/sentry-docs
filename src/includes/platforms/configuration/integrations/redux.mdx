@@ -11,13 +11,13 @@ const store = createStore(
 
 <Alert level="info" title="Note">
 
-Sentry uses a redux **enhancer**. Pass the enhancer, as indicated above. Don't pass it to `applyMiddleware` and don't call the method when you pass it to the `createStore` method.
+Because Sentry uses a redux **enhancer**, you should pass it as indicated above rather than passing it to`applyMiddleware`. Don't call the method when you pass it to `createStore`.
 
 </Alert>
 
 ## Normalization Depth
 
-By default Sentry SDKs normalize any context to a depth of 3, which in the case of sending Redux state you probably will want to increase that. You do so by passing `normalizeDepth` to the `Sentry.init` call:
+By default, Sentry SDKs normalize any context to a depth of 3. You may want to increase this for sending Redux states by passing `normalizeDepth` to the `Sentry.init` call:
 
 ```javascript
 Sentry.init({
@@ -28,17 +28,17 @@ Sentry.init({
 
 ## Redux Enhancer Options
 
-Pass an options object as the first parameter to `Sentry.createReduxEnhancer` to configure it.
+To configure enhancer options, pass an options object as the first parameter to `Sentry.createReduxEnhancer`.
 
 <Alert level="warning" title="Note">
 
-We advise against sending sensitive information to Sentry, but if you do, we will try our best to filter out things such as user passwords.
+While we try our best to filter out Personally Identifiable Information such as user passwords, we advise against sending sensitive information to Sentry.
 
 </Alert>
 
 `actionTransformer` (Function)
 
-: Used to remove sensitive information from actions. The first parameter passed to the function is the Redux action. Return `null` to not send the action to Sentry. By default we send all actions.
+This can be used to remove sensitive information from actions. The first parameter passed to the function is the Redux action. We send all actions by default, if you don't want an action sent to Sentry, use `return null`.
 
 ```javascript
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
@@ -62,7 +62,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 
 `stateTransformer` (Function)
 
-: Used to remove sensitive information from state. The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you choose not to send state to Sentry, your errors might not have the latest version of the state attached. By default, we attach all state changes.
+This can be used to remove sensitive information from state. The first parameter passed to the function is the Redux state. We attach all state changes by default. If you don't want to attach state changes to events being sent to Sentry, use `return null`. Note, that if you choose not to send state to Sentry, your errors might not have the latest version attached. 
 
 ```javascript
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
@@ -93,7 +93,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 
 `configureScopeWithState` (Function)
 
-: Called on every state update, configure the Sentry Scope with the Redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`, and the second parameter is the latest Redux state.
+This is called on every state update. To use it, configure the Sentry Scope with the Redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`. The second parameter is the latest Redux state.
 
 ```javascript
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
