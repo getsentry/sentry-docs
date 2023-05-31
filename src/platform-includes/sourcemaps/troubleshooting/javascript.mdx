@@ -3,13 +3,20 @@
 Chances are, you set up source maps for Sentry a while ago. Since then we updated a lot of our tooling to make the process around source maps easier.
 We recommend you upgrade your tooling to the newest versions, as that is usually easier than to troubleshoot the legacy method.
 
-If you still want to find information on the legacy method of uploading source maps, please see the <PlatformLink to="/sourcemaps/troubleshooting_js/uploading-without-debug-ids">guide to upload source maps without debug IDs</PlatformLink>.
+For information on the legacy method of uploading source maps, please see the guide on <PlatformLink to="/sourcemaps/troubleshooting_js/uploading-without-debug-ids">Uploading without Debug IDs</PlatformLink>.
 
 </Note>
 
-Source maps can sometimes be tricky to get going. If you're having trouble, you can try using our verification tool inside `sentry-cli`, or go through the steps listed below yourself.
+Setting up source maps can be tricky, but it's worth it to get it right. To troubleshoot your source maps set up, you can either:
 
-To use the automated verification process, [install and configure](/product/cli/) `sentry-cli`. Once completed, use the `sourcemaps explain` command, by calling it with the event ID that can be found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io). For example, "Event ID: c2ad049f".
+1. Use our automated verification tool inside `sentry-cli`, or 
+2. Follow the manual steps listed below
+
+## Use the CLI
+
+To use the automated verification process, install and configure the Sentry [Command Line Interface](/product/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io). 
+
+For example, "Event ID: c2ad049f":
 
 ![Image highlighting where to find the ID of an event on Sentry](event_id.png)
 
@@ -17,37 +24,43 @@ To use the automated verification process, [install and configure](/product/cli/
 sentry-cli sourcemaps explain c2ad049fd9e448ada7849df94575e019
 ```
 
-This should provide you with some useful hints about what exactly went wrong with the source maps setup process.
-If it doesn't, let us know so we can make it better.
+The CLI output should give you useful information about what went wrong with your source maps setup.
+If it doesn't, let us know by filing an issue on our [Sentry CLI repo](https://github.com/getsentry/sentry-cli) so we can make it better.
 
-## Verify artifacts are uploaded
+## Follow Manual Steps
 
-You can find the artifacts uploaded to Sentry by navigating to **[Settings] » Projects » Select your project » Source Maps**.
+### Verify Artifacts Are Uploaded
+
+Verify your artifacts are being uploaded to Sentry. You can find them at **[Settings] > Projects > Select your project > Source Maps**.
 For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps.
 
-## Verify you are building sourcemaps
+## Verify You Are Building Source Maps
 
-Bundlers and tools (like `tsc`) that generate code, generally require you to manually set specific options in order for source maps to be generated.
+Bundlers and tools (like `tsc`) that generate code, often require you to manually set specific options to generate source maps.
 
-If you followed our tool-specific guides, verify that you configured your tool to emit source maps and that the source maps contain your original source code inside the `sourcesContent` field.
+If you followed one of our tool-specific guides, verify you configured your tool to emit source maps and that the source maps contain your original source code in the `sourcesContent` field.
 
-## Verify your source files contain debug ID injection snippets
+## Verify Your Source Files Contain Debug ID Injection Snippets
 
-Inside the JavaScript files you uploaded to Sentry, search for code that roughly looks like `e._sentryDebugIds=e._sentryDebugIds||{}` (note that this snipped might be looking different depending on how you process your code). Having this code inside a bundle means that it will be able to be matched to a source file. Every bundle you deploy in your app needs to have this snippet in order to be correctly source mapped.
+In the JavaScript files you uploaded to Sentry, search for code that roughly looks like `e._sentryDebugIds=e._sentryDebugIds||{}`. This code snippet might look different depending on how you process your code.
 
-If your source code does not have the snippet and if you're using a Sentry plugin for your bundler, please check that you are using the latest version and please verify that the plugin is correctly processing your files. You can set the `debug` option to `true` in order to print useful information.
+If this code exists in a bundle, that bundle will be able to be matched to a source file. Every bundle you deploy in your app needs to have this snippet in order to be correctly source mapped.
 
-If you are using Sentry CLI, please verify that you are running the `inject` command **before** you're uploading to Sentry and **before** you're deploying your files.
+If your source code does not contain this snippet and you're using a Sentry plugin for your bundler, please check that you are using the latest version and please verify that the plugin is correctly processing your files. Set the `debug` option to `true` to print useful degbugging information.
 
-## Verify your events contain debug metadata
+If you're using the Sentry CLI, verify that you're running the `inject` command **before** you upload to Sentry and **before** you deploy your files.
 
-When inspecting the event payload JSON data in Sentry, verify that the events have a `debug_meta` property. If this property is missing and you already made sure your source files contain debug ID injection snippets, this likely means that you're using an outdated SDK. We generally recommend upgrading to the latest version, but for source maps to work you need to at least use version `7.47.0`.
+## Verify Your Source Files Contain Debug ID Injection Snippets
 
-When you verified that your event has a `debug_meta` property, the next thing to check is whether all frames inside the `raw_stacktrace` property inside the events have an `abs_path` property that exactly matches one of the `code_file` properties inside the `debug_meta` images.
+When inspecting the event payload JSON data in Sentry, verify that the events have a `debug_meta` property. If this property is missing and you already made sure your source files contain debug ID injection snippets, this likely means that you're using an outdated SDK. 
+
+We generally recommend upgrading to the latest version, and for source maps to work you need to at least use version `7.47.0`.
+
+After you verified your event has a `debug_meta` property, the next thing to check is whether all frames inside the `raw_stacktrace` property inside the events have an `abs_path` property that exactly matches one of the `code_file` properties inside the `debug_meta` images.
 
 If a stack frame doesn't match an entry inside `debug_meta`, make sure that the relevant file contains a debug ID injection snippet.
 
-## Verify artifacts are uploaded before errors occur
+## Verify Artifacts Are Uploaded Before Errors Occur
 
 Sentry expects that source code and source maps in a given release are uploaded to Sentry **before** errors occur in that release.
 
