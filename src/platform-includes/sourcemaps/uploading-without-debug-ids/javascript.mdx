@@ -6,19 +6,14 @@ This process requires your application to use a very recent SDK and bundler plug
 
 Use the guide on this page if you're using one of the following:
 
-- JavaScript SDK: version `7.46.0` or lower
-- Bundler Plugins
-  - `@sentry/webpack-plugin` package: version `2.1.0` or lower
-  - `@sentry/vite-plugin` package: version `0.7.1` or lower
-  - `@sentry/esbuild-plugin` package: version `0.7.1` or lower
-  - `@sentry/rollup-plugin` package: version `0.7.1` or lower
-- `sentry-cli`: version `2.16.1` or lower
+- JavaScript SDK version `7.46.0` or lower
+- `@sentry/webpack-plugin` package version `1.x` or lower
+- `sentry-cli` version `2.16.1` or lower
+- Sentry self-hosted or single-tenant on version `23.4.0` or lower
 
 If all of your Sentry dependencies are on more up-to-date versions than in the list above, we recommend using the regular <PlatformLink to="/sourcemaps">Source Maps</PlatformLink> guide.
 
-If you're using one of our bundler plugins, we also recommend using the regular <PlatformLink to="/sourcemaps">Source Maps</PlatformLink> page to find the corresponding guide for your bundler.
-
-If your application does use an older version of our SDK or bundler plugin (or sentry-cli), you can still upload source maps; however, the process will differ. Instead of using Debug IDs, you'll use releases to match an event's stack frame with its corresponding minified source and source map file (known as artifacts).
+If you're using one or more of these older versions of the tools, you can still upload source maps; however, the process will differ. Instead of using Debug IDs, you'll use releases to match an event's stack frame with its corresponding minified source and source map file (known as artifacts).
 
 ## Uploading Source Maps using `sentry-cli`
 
@@ -52,10 +47,189 @@ Next, upload your artifacts (minified sources and source maps):
 sentry-cli sourcemaps upload --release=<release_name> /path/to/directory
 ```
 
-#### Verify Artifacts Were Uploaded
+## Uploading Source Maps using `@sentry/webpack-plugin` on version `1.x`
+
+Assuming you have the `@sentry/webpack` package installed on version `1.x`, you can learn more on how to configure the plugin in the [Sentry Webpack Plugin v1 documentation](https://github.com/getsentry/sentry-webpack-plugin#readme).
+
+Example:
+
+```javascript {filename:webpack.config.js}
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // ... other config above ...
+
+  devtool: "source-map", // Source map generation must be turned on
+  plugins: [
+    new SentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Specify the directory containing build artifacts
+      include: "./dist",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and needs the `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Optionally uncomment the line below to override automatic release name detection
+      // release: process.env.RELEASE,
+    }),
+  ],
+};
+```
+
+The Sentry Webpack plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // When using the plugin, either remove the `release`` property here entirely or
+  // make sure that the plugin's release option and the Sentry.init()'s release
+  // option match exactly.
+  // release: "my-example-release-1"
+});
+```
+
+## Using bundler plugins on version `2.x`
+
+If you are using a Sentry self-hosted or single-tenant on version `23.4.0` or lower, or you are using the Sentry JavaScript SDK on version `7.46.0` you will need to configure the bundler plugins with the `release.uploadLegacySourcemaps` option.
+
+This applies when using the following packages on version `2.x` and above:
+
+- `@sentry/webpack-plugin`
+- `@sentry/vite-plugin`
+- `@sentry/esbuild-plugin`
+- `@sentry/rollup-plugin`
+
+Example of using the `release.uploadLegacySourcemaps` option:
+
+```javascript {filename:webpack.config.js} {tabTitle:Webpack}
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // ... other config above ...
+
+  devtool: "source-map", // Source map generation must be turned on
+  plugins: [
+    sentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and need `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      release: {
+        uploadLegacySourcemaps: {
+          paths: ["."],
+          ignore: ["./node_modules"],
+        },
+      },
+    }),
+  ],
+};
+```
+
+```javascript {filename:vite.config.js} {tabTitle:Vite}
+import { defineConfig } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  return {
+    build: {
+      sourcemap: true, // Source map generation must be turned on
+    },
+    plugins: [
+      // Put the Sentry vite plugin after all other plugins
+      sentryVitePlugin({
+        org: "___ORG_SLUG___",
+        project: "___PROJECT_SLUG___",
+
+        // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+        // and need `project:releases` and `org:read` scopes
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+
+        release: {
+          uploadLegacySourcemaps: {
+            paths: ["."],
+            ignore: ["./node_modules"],
+          },
+        },
+      }),
+    ],
+  };
+});
+```
+
+```javascript {filename:esbuild.config.js} {tabTitle:esbuild}
+const { sentryEsbuildPlugin } = require("@sentry/esbuild-plugin");
+
+require("esbuild").build({
+  sourcemap: true, // Source map generation must be turned on
+  plugins: [
+    // Put the Sentry esbuild plugin after all other plugins
+    sentryEsbuildPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and need `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      release: {
+        uploadLegacySourcemaps: {
+          paths: ["."],
+          ignore: ["./node_modules"],
+        },
+      },
+    }),
+  ],
+});
+```
+
+```javascript {filename:rollup.config.js} {tabTitle:Rollup}
+import { sentryRollupPlugin } from "@sentry/rollup-plugin";
+
+export default {
+  plugins: [
+    // Put the Sentry rollup plugin after all other plugins
+    sentryRollupPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // and need `project:releases` and `org:read` scopes
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      release: {
+        uploadLegacySourcemaps: {
+          paths: ["."],
+          ignore: ["./node_modules"],
+        },
+      },
+    }),
+  ],
+  output: {
+    sourcemap: true, // Source map generation must be turned on
+  },
+};
+```
+
+The Sentry bundler plugins will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release.name` option exactly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // When using one of the plugins, either remove the `release`` property here entirely or
+  // make sure that the plugin's `release.name` option and the Sentry.init()'s release
+  // option match exactly.
+  // release: "my-example-release-1"
+});
+```
+
+## Verify Artifacts Were Uploaded
 
 Open up Sentry and navigate to **[Settings] > Projects > Select your project > Source Maps** on Sentry.
-
-## Summary
-
-You can still upload source maps regardless of what version of our SDK or bundler plugin (or sentry-cli) your application depends on. Visit the regular <PlatformLink to="/sourcemaps/troubleshooting_js">Source Maps</PlatformLink> guide if you experience any problems following this guide.
