@@ -1,3 +1,11 @@
+<Note>
+
+This guide assumes you are using a Sentry SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
 You can use the Sentry Vite plugin to automatically create releases and upload source maps to Sentry when bundling your app.
 
 ## Installation
@@ -17,13 +25,10 @@ Learn more about configuring the plugin in our [Sentry Vite Plugin documentation
 Example:
 
 ```javascript {filename:vite.config.js}
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 
-export default defineConfig(({ command, mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  const env = loadEnv(mode, process.cwd(), "");
+export default defineConfig({
   return {
     build: {
       sourcemap: true, // Source map generation must be turned on
@@ -37,27 +42,6 @@ export default defineConfig(({ command, mode }) => {
         // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
         // and need `project:releases` and `org:read` scopes
         authToken: env.SENTRY_AUTH_TOKEN,
-
-        sourcemaps: {
-          // Specify the directory containing build artifacts
-          assets: "./**",
-          // Don't upload the source maps of dependencies
-          ignore: ["./node_modules/**"],
-        },
-
-        // Helps troubleshooting - set to false to make plugin less noisy
-        debug: true,
-
-        // Use the following option if you're on an SDK version lower than 7.47.0:
-        // release: {
-        //   uploadLegacySourcemaps: {
-        //     include: ".",
-        //     ignore: ["node_modules"],
-        //   },
-        // },
-
-        // Optionally uncomment the line below to override automatic release name detection
-        // release: env.RELEASE,
       }),
     ],
   };

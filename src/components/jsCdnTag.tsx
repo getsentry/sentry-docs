@@ -1,8 +1,8 @@
 import React from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import CodeBlock from './codeBlock';
-import CodeTabs from './codeTabs';
+import {CodeBlock} from './codeBlock';
+import {CodeTabs} from './codeTabs';
 
 type Props = {
   name?: string;
@@ -24,7 +24,7 @@ const query = graphql`
   }
 `;
 
-export default function JsCdnTag({tracing = false, name = ''}: Props): JSX.Element {
+export function JsCdnTag({tracing = false, name = ''}: Props): JSX.Element {
   const {package: packageData} = useStaticQuery(query);
 
   const bundleName = tracing ? 'bundle.tracing.min.js' : name || 'bundle.min.js';

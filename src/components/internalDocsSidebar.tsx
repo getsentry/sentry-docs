@@ -1,7 +1,7 @@
 import React from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import DynamicNav, {toTree} from './dynamicNav';
+import {DynamicNav, toTree} from './dynamicNav';
 
 const query = graphql`
   query InternalDocsSidebarQuery {
@@ -18,7 +18,7 @@ const query = graphql`
   }
 `;
 
-export default function InternalDocsSidebar(): JSX.Element {
+export function InternalDocsSidebar(): JSX.Element {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   return (

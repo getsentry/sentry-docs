@@ -1,14 +1,14 @@
 import React from 'react';
 
-import usePlatform from './hooks/usePlatform';
-import SmartLink from './smartLink';
+import {usePlatform} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
 type Props = {
   children: JSX.Element;
   to?: string;
 };
 
-export default function PlatformLink({children, to}: Props): JSX.Element {
+export function PlatformLink({children, to}: Props): JSX.Element {
   const [currentPlatform] = usePlatform(null);
   let path = currentPlatform ? currentPlatform.url : `/platform-redirect/`;
   if (to) {

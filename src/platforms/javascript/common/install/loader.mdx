@@ -123,7 +123,7 @@ If you want to understand the inner workings of the loader itself, you can read 
 
 ## CDN
 
-import JsBundleList from "sentry-docs/components/jsBundleList";
+import { JsBundleList } from "sentry-docs/components/jsBundleList";
 
 Sentry supports loading the JavaScript SDK from a CDN. Generally we suggest using our Loader instead. If you _must_ use a CDN, see [Available Bundles](#available-bundles) below.
 
@@ -184,7 +184,15 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   // this assumes your build process replaces `process.env.npm_package_version` with a value
   release: "my-project-name@" + process.env.npm_package_version,
-  integrations: [new Sentry.BrowserTracing()],
+  integrations: [
+    // If you use a bundle with performance monitoring enabled, add the BrowserTracing integration
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+    // If you use a bundle with session replay enabled, add the SessionReplay integration
+    new Sentry.Replay(),
+  ],
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control

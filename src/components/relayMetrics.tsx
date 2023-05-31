@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import Alert from './alert';
+import {Alert} from './alert';
 
 const query = graphql`
   query RelayMetricsQuery {
@@ -44,7 +44,7 @@ function Metric({metric}) {
   const descriptionHtml = metric.childRelayMetricDescription.childMarkdownRemark.html;
 
   return (
-    <React.Fragment>
+    <Fragment>
       <dt>
         <code>
           {metric.name} <MetricType>({metric.type})</MetricType>
@@ -58,11 +58,11 @@ function Metric({metric}) {
           }}
         />
       </dd>
-    </React.Fragment>
+    </Fragment>
   );
 }
 
-export default function RelayMetrics(): JSX.Element {
+export function RelayMetrics(): JSX.Element {
   const data = useStaticQuery(query);
   const metrics = data.allRelayMetric.nodes;
 

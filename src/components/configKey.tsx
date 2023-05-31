@@ -1,7 +1,7 @@
 import React from 'react';
 
-import PlatformIdentifier from './platformIdentifier';
-import PlatformSection from './platformSection';
+import {PlatformIdentifier} from './platformIdentifier';
+import {PlatformSection} from './platformSection';
 
 type Props = {
   name: string;
@@ -11,7 +11,7 @@ type Props = {
   supported?: string[];
 };
 
-export default function ConfigKey({
+export function ConfigKey({
   name,
   supported = [],
   notSupported = [],

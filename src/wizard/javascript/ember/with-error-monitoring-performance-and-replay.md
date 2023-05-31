@@ -28,7 +28,7 @@ import * as Sentry from "@sentry/ember";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
+  integrations: [new Sentry.Replay()],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
   // Session Replay

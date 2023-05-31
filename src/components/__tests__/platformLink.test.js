@@ -1,8 +1,8 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 
-import usePlatform from '../hooks/usePlatform';
-import PlatformLink from '../platformLink';
+import {usePlatform} from '../hooks/usePlatform';
+import {PlatformLink} from '../platformLink';
 
 jest.mock('../hooks/usePlatform');
 

@@ -1,9 +1,9 @@
-import React from 'react';
+import {createContext} from 'react';
 
 type PageContextType = {
   [key: string]: any;
 };
 
-export const PageContext = React.createContext<null | PageContextType>(null);
+export const PageContext = createContext<null | PageContextType>(null);
 
 export default PageContext;

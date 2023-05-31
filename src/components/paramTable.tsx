@@ -12,7 +12,7 @@ type Props = {
   fields: Field[];
 };
 
-export default function ParamTable({fields}: Props): JSX.Element {
+export function ParamTable({fields}: Props): JSX.Element {
   return (
     <table className="table">
       {fields.map(([name, paramList]) => (

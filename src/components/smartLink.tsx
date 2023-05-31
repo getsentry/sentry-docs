@@ -1,9 +1,9 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Link} from 'gatsby';
 
 import {marketingUrlParams} from 'sentry-docs/utils';
 
-import ExternalLink from './externalLink';
+import {ExternalLink} from './externalLink';
 
 type Props = {
   activeClassName?: string;
@@ -17,7 +17,7 @@ type Props = {
   to?: string;
 };
 
-export default function SmartLink({
+export function SmartLink({
   to,
   href,
   children,
@@ -29,12 +29,12 @@ export default function SmartLink({
 }: Props): JSX.Element {
   const realTo = to || href || '';
 
-  const [forcedUrl, setForcedUrl] = React.useState(realTo);
+  const [forcedUrl, setForcedUrl] = useState(realTo);
 
   // Google Tag Manager syncs certain query parameters to all links on the page.
   // Since Gatsby's Link is a React component, it doesn't catch these updates
   // because they're made outside of React, so we keep track of them ourselves.
-  React.useEffect(() => {
+  useEffect(() => {
     const marketingParams = marketingUrlParams();
     if (Object.keys(marketingParams).length === 0) {
       return;
@@ -88,7 +88,7 @@ export default function SmartLink({
       to={forcedUrl ?? realTo}
       activeClassName={activeClassName}
       // We need to manually set class to active because Gatsby doesn't highlight correclty with the original_referrer query param
-      className={isActive ? activeClassName : className}
+      className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >
       {children || to || href}
