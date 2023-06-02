@@ -9,7 +9,7 @@ Install the Sentry Capacitor SDK alongside the sibling Sentry Angular SDK:
 
 ```bash
 # npm
-npm install --save @sentry/capacitor @sentry/angular
+npm install --save @sentry/capacitor @sentry/angular-ivy
 
 # yarn
 yarn add @sentry/capacitor @sentry/angular @sentry/tracing --exact
@@ -91,12 +91,9 @@ With Ionic/Angular:
 ```typescript
 // app.module.ts
 import * as Sentry from '@sentry/capacitor';
-import * as SentryAngular from '@sentry/angular';
-// If taking advantage of automatic instrumentation (highly recommended)
-import { BrowserTracing } from '@sentry/tracing';
-// Or, if only manually tracing
-// import "@sentry/tracing";
-// Note: You MUST import the package in some way for tracing to work
+// Use `@sentry/angular-ivy` for Angular 12+ or `@sentry/angular` for Angular 10 or 11
+import * as SentryAngular from '@sentry/angular-ivy';
+
 
 Sentry.init(
   {
@@ -108,8 +105,10 @@ Sentry.init(
     // We recommend adjusting this value in production.
     tracesSampleRate: 1.0,
     integrations: [
-      new BrowserTracing({
-        tracingOrigins: ['localhost', 'https://yourserver.io/api'],
+      new SentryAngular.BrowserTracing({
+        // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+        tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+        routingInstrumentation: SentryAngular.routingInstrumentation,
       }),
     ]
   },
@@ -123,6 +122,16 @@ Sentry.init(
       provide: ErrorHandler,
       // Attach the Sentry ErrorHandler
       useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
     },
   ],
 })
