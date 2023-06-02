@@ -98,6 +98,7 @@ Sentry.init(
           "localhost",
           /^https:\/\/yourserver\.io\/api/,
         ],
+        routingInstrumentation: SentrySibling.routingInstrumentation,
       }),
     ],
   },
