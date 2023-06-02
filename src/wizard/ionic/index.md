@@ -6,7 +6,7 @@ type: framework
 ---
 
 To use Sentry in your Ionic app, install the Sentry Capacitor SDK alongside the sibling Sentry SDK related to the Web framework you're using with Ionic.
-The supported siblings are: Angular `@sentry/angular`, React `@sentry/react` and Vue `@sentry/vue`.
+The supported siblings are: Angular `@sentry/angular-ivy`, React `@sentry/react` and Vue `@sentry/vue`.
 
 Heres an example of installing Sentry Capacitor along with Sentry Angular:
 
@@ -20,7 +20,7 @@ or
 yarn add @sentry/capacitor @sentry/angular
 ```
 
-The same installation process applies to the other siblings, all you need to do is to replace `@sentry/angular` by the desired sibling.
+The same installation process applies to the other siblings, all you need to do is to replace `@sentry/angular-ivy` by the desired sibling.
 
 ## Capacitor 2 - Android Installation
 
@@ -107,7 +107,7 @@ Sentry.init(
 );
 ```
 
-Additionally for Angular, you will also need to alter NgModule (same code doesn't apply to other siblings)
+Additionally for Angular, you will also need to configure your root `app.module.ts` (same code doesn't apply to other siblings):
 
 ```javascript
 @NgModule({
@@ -116,6 +116,16 @@ Additionally for Angular, you will also need to alter NgModule (same code doesn'
       provide: ErrorHandler,
       // Attach the Sentry ErrorHandler
       useValue: SentrySibling.createErrorHandler(),
+    },
+    {
+      provide: SentrySibling.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentrySibling.TraceService],
+      multi: true,
     },
   ],
 })

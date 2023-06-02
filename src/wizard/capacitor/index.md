@@ -9,7 +9,7 @@ Install the Sentry Capacitor SDK alongside the sibling Sentry Angular SDK:
 
 ```bash
 # npm
-npm install --save @sentry/capacitor @sentry/angular
+npm install --save @sentry/capacitor @sentry/angular-ivy
 
 # yarn
 yarn add @sentry/capacitor @sentry/angular @sentry/tracing --exact
@@ -108,6 +108,7 @@ Sentry.init(
       new SentryAngular.BrowserTracing({
         // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
         tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+        routingInstrumentation: SentryAngular.routingInstrumentation,
       }),
     ]
   },
@@ -121,6 +122,16 @@ Sentry.init(
       provide: ErrorHandler,
       // Attach the Sentry ErrorHandler
       useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
     },
   ],
 })

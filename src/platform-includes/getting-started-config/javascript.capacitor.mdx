@@ -2,7 +2,8 @@ Then forward the `init` method from the sibling Sentry SDK for the framework you
 
 ```typescript {tabTitle: Angular} {filename: app.module.ts}
 import * as Sentry from "@sentry/capacitor";
-import * as SentryAngular from "@sentry/angular";
+// Use @sentry/angular-ivy for Angular 12+ or `@sentry/angular` from Angular 10 and 11
+import * as SentryAngular from "@sentry/angular-ivy";
 
 Sentry.init(
   {
@@ -36,6 +37,16 @@ Sentry.init(
       provide: ErrorHandler,
       // Attach the Sentry ErrorHandler
       useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
     },
   ],
 })
