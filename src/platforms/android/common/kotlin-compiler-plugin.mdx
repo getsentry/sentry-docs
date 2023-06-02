@@ -1,0 +1,60 @@
+---
+title: Kotlin Compiler Plugin
+sidebar_order: 99
+description: "Learn about using the Sentry Kotlin Compiler Plugin."
+---
+
+The [Sentry Kotlin Compiler Plugin](https://github.com/getsentry/sentry-android-gradle-plugin) is an addition to the Sentry Android Gradle plugin and offers improvements to existing SDK features. As of now the main focus of the plugin is to improve apps which utilize Jetpack Compose by automatically tagging `@Composable` functions.
+ * <PlatformLink to="/enriching-events/viewhierarchy">View Hierarchy</PlatformLink>
+ * <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation">User Interaction Tracing</PlatformLink>
+
+<Note>
+
+The Sentry Kotlin Compiler plugin is considered _experimental_. Give it a try and provide early feedback [on GitHub](https://github.com/getsentry/sentry-android-gradle-plugin).
+
+</Note>
+
+
+## How it works
+
+Given a `@Composable` function:
+````kotlin
+@Composable
+fun LoginScreen() {
+    Column() {
+        // ...
+    }
+}
+````
+
+The Sentry Kotlin Compiler Plugin will transform it into the following:
+````kotlin
+@Composable
+fun LoginScreen() {
+    Column(modifier = Modifier.sentryTag("LoginScreen")) {
+        // ...
+    }
+}
+````
+
+## Setup
+
+### Install
+
+Kotlin Compiler plugins are executed during compilation and thus need to be applied to _every_ relevant Gradle module. Add the following to e.g. your `app/build.gradle`:
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.kotlin.compiler.gradle" version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.compiler.gradle") version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.0.0') }}"
+}
+```
+
+### Configuration
+
+As of now no additional steps are necessary. Checkout the docs for <PlatformLink to="/enriching-events/viewhierarchy">View Hierarchy</PlatformLink> and <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation">User Interaction Tracing</PlatformLink> to see which features the Sentry Kotlin Compiler Plugin improves.
