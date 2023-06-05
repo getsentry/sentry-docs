@@ -127,7 +127,7 @@ export function BaseSEO({
   );
 }
 
-export default function SEO(props: Props): JSX.Element {
+export function SEO(props: Props): JSX.Element {
   return (
     <StaticQuery
       query={detailsQuery}

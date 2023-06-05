@@ -5,7 +5,7 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   'Join us on May 30th at 10am PT for a 20-minute session on frontend error monitoring with Sentry.';
 const BANNER_LINK_URL =
@@ -47,7 +47,7 @@ const readOrResetLocalStorage = () => {
   }
 };
 
-function Banner({isModule = false}) {
+export function Banner({isModule = false}) {
   const [isVisible, setIsVisible] = useState(false);
   const hash = fastHash(`${BANNER_TEXT}:${BANNER_LINK_URL}`).toString();
 
@@ -99,5 +99,3 @@ function Banner({isModule = false}) {
       )
     : null;
 }
-
-export default Banner;

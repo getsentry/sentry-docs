@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
 
-import CodeContext from './codeContext';
+import {CodeContext} from './codeContext';
 
 // human readable versions of names
 const LANGUAGES = {
@@ -24,7 +24,7 @@ type Props = {
   children: JSX.Element | JSX.Element[];
 };
 
-export default function CodeTabs({children}: Props): JSX.Element {
+export function CodeTabs({children}: Props): JSX.Element {
   if (!Array.isArray(children)) {
     children = [children];
   } else {

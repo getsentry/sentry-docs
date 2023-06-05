@@ -1,8 +1,8 @@
 import React from 'react';
 import {graphql} from 'gatsby';
 
-import BasePage from 'sentry-docs/components/basePage';
-import SmartLink from 'sentry-docs/components/smartLink';
+import {BasePage} from 'sentry-docs/components/basePage';
+import {SmartLink} from 'sentry-docs/components/smartLink';
 
 export default function WizardDebug({
   data: {

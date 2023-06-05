@@ -1,13 +1,14 @@
-import React from 'react';
+import React, {Fragment, useState} from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import usePlatform, {
+import {
   getPlatform,
   getPlatformsWithFallback,
   Platform,
+  usePlatform,
 } from './hooks/usePlatform';
-import Content from './content';
-import SmartLink from './smartLink';
+import {Content} from './content';
+import {SmartLink} from './smartLink';
 
 const includeQuery = graphql`
   query PlatformContentQuery {
@@ -63,15 +64,11 @@ const getFileForPlatform = (
   return contentMatch;
 };
 
-export default function PlatformContent({
-  includePath,
-  platform,
-  children,
-}: Props): JSX.Element {
+export function PlatformContent({includePath, platform, children}: Props): JSX.Element {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
-  const [dropdown, setDropdown] = React.useState(null);
+  const [dropdown, setDropdown] = useState(null);
   const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
 
@@ -148,10 +145,10 @@ export default function PlatformContent({
 
       <div className="tab-content">
         <div className="tab-pane show active">
-          <React.Fragment>
+          <Fragment>
             {children || null}
             <Content key={contentMatch.id} file={contentMatch} />
-          </React.Fragment>
+          </Fragment>
         </div>
       </div>
     </section>

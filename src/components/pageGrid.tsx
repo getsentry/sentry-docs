@@ -4,7 +4,7 @@ import {graphql, useStaticQuery} from 'gatsby';
 
 import {sortPages} from 'sentry-docs/utils';
 
-import SmartLink from './smartLink';
+import {SmartLink} from './smartLink';
 
 const query = graphql`
   query PageGridQuery {
@@ -31,11 +31,7 @@ type Props = {
   header?: string;
 };
 
-export default function PageGrid({
-  nextPages = false,
-  header,
-  exclude,
-}: Props): JSX.Element {
+export function PageGrid({nextPages = false, header, exclude}: Props): JSX.Element {
   const data = useStaticQuery(query);
   const location = useLocation();
 
