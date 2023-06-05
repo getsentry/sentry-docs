@@ -21,7 +21,7 @@ buildscript {
 }
 
 plugins {
-    id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
 }
 ```
 
@@ -33,13 +33,13 @@ buildscript {
 }
 
 plugins {
-    id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+    id("io.sentry.jvm.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
 }
 ```
 
 <Note>
 
-Although the plugin id contains `android`, it can be used for non-android projects. However, for non-android projects, the plugin only collects external dependencies.
+Although the plugin repository name contains `android`, it can be used for non-android projects. However, for non-android projects, the plugin only collects external dependencies and uploads <PlatformLink to="/source-context/">Source Context</PlatformLink>.
 
 </Note>
 
@@ -49,6 +49,22 @@ We expose the following configuration values directly in `build.gradle`:
 
 ```groovy
 sentry {
+    // Enables more detailed log output, e.g. for sentry-cli.
+    //
+    // Default is false.
+    debug = true
+
+    // Generates a source bundle and uploads it to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext = true
+
+    // Includes additional source directories into the source bundle.
+    // These directories are resolved relative to the project directory.
+    additionalSourceDirsForSourceContext = ["mysrc/java", "other-source-dir/main/kotlin"]
+
     // Disables or enables dependencies metadata reporting for Sentry.
     // If enabled, the plugin will collect external dependencies and
     // upload them to Sentry as part of events. If disabled, all the logic
@@ -61,6 +77,22 @@ sentry {
 
 ```kotlin
 sentry {
+    // Enables more detailed log output, e.g. for sentry-cli.
+    //
+    // Default is false.
+    debug.set(true)
+
+    // Generates a source bundle and uploads it to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext.set(true)
+
+    // Includes additional source directories into the source bundle.
+    // These directories are resolved relative to the project directory.
+    additionalSourceDirsForSourceContext.set(setOf("mysrc/java", "other-source-dir/main/kotlin"))
+
     // Disables or enables dependencies metadata reporting for Sentry.
     // If enabled, the plugin will collect external dependencies and
     // upload them to Sentry as part of events. If disabled, all the logic
@@ -70,6 +102,10 @@ sentry {
     includeDependenciesReport.set(true)
 }
 ```
+
+## Source Context
+
+Check out our dedicated page for <PlatformLink to="/source-context/">Source Context</PlatformLink>
 
 ## Dependencies Report
 

@@ -9,6 +9,8 @@ type: framework
    The sentry-logback library provides Logback support for Sentry using an <a href=https://logback.qos.ch/apidocs/ch/qos/logback/core/Appender.html>Appender</a> that sends logged exceptions to Sentry.
 </Alert>
 
+## Install
+
 Install Sentry's integration with Logback using either Maven or Gradle:
 
 ### Maven
@@ -21,13 +23,85 @@ Install Sentry's integration with Logback using either Maven or Gradle:
 </dependency>
 ```
 
+To upload your source code to Sentry and show it in stacktraces, use our Maven plugin.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-maven-plugin</artifactId>
+            <version>{{@inject packages.version('sentry.java.mavenplugin', '0.0.2') }}</version>
+            <configuration>
+                <!-- for showing output of sentry-cli -->
+                <debugSentryCli>true</debugSentryCli>
+
+                <!-- download the latest sentry-cli and provide path to it here -->
+                <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
+                <!-- minimum required version is 2.17.3 -->
+                <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath>
+
+                <org>___ORG_SLUG___</org>
+
+                <project>___PROJECT_SLUG___</project>
+
+                <!-- in case you're self hosting, provide the URL here -->
+                <!--<url>http://localhost:8000/</url>-->
+
+                <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
+                <!-- you can find it in Sentry UI: Settings > Account > API > Auth Tokens -->
+                <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>install</phase>
+                    <goals>
+                        <goal>uploadSourceBundle</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    ...
+</build>
+```
+
 ### Gradle
 
 ```groovy
 implementation 'io.sentry:sentry-logback:{{@inject packages.version('sentry.java.logback', '4.0.0') }}'
 ```
 
+To upload your source code to Sentry and show it in stacktraces, use our Gradle plugin.
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
+}
+
+sentry {  
+    // Generates a source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext = true
+
+    org = "___ORG_SLUG___"
+    project = "___PROJECT_SLUG___"
+    authToken = "your-sentry-auth-token"
+}
+```
+
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-logback).
+
+## Configure
 
 Configure Sentry as soon as possible in your application's lifecycle:
 

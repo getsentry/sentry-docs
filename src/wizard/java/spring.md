@@ -13,17 +13,23 @@ type: framework
     Sentry's integration with Spring supports Spring Framework 5.1.2 and above to report unhandled exceptions and optional user information. If you're on an older version, use <a href=https://docs.sentry.io/platforms/java/guides/spring/legacy/>our legacy integration</a>.
 </Alert>
 
+## Install
+
 Install Sentry's integration with Spring using either Maven or Gradle:
 
 ### Maven:
 
-```xml {tabTitle:Spring 5}{filename:pom.xml}
+#### Spring 5
+
+```xml
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
     <version>{{@inject packages.version('sentry.java.spring', '4.0.0') }}</version>
 </dependency>
 ```
+
+#### Spring 6
 
 ```xml {tabTitle:Spring 6}{filename:pom.xml}
 <dependency>
@@ -33,17 +39,96 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 </dependency>
 ```
 
+#### Source Context
+To upload your source code to Sentry and show it in stacktraces, use our Maven plugin.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-maven-plugin</artifactId>
+            <version>{{@inject packages.version('sentry.java.mavenplugin', '0.0.2') }}</version>
+            <configuration>
+                <!-- for showing output of sentry-cli -->
+                <debugSentryCli>true</debugSentryCli>
+
+                <!-- download the latest sentry-cli and provide path to it here -->
+                <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
+                <!-- minimum required version is 2.17.3 -->
+                <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath>
+
+                <org>___ORG_SLUG___</org>
+
+                <project>___PROJECT_SLUG___</project>
+
+                <!-- in case you're self hosting, provide the URL here -->
+                <!--<url>http://localhost:8000/</url>-->
+
+                <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
+                <!-- you can find it in Sentry UI: Settings > Account > API > Auth Tokens -->
+                <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>install</phase>
+                    <goals>
+                        <goal>uploadSourceBundle</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    ...
+</build>
+```
+
 ### Gradle:
 
-```groovy {tabTitle:Spring 5}{filename:build.gradle}
+#### Spring 5
+
+```groovy
 implementation 'io.sentry:sentry-spring:{{@inject packages.version('sentry.java.spring', '4.0.0') }}'
 ```
 
-```groovy {tabTitle:Spring 6}{filename:build.gradle}
+#### Spring 6
+
+```groovy
 implementation 'io.sentry:sentry-spring-jakarta:{{@inject packages.version('sentry.java.spring.jakarta', '6.7.0') }}'
 ```
 
+#### Source Context
+
+To upload your source code to Sentry and show it in stacktraces, use our Gradle plugin.
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
+}
+
+sentry {  
+    // Generates a source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext = true
+
+    org = "___ORG_SLUG___"
+    project = "___PROJECT_SLUG___"
+    authToken = "your-sentry-auth-token"
+}
+```
+
 For other dependency managers see the [central Maven repository (Spring 5)](https://search.maven.org/artifact/io.sentry/sentry-spring) and [central Maven repository (Spring 6)](https://search.maven.org/artifact/io.sentry/sentry-spring-jakarta).
+
+## Configure
 
 Configure Sentry as soon as possible in your application's lifecycle:
 
@@ -55,7 +140,9 @@ The `sentry-spring` and `sentry-spring-jakarta` libraries provide an `@EnableSen
 
 ### Java
 
-```java {tabTitle: Spring 5}
+#### Spring 5
+
+```java
 import io.sentry.spring.EnableSentry;
 
 @EnableSentry(dsn = "___PUBLIC_DSN___")
@@ -64,7 +151,9 @@ class SentryConfiguration {
 }
 ```
 
-```java {tabTitle: Spring 6}
+#### Spring 6
+
+```java
 import io.sentry.spring.jakarta.EnableSentry;
 
 @EnableSentry(dsn = "___PUBLIC_DSN___")
@@ -75,7 +164,9 @@ class SentryConfiguration {
 
 ### Kotlin
 
-```kotlin {tabTitle: Spring 5}
+#### Spring 5
+
+```kotlin
 import io.sentry.spring.EnableSentry
 import org.springframework.core.Ordered
 
@@ -85,7 +176,9 @@ import org.springframework.core.Ordered
 )
 ```
 
-```kotlin {tabTitle: Spring 6}
+#### Spring 6
+
+```kotlin
 import io.sentry.spring.jakarta.EnableSentry
 import org.springframework.core.Ordered
 

@@ -311,3 +311,49 @@ UUIDs into a properties file.
 `--require-one`
 
 : Requires at least one file to upload or the command will error.
+
+
+## JVM Source Bundles
+
+`sentry-cli` can be used to upload source files for any JVM based language like
+Java or Kotlin to Sentry; however, in most situations, you would use one of our
+build tool plugins to do that ([Android](platforms/android/source-context/)
+[Java](platforms/java/source-context/)). Nevertheless, there may be situations
+where you would upload source bundle files manually.
+
+<Note>
+
+You need to specify the organization and project you are working with
+because source bundle files work on projects. For more information about this refer to
+[Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects).
+
+</Note>
+
+### Creating a Source Bundle
+
+The `debug-files bundle-jvm` command can be used to create a source bundle for a
+source directory.
+
+```bash
+sentry-cli debug-files bundle-jvm \
+    --output some/dir \
+    --debug-id A_VALID_UUID \
+    path/to/source/dir
+```
+
+Since the Java/Android SDK needs to send the UUID of the source bundle, you need to
+provide it. More details can be found in the [Java SDK docs](platforms/java/source-context/#manually-uploading-source-context) and [Android SDK Docs](platforms/android/source-context/#manually-uploading-source-context)
+
+### Uploading a Source Bundle
+
+The `debug-files upload` command allows you to upload the previously created source
+bundle to Sentry.
+
+```bash
+sentry-cli debug-files upload \
+    --type jvm \
+    output/path/of/bundle-jvm/command
+```
+
+After the upload, Sentry will attach Source Context to future events.
+To make sure that it worked, you can check _Project Settings > Debug Files_ and see if the uploaded source bundle files are listed.

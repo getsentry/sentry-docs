@@ -9,6 +9,8 @@ type: framework
 The sentry-log4j2 library provides <a href=https://logging.apache.org/log4j/2.x//>Log4j 2.x</a> support for Sentry via an <a href=https://logging.apache.org/log4j/2.x/log4j-core/apidocs/org/apache/logging/log4j/core/Appender.html/>Appender</a> that sends logged exceptions to Sentry.
 </Alert>
 
+## Install
+
 Install Sentry's integration with Log4j 2.x using either Maven or Gradle:
 
 ### Maven
@@ -21,11 +23,83 @@ Install Sentry's integration with Log4j 2.x using either Maven or Gradle:
 </dependency>
 ```
 
+To upload your source code to Sentry and show it in stacktraces, use our Maven plugin.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-maven-plugin</artifactId>
+            <version>{{@inject packages.version('sentry.java.mavenplugin', '0.0.2') }}</version>
+            <configuration>
+                <!-- for showing output of sentry-cli -->
+                <debugSentryCli>true</debugSentryCli>
+
+                <!-- download the latest sentry-cli and provide path to it here -->
+                <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
+                <!-- minimum required version is 2.17.3 -->
+                <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath>
+
+                <org>___ORG_SLUG___</org>
+
+                <project>___PROJECT_SLUG___</project>
+
+                <!-- in case you're self hosting, provide the URL here -->
+                <!--<url>http://localhost:8000/</url>-->
+
+                <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
+                <!-- you can find it in Sentry UI: Settings > Account > API > Auth Tokens -->
+                <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>install</phase>
+                    <goals>
+                        <goal>uploadSourceBundle</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    ...
+</build>
+```
+
 ### Gradle
 
 ```groovy
 implementation 'io.sentry:sentry-log4j2:{{@inject packages.version('sentry.java.log4j2', '4.0.0') }}'
 ```
+
+To upload your source code to Sentry and show it in stacktraces, use our Gradle plugin.
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
+}
+
+sentry {  
+    // Generates a source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext = true
+
+    org = "___ORG_SLUG___"
+    project = "___PROJECT_SLUG___"
+    authToken = "your-sentry-auth-token"
+}
+```
+
+## Configure
 
 Configure Sentry as soon as possible in your application's lifecycle:
 

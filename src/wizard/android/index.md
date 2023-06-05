@@ -9,9 +9,10 @@ type: framework
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
 
-### Auto-Installation With the Sentry Android Gradle Plugin
+### Auto-Installation and Source Context With the Sentry Android Gradle Plugin
 
 The Sentry Android Gradle plugin will install the Android SDK and integrations relevant to your application.
+It can also upload your sources to Sentry so they can be shown as part of the stacktraces.
 
 To install the plugin, please update your app's `build.gradle` file as follows:
 
@@ -24,9 +25,22 @@ buildscript {
 plugins {
   id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
 }
+
+sentry {
+    // Generates a source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+  includeSourceContext = true
+
+  org = "___ORG_SLUG___"
+  project = "___PROJECT_SLUG___"
+  authToken = "your-sentry-auth-token"
+}
 ```
 
-The plugin version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}` will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '4.2.0') }}`) to your app.
+The plugin version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}` will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '6.21.0') }}`) to your app.
 
 ## Connecting the SDK to Sentry
 
