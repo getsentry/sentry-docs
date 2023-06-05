@@ -1,0 +1,349 @@
+---
+title: Network Requests
+---
+
+There are multiple ways to make network requests in the Sentry app, but React Query (`sentry/utils/queryClient.tsx`) is the preferred way to do so. In this guide we will explore how to effectively request and update data.
+
+## How we use React Query
+
+For the most part, we use React Query as-is. Please refer to the [official docs](https://tanstack.com/query/latest/docs/react/overview) for most questions about options and usage. You’ll notice that we do wrap the library exports in the file `sentry/utils/queryClient.tsx` which applies a few modifications for ease of use:
+
+- `useApiQuery` wraps `useQuery` and should be used whenever possible.
+  - It provides a default value for `queryFn`, which uses `queryKey` to generate request URL.
+  - It stores extra data from the API response, including headers and status codes.
+  - It requires a value to be provided for the option `staleTime`, which defaults to `0` normally. Making this explicit ensures that consumers are aware of how often the query will refetch data. See the [section on stale time](#what-to-use-for-staletime) for more information.
+  - `refetchOnWindowFocus` defaults to `false` instead of `true`. This is once again intended to make refetches more intentional.
+- `setApiQueryData` wraps `setQueryData` for use with `useApiQuery`. See the [section on updating the cache](#updating-your-query-data) for more information.
+
+## Queries (GET requests)
+
+Queries are relatively simple. It takes a query key, makes a request, and caches the result. Any changes to the query key will automatically initiate another fetch (or cache hit). If your component isn’t always ready to make a request, you may disable it with the `enabled` option.
+
+### Quick start
+
+Let’s say you are making the following request: `GET /projects/?org=<org>`
+
+```tsx
+import {useApiQuery} from 'sentry/utils/queryClient';
+
+type FetchProjectsResponse = Array<{id: string; name: string}>;
+type ProjectsListProps = {org: string};
+
+function ProjectsList({org}: ProjectsListProps) {
+  const {
+    isLoading,
+    isError,
+    data: projects,
+    refetch,
+  } = useApiQuery<FetchProjectsResponse>(['/projects/', {query: {org}}], {
+    staleTime: 0,
+  });
+
+  if (isLoading) {
+    return <Placeholder height="100px" />;
+  }
+
+  if (isError) {
+    return <LoadingError onRetry={refetch} message="Failed to load projects." />;
+  }
+
+  return (
+    <ul>
+      {projects.map(project => (
+        <li>{project.id}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### What to use for staleTime
+
+Consider the value you select for `staleTime` carefully. With default options, queries will refetch any time the hook has mounted or the query key has changed, so long as the query is stale. The value provided for `staleTime` is the number of milliseconds that queries stay fresh in the cache before being marked stale. Once stale, the queries will stay in the cache and be refetched in the background on the next refetch event (remount or key change). Here are some common values you might use:
+
+- `staleTime: Infinity` — “Once I fetch this, I never want it refetched automatically”
+- `staleTime: 0` — “This data changes often and I’m okay with excess refetches”
+- `staleTime: 30_000` — “I only want to refetch at most every 30 seconds”
+
+Note that regardless of the value chosen for `staleTime`, values only stay in the cache for 5 minutes since last use. This can be modified with `cacheTime`.
+
+### Expected error statuses
+
+By default, any non 2xx status code will be considered an error and retried. While this works in most cases, sometimes you do expect error statuses such as `404` and want to display the not found state immediately. You may disable retries entirely with `retry: false` or filter out specific statuses by providing a function like so:
+
+```tsx
+useApiQuery(..., {retry: (_, error) => error.status !== 404});
+```
+
+### Headers and pagination
+
+Headers, including page links, can be accessed with `getResponseHeader` which is returned from `useApiQuery`:
+
+```tsx
+const {getResponseHeader} = useApiQuery(...);
+const pageLinks = getResponseHeader?.('Link');
+```
+
+### Making your query reusable
+
+Often, you will have a `useApiQuery` call in one place that makes the request and components elsewhere that will also require access to the same data. There are a few things to keep in mind when making these hooks reusable, so let’s look at an example:
+
+```tsx
+// useFetchProjects.tsx
+type ProjectsResponse = Array<{id: string; name: string}>;
+type FetchProjectsParameters = {orgSlug: string};
+
+export function makeFetchProjectsQueryKey({
+  orgSlug,
+}: FetchProjectsParameters): ApiQueryKey {
+  return [`/projects/`, {query: {orgSlug}}];
+}
+
+export function useFetchProjects(
+  params: FetchProjectsParameters,
+  options: Partial<UseApiQueryOptions<ProjectsResponse>> = {}
+) {
+  return useApiQuery(makeFetchProjectsQueryKey(params), {
+    staleTime: 0,
+    ...options,
+  });
+}
+
+// ProjectsPage.tsx
+function ProjectsPage({orgSlug}: EventsPageProps) {
+  const {isLoading, isError, data} = useFetchProjects({orgSlug});
+  return (...)
+}
+
+// ProjectSubComponent.tsx
+function ProjectSubComponent({orgSlug}: EventPaginationProps) {
+  const {data} = useFetchProjects({orgSlug});
+  return (...)
+}
+```
+
+Note that we add an `options` argument to our `useFetchProjects` hook so that consumers can pass their own options. Some options that can be helpful to use are:
+
+- `refetchOnMount: false`
+  - If you are using a non-infinite value for `staleTime`, subcomponents may cause refetches when mounted. By setting `refetchOnMount: false` on the subcomponent `useApiQuery`, you can prevent this.
+- `notifyOnChangeProps: ['data']`
+  - If you know that your data will already be in the cache and you only want to extract the data from it, use this option to prevent rerenders when other `useApiQuery` states change.
+- `enabled: <condition>`
+  - If this query is dependent on information that isn’t available yet, make sure to disable it until you have everything you need.
+  - Be aware that disabled queries will always return `isLoading: true`! Make sure to account for this in your components with disabled queries.
+
+Also make note of the function `makeFetchProjectsQueryKey`. We extract out the query key creation to its own function so that consumers of this hook can also update and refetch without having to recreate the query key manually, which can be prone to error.
+
+Reusable queries like this can be placed in `/sentry/actionsCreators`.
+
+### Updating your query data
+
+There are many situations where your query data becomes out of date and needs to be updated or refetched. This is usually because of some user input (e.g. creating/deleting/editing a record). If you already know what the new data should look like, you can (and should) immediately update the cache using the query client:
+
+```tsx
+import {setQueryData, queryClient} from 'utils/queryClient'
+
+const queryClient = useQueryClient();
+
+function handleCreateProject() {
+  const newProject = await createProject();
+  setApiQueryData<ProjectsResponse>(queryClient, makeFetchProjectsQueryKey(...), data => {
+    return data ? [...data, newProject] : data;
+  });
+}
+```
+
+Note the use of `setApiQueryData`. Use this helper function when using `useApiQuery` because it deals setting the full API response data for you.
+
+If you know the data is out of date, but don’t know what the new data should look like, you can invalidate the cache with `invalidateQueries`. [See the docs](https://tanstack.com/query/v4/docs/react/guides/query-invalidation) for how to use this.
+
+## Mutations (POST/PUT/DELETE requests)
+
+Mutations, unlike queries, do not fire automatically. Instead of `data`, it returns a `mutate` function which accepts the dynamic variables necessary to complete the mutation. Also note that unlike `useApiQuery` where the query function was created automatically, you must supply your own mutation function.
+
+### Quick start
+
+Let’s say you have a button that creates a project with `POST /organizations/<org>/projects/`:
+
+```tsx
+import {useMutation} from 'sentry/utils/queryClient';
+
+type CreateProjectResponse = {id: string; name: string};
+type CreateProjectVariables = {name: string; orgSlug: string};
+
+function Component() {
+  const api = useApi();
+
+  const {mutate} = useMutation<
+    CreateProjectResponse,
+    RequestError,
+    CreateProjectVariables
+  >({
+    ...options,
+    mutationFn: ({org, name}: CreateSavedSearchVariables) =>
+      api.requestPromise(`/organizations/${org}/projects/`, {
+        method: 'POST',
+        data: {name},
+      }),
+    onSuccess: response => {
+      addSuccessMessage(`Successfully created project ${response.name}`);
+    },
+  });
+
+  return (
+    <button onClick={() => mutate({org: '...', name: '...'})}>Create project</button>
+  );
+}
+```
+
+### Optimistic updates
+
+In some situations, displaying a loading state for every action can be cumbersome and make the experience feel bloated and slow. For interactions like these, it may make sense to immediately update the cache rather than wait for a response.
+
+While there is no loading state when optimistically updating, errors still need to be handled. Errors should reset the UI to the previous state and display a message to notify the user that their action didn’t succeed.
+
+For an example, let’s say that you want to update the project’s name:
+
+```tsx
+// useFetchProject.tsx
+export function makeFetchProjectQueryKey({id}): ApiQueryKey {
+  return [`/projects/${id}`];
+}
+
+// useUpdateProjectNameOptimistic.tsx
+function useUpdateProjectNameOptimistic(incomingOptions: UpdateProjectOptions) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+
+  const options: Options = {
+    ...incomingOptions,
+    mutationFn: ({id, name}) => {
+      return api.requestPromise(`/projects/${id}/`, {
+        method: 'PUT',
+        data: {name},
+      });
+    },
+    onMutate: async variables => {
+      // Cancel any ongoing queries so our cache changes aren't overridden
+      await queryClient.cancelQueries(makeFetchProjectQueryKey({id: variables.id}));
+
+      const previousProject = queryClient.getQueryData<Project>(
+        makeFetchProjectQueryKey({id: variables.id})
+      );
+
+      // Update the cache with the new value
+      setQueryData(queryClient, makeFetchProjectQueryKey({id: variables.id}), oldData => {
+        return oldData ? {...oldData, name: variables.name} : oldData;
+      });
+
+      // Call `onMutate` in case a consumer wants to use this handler
+      incomingOptions.onMutate?.(variables);
+
+      // Return previous data that can be used in the case of an error
+      // This will be accessible as `context` in the onError handler
+      return {previousProject};
+    },
+    onError: (error, variables, context) => {
+      addErrorMessage(t('Failed to update project name.'));
+
+      // Reset to the previous value which we set in the return value of onMutate
+      if (context) {
+        queryClient.setQueryData(
+          makeFetchProjectQueryKey({id: variables.id}),
+          context.previousProject
+        );
+      }
+
+      incomingOptions.onError?.(error, variables, context);
+    },
+    onSettled: (...params) => {
+      // To be safe, trigger a refetch afterwards to ensure data is correct
+      queryClient.invalidateQueries({queryKey: ['todos']});
+      incomingOptions.onSettled?.(...params);
+    },
+  };
+
+  return useMutation(options);
+}
+```
+
+## Testing components with network requests
+
+We use `MockApiClient` to mock API responses. This is a globally-available class in tests that reimplements `Client` in the test environment. You can read up on the logic [here](https://github.com/getsentry/sentry/blob/master/static/app/__mocks__/api.tsx).
+
+### Mocking successful responses
+
+```tsx
+// Mock fetching projects
+MockApiClient.addMockResponse({
+  url: '/projects/',
+  body: [{id: 1, name: 'my project'}],
+});
+
+// Mock creating a project
+MockApiClient.addMockResponse({
+  url: '/projects/',
+  method: 'POST',
+  body: {id: 1, name: 'my project'},
+});
+
+// More complex matching logic:
+// Matches POST /projects/?param=1 with {name: 'other'} in body
+MockApiClient.addMockResponse({
+  url: '/projects/',
+  method: 'POST',
+  body: {id: 2, name: 'other'},
+  match: [
+    MockApiClient.matchQuery({param: '1'}),
+    MockApiClient.matchData({name: 'other'}),
+  ],
+});
+```
+
+### Mocking error responses
+
+```tsx
+MockApiClient.addMockResponse({
+  url: '/projects/',
+  body: {
+    detail: 'Internal Error',
+  },
+  statusCode: 500,
+});
+```
+
+### Common pitfalls
+
+#### Waiting for your queries to respond
+
+Always, always, always await your assertions when a network request is involved! Although the data is readily available (since we provide mocks), it is still an async process which takes multiple render cycles. So be sure to use [`findBy` queries](https://testing-library.com/docs/dom-testing-library/api-async#findby-queries) when necessary.
+
+#### Mocking mutations with refetches
+
+When testing a component with a mutation, you often want to refetch data after the mutation has completed. Since the data has changed, you will need to update your mocks before the refetch occurs in order to create a test that matches reality. Otherwise you could have perfectly good logic which updates the cache, but the refetch will use the original mocked data and ruin the test. To prevent that from happening, see this example:
+
+```tsx
+it('adds a project to the list', function () {
+  MockApiClient.addMockResponse({
+    url: '/projects/',
+    body: [],
+  });
+  const createProject = mockApiClient.addMockResponse({
+    url: '/projects/',
+    method: 'POST',
+    body: {id: 1, name: 'My Project'},
+  });
+
+  render(<ProjectList />);
+  expect(screen.getByText('My Project')).not.toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', {name: 'Create Project'}));
+  // Override the previous response with the new data
+  MockApiClient.addMockResponse({
+    url: '/projects/',
+    body: [{id: 1, name: 'My Project'}],
+  });
+  await waitFor(() => expect(createProject).toHaveBeenCalledWith({name: 'My Project'}));
+  await screen.findByText('My Project').toBeInTheDocument();
+});
+```
