@@ -89,3 +89,16 @@ Future<void> processOrderBatch(ISentrySpan span) async {
 ```
 
 Check out [the documentation](https://docs.sentry.io/platforms/flutter/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+
+## Uploads Debug Symbols
+
+Use the Sentry Dart Plugin to upload debug symbols for Android, iOS/macOS and source maps for Web to Sentry via [sentry-cli](https://docs.sentry.io/product/cli/).
+
+### Install
+
+In your `pubspec.yaml`, add `sentry_dart_plugin` as a new dev dependency.
+
+```yaml
+dev_dependencies:
+  sentry_dart_plugin: ^1.0.0
+```
