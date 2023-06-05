@@ -42,7 +42,7 @@ plugins {
     id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
 }
 
-sentry {  
+sentry {
     // Generates a source bundle and uploads your source code to Sentry.
     // This enables source context, allowing you to see your source
     // code as part of your stack traces in Sentry.
