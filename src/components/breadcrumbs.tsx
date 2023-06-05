@@ -2,7 +2,7 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, StaticQuery} from 'gatsby';
 
-import SmartLink from './smartLink';
+import {SmartLink} from './smartLink';
 
 const query = graphql`
   query BreadcrumbsQuery {
@@ -79,7 +79,7 @@ export function BaseBreadcrumbs({
   );
 }
 
-export default function breadcrumb() {
+export function breadcrumb() {
   return (
     <StaticQuery
       query={query}

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import usePlatform from './hooks/usePlatform';
-import ExternalLink from './externalLink';
+import {usePlatform} from './hooks/usePlatform';
+import {ExternalLink} from './externalLink';
 
 const scenarios = [
   'performance',
@@ -75,7 +75,7 @@ const SANDBOX_PLATFORM_MAP: {[key: string]: string} = {
   node: 'react',
 };
 
-export default function SandboxLink({children, platform, target, ...params}: Props) {
+export function SandboxLink({children, platform, target, ...params}: Props) {
   const [currentPlatform] = usePlatform(platform);
 
   if (isSandboxHidden()) {

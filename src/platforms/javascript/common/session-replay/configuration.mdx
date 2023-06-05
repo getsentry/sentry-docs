@@ -20,13 +20,15 @@ The following options can be configured on the root level of your browser-based 
 
 The following can be configured as integration options in `new Replay({})`:
 
-| Key                    | Type                 | Default | Description                                                                                                                                                   |
-| ---------------------- | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stickySession          | boolean              | `true`  | Keep track of users across page loads. Note, because closing a tab ends the session, a single user using multiple tabs will be recorded as multiple sessions. |
-| networkDetailAllowUrls | (string \| RegExp)[] | `[]`    | Capture request and response details for XHR and fetch requests that match the given URLs.                                                                    |
-| networkCaptureBodies   | boolean              | `true`  | Decide whether to capture request and response bodies for URLs defined in `networkDetailAllowUrls`.                                                           |
-| networkRequestHeaders  | string[]             | `[]`    | Capture request headers for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                  |
-| networkResponseHeaders | string[]             | `[]`    | Capture response headers for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                 |
+| Key                     | Type                 | Default | Description                                                                                                                                                   |
+| ----------------------- | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| stickySession           | boolean              | `true`  | Keep track of users across page loads. Note, because closing a tab ends the session, a single user using multiple tabs will be recorded as multiple sessions. |
+| mutationLimit           | number               | 10000   | The upper bound of mutations to process before Session Replay stops recording due to performance impacts. See [Mutation Limits](#mutation-limits)             |
+| mutationBreadcrumbLimit | number               | 750     | The upper bound of mutations to process before Session Replay sends a breadcrumb to warn of large mutations. See [Mutation Limits](#mutation-limits)          |
+| networkDetailAllowUrls  | (string \| RegExp)[] | `[]`    | Capture request and response details for XHR and fetch requests that match the given URLs.                                                                    |
+| networkCaptureBodies    | boolean              | `true`  | Decide whether to capture request and response bodies for URLs defined in `networkDetailAllowUrls`.                                                           |
+| networkRequestHeaders   | string[]             | `[]`    | Additional request headers to capture for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                    |
+| networkResponseHeaders  | string[]             | `[]`    | Additional response headers to capture for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                   |
 
 ### Sampling
 
@@ -72,6 +74,17 @@ new Replay({
 ```
 
 <Note>Captured bodies will be truncated to 150k characters max.</Note>
+
+## Mutation Limits
+
+Session Replay works by recording incremental DOM changes that occur in your web application. Generally these changes occur in small batches and cause minimal overhead. However, it can be easy to overlook cases that will cause a large amount of DOM mutations to happen in a single update. An example is a custom dropdown component that has an unbounded list of options to render. This can negatively impact performance without Session Replay and its effects will be magnified with Session Replay enabled. In order to avoid this scenario, Session Replay will stop recording if it detects a large number of mutations (default: 10,000), which can be configured by setting `mutationLimit`. Additionally, we provide breadcrumbs in the replay to warn you when a large number of mutations are detected (default: 750).
+
+```javascript
+new Replay({
+  mutationBreadcrumbLimit: 1000,
+  mutationLimit: 1500,
+});
+```
 
 ## Identifying Users
 

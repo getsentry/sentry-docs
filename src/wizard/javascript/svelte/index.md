@@ -26,7 +26,12 @@ import * as Sentry from "@sentry/svelte";
 // Initialize the Sentry SDK here
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.BrowserTracing()],
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+  ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
