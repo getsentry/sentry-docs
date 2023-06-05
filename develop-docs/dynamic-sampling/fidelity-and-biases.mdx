@@ -13,7 +13,13 @@ A sample rate is a number in the interval `[0.0, 1.0]` that will determine the l
 
 ## The Concept of Fidelity
 
-At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all transactions of an organization. _The determination of the target sample rate is configurable by changing the return value of the `get_blended_sample_rate` function (defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/quotas/base.py#L466-L466))._ Within this target sample rate, Dynamic Sampling can create a **bias toward more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event.
+At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all transactions of an organization.
+
+The **determination** of the target sample rate is done dynamically by analyzing the volume of data received by Sentry in a specific time window (configurable [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/options/defaults.py#L690)) and then calling the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)) which takes as input the volume in the time window and returns a sampling tier in the form of (`volume`, `sample_rate`).
+
+_The `get_sampling_tier_for_volume`, like the `get_blend_sample_rate` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L466)), is a function that must be overridden by the user to customize the behavior of Dynamic Sampling._
+
+Within this target sample rate, Dynamic Sampling can create a **bias toward more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event.
 
 ![Concept of Fidelity](/images/fidelityAndPriorities.png)
 
@@ -129,7 +135,7 @@ In order to rebalance transactions, the system computes the counts of the transa
 
 This bias is the simplest one that can be defined. It applies to any incoming trace and is defined on a per-project basis.
 
-_The sample rate of the uniform bias is computed using an algorithm that is based on the base sample rate, known as the target fidelity rate. This rate is defined at the organization level and is returned by the `quotas.get_blended_sample_rate` function._
+_The sample rate of the uniform bias is computed using an algorithm that leverages a dynamic sample rate obtained by measuring the incoming volume of transactions in a sliding time window, known as the target fidelity rate. This rate is obtained by calling, at fixed intervals, the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)), which given the volume in a time window, will determine the appropriate target fidelity rate for the entire organization._
 
 The algorithm used in this bias, computes a new sample rate with the goal of prioritizing low-volume projects, which can be drowned out by high-volume projects. The mechanism used for prioritizing is similar to the low-volume transactions bias in which given the sample rate of the organization and the counts of each project, it computes a new sample rate for each project, assuming an ideal distribution of the counts.
 
