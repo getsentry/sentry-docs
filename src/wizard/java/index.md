@@ -119,7 +119,7 @@ For **SBT**:
 libraryDependencies += "io.sentry" % "sentry" % "{{@inject packages.version('sentry.java', '4.0.0') }}"
 ```
 
-To upload your source code to Sentry and show it in stacktraces, please refer to [Manually Uploading Source Context](platforms/java/source-context).
+To upload your source code to Sentry and show it in stacktraces, please refer to [Manually Uploading Source Context](https://docs.sentry.io/platforms/java/source-context).
 
 ## Configure
 
