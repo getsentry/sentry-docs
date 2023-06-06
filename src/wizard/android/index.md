@@ -12,7 +12,7 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 ### Auto-Installation and Source Context With the Sentry Android Gradle Plugin
 
 The Sentry Android Gradle plugin will install the Android SDK and integrations relevant to your application.
-It can also upload your sources to Sentry so they can be shown as part of the stacktraces.
+It can also upload your source code to Sentry so it can be shown as part of the stacktraces.
 
 To install the plugin, please update your app's `build.gradle` file as follows:
 
@@ -30,8 +30,6 @@ sentry {
     // Generates a source bundle and uploads your source code to Sentry.
     // This enables source context, allowing you to see your source
     // code as part of your stack traces in Sentry.
-    //
-    // Default is disabled.
   includeSourceContext = true
 
   org = "___ORG_SLUG___"

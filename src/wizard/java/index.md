@@ -46,8 +46,6 @@ sentry {
     // Generates a source bundle and uploads your source code to Sentry.
     // This enables source context, allowing you to see your source
     // code as part of your stack traces in Sentry.
-    //
-    // Default is disabled.
     includeSourceContext = true
 
     org = "___ORG_SLUG___"
