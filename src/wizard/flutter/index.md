@@ -94,4 +94,4 @@ Check out [the documentation](https://docs.sentry.io/platforms/flutter/performan
 
 Debug symbols provide information that Sentry displays on the **Issue Details** page to help you triage an issue. We offer a range of methods to provide Sentry with debug symbols.
 
-Check out [Debug Symbols](platforms/flutter/upload-debug/) documentation to upload debug symbols for Android, iOS/macOS and source maps for Web to Sentry.
+Check out [Debug Symbols](/platforms/flutter/upload-debug/) documentation to upload debug symbols for Android, iOS/macOS and source maps for Web to Sentry.
