@@ -35,7 +35,7 @@ sentry {
   includeSourceContext = true
 
   org = "___ORG_SLUG___"
-  project = "___PROJECT_SLUG___"
+  projectName = "___PROJECT_SLUG___"
   authToken = "your-sentry-auth-token"
 }
 ```
