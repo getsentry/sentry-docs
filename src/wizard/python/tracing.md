@@ -1,6 +1,6 @@
 ---
 name: Python
-doc_link: https://docs.sentry.io/platforms/python/performance/
+doc_link: https://docs.sentry.io/platforms/python/performance/instrumentation/custom-instrumentation/
 support_level: production
 type: language
 ---
