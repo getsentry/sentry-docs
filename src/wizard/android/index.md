@@ -23,7 +23,7 @@ buildscript {
   }
 }
 plugins {
-  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
 }
 
 sentry {
@@ -38,7 +38,7 @@ sentry {
 }
 ```
 
-The plugin version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}` will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '6.21.0') }}`) to your app.
+The plugin version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}` will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '6.21.0') }}`) to your app.
 
 ## Connecting the SDK to Sentry
 

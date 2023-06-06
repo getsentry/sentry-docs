@@ -39,7 +39,7 @@ buildscript {
 }
 
 plugins {
-    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.8.1') }}"
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
 }
 
 sentry {
