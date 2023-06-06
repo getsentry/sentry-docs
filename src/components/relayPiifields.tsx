@@ -3,22 +3,18 @@ import { graphql, useStaticQuery } from 'gatsby';
 
 const query = graphql`
   query PiiFieldsQuery {
-    allPiiFieldPath {
-      nodes {
-        path
-      }
-    }
+    allPiiFieldPath
   }
 `;
 
 function PiiField({ field }) {
-    const asterisk_flag = field.path.endsWith("other");
+    const asterisk_flag = field.endsWith("other");
 
     return (
         <React.Fragment>
             <dt>
                 <code>
-                    {field.path}
+                    {field}
                 </code>
                 {
                     asterisk_flag ?
@@ -35,12 +31,12 @@ function PiiField({ field }) {
 
 export default function PiiFields(): JSX.Element {
     const data = useStaticQuery(query);
-    const fields = data.allPiiFieldPath.nodes;
+    const fields = data.allPiiFieldPath;
 
     return (
         <dl>
             {fields.map(field => (
-                <PiiField key={field.path} field={field} />
+                <PiiField key={field} field={field} />
             ))}
         </dl>
     );
