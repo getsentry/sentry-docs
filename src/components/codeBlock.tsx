@@ -1,21 +1,20 @@
-import React, {useContext, useRef, useState} from 'react';
-import ReactDOM from 'react-dom';
+import React, {Children, Fragment, useContext, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {ArrowDown, Clipboard} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
 import {MDXProvider} from '@mdx-js/react';
-import copy from 'copy-to-clipboard';
 import {AnimatePresence, motion} from 'framer-motion';
 import memoize from 'lodash/memoize';
 
-import {useOnClickOutside} from '../utils';
+import {useOnClickOutside} from 'sentry-docs/utils';
 
-import CodeContext from './codeContext';
+import {CodeContext} from './codeContext';
 
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
 function makeKeywordsClickable(children: React.ReactChildren) {
-  const items = React.Children.toArray(children);
+  const items = Children.toArray(children);
 
   KEYWORDS_REGEX.lastIndex = 0;
 
@@ -44,7 +43,7 @@ function makeKeywordsClickable(children: React.ReactChildren) {
       lastIndex = KEYWORDS_REGEX.lastIndex;
     }
 
-    const after = child.substr(lastIndex);
+    const after = child.substring(lastIndex);
     if (after.length > 0) {
       arr.push(after);
     }
@@ -103,7 +102,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const [isAnimating, setIsAnimating] = useState(false);
 
   if (!currentSelection) {
-    return <React.Fragment>keyword</React.Fragment>;
+    return <Fragment>keyword</Fragment>;
   }
 
   const selector = isOpen && (
@@ -136,7 +135,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const portal = getPortal();
 
   return (
-    <React.Fragment>
+    <Fragment>
       <KeywordDropdown
         key={index}
         ref={setReferenceEl}
@@ -166,9 +165,8 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
           </AnimatePresence>
         </span>
       </KeywordDropdown>
-      {portal &&
-        ReactDOM.createPortal(<AnimatePresence>{selector}</AnimatePresence>, portal)}
-    </React.Fragment>
+      {portal && createPortal(<AnimatePresence>{selector}</AnimatePresence>, portal)}
+    </Fragment>
   );
 }
 
@@ -261,6 +259,7 @@ const Selections = styled('div')`
   background: #fff;
   border-radius: 3px;
   overflow: scroll;
+  overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -339,20 +338,20 @@ type Props = {
   title?: string;
 };
 
-export default function CodeBlock({filename, language, children}: Props): JSX.Element {
+export function CodeBlock({filename, language, children}: Props): JSX.Element {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 
-  function copyCode() {
+  async function copyCode() {
     let code = codeRef.current.innerText;
     // don't copy leading prompt for bash
     if (language === 'bash' || language === 'shell') {
       const match = code.match(/^\$\s*/);
       if (match) {
-        code = code.substr(match[0].length);
+        code = code.substring(match[0].length);
       }
     }
-    copy(code);
+    await navigator.clipboard.writeText(code);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 1200);
   }

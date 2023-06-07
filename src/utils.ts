@@ -1,4 +1,6 @@
 import {useEffect} from 'react';
+import type {Transaction} from '@sentry/browser';
+import qs from 'query-string';
 
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
@@ -59,3 +61,44 @@ export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] =>
     );
   });
 };
+
+type URLQueryObject = {
+  [key: string]: string;
+};
+
+const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
+
+export const marketingUrlParams = (): URLQueryObject => {
+  const query = qs.parse(window.location.search);
+  const marketingParams: Record<string, string> = Object.keys(query).reduce((a, k) => {
+    const matcher = paramsToSync.find(m => m.test(k));
+    return matcher ? {...a, [k]: query[k]} : a;
+  }, {});
+
+  // add in original_referrer
+  if (document.referrer && !marketingParams.original_referrer) {
+    marketingParams.original_referrer = document.referrer;
+  }
+
+  return marketingParams;
+};
+
+export function getCurrentTransaction(): Transaction | undefined {
+  try {
+    // getCurrentHub() can actually return undefined, as we are using the Loader Script
+    // so we guard defensively against all of these existing.
+    return window.Sentry.getCurrentHub().getScope().getTransaction();
+  } catch {
+    return undefined;
+  }
+}
+
+export function captureException(exception: unknown): void {
+  try {
+    // Sentry may not be available, as we are using the Loader Script
+    // so we guard defensively against all of these existing.
+    window.Sentry.captureException(exception);
+  } catch {
+    // ignore
+  }
+}

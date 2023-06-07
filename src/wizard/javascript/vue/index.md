@@ -23,41 +23,6 @@ npm install --save @sentry/vue
 
 Next, initialize Sentry in your app entry point before you initialize your root component.
 
-#### Vue 2
-
-```javascript
-import Vue from "vue";
-import Router from "vue-router";
-import * as Sentry from "@sentry/vue";
-
-Vue.use(Router);
-
-const router = new Router({
-  // ...
-});
-
-Sentry.init({
-  Vue,
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-    }),
-  ],
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
-});
-
-// ...
-
-new Vue({
-  router,
-  render: h => h(App),
-}).$mount("#app");
-```
-
 #### Vue 3
 
 ```javascript
@@ -77,6 +42,8 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
     }),
   ],
@@ -88,6 +55,43 @@ Sentry.init({
 
 app.use(router);
 app.mount("#app");
+```
+
+#### Vue 2
+
+```javascript
+import Vue from "vue";
+import Router from "vue-router";
+import * as Sentry from "@sentry/vue";
+
+Vue.use(Router);
+
+const router = new Router({
+  // ...
+});
+
+Sentry.init({
+  Vue,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+    }),
+  ],
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+// ...
+
+new Vue({
+  router,
+  render: (h) => h(App),
+}).$mount("#app");
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).

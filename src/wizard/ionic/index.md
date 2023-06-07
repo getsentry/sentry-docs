@@ -6,24 +6,28 @@ type: framework
 ---
 
 To use Sentry in your Ionic app, install the Sentry Capacitor SDK alongside the sibling Sentry SDK related to the Web framework you're using with Ionic.
-The supported siblings are: Angular `@sentry/angular`, React `@sentry/react` and Vue `@sentry/vue`.
+The supported siblings are: Angular `@sentry/angular-ivy`, React `@sentry/react` and Vue `@sentry/vue`.
 
 Heres an example of installing Sentry Capacitor along with Sentry Angular:
+
 ```
 npm install --save @sentry/capacitor @sentry/angular
 ```
+
 or
+
 ```
 yarn add @sentry/capacitor @sentry/angular
 ```
-The same installation process applies to the other siblings, all you need to do is to replace `@sentry/angular` by the desired sibling.
+
+The same installation process applies to the other siblings, all you need to do is to replace `@sentry/angular-ivy` by the desired sibling.
 
 ## Capacitor 2 - Android Installation
 
 <Note>
 
- This step is not needed if you are using Capacitor 3
- 
+This step is not needed if you are using Capacitor 3
+
 </Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.
@@ -74,33 +78,36 @@ class MainActivity : BridgeActivity() {
 You must initialize the Sentry SDK as early as you can:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
-// The example is using Angular, Import '@sentry/vue' or '@sentry/react' when using a Sibling different than Angular.
-import * as SentrySibling from '@sentry/angular';
-// For automatic instrumentation (highly recommended)
-import { BrowserTracing } from '@sentry/tracing';
+import * as Sentry from "@sentry/capacitor";
+// The example is using Angular 12+. Import '@sentry/angular' for Angular 10 and 11. Import '@sentry/vue' or '@sentry/react' when using a Sibling different than Angular.
+import * as SentrySibling from "@sentry/angular-ivy";
 
 Sentry.init(
   {
-    dsn: '___PUBLIC_DSN___',
+    dsn: "___PUBLIC_DSN___",
     // To set your release and dist versions
-    release: 'my-project-name@' + process.env.npm_package_version,
-    dist: '1',
+    release: "my-project-name@" + process.env.npm_package_version,
+    dist: "1",
     // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
     // We recommend adjusting this value in production.
     tracesSampleRate: 1.0,
     integrations: [
-      new BrowserTracing({
-        tracingOrigins: ['localhost', 'https://yourserver.io/api'],
+      new SentrySibling.BrowserTracing({
+        // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+        tracePropagationTargets: [
+          "localhost",
+          /^https:\/\/yourserver\.io\/api/,
+        ],
+        routingInstrumentation: SentrySibling.routingInstrumentation,
       }),
-    ]
+    ],
   },
   // Forward the init method to the sibling Framework.
   SentrySibling.init
 );
 ```
 
-Additionally for Angular, you will also need to alter NgModule (same code doesn't apply to other siblings)
+Additionally for Angular, you will also need to configure your root `app.module.ts` (same code doesn't apply to other siblings):
 
 ```javascript
 @NgModule({
@@ -109,6 +116,16 @@ Additionally for Angular, you will also need to alter NgModule (same code doesn'
       provide: ErrorHandler,
       // Attach the Sentry ErrorHandler
       useValue: SentrySibling.createErrorHandler(),
+    },
+    {
+      provide: SentrySibling.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentrySibling.TraceService],
+      multi: true,
     },
   ],
 })
@@ -119,22 +136,22 @@ Additionally for Angular, you will also need to alter NgModule (same code doesn'
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
-Sentry.captureException('Test Captured Exception');
+Sentry.captureException("Test Captured Exception");
 ```
 
 You can also throw an error anywhere in your application:
 
 ```javascript
 // Must be thrown after Sentry.init is called to be captured.
-throw new Error('Test Thrown Error');
+throw new Error("Test Thrown Error");
 ```
 
 Or trigger a native crash:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
 Sentry.nativeCrash();
 ```

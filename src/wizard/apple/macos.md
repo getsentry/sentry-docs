@@ -16,7 +16,7 @@ platform :ios, '11.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{ packages.version('sentry.cocoa') }}'
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{@inject packages.version('sentry.cocoa') }}'
 end
 ```
 
@@ -33,7 +33,7 @@ https://github.com/getsentry/sentry-cocoa.git
 Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
 
 ```swift {tabTitle:Swift}
-.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{ packages.version('sentry.cocoa') }}"),
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
 ```
 
 For more information visit the [docs](/platforms/apple/install/swift-package-manager/).
@@ -43,7 +43,7 @@ For more information visit the [docs](/platforms/apple/install/swift-package-man
 To integrate Sentry into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ruby
-github "getsentry/sentry-cocoa" "{{ packages.version('sentry.cocoa') }}"
+github "getsentry/sentry-cocoa" "{{@inject packages.version('sentry.cocoa') }}"
 ```
 
 Run `carthage update` to download the framework and drag the built `Sentry.framework` into your Xcode project. For more information visit the [docs](/platforms/apple/install/carthage/).
@@ -73,7 +73,7 @@ func application(_ application: UIApplication,
 }
 ```
 
-When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry

@@ -2,16 +2,16 @@ import React from 'react';
 import {Nav} from 'react-bootstrap';
 import {useLocation} from '@reach/router';
 
-import NavbarPlatformDropdown from './navbarPlatformDropdown';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {getSandboxURL, SandboxOnly} from './sandboxLink';
-import Search from './search';
-import SmartLink from './smartLink';
+import {Search} from './search';
+import {SmartLink} from './smartLink';
 
 type Props = {
   platforms?: string[];
 };
 
-export default function Navbar({platforms}: Props): JSX.Element {
+export function Navbar({platforms}: Props): JSX.Element {
   const location = useLocation();
 
   return (

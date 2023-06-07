@@ -1,7 +1,7 @@
 ---
 title: Automatic Instrumentation
 sidebar_order: 10
-description: 'Learn what transactions are captured after tracing is enabled.'
+description: "Learn what transactions are captured after tracing is enabled."
 redirect_from:
   - /performance/included-instrumentation/
 ---
@@ -170,7 +170,7 @@ Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#
 We check for availability at runtime, so if you're not using `androidx.core`, you can remove it from Sentry's transitive dependencies.
 
 ```Groovy
-implementation ('io.sentry:sentry-android:{{ packages.version('sentry.java.android', '4.2.0') }}') {
+implementation ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
     exclude group: 'androidx.core', module: 'core'
 }
 ```
@@ -241,7 +241,7 @@ This feature is disabled by default, but you can enable it by setting:
 
 _(New in version 6.0.0)_
 
- The SDK composes the transaction name out of the host `Activity` and the `id` of the view that captured the user interaction — for example, for `LoginActivity.login_button`. The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll`, or `swipe`).
+The SDK composes the transaction name out of the host `Activity` and the `id` of the view that captured the user interaction — for example, for `LoginActivity.login_button`. The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll`, or `swipe`).
 
 <Note>
 
@@ -273,9 +273,31 @@ fun LoginScreen() {
 
 <Note>
 
-If the `@Composable` doesn't have a `testTag` modifier applied, the transaction won't be captured because it can't be uniquely identified otherwise.
+If the `@Composable` doesn't have a `testTag` modifier applied, the transaction won't be captured because it can't be uniquely identified. To capture a transaction for the `@Composable`, you must either add a `testTag` modifier or enable automatic `@Composable` tagging.
 
 </Note>
+
+##### Automatic `@Composable` tagging using the Sentry Kotlin Compiler Plugin
+
+<Note>
+
+The Sentry Kotlin Compiler plugin is considered _experimental_. Give it a try and provide early feedback [on GitHub](https://github.com/getsentry/sentry-android-gradle-plugin).
+
+</Note>
+
+The <PlatformLink to="/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> can automatically enrich your `@Composable` functions during compilation with a tag name, based on the function name of your `@Composable`. In order to use this feature, the Sentry Kotlin Compiler plugin needs to be applied to all modules, which contain `@Composable` elements.
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.kotlin.compiler.gradle" version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.compiler.gradle") version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
 
 #### Transaction Lifetime
 

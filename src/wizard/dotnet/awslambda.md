@@ -12,15 +12,14 @@ Sentry provides an integration with AWS Lambda ASP.NET Core Server through the [
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry.AspNetCore -Version {{ packages.version('sentry.dotnet.aspnetcore') }}
+Install-Package Sentry.AspNetCore -Version {{@inject packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry.AspNetCore -v {{ packages.version('sentry.dotnet.aspnetcore') }}
+dotnet add package Sentry.AspNetCore -v {{@inject packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 You can combine this integration with a logging library like `log4net`, `NLog`, or `Serilog` to include both request data as well as your logs as breadcrumbs. The logging ingrations also capture events when an error is logged.
-
 
 ### Configuring
 
@@ -66,9 +65,8 @@ public class BadController
 
 And make a request to that lambda:
 
-```sh
+```shell
 curl -X GET -I https://url.of.server.aws/api/bad
 ```
-
 
 Check out the [Sentry ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) documentation for the complete set of options.

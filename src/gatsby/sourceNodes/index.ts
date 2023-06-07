@@ -5,17 +5,13 @@ import { sourcePlatformNodes } from './platformNodes';
 import { relayMetricsNodes } from './relayMetricsNodes';
 import { piiFieldsNodes } from './relayPiiNodes';
 
-
 async function main(params) {
-  await Promise.all([
-    relayMetricsNodes(params),
-    sourcePlatformNodes(params),
-    sourcePackageRegistryNodes(params),
-    sourceAppRegistryNodes(params),
-    sourceAwsLambdaLayerRegistryNodes(params),
-    piiFieldsNodes(params),
-  ]);
+  relayMetricsNodes(params);
+  piiFieldsNodes(params);
+  await sourcePlatformNodes(params);
+  await sourcePackageRegistryNodes(params);
+  await sourceAppRegistryNodes(params);
+  await sourceAwsLambdaLayerRegistryNodes(params);
 }
 
 export default main;
-

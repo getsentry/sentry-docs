@@ -1,43 +1,8 @@
-To initialize Sentry in your Vue application, add this to your `app.js`:
-
-### Vue 2
-
-```javascript
-import Vue from "vue";
-import Router from "vue-router";
-import * as Sentry from "@sentry/vue";
-
-Vue.use(Router);
-
-const router = new Router({
-  // ...
-});
-
-Sentry.init({
-  Vue,
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-    }),
-  ],
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
-});
-
-// ...
-
-new Vue({
-  router,
-  render: h => h(App),
-}).$mount("#app");
-```
+To initialize Sentry in your Vue application, add the following code snippet to your `main.js`:
 
 ### Vue 3
 
-```javascript
+```javascript {filename:main.js}
 import { createApp } from "vue";
 import { createRouter } from "vue-router";
 import * as Sentry from "@sentry/vue";
@@ -54,52 +19,77 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
     }),
+    new Sentry.Replay(),
   ],
+
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
 });
 
 app.use(router);
 app.mount("#app");
 ```
 
-Additionally, Vue 3 allows you to use multiple apps with the same Sentry SDK instance, as well as add more apps dynamically after the SDK has been already initialized.
+### Vue 2
 
-### Vue 3 - Multiple Apps
-
-```javascript
-const appOne = Vue.createApp(App);
-const appTwo = Vue.createApp(App);
-const appThree = Vue.createApp(App);
-
-Sentry.init({
-  app: [appOne, appTwo, appThree],
-});
-```
-
-### Vue 3 - Manual Initialization
-
-```javascript
+```javascript {filename:main.js}
+import Vue from "vue";
+import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
 
-// ...
-const app = createApp(App);
+Vue.use(Router);
 
-Sentry.init({
-  app,
+const router = new Router({
   // ...
 });
 
-const miscApp = createApp(MiscApp);
-miscApp.mixin(Sentry.createTracingMixins({ trackComponents: true }));
-Sentry.attachErrorHandler(miscApp);
+Sentry.init({
+  Vue,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+    }),
+    new Sentry.Replay(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+// ...
+
+new Vue({
+  router,
+  render: (h) => h(App),
+}).$mount("#app");
 ```
 
-The SDK accepts a few different configuration options that let you change its behavior:
+If you're creating more than one Vue 3 app within your application, check out how to initialize the SDK for [multiple apps](./features/multiple-apps).
+
+### Vue-Specific configuration
+
+The SDK accepts a few Vue-specific `Sentry.init` configuration options:
 
 - `attachProps` (defaults to `true`) - Includes all Vue components' props with the events.
 - `logErrors` (defaults to `true`) - Decides whether SDK should call Vue's original `logError` function as well.

@@ -1,23 +1,54 @@
 To use this SDK, initialize Sentry in your Remix entry points for both the client and server.
 
-```typescript {filename: entry.client.tsx}
+Create two files in the root directory of your project, `entry.client.tsx` and `entry.server.tsx` (if they don't exist yet). In these files, add your initialization code for the client-side SDK and server-side SDK, respectively.
+
+The two configuration types are mostly the same, except that some configuration features, like Session Replay, only work in `entry.client.tsx`.
+
+```typescript {tabTitle:Client} {filename: entry.client.tsx}
 import { useLocation, useMatches } from "@remix-run/react";
 import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
   dsn: "___DSN___",
-  tracesSampleRate: 1,
   integrations: [
     new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.remixRouterInstrumentation(
         useEffect,
         useLocation,
-        useMatches,
+        useMatches
       ),
     }),
+    // Replay is only available in the client
+    new Sentry.Replay(),
   ],
-  // ...
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+```typescript {tabTitle:Server} {filename: entry.server.tsx}
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
+
+Sentry.init({
+  dsn: "___DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
 });
 ```
 
@@ -50,17 +81,17 @@ If you use a custom Express server in your Remix application, you should wrap yo
 
 </Alert>
 
-
 ```typescript {filename: server/index.ts}
 import { wrapExpressCreateRequestHandler } from "@sentry/remix";
-import { createRequestHandler } from '@remix-run/express';
+import { createRequestHandler } from "@remix-run/express";
 
 // ...
 
-const createSentryRequestHandler = wrapExpressCreateRequestHandler(createRequestHandler);
+const createSentryRequestHandler =
+  wrapExpressCreateRequestHandler(createRequestHandler);
 
 // Use createSentryRequestHandler like you would with createRequestHandler
-app.all('*', createSentryRequestHandler(/* ... */));
+app.all("*", createSentryRequestHandler(/* ... */));
 ```
 
 Also, wrap your Remix root with `withSentry` to catch React component errors and to get parameterized router transactions.
@@ -101,15 +132,15 @@ You can disable or configure `ErrorBoundary` using a second parameter to `withSe
 
 ```ts
 withSentry(App, {
-  wrapWithErrorBoundary: false
+  wrapWithErrorBoundary: false,
 });
 
 // or
 
 withSentry(App, {
   errorBoundaryOptions: {
-    fallback: <p>An error has occurred</p>
-  }
+    fallback: <p>An error has occurred</p>,
+  },
 });
 ```
 

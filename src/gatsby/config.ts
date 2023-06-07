@@ -3,12 +3,9 @@
 /* eslint import/no-nodejs-modules:0 */
 
 import queries from './utils/algolia';
-import AppRegistry from './utils/appRegistry';
-import PackageRegistry from './utils/packageRegistry';
+import getAppRegistry from './utils/appRegistry';
+import getPackageRegistry from './utils/packageRegistry';
 import resolveOpenAPI from './utils/resolveOpenAPI';
-
-const packages = new PackageRegistry();
-const apps = new AppRegistry();
 
 const root = `${__dirname}/../..`;
 
@@ -28,9 +25,13 @@ const getPlugins = () => {
     {
       resolve: require.resolve('./plugins/gatsby-remark-variables'),
       options: {
-        scope: {
-          packages,
-          apps,
+        resolveScopeData: async function () {
+          const [apps, packages] = await Promise.all([
+            getAppRegistry(),
+            getPackageRegistry(),
+          ]);
+
+          return {apps, packages};
         },
         excludeExpr: ['default', 'secrets.SENTRY_AUTH_TOKEN'],
       },
@@ -86,28 +87,10 @@ const getPlugins = () => {
   ].filter(Boolean);
 
   const plugins = [
-    {
-      resolve: '@sentry/gatsby',
-    },
     'gatsby-plugin-sharp',
     'gatsby-plugin-sass',
     'gatsby-plugin-zeit-now',
     'gatsby-plugin-sitemap',
-    {
-      resolve: 'gatsby-plugin-google-gtag',
-      options: {
-        // You can add multiple tracking ids and a pageview event will be fired for all of them.
-        trackingIds: [
-          'UA-30327640-1', // Sentry
-        ],
-        // This object gets passed directly to the gtag config command
-        // This config will be shared across all trackingIds
-        gtagConfig: {
-          anonymize_ip: true,
-          cookie_expires: 0,
-        },
-      },
-    },
     {
       resolve: `gatsby-transformer-remark`,
       options: {

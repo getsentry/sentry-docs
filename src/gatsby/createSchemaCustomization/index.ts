@@ -10,10 +10,13 @@ function main({actions, schema}) {
     `
     type PageContext {
       title: String
-      sidebar_order: Int
-      sidebar_title: String
+      description: String
+      keywords: [String!]
       draft: Boolean
       redirect_from: [String!]
+      noindex: Boolean
+      sidebar_title: String
+      sidebar_order: Int
 
       platform: PlatformContext
       guide: GuideContext
@@ -38,7 +41,8 @@ function main({actions, schema}) {
       fields: Fields
     }
 
-    type Mdx implements Node {
+    type Mdx implements Node
+      @childOf(types: ["File"], mimeTypes: ["text/markdown", "text/x-markdown"]) {
       frontmatter: Frontmatter
       fields: Fields
     }
@@ -47,12 +51,15 @@ function main({actions, schema}) {
       slug: String!
       legacy: Boolean
     }
-  `,
+    `,
     schema.buildObjectType({
       name: 'Frontmatter',
       fields: {
         title: {
           type: 'String!',
+        },
+        description: {
+          type: 'String',
         },
         keywords: {
           type: '[String!]',

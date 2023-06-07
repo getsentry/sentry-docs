@@ -1,7 +1,7 @@
 import React from 'react';
 import {graphql} from 'gatsby';
 
-import Content from '~src/components/content';
+import {Content} from 'sentry-docs/components/content';
 
 export default function WizardDebug({data: {file}}) {
   const {frontmatter} = file.childMarkdownRemark;

@@ -22,14 +22,20 @@ npm install --save @sentry/svelte
 Initialize Sentry as early as possible in your application's lifecycle.
 
 ```javascript
-import './app.css';
-import App from './App.svelte';
+import "./app.css";
+import App from "./App.svelte";
 
-import * as Sentry from '@sentry/svelte';
+import * as Sentry from "@sentry/svelte";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+    new Sentry.Replay(),
+  ],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
   // Session Replay
@@ -38,7 +44,7 @@ Sentry.init({
 });
 
 const app = new App({
-  target: document.getElementById('app'),
+  target: document.getElementById("app"),
 });
 
 export default app;

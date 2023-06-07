@@ -1,46 +1,13 @@
-import React, {useRef} from 'react';
-import * as Sentry from '@sentry/gatsby';
+import React, {forwardRef, Fragment, useRef} from 'react';
 
-import Banner from './banner';
-import CodeContext, {useCodeContextState} from './codeContext';
-import Layout from './layout';
-import SEO from './seo';
-import SmartLink from './smartLink';
-import TableOfContents from './tableOfContents';
+import {getCurrentTransaction} from '../utils';
 
-type GitHubCTAProps = {
-  relativePath: string;
-  sourceInstanceName: string;
-};
-
-function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps): JSX.Element {
-  return (
-    <div className="github-cta">
-      <small>Help improve this content</small>
-      <br />
-      <small>
-        Our documentation is open source and available on GitHub. Your contributions are
-        welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would
-        be better").
-        <div className="muted">
-          <SmartLink
-            to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
-          >
-            Suggest an edit to this page
-          </SmartLink>{' '}
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-          <SmartLink to="https://docs.sentry.io/contributing/">
-            Contribute to Docs
-          </SmartLink>{' '}
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-          <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new/choose">
-            Report a problem
-          </SmartLink>{' '}
-        </div>
-      </small>
-    </div>
-  );
-}
+import {Banner} from './banner';
+import {CodeContext, useCodeContextState} from './codeContext';
+import {GitHubCTA} from './githubCta';
+import {Layout} from './layout';
+import {SEO} from './seo';
+import {TableOfContents} from './tableOfContents';
 
 export type PageContext = {
   description?: string;
@@ -57,7 +24,7 @@ type WrappedTOCProps = {
   pageContext: PageContext;
 };
 
-const WrappedTOC = React.forwardRef(
+const WrappedTOC = forwardRef(
   (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
     return <TableOfContents {...props} contentRef={ref} />;
   }
@@ -82,7 +49,7 @@ type Props = {
   sidebar?: JSX.Element;
 };
 
-export default function BasePage({
+export function BasePage({
   data: {file} = {},
   pageContext = {},
   seoTitle,
@@ -90,7 +57,7 @@ export default function BasePage({
   children,
   prependToc,
 }: Props): JSX.Element {
-  const tx = Sentry.getCurrentHub().getScope().getTransaction();
+  const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('ok');
   }
@@ -103,6 +70,8 @@ export default function BasePage({
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
   return (
+    // @ts-expect-error TODO(epurkhiser): Understand why these types are
+    // totally different
     <Layout {...{sidebar, pageContext}}>
       <SEO
         title={seoTitle || title}
@@ -134,10 +103,10 @@ export default function BasePage({
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
             <div className="page-nav">
               <Banner isModule />
-              <React.Fragment>
+              <Fragment>
                 {prependToc}
                 {hasToc && <WrappedTOC ref={contentRef} pageContext={pageContext} />}
-              </React.Fragment>
+              </Fragment>
             </div>
           </div>
         )}

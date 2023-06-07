@@ -31,7 +31,7 @@ func application(_ application: UIApplication,
 }
 ```
 
-When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry
@@ -66,6 +66,7 @@ SentrySDK.start { options in
     options.attachScreenshot = true
     options.attachViewHierarchy = true
     options.enableMetricKit = true
+    options.swiftAsyncStacktraces = true
 }
 ```
 
@@ -80,6 +81,32 @@ SentrySDK.start { options in
     options.attachScreenshot = YES;
     options.attachViewHierarchy = YES;
     options.enableMetricKit = YES;
+}];
+```
+
+## Stitch Together Swift Concurrency Stack Traces
+
+<Note>This feature is experimental and may have bugs.</Note>
+
+If you use Swift concurrency, this feature will stitch your stack traces together. That means you will be able to see the full stack trace of your async code.
+For this to happen you need to enable the `swiftAsyncStacktraces` option.
+You can also enable this in your Objective-C project, however, only async code written in Swift will be stitched together.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    // ...
+    options.swiftAsyncStacktraces = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    // ...
+    options.swiftAsyncStacktraces = YES;
 }];
 ```
 

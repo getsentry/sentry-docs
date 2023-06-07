@@ -4,7 +4,7 @@ sidebar_order: 4200
 notSupported:
   - javascript.cordova
   - javascript.wasm
-description: 'Configuring Session Replay to maintain user and data privacy.'
+description: "Configuring Session Replay to maintain user and data privacy."
 ---
 
 <Include name="beta-note-session-replay.mdx" />
@@ -32,17 +32,24 @@ Ignoring only applies to form inputs. Events will be ignored on the input elemen
 
 The following options can be configured as options to the integration, in `new Replay({})`:
 
-| key           | type                     | default                                  | description                                                                                                                                                                     |
-| ------------- | ------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mask          | string[]                 | `.sentry-mask, [data-sentry-mask]`       | Mask all elements that match the given DOM selectors. See [Masking](#masking) section for an example. Note that any configured selectors will be in _addition_ to the defaults. |
-| maskAllText   | boolean                  | `true`                                   | Mask _all_ text content. Will pass text content through `maskTextFn` before sending to server.                                                                                  |
-| maskAllInputs | boolean                  | `true`                                   | Mask values of `<input>` elements. Passes input values through `maskTextFn` before sending to server.                                                                           |
-| block         | string[]                 | `.sentry-block, [data-sentry-block]`     | Redact all elements that match the DOM selector(s). See [Blocking](#blocking) section for an example. Note that any configured selectors will be in _addition_ to the defaults. |
-| blockAllMedia | boolean                  | `true`                                   | Block _all_ media elements (`img`, `svg`, `video`, `object`, `picture`, `embed`, `map`, `audio`).                                                                               |
-| ignore        | string[]                 | `.sentry-ignore, [data-sentry-ignore]`   | Ignores all events on the matching input fields. See [Ignoring](#ignoring) above for an example.                                                                                |
-| maskTextFn    | (text: string) => string | `(text) => '*'.repeat(text.length)`      | Function to customize how text content is masked before sending to server. By default, masks text with `*`.                                                                     |
-| unblock       | string[]                 | `.sentry-unblock, [data-sentry-unblock]` | Don't redact any elements that match the DOM selectors. Used to unblock specific media elements that are blocked with `blockAllMedia`.                                          |
-| unmask        | string[]                 | `.sentry-unmask, [data-sentry-unmask]`   | Unmask all elements that match the given DOM selectors. Used to unmask specific elements that are masked with `maskAllText`.                                                    |
+| key           | type                     | default                                  | description                                                                                                                                                                                       |
+| ------------- | ------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| mask          | string[]                 | `.sentry-mask, [data-sentry-mask]`       | Mask all elements that match the given DOM selectors. See [Masking](#masking) section for an example. Note that any configured selectors will be in _addition_ to the defaults.                   |
+| maskAllText   | boolean                  | `true`                                   | Mask _all_ text content. Will pass text content through `maskFn` before sending to server.                                                                                                        |
+| maskAllInputs | boolean                  | `true`                                   | Mask values of `<input>` elements. Passes input values through `maskFn` before sending to server.                                                                                                 |
+| block         | string[]                 | `.sentry-block, [data-sentry-block]`     | Redact all elements that match the DOM selector(s). See [Blocking](#blocking) section for an example. Note that any configured selectors will be in _addition_ to the defaults.                   |
+| blockAllMedia | boolean                  | `true`                                   | Block _all_ media elements (`img`, `svg`, `video`, `object`, `picture`, `embed`, `map`, `audio`).                                                                                                 |
+| ignore        | string[]                 | `.sentry-ignore, [data-sentry-ignore]`   | Ignores all events on the matching input fields. See [Ignoring](#ignoring) above for an example.                                                                                                  |
+| maskFn        | (text: string) => string | `(text) => '*'.repeat(text.length)`      | Function to customize how text content is masked before sending to server. By default, masks text with `*`.                                                                                       |
+| unblock       | string[]                 | `.sentry-unblock, [data-sentry-unblock]` | Don't redact any elements that match the DOM selectors. Used to unblock specific media elements that are blocked with `blockAllMedia`. This doesn't affect sensitive elements such as `password`. |
+| unmask        | string[]                 | `.sentry-unmask, [data-sentry-unmask]`   | Unmask all elements that match the given DOM selectors. Used to unmask specific elements that are masked with `maskAllText`.                                                                      |
+
+## Network Request and Response Bodies and Headers
+
+Collecting request and response bodies is an opt-in feature. That's because the best way to avoid getting PII into Sentry is by not adding URLs of endpoints that may contain PII.
+Additionally, Sentry attempts to [scrub](/product/data-management-settings/scrubbing/server-side-scrubbing/) certain types of sensitive data from request and response bodies, if you accidentally opt-in to a URL that includes this type of data. This mechanism happens on our ingestion service, before data hits our disks. This is a best effort approach which pattern-matches the content with things like credit card information, social security numbers, and [passwords](https://github.com/search?q=repo%3Agetsentry%2Frelay%20PASSWORD_KEY_REGEX&type=code).
+
+More details about this feature can be found in the [configuration page](/platforms/javascript/session-replay/configuration/#network-details).
 
 ### Deprecated Options
 

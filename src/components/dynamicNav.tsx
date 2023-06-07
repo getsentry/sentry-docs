@@ -2,10 +2,10 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {withPrefix} from 'gatsby';
 
-import SidebarLink from './sidebarLink';
-import SmartLink from './smartLink';
+import {sortPages} from 'sentry-docs/utils';
 
-import {sortPages} from '~src/utils';
+import {SidebarLink} from './sidebarLink';
+import {SmartLink} from './smartLink';
 
 type Node = {
   [key: string]: any;
@@ -104,7 +104,7 @@ type Props = {
   title?: string;
 };
 
-export default function DynamicNav({
+export function DynamicNav({
   root,
   title,
   tree,
@@ -117,8 +117,8 @@ export default function DynamicNav({
 }: Props): JSX.Element | null {
   const location = useLocation();
 
-  if (root.indexOf('/') === 0) {
-    root = root.substr(1);
+  if (root.startsWith('/')) {
+    root = root.substring(1);
   }
 
   let entity: EntityTree;
@@ -171,9 +171,7 @@ export default function DynamicNav({
         <ul className="list-unstyled" data-sidebar-tree>
           {prependLinks &&
             prependLinks.map(link => (
-              <SidebarLink to={link[0]} key={link[0]}>
-                {link[1]}
-              </SidebarLink>
+              <SidebarLink to={link[0]} key={link[0]} title={link[1]} />
             ))}
           <Children tree={entity.children} exclude={exclude} showDepth={showDepth} />
         </ul>

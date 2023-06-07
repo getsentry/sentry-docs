@@ -51,6 +51,32 @@ You don't need to create Cron Monitors for your tasks on Sentry.io, we'll do it 
 
 </Note>
 
+### Excluding Celery Beat Tasks from Auto Discovery
+
+You can exclude Celery Beat tasks from being auto-instrumented. To do this, add a list of tasks you want to exclude as option `exclude_beat_tasks` when creating `CeleryIntegration`. The list can contain simple strings with the full task name, as specified in the Celery Beat schedule, or regular expressions to match multiple tasks.
+
+```python
+    exclude_beat_tasks = [
+        "some-task-a",
+        "payment-check-.*",
+    ]
+
+    sentry_sdk.init(
+        dsn='___PUBLIC_DSN___',
+        integrations=[
+            CeleryIntegration(
+                monitor_beat_tasks=True,
+                exclude_beat_tasks=exclude_beat_tasks),
+            ],
+        environment="local.dev.grace",
+        release="v1.0",
+    )
+```
+
+In this example the task `some-task-a` and all tasks with a name starting with `payment-check-` will be ignored.
+
+For more information, see the documentation for <PlatformLink to="/#options">options on CeleryIntegration</PlatformLink>.
+
 ## Manual Task Monitoring
 
 We provide a lightweight decorator to make monitoring individual tasks easier. To use it, add `@sentry_sdk.monitor` to your Celery task (or any function), then supply a `monitor_slug` of a monitor created previously on Sentry.io. Once this is done, every time the task (or function) is executed, telemetry data will be captured when a task is started, when it finishes, and when it fails.

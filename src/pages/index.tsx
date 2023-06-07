@@ -2,17 +2,16 @@ import React from 'react';
 import {Nav} from 'react-bootstrap';
 import {PlatformIcon} from 'platformicons';
 
-import '../css/screen.scss';
+import {Banner} from 'sentry-docs/components/banner';
+import {usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
+import {NavbarPlatformDropdown} from 'sentry-docs/components/navbarPlatformDropdown';
+import {getSandboxURL, SandboxOnly} from 'sentry-docs/components/sandboxLink';
+import {Search} from 'sentry-docs/components/search';
+import {SEO} from 'sentry-docs/components/seo';
+import {SmartLink} from 'sentry-docs/components/smartLink';
+import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 
-import Banner from '../components/banner';
-import {usePlatformList} from '../components/hooks/usePlatform';
-import NavbarPlatformDropdown from '../components/navbarPlatformDropdown';
-import Search from '../components/search';
-import SEO from '../components/seo';
-import SmartLink from '../components/smartLink';
-import SentryWordmarkSVG from '../logos/sentry-wordmark-dark.svg';
-
-import {getSandboxURL, SandboxOnly} from '~src/components/sandboxLink';
+import 'sentry-docs/css/screen.scss';
 
 const HIGHLIGHTED_PLATFORMS = [
   'javascript',

@@ -8,7 +8,7 @@ type Props = {
   title?: string;
 };
 
-export default function Alert({
+export function Alert({
   title,
   children,
   level,

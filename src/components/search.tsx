@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {
   Hit,
   Result,
@@ -9,8 +9,8 @@ import DOMPurify from 'dompurify';
 import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
 
-import useKeyboardNavigate from './hooks/useKeyboardNavigate';
-import Logo from './logo';
+import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
+import {Logo} from './logo';
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {
@@ -82,7 +82,7 @@ type Props = {
   platforms?: string[];
 };
 
-function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
+export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -195,7 +195,7 @@ function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
               {results
                 .filter(x => x.hits.length > 0)
                 .map((result, i) => (
-                  <React.Fragment key={result.site}>
+                  <Fragment key={result.site}>
                     {showOffsiteResults && (
                       <h4 className="sgs-site-result-heading">From {result.name}</h4>
                     )}
@@ -255,7 +255,7 @@ function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
                         </li>
                       ))}
                     </ul>
-                  </React.Fragment>
+                  </Fragment>
                 ))}
             </div>
           )}
@@ -282,5 +282,3 @@ function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
     </div>
   );
 }
-
-export default Search;

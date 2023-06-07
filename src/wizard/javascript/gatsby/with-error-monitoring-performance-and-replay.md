@@ -25,7 +25,7 @@ Register the `@sentry/gatsby` plugin in your Gatsby configuration file (typicall
 module.exports = {
   plugins: [
     {
-      resolve: '@sentry/gatsby',
+      resolve: "@sentry/gatsby",
     },
   ],
 };
@@ -34,11 +34,17 @@ module.exports = {
 Then, configure your `Sentry.init`:
 
 ```javascript {filename:sentry.config.js}
-import * as Sentry from '@sentry/gatsby';
+import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+    new Sentry.Replay(),
+  ],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
   // Session Replay
@@ -60,4 +66,3 @@ myUndefinedFunction();
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/gatsby/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Gatsby Features](https://docs.sentry.io/platforms/javascript/guides/gatsby/features/): Learn about our first class integration with the Gatsby framework.

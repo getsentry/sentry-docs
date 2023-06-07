@@ -1,15 +1,15 @@
 import React from 'react';
 import {Nav} from 'react-bootstrap';
 
-import '~src/css/screen.scss';
+import 'sentry-docs/css/screen.scss';
 
-import Breadcrumbs from './breadcrumbs';
-import Header from './header';
-import Navbar from './navbar';
-import NavbarPlatformDropdown from './navbarPlatformDropdown';
+import {breadcrumb as Breadcrumbs} from './breadcrumbs';
+import {Header} from './header';
+import {Navbar} from './navbar';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {getSandboxURL, SandboxOnly} from './sandboxLink';
-import Sidebar from './sidebar';
-import SmartLink from './smartLink';
+import {Sidebar} from './sidebar';
+import {SmartLink} from './smartLink';
 
 type Props = {
   children: JSX.Element | JSX.Element[];
@@ -26,11 +26,7 @@ type Props = {
   sidebar?: JSX.Element;
 };
 
-export default function Layout({
-  children,
-  sidebar,
-  pageContext = {},
-}: Props): JSX.Element {
+export function Layout({children, sidebar, pageContext = {}}: Props): JSX.Element {
   const searchPlatforms = [pageContext.platform?.name, pageContext.guide?.name].filter(
     Boolean
   );

@@ -10,18 +10,18 @@ Install the **NuGet** package:
 Package Manager:
 
 ```shell
-Install-Package Sentry.AspNet -Version {{ packages.version('sentry.dotnet.aspnet') }}
+Install-Package Sentry.AspNet -Version {{@inject packages.version('sentry.dotnet.aspnet') }}
 ```
 
 Using Entity Framework 6?
 
 ```shell
-Install-Package Sentry.EntityFramework -Version {{ packages.version('sentry.dotnet.ef') }}
+Install-Package Sentry.EntityFramework -Version {{@inject packages.version('sentry.dotnet.ef') }}
 ```
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
     <div class="alert-body content-flush-bottom">
-        <a href="https://docs.sentry.io/clients/csharp/">Our legacy SDK</a> supports .NET Framework as early as 3.5.
+        <a href="https://docs.sentry.io/platforms/dotnet/legacy-sdk/">Our legacy SDK</a> supports .NET Framework as early as 3.5.
     </div>
 </div>
 

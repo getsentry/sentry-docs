@@ -5,12 +5,12 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
-  'Syntax is joining Sentry. Check out the post and listen to the tasty 600th episode to learn more and grab limited edition swag.';
+  'Join us on May 30th at 10am PT for a 20-minute session on frontend error monitoring with Sentry.';
 const BANNER_LINK_URL =
-  'https://blog.sentry.io/2023/04/12/syntax-sentry-mmxxiii/?utm_source=web&utm_medium=docs&utm_campaign=sentry+syntax&utm_term=link';
-const BANNER_LINK_TEXT = 'Read more.';
+  'https://sentry.io/resources/livestream-ama-frontend-error-monitoring-101/?utm_medium=banner&utm_source=sentry-app&utm_campaign=frontend-error-webinar-may&utm_content=docs-banner';
+const BANNER_LINK_TEXT = 'Register now.';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
@@ -47,7 +47,7 @@ const readOrResetLocalStorage = () => {
   }
 };
 
-function Banner({isModule = false}) {
+export function Banner({isModule = false}) {
   const [isVisible, setIsVisible] = useState(false);
   const hash = fastHash(`${BANNER_TEXT}:${BANNER_LINK_URL}`).toString();
 
@@ -99,5 +99,3 @@ function Banner({isModule = false}) {
       )
     : null;
 }
-
-export default Banner;

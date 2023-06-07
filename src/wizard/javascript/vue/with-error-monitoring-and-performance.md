@@ -21,12 +21,44 @@ npm install --save @sentry/vue
 
 Initialize Sentry as early as possible in your application's lifecycle.
 
+#### Vue 3
+
+```javascript
+import { createApp } from "vue";
+import { createRouter } from "vue-router";
+import * as Sentry from "@sentry/vue";
+
+const app = createApp({
+  // ...
+});
+const router = createRouter({
+  // ...
+});
+
+Sentry.init({
+  app,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+    }),
+  ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+});
+
+app.use(router);
+app.mount("#app");
+```
+
 #### Vue 2
 
 ```javascript
-import Vue from 'vue';
-import Router from 'vue-router';
-import * as Sentry from '@sentry/vue';
+import Vue from "vue";
+import Router from "vue-router";
+import * as Sentry from "@sentry/vue";
 
 Vue.use(Router);
 
@@ -36,9 +68,11 @@ const router = new Router({
 
 Sentry.init({
   Vue,
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
     }),
   ],
@@ -50,38 +84,8 @@ Sentry.init({
 
 new Vue({
   router,
-  render: h => h(App),
-}).$mount('#app');
-```
-
-#### Vue 3
-
-```javascript
-import {createApp} from 'vue';
-import {createRouter} from 'vue-router';
-import * as Sentry from '@sentry/vue';
-
-const app = createApp({
-  // ...
-});
-const router = createRouter({
-  // ...
-});
-
-Sentry.init({
-  app,
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-    }),
-  ],
-  // Performance Monitoring
-  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
-});
-
-app.use(router);
-app.mount('#app');
+  render: (h) => h(App),
+}).$mount("#app");
 ```
 
 ## Verify

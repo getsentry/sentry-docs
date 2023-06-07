@@ -22,17 +22,17 @@ npm install --save @sentry/svelte
 Initialize Sentry as early as possible in your application's lifecycle, usually your Svelte app's entry point (`main.ts/js`):
 
 ```javascript
-import './app.css';
-import App from './App.svelte';
+import "./app.css";
+import App from "./App.svelte";
 
-import * as Sentry from '@sentry/svelte';
+import * as Sentry from "@sentry/svelte";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 });
 
 const app = new App({
-  target: document.getElementById('app'),
+  target: document.getElementById("app"),
 });
 
 export default app;

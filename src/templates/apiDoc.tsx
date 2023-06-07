@@ -1,10 +1,10 @@
 import React from 'react';
 import {graphql} from 'gatsby';
 
-import ApiSidebar from '~src/components/apiSidebar';
-import BasePage from '~src/components/basePage';
-import Content from '~src/components/content';
-import SmartLink from '~src/components/smartLink';
+import {ApiSidebar} from 'sentry-docs/components/apiSidebar';
+import {BasePage} from 'sentry-docs/components/basePage';
+import {Content} from 'sentry-docs/components/content';
+import {SmartLink} from 'sentry-docs/components/smartLink';
 
 export default function ApiDoc(props) {
   const {

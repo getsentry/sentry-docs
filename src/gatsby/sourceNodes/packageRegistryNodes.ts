@@ -1,14 +1,12 @@
-import PackageRegistry from '../utils/packageRegistry';
+import getPackageRegistry from '../utils/packageRegistry';
 
 export const sourcePackageRegistryNodes = async ({actions, createContentDigest}) => {
   const {createNode} = actions;
 
-  const registry = new PackageRegistry();
-  const allSdks = await registry.getList();
+  const packageRegistry = await getPackageRegistry();
+  const allSdks = packageRegistry.data;
 
-  Object.keys(allSdks).forEach(async sdkName => {
-    const sdkData = (await registry.getData(sdkName)) as any;
-
+  Object.entries(allSdks).forEach(([sdkName, sdkData]) => {
     const data = {
       canonical: sdkData.canonical,
       name: sdkData.name,
@@ -43,9 +41,6 @@ export const sourcePackageRegistryNodes = async ({actions, createContentDigest})
       },
     };
 
-    createNode({
-      ...data,
-      ...nodeMeta,
-    });
+    createNode({...data, ...nodeMeta});
   });
 };

@@ -1,11 +1,14 @@
+// Not sure why but this rule does not get inherited from the eslint config
+/* eslint import/no-unresolved: ['error', { ignore: ['@reach'] }] */
+
 import React from 'react';
 import {useLocation, useNavigate} from '@reach/router';
 import {act, renderHook} from '@testing-library/react-hooks';
 import {useStaticQuery} from 'gatsby';
 
-import PageContext from '../../pageContext';
-import useLocalStorage from '../useLocalStorage';
-import usePlatform from '../usePlatform';
+import {PageContext} from '../../pageContext';
+import {useLocalStorage} from '../useLocalStorage';
+import {usePlatform} from '../usePlatform';
 
 const PLATFORMS = [
   {

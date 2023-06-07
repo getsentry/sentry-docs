@@ -1,24 +1,43 @@
 ---
 title: Application Not Responding (ANR)
 sidebar_order: 3
-description: 'Learn how to turn off or specify ANR.'
+description: "Learn how to turn off or specify ANR."
 ---
 
-Whenever the main UI thread of the application is blocked for more than five seconds, the SDK will report the problem to the server.
+The Android SDK uses different implementations to detect ANRs, depending on what version of Android the device is running:
+
+- Below Android 11: Running a Watchdog thread (v1)
+- Android 11 and above: Reading [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) (v2)
+
+The new implementation (v2) uses the same data source as Google Play Console. This means the reported ANR events and [ANR rate](/platforms/android/performance/instrumentation/performance-metrics/#application-not-responding-anr-rate) should match with what you see on Sentry. The new implementation also captures a thread dump with additional information, like held locks, to help you resolve ANRs more efficiently.
+
+While the original Watchdog approach (v1) reports many false positives and is based on heuristics, it still has some advantages over v2, like capturing screenshots and transactions with profiles at the time of ANR.
 
 <Note>
 
-Sentry does not report the ANR if the application is in debug mode.
+We're considering SDK support for both approaches working alongside each other on Android 11 and up. Please upvote [this GitHub discussion](https://github.com/getsentry/sentry-java/discussions/2716) and share your feedback if you have a case for v1 and v2 working together.
 
 </Note>
 
-You can turn off monitoring the ANR by adding the following to your `AndroidManifest.xml`:
+Both ANR detection implementations are controlled by the same flag:
 
 ```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.anr.enable" android:value="false" />
 </application>
 ```
+
+## Watchdog (v1)
+
+Whenever the main UI thread of the application is blocked for more than five seconds, the SDK will report the problem to the server.
+
+The integration reports ANR events with `mechanism:ANR`.
+
+<Note>
+
+Sentry does not report the ANR if the application is in debug mode.
+
+</Note>
 
 You can also specify how long the thread should be blocked before the ANR is reported. Provide the duration in the attribute `io.sentry.anr.timeout-interval-millis` in your `AndroidManifest.xml`:
 
@@ -27,3 +46,12 @@ You can also specify how long the thread should be blocked before the ANR is rep
     <meta-data android:name="io.sentry.anr.timeout-interval-millis" android:value="2000" />
 </application>
 ```
+
+## ApplicationExitInfo (v2)
+
+This approach reads the [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) API on the next app launch
+and asynchronously sends ANR events to Sentry for each ANR in the history, enriching only the latest one with breadcrumbs, contexts, tags, etc.
+
+The integration reports ANR events with `mechanism:AppExitInfo`.
+
+![ANR](app-not-respond.png)

@@ -9,7 +9,6 @@ Sentry captures data by using an SDK within your application’s runtime.
 
 > If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
 
-
 Run `@sentry/wizard`:
 
 ```bash
@@ -59,6 +58,7 @@ Or, try a native crash with:
 ```javascript
 Sentry.nativeCrash();
 ```
+
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
 If you're an existing user and have disabled alerts, you won't receive this email.

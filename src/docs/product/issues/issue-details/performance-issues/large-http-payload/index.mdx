@@ -1,0 +1,40 @@
+---
+title: "Large HTTP Payload"
+sidebar_order: 30
+redirect_from:
+  - /product/issues/performance-issues/large-http-payload/
+description: "Learn more about Large HTTP Payload issues, how to diagnose and fix them."
+---
+
+Large HTTP payload issues are created when an http span has an encoded body size that exceeds a threshold.
+
+## Detection Criteria
+
+The detector for this performance issue looks for a single http span that meets the following criteria:
+
+- The HTTP url must not begin with \_next/static/ or \_next/data/
+- The HTTP url must not end with an extension (e.g. .js, .css, .png, .jpg, .jpeg, .mp3), unless the extension is .json
+- The HTTP span must have an `http.response_content_length` (added by the `@sentry/browser` SDK, version `7.53.0`) that exceeds 500kb
+- The HTTP span duration must exceed 100ms
+
+If Sentry isn't detecting a Large HTTP Payload issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
+
+## Span Evidence
+
+You can find additional information about your Large HTTP Payload problem by four main aspects in the "Span Evidence" section:
+
+- **Transaction name**
+- **Large HTTP Payload Span:** The large HTTP span, usually containing the asset url.
+- **Payload Size:** The size of the payload in bytes.
+
+![Large HTTP payload span evidence](span-evidence.png)
+
+View it by going to the **Issues** page in Sentry, selecting your project, clicking on the Large HTTP Payload issue you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+
+## Fixing Large HTTP Payload Issues
+
+The reasons for getting consecutive Large HTTP Payload issues vary, but here are some suggestions to help you resolve them:
+
+- If you have control over the backend, check if you're sending more data than you need or if the data can be processed further before being sent to the client.
+- If all the endpoint data is needed, consider methods such as pagination to split up data across views.
+- Check if any changes were made to your serializer that may have resulted in a larger body size than necessary.

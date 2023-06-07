@@ -2,7 +2,7 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, StaticQuery} from 'gatsby';
 
-import SmartLink from './smartLink';
+import {SmartLink} from './smartLink';
 
 const query = graphql`
   query BreadcrumbsQuery {
@@ -49,7 +49,7 @@ export function BaseBreadcrumbs({
 }: Props) {
   const location = useLocation();
   let currentPath = location.pathname;
-  if (currentPath.substr(currentPath.length - 1) !== '/') {
+  if (!currentPath.endsWith('/')) {
     currentPath = currentPath += '/';
   }
   const rootNode = nodes.find(n => n.path === currentPath);
@@ -79,7 +79,7 @@ export function BaseBreadcrumbs({
   );
 }
 
-export default function breadcrumb() {
+export function breadcrumb() {
   return (
     <StaticQuery
       query={query}

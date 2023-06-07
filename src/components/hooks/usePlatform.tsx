@@ -3,9 +3,9 @@ import {useLocation, useNavigate, WindowLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 import {parse} from 'query-string';
 
-import PageContext from '../pageContext';
+import {PageContext} from 'sentry-docs/components/pageContext';
 
-import useLocalStorage from './useLocalStorage';
+import {useLocalStorage} from './useLocalStorage';
 
 const query = graphql`
   query UsePlatformQuery {
@@ -42,13 +42,13 @@ export const formatCaseStyle = (style: string, value: string): string => {
       return value
         .split(/-/g)
         .map((val, idx) =>
-          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
+          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substring(1)
         )
         .join('');
     case 'PascalCase':
       return value
         .split(/-/g)
-        .map(val => val.charAt(0).toUpperCase() + val.substr(1))
+        .map(val => val.charAt(0).toUpperCase() + val.substring(1))
         .join('');
     default:
       return value;
@@ -236,7 +236,7 @@ export const getPlatformsWithFallback = (platform: Platform | Guide): string[] =
  * If you're operating in a context that is _only_ for a specific platform, you
  * want to pass `defaultValue` with the effective platform to avoid fallbacks.
  */
-export default function usePlatform(
+export function usePlatform(
   value: string = null,
   useStoredValue: boolean = true,
   useDefault: boolean = true,

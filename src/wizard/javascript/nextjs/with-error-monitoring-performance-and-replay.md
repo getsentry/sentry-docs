@@ -7,7 +7,7 @@ type: framework
 
 ## Install
 
-Configure your app automatically with [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure).
+Add Sentry automatically to your app with the [Sentry wizard](https://docs.sentry.io/platforms/javascript/guides/nextjs/#install):
 
 ```bash
 npx @sentry/wizard -i nextjs
@@ -15,7 +15,7 @@ npx @sentry/wizard -i nextjs
 
 ## Configure
 
-Sentry wizard will automatically patch your application:
+The Sentry wizard will automatically patch your application:
 
 - create `sentry.client.config.js` and `sentry.server.config.js` with the default `Sentry.init`.
 - create `next.config.js` with the default configuration.
@@ -35,8 +35,14 @@ npm install --save @sentry/nextjs
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+    new Sentry.Replay(),
+  ],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
   // Session Replay
@@ -58,4 +64,3 @@ return <button onClick={() => methodDoesNotExist()}>Break the world</button>;
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/nextjs/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Next.js Features](https://docs.sentry.io/platforms/javascript/guides/nextjs/features/): Learn about our first class integration with the Next.js framework.

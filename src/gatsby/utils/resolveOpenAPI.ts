@@ -4,11 +4,9 @@
 
 import {promises as fs} from 'fs';
 
-import axios from 'axios';
-
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '2e7fb04951d8be47c87db5991307c501af24adab';
+const SENTRY_API_SCHEMA_SHA = '86cd1c0fb4bdda737b2c879b7eb9ba32dec761ba';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -20,15 +18,15 @@ async function main() {
       return data;
     } catch (error) {
       console.log(
-        `Failed to connect to  ${process.env.OPENAPI_LOCAL_PATH}. Continuing to fetch versioned schema from Github.
+        `Failed to connect to  ${process.env.OPENAPI_LOCAL_PATH}. Continuing to fetch versioned schema from GitHub.
         ${error}`
       );
     }
   }
-  const response = await axios.get(
+  const response = await fetch(
     `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
   );
-  return response.data;
+  return await response.json();
 }
 
 export default main;

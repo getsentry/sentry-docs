@@ -1,169 +1,73 @@
-Source maps can sometimes be tricky to get going. If you're having trouble, you can try using our verification tool inside `sentry-cli`, or go through the steps listed below yourself. Please keep in mind, that the `sentry-cli` is a work-in-progress, and we're actively working to improve it.
-
-To use the automated verification process, [install and configure](/product/cli/) `sentry-cli`. Once completed, use the `sourcemaps explain` command, by calling it with the event ID that can be found at the top of the **Issue Details** page in [sentry.io](https://sentry.io). For example, "Event fdfd1337e3964cd6a4d11f35357a4c43 | JSON (42.0 KiB)".
-
-```shell
-sentry-cli sourcemaps explain fdfd1337e3964cd6a4d11f35357a4c43
-```
-
-This should provide you with some useful hints about what exactly went wrong with the source maps setup process.
-If it doesn't, let us know so we can make it better.
-
-<PlatformSection notSupported={["javascript.electron"]}>
-
-## Verify a release is configured in your SDK
-
-For uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct artifacts uploaded with it), and the name of that newly-created release needs to be specified in your SDK configuration.
-
-To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors](../../configuration/releases/). If this is properly set up you'll see "Release: my_example_release".
-
-</PlatformSection>
-
-## Verify artifacts are uploaded
-
-Once your release is properly configured and issues are tagged, you can find the artifacts uploaded to Sentry by navigating to **[Project] » Project Settings » Source Maps**.
-
-Additionally, make sure all of the necessary files are available. For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps.
-
-## Verify `sourceMappingURL` is present
-
-Some CDNs automatically strip comments from static files, including JavaScript files. This can have the effect of stripping your JavaScript file of its `sourceMappingURL` directive, because it is considered a comment. For example, CloudFlare has a feature called [Auto-Minify](https://blog.cloudflare.com/an-all-new-and-improved-autominify/) which will strip `sourceMappingURL` if it is enabled.
-
-Double-check that your deployed, final JavaScript files have `sourceMappingURL` present.
-
-Alternately, instead of `sourceMappingURL`, you can set a `SourceMap` HTTP header on your minified file. If this header is present, Sentry will use it to discover the location of your source map.
-
-<PlatformSection notSupported={["javascript.electron"]}>
-
-## Verify artifact distribution value matches value configured in your SDK
-
-Whenever you are using a distribution identifier (the `dist` configuration option in the SDK), the same value has to be used during source map upload. Conversely, if your source maps are getting uploaded with a `dist` value, the same value must be set in your SDK.
-To add a `dist` value to your uploaded source maps, use the `--dist` flag with `sentry-cli` or the `dist` option in our [Sentry Bundler Plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins) (like for example `@sentry/webpack-plugin`). To set the `dist` value in the SDK, use the `dist` option in your `Sentry.init()`.
-
-To verify that the distribution has been set correctly in the SDK, open an issue in the Sentry UI and check that the `dist` tag is present. For artifacts, go to the `Source Maps` page in project settings, choose the release shown on the event you just checked, and verify that the `dist` value (in the small oval next to the upload time) matches that on the event.
-
-</PlatformSection>
-
-## Verify artifact names match stack trace frames
-
-If you've uploaded source maps and they aren't applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we're attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
-
-If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={["node"]}><PlatformLink to="/configuration/integrations/plugin/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={["node"]}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
-
-### Using sentry-cli
-
-If your `sourceMappingURL` comment is similar to:
-
-```javascript
-// -- end script.min.js (located at http://localhost:8000/scripts/script.min.js)
-//# sourceMappingURL=script.min.js.map
-```
-
-An example `sentry-cli` command to upload these files correctly would look like this (assuming you're in the `/scripts` directory, running your web server from one directory higher, which is why we're using the `--url-prefix` option):
-
-```shell
-sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
-```
-
-This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
-
-```
-~/scripts/script.js
-~/scripts/script.min.js
-~/scripts/script.min.js.map
-```
-
-Alternately you can specify which files to upload. For example:
-
-```
-sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
-```
-
-You can also upload it with the fully qualified URL. For example:
-
-```
-sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
-```
-
-### Using the API
-
-You can alternately [use our API](/api/releases/update-an-organization-release-file/) to upload artifacts, following the same naming convention explained here.
-
-```shell
-curl -X POST \
-  https://sentry.io/api/0/organizations/ORG_SLUG/releases/VERSION/files/ \
-  -H 'Authorization: Bearer AUTH_TOKEN' \
-  -H 'content-type: multipart/form-data' \
-  -F file=@script.min.js.map \
-  -F 'name=~/scripts/script.min.js.map'
-```
-
-### Using the `~`
-
-The `~` is used in Sentry to replace the scheme and domain. It is not a glob!
-
-`http://example.com/dist/js/script.js` will match `~/dist/js/script.js` or `http://example.com/dist/js/script.js`
-
-but will NOT match `~/script.js`.
-
-## Multiple Origins
-
-It's not uncommon for a web application to be accessible at multiple origins. For example:
-
-- Website is operable over both `https` and `http`
-- Geolocated web addresses: such as `https://us.example.com`, `https://eu.example.com`
-- Multiple static CDNs: such as `https://static1.example.com`, `https://static2.example.com`
-- Customer-specific domains/subdomains
-
-In this situation, **identical** JavaScript and source map files may be located at two or more distinct origins. In this situation we recommend using our special tilde (`~`) prefix on paths.
-
-So for example, if you have the following:
-
-- https://static1.example.com/js/app.js
-- https://static2.example.com/js/app.js
-
-You can upload using the URL of `~/js/app.js`. This will tell Sentry to ignore the domain and use the artifact for any origin.
-
-Additionally you can also upload the same file under multiple names. Under the hood Sentry will deduplicate these.
-
 <Note>
 
-The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. Use this method **only** if your source/source map files are identical at all possible protocol/hostname combinations. **Sentry will prioritize full URLs over tilde prefixed paths**, if found.
+If you previously set up source maps, we suggest updating your tools (SDK, bundler plugins, Sentry CLI).
+It is generally easier to upgrade to the latest versions and follow the current process rather than troubleshooting with older versions.
+
+For information on the legacy method of uploading source maps, please see the guide on <PlatformLink to="/sourcemaps/troubleshooting_js/uploading-without-debug-ids">Uploading without Debug IDs</PlatformLink>.
+
+Dependency versions that require the legacy method of uploading source maps include:
+
+- JavaScript SDK version `7.46.0` or lower
+- `@sentry/webpack-plugin` package version `1.x` or lower
+- `sentry-cli` version `2.16.1` or lower
+- Sentry self-hosted or single-tenant on version `23.4.0` or lower
 
 </Note>
 
-## Verify artifact names match `sourceMappingURL` value
+Setting up source maps can be tricky, but it's worth it to get it right. To troubleshoot your source maps set up, you can either:
 
-The `sourceMappingURL` comment on the last line of your bundled or minified JavaScript file tells Sentry (or the browser) where to locate the corresponding source map. This can either be a fully qualified URL, a relative path, or the filename itself. When uploading artifacts to Sentry, you must name your source map files with the value the file resolves to.
+1. Use our automated verification tool inside `sentry-cli`, or
+2. Follow the manual steps listed below
 
-That is, if your file is similar to:
+## Use the CLI
 
-```javascript
-// -- end script.min.js
-//# sourceMappingURL=script.min.js.map
+To use the automated verification process, install and configure the Sentry [Command Line Interface](/product/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io).
+
+For example, "Event ID: c2ad049f":
+
+![Image highlighting where to find the ID of an event on Sentry](event_id.png)
+
+```shell
+sentry-cli sourcemaps explain c2ad049fd9e448ada7849df94575e019
 ```
 
-and is hosted at http://example.com/js/script.min.js, then Sentry will look for that source map file at http://example.com/js/script.min.js.map. Your uploaded artifact must therefore be named `http://example.com/js/script.min.js.map` (or `~/js/script.min.js.map`).
+The CLI output should give you useful information about what went wrong with your source maps setup.
+If it doesn't, let us know by filing an issue on our [Sentry CLI repo](https://github.com/getsentry/sentry-cli) so we can make it better.
 
-Or, if your file is similar to:
+## Follow Manual Steps
 
-```javascript
-//-- end script.min.js
-//# sourceMappingURL=https://example.com/dist/js/script.min.js.map
-```
+### Verify Artifacts Are Uploaded
 
-then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map` (or `~/dist/js/script.min.js.map`).
+Verify your artifacts are being uploaded to Sentry. You can find them at **[Settings] > Projects > Select your project > Source Maps**.
+For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps.
 
-Finally, if your file is similar to:
+## Verify You Are Building Source Maps
 
-```javascript
-//-- end script.min.js
-//# sourceMappingURL=../maps/script.min.js.map
-```
+Bundlers and tools (like `tsc`) that generate code, often require you to manually set specific options to generate source maps.
 
-then your uploaded artifact should be named `https://example.com/dist/maps/script.min.js.map` (or `~/dist/maps/script.min.js.map`).
+If you followed one of our tool-specific guides, verify you configured your tool to emit source maps and that the source maps contain your original source code in the `sourcesContent` field.
 
-## Verify artifacts are uploaded before errors occur
+## Verify Your Source Files Contain Debug ID Injection Snippets
+
+In the JavaScript files you uploaded to Sentry, search for code that roughly looks like `e._sentryDebugIds=e._sentryDebugIds||{}`. This code snippet might look different depending on how you process your code.
+
+If this code exists in a bundle, that bundle will be able to be matched to a source file. Every bundle you deploy in your app needs to have this snippet in order to be correctly source mapped.
+
+If your source code does not contain this snippet and you're using a Sentry plugin for your bundler, please check that you are using the latest version and please verify that the plugin is correctly processing your files. Set the `debug` option to `true` to print useful degbugging information.
+
+If you're using the Sentry CLI, verify that you're running the `inject` command **before** you upload to Sentry and **before** you deploy your files.
+
+## Verify Your Source Files Contain Debug ID Injection Snippets
+
+When inspecting the event payload JSON data in Sentry, verify that the events have a `debug_meta` property. If this property is missing and you already made sure your source files contain debug ID injection snippets, this likely means that you're using an outdated SDK.
+
+We generally recommend upgrading to the latest version, and for source maps to work you need to at least use version `7.47.0`.
+
+After you verified your event has a `debug_meta` property, the next thing to check is whether all frames inside the `raw_stacktrace` property inside the events have an `abs_path` property that exactly matches one of the `code_file` properties inside the `debug_meta` images.
+
+If a stack frame doesn't match an entry inside `debug_meta`, make sure that the relevant file contains a debug ID injection snippet.
+
+## Verify Artifacts Are Uploaded Before Errors Occur
 
 Sentry expects that source code and source maps in a given release are uploaded to Sentry **before** errors occur in that release.
 
@@ -185,7 +89,7 @@ First, install `source-map` globally as an npm module:
 npm install -g source-map
 ```
 
-Then, write a script that reads your source map file and tests a mapping. Here's an example:
+Then, write a Node.js script that reads your source map file and tests a mapping. Here's an example:
 
 ```javascript
 var fs = require("fs"),
@@ -200,7 +104,7 @@ var GENERATED_FILE = path.join(".", "app.min.js.map");
 var GENERATED_LINE_AND_COLUMN = { line: 1, column: 1000 };
 
 var rawSourceMap = fs.readFileSync(GENERATED_FILE).toString();
-new sourceMap.SourceMapConsumer(rawSourceMap).then(function(smc) {
+new sourceMap.SourceMapConsumer(rawSourceMap).then(function (smc) {
   var pos = smc.originalPositionFor(GENERATED_LINE_AND_COLUMN);
 
   // You should see something like:

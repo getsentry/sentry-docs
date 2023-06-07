@@ -25,7 +25,7 @@ Register the `@sentry/gatsby` plugin in your Gatsby configuration file (typicall
 module.exports = {
   plugins: [
     {
-      resolve: '@sentry/gatsby',
+      resolve: "@sentry/gatsby",
     },
   ],
 };
@@ -34,10 +34,10 @@ module.exports = {
 Then, configure your `Sentry.init`:
 
 ```javascript {filename:sentry.config.js}
-import * as Sentry from '@sentry/gatsby';
+import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -58,5 +58,4 @@ myUndefinedFunction();
 ## Next Steps
 
 - [Source Maps](https://docs.sentry.io/platforms/javascript/guides/gatsby/sourcemaps/): Learn how to enable readable stack traces in your Sentry errors.
-- [Gatsby Features](https://docs.sentry.io/platforms/javascript/guides/gatsby/features/): Learn about our first class integration with the Gatsby framework.
 - [Performance Monitoring](https://docs.sentry.io/platforms/javascript/guides/gatsby/performance/): Track down transactions to connect the dots between 10-second page loads and poor-performing API calls or slow database queries.
