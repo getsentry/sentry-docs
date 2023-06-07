@@ -24,7 +24,7 @@ import { PlatformIdentifier } from './platformIdentifier';
 import { PlatformLink } from './platformLink';
 import { PlatformSection } from './platformSection';
 import { RelayMetrics } from './relayMetrics';
-import PiiFields from './relayPiifields';
+import { PiiFields } from './relayPiifields';
 import { SandboxLink, SandboxOnly } from './sandboxLink';
 import { SmartLink } from './smartLink';
 import { VimeoEmbed, YouTubeEmbed } from './video';

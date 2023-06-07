@@ -33,7 +33,7 @@ function PiiField({ field }) {
     );
 }
 
-export default function PiiFields(): JSX.Element {
+export function PiiFields(): JSX.Element {
     const data = useStaticQuery(query);
     const fields = data.allPiiFieldPath.nodes.map(node => node.path);
 
