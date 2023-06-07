@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
 import styled from '@emotion/styled';
-import { graphql, useStaticQuery } from 'gatsby';
+import {graphql, useStaticQuery} from 'gatsby';
 
 import {Alert} from './alert';
 
@@ -27,7 +27,7 @@ const MetricType = styled.span`
   font-style: italic;
 `;
 
-function RelayFeatures({ features }) {
+function RelayFeatures({features}) {
   if (Array.isArray(features) && features.includes('processing')) {
     return (
       <Alert level="info" title="Note">
@@ -40,7 +40,7 @@ function RelayFeatures({ features }) {
   return null;
 }
 
-function Metric({ metric }) {
+function Metric({metric}) {
   const descriptionHtml = metric.childRelayMetricDescription.childMarkdownRemark.html;
 
   return (
