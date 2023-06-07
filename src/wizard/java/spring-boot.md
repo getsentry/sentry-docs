@@ -88,7 +88,7 @@ If you use Logback for logging you may also want to send error logs to Sentry. A
 </dependency>
 ```
 
-To upload your source code to Sentry and show it in stacktraces, use our Maven plugin.
+To upload your source code to Sentry so it can be shown in stack traces, use our Maven plugin.
 
 ```xml
 <build>
@@ -137,7 +137,7 @@ To upload your source code to Sentry and show it in stacktraces, use our Maven p
 implementation 'io.sentry:sentry-logback:{{@inject packages.version('sentry.java.logback', '4.0.0') }}'
 ```
 
-To upload your source code to Sentry and show it in stacktraces, use our Gradle plugin.
+To upload your source code to Sentry so it can be shown in stack traces, use our Gradle plugin.
 
 ```groovy
 buildscript {

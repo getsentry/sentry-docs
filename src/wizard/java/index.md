@@ -29,7 +29,7 @@ dependencies {
 }
 ```
 
-To upload your source code to Sentry and show it in stacktraces, use our Gradle plugin.
+To upload your source code to Sentry so it can be shown in stack traces, use our Gradle plugin.
 
 ```groovy
 buildscript {
@@ -66,7 +66,7 @@ For **Maven**, add to your `pom.xml` file:
 </dependency>
 ```
 
-To upload your source code to Sentry and show it in stacktraces, use our Maven plugin.
+To upload your source code to Sentry so it can be shown in stack traces, use our Maven plugin.
 
 ```xml
 <build>
@@ -117,7 +117,7 @@ For **SBT**:
 libraryDependencies += "io.sentry" % "sentry" % "{{@inject packages.version('sentry.java', '4.0.0') }}"
 ```
 
-To upload your source code to Sentry and show it in stacktraces, please refer to [Manually Uploading Source Context](https://docs.sentry.io/platforms/java/source-context).
+To upload your source code to Sentry so it can be shown in stack traces, please refer to [Manually Uploading Source Context](https://docs.sentry.io/platforms/java/source-context).
 
 ## Configure
 

@@ -41,7 +41,7 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 
 #### Source Context
 
-To upload your source code to Sentry and show it in stacktraces, use our Maven plugin.
+To upload your source code to Sentry so it can be shown in stack traces, use our Maven plugin.
 
 ```xml
 <build>
@@ -100,7 +100,7 @@ implementation 'io.sentry:sentry-spring-jakarta:{{@inject packages.version('sent
 
 #### Source Context
 
-To upload your source code to Sentry and show it in stacktraces, use our Gradle plugin.
+To upload your source code to Sentry so it can be shown in stack traces, use our Gradle plugin.
 
 ```groovy
 buildscript {
