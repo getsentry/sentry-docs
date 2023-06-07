@@ -92,21 +92,6 @@ const getPlugins = () => {
     'gatsby-plugin-zeit-now',
     'gatsby-plugin-sitemap',
     {
-      resolve: 'gatsby-plugin-google-gtag',
-      options: {
-        // You can add multiple tracking ids and a pageview event will be fired for all of them.
-        trackingIds: [
-          'UA-30327640-1', // Sentry
-        ],
-        // This object gets passed directly to the gtag config command
-        // This config will be shared across all trackingIds
-        gtagConfig: {
-          anonymize_ip: true,
-          cookie_expires: 0,
-        },
-      },
-    },
-    {
       resolve: `gatsby-transformer-remark`,
       options: {
         plugins: remarkPlugins,

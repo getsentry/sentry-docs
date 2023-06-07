@@ -5,7 +5,7 @@ support_level: production
 type: language
 ---
 
-The Sentry SDK for Python does a very good job of auto instrumenting your application. Here a short introduction on how to do custom performance instrumentation. If you'd like to learn more, read our [custom instrumentation](/platforms/python/performance/instrumentation/custom-instrumentation/) documentation.
+The Sentry SDK for Python does a very good job of auto instrumenting your application. Here a short introduction on how to do custom performance instrumentation. If you'd like to learn more, read our [custom instrumentation](https://docs.sentry.io/platforms/python/performance/instrumentation/custom-instrumentation/) documentation.
 
 **Adding a Transaction**
 
