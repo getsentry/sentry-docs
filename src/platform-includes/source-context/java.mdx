@@ -1,40 +1,49 @@
-If you want to see your source code as part of stack traces in Sentry, you can enable the Source Context feature by adding
-one of our build tool plugins to your project. You may also manually upload source bundle by using [sentry-cli](/product/cli/dif/#jvm-source-bundles).
+You'll need to enable the Source Context feature to see your source code as part of stack traces in Sentry. You can either do this:
 
-It works the same either way. A (random) UUID will be or has to be generated and placed into the `sentry-debug-meta.properties`. The same UUID has to be used to upload the source bundle file. Whenever an error is sent to Sentry, this UUID will be sent along, allowing
-the Sentry server to look up source code in the source bundle with matching ID.
+- By adding one of a build tool plugin to your project
+- Or, by manually uploading your source bundle using the Sentry CLI
+
+This document covers both methods. You can find more information about uploading via the CLI in our [Debug Information Files](/product/cli/dif/#jvm-source-bundles) docs.
+
+<PlatformSection supported={["android"]}>
+
+Source Context also works with ProGuard. See the [ProGuard & DexGuard](/platforms/android/proguard/) docs for more information.
+
+</PlatformSection>
+
+### UUIDs
+
+A random UUID must be generated and placed into the `sentry-debug-meta.properties`. The same UUID must be used to upload the source bundle file. Whenever an error is sent to Sentry, this UUID is sent alongside the error, allowing
+the Sentry server to look up source code in the source bundle with a matching ID.
+
+If you're using a build tool plugin, these steps happen automatically.
 
 ![Java Source Context](java-source-context.png)
 
 All of the following methods require `org`, `project` and an `authToken`.
 
 You can create an auth token by visiting the
-[auth token user settings page](https://sentry.io/settings/account/api/auth-tokens/).
+[User Auth Tokens](https://sentry.io/settings/account/api/auth-tokens/) settings page in Sentry.io.
 The auth token requires either a `project:releases` or `project:write` Scope.
 
-<PlatformSection supported={["android"]}>
-
-Source Context also works with [ProGuard](/platforms/android/proguard/).
-
-</PlatformSection>
 
 ## Known Limitations
 
-- Multiple files with same name but different extension will lead to undefined behaviour
+- Files with same name but different extensions will lead to undefined behavior
   - e.g. MainActivity.java and MainActivity.kt will both be renamed to MainActivity.jvm
 - Package declaration and file tree must match for source lookup to work
   - e.g. a class io.sentry.sample.MainActivity.java has to be stored in io/sentry/sample
 
 <PlatformSection supported={["android"]}>
 
-- Kotlin files may contain multiple classes but this feature may be broken by code obfuscation tools like ProGuard or R8
-- For AGP < 7.4 we don't add generated sources yet
+- Kotlin files are allowed to contain multiple classes but code obfuscation tools like ProGuard or R8 may prevent this from working correctly 
+- We don't add generated sources for AGP < 7.4
 
 </PlatformSection>
 
-## Gradle Plugin
+## Using the Gradle Build Tool Plugin
 
-You can add the plugin to your project by adding the following lines and making sure the `assemble` task is executed:
+Add the Sentry Gradle plugin to your project by adding the following lines and making sure the `assemble` task is executed:
 
 <PlatformSection supported={["android"]}>
 
@@ -182,11 +191,9 @@ sentry {
 
 <PlatformSection notSupported={["android"]}>
 
-## Maven Plugin
+## Using the Maven Build Tool Plugin
 
-We also offer a [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin).
-
-You can add the plugin to your `pom.xml` by adding the following lines:
+Add the [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) to your project by adding the following lines to your `pom.xml` file:
 
 ```xml
 <build>
@@ -229,7 +236,7 @@ You can add the plugin to your `pom.xml` by adding the following lines:
 </build>
 ```
 
-For now you have to manually download `sentry-cli` for your required architecture and point
+You must manually download `sentry-cli` for your required architecture and point
 the Maven Plugin to it using `sentryCliExecutablePath`.
 You can get the latest release from the following URL:
 
@@ -241,15 +248,15 @@ https://github.com/getsentry/sentry-cli/releases/tag/{{@inject apps.version('sen
 
 ## Manually Uploading Source Context
 
-If your build tool of choice isn't supported yet or there are other reasonsfor not
-using our Gradle or Maven plugins, you can manually create and upload source bundles.
+If you're using a build tool we don't support, or you prefer not to use Sentry's build tool plugins, you'll need to create and upload source bundle files manually using the Sentry CLI. 
 
-The `sentry-cli` commands allow you to supply `--org` and `--project` as well as providing the auth token by setting the `SENTRY_AUTH_TOKEN` environment variable.
-Another option is to use `.sentryclirc` or a `.properties` file which you can link using the `SENTRY_PROPERTIES` environment variable.
+The `sentry-cli` commands allow you to supply `--org` and `--project` as well as provide the auth token by setting the `SENTRY_AUTH_TOKEN` environment variable.
+
+You can also use a `.sentryclirc` or a `.properties` file, which you can link using the `SENTRY_PROPERTIES` environment variable.
 
 ### Creating the Source Bundle
 
-First you have to create the source bundle containing your source files.
+First, create the source bundle containing your source files:
 
 ```
 sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VALID_UUID path/to/source-code
@@ -257,7 +264,7 @@ sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VAL
 
 ### Uploading the Source Bundle
 
-Next you can upload that source bundle to Sentry.
+Next, upload that source bundle to Sentry:
 
 ```
 sentry-cli debug-files upload --type jvm path/to/bundle
@@ -265,7 +272,7 @@ sentry-cli debug-files upload --type jvm path/to/bundle
 
 ### Configuring the SDK
 
-You have to tell the SDK which source bundle it should use for providing Source Context via one of the following options.
+You'll need to tell the SDK which source bundle it should use for providing Source Context via one of the following options:
 
 #### `sentry-debug-meta.properties`
 

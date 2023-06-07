@@ -12,7 +12,7 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 ### Auto-Installation and Source Context With the Sentry Android Gradle Plugin
 
 The Sentry Android Gradle plugin will install the Android SDK and integrations relevant to your application.
-It can also upload your source code to Sentry so it can be shown as part of the stacktraces.
+It can also upload your source code to Sentry so it can be shown as part of the stack traces.
 
 To install the plugin, please update your app's `build.gradle` file as follows:
 
