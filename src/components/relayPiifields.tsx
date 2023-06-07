@@ -12,22 +12,13 @@ const query = graphql`
 `;
 
 function PiiField({ field }) {
-    const asterisk_flag = field.endsWith("other");
+    const asterisk_flag = field.endsWith('other');
 
     return (
         <React.Fragment>
             <dt>
-                <code>
-                    {field}
-                </code>
-                {
-                    asterisk_flag ?
-                        <span style={{ marginLeft: '5px' }}>
-
-                            *
-                        </span> :
-                        null
-                }
+                <code>{field}</code>
+                {asterisk_flag ? <span style={{ marginLeft: '5px' }}>*</span> : null}
             </dt>
         </React.Fragment>
     );
