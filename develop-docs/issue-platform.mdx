@@ -1,0 +1,130 @@
+---
+title: "Issue Platform"
+---
+
+The Issue Platform allows developers to create new issue types from arbitrary data sources. If you have data about something that you want to track via an issue, you can build it on the issue platform. For example, building profiling issues on the issue platform allowed us to turn things like “JSON decoding on the main thread” into their own issue types.
+
+To use the Issue Platform you need to:
+1. <Link to="#writing-a-detector">Write a Detector</Link> 
+2. <Link to="#register-an-issue-type">Register an Issue Type</Link> 
+3. <Link to="#send-occurrences-to-the-issue-platform">Send Occurrences to the Issue Platform</Link> 
+4. <Link to="#Releasing-your-issue-type">Release</Link>
+
+## Writing a Detector
+The first step to introducing a new issue type to Sentry is to determine what type of issue you want to detect. It can be from any data stream, as long as you can produce an <Link to="#issue-occurrence-schema">Occurrence</Link> representing the issue
+
+## Register an Issue Type
+To register a new issue type you need to subclass <Link to="https://github.com/getsentry/sentry/blob/ef76b0765f6c057af12b1cd0dc2de6b42a938c02/src/sentry/issues/grouptype.py#L98-L108">`GroupType`</Link>
+
+When registering the class, set the following required attributes on the class:
+- `type_id`: A unique integer to identify your issue type.
+- `slug`: A unique slug to identify your issue type. Used to search by issue type in the issue stream
+- `description`: A human-readable description of your issue type.
+- `category`: The overall category that your issue type belongs to. You can <Link to="#register-a-category">register a category</Link> if the existing ones don't make sense for your issue type.
+
+You may also set these optional attributes:
+- `released`: Whether this issue type has been released to all customers. See <Link to="#releasing-your-issue-type">Releasing your issue type</Link>
+- `noise_config`: A `NoiseConfig` that allows you to set policy on how many times a fingerprint must occur in a period of time before an issue is created. NoiseConfig has two attributes:
+  - `ignore_limit`: How many occurrences need to occur before we create a new issue
+  - `expiry_time`: The period of time the occurrences must occur in before we reset the count
+
+Here's an example issue type:
+```python
+@dataclass(frozen=True)
+class ProfileFileIOGroupType(GroupType):
+    type_id = 2001
+    slug = "profile_file_io_main_thread"
+    description = "File I/O on Main Thread"
+    category = GroupCategory.PROFILE.value
+```
+and here's one with `noise_config` configured
+```python
+@dataclass(frozen=True)
+class ProfileFileIOGroupType(GroupType):
+    type_id = 2001
+    slug = "profile_file_io_main_thread"
+    description = "File I/O on Main Thread"
+    category = GroupCategory.PROFILE.value
+    noise_config = NoiseConfig(5, timedelta(days=2))
+```
+
+### Register a Category
+You might also want to register a new category related to your issue type as well. This allows you to group related issue types together. To do so, add your category to <Link to="https://github.com/getsentry/sentry/blob/97f4174c28041357aa190f27012dc33c1c7bafc7/src/sentry/issues/grouptype.py#L17-L22">this enum</Link>
+
+## Send Occurrences to the Issue Platform
+If operating within the Sentry codebase, you can call <Link to="https://github.com/getsentry/sentry/blob/master/src/sentry/issues/producer.py#L28-L30">sentry.issues.produce_occurrence_to_kafka</Link> and pass in the <Link to="https://github.com/getsentry/sentry/blob/d262bbd9d8d3a2747d5251bee35c016c13ca050a/src/sentry/issues/issue_occurrence.py#L58">IssueOccurrence</Link>, and optionally the `Event` data. The fields in these are described in the schemas below.
+
+If operating from an external service then pass a json payload that matches the <Link to="#issue-occurrence-schema">Issue Occurrence Schema</Link> to the `ingest-occurrences` topic on the <Link to="https://github.com/getsentry/getsentry/blob/97039335a29517a7e48149148cdd7a30a60971e7/getsentry/conf/settings/prod.py#L567-L571">issue occurrences Kafka cluster</Link>
+
+### Issue Occurrence Schema:
+<Link to="https://github.com/getsentry/sentry/blob/ccfb37212102945df5f35e8f55fe38891b70036b/src/sentry/issues/issue_occurrence.py#L23-L36">Schema</Link>
+
+Required:
+- `id`: str. A user generated uuid in string format representing a unique id for this occurrence.
+Generally it's a good idea to generate this separately to your event id.
+- `project_id`: int. Id of the project this occurred in
+- `fingerprint`: Sequence[str].  Unique identifier for the root cause of this problem.
+Used for aggregating occurrences together into groups. We only make use of the first
+fingerprint for the moment - if you have a use case for additional fingerprints let the
+issue platform team know.
+- `issue_title`: str. A short description of the problem. This will be used as the title
+of the issue and also used in notifications.
+- `subtitle`: str: Extra detail about the issue, displayed below the `issue_title`
+- `culprit`: str: Where the problem occurred. This could be an api path, a function path, etc.
+![issue properties](img/issueProperties.jpg)
+- `evidence_data`: Mapping[str, Any]. An arbitrary map of data. The issue platform doesn't
+make use of this data directly, it just make it available for use on the frontend and in
+notifications.  This can be used to customize the issue details ui, notifications and so on.
+- `evidence_display`: Sequence[<Link to="#issue-evidence-schema">IssueEvidence</Link>]. A sequence of `IssueEvidence` entries. These are used to display generic information about your issue in the issue details ui and in various notifications. Even if you are customizing the ui and email, it's recommended to include this so that we can display information correctly on all our other integrations. Typically, these will be displayed in a table when space allows. For space limited integrations we'll display one row that is labelled `important` if available.
+- `type`: int: The type of issue you are creating. Maps to `type_id` in your registered `GroupType`.
+- `detection_time`: float. A timestamp representing when the issue was detected.
+- `level`: str. Info\Warning\Error
+
+One of:
+- `event_id`: str. The event id of an existing event, typically this would be an error or transaction id.
+- `event`: <Link to="#event-schema">Event</Link>
+
+Optional:
+- `resource_id`: str | None. An identifier used to link to an external system to load data.
+For example, this could be an id that we use to build a link to a specific product page.
+
+### Issue Evidence Schema
+<Link to="https://github.com/getsentry/sentry/blob/ccfb37212102945df5f35e8f55fe38891b70036b/src/sentry/issues/issue_occurrence.py#L17-L20">Schema</Link>
+
+- `name`: str.
+- `value`: str
+- `important`: bool. Whether this entry contains important data to display to the user.
+One entry should be marked as important, and it will be displayed in space constrained
+integrations.
+
+The most current version of this schema is documented here:
+
+### Event Schema
+<Link to="https://github.com/getsentry/sentry/blob/ccfb37212102945df5f35e8f55fe38891b70036b/src/sentry/issues/json_schemas.py#L3">Schema</Link>
+
+The event schema should match the <Link to="/event-payloads">Sentry event schema</Link>. Any fields/interfaces defined here can be passed along with your event. It's best to fill in as many of these as makes sense for your issue type.
+
+There's a minimum set of fields which should be included:
+- `environment`
+- `event_id`
+- `platform`
+- `project_id`
+- `received`
+- `tags` - Should be an empty dict if no tags
+- `timestamp`
+
+Caveats
+- Attachments will not work. If you have a need for this please contact the issues team.
+
+## Releasing your issue type
+The issue platform provides functionality to help release your new issue type in a controlled way. There are 3 feature flags that are used to release an issue type:
+- Ingest - This controls whether we'll accept or drop issues of this type in our consumer
+- Post processing - This controls whether we'll pass the issue along to post processing. If disabled, then issues will be created but no notifications will be sent. This can be helpful for testing out what issues look like before release. *Note:* Any issues created this way will not send new issue notifications after the flag is enabled, since they already exist. In the future, if there is demand we might provide a way to remove all test versions of a new issue type.
+- UI - This controls whether the issue type will appear in the issue list and elsewhere in the ui.
+
+The flags for ingest and post processing are backed by options, and we automatically register these when the issue type is created. These options can be enabled for LA/EA/GA here
+https://sentry.io/_admin/options/.
+
+The flag for the UI uses flagr. We're unable to register new flags in flagr automatically, so you'll need to create the flag in flagr yourself. The name will be in the format `organizations:<GroupType.slug.replace("_", "-")>-visible`.
+
+Once your issue type is fully released, and you want it to go out to self-hosted and single tenant you can set `release = True` on your GroupType. This allows it to be released everywhere, and removes the feature flags and options. Generally we recommend doing this after your issue type has been in GA for long enough to verify that it's working as intended.
