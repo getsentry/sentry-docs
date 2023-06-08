@@ -46,19 +46,13 @@ More details about this feature can be found in the <PlatformLink to="/session-r
 
 ## I see the message "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers"
 
-The Sentry SDK attempts to minimize potential [performance overhead in a few different ways](/product/session-replay/performance-overhead/#how-is-session-replay-optimized).
-One such way is by keeping track of how many DOM mutations are happening. This is important because many mutations can slow down the web page. And for Replay to keep track of it,
-it could inccur an additional slow down. This is an indication your page could be optimized. For example, a drop down list with thousands of entries could be refactored into one with lazy loading.
-Fetching more data and updating the drop down list as the user scroll through it.
-The SDK has a <PlatformLink to="/session-replay/configuration/#mutation-limits">configuration that allows you configure the limits</PlatformLink> before recordings stops.
+The Sentry SDK attempts to minimize potential [performance overhead in a few different ways](/product/session-replay/performance-overhead/#how-is-session-replay-optimized). One such way is by keeping track of how many DOM mutations are happening and disabling recording when an excessive amount of changes are detected. Many simultaneous mutations can slow down the web page, whether or not Session Replay is installed. However when an excessive amount of mutations happen the Replay client can incur an additional slow down as it records each change.
+
+If you see the message "A large number of mutations was detected" it is indication your page could be optimized. For example, a drop down list with thousands of entries could be refactored into one with lazy loading. Fetching more data and updating the drop down list as the user scroll through it. The SDK has a <PlatformLink to="/session-replay/configuration/#mutation-limits">configuration that allows you configure the limits</PlatformLink> before recordings stops.
 
 ## The SDK is slowing down my website
 
-Sentry's SDK latest version includes several performance improvements. Two of the major culprits for performance impact we've identified
-where due to websites having extremely large number of mutations happening (see above _large number of mutations_), and very large console messages. We've added improvements for these
-cases such as [truncating the console](https://github.com/getsentry/sentry-javascript/pull/7917) and disabling Replay recording on pages that have excessively high number of mutations.
-It's important to update the SDK to the latest version to benefit from these improvements. In the event you encounter performance problems with Session Replay on the latest version of the SDK,
-please [open a GitHub issue](https://github.com/getsentry/sentry-javascript/issues/new?assignees=&labels=Type%3A+Bug&projects=&template=bug.yml) describing the situation so we can further investigate.
+Sentry's latest SDK version include several performance degradation safeguards. Two of the major culprits for performance impact we've identified are due to websites having extremely large number of mutations happening (see above _large number of mutations_), and very large console messages. We've added improvements for these cases such as [truncating the console](https://github.com/getsentry/sentry-javascript/pull/7917) and disabling Replay recording on pages that have excessively high number of mutations. It's important to update the SDK to the latest version to benefit from these improvements. In the event you encounter performance problems with Session Replay on the latest version of the SDK, please [open a GitHub issue](https://github.com/getsentry/sentry-javascript/issues/new?assignees=&labels=Type%3A+Bug&projects=&template=bug.yml) describing the situation so we can further investigate.
 
 ## Text in the iframe isn't masked
 
