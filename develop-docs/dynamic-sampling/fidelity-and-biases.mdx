@@ -94,7 +94,7 @@ The list of health check endpoints is available [here](https://github.com/getsen
 
 For deprioritizing health checks, we compute a new sample rate by dividing the base sample rate of the project by a factor, which is defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/utils.py#L13-L13).
 
-### Prioritize Dev Environments
+### Boost Dev Environments
 
 This bias is used to prioritize traces coming from a development environment in order to increase the amount of data retained for such environments, since they are more likely to be useful for debugging.
 
@@ -115,33 +115,33 @@ The list of development environments is available [here](https://github.com/gets
 
 For prioritizing dev environments, we use a sample rate of `1.0` (100%), which results in all traces being sampled.
 
-### Prioritize New Releases
+### Boost New Releases
 
 This bias is used to prioritize traces that are coming from a new release. The goal is to increase the sample rate in the time window that occurs between the creation of a release and its adoption by users. _The identification of a new release is done in the `event_manager` defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/event_manager.py#L937-L937)._
 
-Since the adoption of a release is not constant, we created a system of *decaying* rules which can interpolate between two sample rates in a given time window with a given function (e.g. `linear`). The idea being that we want to reduce the sample rate since the amount of samples will increase as the release gets adopted by users.
+Since the adoption of a release is not constant, we created a system of _decaying_ rules which can interpolate between two sample rates in a given time window with a given function (e.g. `linear`). The idea being that we want to reduce the sample rate since the amount of samples will increase as the release gets adopted by users.
 
 ![Sample Rate and Adoption](/images/sampleRateAndAdoption.png)
 
 The latest release bias uses a decaying rule to interpolate between a starting sample rate and an ending sample rate over a time window that is statically defined for each platform (the list of time to adoptions is define [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L26-L26). For example, Android has a bigger time window than Javascript because on average Android apps take more time to get adopted by users.
 
-### Prioritize Low Volume Transactions
+### Boost Low Volume Transactions
 
 This bias is used to prioritize low-volume transactions that can be drowned out by high-volume transactions. The goal is to rebalance sample rates of the individual transactions so that low-volume transactions are more likely to have representative samples. The bias is of type trace, which means that the transaction considered for rebalancing will be the root transaction of the trace.
 
 In order to rebalance transactions, the system computes the counts of the transactions for each project and runs an algorithm that, given the sample rate of the organization and the counts of each transaction, computes a new sample rate for each transaction assuming an ideal distribution of the counts.
 
-### Uniform Bias
+### Boost Low Volume Projects
 
 This bias is the simplest one that can be defined. It applies to any incoming trace and is defined on a per-project basis.
 
-_The sample rate of the uniform bias is computed using an algorithm that leverages a dynamic sample rate obtained by measuring the incoming volume of transactions in a sliding time window, known as the target fidelity rate. This rate is obtained by calling, at fixed intervals, the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)), which given the volume in a time window, will determine the appropriate target fidelity rate for the entire organization._
+_The sample rate of the boost low volume projects bias is computed using an algorithm that leverages a dynamic sample rate obtained by measuring the incoming volume of transactions in a sliding time window, known as the target fidelity rate. This rate is obtained by calling, at fixed intervals, the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)), which given the volume in a time window, will determine the appropriate target fidelity rate for the entire organization._
 
 The algorithm used in this bias, computes a new sample rate with the goal of prioritizing low-volume projects, which can be drowned out by high-volume projects. The mechanism used for prioritizing is similar to the low-volume transactions bias in which given the sample rate of the organization and the counts of each project, it computes a new sample rate for each project, assuming an ideal distribution of the counts.
 
 <Alert title="✨ Note" level="info">
 
-The algorithms for low-volume transactions and uniform bias are run periodically (with cron jobs) with a sliding window to account for changes in the incoming volume.
+The algorithms for boosting low volume transactions and projects are run periodically (with cron jobs) with a sliding window to account for changes in the incoming volume.
 
 </Alert>
 

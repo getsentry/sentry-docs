@@ -68,9 +68,9 @@ A sampling decision involves:
 
 _In case no match is found, or there are problems during matching, Relay will accept the event under the assumption that we prefer to oversample rather than drop events._
 
-Relay samples with two [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/struct.SamplingConfig.html) instances, namely **non-root sampling configuration** and **root sampling configuration**. The non-root config is the config of the project to which the incoming event belongs, whereas the root config is the config of the project to which the head transaction of the trace belongs. *In case no root sampling configuration is available, only transaction sampling will be performed.*
+Relay samples with two [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/struct.SamplingConfig.html) instances, namely **non-root sampling configuration** and **root sampling configuration**. The non-root config is the config of the project to which the incoming event belongs, whereas the root config is the config of the project to which the head transaction of the trace belongs. _In case no root sampling configuration is available, only transaction sampling will be performed._
 
-Once both configurations are fetched, Relay will **compute a merged configuration** (following the algorithm defined [here](https://getsentry.github.io/relay/relay_sampling/fn.merge_rules_from_configs.html)) consisting of all the transaction rules of the non-root project, **concatenated** to all the trace rules of the root project. This will result in a single configuration containing all the rules that Relay is going to try and match (**from top to bottom**). *The order of the rules of the same type is important, as it will influence the sampling decision.*
+Once both configurations are fetched, Relay will **compute a merged configuration** (following the algorithm defined [here](https://getsentry.github.io/relay/relay_sampling/fn.merge_rules_from_configs.html)) consisting of all the transaction rules of the non-root project, **concatenated** to all the trace rules of the root project. This will result in a single configuration containing all the rules that Relay is going to try and match (**from top to bottom**). _The order of the rules of the same type is important, as it will influence the sampling decision._
 
 With the merged configurations, Relay is ready to match the rules. During matching, Relay will inspect two payloads:
 
@@ -130,6 +130,7 @@ And suppose this is the merged configuration from the non-root and root project:
 ```
 
 In this case, the matching will happen from **top to bottom** and the following will occur:
+
 1. Rule `1` is matched against the event payload, since it is of type `transaction`. The `samplingValue` is a `factor`, thus the accumulated factors will now be `2.0 * 1.0`, where `1.0` is the identity for the multiplication.
 2. Because rule `1` was a factor rule, the matching continues and rule `2` will be matched against the DSC, since it is of type `trace`. The `samplingValue` is a `sampleRate`, thus the matching will stop and the sample rate will be computed as `2.0 * 0.5 = 1.0`, where `2.0` is the factor accumulated from the previous rule and `0.5` is the sample rate of the current rule.
 
@@ -155,8 +156,9 @@ The generation of rules is performed as part of the **project configuration reco
 The invalidation of the configuration can happen under **several circumstances**, by calling the [following function](https://github.com/getsentry/sentry/blob/master/src/sentry/tasks/relay.py#L244-L244). Some examples of cases when the recomputation happens are when a new release is detected, when some project settings change, or when the Celery tasks for computing the variable sample rates are finished executing.
 
 The generation of the rules that will be part of the project configuration recalculation is defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/base.py#L72-L72) and works by performing the following steps:
+
 1. Fetching the list of active biases, since some of them can be enabled or disabled by the user in the Sentry UI;
-2. Determining the base sample rate which will be used for the uniform bias.
+2. Determining the base sample rate specific for each project.
 3. Computing the rules for each bias by using all the information available at the time (e.g., in memory, fetched from Redis);
 4. Packing the rules into the `dynamicSampling.rulesV2` field of the project configuration;
 5. Returning all the set of rules that will be stored in the project configuration.
@@ -167,13 +169,13 @@ Certain biases require data that **must be computed from other parts of the syst
 
 For such use cases, we decided to use a separate Redis instance, which is used to store many kinds of information, such as sample rates and boosted releases. During rule generation, we connect to this Redis instance and fetch the necessary data to compute the rules.
 
-An illustration on how Redis is used for tracking boosted releases (which are used by the [prioritize new releases bias](/dynamic-sampling/fidelity-and-biases/#prioritize-new-releases)):
+An illustration on how Redis is used for tracking boosted releases (which are used by the [boost new releases bias](/dynamic-sampling/fidelity-and-biases/#boost-new-releases)):
 
 ![Usage of Redis for Boosted Releases](images/redisBoostedRelease.png)
 
 #### Celery Tasks for Asynchronous Processing
 
-Certain biases require data that **must be computed asynchronously by background tasks** due to the complexity of the computation (e.g., running cross-org queries on Snuba). This is the case for the low-volume and prioritize-by-project biases, which need expensive queries to obtain all the necessary data to run the rebalancing algorithms. These tasks are handled by Celery workers, that are scheduled automatically by cron jobs configured in Sentry.
+Certain biases require data that **must be computed asynchronously by background tasks** due to the complexity of the computation (e.g., running cross-org queries on Snuba). This is the case for the [boost low-volume projects bias](/dynamic-sampling/fidelity-and-biases/#boost-low-volume-projects) and [boost low-volume transactions bias](/dynamic-sampling/fidelity-and-biases/#boost-low-volume-transactions), which need expensive queries to obtain all the necessary data to run the rebalancing algorithms. These tasks are handled by Celery workers, that are scheduled automatically by cron jobs configured in Sentry.
 
 _The data computed by these tasks could theoretically be computed sequentially during rules generation but for scalability reasons we opted to use Celery tasks instead. This way, the computation of the data can be parallelized and the rules generation can be performed faster._
 
