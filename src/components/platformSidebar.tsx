@@ -86,6 +86,13 @@ export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element
         tree={tree}
       />
       <DynamicNav
+        root={`/${pathRoot}/profiling`}
+        title="Profiling"
+        prependLinks={[[`/${pathRoot}/profiling/`, 'Set Up Profiling']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
         root={`/${pathRoot}/session-replay`}
         title="Session Replay"
         prependLinks={[[`/${pathRoot}/session-replay/`, 'Set Up Session Replay']]}
@@ -96,13 +103,6 @@ export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element
         root={`/${pathRoot}/crons`}
         title="Crons"
         prependLinks={[[`/${pathRoot}/crons/`, 'Set Up Crons']]}
-        suppressMissing
-        tree={tree}
-      />
-      <DynamicNav
-        root={`/${pathRoot}/profiling`}
-        title="Profiling"
-        prependLinks={[[`/${pathRoot}/profiling/`, 'Set Up Profiling']]}
         suppressMissing
         tree={tree}
       />
