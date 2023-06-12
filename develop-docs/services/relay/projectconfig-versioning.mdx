@@ -8,13 +8,13 @@ Relay fetches project configs from an "upstream". That upstream can either be Se
 
 Your configuration will flow from Sentry to either:
 
-- Internal Relay (freight deployment = `relay`)
+- Internal Relay
 
 - External Relays (customers run those, we practically have no deprecation policy for old versions)
 
 Internal Relay can forward your configuration to:
 
-- PoP Relays (freight deployment = `relay-pop`)
+- PoP Relays
 
 Generally, all of those must be able to deal with the changes you make to the project config schema.
 
@@ -32,12 +32,12 @@ struct Foo {
 
 ## Adding new fields in projectconfig endpoint(s)
 
-The endpoint is implemented by both Sentry and Relay itself. When Sentry receives a project config request, it differentiates between trusted Relays operated by Sentry and untrusted Relays operated by customers. Untrusted Relays receive only a subset of the fields: 
+The endpoint is implemented by both Sentry and Relay itself. When Sentry receives a project config request, it differentiates between trusted Relays operated by Sentry and untrusted Relays operated by customers. Untrusted Relays receive only a subset of the fields:
 
 - In Sentry, this is handled by an [early return](https://github.com/getsentry/sentry/blob/b1434710fff9d8f90c99668bcc958ed1ee52b66e/src/sentry/relay/config.py#L165-L167) to stop populating the config object.
 - In Relay, this is implemented by having two separate types for trusted vs restricted project config, either `ProjectConfig` (consumed by trusted Relays) or `LimitedProjectConfig` (consumed by untrusted Relays).
 
-For as long as your new feature is in development, it's recommended to emit new/different fields only for trusted Relays. 
+For as long as your new feature is in development, it's recommended to emit new/different fields only for trusted Relays.
 
 ## Defining New Structs in Relay
 
