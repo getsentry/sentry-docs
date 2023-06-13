@@ -32,7 +32,8 @@ Add `Interceptors` to `ApolloClient.Builder` using `ApolloBuilderExtensions`:
 import com.apollographql.apollo3.ApolloClient;
 import io.sentry.apollo3.SentryApolloBuilderExtensionsKt;
 
-ApolloClient apollo = SentryApolloBuilderExtensionsKt.sentryTracing(new ApolloClient.Builder())
+ApolloClient apollo = SentryApolloBuilderExtensionsKt
+    .sentryTracing(new ApolloClient.Builder())
     .serverUrl("https://your-api-host/")
     .build();
 ```
@@ -118,3 +119,91 @@ val apollo = ApolloClient.builder()
     }
     .build()
 ```
+
+## GraphQL Client Errors
+
+This feature, once enabled, automatically captures GraphQL client errors, like bad operations and response codes, as error events and reports them to Sentry. The error event will contain the `request` and `response` data, such as `url`, `status_code`, `data` (stringified `query`) and so on.
+
+This feature is opt-in and can be enabled by setting the `captureFailedRequests` option to `true`:
+
+```kotlin
+import com.apollographql.apollo3.ApolloClient
+import io.sentry.apollo3.sentryTracing
+
+val apollo = ApolloClient.builder()
+    .serverUrl("https://your-api-host/")
+    .sentryTracing(captureFailedRequests = true)
+    .build()
+```
+
+By default, only GraphQL client errors with a response that includes the [errors](https://spec.graphql.org/October2021/#sec-Errors) array are captured as error events.
+
+GraphQL client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by setting the `failedRequestTargets` option with either a regular expression or a plain `String`. A plain string must contain at least one of the items from the list. Plain strings don't have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
+
+```kotlin
+import com.apollographql.apollo3.ApolloClient
+import io.sentry.apollo3.sentryTracing
+
+val apollo = ApolloClient.builder()
+    .serverUrl("https://your-api-host/")
+    .sentryTracing(captureFailedRequests = true, failedRequestTargets = listOf("myapi.com"))
+    .build()
+```
+
+By default, error events won't contain `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+</application>
+```
+
+Error events will contain the raw bodies of GraphQL requests and responses, the raw bodies can contain sensitive data, to avoid that, you can do the parametrization of your queries using the [variables](https://spec.graphql.org/October2021/#sec-Language.Variables) field, using parametrized queries, [Relay](https://docs.sentry.io/product/relay) will run [PII Data Scrubbing](https://docs.sentry.io/product/relay/#pii-data-scrubbing) automatically transforming the values into `[Filtered]`.
+
+Alternatively, you can customize the event and scrub the data yourself.
+
+### Customize or Drop the Error Event
+
+To customize or drop the error event, you need to do a [manual initialization](/platforms/android/configuration/manual-init/) of the Sentry Android SDK.
+
+The captured error event can be customized or dropped with a `BeforeSendCallback`:
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import com.apollographql.apollo3.api.http.HttpRequest
+import com.apollographql.apollo3.api.http.HttpResponse
+import io.sentry.TypeCheckHint.APOLLO_REQUEST
+import io.sentry.TypeCheckHint.APOLLO_RESPONSE
+
+SentryAndroid.init(this) { options ->
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    val request = hint.getAs(APOLLO_REQUEST, HttpRequest::class.java)
+    val response = hint.getAs(APOLLO_RESPONSE, HttpResponse::class.java)
+
+    // customize or drop the event
+    event
+  }
+}
+```
+
+### Automatically Captured GraphQL Client Errors and Manually Captured Errors
+
+When `captureFailedRequests` is enabled, some GraphQL client libraries throw unchecked exceptions like `ApolloException` and its implementations. In this case, the error event is captured twice; once by the GraphQL client library and once by the Sentry Android SDK:
+
+```kotlin
+import io.sentry.Sentry
+import com.apollographql.apollo3.exception.ApolloException
+
+try {
+  // If this API call returns 500, it will be captured as an error event by the `SentryOkHttpInterceptor`.
+  return apolloClient.query(LaunchDetailsQuery(launchId)).execute()
+} catch (e: ApolloException) {
+  // Do not manually capture this exception to avoid duplicated error events.
+  // Sentry.captureException(e)
+}
+```
+
+We recommend you identify those errors and **not** capture them manually with the `Sentry.captureException` method.
