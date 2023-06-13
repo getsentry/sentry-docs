@@ -4,7 +4,7 @@ import path from 'path';
 export const piiFieldsNodes = ({ actions, createNodeId, createContentDigest }) => {
     const { createNode } = actions;
 
-    const data = fs.readFileSync(path.join(__dirname, '../../data/relay_event_pii.txt'), 'utf-8');
+    const data = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'relay_event_pii.txt'), 'utf-8');
     const fields = data.split('\n').map(line => line.trim()).filter(Boolean);
 
     fields.forEach((field, index) => {
