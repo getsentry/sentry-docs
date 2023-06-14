@@ -22,6 +22,7 @@ import {ParamTable} from './paramTable';
 import {PlatformContent} from './platformContent';
 import {PlatformIdentifier} from './platformIdentifier';
 import {PlatformLink} from './platformLink';
+import {PlatformLinkWithLogo} from './platformLinkWithLogo';
 import {PlatformSection} from './platformSection';
 import {RelayMetrics} from './relayMetrics';
 import {SandboxLink, SandboxOnly} from './sandboxLink';
@@ -47,6 +48,7 @@ const mdxComponents = {
   DefinitionList,
   PlatformContent,
   PlatformLink,
+  PlatformLinkWithLogo,
   PlatformSection,
   PlatformIdentifier,
   RelayMetrics,
