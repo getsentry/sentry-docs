@@ -2,6 +2,7 @@
 title: Room and SQLite
 caseStyle: camelCase
 supportLevel: production
+sdk: sentry.java.android.sqlite
 description: "Learn more about the Sentry Room and AndroidX SQLite integrations for the Android SDK."
 categories:
   - mobile
@@ -13,13 +14,17 @@ Supported in Sentry's Android SDK version `4.0.0` and above.
 
 Supported in Sentry Android Gradle Plugin version `3.0.0` and above.
 
+Manual instrumentation is supported in Sentry's Android SDK, version `6.21.0` and above.
+
 </Note>
+
+## Auto-Installation With the Sentry Android Gradle Plugin
 
 The [Sentry Android Gradle Plugin](/platforms/android/gradle/) provides Room and AndroidX SQLite support through bytecode manipulation. The source can be found [on GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/tree/main/plugin-build/src/main/kotlin/io/sentry/android/gradle/instrumentation).
 
 On this page, we get you up and running with Sentry's Room and SQLite Integration, so that it will automatically start a span from an active transaction that's bound to the scope of each sqlite/dao query.
 
-## Install
+### Install
 
 To use the Room and AndroidX SQLite integration, add the Sentry Android Gradle plugin and the Sentry Android SDK (version `4.0.0` or above) in `build.gradle`:
 
@@ -61,7 +66,7 @@ Make sure, that [performance monitoring](/platforms/android/performance/#configu
 
 </Note>
 
-## Configure
+### Configure
 
 In general, no further configuration is required as the auto-instrumentation is enabled by default. If you would like to disable the database instrumentation feature, we expose a configuration option for that:
 
@@ -86,6 +91,65 @@ sentry {
     features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.DATABASE)
   }
 }
+```
+
+## Manual Installation
+
+<Note>
+
+Supported in Sentry's Android SDK, version `6.21.0` and above.
+
+</Note>
+
+### Install
+
+Sentry captures data by wrapping a `SupportSQLiteOpenHelper.Factory`. To add the SQLite integration, initialize the [Android SDK](/platforms/android/), then add the `sentry-android-sqlite` dependency using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.21.0') }}'
+implementation 'io.sentry:sentry-android-sqlite:{{@inject packages.version('sentry.java.android.sqlite', '6.21.0') }}'
+```
+
+### Configure
+
+No configuration is required. Just wrap your `SupportSQLiteOpenHelper` instance in `SentrySupportSQLiteOpenHelper`.
+
+```kotlin
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper
+
+private val myOpenHelper = MyOpenHelper()
+private val instrumentedOpenHelper = SentrySupportSQLiteOpenHelper.create(myOpenHelper)
+```
+
+```java
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper;
+
+private final SupportSQLiteOpenHelper myOpenHelper = new MyOpenHelper();
+private final SupportSQLiteOpenHelper instrumentedOpenHelper = SentrySupportSQLiteOpenHelper.create(myOpenHelper);
+```
+
+Room is supported when using the default `FrameworkSQLiteOpenHelperFactory` provided by the `androidx.sqlite` package, but any custom `SupportSQLiteOpenHelper` can be used.
+
+```kotlin
+import androidx.room.Room
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper
+
+val database = Room.databaseBuilder(context, MyDatabase::class.java, "dbName")
+    .openHelperFactory { configuration ->
+        SentrySupportSQLiteOpenHelper.create(FrameworkSQLiteOpenHelperFactory().create(configuration))
+    }
+    .build()
+```
+
+```java
+import androidx.room.Room;
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper;
+
+final MyDatabase database = Room.databaseBuilder(context, MyDatabase.class, "dbName")
+    .openHelperFactory (configuration ->
+        SentrySupportSQLiteOpenHelper.create(new FrameworkSQLiteOpenHelperFactory().create(configuration))
+    )
+    .build();
 ```
 
 ## Verify
@@ -151,7 +215,11 @@ To view the recorded transaction, log into [sentry.io](https://sentry.io) and op
 
 <Note>
 
-At the moment, we only support standard `androidx.room` usage. That is, the SDK will not report SQL queries for any `SupportSQLiteOpenHelper.Factory` other than [androidx.sqlite](https://github.com/androidx/androidx/tree/androidx-main/sqlite). However, if you are using a different `SupportSQLiteOpenHelper.Factory`, please report any [issues on GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/issues), so we are aware and can possibly work on them.
+The Sentry Android Gradle plugin will report SQL queries for any `SupportSQLiteOpenHelper.Factory`, starting with version `3.11.0`.
+
+Earlier versions will only support standard `androidx.room` usage and won't report SQL queries for any `SupportSQLiteOpenHelper.Factory` other than [androidx.sqlite](https://github.com/androidx/androidx/tree/androidx-main/sqlite).
+
+If you're having trouble with this SDK, we want to hear about it. Create an [issue on GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/issues) and describe your experience.
 
 </Note>
 
