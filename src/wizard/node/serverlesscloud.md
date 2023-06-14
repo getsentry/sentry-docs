@@ -30,7 +30,7 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
-    new Tracing.Integrations.Express({ app }),
+    new Sentry.Integrations.Express({ app }),
     // Automatically instrument Node.js libraries and frameworks
     ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
   ],
