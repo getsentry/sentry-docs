@@ -1,5 +1,7 @@
 import React from 'react';
-import {graphql, useStaticQuery} from 'gatsby';
+import { graphql, useStaticQuery } from 'gatsby';
+import styled from '@emotion/styled';
+
 
 const query = graphql`
   query PiiFieldsQuery {
@@ -11,16 +13,18 @@ const query = graphql`
   }
 `;
 
-function PiiField({field}) {
+const Asterisk = styled.span`
+  margin-left: 5px;
+`;
+
+function PiiField({ field }) {
   const asterisk_flag = field.endsWith('other');
 
   return (
-    <React.Fragment>
-      <dt>
-        <code>{field}</code>
-        {asterisk_flag ? <span style={{marginLeft: '5px'}}>*</span> : null}
-      </dt>
-    </React.Fragment>
+    <dt>
+      <code>{field}</code>
+      {asterisk_flag ? <Asterisk>*</Asterisk> : null}
+    </dt>
   );
 }
 
