@@ -1,5 +1,5 @@
 ---
-title: "Making an API Public"
+title: 'Making an API Public'
 ---
 
 ## Introduction
@@ -103,22 +103,20 @@ For the rest of the documentation, we'll use `@extend_schema` on the various end
 
 ```python
 @extend_schema(
-  operation_id="Retrieve an Organization's details", # What goes in the doc sidebar for the name of the API page
-  parameters=[GLOBAL_PARAMS.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
-  request=None, # this will usually be a DRF Serializer if the endpoint takes a body
+  operation_id="Create a New Team", # What goes in the doc sidebar for the name of the API page
+  parameters=[GlobalParams.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
+  request=TeamPostSerializer, # this will usually be a DRF Serializer if the endpoint takes a body
   responses={
-            200: OrganizationSerializer, # The Sentry response serializer
-            401: RESPONSE_UNAUTHORIZED,
-            403: RESPONSE_FORBIDDEN,
-            404: RESPONSE_NOTFOUND,
-        },
-  examples=[OpenApiExample()], # see the link to an existing documented endpoint below for how to define an example
+      201: TeamSerializer, # the Sentry Response Serializer
+      400: RESPONSE_BAD_REQUEST,
+      403: RESPONSE_FORBIDDEN,
+      404: OpenApiResponse(description="A team with this slug already exists."),
+  },
+  examples=TeamExamples.CREATE_TEAM, # use examples defined in `src/sentry/apidocs/examples`
 )
-def get(self,request, organization):
+def post(self, request: Request, organization, member, team_slug: str,) -> Response:
   pass
 ```
-
-Examples can be directly inserted using `OpenApiExample`, and multiple can be provided.
 
 Specify an `operation_id` (this is what is shown as the title under the docs site sidebar).
 
@@ -129,7 +127,10 @@ Specify the parameters using a list, and a serializer if needed.
 Specify the request and response serializers.
 
 - Request serializers, since they use DRF serializers, can generally just be the serializer itself. There is plenty of customization and if needed can be overriden with `inline_serializer`. These will be passed to the `request` parameter in `extend_schema`.
-- For our response serializers, you must type the `serialize` function's return with a `TypedDict` and pass the serializer as a parameter in `extend_schema`. See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/models/organization_member/scim.py) for an example of this.
+- For our response serializers, you must type the `serialize` function's return with a `TypedDict`
+  and pass the serializer as a parameter in `extend_schema`. See
+  [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/models/organization_member/scim.py)
+  for an example of this.
 - If the response is a wrapper or you need more customization, you can use the `inline_sentry_response_serializer` function.
 
 ```python
@@ -142,15 +143,39 @@ from sentry.apidocs.utils import inline_sentry_response_serializer
       List[OrganizationSerializerResponse])
       # A common use case is to return a list of serialized items
   }
+)
 ```
-
 - Note that you can instead provide OpenAPI JSON, so you can fall back to this if you are running into issues.
 
-See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/scim/endpoints/members.py) for an example of an endpoint documented using drf-spectacular, and the [drf-spectacular docs here](https://drf-spectacular.readthedocs.io/en/latest/) to learn more.
+Examples can be directly inserted using `OpenApiExample`, and multiple can be provided. If needed,
+create new examples in `src/sentry/apidocs/examples/*.py` in the appropriate file.
 
-**Note that if the endpoint you're modifying previously had JSON documentation, you will need to delete the old documentation found in [this file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json)**
+```python
+from drf_spectacular.types import OpenApiExample
 
-Write a test [here](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
+class TeamExamples:
+  CREATE_TEAM = [
+      OpenApiExample(
+          "Create a new team", # description of example
+          value={"slug": "my-team", "name": "My Team"}, # response body
+          status_codes=["201"], # the status code(s) this example applies to
+          response_only=True, # You MUST INCLUDE this for all examples!!!
+      )
+  ]
+```
+
+See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/endpoints/organization_teams.py) for an example of an endpoint documented using drf-spectacular, and the [drf-spectacular docs here](https://drf-spectacular.readthedocs.io/en/latest/) to learn more.
+
+**Note that if the endpoint you're modifying previously had JSON documentation, you will need to
+delete the old documentation path found in [this
+file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json) along with its
+corresponding JSON build in [this
+folder](https://github.com/getsentry/sentry/blob/master/api-docs/paths).**
+
+**Additionally if there are multiple request types in the same endpoint using the old JSON
+documentation, you must update both of them in the same PR. Updating only one request and
+deleting the documentation path/JSON will cause the other unedited request to disappear from the
+docs.**
 
 **Tips**:
 
