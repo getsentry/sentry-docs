@@ -1,11 +1,11 @@
 ```javascript
+import { createBrowserRouter } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // This enables automatic instrumentation (highly recommended), but is not
-  // necessary for purely manual usage.
+  // This enables automatic instrumentation (highly recommended)
   // If you only want to use manual instrumentation:
   // * Remove the `BrowserTracing` integration
   // * add `Sentry.addTracingExtensions()` above your Sentry.init() call
@@ -13,11 +13,20 @@ Sentry.init({
     new Sentry.BrowserTracing({
       // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
       tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+      // See docs for support of different versions of variation of react router
+      // https://docs.sentry.io/platforms/javascript/guides/react/configuration/integrations/react-router/
+      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+        React.useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes
+      ),
     }),
   ],
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // For finer control of sent transactions you can adjust this value, or
+  // use tracesSampler
   tracesSampleRate: 1.0,
 });
 ```
