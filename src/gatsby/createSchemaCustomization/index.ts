@@ -1,11 +1,11 @@
-import { getApiTypeDefs } from './apiSchema';
-import { getAppTypeDefs } from './appSchema';
-import { getPackageTypeDefs } from './packageSchema';
-import { getPlatformTypeDefs } from './platformSchema';
+import {getApiTypeDefs} from './apiSchema';
+import {getAppTypeDefs} from './appSchema';
+import {getPackageTypeDefs} from './packageSchema';
+import {getPlatformTypeDefs} from './platformSchema';
 
 // TODO(dcramer): move frontmatter out of ApiEndpoint and into Frontmatter
-function main({ actions, schema }) {
-  const { createTypes } = actions;
+function main({actions, schema}) {
+  const {createTypes} = actions;
   const typeDefs = [
     `
     type PageContext {
