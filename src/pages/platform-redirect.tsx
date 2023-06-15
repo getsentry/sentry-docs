@@ -30,7 +30,7 @@ function BasePlatformRedirect({path = '/'}: Props) {
                 size={16}
                 platform={platform.key}
                 style={{marginRight: '0.5rem'}}
-                format="lg"
+                format="sm"
               />
               <h4 style={{display: 'inline-block'}}>{platform.title}</h4>
             </SmartLink>
