@@ -71,12 +71,22 @@ export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element
         exclude={[
           `/${pathRoot}/enriching-events/`,
           `/${pathRoot}/data-management/`,
+          `/${pathRoot}/distributed-tracing/`,
           `/${pathRoot}/performance/`,
           `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
           `/${pathRoot}/crons/`,
         ]}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/distributed-tracing`}
+        title="Distributed Tracing"
+        prependLinks={[
+          [`/${pathRoot}/distributed-tracing/`, 'Set Up Distributed Tracing'],
+        ]}
+        suppressMissing
+        tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/performance`}
