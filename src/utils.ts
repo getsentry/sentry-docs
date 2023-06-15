@@ -4,22 +4,32 @@ import qs from 'query-string';
 
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
-export function useOnClickOutside<T>(
-  ref: React.RefObject<T>,
-  handler: ClickOutsideCallback
-) {
+interface UseClickOutsideOpts<E extends HTMLElement> {
+  enabled: boolean;
+  handler: ClickOutsideCallback;
+  ref: React.RefObject<E>;
+}
+
+export function useOnClickOutside<E extends HTMLElement>({
+  ref,
+  enabled,
+  handler,
+}: UseClickOutsideOpts<E>) {
   useEffect(() => {
     const cb = (event: MouseEvent) => {
-      // TODO(dcramer): fix any type here
-      if (!ref.current || !(ref.current as any).contains(event.target)) {
+      if (!enabled) {
+        return;
+      }
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+      if (!ref.current.contains(event.target)) {
         handler(event);
       }
     };
     document.addEventListener('click', cb);
-    return () => {
-      document.removeEventListener('click', cb);
-    };
-  }, [ref, handler]);
+    return () => document.removeEventListener('click', cb);
+  }, [enabled, handler, ref]);
 }
 
 export const sortBy = (arr: any[], comp: (any) => any): any[] => {
