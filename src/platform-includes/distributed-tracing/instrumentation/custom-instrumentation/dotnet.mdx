@@ -1,0 +1,51 @@
+To obtain a trace header from the span, use `ISpan.GetTraceHeader()` method, then pass it to the downstream service.
+
+<Note>
+
+For HTTP communications, Sentry's SDK provides `SentryHttpMessageHandler`, which can be used to [automatically attach trace headers to outgoing HTTP requests](/platforms/dotnet/performance/instrumentation/automatic-instrumentation/).
+
+</Note>
+
+The code snippet below demonstrates propagating the trace programatically. Even though `SentryHttpMessageHandler` does that automatically for you, this illustrates the mechanism so it can be replicated in other protocols and technologies such a messaging systems.
+
+```csharp
+using System;
+using System.Net.Http;
+using Sentry;
+
+var transaction = SentrySdk.StartTransaction("name", "op");
+var sentryTraceHeader = transaction.GetTraceHeader();
+
+using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
+request.Headers.Add("sentry-trace", sentryTraceHeader.ToString());
+```
+
+To create a span as a continuation of the trace retrieved from the upstream service, pass the `sentry-trace` header value to the `StartTransaction(...)` method:
+
+```csharp
+using System;
+using Sentry;
+
+var httpContext = ...;
+
+if (httpContext.Request.Headers.TryGetValue("sentry-trace", out var sentryTraceHeaderValue))
+{
+    try
+    {
+        var sentryTraceHeader = SentryTraceHeader.Parse(sentryTraceHeaderValue);
+        var transaction = SentrySdk.StartTransaction("name", "op", sentryTraceHeader);
+    }
+    catch (FormatException e)
+    {
+        // Handle invalid trace header
+        e.Data["bad-sentry-header"] = sentryTraceHeaderValue;
+        SentrySdk.CaptureException(e);
+    }
+}
+```
+
+<Note>
+
+In Sentry's ASP.NET Core integration, trace headers are [handled automatically by the tracing middleware](/platforms/dotnet/performance/instrumentation/automatic-instrumentation/).
+
+</Note>
