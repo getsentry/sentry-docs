@@ -3,7 +3,6 @@ import path from 'path';
 
 
 
-
 export const piiFieldsNodes = ({ actions, createNodeId, createContentDigest }) => {
     const { createNode } = actions;
 
@@ -12,13 +11,11 @@ export const piiFieldsNodes = ({ actions, createNodeId, createContentDigest }) =
 
     fields.forEach((field, index) => {
         const fieldNode = {
-            // extract path and attributes from field object
             path: field.path,
-            attributes: field.attributes,
+            additional_properties: field.additional_properties,
             id: createNodeId(`PiiFieldPath-${index}`),
             internal: {
                 type: 'PiiFieldPath',
-                // use JSON.stringify to convert field object into a string for contentDigest
                 contentDigest: createContentDigest(JSON.stringify(field)),
             },
         };
