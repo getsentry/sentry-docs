@@ -9,7 +9,7 @@ supported:
   - python
 ---
 
-Distributed tracing works out of the box for the following frameworks: Django, FastAPI, Flask, Bottle, Falcon, Pyramid, Quart, Starlette, Starlite, Tornado.
+Distributed tracing works out of the box for the following frameworks: <PlatformLinkWithLogo platform="python.django" url=/python/guides/django/distributed-tracing/instrumentation/automatic-instrumentation/ /> Django, FastAPI, Flask, Bottle, Falcon, Pyramid, Quart, Starlette, Starlite, Tornado.
 
 If you are using one of the frameworks listed, you do not need to do anything for distributed tracing to work! You can now stop reading this page and continue building and amazing product.
 
@@ -27,28 +27,30 @@ Incoming tracing can come from different places. In a web environment it will be
 
 ```python
 import sentry_sdk
+from my_project import get_incoming_headers_as_dict
 
 headers = get_incoming_headers_as_dict()
 
 sentry_sdk.continue_trace(headers)
 ```
 
-This will parse the headers and try to find the `sentry-trace` and `baggage` headers and stores them for later use.
+This will parse the given headers and try to find the `sentry-trace` and `baggage` headers and it will store them for later use.
 
 ## Add tracing information to outgoing requests
 
 On outgoing requests to have to add the two headers `sentry-trace` and `baggage` that you parsed and stored earlier.
 
-If you are doing your http requests with `requests` or `aiohttp` (or even the low level `http.client` (or `httplib` on older Pythons)) the parsed and stored headers are added automatically. You do not need to do anything!
+If you are doing your HTTP requests with [Requests](https://requests.readthedocs.io/en/latest/), [AIOHTTP](https://docs.aiohttp.org/en/stable/), the low level [http.client](https://docs.python.org/3/library/http.client.html), or even [httplib](https://docs.python.org/2/library/httplib.html) on Pyton 2 the parsed and stored headers are added automatically added to outgoing requests. You do not need to do anything!
 
 If you do outgoing requests in another way you can prepare the headers like follows:
 
 ```python
 import sentry_sdk
+from my_project import make_an_outgoing_request
 
 headers = {}
 headers["sentry-trace"] = sentry_sdk.get_traceparent()
 headers["baggage"] = sentry_sdk.get_baggage()
 
-do_an_outgoing_request("https://example.com", headers=headers)
+make_an_outgoing_request(to="https://example.com", headers=headers)
 ```
