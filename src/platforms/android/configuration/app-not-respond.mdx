@@ -55,3 +55,29 @@ and asynchronously sends ANR events to Sentry for each ANR in the history, enric
 The integration reports ANR events with `mechanism:AppExitInfo`.
 
 ![ANR](app-not-respond.png)
+
+# ANR Root Cause Analysis
+
+Sentry performs various root cause analysis to give you tips about why some certain ANRs might appear. If we've 
+detected a potential root cause, it'll be displayed in a new section underneath the ANR stacktrace. Sentry is 
+capable of detecting the following root causes:
+
+## Performance Issues
+
+If an ANR is connected to one of the Performance Issues detected by Sentry (for example, [File I/O on Main Thread](https://docs.sentry.io/product/issues/issue-details/performance-issues/file-main-thread-io/) or [DB on Main Thread](https://docs.sentry.io/product/issues/issue-details/performance-issues/db-main-thread-io/)), we'll link the offending span to the ANR event, showing you exactly which slow operation contributed to this ANR.
+
+![ANR Root Cause File I/O](anr-rootcause-fileio.png)
+
+## Common Patterns
+
+Our detector looks at the stacktrace of the ANR and tries to identify common pitfalls, such as accessing files, assets or heavy resources on the main thread. If we've found an offending stack frame, we will highlight it in the stacktrace and provide some materials on how to prevent this type of ANR:
+
+![ANR Root Cause Suspect Frame](anr-rootcause-frame.png)
+
+## Deadlock Detection
+
+We also detect deadlocks, for example, if the main thread is blocked waiting on a lock object held by another thread. In this case, we'll highlight
+the suspect frame that is waiting on the lock as well as show the stacktrace of the offending thread that is holding the lock. We'll also highlight the frame
+of the offending thread that is holding the lock:
+
+![ANR Root Cause Deadlock](anr-rootcause-deadlock.png)
