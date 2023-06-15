@@ -13,7 +13,7 @@ import {CodeContext} from './codeContext';
 
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
-function makeKeywordsClickable(children: React.ReactChildren) {
+function makeKeywordsClickable(children: React.ReactNode) {
   const items = Children.toArray(children);
 
   KEYWORDS_REGEX.lastIndex = 0;
@@ -35,9 +35,10 @@ function makeKeywordsClickable(children: React.ReactChildren) {
       }
       arr.push(
         <KeywordSelector
+          key={lastIndex}
+          index={lastIndex}
           group={match[1] || 'PROJECT'}
           keyword={match[2]}
-          index={lastIndex}
         />
       );
       lastIndex = KEYWORDS_REGEX.lastIndex;
@@ -76,8 +77,8 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const codeContext = useContext(CodeContext);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [referenceEl, setReferenceEl] = useState(null);
-  const [dropdownEl, setDropdownEl] = useState(null);
+  const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
+  const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
 
   const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
     placement: 'bottom',
@@ -90,7 +91,11 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
     ],
   });
 
-  useOnClickOutside({current: dropdownEl}, () => isOpen && setIsOpen(false));
+  useOnClickOutside({
+    ref: {current: referenceEl},
+    enabled: isOpen,
+    handler: () => setIsOpen(false),
+  });
 
   const [sharedSelection, setSharedSelection] = codeContext.sharedKeywordSelection;
 
