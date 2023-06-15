@@ -1,22 +1,10 @@
-You need to register `SentrySpanProcessor` and `SentryPropagator` with your OpenTelemetry installation in your `sentry.server.config.js` file:
+First, follow the Next.js instructions to set up a [manual OpenTelemetry configuration](https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry#manual-opentelemetry-configuration).
+
+At the end of that process you should have added `instrumentation.{js,ts}` and `instrumentation.node.{js,ts}` files to your application.
+
+Then you need to update your `sentry.server.config.js` file to use the OpenTelemetry instrumenter option.
 
 ```javascript {filename:sentry.server.config.js}
-const Sentry = require("@sentry/nextjs");
-const {
-  SentrySpanProcessor,
-  SentryPropagator,
-} = require("@sentry/opentelemetry-node");
-
-const opentelemetry = require("@opentelemetry/sdk-node");
-const otelApi = require("@opentelemetry/api");
-const {
-  getNodeAutoInstrumentations,
-} = require("@opentelemetry/auto-instrumentations-node");
-const {
-  OTLPTraceExporter,
-} = require("@opentelemetry/exporter-trace-otlp-grpc");
-
-// Make sure to call `Sentry.init` BEFORE initializing the OpenTelemetry SDK
 Sentry.init({
   dsn: "__DSN__",
   tracesSampleRate: 1.0,
@@ -24,17 +12,26 @@ Sentry.init({
   instrumenter: "otel",
   // ...
 });
+```
 
-const sdk = new opentelemetry.NodeSDK({
-  // Existing config
-  traceExporter: new OTLPTraceExporter(),
-  instrumentations: [getNodeAutoInstrumentations()],
+Finally update your `instrumentation.node.{js,ts}` to use Sentry's OpenTelemetry `SpanProcessor` and `SpanPropagator`.
 
+```javascript {filename:instrumentation.node.js}
+import { trace, context } from "@opentelemetry/api";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { Resource } from "@opentelemetry/resources";
+import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node";
+
+const sdk = new NodeSDK({
+  resource: new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: "next-app",
+  }),
   // Sentry config
   spanProcessor: new SentrySpanProcessor(),
+  textMapPropagator: new SentryPropagator(),
 });
-
-otelApi.propagation.setGlobalPropagator(new SentryPropagator());
 
 sdk.start();
 ```
