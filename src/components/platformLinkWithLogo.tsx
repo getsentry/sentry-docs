@@ -34,7 +34,7 @@ export function PlatformLinkWithLogo({platform, label, url}: Props): JSX.Element
           border: 0,
           boxShadow: 'none',
         }}
-        format="lg"
+        format="sm"
       />
       {linkText}
     </SmartLink>
