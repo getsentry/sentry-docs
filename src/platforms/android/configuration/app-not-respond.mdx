@@ -27,7 +27,7 @@ Both ANR detection implementations are controlled by the same flag:
 </application>
 ```
 
-## Watchdog (v1)
+### Watchdog (v1)
 
 Whenever the main UI thread of the application is blocked for more than five seconds, the SDK will report the problem to the server.
 
@@ -47,7 +47,7 @@ You can also specify how long the thread should be blocked before the ANR is rep
 </application>
 ```
 
-## ApplicationExitInfo (v2)
+### ApplicationExitInfo (v2)
 
 This approach reads the [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) API on the next app launch
 and asynchronously sends ANR events to Sentry for each ANR in the history, enriching only the latest one with breadcrumbs, contexts, tags, etc.
@@ -55,3 +55,25 @@ and asynchronously sends ANR events to Sentry for each ANR in the history, enric
 The integration reports ANR events with `mechanism:AppExitInfo`.
 
 ![ANR](app-not-respond.png)
+
+## ANR Root Cause Analysis
+
+Sentry performs various root cause analyses to give you insights about why certain ANRs might appear. If a potential root cause is detected, it'll be displayed in a new section below the ANR stacktrace. Sentry can detect the following root causes:
+
+### Performance Issues
+
+If an ANR is connected to one of the Performance Issues detected by Sentry (for example, [File I/O on Main Thread](/product/issues/issue-details/performance-issues/file-main-thread-io/) or [DB on Main Thread](/product/issues/issue-details/performance-issues/db-main-thread-io/)), the offending span will be linked to the ANR event, showing you exactly which slow operation is to blame.
+
+![ANR Root Cause File I/O](anr-rootcause-fileio.png)
+
+### Common Patterns
+
+This detector looks at the stacktrace of an ANR and tries to identify common pitfalls, such as accessing files, assets, or heavy resources on the main thread. If an offending stack frame is found, it'll be highlighted in the stacktrace with some information about how to prevent this type of ANR:
+
+![ANR Root Cause Suspect Frame](anr-rootcause-frame.png)
+
+### Deadlock Detection
+
+Sentry will try to detect deadlocks and point out potential causes. If, for example, the main thread is blocked by waiting on a lock object that's held by another thread, the suspect frame that's waiting on the lock will be highlighted. The stacktrace of the offending thread that's holding the lock, as well as the offending frame of that thread will also be shown:
+
+![ANR Root Cause Deadlock](anr-rootcause-deadlock.png)
