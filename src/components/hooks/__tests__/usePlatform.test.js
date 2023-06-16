@@ -2,9 +2,9 @@
 /* eslint import/no-unresolved: ['error', { ignore: ['@reach'] }] */
 
 import React from 'react';
-import {useLocation, useNavigate} from '@reach/router';
+import {useLocation} from '@reach/router';
 import {act, renderHook} from '@testing-library/react-hooks';
-import {useStaticQuery} from 'gatsby';
+import {navigate, useStaticQuery} from 'gatsby';
 
 import {PageContext} from '../../pageContext';
 import {useLocalStorage} from '../useLocalStorage';
@@ -28,6 +28,10 @@ const PLATFORMS = [
 jest.mock('../useLocalStorage');
 
 describe('usePlatform', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('uses the default of javascript', () => {
     const wrapper = ({children}) => (
       <PageContext.Provider value={{}}>{children}</PageContext.Provider>
@@ -99,9 +103,6 @@ describe('usePlatform', () => {
       pathname: '/platforms/ruby/',
     });
 
-    const navigate = jest.fn();
-
-    useNavigate.mockImplementation(() => navigate);
     useStaticQuery.mockImplementation(() => ({
       allPlatform: {
         nodes: PLATFORMS,
@@ -132,9 +133,6 @@ describe('usePlatform', () => {
       pathname: '/platforms/ruby/',
     });
 
-    const navigate = jest.fn();
-
-    useNavigate.mockImplementation(() => navigate);
     useStaticQuery.mockImplementation(() => ({
       allPlatform: {
         nodes: PLATFORMS,
@@ -182,9 +180,7 @@ describe('usePlatform', () => {
       pathname: '/',
       search: '?platform=javascript',
     });
-    const navigate = jest.fn();
 
-    useNavigate.mockImplementation(() => navigate);
     useStaticQuery.mockImplementation(() => ({
       allPlatform: {
         nodes: PLATFORMS,

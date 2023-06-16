@@ -1,6 +1,6 @@
 import {useContext, useState} from 'react';
-import {useLocation, useNavigate, WindowLocation} from '@reach/router';
-import {graphql, useStaticQuery} from 'gatsby';
+import {useLocation, WindowLocation} from '@reach/router';
+import {graphql, navigate, useStaticQuery} from 'gatsby';
 import {parse} from 'query-string';
 
 import {PageContext} from 'sentry-docs/components/pageContext';
@@ -243,7 +243,6 @@ export function usePlatform(
   defaultValue: string = DEFAULT_PLATFORM
 ): UsePlatform {
   const location = useLocation();
-  const navigate = useNavigate();
 
   const pageContext = useContext(PageContext);
 
