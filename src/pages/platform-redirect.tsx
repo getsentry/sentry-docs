@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
-import {useLocation, useNavigate} from '@reach/router';
+import {useLocation} from '@reach/router';
+import {navigate} from 'gatsby';
 import {PlatformIcon} from 'platformicons';
 import {parse} from 'query-string';
 
@@ -45,7 +46,6 @@ export default function PlatformRedirect() {
   const platformList = usePlatformList();
 
   const location = useLocation();
-  const navigate = useNavigate();
 
   const queryString = parse(location.search, {arrayFormat: 'none'});
   const path = (queryString.next as string | null) || '';
@@ -61,7 +61,7 @@ export default function PlatformRedirect() {
     if (shouldRedirect) {
       navigate(`/platforms/${requestedPlatform}${path}`);
     }
-  }, [navigate, path, requestedPlatform, shouldRedirect]);
+  }, [path, requestedPlatform, shouldRedirect]);
 
   if (shouldRedirect) {
     return null;
