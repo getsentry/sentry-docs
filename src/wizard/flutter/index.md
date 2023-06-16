@@ -102,6 +102,6 @@ You'll also need to [upload the debug information files](/platforms/flutter/uplo
 
 If Sentry has access to application source code, it can show snippets of code around the location of stack frames. We refer to these snippets as _source context_.
 
-Source context can be very useful for quickly identify problematic code.
+Source context can be very useful to quickly locate problematic code.
 
 To enable source context, you need to upload debug symbols to Sentry. You can do that by following the [Uploading Source Code Context for Flutter Android, iOS, and macOS](/platforms/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos) guide.
