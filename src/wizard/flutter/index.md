@@ -88,7 +88,7 @@ Future<void> processOrderBatch(ISentrySpan span) async {
 }
 ```
 
-Check out [the documentation](/platforms/flutter/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+To learn more about the API and automatic instrumentations, check out the [performance documentation](/platforms/flutter/performance/instrumentation/) .
 
 ## Debug Symbols
 
