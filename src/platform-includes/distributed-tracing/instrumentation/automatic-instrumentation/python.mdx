@@ -1,0 +1,60 @@
+# AUTOMATIC PYTHON
+
+<Note>
+Please refer to tracing with and without performance activated and delete this note and its headline afterwards.
+</Note>
+
+
+Distributed tracing works out of the box for the following frameworks: [Django](/platforms/python/guides/django/distributed-tracing/instrumentation/automatic-instrumentation/), [FastAPI](/platforms/python/guides/fastapi/distributed-tracing/instrumentation/automatic-instrumentation/),[Flask](/platforms/python/guides/flask/distributed-tracing/instrumentation/automatic-instrumentation/), [Bottle](/platforms/python/guides/bottle/distributed-tracing/instrumentation/automatic-instrumentation/), [Falcon](/platforms/python/guides/falcon/distributed-tracing/instrumentation/automatic-instrumentation/), [Pyramid](/platforms/python/guides/pyramid/distributed-tracing/instrumentation/automatic-instrumentation/), [Quart](/platforms/python/guides/quart/distributed-tracing/instrumentation/automatic-instrumentation/), [Starlette](/platforms/python/guides/starlette/distributed-tracing/instrumentation/automatic-instrumentation/), [Starlite](/platforms/python/guides/starlite/distributed-tracing/instrumentation/automatic-instrumentation/), [Tornado](/platforms/python/guides/tornado/distributed-tracing/instrumentation/automatic-instrumentation/).
+
+If you are using one of the frameworks listed above, you do not need to do anything for distributed tracing to work! You can now stop reading this page and continue building and amazing product.
+
+If you have a vanilla Python project or use a (yet) unsupported framework you can still add distributed tracing to your project but need to it "by hand".
+
+Two things need to be done for distributed tracing to work:
+
+- When receiving incoming requests, parse and store incoming tracing information.
+- When doing outgoing requests, add tracing information to the outgoing request.
+
+## Parse incoming tracing information
+
+Incoming tracing information has to be parsed and saved.
+Incoming tracing can come from different places:
+
+- In a web environment it will be sent with HTTP headers.
+- In a job queue (like Celery) the tracing information can be retrieved from some meta or header variables.
+- You also can pick up tracing information from environment variables.
+
+```python
+import sentry_sdk
+from my_project import get_incoming_headers_as_dict
+
+headers = get_incoming_headers_as_dict()
+
+sentry_sdk.continue_trace(headers)
+```
+
+This will parse the given headers and try to find the `sentry-trace` and `baggage` headers and it will store them for later use.
+
+## Add tracing information to outgoing requests
+
+On outgoing requests to have to add the two headers `sentry-trace` and `baggage` that you parsed and stored earlier.
+
+If you are doing your HTTP requests with [Requests](https://requests.readthedocs.io/en/latest/), [AIOHTTP](https://docs.aiohttp.org/en/stable/), the low level [http.client](https://docs.python.org/3/library/http.client.html), or [httplib](https://docs.python.org/2/library/httplib.html) on Pyton 2 the parsed and stored headers are added automatically to outgoing requests. You do not need to do anything!
+
+If you do outgoing requests in another way you can prepare the headers like follows:
+
+```python
+import sentry_sdk
+from my_project import make_an_outgoing_request
+
+headers = {}
+headers["sentry-trace"] = sentry_sdk.get_traceparent()
+headers["baggage"] = sentry_sdk.get_baggage()
+
+make_an_outgoing_request(to="https://example.com", headers=headers)
+```
+
+Now tracing information is propagated to the project running at `https://example.com`. If it has the Python SDK with distributed tracing running, it will parse and save the tracing information for later use.
+
+The two services are now connect with distributed tracing.
