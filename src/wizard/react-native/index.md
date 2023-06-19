@@ -17,7 +17,7 @@ npx @sentry/wizard -s -i reactNative
 
 [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [setup manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer.
 
-- iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. However.
+- iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. ```
 - Android Specifics: We hook into Gradle for the source map build process. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry. If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build by setting `org.gradle.configureondemand=false` or remove it.
 
 ### Initialize the SDK
