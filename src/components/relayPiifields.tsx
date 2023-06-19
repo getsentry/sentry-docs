@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import {graphql, useStaticQuery} from 'gatsby';
+import { graphql, useStaticQuery } from 'gatsby';
 
 const query = graphql`
   query PiiFieldsQuery {
@@ -17,7 +17,7 @@ const Asterisk = styled.span`
   margin-left: 5px;
 `;
 
-function PiiField({field}) {
+function PiiField({ field }) {
   const asterisk_flag = field.additional_properties;
 
   return (
@@ -47,8 +47,7 @@ export function PiiFields(): JSX.Element {
       ))}
       {hasStar && (
         <dd>
-          * Not an actual field, but represents unstructured data that is not part of the
-          schema.
+          * Not an actual field, but represents unstructured data that is not part of the schema.
         </dd>
       )}
     </dl>
