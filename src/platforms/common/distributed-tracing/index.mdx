@@ -4,33 +4,39 @@ sidebar_order: 40
 description: "Learn how to connect backend and frontend transactions."
 ---
 
-When tracing is enabled, the SDK will attach an outgoing header called `sentry-trace` to requests. This depends on the out of the box integrations we provide, but you can expect the header `sentry-trace` to be present. If it's not, you can manually add `sentry-trace` headers to any requests by learning more about [its structure](https://develop.sentry.dev/sdk/performance/#header-sentry-trace).
+## What is distributed tracing?
 
-SDKs with performance monitoring support listen to incoming requests and typically automatically pick up the incoming `sentry-trace` header to continue the trace (with the same `trace-id`) from there, connecting backend and frontend transactions into a single coherent trace using the `trace_id` value. Depending on the circumstance, this ID is transmitted either in a request header or in an HTML `<meta>` tag.
+Applications can consist of multiple components, which are also called services. A web application for example can consist of a frontend, a backend and a microservice. A mobile app can alike constist of the mobile app running on the device and a backend and a microserivce.
 
-All your transactions that have the same `trace-id` are connected. Linking transactions in this way makes it possible to navigate among them in [sentry.io](https://sentry.io) to better understand how the different parts of your system are affecting one another. You can learn more about this model in our [Distributed Tracing](/product/sentry-basics/tracing/distributed-tracing/) docs.
+When a user triggeres an action in the frontend or the app it will call the backend which on its part calls the microservice.
+So the users action leaves a trace through three services.
 
-<PlatformSection notSupported={["javascript", "node"]}>
+Adding a unique trace ID to the users actions and passing it on from the frontend/app to the backend and further on to the microservice is called distributed tracing.
 
-If the instrumentation you're using doesn't automatically pick up the `sentry-trace` header, you can also continue a trace manually by using the `continueFromHeaders` function on a `Transaction`. Learn more about this in our [Transaction Interface](https://develop.sentry.dev/sdk/performance/#new-span-and-transaction-classes) documentation.
+![Trace propagation in Sentry SDK](distributed-tracing-trace-propagation.png)
 
-</PlatformSection>
+This way all the information that is collect on the frontend, the backend and the microservice is associated with one unique trace. Which makes it possible to relate information that was collected on the frontend with information collected in the backend or microservice
 
-<PlatformSection supported={["android", "javascript", "node"]}>
+You could for example see what UI element was clicked on the frontend that lead to an error in the microservice. This gives you the complete picture of what was happing in your application as a whole, not just what was happening in one service.
 
-<PlatformContent includePath="distributed-tracing/index" />
+## Configure
 
-</PlatformSection>
+Es gibt zwei header
 
-# Temp
+- `sentry-trace`
+- `baggage`
 
-Was ist dt und warum ist es cool?
+TODO: header beschreiben
+beispiel header anzeigen
 
--> vielleicht etwas von der Produktseite übernehmen
+Config fürs limitieren auf gewisse hosts
+`trace-propagation-targets`
 
-Ab welcher Version ist es supported?
+Je nach User Setup in Firewalls / Proxies freischalten.
 
-# Supported frameworks
+jetzt neu: auch ohne performance!
+
+### Supported frameworks
 
 In the following frameworks distributed tracing works out of the box:
 
@@ -54,31 +60,20 @@ TODO: Check these if there is really auto instrumentation:
 - rq
  -->
 
-# Configure
+If you have a vanilla Python project or use a (yet) unsupported framework you need to implement <PlatformLink to="/distributed-tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink>.
 
-Es gibt zwei header
-
-- `sentry-trace`
-- `baggage`
-
-TODO: header beschreiben
-beispiel header anzeigen
-
-Config fürs limitieren auf gewisse hosts
-`trace-propagation-targets`
-
-Je nach User Setup in Firewalls / Proxies freischalten.
-
-jetzt neu: auch ohne performance!
-
-# Setup Your Other Services
+## Setup Your Other Services
 
 -> Link to list of supported frameworks/guides or to frameworks/guides with performance enabled.
 
-# Verify
+## Verify
 
 Screenshots wie es aussehen soll und wo man in Sentry.io es sich ansehen kann.
 
 Von Instrumentationssue auf Trace
 
 Von Replay auf Trace
+
+## Temp
+
+Ab welcher Version ist es supported?
