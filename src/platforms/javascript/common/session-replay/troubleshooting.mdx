@@ -44,6 +44,28 @@ Another reason you might not see the body is if the format is not supported. We 
 
 More details about this feature can be found in the <PlatformLink to="/session-replay/configuration/">configuration page</PlatformLink>.
 
+## The SDK is slowing down my website.
+
+If you're experiencing slowdowns on your website, first make sure you're on the latest version of our SDK, which will have the most up-to-date bug fixes and performance improvements.
+
+We've identified two major potential reasons for impacted performance and have added several performance degradation safeguards as a result. The two culprits are websites that have a large numbers of mutations (Read the entry below to learn more.) and large console messages.
+
+To mitigate these problems, SDK version 7.54.0 will [truncate console messages](https://github.com/getsentry/sentry-javascript/pull/7917) and disable Replay recordings on pages that have a large number of mutations.
+
+If you're having any problems with the latest SDK version, we want to hear about it. Please open a [GitHub issue](https://github.com/getsentry/sentry-javascript/issues/new?assignees=&labels=Type%3A+Bug&projects=&template=bug.yml) and describe your situation.
+
+## I see the message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."
+
+The Sentry SDK attempts to minimize potential [performance overhead](/product/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
+
+If you're seeing the "A large number of mutations was detected" message while watching a replay, it means that your page could be optimized. For example, a dropdown list with thousands of entries could be refactored so that rows are virtualized where only the visible rows are rendered in the DOM. Another potential solution is to paginate the results fetch more data as the user scrolls through it. The SDK has a <PlatformLink to="/session-replay/configuration/#mutation-limits">configuration</PlatformLink> that allows you to configure the limits before recording stops.
+
+## Text in the iframe isn't masked
+
+Our masking logic doesn't run on iframe content that's provided using the `srcdoc` attribute, rather than loaded in via `src`.
+
+To hide this content, block the iframe, as described in our Session Replay <PlatformLink to="/session-replay/privacy/#blocking">Privacy</PlatformLink> docs.
+
 ## Replay on My Browser Extension Doesn't Work
 
 This is not a supported use-case. The replay package is built to work on a website and not as an externally-loaded script via browser extension or other mechanism. In fact, Sentry's Session Replay product can help developers find out when a third-party Chrome extension causes otherwise hard to debug or reproduce issues with their website.

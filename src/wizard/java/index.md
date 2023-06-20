@@ -13,6 +13,8 @@ type: language
 
 Install the SDK via Gradle, Maven, or SBT:
 
+### Gradle
+
 For **Gradle**, add to your `build.gradle` file:
 
 ```groovy
@@ -27,6 +29,33 @@ dependencies {
 }
 ```
 
+To upload your source code to Sentry so it can be shown in stack traces, use our Gradle plugin.
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+
+sentry {
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    includeSourceContext = true
+
+    org = "___ORG_SLUG___"
+    projectName = "___PROJECT_SLUG___"
+    authToken = "your-sentry-auth-token"
+}
+```
+
+### Maven
+
 For **Maven**, add to your `pom.xml` file:
 
 ```xml
@@ -37,11 +66,58 @@ For **Maven**, add to your `pom.xml` file:
 </dependency>
 ```
 
+To upload your source code to Sentry so it can be shown in stack traces, use our Maven plugin.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-maven-plugin</artifactId>
+            <version>{{@inject packages.version('sentry.java.mavenplugin', '0.0.2') }}</version>
+            <configuration>
+                <!-- for showing output of sentry-cli -->
+                <debugSentryCli>true</debugSentryCli>
+
+                <!-- download the latest sentry-cli and provide path to it here -->
+                <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
+                <!-- minimum required version is 2.17.3 -->
+                <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath>
+
+                <org>___ORG_SLUG___</org>
+
+                <project>___PROJECT_SLUG___</project>
+
+                <!-- in case you're self hosting, provide the URL here -->
+                <!--<url>http://localhost:8000/</url>-->
+
+                <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
+                <!-- you can find it in Sentry UI: Settings > Account > API > Auth Tokens -->
+                <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>install</phase>
+                    <goals>
+                        <goal>uploadSourceBundle</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    ...
+</build>
+```
+
+### SBT
+
 For **SBT**:
 
 ```scala
 libraryDependencies += "io.sentry" % "sentry" % "{{@inject packages.version('sentry.java', '4.0.0') }}"
 ```
+
+To upload your source code to Sentry so it can be shown in stack traces, please refer to [Manually Uploading Source Context](https://docs.sentry.io/platforms/java/source-context).
 
 ## Configure
 

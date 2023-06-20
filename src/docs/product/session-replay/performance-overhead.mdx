@@ -4,7 +4,7 @@ sidebar_order: 48
 description: "Session Replay SDK performance overhead."
 ---
 
-<Include name="beta-note-session-replay.mdx" />
+<Include name="feature-stage-beta-session-replay.mdx" />
 
 Session Replay works by observing and recording changes to your web application's DOM, and transmitting that data to event ingestion servers over the public internet. In order to perform this work without negatively impacting the host page's performance, the Session Replay SDK takes care to introduce minimal additional filesize, observe and record DOM content in a non-intrusive way, send the absolute minimum number of bytes required, and use low-latency ingestion endpoints geographically close to your end-users.
 
@@ -24,3 +24,4 @@ Sentry's Session Replay SDK takes several measures to avoid negatively impacting
   - DOM content itself is gzip compressed client-side before transmission over HTTP. The compression operation is executed in a background thread using a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers), which means the browser’s UI thread is unaffected.
   - The SDK does not cause the browser to download and transmit other static assets, like images, video, etc. Instead during playback, those assets are fetched directly from the original host server.
 - Sentry’s event ingestion infrastructure uses [distributed Points-of-Presence (PoPs)](https://blog.sentry.io/2022/03/31/sentry-points-of-presence-how-we-built-a-distributed-ingestion/) which place ingestion servers around the world and close to your users. When a Session Replay event is transmitted, the user’s browser connects and transmits the event payload to the closest PoP available for their region. This greatly reduces end-to-end latency and minimizes the amount of networking overhead placed on the browser.
+- The SDK is built to gracefully downgrade when needed. In the event several thousand DOM mutations happen at once, the SDK will disable recording to make sure recording the website doesn't further degrade user experience. The [mutation limit values are configurable](/platforms/javascript/session-replay/configuration/#mutation-limits).

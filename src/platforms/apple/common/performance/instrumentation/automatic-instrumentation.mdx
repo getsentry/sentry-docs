@@ -161,6 +161,35 @@ SentrySDK.start { options in
 [NSURLSession]: https://developer.apple.com/documentation/foundation/nsurlsession
 [NSURLConnection]: https://developer.apple.com/documentation/foundation/nsurlconnection
 
+### Trace Propagation Targets
+
+Sentry adds an extra header with the trace id in the outgoing HTTP requests to continue the transaction in the backend.
+
+You can set the `tracePropagationTarget` option to filter which requests Sentry adds the extra header to.
+For example, to ensure that only your app backend will receive the trace id.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracePropagationTargets = ["MyAppDomain.com"]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracePropagationTargets = @[@"MyAppDomain.com"]
+}];
+```
+
+The option may contain a list of `NSString` or `NSRegularExpression` against which the URLs of outgoing requests are matched. If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request. String entries do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
+
+If `tracePropagationTargets` is not provided, trace data is attached to every outgoing request from the instrumented client.
+
 ## File I/O Tracing
 
 The Sentry SDK adds spans for file I/O operations to ongoing transactions bound to the scope. Currently, the SDK supports operations with [NSData][NSData], but many other APIs like [NSFileManager][NSFileManager], [NSString][NSString] and [NSBundle][NSBundle] uses [NSData][NSData].
@@ -255,7 +284,7 @@ If the UI transaction has idled but didn't have any child spans added, the SDK w
 
 </Note>
 
-The SDK binds user interaction transactions to the `Scope` automatically if there's no other transaction set. Because of that, you can create spans using manual instrumentation, and those spans will be automatically associated with the running UI transaction.
+The SDK binds user interaction transactions to the `Scope` automatically if there's no other transaction set. Because of that, you can create spans using custom instrumentation, and those spans will be automatically associated with the running UI transaction.
 
 ```Swift
 import Sentry

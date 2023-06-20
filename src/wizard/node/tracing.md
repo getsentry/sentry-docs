@@ -1,6 +1,6 @@
 ---
 name: Node.js
-doc_link: https://docs.sentry.io/platforms/node/performance/
+doc_link: https://docs.sentry.io/platforms/node/performance/instrumentation/custom-instrumentation/
 support_level: production
 type: framework
 ---

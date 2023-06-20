@@ -22,8 +22,10 @@ import {ParamTable} from './paramTable';
 import {PlatformContent} from './platformContent';
 import {PlatformIdentifier} from './platformIdentifier';
 import {PlatformLink} from './platformLink';
+import {PlatformLinkWithLogo} from './platformLinkWithLogo';
 import {PlatformSection} from './platformSection';
 import {RelayMetrics} from './relayMetrics';
+import {PiiFields} from './relayPiifields';
 import {SandboxLink, SandboxOnly} from './sandboxLink';
 import {SmartLink} from './smartLink';
 import {VimeoEmbed, YouTubeEmbed} from './video';
@@ -45,8 +47,10 @@ const mdxComponents = {
   PageGrid,
   ParamTable,
   DefinitionList,
+  PiiFields,
   PlatformContent,
   PlatformLink,
+  PlatformLinkWithLogo,
   PlatformSection,
   PlatformIdentifier,
   RelayMetrics,
