@@ -1,6 +1,6 @@
 ---
 name: React-Native
-doc_link: /platforms/react-native/
+doc_link: https://docs.sentry.io/platforms/react-native/
 support_level: production
 type: language
 ---
