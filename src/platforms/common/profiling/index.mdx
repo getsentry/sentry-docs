@@ -8,6 +8,7 @@ supported:
   - python
   - rust
   - ruby
+  - react-native
 notSupported:
   - unity
   - dart
@@ -15,7 +16,6 @@ notSupported:
   - native
   - javascript
   - javascript.vue
-  - react-native
   - dotnet
   - java
   - java.spring-boot
@@ -28,6 +28,16 @@ notSupported:
   - native.wasm
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
+
+<PlatformSection supported={["react-native"]}>
+
+<Note>
+
+React Native Profiling is currently in alpha. Alpha features are still in progress and may have bugs. We recognize the irony.
+
+</Note>
+
+</PlatformSection>
 
 <PlatformSection supported={["go"]}>
 
@@ -96,6 +106,17 @@ In `AndroidManifest.xml`:
     <meta-data android:name="io.sentry.dsn" android:value="___DSN___" />
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["react-native"]}>
+
+```javascript
+Sentry.init({
+  dsn: '__DSN__',
+  tracesSampleRate: 1.0,
+});
 ```
 
 </PlatformSection>
@@ -274,6 +295,30 @@ sentry_sdk.init(
 
 </PlatformSection>
 
+<PlatformSection supported={["react-native"]}>
+
+<Note>
+
+React Native Profiling alpha is available since SDK version `5.7.0`.
+
+</Note>
+
+To enable profiling, set the `profilesSampleRate`:
+
+```javascript
+  Sentry.init({
+    dsn: '__DSN__',
+    tracesSampleRate: 1.0,
+    _experiments: {
+      // The sampling rate for profiling is relative to TracesSampleRate.
+      // In this case, we'll capture profiles for 100% of transactions.
+      profilesSampleRate: 1.0,
+    },
+  });
+```
+
+</PlatformSection>
+
 <PlatformSection supported={["go"]}>
 
 <Note>
@@ -382,6 +427,17 @@ If you don't see any profiling data in [sentry.io](https://sentry.io), you can t
 - Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
 - If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
 - Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
+
+<PlatformSection supported={["react-native"]}>
+
+### Limitations
+
+Profile samples are collected periodically and sampling frequency is fixed make sure to check whether the overhead is within the acceptable range for your use case.
+We are working on symbolication of the collected profiles. Out of the box, you will see function names.
+
+As always, and especially with Profiling in React Native being an alpha feature, feedback is welcome on [Discord](https://discord.com/channels/621778831602221064/750735628932612096) or [GitHub](https://github.com/getsentry/sentry-react-native/issues/2668).
+
+</PlatformSection>
 
 <PlatformSection supported={["go"]}>
 
