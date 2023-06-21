@@ -1,0 +1,82 @@
+<Alert title="Note" level="note">
+
+Distributed tracing **works out of the box** if you have "Performance Monitoring" enable and use one of Sentry's tracing-related integrations (`BrowserTracing`, `Http`, and `Express`), or the [Next.JS SDK](/platforms/javascript/guides/nextjs/).
+
+If you are using one of the integrations of Frameworks listed above, **you do not need to do anything** for distributed tracing to work!
+
+You can stop reading this page now and continue building an amazing product.
+
+</Alert>
+
+Please read the note above. If you want to implement distributed tracing "by hand" two things need to be done:
+
+- When loading the page, extract and store incoming tracing information from HTML `meta` tags.
+- When doing outgoing requests, inject tracing information to the outgoing request.
+
+To learn more see also: <PlatformLink to="/distributed-tracing/#how-does-distributed-tracing-work-in-sentry">How Does Distributed Tracing Work in Sentry?</PlatformLink>
+
+## Extract Tracing Information From HTML `meta` Tags
+
+On `pageload` do the following:
+
+```javascript
+// Read meta tag values
+const sentryTraceMetaTagValue = getMetaContent("sentry-trace");
+const baggageMetaTagValue = getMetaContent("baggage");
+
+// Extract Sentry trace information
+const traceParentData = extractTraceparentData(sentryTraceMetaTagValue);
+
+// Create Dynamic Sampling Context
+const dynamicSamplingContext =
+  baggageHeaderToDynamicSamplingContext(baggageMetaTagValue);
+
+// Create transaction context
+const transactionContext = {
+  ...traceParentData,
+  metadata: {
+    dynamicSamplingContext: dynamicSamplingContext,
+  },
+};
+
+// Start transaction with tracing information of meta tags
+const pageLoadTransaction = startTransaction(hub, transactionContext);
+```
+
+In this example we create a new transaction, that is attached to the trace that was specified in the information in the `sentry-trace` and `baggage` HTML `meta` tags.
+
+## Inject Tracing Information to Outgoing Requests
+
+On outgoing XHR/fetch requests you have to add the two headers `sentry-trace` and `baggage` that you extracted and stored in the `pageLoadTransaction` earlier.
+
+If you are do outgoing requests in another way you can generate the tracing information like follows:
+
+```javascript
+// Create `sentry-trace` header
+const sentryTraceHeader = pageLoadTransaction.toTraceparent();
+
+// Create `baggage` header
+const dynamicSamplingContext = pageLoadTransaction.getDynamicSamplingContext();
+const sentryBaggageHeader = dynamicSamplingContextToSentryBaggageHeader(
+  dynamicSamplingContext
+);
+
+// Make outgoing request
+fetch("https://example.com", {
+  method: "GET",
+  headers: {
+    baggage: sentryBaggageHeader,
+    "sentry-trace": sentryTraceHeader,
+  },
+}).then((response) => {
+  // ...
+});
+```
+
+Now tracing information is propagated to the project running at `https://example.com`. If it has a Sentry SDK running, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so distributed tracing is working.
