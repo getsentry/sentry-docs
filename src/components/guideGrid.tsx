@@ -22,10 +22,9 @@ export function GuideGrid({platform, className}: Props): JSX.Element {
         <li key={guide.key}>
           <SmartLink to={guide.url}>
             <PlatformIcon
-              size={16}
               platform={guide.key}
               style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
-              format="lg"
+              format="sm"
             />
             <h4 style={{display: 'inline-block'}}>{guide.title}</h4>
           </SmartLink>

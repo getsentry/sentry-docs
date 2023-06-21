@@ -4,6 +4,7 @@ sidebar_order: 5000
 supported:
   - android
   - apple
+  - go
   - python
   - rust
   - ruby
@@ -19,7 +20,6 @@ notSupported:
   - java
   - java.spring-boot
   - java.spring
-  - go
   - javascript.cordova
   - native.breakpad
   - native.crashpad
@@ -28,6 +28,16 @@ notSupported:
   - native.wasm
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
+
+<PlatformSection supported={["go"]}>
+
+<Note>
+
+Go Profiling is currently in alpha. Alpha features are still in progress and may have bugs. We recognize the irony.
+
+</Note>
+
+</PlatformSection>
 
 <PlatformSection supported={["ruby"]}>
 
@@ -86,6 +96,19 @@ In `AndroidManifest.xml`:
     <meta-data android:name="io.sentry.dsn" android:value="___DSN___" />
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["go"]}>
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	EnableTracing: true,
+	// We recommend adjusting this value in production:
+	TracesSampleRate: 1.0,
+})
 ```
 
 </PlatformSection>
@@ -251,6 +274,29 @@ sentry_sdk.init(
 
 </PlatformSection>
 
+<PlatformSection supported={["go"]}>
+
+<Note>
+
+Go Profiling alpha is available since SDK version `0.22.0`.
+
+</Note>
+
+To enable profiling, set the `ProfilesSampleRate`:
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	EnableTracing: true,
+	// We recommend adjusting these values in production:
+	TracesSampleRate: 1.0,
+	// The sampling rate for profiling is relative to TracesSampleRate:
+	ProfilesSampleRate: 1.0,
+})
+```
+
+</PlatformSection>
+
 <PlatformSection supported={["ruby"]}>
 
 <Note>
@@ -336,6 +382,17 @@ If you don't see any profiling data in [sentry.io](https://sentry.io), you can t
 - Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
 - If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink>.
 - Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
+
+<PlatformSection supported={["go"]}>
+
+### Limitations
+
+Profile samples are collected periodically for each goroutine.
+If your program uses a large number of concurrent goroutines, make sure to check whether the overhead is within the acceptable range for your use case.
+
+As always, and especially with Profiling in Go being an alpha feature, feedback is welcome on [Discord](https://discord.com/channels/621778831602221064/621786587939864586) or [GitHub](https://github.com/getsentry/sentry-go/issues/630).
+
+</PlatformSection>
 
 <PlatformSection supported={["ruby"]}>
 
