@@ -121,7 +121,7 @@ transaction.finish() // Mark the transaction as finished and send it to Sentry
 
 Check out [the documentation](https://docs.sentry.io/platforms/apple/performance/instrumentation/) to learn more about the API and automatic instrumentations.
 
-> Want to play with some new features? Try out our experimental features for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation), [Screenshots](https://docs.sentry.io/platforms/apple/guides/ios/enriching-events/screenshots/), [Swift Async Stacktraces](https://docs.sentry.io/platforms/apple/guides/ios/#have-your-swift-concurrency-stack-traces-stitched-together). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+> Want to play with some new features? Try out our experimental features for [View Hierarchy](/platforms/apple/guides/ios/enriching-events/viewhierarchy/), [Time to Full Display (TTFD)](/platforms/apple/guides/ios/performance/instrumentation/automatic-instrumentation/#time-to-full-display), [MetricKit](/platforms/apple/guides/watchos/configuration/metric-kit/), [Prewarmed App Start Tracing](https://docs.sentry.io/platforms/apple/performance/instrumentation/automatic-instrumentation/#prewarmed-app-start-tracing), and [Swift Async Stacktraces](/platforms/apple/guides/ios/#stitch-together-swift-concurrency-stack-traces). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
 >
 > Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
 
@@ -132,10 +132,10 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
-    options.enablePreWarmedAppStartTracing = true
-    options.attachScreenshot = true
     options.attachViewHierarchy = true
+    options.enablePreWarmedAppStartTracing = true
     options.enableMetricKit = true
+    options.enableTimeToFullDisplay = true
     options.swiftAsyncStacktraces = true
 }
 ```
