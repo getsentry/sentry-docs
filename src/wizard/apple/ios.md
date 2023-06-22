@@ -132,10 +132,10 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
-    options.enablePreWarmedAppStartTracing = true
-    options.attachScreenshot = true
     options.attachViewHierarchy = true
+    options.enablePreWarmedAppStartTracing = true
     options.enableMetricKit = true
+    options.enableTimeToFullDisplay = true
     options.swiftAsyncStacktraces = true
 }
 ```
