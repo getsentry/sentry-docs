@@ -68,6 +68,35 @@ Now tracing information is propagated to the project running at `https://example
 
 The two services are now connected with your custom distributed tracing implementation.
 
+### Inject Tracing Information into rendered HTML
+
+If you want to propagate tracing information into Javascript that is running in your rendered HTML you have to inject HTML `meta` tags into your rendered HTML:
+
+```python
+import sentry_sdk
+from my_project import render
+
+meta = ""
+meta += '<meta name="sentry-trace" content="%s">' % sentry_sdk.get_traceparent()
+meta += '<meta name="baggage" content="%s">' % sentry_sdk.get_baggage()
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        {additional_meta}
+    </head>
+    <body>
+        <p>This is a website.</p>
+    </body>
+</html>
+""".format(additional_meta=meta)
+
+render(html)
+
+```
+
 ## Verification
 
 If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so distributed tracing is working.
