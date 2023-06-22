@@ -163,6 +163,34 @@ Unresponsive UI and animation hitches annoy users and degrade the user experienc
 
 Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
 
+### Trace Propagation Targets
+
+Sentry adds an extra header with the trace id in the outgoing HTTP requests to continue the transaction in the backend.
+You can set the `tracePropagationTarget` option to filter which requests Sentry adds the extra header to.
+For example, to ensure that only your app backend will receive the trace id.
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    final List<String> targets = new ArrayList<>();
+    targets.add("myapp.com");
+    options.setTracePropagationTargets(targets);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setTracePropagationTargets(listOf("myapp.com"))
+}
+```
+
+The option may contain a list of Strings (including regular expressions) which are matched against the URLs of outgoing requests. If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request. String entries do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
+If `tracePropagationTargets` is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+
 #### AndroidX Support
 
 Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
