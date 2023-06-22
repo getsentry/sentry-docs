@@ -4,6 +4,40 @@
 </application>
 ```
 
+### Customize View Hierarchy Capturing
+
+On Android capturing view hierarchy can be an resource-intense operation, thus capturing is limited to one view hierarchy every 2 seconds using a debouncing mechanism. This behavior can be overruled by supplying a `BeforeCaptureCallback` for view hierarchies in the `SentryAndroidOptions`.
+
+The `BeforeCaptureCallback` also allows you to customize the behavior based on event data, giving you full control over when a view hierarchy should be captured and when not.
+
+For example, view hierarchy capturing can be limited to only crashed events:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setBeforeViewHierarchyCaptureCallback((event, hint, debounce) -> {
+        if (event.isCrashed()) {
+            return true;
+        }
+        return false;
+    });
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setBeforeViewHierarchyCaptureCallback { event, hint, debounce ->
+        if (event.isCrashed) {
+            return@setBeforeViewHierarchyCaptureCallback true
+        }
+        return@setBeforeViewHierarchyCaptureCallback false
+    }
+}
+```
+
 ### Jetpack Compose Support using the Sentry Kotlin Compiler Plugin
 
 <Note>
