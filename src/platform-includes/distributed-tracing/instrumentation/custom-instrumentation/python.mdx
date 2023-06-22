@@ -41,6 +41,24 @@ In this example `get_incoming_headers_as_dict()` returns a dictorary that contai
 
 Sentry's `continue_from_trace()` will extract the given headers and try to find the `sentry-trace` and `baggage` headers and it will store them in memory for later use.
 
+### Performance Monitoring in Combination With Distributed Tracing
+
+If you want to add new transactions and spans to the trace described in the incoming headers you can do this. `continue_from_trace()` returns a transaction object that you can use to start a custom transaction:
+
+```python
+import sentry_sdk
+from my_project import get_incoming_headers_as_dict, do_some_heavy_lifting
+
+headers = get_incoming_headers_as_dict()
+
+transaction = sentry_sdk.continue_trace(headers)
+
+with start_transaction(transaction=transaction) as transaction:
+    do_some_heavy_lifting()
+```
+
+See the [Performance Monitoring Documentation](/performance/instrumentation/custom-instrumentation/) to learn what you can do with transactions.
+
 ## Inject Tracing Information to Outgoing Requests
 
 On outgoing requests you have to add the two headers `sentry-trace` and `baggage` that you extracted and stored earlier.
