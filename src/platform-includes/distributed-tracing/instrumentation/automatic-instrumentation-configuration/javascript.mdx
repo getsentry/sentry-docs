@@ -1,0 +1,24 @@
+## Configuration
+
+By default trace information (`sentry-trace` and `baggage` headers) will be added to outgoing XHR/fetch requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `/api/v1/users`).
+
+If you want to configure to what URLs the trace information should be added you can add an `tracePropagationTargets` option:
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: [
+    new Sentry.BrowserTracing({
+      tracePropagationTargets: ["localhost", /^https:\/\/api\.example\.com/],
+    }),
+  ],
+});
+```
+
+In this example trace information will be added to outgoing XHR/fetch requests to `localhost` and URLs starting with `https://api.example.com`.
+
+See <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#tracepropagationtargets">tracePropagationTargets documentation</PlatformLink> to learn more.
+
+### CORS headers
+
+If your frontend project does XHR/fetch requests to your backend you'll need to configure your backend [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` and `baggage` headers. The configuration of your servers response headers might look like `"Access-Control-Allow-Headers: sentry-trace"` and `"Access-Control-Allow-Headers: baggage"`, but the configuration depends on your setup. If you don't allow the `sentry-trace` and `baggage` headers, the request might be blocked.
