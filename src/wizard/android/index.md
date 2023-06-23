@@ -5,44 +5,22 @@ support_level: production
 type: framework
 ---
 
-## Integrating the SDK
+## Install
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
-
-### Auto-Installation and Source Context With the Sentry Android Gradle Plugin
-
-The Sentry Android Gradle plugin will install the Android SDK and integrations relevant to your application.
-It can also upload your source code to Sentry so it can be shown as part of the stack traces.
-
-To install the plugin, please update your app's `build.gradle` file as follows:
+Add the [Sentry Android Gradle plugin](/platforms/android/gradle/) to your `app` module:
 
 ```groovy {filename:app/build.gradle}
-buildscript {
-  repositories {
-    mavenCentral()
-  }
-}
 plugins {
+  id "com.android.application" // should be in the same module
   id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
-}
-
-sentry {
-  // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
-  // This enables source context, allowing you to see your source
-  // code as part of your stack traces in Sentry.
-  includeSourceContext = true
-
-  org = "___ORG_SLUG___"
-  projectName = "___PROJECT_SLUG___"
-  authToken = "your-sentry-auth-token"
 }
 ```
 
-The plugin version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}` will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '6.21.0') }}`) to your app.
+The plugin will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '6.21.0') }}`) to your app.
 
-## Connecting the SDK to Sentry
+## Configure
 
-Configuration is done via the application `AndroidManifest.xml`. The code snippet below includes the DSN, which tells the SDK to send the events to this project.
+Configuration is done via the application `AndroidManifest.xml`. Under the hood Sentry uses a `ContentProvider` to initalize the SDK based on the values provided below. This way the SDK can capture important crashes and metrics right from the app start.
 
 Here's an example config which should get you started:
 
@@ -65,88 +43,27 @@ Here's an example config which should get you started:
 </application>
 ```
 
-Under the hood Sentry uses a `ContentProvider` to initalize the SDK based on the values provided above. This way the SDK can capture important crashes and metrics right from the app start.
+## Verify
 
-Additional options can be found [on our dedicated options page](https://docs.sentry.io/platforms/android/configuration/options/).
-
-If you want to customize the SDK init behaviour, you can still use the [Manual Initialization method](https://docs.sentry.io/platforms/android/configuration/manual-init/).
-
-## Verifying Your Setup
-
-Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
-
-In **Java**:
-
-```java
-import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
-
-import io.sentry.Sentry;
-
-public class MyActivity extends AppCompatActivity {
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    Sentry.captureMessage("testing SDK setup");
-  }
-}
-```
-
-In **Kotlin**:
+This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected. You can add it to your app's `MainActivity`.
 
 ```kotlin
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-
-import io.sentry.Sentry
-
-class MyActivity : AppCompatActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    Sentry.captureMessage("testing SDK setup")
+val breakWorld = Button(this).apply {
+  text = "Break the world"
+  setOnClickListener {
+    throw RuntimeException("Break the world")
   }
 }
+
+addContentView(breakWorld, ViewGroup.LayoutParams(
+  ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 ```
 
-## Performance Monitoring
+---
 
-Set `io.sentry.traces.sample-rate` to 1.0 to capture 100% of transactions for performance monitoring.
+## Next Steps
 
-We recommend adjusting this value in production.
-
-```xml {filename:AndroidManifest.xml}
-<application>
-    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-</application>
-```
-
-You can measure the performance of your code by capturing transactions and spans.
-
-```kotlin
-import io.sentry.Sentry
-
-// Transaction can be started by providing, at minimum, the name and the operation
-val transaction = Sentry.startTransaction("test-transaction-name", "test-transaction-operation")
-
-// Transactions can have child spans (and those spans can have child spans as well)
-val span = transaction.startChild("test-child-operation")
-
-// ...
-// (Perform the operation represented by the span/transaction)
-// ...
-
-
-span.finish() // Mark the span as finished
-transaction.finish() // Mark the transaction as finished and send it to Sentry
-```
-
-Check out [the documentation](https://docs.sentry.io/platforms/android/performance/instrumentation/) to learn more about the API and automatic instrumentations.
-
-### Next Steps
-
-Using ProGuard/DexGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
-
-Using Jetpack Compose? Try out our new [Jetpack Compose](https://docs.sentry.io/platforms/android/configuration/integrations/jetpack-compose/) integration. It automatically adds a breadcrumb and starts a transaction for each navigation or user interaction event.
-
-[The documentation](https://docs.sentry.io/platforms/android/configuration/) has more information about the many configurations and API available in Sentry's SDK.
-
-> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-java/issues/new?assignees=&labels=Platform%3A+Android%2CType%3A+Bug&template=bug_report_android.yml).
+- [Manual Configuration](/platforms/android/configuration/manual-init/): Customize the SDK initialization behavior.
+- [ProGuard/R8](/platforms/android/gradle/#proguardr8--dexguard): Deobfuscate and get readable stacktraces in your Sentry errors.
+- [Jetpack Compose](/platforms/android/configuration/integrations/jetpack-compose/): Learn about our first class integration with Jetpack Compose.
+- [Source Context](/platforms/android/source-context/): See your source code as part of your stacktraces in Sentry.
