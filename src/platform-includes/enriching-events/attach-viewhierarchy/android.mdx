@@ -14,30 +14,48 @@ Requires SDK version `6.24.0` or higher.
 
 Because capturing view hierarchy can be a resource-intensive operation on Android, it's limited to one view hierarchy every 2 seconds using a debouncing mechanism. This behavior can be overruled if you supply a `BeforeCaptureCallback` for view hierarchies in the `SentryAndroidOptions`.
 
-The `BeforeCaptureCallback` also allows you to customize behavior based on event data so you can decide when to capture view hierarchy and when not to. For example, you can decide to only capture view hierarchy for crashed events:
+The `BeforeCaptureCallback` also allows you to customize behavior based on event data so you can decide when to capture view hierarchy and when not to. For example, you can decide to only capture view hierarchy for crashed and fatal events:
 
 ```java
+import io.sentry.SentryLevel;
 import io.sentry.android.core.SentryAndroid;
 
 SentryAndroid.init(this, options -> {
     options.setBeforeViewHierarchyCaptureCallback((event, hint, debounce) -> {
+        // always capture crashed events
         if (event.isCrashed()) {
             return true;
         }
-        return false;
+
+        // if debounce is active, skip capturing
+        if (debounce) {
+            return false;
+        } else {
+            // also capture fatal events
+            return event.getLevel() == SentryLevel.FATAL;
+        }
     });
 });
 ```
 
 ```kotlin
+import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
 
 SentryAndroid.init(this) { options ->
     options.setBeforeViewHierarchyCaptureCallback { event, hint, debounce ->
+        // always capture crashed events
         if (event.isCrashed) {
-            return@setBeforeViewHierarchyCaptureCallback true
+            return@setBeforeScreenshotCaptureCallback true
         }
-        return@setBeforeViewHierarchyCaptureCallback false
+
+        // if debounce is active, skip capturing
+        if (debounce) {
+            return@setBeforeScreenshotCaptureCallback false
+        } else {
+            // also capture fatal events
+            return@setBeforeScreenshotCaptureCallback event.level == SentryLevel.FATAL
+        }
     }
 }
 ```
