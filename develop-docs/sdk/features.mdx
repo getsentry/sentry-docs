@@ -264,6 +264,8 @@ Add a breadcrumb for each outgoing HTTP request after the request finishes:
   - `url` - The URL used in the HTTP request
   - `method` - uppercase HTTP method, i.e: GET, HEAD
   - `status_code` - Numeric status code such as `200` or `404`
+  - `http.query` - The query part of the URL
+  - `http.fragment` - The fragment part of the URL
   - `request_body_size` Size in bytes
   - `response_body_size` Size in bytes
 
@@ -275,6 +277,7 @@ If Performance Monitoring is both supported by the SDK and enabled in the client
 - HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/performance/dynamic-sampling-context/#baggage) to support [dynamic sampling](/sdk/performance/dynamic-sampling-context/)
 - span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/event-payloads/span/))
 - when network error occurs, span status must be set to `internal_error`
+- span data must follow the [Span Data Conventions](/sdk/performance/span-data-conventions/)
 
 ### HTTP Client Errors
 
@@ -289,6 +292,7 @@ The HTTP Client integration should have 3 configuration options:
   - If the language has a `Range` type, it should be used instead of `HttpStatusCodeRange`.
 - `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/performance/#tracepropagationtargets">tracePropagationTargets</Link>.
   - The SDK will only capture HTTP Client errors if the HTTP Request URL is a match for any of the `failedRequestsTargets`.
+-  sensitive `headers` should only be set if `sendDefaultPii` is enabled, e.g. `Cookie` and `Set-Cookie`.
 
 The HTTP Client integration should capture error events with the following properties:
 
@@ -326,6 +330,71 @@ When capturing error events, pass the original `Request` and `Response` objects 
 Automatically captured HTTP Client error events can be searchable and alertable with the `http.url` and `http.status_code` properties, learn more about it in the [Searchable Properties](https://docs.sentry.io/product/sentry-basics/search/searchable-properties/) docs.
 
 As an example, see the [OkHTTP Client integration](https://github.com/getsentry/sentry-java/pull/2287) for Android.
+
+## GraphQL Client Integrations
+
+The GraphQL Client integrations should match the guidelines for [HTTP Client Integrations](/sdk/features/#http-client-integrations) with a few differences:
+
+The `failedRequestStatusCodes` parameter does not exist because GraphQL errors are not HTTP errors, so that the request can be errored even though the HTTP status code of the response is successful.
+
+Instead, the error has to be captured if the GraphQL response contains an `errors` array. This can be done by regexing the response body, e.g.:
+
+```kotlin
+val regex = "(?i)\"errors\"\\s*:\\s*\\[".toRegex()
+
+// [body] is the stringified GraphQL response body
+if (regex.containsMatchIn(body)) {
+    // captures the error
+}
+```
+
+Additional fields for breadcrumbs:
+
+- data (all fields are optional but recommended):
+  - `operation_name` - The GraphQL operation name
+  - `operation_type` - The GraphQL operation type, i.e: `query`, `mutation`, `subscription`
+  - `operation_id` - The GraphQL operation ID
+
+Required fields for the Request interface:
+
+```json
+{
+  "request": {
+    "api_target": "graphql",
+    "data": {
+      "foo": "bar"
+    }
+  }
+}
+```
+
+The `data` field is a JSON object that contains the GraphQL request payload.
+
+Required fields for the Response interface:
+
+```json
+{
+  "contexts": {
+    "response": {
+      "data": {
+        "foo": "bar"
+      }
+    }
+  }
+}
+```
+
+The `data` field is a JSON object that contains the GraphQL response payload.
+
+Required fields for the Event interface:
+
+The `fingerprints` field should be set to `["$operationName", "$operationType", "$statusCode"]`.
+
+```json
+{
+  "fingerprints": ["$operationName", "$operationType", "$statusCode"]
+}
+```
 
 ## Attaching Request Body in Server SDKs
 
