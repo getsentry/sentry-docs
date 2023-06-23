@@ -3,3 +3,57 @@
   <meta-data android:name="io.sentry.attach-screenshot" android:value="true" />
 </application>
 ```
+
+### Customize Screenshot Capturing
+
+<Note>
+
+Requires SDK version `6.24.0` or higher.
+
+</Note>
+
+Because capturing screenshots can be a resource-intensive operation on Android, it's limited to one screenshot every 2 seconds using a debouncing mechanism. This behavior can be overruled if you supply a `BeforeCaptureCallback` for screenshots in the `SentryAndroidOptions`.
+
+The `BeforeCaptureCallback` also allows you to customize the behavior based on event data, so you can decide when to capture a screenshot and when not to. For example, you can decide to only capture screenshots of crashed and fatal events:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setBeforeScreenshotCaptureCallback((event, hint, debounce) -> {
+        // always capture crashed events
+        if (event.isCrashed()) {
+            return true;
+        }
+
+        // if debounce is active, skip capturing
+        if (debounce) {
+            return false;
+        } else {
+            // also capture fatal events
+            return event.getLevel() == SentryLevel.FATAL;
+        }
+    });
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setBeforeScreenshotCaptureCallback { event, hint, debounce ->
+        // always capture crashed events
+        if (event.isCrashed) {
+            return@setBeforeScreenshotCaptureCallback true
+        }
+
+        // if debounce is active, skip capturing
+        if (debounce) {
+            return@setBeforeScreenshotCaptureCallback false
+        } else {
+            // also capture fatal events
+            return@setBeforeScreenshotCaptureCallback event.level == SentryLevel.FATAL
+        }
+    }
+}
+```
