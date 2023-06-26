@@ -4,7 +4,9 @@ sidebar_order: 3
 description: "Learn how to turn off or specify ANR."
 ---
 
-# ANR implementation details
+Application Not Responding (ANR) errors are triggered when the main UI thread of an application is blocked for more than five seconds. The Android SDK reports ANR errors as Sentry events. In addition, Sentry calculates [ANR rate](/platforms/android/performance/instrumentation/performance-metrics/#application-not-responding-anr-rate) based on these events and user sessions.
+
+## ANR implementation details
 
 The Android SDK uses different implementations to detect ANRs, depending on what version of Android the device is running:
 
@@ -29,7 +31,7 @@ Both ANR detection implementations are controlled by the same flag:
 </application>
 ```
 
-## Watchdog (v1)
+### Watchdog (v1)
 
 Whenever the main UI thread of the application is blocked for more than five seconds, the SDK will report the problem to the server.
 
@@ -49,7 +51,7 @@ You can also specify how long the thread should be blocked before the ANR is rep
 </application>
 ```
 
-## ApplicationExitInfo (v2)
+### ApplicationExitInfo (v2)
 
 This approach reads the [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) API on the next app launch
 and asynchronously sends ANR events to Sentry for each ANR in the history, enriching only the latest one with breadcrumbs, contexts, tags, etc.
@@ -64,7 +66,7 @@ If [ApplicationExitInfo#getTraceInputStream](<https://developer.android.com/refe
 
 ![ANR](app-not-respond.png)
 
-### Historical ANRs
+#### Historical ANRs
 
 By default, the SDK only reports and enriches the latest ANR and it's the only one counted towards the ANR rate. However, there's also a `setReportHistoricalAnrs` option available in `SentryOptions`, which enables the SDK to report all ANRs from the [getHistoricalExitReasons](<https://developer.android.com/reference/android/app/ActivityManager?hl=en#getHistoricalProcessExitReasons(java.lang.String,%20int,%20int)>) list:
 
@@ -80,13 +82,11 @@ SentryAndroid.init(context) { options ->
 }
 ```
 
-This option is useful when updating the SDK to the version where the new ANR implementation has been introduced, to report
-all ANRs happened prior to the SDK update. After that, the SDK will always pick up the latest ANR from the historical exit
-reasons list on next app restart, so there will be no historical ANRs to report.
+This option is useful after updating the SDK to the version where the new ANR implementation was introduced, in order to report all ANRs that took place prior to the SDK update. Other than that, the SDK will always pick up the latest ANR from the historical exit reasons list on next app restart, and there won't be any historical ANRs to report.
 
 The integration reports ANR events with `mechanism:HistoricalAppExitInfo`.
 
-### Attaching Thread Dump
+#### Attaching Thread Dump
 
 The SDK makes it possible to send the ANR thread dump from [ApplicationExitInfo#getTraceInputStream](<https://developer.android.com/reference/android/app/ApplicationExitInfo#getTraceInputStream()>) as an attachment. This is useful for performing deeper investigations using all available information from the OS (in addition to the SDK parsing the thread dump into threads with stack traces):
 
@@ -104,23 +104,23 @@ SentryAndroid.init(context) { options ->
 
 ![ANR Thread Dump](app-not-respond-thread-dump.png)
 
-# ANR Root Cause Analysis
+## ANR Root Cause Analysis
 
 Sentry performs various root cause analyses to give you insights about why certain ANRs might appear. If a potential root cause is detected, it'll be displayed in a new section below the ANR stacktrace. Sentry can detect the following root causes:
 
-## Performance Issues
+### Performance Issues
 
 If an ANR is connected to one of the Performance Issues detected by Sentry (for example, [File I/O on Main Thread](/product/issues/issue-details/performance-issues/file-main-thread-io/) or [DB on Main Thread](/product/issues/issue-details/performance-issues/db-main-thread-io/)), the offending span will be linked to the ANR event, showing you exactly which slow operation is to blame.
 
 ![ANR Root Cause File I/O](anr-rootcause-fileio.png)
 
-## Common Patterns
+### Common Patterns
 
 This detector looks at the stacktrace of an ANR and tries to identify common pitfalls, such as accessing files, assets, or heavy resources on the main thread. If an offending stack frame is found, it'll be highlighted in the stacktrace with some information about how to prevent this type of ANR:
 
 ![ANR Root Cause Suspect Frame](anr-rootcause-frame.png)
 
-## Deadlock Detection
+### Deadlock Detection
 
 Sentry will try to detect deadlocks and point out potential causes. If, for example, the main thread is blocked by waiting on a lock object that's held by another thread, the suspect frame that's waiting on the lock will be highlighted. The stacktrace of the offending thread that's holding the lock, as well as the offending frame of that thread will also be shown:
 
