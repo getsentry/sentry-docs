@@ -67,7 +67,7 @@ struct SwiftUIApp: App {
 
 ## Verify
 
-This snippet contains an intentional error and can be used as a test to make sure that everything's working as expected. You can add it to your main `ViewController`.
+This snippet contains an intentional error you can use to test that errors are uploaded to Sentry correctly. You can add it to your main `ViewController`.
 
 ```swift
 let button = UIButton(type: .roundedRect)
