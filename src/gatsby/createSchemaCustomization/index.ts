@@ -51,6 +51,13 @@ function main({actions, schema}) {
       slug: String!
       legacy: Boolean
     }
+
+    type PiiFieldPath implements Node {
+      path: String
+      additional_properties: Boolean
+    }
+
+
     `,
     schema.buildObjectType({
       name: 'Frontmatter',

@@ -51,6 +51,26 @@ Additionally, Sentry attempts to [scrub](/product/data-management-settings/scrub
 
 More details about this feature can be found in the [configuration page](/platforms/javascript/session-replay/configuration/#network-details).
 
+## Custom Scrubbing
+
+The `beforeAddRecordingEvent` has been added starting with SDK version 7.53.0. It allows you to modify, scrub the recordings to remove PII, or ignore recording events before they leave the browser. These events include console logs, network requests, and response data.
+
+```javascript
+new Sentry.Replay({
+  beforeAddRecordingEvent: (event) => {
+    // Filter out specific events
+    if (event.data.tag === "foo") {
+      return null;
+    }
+
+    // Remember to return an event if you want to keep it!
+    return event;
+  },
+});
+```
+
+Note that we also have [server-side PII scrubbing](/product/data-management-settings/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
+
 ### Deprecated Options
 
 Note that the privacy API prior to version 7.35.0 has been deprecated and replaced with the options above. Please see the [Replay migration guide](https://github.com/getsentry/sentry-javascript/blob/master/packages/replay/MIGRATION.md#upgrading-replay-from-7340-to-7350---6645) for further information.

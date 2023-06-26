@@ -17,7 +17,7 @@ export function NavbarPlatformDropdown() {
               platform={currentPlatform.key}
               size={16}
               style={{marginRight: '0.5rem'}}
-              format="lg"
+              format="sm"
             />
             {currentPlatform.title}
           </Fragment>
@@ -39,7 +39,7 @@ export function NavbarPlatformDropdown() {
             platform={platform.key}
             size={16}
             style={{marginRight: '0.5rem'}}
-            format="lg"
+            format="sm"
           />
           {platform.title}
         </SmartLink>

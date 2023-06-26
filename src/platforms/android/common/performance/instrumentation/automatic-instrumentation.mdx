@@ -58,7 +58,7 @@ span?.finish()
 
 In case that the user left this Activity before you've finished the transaction manually, the SDK finishes the transaction automatically when the `onDestroy` method is called.
 
-Transactions are always bound to the Scope automatically if there's none set. Because of that, you may create spans using manual instrumentation, and those spans will be automatically associated with the Activity's running transaction.
+Transactions are always bound to the Scope automatically if there's none set. Because of that, you may create spans using custom instrumentation, and those spans will be automatically associated with the Activity's running transaction.
 
 ```java
 import java.lang.Exception;
@@ -162,6 +162,33 @@ Supported on Android OS version `7.0` and above.
 Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are _slow frames_ and _frozen frames_. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the [Android's Activity](/platforms/android/performance/instrumentation/automatic-instrumentation/#androids-activity-instrumentation) transactions.
 
 Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
+
+### Trace Propagation Targets
+
+Sentry adds an extra header with the trace id in the outgoing HTTP requests to continue the transaction in the backend.
+You can set the `tracePropagationTarget` option to filter which requests Sentry adds the extra header to.
+For example, to ensure that only your app backend will receive the trace id.
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    final List<String> targets = new ArrayList<>();
+    targets.add("myapp.com");
+    options.setTracePropagationTargets(targets);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setTracePropagationTargets(listOf("myapp.com"))
+}
+```
+
+The option may contain a list of Strings (including regular expressions) which are matched against the URLs of outgoing requests. If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request. String entries do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
+If `tracePropagationTargets` is not provided, trace data is attached to every outgoing request from the instrumented client.
 
 #### AndroidX Support
 
@@ -329,7 +356,7 @@ span?.finish()
 
 If the host `Activity` transitions into a non-interactive state (for example, `onPause`), the UI transaction will be scheduled to finish automatically (as soon as all of its child spans are finished).
 
-Transactions are always bound to the `Scope` automatically if there's none set. Because of that, you can create spans using manual instrumentation, and those spans will be automatically associated with the running UI transaction.
+Transactions are always bound to the `Scope` automatically if there's none set. Because of that, you can create spans using custom instrumentation, and those spans will be automatically associated with the running UI transaction.
 
 ```java
 import java.lang.Exception;
