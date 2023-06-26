@@ -16,7 +16,7 @@ plugins {
 }
 ```
 
-The plugin will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '6.21.0') }}`) to your app.
+The plugin will automatically add the Sentry Android SDK to your app.
 
 ## Configure
 
