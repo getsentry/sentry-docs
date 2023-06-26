@@ -135,7 +135,7 @@ SentrySDK.start { options in
     options.attachViewHierarchy = true
     options.enablePreWarmedAppStartTracing = true
     options.enableMetricKit = true
-    options.enableTimeToFullDisplay = true
+    options.enableTimeToFullDisplayTracing = true
     options.swiftAsyncStacktraces = true
 }
 ```
