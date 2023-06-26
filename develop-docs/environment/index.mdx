@@ -477,7 +477,7 @@ pip install --no-cache-dir uwsgi
 
 ---
 
-**Problem:** You see something like `Error: No such container: sentry_postgres`
+**Problem:** You see something like `Error: No such container: sentry_postgres`, or you don't see `sentry_snuba`, `sentry_postgres`, `sentry_clickhouse`, and `sentry_redis` listed under `COMMAND NAMES`.
 
 **Solution:** Review the [bootstrap services](/environment/#bootstrap-services)
 section or spin up Docker services with:
@@ -496,8 +496,21 @@ sentry devservices up
 docker ps
 ```
 
-If you don't see `sentry_snuba`, `sentry_postgres`, `sentry_clickhouse`, and `sentry_redis` listed under `COMMAND NAMES`, you need to start up services with:
+--
+
+**Problem:** If you see the following error about Kafka
 
 ```shell
-sentry devservices up
+%3|1687815512.814|FAIL|rdkafka#producer-1| [thrd:127.0.0.1:9092/bootstrap]: 127.0.0.1:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+```
+
+**Solution:** You need to start up additional services with:
+
+```shell
+# In the file ~/.sentry/sentry.conf.py
+# Insert this line at the bottom
+SENTRY_EVENTSTREAM = 'sentry.eventstream.kafka.KafkaEventStream'
+
+# You should see Kafka and Zookeeper
+sentry devservices down && sentry devservices up
 ```
