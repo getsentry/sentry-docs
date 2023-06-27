@@ -60,12 +60,12 @@ This helps Relay to know what kind of data it receives and this helps with scrub
 
   The description of spans with `op` set to `http` must follow the format `HTTP_METHOD scheme://host/path` (ex. `GET https://example.com/foo`).
   If an authority is present in the URL (`https://username:password@example.com`), the authority must be replaced with a placeholder regardless of `sendDefaultPii`, leading to a new URL of `https://[Filtered]:[Filtered]@example.com`.
-  If query strings or fragments are present in the URL, both are set into the data attribute of the span.
+  If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both are set into the data attribute of the span.
 
   ```js
   span.setData({
     "http.query": url.getQuery(),
-    "http.fragment": url.getFragment(),
+    "http.fragment": uri.getFragment(),
   });
   ```
 
@@ -83,7 +83,7 @@ https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions
 ### Breadcrumbs
 
 If the `message` in a breadcrumb contains an URL it should be formatted the same way as in `http` spans (see above).
-The query and the fragment should also be set in the data attribute like with `http` spans.
+If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both should also be set in the data attribute like with `http` spans.
 
 ```js
 getCurrentHub().addBreadcrumb({
