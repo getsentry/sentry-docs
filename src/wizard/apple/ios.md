@@ -15,7 +15,7 @@ https://github.com/getsentry/sentry-cocoa.git
 
 Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
 
-````swift {tabTitle:Swift}
+```swift {tabTitle:Swift}
 .package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
 ```
 
@@ -42,7 +42,7 @@ func application(_ application: UIApplication,
 
     return true
 }
-````
+```
 
 When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
