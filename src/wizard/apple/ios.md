@@ -17,7 +17,7 @@ Alternatively, when your project uses a `Package.swift` file to manage dependenc
 
 ````swift {tabTitle:Swift}
 .package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
-```:
+```
 
 ## Configure
 
