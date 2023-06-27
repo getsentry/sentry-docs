@@ -7,18 +7,17 @@ type: language
 
 ## Install
 
-We recommend installing the SDK with CocoaPods, but we also support [alternate installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your Podfile:
+We recommend installing the SDK with Swift Package Manager (SPM), but we also support [alternate installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project using SPM, open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the Git repo url in the top right search field:
 
-```ruby
-platform :ios, '11.0'
-use_frameworks! # This is important
-
-target 'YourApp' do
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{@inject packages.version('sentry.cocoa') }}'
-end
+```text
+https://github.com/getsentry/sentry-cocoa.git
 ```
 
-Afterwards run `pod install`.
+Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
+
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+```:
 
 ## Configure
 
@@ -106,7 +105,7 @@ SentrySDK.start { options in
 
 ## Next Steps
 
-- [SPM/Carthage](/platforms/apple/install/): Learn about integrating Sentry into your project using Swift Package Manager or Carthage.
+- [CocoaPods/Carthage](/platforms/apple/install/): Learn about integrating Sentry into your project using CocoaPods or Carthage.
 - [Debug Symbols](/platforms/apple/dsym/): Symbolicate and get readable stacktraces in your Sentry errors.
 - [SwiftUI](/platforms/apple/performance/instrumentation/swiftui-instrumentation/): Learn about our first class integration with SwiftUI.
 - [Profiling](/platforms/apple/profiling/): Collect and analyze performance profiles from real user devices in production.
