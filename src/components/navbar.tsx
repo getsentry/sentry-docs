@@ -37,6 +37,12 @@ export function Navbar({platforms}: Props): JSX.Element {
                 href={getSandboxURL().toString()}
                 target="_blank"
               >
+                Changelog
+             </Nav.Link>
+            </Nav.Item>
+          </SandboxOnly>
+          <Nav.Item>
+            <Nav.Link href="https://changelog.getsentry.com/">
                 Sandbox
               </Nav.Link>
             </Nav.Item>
