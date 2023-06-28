@@ -6,12 +6,10 @@ If you are using one of the frameworks listed above, see the <PlatformLink to="/
 
 </Alert>
 
-Please read the note above. If you have a vanilla Python project or use an unsupported framework you can still add distributed tracing to your project but need to it "by hand".
+To add distributed tracing to a vanilla Python project or a project with an unsupported framework, you must:
 
-Two things need to be done for distributed tracing to work:
-
-- When receiving incoming requests, extract and store incoming tracing information.
-- When doing outgoing requests, inject tracing information to the outgoing request.
+- Extract and store incoming tracing information when receiving incoming requests.
+- Inject tracing information to the outgoing request when sending outgoing requests.
 
 To learn more, see our <PlatformLink to="/distributed-tracing/">Distributed Tracing</PlatformLink> docs.
 
@@ -37,11 +35,13 @@ sentry_sdk.continue_trace(headers)
 
 In this example, `get_incoming_headers_as_dict()` returns a dictionary that contains tracing information. This dictionary would contain information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
 
-Sentry's `continue_from_trace()` will extract the given headers and try to find the `sentry-trace` and `baggage` headers and it will store them in memory for later use.
+Sentry's `continue_trace()` function will extract the given headers, try to find the`sentry-trace` and `baggage` headers, and store them in memory for later use.
 
 ### Performance Monitoring in Combination With Distributed Tracing
 
-If you want to add new transactions and spans to the trace described in the incoming headers you can do this. `continue_from_trace()` returns a transaction object that you can use to start a custom transaction:
+To use distributed tracing to measure the performance of your code, you can add custom transactions and spans to incoming traces.
+
+Here's an example of how to use the transaction object returned from `continue_trace` to start a custom transaction:
 
 ```python
 import sentry_sdk
@@ -63,7 +63,7 @@ For distributed tracing to work, the two headers that you extracted and stored, 
 
 If you are sending outgoing HTTP requests with [Requests](https://requests.readthedocs.io/en/latest/), [AIOHTTP](https://docs.aiohttp.org/en/stable/), the low level [http.client](https://docs.python.org/3/library/http.client.html), or [httplib](https://docs.python.org/2/library/httplib.html) on Python 2, this tracing information is automatically added to outgoing requests.
 
-If you are do outgoing requests in another way you can generate the tracing information like follows:
+If you use a different library or send requests in another way you can generate this tracing information with the Sentry SDK's `get_traceparent` and `get_baggage` functions. Here's an example:
 
 ```python
 import sentry_sdk
