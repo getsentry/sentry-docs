@@ -17,6 +17,7 @@ limit<sub>escalating</sub> = max(limit<sub>spike</sub> , limit<sub>bursty</sub>)
 In most cases, the spike limit is applied to issues with a relatively stable event volume, while the bursty limit is applied to issues with regular bursts in volume (such as cron or Airflow jobs and task runners).
 
 ### Spike Limit Calculation
+
 The spike limit calculation establishes a baseline for what’s considered a significant increase in volume for an issue. It takes the average hourly volume (weighted by day-of-week) and variance over the previous week to calculate the limit:
 
 limit<sub>spike</sub> = avg<sub>weighted</sub> + (min(max((avg + (5 \* std))/avg, 5),8) \* avg)
@@ -28,6 +29,7 @@ limit<sub>spike</sub> = avg<sub>weighted</sub> + (min(max((avg + (5 \* std))/avg
 The chart above shows the event volumes for an actual Sentry issue that was escalating. The orange line shows the volume from the past week, which is then used to generate the spike threshold for the next week, represented by the green line. The blue line shows the next week’s volume, which crosses the threshold around hour 148 (day 7). At this point, the issue is flagged as escalating.
 
 ### Bursty Limit Calculation
+
 Some issues, such as cron jobs, purposefully have a high volume of events in a short period of time. If we used the spike limit calculation, it could incorrectly flag these types of issues as escalating. To account for this, the algorithm uses a bursty limit calculation, which is based on the maximum hourly volume and the coefficient of variation (ratio of standard deviation over the average) for the previous week:
 
 limit<sub>bursty</sub> = max<sub>timeseries</sub> \* min(max(2, 5e<sup>-0.65cv</sup>), 5)
