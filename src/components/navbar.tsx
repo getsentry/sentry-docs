@@ -30,6 +30,9 @@ export function Navbar({platforms}: Props): JSX.Element {
               API
             </SmartLink>
           </Nav.Item>
+          <Nav.Item>
+            <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
+          </Nav.Item>
           <SandboxOnly>
             <Nav.Item>
               <Nav.Link
