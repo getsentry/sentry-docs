@@ -1,10 +1,8 @@
 <Alert title="Note" level="note">
 
-Distributed tracing **works out of the box** for the following frameworks: <a href="/platforms/python/guides/django/distributed-tracing/instrumentation/automatic-instrumentation/">Django</a>, <a href="/platforms/python/guides/fastapi/distributed-tracing/instrumentation/automatic-instrumentation/">FastAPI</a>, <a href="/platforms/python/guides/flask/distributed-tracing/instrumentation/automatic-instrumentation/">Flask</a>, <a href="/platforms/python/guides/bottle/distributed-tracing/instrumentation/automatic-instrumentation/">Bottle</a>, <a href="/platforms/python/guides/falcon/distributed-tracing/instrumentation/automatic-instrumentation/">Falcon</a>, <a href="/platforms/python/guides/pyramid/distributed-tracing/instrumentation/automatic-instrumentation/">Pyramid</a>, <a href="/platforms/python/guides/quart/distributed-tracing/instrumentation/automatic-instrumentation/">Quart</a>, <a href="/platforms/python/guides/starlette/distributed-tracing/instrumentation/automatic-instrumentation/">Starlette</a>, <a href="/platforms/python/guides/tornado/distributed-tracing/instrumentation/automatic-instrumentation/">Tornado</a>.
+There's no additional set up needed to use distributed tracing with the following frameworks: [Django](/platforms/python/guides/django/distributed-tracing/instrumentation/automatic-instrumentation/), [FastAPI](/platforms/python/guides/fastapi/distributed-tracing/instrumentation/automatic-instrumentation/), [Flask](/platforms/python/guides/flask/distributed-tracing/instrumentation/automatic-instrumentation/), [Bottle](/platforms/python/guides/bottle/distributed-tracing/instrumentation/automatic-instrumentation/), [Falcon](/platforms/python/guides/falcon/distributed-tracing/instrumentation/automatic-instrumentation/), [Pyramid](/platforms/python/guides/pyramid/distributed-tracing/instrumentation/automatic-instrumentation/), [Quart](/platforms/python/guides/quart/distributed-tracing/instrumentation/automatic-instrumentation/), [Starlette](/platforms/python/guides/starlette/distributed-tracing/instrumentation/automatic-instrumentation/), [Tornado](/platforms/python/guides/tornado/distributed-tracing/instrumentation/automatic-instrumentation/).
 
-If you are using one of the frameworks listed above, **you do not need to do anything** for distributed tracing to work!
-
-You can stop reading this page now and continue building an amazing product.
+If you are using one of the frameworks listed above, see the <PlatformLink to="/distributed-tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> page for how to configure distributed tracing.
 
 </Alert>
 
@@ -15,18 +13,18 @@ Two things need to be done for distributed tracing to work:
 - When receiving incoming requests, extract and store incoming tracing information.
 - When doing outgoing requests, inject tracing information to the outgoing request.
 
-To learn more see also: <PlatformLink to="/distributed-tracing/#how-does-distributed-tracing-work-in-sentry">How Does Distributed Tracing Work in Sentry?</PlatformLink>
+To learn more, see our <PlatformLink to="/distributed-tracing/">Distributed Tracing</PlatformLink> docs.
 
 ## Extract Incoming Tracing Information
 
-Incoming tracing information has to be extracted and stored in memory for later use.
-This incoming tracing information can come from different places:
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continue_trace` function to help with this.
+Incoming tracing information can come from different places:
 
-- In a web environment it will be sent with HTTP headers. (for example by another Sentry SDK used in your front end project)
-- In a job queue (like Celery) the tracing information can be retrieved from meta or header variables.
+- In a web environment it will be sent with HTTP headers, for example, by another Sentry SDK used in your frontend project.
+- In a job queue, like Celery, it can be retrieved from meta or header variables.
 - You also can pick up tracing information from environment variables.
 
-Whenever an incoming requests is processed by your project you need to do the following:
+Here's an example of how to extract and store incoming tracing information using `continue_trace`:
 
 ```python
 import sentry_sdk
@@ -37,7 +35,7 @@ headers = get_incoming_headers_as_dict()
 sentry_sdk.continue_trace(headers)
 ```
 
-In this example `get_incoming_headers_as_dict()` returns a dictorary that contains the tracing information. This dictionary would have been populated with information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
+In this example, `get_incoming_headers_as_dict()` returns a dictionary that contains tracing information. This dictionary would contain information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
 
 Sentry's `continue_from_trace()` will extract the given headers and try to find the `sentry-trace` and `baggage` headers and it will store them in memory for later use.
 
@@ -57,17 +55,13 @@ with start_transaction(transaction=transaction) as transaction:
     do_some_heavy_lifting()
 ```
 
-See the <PlatformLink to="/performance/instrumentation/custom-instrumentation/">Performance Monitoring Documentation</PlatformLink> to learn what you can do with transactions.
+See the Performance docs on <PlatformLink to="/performance/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> to learn more about using custom transactions and spans to measure the performance of your code.
 
 ## Inject Tracing Information to Outgoing Requests
 
-On outgoing requests you have to add the two headers `sentry-trace` and `baggage` that you extracted and stored earlier.
+For distributed tracing to work, the two headers that you extracted and stored, `sentry-trace` and `baggage`, must be added to outgoing requests.
 
-<Alert title="Note" level="note">
-
-If you are doing outgoing HTTP requests with <a href="https://requests.readthedocs.io/en/latest/">Requests</a>, <a href="https://docs.aiohttp.org/en/stable/">AIOHTTP</a>, the low level <a href="https://docs.python.org/3/library/http.client.html">http.client</a> (or <a href="https://docs.python.org/2/library/httplib.html">httplib</a> on Pyton 2) the parsed and stored tracing information is added automatically to outgoing requests. You do not need to do anything!
-
-</Alert>
+If you are sending outgoing HTTP requests with [Requests](https://requests.readthedocs.io/en/latest/), [AIOHTTP](https://docs.aiohttp.org/en/stable/), the low level [http.client](https://docs.python.org/3/library/http.client.html), or [httplib](https://docs.python.org/2/library/httplib.html) on Python 2, this tracing information is automatically added to outgoing requests.
 
 If you are do outgoing requests in another way you can generate the tracing information like follows:
 
@@ -82,13 +76,13 @@ headers["baggage"] = sentry_sdk.get_baggage()
 make_an_outgoing_request(to="https://example.com", headers=headers)
 ```
 
-Now tracing information is propagated to the project running at `https://example.com`. If it has the Python SDK running, it will extract and save the tracing information for later use.
+In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses the Sentry Python SDK, it will extract and save the tracing information for later use.
 
 The two services are now connected with your custom distributed tracing implementation.
 
 ### Inject Tracing Information Into Rendered HTML
 
-If you want to propagate tracing information into Javascript that is running in your rendered HTML you have to inject HTML `meta` tags into your rendered HTML:
+To propagate tracing information into JavaScript running in rendered HTML you have to inject HTML `meta` tags for `sentry-trace` and `baggage` data into your rendered HTML. Here's an example:
 
 ```python
 import sentry_sdk
@@ -117,4 +111,4 @@ render(html)
 
 ## Verification
 
-If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so distributed tracing is working.
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
