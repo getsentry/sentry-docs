@@ -9,11 +9,14 @@ categories:
 ---
 
 The `sentry-compose-android` library provides [Jetpack Compose](https://developer.android.com/jetpack/androidx/releases/compose) support in the following areas:
-* `@Composable` performance metrics
-* Transaction and breadcrumb support for user interactions (clicks, swipes and scroll gestures)
-* Transaction and breadcrumb support for navigation events
+
+- `@Composable` performance metrics
+- Transaction and breadcrumb support for user interactions (clicks, swipes and scroll gestures)
+- Transaction and breadcrumb support for navigation events
+- Support for <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchies</PlatformLink>
 
 ## Performance Metrics
+
 _(New in version 6.16.0)_
 
 With Jetpack Compose performance metrics the Sentry Android SDK can automatically measure the initial `composition` and `rendering` time as performance spans of your `@Composable` UI elements.
@@ -23,15 +26,19 @@ With Jetpack Compose performance metrics the Sentry Android SDK can automaticall
 <Note>
 
 This feature requires an underlying transaction to attach it's spans to. Transactions can be created manually or automatically by configuring
-* <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">Android's Activity instrumentation</PlatformLink>
-* [Navigation Instrumentation](#jetpack-compose-navigation)
-* [User Interactions](#user-interactions)
+
+- <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">
+    Android's Activity instrumentation
+  </PlatformLink>
+- [Navigation Instrumentation](#jetpack-compose-navigation)
+- [User Interactions](#user-interactions)
 
 </Note>
 
 Once performance metrics have been enabled, you'll see two spans inside your transactions:
-* `ui.compose.composition`, describing the time it took to execute your `@Composable`
-* `ui.compose.rendering`, describing the time it took to render your `@Composable` to the canvas
+
+- `ui.compose.composition`, describing the time it took to execute your `@Composable`
+- `ui.compose.rendering`, describing the time it took to render your `@Composable` to the canvas
 
 The `SentryTraced` function also provides an `enableUserInteractionTracing` argument, which automatically applies a `Modifier.testTag()` and enables the _User Interactions_ feature mentioned below.
 
@@ -40,11 +47,12 @@ The `SentryTraced` function also provides an `enableUserInteractionTracing` argu
 To add the Jetpack Compose integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose-android` dependency using Gradle:
 
 ```groovy
-implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
-implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose', '6.2.0') }}'
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.compose', '6.2.0') }}'
 ```
 
 Once installed, you need to wrap your `@Composable` body with the `SentryTraced` function.
+
 ```kotlin
 import io.sentry.compose.SentryTraced
 
@@ -63,6 +71,7 @@ fun LoginScreen() {
 ```
 
 ## User Interactions
+
 _(New in version 6.10.0)_
 
 The Sentry User Interactions feature for Jetpack Compose can detect click, scroll, and swipe gestures. For every gesture, the SDK can automatically collect breadcrumbs and launch transactions.
@@ -74,8 +83,8 @@ The Sentry User Interactions feature for Jetpack Compose can detect click, scrol
 To add the Jetpack Compose integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose-android` dependency using Gradle:
 
 ```groovy
-implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
-implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose', '6.2.0') }}'
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.compose', '6.2.0') }}'
 ```
 
 ### Configuration
@@ -83,6 +92,7 @@ implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.jav
 This feature is disabled by default, but you can enable it the following ways.
 
 #### Using `AndroidManifest.xml`
+
 ```xml {filename:AndroidManifest.xml}
 <application>
     <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
@@ -93,6 +103,7 @@ This feature is disabled by default, but you can enable it the following ways.
 #### Using `SentryOptions`
 
 If you initialize the SDK [manually as mentioned here](/platforms/android/configuration/manual-init/), you can enable user interactions like this:
+
 ```kotlin {filename:MyApplication.kt}
 SentryAndroid.init(this) { options ->
     // ...
@@ -121,7 +132,7 @@ fun LoginScreen() {
 
 <Note>
 
-If a `@Composable` doesn't have a `testTag` modifier applied, both breadcrumbs and transactions won't be captured because they can't be uniquely identified.
+If a `@Composable` doesn't have a `testTag` modifier applied, both breadcrumbs and transactions won't be captured because they can't be uniquely identified. To automatically generate tags, refer to the docs about our <PlatformLink to="/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink>.
 
 </Note>
 
@@ -133,11 +144,9 @@ If you want to customize the recorded breadcrumbs/transactions, you can skip to 
 
 ## Jetpack Compose Navigation
 
-
 In this section, we get you up and running with Sentry's Compose Navigation Integration, so that it will automatically add a breadcrumb and start a transaction for each navigation event.
 
 ![Jetpack Compose Navigation Breadcrumbs](jetpack-compose-navigation.png)
-
 
 ### Auto-Installation With the Sentry Android Gradle Plugin
 
@@ -155,7 +164,7 @@ buildscript {
 }
 
 plugins {
-  id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
 }
 ```
 
@@ -167,7 +176,7 @@ buildscript {
 }
 
 plugins {
-  id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
 }
 ```
 
@@ -211,8 +220,8 @@ sentry {
 Sentry captures data by adding a `withSentryObservableEffect` extension function to `NavHostController`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-compose` dependency using Gradle:
 
 ```groovy
-implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '6.2.0') }}'
-implementation 'io.sentry:sentry-compose-android:{{ packages.version('sentry.java.compose.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.compose.android', '6.2.0') }}'
 ```
 
 #### Configure

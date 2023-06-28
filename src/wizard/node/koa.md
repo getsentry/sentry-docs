@@ -30,8 +30,8 @@ const app = new Koa();
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
 app.on("error", (err, ctx) => {
-  Sentry.withScope(function(scope) {
-    scope.addEventProcessor(function(event) {
+  Sentry.withScope(function (scope) {
+    scope.addEventProcessor(function (event) {
       return Sentry.addRequestDataToEvent(event, ctx.request);
     });
     Sentry.captureException(err);

@@ -1,27 +1,29 @@
-import React, { useEffect, useState } from "react";
-import * as Sentry from "@sentry/gatsby";
-import GuideGrid from "./guideGrid";
-import { PageContext } from "./basePage";
+import React, {Fragment, useEffect, useState} from 'react';
+
+import {captureException} from '../utils';
+
+import {PageContext} from './basePage';
+import {GuideGrid} from './guideGrid';
 
 type Item = {
+  items: Item[];
   title?: string;
   url?: string;
-  items: Item[];
 };
 
 const getHeadings = (element: HTMLElement): Item[] => {
   const levels = [2, 3];
   const headingSelector = levels.map(level => `h${level}`).join(`, `);
-  const htmlNodes: HTMLElement[] = Array.from(
-    element.querySelectorAll(headingSelector)
-  );
+  const htmlNodes: HTMLElement[] = Array.from(element.querySelectorAll(headingSelector));
   const headings = [];
   const tree = [];
   let lastDepth = null;
   // XXX(dcramer): someone please rewrite this code to be less terrible, i hate trees
   // TODO(dcramer): this doesnt handle jumping heading levels properly (probably)
-  htmlNodes.forEach((node, i) => {
-    if (!node.id) return;
+  htmlNodes.forEach(node => {
+    if (!node.id) {
+      return;
+    }
     const item = {
       items: [],
       url: `#${node.id}`,
@@ -61,47 +63,53 @@ type Props = {
   pageContext?: PageContext;
 };
 
-export default ({ contentRef, pageContext }: Props) => {
+function recursiveRender(items) {
+  return items.map(i => {
+    if (!i.title) {
+      return recursiveRender(i.items);
+    }
+    return (
+      <li className="toc-entry" key={i.url}>
+        <a href={i.url}>{i.title}</a>
+        {i.items && <ul>{recursiveRender(i.items)}</ul>}
+      </li>
+    );
+  });
+}
+
+export function TableOfContents({contentRef, pageContext}: Props) {
   const [items, setItems] = useState<Item[]>(null);
-  const { platform } = pageContext;
+  const {platform} = pageContext;
 
   useEffect(() => {
     if (!items && contentRef.current) {
       try {
         setItems(getHeadings(contentRef.current));
       } catch (err) {
-        Sentry.captureException(err);
+        captureException(err);
         setItems([]);
       }
     }
-  });
+  }, [contentRef, items]);
 
-  if (!items || !items.length) return null;
+  if (!items || !items.length) {
+    return null;
+  }
 
-  const recurse = items =>
-    items.map(i => {
-      if (!i.title) return recurse(i.items);
-      return (
-        <li className="toc-entry" key={i.url}>
-          <a href={i.url}>{i.title}</a>
-          {i.items && <ul>{recurse(i.items)}</ul>}
-        </li>
-      );
-    });
   return (
     <div className="doc-toc">
       <div className="doc-toc-title">
         <h6>On this page</h6>
       </div>
-      <ul className="section-nav">{recurse(items)}</ul>
+      <ul className="section-nav">{recursiveRender(items)}</ul>
       {platform && (
-        <>
+        <Fragment>
           <div className="doc-toc-title">
             <h6>Related Guides</h6>
           </div>
           <GuideGrid platform={platform.name} className="section-nav" />
-        </>
+        </Fragment>
       )}
     </div>
   );
-};
+}

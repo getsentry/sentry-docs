@@ -1,4 +1,4 @@
-```javascript {tabTitle: JavaScript}
+```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
 import { RewriteFrames as RewriteFramesIntegration } from "@sentry/integrations";
 
@@ -19,36 +19,70 @@ Sentry.init({
 });
 ```
 
-```javascript {tabTitle: CDN}
+```html {tabTitle: Loader}
 <script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/rewriteframes.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'rewriteframes.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 
+<script>
+  Sentry.onLoad(function() {
+    Sentry.init({
+      integrations: [new Sentry.Integrations.RewriteFrames(
+        {
+          // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
+          root: string;
+
+          // a custom prefix that will be used by the default iteratee (default: `app://`)
+          prefix: string;
+
+          // function that takes the frame, applies a transformation, and returns it
+          // See the default implementation for some inspiration:
+          // https://github.com/getsentry/sentry-javascript/blob/master/packages/integrations/src/rewriteframes.ts
+          iteratee: (frame) => frame;
+        }
+      )],
+    });
+  });
+</script>
+```
+
+```html {tabTitle: CDN}
 <script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/rewriteframes.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'rewriteframes.min.js', 'sha384-base64') }}"
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/rewriteframes.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'rewriteframes.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.Integrations.RewriteFrames(
-    {
-      // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
-      root: string;
+<script>
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [new Sentry.Integrations.RewriteFrames(
+      {
+        // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
+        root: string;
 
-      // a custom prefix that will be used by the default iteratee (default: `app://`)
-      prefix: string;
+        // a custom prefix that will be used by the default iteratee (default: `app://`)
+        prefix: string;
 
-      // function that takes the frame, applies a transformation, and returns it
-      // See the default implementation for some inspiration:
-      // https://github.com/getsentry/sentry-javascript/blob/master/packages/integrations/src/rewriteframes.ts
-      iteratee: (frame) => frame;
-    }
-  )],
-});
+        // function that takes the frame, applies a transformation, and returns it
+        // See the default implementation for some inspiration:
+        // https://github.com/getsentry/sentry-javascript/blob/master/packages/integrations/src/rewriteframes.ts
+        iteratee: (frame) => frame;
+      }
+    )],
+  });
+</script>
 ```
 
 #### Usage Examples

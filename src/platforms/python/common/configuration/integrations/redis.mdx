@@ -1,7 +1,7 @@
 ---
 title: Redis
 description: "Learn about importing the Redis integration."
-sidebar_order: 180
+sidebar_order: 110
 ---
 
 <!-- NOTE: Due to being in common, redirects are in vercel.json -->
@@ -16,7 +16,38 @@ pip install --upgrade 'sentry-sdk'
 
 ## Configure
 
-Add `RedisIntegration()` to your `integrations` list:
+If you have the `redis` Python package in your dependencies, the Redis integration will be enabled automatically. There is nothing to do for you except initializing the Sentry SDK.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.redis import RedisIntegration
+
+sentry_sdk.init(
+    dsn='___PUBLIC_DSN___',
+)
+```
+
+## Behavior
+
+With Redis integration the following information will be available to you on Sentry.io:
+
+- Performance information about requests to redis will be available in the waterfall diagram in the Performance section on Sentry.io.
+- Redis commands will be added as breadcrumbs.
+- If `send_default_pii` is set to `True` you will also see the data used in your redis requests.
+- Data of the `AUTH` command will never be collected.
+
+## Integration Options
+
+If you want to change the default behavior of the Redis integration, you need to instantiate the integration manually to pass options to the integration and then pass it to Sentry's init function.
+
+<ConfigKey name="max_data_size">
+
+By default `RedisIntegration()` will trim data collected after `1024` characters. You can change this behavior with the `max_data_size` parameter:
+
+- When you set `max_data_size` to a value that evaluates to `False` (like `0` or `None`) no trimming will take place.
+- You can set `max_data_size` to an integer to control how many characters should be collected.
+
+Example for disabling data trimming, the whole Redis command will be recorded:
 
 ```python
 import sentry_sdk
@@ -25,10 +56,26 @@ from sentry_sdk.integrations.redis import RedisIntegration
 sentry_sdk.init(
     dsn='___PUBLIC_DSN___',
     integrations=[
-        RedisIntegration(),
-    ],
+        RedisIntegration(max_data_size=None),
+    ]
 )
 ```
+
+Example of keeping just a maximum of 50 characters of Redis commands:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.redis import RedisIntegration
+
+sentry_sdk.init(
+    dsn='___PUBLIC_DSN___',
+    integrations=[
+        RedisIntegration(max_data_size=50),
+    ]
+)
+```
+
+</ConfigKey>
 
 ## Supported Versions
 

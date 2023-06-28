@@ -1,6 +1,13 @@
 ## Upload Source Maps for a Svelte Project
 
-Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
+<Note>
+
+This guide assumes you are using the `@sentry/svelte` SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
 This page is a guide on how to create releases and upload source maps to Sentry when bundling your Svelte app.
 
 To generate source maps with your Svelte project, you need to set the source map [compiler options](https://svelte.dev/docs#compile-time-svelte-compile) in your Svelte config:
@@ -22,11 +29,11 @@ export default config;
 
 If you're using Vite in you Svelte project, you can use Sentry's Vite plugin for convenience:
 
-```npm
+```bash {tabTitle:npm}
 npm install @sentry/vite-plugin --save-dev
 ```
 
-```yarn
+```bash {tabTitle:Yarn}
 yarn add @sentry/vite-plugin --dev
 ```
 
@@ -49,19 +56,20 @@ export default defineConfig({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Specify the directory containing build artifacts
-      include: "./dist",
-
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
       // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
-
-      // Optionally uncomment the line below to override automatic release name detection
-      // release: process.env.RELEASE,
     }),
   ],
 });
 ```
+
+<Note>
+
+The Sentry Vite plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your implementation.
+
+</Note>
 
 ### Other Bundlers
 

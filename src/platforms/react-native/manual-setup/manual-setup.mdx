@@ -77,10 +77,9 @@ SENTRY_CLI="../node_modules/@sentry/cli/bin/sentry-cli"
 $SENTRY_CLI debug-files upload "$INCLUDE_SOURCES_FLAG" "$DWARF_DSYM_FOLDER_PATH"
 ```
 
-For bitcode enabled builds via iTunes Connect, additional steps are required.
-Follow the instructions in [Sentry's bitcode documentation](/clients/cocoa/dsym/#dsym-with-bitcode) to set up uploads of symbols for all build variants.
-
 By default, uploading of debug simulator builds is disabled for speed reasons. If you want to generate debug symbols for debug builds, you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.
+
+For more information visit [Sentry CLI Apple Debug Symbols](/platforms/apple/dsym/#sentry-cli) documentation.
 
 ### Using node with nvm or Volta
 
@@ -96,6 +95,29 @@ We enable the Gradle integration in your `android/app/build.gradle` file by addi
 
 ```groovy {filename:android/app/build.gradle}
 apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+### Enable Sentry AGP
+
+You can enable native symbol upload and other features by adding [Sentry Android Gradle Plugin (SAGP)](/platforms/android/gradle) to `android/app/build.gradle`.
+
+```groovy {filename:android/app/build.gradle}
+apply plugin: "io.sentry.android.gradle"
+
+sentry {
+    // Enables or disables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols = true
+
+    // Enables or disables the automatic upload of the app's native source code to Sentry.
+    // This executes sentry-cli with the --include-sources param automatically so
+    // you don't need to do it manually.
+    // This option has an effect only when [uploadNativeSymbols] is enabled.
+    // Default is disabled.
+    includeNativeSources = true
+}
 ```
 
 ### Enable Logging for `sentry-cli`

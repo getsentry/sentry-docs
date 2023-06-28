@@ -2,8 +2,6 @@
 title: Basic Options
 sidebar_order: 1
 description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
-notSupported:
-  - perl
 ---
 
 SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
@@ -248,6 +246,22 @@ If <PlatformIdentifier name="send-default-pii" /> is `off`, scrubs the event pay
 
 </ConfigKey>
 
+<ConfigKey name="include-source-context" supported={["python"]}>
+
+When enabled, source context will be included in events sent to Sentry. This source context includes the five lines of code above and below the line of code where an error happened.
+
+The option is enabled by default.
+
+</ConfigKey>
+
+<ConfigKey name="include-local-variables" supported={["python"]}>
+
+When enabled, the SDK will capture a snapshot of local variables to send with the event to help with debugging.
+
+This option is on by default.
+
+</ConfigKey>
+
 <ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java", "dart", "dotnet"]} notSupported={["android"]}>
 
 This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
@@ -414,12 +428,44 @@ Callback function:
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   debug: true,
-  initialScope: scope => {
+  initialScope: (scope) => {
     scope.setTags({ a: "b" });
     return scope;
   },
 });
 ```
+
+</ConfigKey>
+
+<ConfigKey name="initial-scope" supported={["apple"]}>
+
+A block that configures the initial scope when starting the SDK.
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.initialScope = { scope in
+        scope.setTag(value: "my value", key: "my-tag")
+        return scope
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.initialScope = ^(SentryScope *scope) {
+        scope setTagValue:@"my value" forKey:@"my-tag"];
+        return scope;
+    };
+}];
+```
+
+_(New in [sentry-cocoa version 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870))_
 
 </ConfigKey>
 
@@ -437,16 +483,20 @@ Sentry SDKs normalize any contextual data to a given depth. Any data beyond this
 
 <ConfigKey name="normalize-max-breadth" supported={["javascript", "node"]} notSupported={["electron"]}>
 
-_(New in version 6.19.1)_
-
 This is the maximum number of properties or entries that will be included in any given object or array when the SDK is normalizing contextual data. Any data beyond this depth will be dropped. (defaults to 1000)
 
 </ConfigKey>
 
-<ConfigKey name="attach-screenshot" supported={["android", "apple.ios", "unity", "dotnet.xamarin", "flutter"]}>
+<ConfigKey name="attach-screenshot" supported={["android", "apple.ios", "unity", "dotnet.xamarin", "flutter", "react-native"]}>
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+
+<PlatformSection supported={["react-native"]}>
+
+_(New in version 4.11.0)_
+
+</PlatformSection>
 
 <PlatformSection supported={["android"]}>
 
@@ -469,7 +519,7 @@ Learn more about enriching events with the view hierarchy in our <PlatformLink t
 
 </ConfigKey>
 
-<ConfigKey name="idle-timeout" supported={["android", "flutter"]}>
+<ConfigKey name="idle-timeout" supported={["android", "flutter", "apple.ios"]}>
 
 The idle time, measured in ms, to wait until a transaction will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
 
@@ -547,9 +597,27 @@ _(New in version 6.6.0)_
 
 </ConfigKey>
 
-<ConfigKey name="capture-failed-requests" supported={["apple"]}>
+<ConfigKey name="capture-failed-requests" supported={["dotnet","dart"]}>
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
+
+<PlatformSection supported={["dart"]}>
+
+_(New in version 7.0.0)_
+
+</PlatformSection>
+
+</ConfigKey>
+
+<ConfigKey name="enable-capture-failed-requests" supported={["apple","react-native"]}>
+
+Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
+
+<PlatformSection supported={["react-native"]}>
+
+_(New in version 5.3.0)_
+
+</PlatformSection>
 
 <PlatformSection supported={["apple"]}>
 
@@ -586,7 +654,7 @@ For many platform SDKs integrations can be configured alongside it. On some plat
 
 In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
 
-<ConfigKey name="default-integrations" notSupported={["java", "dart"]}/>
+<ConfigKey name="default-integrations" notSupported={["java", "dart"]} />
 
 This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
 
@@ -614,8 +682,6 @@ This function is called with an SDK-specific message or error event object, and 
 This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
 
 <PlatformSection supported={["javascript", "node"]}>
-
-_(New in version 7.18.0)_
 
 </PlatformSection>
 
@@ -670,7 +736,10 @@ Options used to configure the transport. This is an object with the following po
 </ConfigKey>
 
 <ConfigKey name="proxy" supported={["native"]}>
-Configures an HTTP proxy for outgoing requests to the backend, (HTTPS requests tunneled through that proxy). The Native SDK doesn't pick up the `http_proxy` environment variable. You can find more details on the [transport page](/platforms/native/configuration/transports/#using-an-http-proxy).
+  Configures an HTTP proxy for outgoing requests to the backend, (HTTPS requests
+  tunneled through that proxy). The Native SDK doesn't pick up the `http_proxy`
+  environment variable. You can find more details on the [transport
+  page](/platforms/native/configuration/transports/#using-an-http-proxy).
 </ConfigKey>
 
 <ConfigKey name="http-proxy" supported={["php", "python", "java", "dotnet", "rust"]}>
@@ -765,13 +834,19 @@ The maximum execution time, in seconds, for the request+response as a whole. The
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "dart"]}>
+<ConfigKey name="enable-tracing" supported={["apple", "node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dart"]}>
+
+A boolean value, if true, transactions and trace data will be generated and captured. This will set the `traces-sample-rate` to the recommended default of 1.0 if `traces-sample-rate` is not defined. Note that `traces-sample-rate` and `traces-sampler` take precedence over this option.
+
+</ConfigKey>
+
+<ConfigKey name="traces-sample-rate" supported={["apple","node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "dart"]}>
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
-<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
+<ConfigKey name="traces-sampler" supported={["apple", "node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
@@ -800,7 +875,7 @@ If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trac
 An optional list of functions that should be set up for performance monitoring. For each function in the list, a span will be created when the function is executed.
 Functions in the list are represented as strings containing the fully qualified name of the function.
 
-This is a convenient option, making it possible to have one central place for configuring what functions to trace, instead of having manual instrumentation scattered all over your code base.
+This is a convenient option, making it possible to have one central place for configuring what functions to trace, instead of having custom instrumentation scattered all over your code base.
 
 To learn more, see the [Custom Instrumentation](/platforms/python/performance/instrumentation/custom-instrumentation/#define-span-creation-in-a-central-place) documentation.
 
@@ -889,6 +964,7 @@ Set this boolean to `false` to disable the scope sync from Java to NDK on Androi
 <ConfigKey name="attachThreads">
 
 Set this boolean to `true` to automatically attach all threads to all logged events on Android.
+
 </ConfigKey>
 
 <ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
@@ -916,7 +992,8 @@ Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/i
 <ConfigKey name="enableWatchdogTerminationTracking" supported={["apple", "flutter"]}>
 
 <Note>
-Available since version 8.0.0 of Sentry Apple SDK. It was named `enableOutOfMemoryTracking` before the 8.0.0 release.
+  Available since version 8.0.0 of Sentry Apple SDK. It was named
+  `enableOutOfMemoryTracking` before the 8.0.0 release.
 </Note>
 
 Set this boolean to `false` to disable [watchdog termination](/platforms/apple/guides/ios/configuration/watchdog-terminations/) tracking on iOS.

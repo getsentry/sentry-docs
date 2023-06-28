@@ -10,24 +10,22 @@ Install the **NuGet** package:
 Package Manager:
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry.Google.Cloud.Functions -Version {{ packages.version('sentry.dotnet.google-cloud-function') }}
+Install-Package Sentry.Google.Cloud.Functions -Version {{@inject packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry.Google.Cloud.Functions -v {{ packages.version('sentry.dotnet.google-cloud-function') }}
+dotnet add package Sentry.Google.Cloud.Functions -v {{@inject packages.version('sentry.dotnet.google-cloud-function') }}
 ```
 
 Or, manually add the Sentry dependency into your csproj file:
 
 ```xml {tabTitle:project.csproj}
   <ItemGroup>
-    <PackageReference Include="Sentry.Google.Cloud.Functions" Version="{{ packages.version('sentry.dotnet.google-cloud-function') }}"/>
+    <PackageReference Include="Sentry.Google.Cloud.Functions" Version="{{@inject packages.version('sentry.dotnet.google-cloud-function') }}"/>
   </ItemGroup>
 ```
 
-
-Then, add Sentry to the  `Function` class through `FunctionsStartup`:
-
+Then, add Sentry to the `Function` class through `FunctionsStartup`:
 
 ```csharp
 // Add the following line:

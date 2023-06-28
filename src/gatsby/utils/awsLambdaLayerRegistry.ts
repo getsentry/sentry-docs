@@ -1,39 +1,22 @@
-import axios from "axios";
-
-import { BASE_REGISTRY_URL } from "./shared";
+import {makeFetchCache} from './fetchCache';
+import {BASE_REGISTRY_URL} from './shared';
 
 type LayerData = {
+  account_number: string;
   canonical: string;
+  layer_name: string;
   main_docs_url: string;
   name: string;
+  regions: Array<{region: string; version: string}>;
   repo_url: string;
-  account_number: string;
-  layer_name: string;
   sdk_version: string;
-  regions: Array<{ region: string; version: string }>;
 };
 
-export default class AwsLambdaLayerRegistry {
-  indexCache: { [cannonical: string]: LayerData } | null;
+const getLayerMap = makeFetchCache<Record<string, LayerData>>({
+  name: 'aws lambda layers',
+  dataUrl: `${BASE_REGISTRY_URL}/aws-lambda-layers`,
+});
 
-  constructor() {
-    this.indexCache = null;
-  }
+const awsLambdaRegistry = {getLayerMap};
 
-  getLayerMap = async () => {
-    if (!this.indexCache) {
-      try {
-        const result = await axios({
-          url: `${BASE_REGISTRY_URL}/aws-lambda-layers`,
-        });
-        this.indexCache = result.data;
-      } catch (err) {
-        console.error(
-          `Unable to fetch index for aws lambda layers: ${err.message}`
-        );
-        this.indexCache = {};
-      }
-    }
-    return this.indexCache;
-  };
-}
+export default awsLambdaRegistry;

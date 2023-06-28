@@ -1,7 +1,8 @@
-import React from "react";
-import { useLocation } from "@reach/router";
-import { StaticQuery, graphql } from "gatsby";
-import SmartLink from "./smartLink";
+import React from 'react';
+import {useLocation} from '@reach/router';
+import {graphql, StaticQuery} from 'gatsby';
+
+import {SmartLink} from './smartLink';
 
 const query = graphql`
   query BreadcrumbsQuery {
@@ -18,11 +19,11 @@ const query = graphql`
 `;
 
 type Node = {
-  id: string;
-  path: string;
   context: {
     title: string;
   };
+  id: string;
+  path: string;
 };
 
 type Props = {
@@ -33,35 +34,41 @@ type Props = {
   };
 };
 
-const getTitle = node => {
+const getTitle = (node: Node) => {
   // TODO(dcramer): support frontmatter somehow from js files
-  if (node.path === "/") return "Home";
+  if (node.path === '/') {
+    return 'Home';
+  }
   return node.context.title;
 };
 
-export const Breadcrumbs = ({
+export function BaseBreadcrumbs({
   data: {
-    allSitePage: { nodes },
+    allSitePage: {nodes},
   },
-}: Props) => {
+}: Props) {
   const location = useLocation();
   let currentPath = location.pathname;
-  if (currentPath.substr(currentPath.length - 1) !== "/")
-    currentPath = currentPath += "/";
+  if (!currentPath.endsWith('/')) {
+    currentPath = currentPath += '/';
+  }
   const rootNode = nodes.find(n => n.path === currentPath);
   if (!rootNode) {
+    // eslint-disable-next-line no-console
     console.warn(`Cant find root node for breadcrumbs: ${currentPath}`);
     return null;
   }
   const trailNodes = nodes.filter(n => rootNode.path.indexOf(n.path) === 0);
 
   return (
-    <ul className="breadcrumb" style={{ margin: 0 }}>
+    <ul className="breadcrumb" style={{margin: 0}}>
       {trailNodes
         .sort((a, b) => a.path.localeCompare(b.path))
         .map(n => {
           const title = getTitle(n);
-          if (!title) return null;
+          if (!title) {
+            return null;
+          }
           return (
             <li className="breadcrumb-item" key={n.id}>
               <SmartLink to={n.path}>{title}</SmartLink>
@@ -70,15 +77,15 @@ export const Breadcrumbs = ({
         })}
     </ul>
   );
-};
+}
 
-export default () => {
+export function breadcrumb() {
   return (
     <StaticQuery
       query={query}
       render={data => {
-        return <Breadcrumbs data={data} />;
+        return <BaseBreadcrumbs data={data} />;
       }}
     />
   );
-};
+}

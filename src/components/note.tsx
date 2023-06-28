@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react';
 
 type Props = {
   children?: any;
 };
 
-export default ({ children }: Props): JSX.Element => {
+export function Note({children}: Props): JSX.Element {
   //   let className = "";
   //   if (children.props && typeof children.props.children === "string") {
   //     className += " markdown-text-only";
@@ -14,4 +14,4 @@ export default ({ children }: Props): JSX.Element => {
       <div className="note-body">{children}</div>
     </div>
   );
-};
+}

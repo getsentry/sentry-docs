@@ -9,7 +9,7 @@ Install the Sentry Capacitor SDK alongside the sibling Sentry Angular SDK:
 
 ```bash
 # npm
-npm install --save @sentry/capacitor @sentry/angular
+npm install --save @sentry/capacitor @sentry/angular-ivy
 
 # yarn
 yarn add @sentry/capacitor @sentry/angular @sentry/tracing --exact
@@ -35,8 +35,8 @@ The version of the sibling SDK must match with the version referred by Sentry Ca
 
 <Note>
 
- This step is not needed if you are using Capacitor 3
- 
+This step is not needed if you are using Capacitor 3
+
 </Note>
 
 Then, add the `SentryCapacitor` plugin class inside the `onCreate` method of your `MainActivity` file.
@@ -91,12 +91,9 @@ With Ionic/Angular:
 ```typescript
 // app.module.ts
 import * as Sentry from '@sentry/capacitor';
-import * as SentryAngular from '@sentry/angular';
-// If taking advantage of automatic instrumentation (highly recommended)
-import { BrowserTracing } from '@sentry/tracing';
-// Or, if only manually tracing
-// import "@sentry/tracing";
-// Note: You MUST import the package in some way for tracing to work
+// Use `@sentry/angular-ivy` for Angular 12+ or `@sentry/angular` for Angular 10 or 11
+import * as SentryAngular from '@sentry/angular-ivy';
+
 
 Sentry.init(
   {
@@ -108,8 +105,10 @@ Sentry.init(
     // We recommend adjusting this value in production.
     tracesSampleRate: 1.0,
     integrations: [
-      new BrowserTracing({
-        tracingOrigins: ['localhost', 'https://yourserver.io/api'],
+      new SentryAngular.BrowserTracing({
+        // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+        tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+        routingInstrumentation: SentryAngular.routingInstrumentation,
       }),
     ]
   },
@@ -124,6 +123,16 @@ Sentry.init(
       // Attach the Sentry ErrorHandler
       useValue: SentryAngular.createErrorHandler(),
     },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
+    },
   ],
 })
 ```
@@ -132,15 +141,15 @@ Standalone:
 
 ```javascript
 // App.js
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 
   // Set your release version, such as 'getsentry@1.0.0'
-  release: 'my-project-name@<release-name>',
+  release: "my-project-name@<release-name>",
   // Set your dist version, such as "1"
-  dist: '<dist>',
+  dist: "<dist>",
 });
 ```
 
@@ -149,22 +158,22 @@ Sentry.init({
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
-Sentry.captureException('Test Captured Exception');
+Sentry.captureException("Test Captured Exception");
 ```
 
 You can also throw an error anywhere in your application:
 
 ```javascript
 // Must be thrown after Sentry.init is called to be captured.
-throw new Error('Test Thrown Error');
+throw new Error("Test Thrown Error");
 ```
 
 Or trigger a native crash:
 
 ```javascript
-import * as Sentry from '@sentry/capacitor';
+import * as Sentry from "@sentry/capacitor";
 
 Sentry.nativeCrash();
 ```

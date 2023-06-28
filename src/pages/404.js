@@ -1,15 +1,14 @@
-import React from "react";
-import * as Sentry from "@sentry/gatsby";
+import React from 'react';
 
-import Layout from "../components/layout";
-import SEO from "../components/seo";
+import {Layout} from 'sentry-docs/components/layout';
+import {SEO} from 'sentry-docs/components/seo';
 
-const NotFoundPage = () => {
-  const tx = Sentry.getCurrentHub()
-    .getScope()
-    .getTransaction();
+import {getCurrentTransaction} from '../utils';
+
+function NotFoundPage() {
+  const tx = getCurrentTransaction();
   if (tx) {
-    tx.setStatus("not_found");
+    tx.setStatus('not_found');
   }
 
   return (
@@ -22,6 +21,6 @@ const NotFoundPage = () => {
       <p>We couldn&apos;t find the page you were looking for.</p>
     </Layout>
   );
-};
+}
 
 export default NotFoundPage;

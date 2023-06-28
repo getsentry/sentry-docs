@@ -1,18 +1,26 @@
-Sentry uses [releases](/product/releases/) to match the correct source maps to your events. You can use the Sentry esbuild plugin to automatically create releases and upload source maps to Sentry when bundling your app.
+<Note>
+
+This guide assumes you are using a Sentry SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
+You can use the Sentry esbuild plugin to automatically create releases and upload source maps to Sentry when bundling your app.
 
 ## Install
 
-```npm
+```bash {tabTitle:npm}
 npm install @sentry/esbuild-plugin --save-dev
 ```
 
-```yarn
+```bash {tabTitle:Yarn}
 yarn add @sentry/esbuild-plugin --dev
 ```
 
 ## Configure
 
-Learn more about configuring the plugin in our [Sentry esbuild Plugin documentation](https://github.com/getsentry/sentry-javascript-bundler-plugins/tree/main/packages/esbuild-plugin).
+Learn more about configuring the plugin in our [Sentry esbuild Plugin documentation](https://www.npmjs.com/package/@sentry/esbuild-plugin).
 
 Example:
 
@@ -20,9 +28,6 @@ Example:
 const { sentryEsbuildPlugin } = require("@sentry/esbuild-plugin");
 
 require("esbuild").build({
-  entryPoints: ["./src/index.js"],
-  outdir: "./dist",
-  bundle: true,
   sourcemap: true, // Source map generation must be turned on
   plugins: [
     // Put the Sentry esbuild plugin after all other plugins
@@ -30,29 +35,17 @@ require("esbuild").build({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Specify the directory containing build artifacts
-      include: "./dist",
-
       // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
       // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
-
-      // Optionally uncomment the line below to override automatic release name detection
-      // release: process.env.RELEASE,
     }),
   ],
 });
 ```
 
-The Sentry esbuild plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
+<Note>
 
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+The Sentry esbuild plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your implementation.
 
-  // When using the plugin, either remove the `release`` property here entirely or
-  // make sure that the plugin's release option and the Sentry.init()'s release
-  // option match exactly.
-  // release: "my-example-release-1"
-});
-```
+</Note>

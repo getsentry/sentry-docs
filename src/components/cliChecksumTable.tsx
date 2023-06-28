@@ -1,11 +1,11 @@
-import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
-import styled from "@emotion/styled";
+import React from 'react';
+import styled from '@emotion/styled';
+import {graphql, useStaticQuery} from 'gatsby';
 
 const query = graphql`
   query CliExecutableChecksums {
-    app(id: { eq: "sentry-cli" }) {
-      version,
+    app(id: {eq: "sentry-cli"}) {
+      version
       files {
         name
         checksums {
@@ -22,13 +22,13 @@ const ChecksumValue = styled.code`
   white-space: nowrap;
 `;
 
-export default (): JSX.Element => {
+export function CliChecksumTable(): JSX.Element {
   const {
-    app: { files, version },
+    app: {files, version},
   } = useStaticQuery(query);
 
   return (
-    <table style={{ display: "block", overflow: "scroll" }}>
+    <table style={{display: 'block', overflow: 'scroll'}}>
       <thead>
         <tr>
           <th>Filename (v{version})</th>
@@ -37,23 +37,21 @@ export default (): JSX.Element => {
       </thead>
       <tbody>
         {files
-          .filter(file => !file.name.endsWith(".tgz"))
+          .filter(file => !file.name.endsWith('.tgz'))
           .map(file => (
             <tr key={file.name}>
               <td
                 style={{
-                  fontSize: "0.9em",
-                  verticalAlign: "middle",
-                  whiteSpace: "nowrap",
+                  fontSize: '0.9em',
+                  verticalAlign: 'middle',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {file.name}
               </td>
-              <td style={{ verticalAlign: "middle", width: "100%" }}>
+              <td style={{verticalAlign: 'middle', width: '100%'}}>
                 <ChecksumValue>
-                  {`sha384-${
-                    file.checksums.find(c => c.name === "sha256-hex").value
-                  }`}
+                  {`sha384-${file.checksums.find(c => c.name === 'sha256-hex').value}`}
                 </ChecksumValue>
               </td>
             </tr>
@@ -61,4 +59,4 @@ export default (): JSX.Element => {
       </tbody>
     </table>
   );
-};
+}

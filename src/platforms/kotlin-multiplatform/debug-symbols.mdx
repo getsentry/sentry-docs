@@ -1,0 +1,46 @@
+---
+title: Upload Debug Symbols
+sidebar_order: 1
+description: "Learn more about how to upload debug symbols in Sentry Kotlin Multiplatform."
+---
+
+To symbolicate your stacktraces, you need to provide debug information to Sentry.
+The symbolication process unscrambles the stacktraces to reveal the function, file names, and line numbers of the crash.
+
+## Apple
+
+For Apple applications please follow the iOS documentation on [Uploading Debug Symbols](/platforms/apple/guides/ios/dsym) to set up debug symbols upload.
+
+## Android
+
+### Gradle
+
+To upload ProGuard mapping files or Native debug bymbols via Gradle you need to install the [Sentry Android Gradle](/platforms/android/gradle) plugin:
+
+```kotlin {filename:androidApp/build.gradle.kts}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id("com.android.application")
+    id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+
+// Prevent Sentry dependencies from being included in the Android app through the AGP.
+sentry {
+  autoInstallation {
+    enabled.set(false)
+  }
+}
+```
+
+#### ProGuard/R8 & DexGuard
+
+Learn more in the Sentry Gradle Plugin docs for [ProGuard/R8 & DexGuard](/platforms/android/gradle/#proguardr8--dexguard).
+
+#### Native Debug Symbols and Sources
+
+You can find more information in the Sentry Gradle Plugin docs for [Native Debug Symbols and Sources](/platforms/android/gradle/#native-debug-symbols-and-sources).

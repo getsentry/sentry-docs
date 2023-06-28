@@ -1,31 +1,30 @@
-import path from "path";
-import SentryWebpackPlugin from "@sentry/webpack-plugin";
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
 
-const getPlugins = reporter => {
-  const authToken = process.env.SENTRY_AUTH_TOKEN;
-  if (!authToken) {
-    reporter.warn("SENTRY_AUTH_TOKEN is not set - will not upload source maps");
-    return [];
-  }
-  return [
-    new SentryWebpackPlugin({
-      org: "sentry",
-      project: "docs",
-      authToken,
-      include: ["public"],
-      stripPrefix: ["public/"],
-      dryRun: process.env.NODE_ENV !== "production",
-    }),
-  ];
-};
+import path from 'path';
 
-export default ({ actions, reporter }) => {
+import {sentryWebpackPlugin} from '@sentry/webpack-plugin';
+
+function main({actions}) {
   actions.setWebpackConfig({
     resolve: {
+      fallback: {
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+      },
       alias: {
-        "~src": path.join(path.resolve(__dirname, "..")),
+        'sentry-docs': path.join(path.resolve(__dirname, '..')),
       },
     },
-    plugins: getPlugins(reporter),
+    plugins: [
+      sentryWebpackPlugin({
+        org: 'sentry',
+        project: 'docs',
+        authToken: process.env.SENTRY_WEBPACK_PLUGIN_AUTH_TOKEN,
+        sourcemaps: {assets: './public/**'},
+      }),
+    ],
   });
-};
+}
+
+export default main;

@@ -1,25 +1,24 @@
-import React from "react";
-import { useLocation } from "@reach/router";
-import { Nav } from "react-bootstrap";
+import React from 'react';
+import {Nav} from 'react-bootstrap';
+import {useLocation} from '@reach/router';
 
-import Search from "./search";
-import SmartLink from "./smartLink";
-
-import NavbarPlatformDropdown from "./navbarPlatformDropdown";
-import { getSandboxURL, SandboxOnly } from "./sandboxLink";
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
+import {getSandboxURL, SandboxOnly} from './sandboxLink';
+import {Search} from './search';
+import {SmartLink} from './smartLink';
 
 type Props = {
   platforms?: string[];
 };
 
-export default ({ platforms }: Props): JSX.Element => {
+export function Navbar({platforms}: Props): JSX.Element {
   const location = useLocation();
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
       <Search path={location.pathname} platforms={platforms} />
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
-        <Nav className="justify-content-end" style={{ flex: 1 }}>
+        <Nav className="justify-content-end" style={{flex: 1}}>
           <NavbarPlatformDropdown />
           <Nav.Item>
             <SmartLink className="nav-link" to="/product/">
@@ -31,9 +30,18 @@ export default ({ platforms }: Props): JSX.Element => {
               API
             </SmartLink>
           </Nav.Item>
+          <Nav.Item>
+            <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
+          </Nav.Item>
           <SandboxOnly>
             <Nav.Item>
-              <Nav.Link className="text-primary" href={getSandboxURL().toString()} target="_blank">Sandbox</Nav.Link>
+              <Nav.Link
+                className="text-primary"
+                href={getSandboxURL().toString()}
+                target="_blank"
+              >
+                Sandbox
+              </Nav.Link>
             </Nav.Item>
           </SandboxOnly>
           <Nav.Item>
@@ -58,4 +66,4 @@ export default ({ platforms }: Props): JSX.Element => {
       </div>
     </div>
   );
-};
+}

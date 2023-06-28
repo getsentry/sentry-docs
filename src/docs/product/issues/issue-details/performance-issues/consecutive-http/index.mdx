@@ -1,0 +1,50 @@
+---
+title: "Consecutive HTTP"
+sidebar_order: 30
+redirect_from:
+  - /product/issues/performance-issues/consecutive-http/
+description: "Learn more about Consecutive HTTP and how to diagnose and fix them."
+---
+
+Consecutive HTTP issues are created when a set of sequential HTTP spans consistently exceeds 1000ms.
+
+## Detection Criteria
+
+<Note>
+
+This issue is currently only available for backend and mobile SDKs.
+
+</Note>
+
+The detector for this performance issue looks for a set of sequential, non-overlapping HTTP spans. It intentionally ignores non-HTTP spans because the browser commonly performs other asynchronous operations, such as loading resources between HTTP spans.
+
+Once this sequence is found, the following must hold true for each HTTP span:
+
+- The HTTP method must be a GET, POST, DELETE, PUT, or PATCH
+- The HTTP URL must not begin with \_next/static/ or \_next/data/
+
+Once these spans are found, the following must also hold true:
+
+- The duration of each HTTP span must exceed a threshold of 1000ms.
+- The time between each HTTP span must not exceed a threshold of 500ms.
+- The number of sequential HTTP spans must exceed a threshold of 3.
+
+If Sentry doesn't detect a Consecutive HTTP issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
+
+## Span Evidence
+
+You can find additional information about your Consecutive HTTP issue by looking at two main aspects in the "Span Evidence" section:
+
+- **Transaction name**
+- **Sequential HTTP Spans**
+
+![Consecutive HTTP span evidence](span-evidence.png)
+
+You can view the span evidence by going to the **Issues** page in Sentry, selecting your project, selecting the Consecutive HTTP Queries error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+
+## Fixing Consecutive HTTP Issues
+
+The causes of Consecutive HTTP issues vary, but here are some suggestions to help you resolve them:
+
+- If your HTTP spans are independent, consider parallelizing them so they're no longer sequential.
+- If you have control over the backend, consider optimizing your endpoints for this specific use case. You can investigate corresponding backend transactions to help identify potential improvements.

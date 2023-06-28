@@ -1,40 +1,35 @@
-import React from "react";
-import { Nav } from "react-bootstrap";
+import React from 'react';
+import {Nav} from 'react-bootstrap';
 
-import Breadcrumbs from "./breadcrumbs";
-import Header from "./header";
-import Sidebar from "./sidebar";
-import Navbar from "./navbar";
-import SmartLink from "./smartLink";
-import NavbarPlatformDropdown from "./navbarPlatformDropdown";
-import { getSandboxURL, SandboxOnly } from "./sandboxLink";
+import 'sentry-docs/css/screen.scss';
 
-import "~src/css/screen.scss";
+import {breadcrumb as Breadcrumbs} from './breadcrumbs';
+import {Header} from './header';
+import {Navbar} from './navbar';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
+import {getSandboxURL, SandboxOnly} from './sandboxLink';
+import {Sidebar} from './sidebar';
+import {SmartLink} from './smartLink';
 
 type Props = {
   children: JSX.Element | JSX.Element[];
-  sidebar?: JSX.Element;
   pageContext?: {
-    platform?: {
-      name?: string;
-      [key: string]: any;
-    };
     guide?: {
-      name?: string;
       [key: string]: any;
+      name?: string;
+    };
+    platform?: {
+      [key: string]: any;
+      name?: string;
     };
   };
+  sidebar?: JSX.Element;
 };
 
-export default ({
-  children,
-  sidebar,
-  pageContext = {},
-}: Props): JSX.Element => {
-  const searchPlatforms = [
-    pageContext.platform?.name,
-    pageContext.guide?.name,
-  ].filter(Boolean);
+export function Layout({children, sidebar, pageContext = {}}: Props): JSX.Element {
+  const searchPlatforms = [pageContext.platform?.name, pageContext.guide?.name].filter(
+    Boolean
+  );
 
   return (
     <div className="document-wrapper">
@@ -46,13 +41,11 @@ export default ({
           id="sidebar"
         >
           <div className="toc">
-            <div className="text-white p-3">
-              {sidebar ? sidebar : <Sidebar />}
-            </div>
+            <div className="text-white p-3">{sidebar ? sidebar : <Sidebar />}</div>
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu">
-          <Nav className="justify-content-center" style={{ flex: 1 }}>
+          <Nav className="justify-content-center" style={{flex: 1}}>
             <NavbarPlatformDropdown />
             <Nav.Item>
               <SmartLink className="nav-link" to="/product/">
@@ -118,4 +111,4 @@ export default ({
       </main>
     </div>
   );
-};
+}

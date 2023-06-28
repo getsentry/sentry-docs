@@ -1,54 +1,15 @@
-import React, { useRef } from "react";
+import React, {forwardRef, Fragment, useRef} from 'react';
 
-import CodeContext, { useCodeContextState } from "./codeContext";
-import SEO from "./seo";
-import Layout from "./layout";
-import SmartLink from "./smartLink";
-import TableOfContents from "./tableOfContents";
-import * as Sentry from "@sentry/gatsby";
-import Banner from "./banner";
+import {getCurrentTransaction} from '../utils';
 
-type GitHubCTAProps = {
-  sourceInstanceName: string;
-  relativePath: string;
-};
-
-const GitHubCTA = ({
-  sourceInstanceName,
-  relativePath,
-}: GitHubCTAProps): JSX.Element => (
-  <div className="github-cta">
-    <small>
-    Help improve this content
-    </small>
-    <br></br>
-    <small>
-    Our documentation is open source and available on GitHub. Your contributions are welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would be better").
-    <div className={"muted"}>
-     <SmartLink
-        to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
-      >
-         Suggest an edit to this page
-      </SmartLink>{" "}
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      <SmartLink
-        to={`https://docs.sentry.io/contributing/`}
-      >
-        Contribute to Docs
-      </SmartLink>{" "}
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      <SmartLink
-        to={`https://github.com/getsentry/sentry-docs/issues/new/choose`}
-      >
-        Report a problem
-      </SmartLink>{" "}
-      </div>
-    </small>
-  </div>
-);
+import {Banner} from './banner';
+import {CodeContext, useCodeContextState} from './codeContext';
+import {GitHubCTA} from './githubCta';
+import {Layout} from './layout';
+import {SEO} from './seo';
+import {TableOfContents} from './tableOfContents';
 
 export type PageContext = {
-  title?: string;
   description?: string;
   excerpt?: string;
   noindex?: boolean;
@@ -56,61 +17,62 @@ export type PageContext = {
   platform?: {
     name: string;
   };
+  title?: string;
 };
 
 type WrappedTOCProps = {
   pageContext: PageContext;
 };
 
-const WrappedTOC = React.forwardRef(
+const WrappedTOC = forwardRef(
   (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
     return <TableOfContents {...props} contentRef={ref} />;
   }
 );
 
 type Props = {
+  children?: JSX.Element;
   data?: {
     file?: {
       [key: string]: any;
     };
   };
   pageContext?: {
-    title?: string;
     description?: string;
     excerpt?: string;
     noindex?: boolean;
     notoc?: boolean;
+    title?: string;
   };
+  prependToc?: JSX.Element;
   seoTitle?: string;
   sidebar?: JSX.Element;
-  children?: JSX.Element;
-  prependToc?: JSX.Element;
 };
 
-export default ({
-  data: { file } = {},
+export function BasePage({
+  data: {file} = {},
   pageContext = {},
   seoTitle,
   sidebar,
   children,
   prependToc,
-}: Props): JSX.Element => {
-  const tx = Sentry.getCurrentHub()
-    .getScope()
-    .getTransaction();
+}: Props): JSX.Element {
+  const tx = getCurrentTransaction();
   if (tx) {
-    tx.setStatus("ok");
+    tx.setStatus('ok');
   }
 
-  const { title, excerpt, description } = pageContext;
+  const {title, excerpt, description} = pageContext;
   const hasToc = !pageContext.notoc;
 
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : "");
+  const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
   return (
-    <Layout {...{ sidebar, pageContext }}>
+    // @ts-expect-error TODO(epurkhiser): Understand why these types are
+    // totally different
+    <Layout {...{sidebar, pageContext}}>
       <SEO
         title={seoTitle || title}
         description={pageDescription}
@@ -120,9 +82,7 @@ export default ({
       <div className="row">
         <div
           className={
-            hasToc || prependToc
-              ? "col-sm-8 col-md-12 col-lg-8 col-xl-9"
-              : "col-12"
+            hasToc || prependToc ? 'col-sm-8 col-md-12 col-lg-8 col-xl-9' : 'col-12'
           }
         >
           <h1 className="mb-3">{title}</h1>
@@ -142,17 +102,15 @@ export default ({
         {(hasToc || prependToc) && (
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
             <div className="page-nav">
-              <Banner isModule={true} />
-              <React.Fragment>
+              <Banner isModule />
+              <Fragment>
                 {prependToc}
-                {hasToc && (
-                  <WrappedTOC ref={contentRef} pageContext={pageContext} />
-                )}
-              </React.Fragment>
+                {hasToc && <WrappedTOC ref={contentRef} pageContext={pageContext} />}
+              </Fragment>
             </div>
           </div>
         )}
       </div>
     </Layout>
   );
-};
+}

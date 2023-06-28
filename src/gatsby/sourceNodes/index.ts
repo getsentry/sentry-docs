@@ -1,15 +1,17 @@
-import { sourcePlatformNodes } from "./platformNodes";
-import { sourcePackageRegistryNodes } from "./packageRegistryNodes";
-import { sourceAppRegistryNodes } from "./appRegistryNodes";
-import { sourceAwsLambdaLayerRegistryNodes } from "./awsLambdLayerRegistryNodes";
-import { relayMetricsNodes } from "./relayMetricsNodes";
+import {sourceAppRegistryNodes} from './appRegistryNodes';
+import {sourceAwsLambdaLayerRegistryNodes} from './awsLambdLayerRegistryNodes';
+import {sourcePackageRegistryNodes} from './packageRegistryNodes';
+import {sourcePlatformNodes} from './platformNodes';
+import {relayMetricsNodes} from './relayMetricsNodes';
+import {piiFieldsNodes} from './relayPiiNodes';
 
-export default async params => {
-  await Promise.all([
-    relayMetricsNodes(params),
-    sourcePlatformNodes(params),
-    sourcePackageRegistryNodes(params),
-    sourceAppRegistryNodes(params),
-    sourceAwsLambdaLayerRegistryNodes(params),
-  ]);
-};
+async function main(params) {
+  relayMetricsNodes(params);
+  piiFieldsNodes(params);
+  await sourcePlatformNodes(params);
+  await sourcePackageRegistryNodes(params);
+  await sourceAppRegistryNodes(params);
+  await sourceAwsLambdaLayerRegistryNodes(params);
+}
+
+export default main;

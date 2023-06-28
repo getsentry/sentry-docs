@@ -1,16 +1,16 @@
-import React from "react";
-import { graphql } from "gatsby";
+import React from 'react';
+import {graphql} from 'gatsby';
 
-import BasePage from "~src/components/basePage";
-import Content from "~src/components/content";
-import ApiSidebar from "~src/components/apiSidebar";
-import InternalDocsSidebar from "~src/components/internalDocsSidebar";
+import {ApiSidebar} from 'sentry-docs/components/apiSidebar';
+import {BasePage} from 'sentry-docs/components/basePage';
+import {Content} from 'sentry-docs/components/content';
+import {InternalDocsSidebar} from 'sentry-docs/components/internalDocsSidebar';
 
-export default (props: any) => {
+export default function Doc(props: any) {
   let sidebar = null;
-  if (props.path.startsWith("/api/")) {
+  if (props.path.startsWith('/api/')) {
     sidebar = <ApiSidebar />;
-  } else if (props.path.startsWith("/contributing/")) {
+  } else if (props.path.startsWith('/contributing/')) {
     sidebar = <InternalDocsSidebar />;
   }
   return (
@@ -18,11 +18,11 @@ export default (props: any) => {
       <Content file={props.data.file} />
     </BasePage>
   );
-};
+}
 
 export const pageQuery = graphql`
   query DocQuery($id: String) {
-    file(id: { eq: $id }) {
+    file(id: {eq: $id}) {
       id
       relativePath
       sourceInstanceName

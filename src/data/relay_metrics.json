@@ -1,14 +1,44 @@
 [
   {
     "type": "Histogram",
+    "name": "buffer.dequeue_attempts",
+    "description": "Number of attempts needed to dequeue spooled envelopes from disk.\n\nAs long as there are enough permits in the [`crate::utils::BufferGuard`], this number should\nalways be one.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
     "name": "buffer.disk_size",
     "description": "The file size of the buffer db on disk, in bytes.\n\nThis metric is computed by multiplying `page_count * page_size`.",
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "buffer.envelopes_disk_count",
+    "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "buffer.envelopes_mem",
+    "description": "The estimated number of envelope bytes buffered in memory.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.envelopes_mem_count",
     "description": "The number of envelopes waiting for project states in memory.\n\nThis number is always <= `EnvelopeQueueSize`.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_read",
+    "description": "Number of _envelopes_ the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_written",
+    "description": "Number of _envelopes_ the envelope buffer spools to disk.",
     "features": []
   },
   {
@@ -87,14 +117,14 @@
   },
   {
     "type": "Counter",
-    "name": "event.transaction_name_changes",
-    "description": "The number of transaction events processed grouped by transaction name modifications.\nThis metric is tagged with:\n- `source_in`: The source of the transaction name before normalization.\nSee the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `change`: The mechanism that changed the transaction name.\nEither `\"none\"`, `\"pattern\"`, `\"rule\"`, or `\"both\"`.\n- `source_out`: The source of the transaction name after normalization.",
+    "name": "event.transaction",
+    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `contains_slashes`: Whether the transaction name contains `/`. We use this as a heuristic\nto represent URL transactions.",
     "features": []
   },
   {
     "type": "Counter",
-    "name": "event.transaction_source",
-    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.",
+    "name": "event.transaction_name_changes",
+    "description": "The number of transaction events processed grouped by transaction name modifications.\nThis metric is tagged with:\n- `source_in`: The source of the transaction name before normalization.\nSee the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `change`: The mechanism that changed the transaction name.\nEither `\"none\"`, `\"pattern\"`, `\"rule\"`, or `\"both\"`.\n- `source_out`: The source of the transaction name after normalization.",
     "features": []
   },
   {

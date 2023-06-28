@@ -1,10 +1,10 @@
 ---
 title: Debug Symbols
 sidebar_order: 2
-description: "Learn more about uploading debug symbols for both Android and iOS/macOS."
+description: "Learn more about uploading debug symbols for both Android, iOS/macOS, and Flutter Web."
 ---
 
-Debug symbols provide information that Sentry displays on the **Issue Details** page to help you triage an issue. We offer a range of methods to provide Sentry with debug symbols.
+We offer a range of methods to provide Sentry with debug symbols so that you can see symbolicated stack traces and triage issues faster.
 
 ## When to Upload
 
@@ -12,27 +12,137 @@ With default settings, complete stack traces are available in your Dart error, o
 
 <Note>
 
-For Flutter Desktop (Windows/macOS/Linux) `split-debug-info` and `obfuscate` flags are not supported yet. See this [issue](https://github.com/getsentry/sentry-dart/issues/433).
+For Flutter Desktop (Windows/Linux) `split-debug-info` and `obfuscate` flags are not supported yet. See this [issue](https://github.com/getsentry/sentry-dart/issues/433).
 
 </Note>
 
 Errors raised from the native layer in Flutter apps require certain debug information files to be uploaded. For example, an Android app can use `proguard` for minification and obfuscation. And when using NDK, dwarf debug files need to be uploaded. Flutter Web requires sourcemaps and iOS apps also require dwarf debug information files.
 
-## Sentry Dart Plugin
+## Automatically Upload Debug Symbols
 
-[Try out the Sentry Dart Plugin](https://github.com/getsentry/sentry-dart-plugin), which uploads debug symbols automatically for you, or follow the manual steps below.
+The easiest way to upload debug symbols is to use the [Sentry Dart Plugin](https://github.com/getsentry/sentry-dart-plugin) which will upload them automatically.
 
-## Uploading for iOS and macOS
+### Install
+
+In your `pubspec.yaml`, add `sentry_dart_plugin` as a new dev dependency.
+
+```yaml
+dev_dependencies:
+  sentry_dart_plugin: ^1.0.0
+```
+
+### Build
+
+Run
+
+- `flutter build apk`
+- `flutter build ios` (or `macos`), or
+- `flutter build web`
+
+before executing the `sentry_dart_plugin` plugin.
+
+This build step outputs the debug symbols and source maps that the plugin will upload.
+
+### Configure
+
+This Sentry Dart Plugin comes with a default configuration.
+
+To modify this configuration, add a `sentry:` configuration to the end of your `pubspec.yaml` file:
+
+```yaml
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: false
+  upload_sources: false
+  project: ...
+  org: ...
+  auth_token: ...
+  url: ...
+  wait_for_processing: false
+  log_level: error
+  release: ...
+  web_build_path: ...
+  commits: auto
+  ignore_missing: true
+```
+
+#### Available Configuration Fields
+
+`project`
+
+: The project's name, for example `sentry-flutter`. Required. This is a `string` type. The alternative environmental variable is `SENTRY_PROJECT`.
+
+`org`
+
+: Your organization's slug, for example `sentry-sdks`. Required. This is a `string` type. The alternative environmental variable is `SENTRY_ORG`.
+
+`auth_token`
+
+: The sentry auth token, which will look like `<64 random characters>`. Required. This is a `string` type. The alternative environmental variable is `SENTRY_AUTH_TOKEN`.
+
+`upload_debug_symbols`
+
+: Enables or disables the automatic upload of debug symbols. This is a boolean type with default value `true`.
+
+`upload_source_maps`
+
+: Enables or disables the automatic upload of source maps. This is a boolean type with default value `false`.
+
+`upload_sources`
+
+: Does or doesn't include the source code of native code. This is a boolean type with default value `false`.
+
+`url`
+
+: The URL of your project, for example `https<area>://mysentry.invalid/`. This is a `string` type. The alternative environmental variable is `SENTRY_URL`.
+
+`wait_for_processing`
+
+: Wait for server-side processing of uploaded files. This is a boolean type with default value `false`.
+
+`log_level`
+
+: Configures the log level for sentry-cli. This is a `string` type with default value `warn`. The alternative environmental variable is `SENTRY_LOG_LEVEL`. Possible values are `trace`, `debug`, `info`, `warn`, and `error`.
+
+`release`
+
+: The release version for source maps, it should match the release set by the SDK. This is a `string` type with default value `name@version` from pubspec. The alternative environmental variable is `SENTRY_RELEASE`.
+
+`web_build_path`
+
+: The web build folder. This is a `string` type with default value `build/web`.
+
+`commits`
+
+: Release commits integration. This is a `string` type with default value `auto`.
+
+`ignore_missing`
+
+: Ignore missing commits previously used in the release. This is a boolean type with default value `false`.
+
+### Run
+
+```bash
+flutter packages pub run sentry_dart_plugin
+```
+
+### Troubleshooting
+
+Refer to [Troubleshooting - Sentry Dart Plugin](/platforms/flutter/troubleshooting#sentry-dart-plugin) to resolve potential issues.
+
+## Manually Upload Debug Symbols
+
+### Uploading for iOS and macOS
 
 Sentry requires a dSYM upload to symbolicate your crash logs. The symbolication process unscrambles Apple’s crash logs to reveal the function, file names, and line numbers of the crash. [Learn how to upload the dSYM files](/platforms/apple/dsym/).
 
 If you use the `split-debug-info` and `obfuscate` flags, you need to upload the `*.dSYM` files instead of the `*.symbols` files generated by the Flutter build. The `*.dSYM` files are located in the `build` folder of your project and not the given `split-debug-info` folder.
 
-##  Uploading for Android NDK
+### Uploading for Android NDK
 
-If you are using `sentry_flutter` version earlier than 5.1, native symbolication on Android requires a specific configuration. For good symbolication, set `android:extractNativeLibs="true"` in your `AndroidManifest.xml` file or `android.bundle.enableUncompressedNativeLibs=false` for [Android App Bundle](https://developer.android.com/guide/app-bundle) in your `gradle.properties` file.
+The Sentry Dart Plugin will also upload NDK symbols if `upload_debug_symbols` is enabled. Alternatively, see our docs on uploading [Debug Information Files](/product/cli/dif/#uploading-files) manually with the Sentry CLI.
 
-If you use the [Android NDK](/platforms/android/using-ndk/), you must [upload files manually using our CLI](/product/cli/dif/#uploading-files).
+If you are using a version of `sentry_flutter` earlier than 5.1, native symbolication on Android requires a specific configuration. Refer to [Troubleshooting](/platforms/flutter/troubleshooting/#native-symbolication-on-android) for more information.
 
 <Note>
 
@@ -40,10 +150,16 @@ Sentry's Flutter SDK doesn't currently support the `uploadNativeSymbols` flag fr
 
 </Note>
 
-## Uploading with ProGuard
+### Uploading with ProGuard
 
-To use ProGuard with Sentry, upload the [Android Proguard/R8 mapping files](/platforms/android/proguard/) by either the recommended method of using our Gradle integration or manually by using [sentry-cli](/product/cli/dif/#proguard-mapping-upload).
+If you have ProGuard (`minifyEnabled`) enabled, you must upload the [Android Proguard/R8 mapping files](/platforms/android/proguard/) to see complete stack traces. You can upload these files by either using our Gradle integration (recommended) or manually by using the [Sentry CLI](/product/cli/dif/#proguard-mapping-upload).
 
-## Uploading Source Maps for Flutter Web
+### Uploading Source Maps for Flutter Web
 
-You can also use our CLI to [upload source maps for Flutter Web](/product/cli/releases/#managing-release-artifacts).
+The Sentry Dart plugin also uploads source maps if `upload_source_maps` is enabled. Alternatively, you can use the Sentry CLI to upload your source maps for Flutter Web by following the docs on [Managing Release Artifacts](/product/cli/releases/#managing-release-artifacts). This will automatically enable Source Context as well.
+
+### Uploading Source Context for Flutter Android, iOS, and macOS
+
+Use the [`upload_sources`](/platforms/flutter/upload-debug/#sentry-dart-plugin) option to enable [Source Context](/platforms/flutter/data-management/debug-files/source-context/).
+
+For more information, check out the [Native Symbolication on iOS/macOS](/platforms/flutter/troubleshooting/#native-symbolication-on-iosmacos) and [Source Context](/platforms/flutter/troubleshooting/#source-context) troubleshooting guides.

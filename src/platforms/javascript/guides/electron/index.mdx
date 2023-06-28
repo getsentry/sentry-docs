@@ -74,12 +74,17 @@ import * as Sentry from "@sentry/electron/renderer";
 
 If you're using a framework-specific Sentry SDK in the Electron renderers, you
 can pass that `init` function as the second parameter and the two SDKs functionalities will be combined:
+
 ```javascript
-import { init } from '@sentry/electron/renderer';
-import { init as reactInit } from '@sentry/react';
+import { init } from "@sentry/electron/renderer";
+import { init as reactInit } from "@sentry/react";
 
-init({ /* config */ }, reactInit);
-
+init(
+  {
+    /* config */
+  },
+  reactInit
+);
 ```
 
 ## Offline Support
@@ -98,14 +103,14 @@ Sentry.init({
     // The maximum number of events to keep in the queue.
     maxQueueCount: 30,
     // Called every time the number of requests in the queue changes.
-    queuedLengthChanged: (length) => { },
+    queuedLengthChanged: (length) => {},
     // Called before attempting to send an event to Sentry. Used to override queuing behavior.
     //
     // Return 'send' to attempt to send the event.
     // Return 'queue' to queue and persist the event for sending later.
     // Return 'drop' to drop the event.
-    beforeSend: (request) => isOnline() ? 'send' : 'queue'
-  }
+    beforeSend: (request) => (isOnline() ? "send" : "queue"),
+  },
 });
 ```
 
@@ -234,9 +239,3 @@ crashReporter.start({
 ## Source Maps
 
 To find out why Sentry needs your source maps and how to provide them visit: [Source Maps](/platforms/javascript/sourcemaps/)
-
-### Native Application
-
-To allow Sentry to match source code references to uploaded source maps or source files, make sure your tool outputs files relative to your project root folder and prefixes them either with `/` or with `~/`. Some tools do this automatically (e.g. Webpack), or have a configuration option (e.g. TypeScript). For others, please see the section on rewriting source maps before uploading.
-
-The SDK will rewrite stack traces before sending them to Sentry. If your application generates manual stack traces for some reason, make sure stack frames always contain relative paths from the project root starting with `~/` or `app:///`.

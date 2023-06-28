@@ -9,7 +9,7 @@ To add Sentry to your Rust project you just need to add a new dependency to your
 
 ```toml
 [dependencies]
-sentry = "{{ packages.version('sentry.rust') }}"
+sentry = "{{@inject packages.version('sentry.rust') }}"
 ```
 
 `sentry.init()` will return you a guard that when freed, will prevent process exit until all events have been sent (within a timeout):

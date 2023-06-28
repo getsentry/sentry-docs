@@ -1,6 +1,6 @@
 ---
 name: React-Native
-doc_link: https://docs.sentry.io/platforms/react-native/performance/
+doc_link: https://docs.sentry.io/platforms/react-native/performance/instrumentation/custom-instrumentation/
 support_level: production
 type: language
 ---

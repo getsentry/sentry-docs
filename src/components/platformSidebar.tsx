@@ -1,15 +1,12 @@
-import React from "react";
-import { StaticQuery, graphql } from "gatsby";
+import React from 'react';
+import {graphql, StaticQuery} from 'gatsby';
 
-import DynamicNav, { toTree } from "./dynamicNav";
+import {DynamicNav, toTree} from './dynamicNav';
 
 const navQuery = graphql`
   query PlatformNavQuery {
     allSitePage(
-      filter: {
-        context: { draft: { ne: true } }
-        path: { regex: "/^/(platforms|product)/" }
-      }
+      filter: {context: {draft: {ne: true}}, path: {regex: "/^/(platforms|product)/"}}
     ) {
       nodes {
         path
@@ -27,15 +24,15 @@ const navQuery = graphql`
 `;
 
 type Node = {
-  path: string;
   context: {
-    title: string;
-    sidebar_order?: number;
-    sidebar_title?: string;
     platform: {
       name: string;
     };
+    title: string;
+    sidebar_order?: number;
+    sidebar_title?: string;
   };
+  path: string;
 };
 
 type Props = {
@@ -57,11 +54,7 @@ type ChildProps = Props & {
   };
 };
 
-export const PlatformSidebar = ({
-  platform,
-  guide,
-  data,
-}: ChildProps): JSX.Element => {
+export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element {
   const platformName = platform.name;
   const guideName = guide ? guide.name : null;
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
@@ -74,7 +67,7 @@ export const PlatformSidebar = ({
         root={pathRoot}
         tree={tree}
         title={`Sentry for ${(guide || platform).title}`}
-        prependLinks={[[`/${pathRoot}/`, "Getting Started"]]}
+        prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[
           `/${pathRoot}/enriching-events/`,
           `/${pathRoot}/data-management/`,
@@ -88,30 +81,28 @@ export const PlatformSidebar = ({
       <DynamicNav
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
-        prependLinks={[[`/${pathRoot}/performance/`, "Set Up Performance"]]}
-        suppressMissing
-        tree={tree}
-      />
-      <DynamicNav
-        root={`/${pathRoot}/session-replay`}
-        title="Session Replay"
-        prependLinks={[
-          [`/${pathRoot}/session-replay/`, "Set Up Session Replay"],
-        ]}
-        suppressMissing
-        tree={tree}
-      />
-      <DynamicNav
-        root={`/${pathRoot}/crons`}
-        title="Crons"
-        prependLinks={[[`/${pathRoot}/crons/`, "Set Up Crons"]]}
+        prependLinks={[[`/${pathRoot}/performance/`, 'Set Up Performance']]}
         suppressMissing
         tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/profiling`}
         title="Profiling"
-        prependLinks={[[`/${pathRoot}/profiling/`, "Set Up Profiling"]]}
+        prependLinks={[[`/${pathRoot}/profiling/`, 'Set Up Profiling']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/session-replay`}
+        title="Session Replay"
+        prependLinks={[[`/${pathRoot}/session-replay/`, 'Set Up Session Replay']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/crons`}
+        title="Crons"
+        prependLinks={[[`/${pathRoot}/crons/`, 'Set Up Crons']]}
         suppressMissing
         tree={tree}
       />
@@ -139,13 +130,13 @@ export const PlatformSidebar = ({
       />
     </ul>
   );
-};
+}
 
-export default (props: Props): JSX.Element => {
+export function PlatformSidebar(props: Props): JSX.Element {
   return (
     <StaticQuery
       query={navQuery}
-      render={data => <PlatformSidebar data={data} {...props} />}
+      render={data => <SidebarContent data={data} {...props} />}
     />
   );
-};
+}

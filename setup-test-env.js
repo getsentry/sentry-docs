@@ -1,5 +1,5 @@
-// https://www.gatsbyjs.com/docs/unit-testing/
-import "@testing-library/jest-dom/extend-expect";
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
 
 global.___loader = {
   enqueue: jest.fn(),

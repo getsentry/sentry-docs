@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from 'react';
 
-import Markdown from "./markdown";
+import {Markdown} from './markdown';
 
 type FileNode = {
   childMarkdownRemark?: {
@@ -16,24 +16,23 @@ type Props = {
 };
 
 // https://github.com/gatsbyjs/gatsby/issues/12413
-const RawHtml = ({ html }) => {
-  const [innerHtml, setInnerHtml] = useState();
+function RawHtml({html}) {
+  return <div dangerouslySetInnerHTML={{__html: html}} />;
+}
 
-  useEffect(() => {
-    setInnerHtml(html);
-  }, []);
-
-  return <div dangerouslySetInnerHTML={{ __html: innerHtml }} />;
-};
-
-export default ({ file }: Props): JSX.Element | null => {
-  if (!file) return null;
+export function Content({file}: Props): JSX.Element | null {
+  if (!file) {
+    return null;
+  }
   const child = file.childMarkdownRemark || file.childMdx;
-  if (!child) return null;
+  if (!child) {
+    return null;
+  }
   if (file.childMarkdownRemark) {
     return <RawHtml html={file.childMarkdownRemark.html} />;
-  } else if (file.childMdx) {
+  }
+  if (file.childMdx) {
     return <Markdown value={file.childMdx.body} />;
   }
   return null;
-};
+}

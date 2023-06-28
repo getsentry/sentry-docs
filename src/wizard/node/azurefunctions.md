@@ -26,7 +26,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 });
 
-module.exports = async function(context, req) {
+module.exports = async function (context, req) {
   try {
     await notExistFunction();
   } catch (e) {

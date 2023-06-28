@@ -1,15 +1,11 @@
-import React from "react";
+import React from 'react';
 
-import SmartLink from "./smartLink";
+import {SmartLink} from './smartLink';
 
-export default (): JSX.Element => {
+export function Header(): JSX.Element {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
-      <SmartLink
-        to="/"
-        title="Sentry error monitoring"
-        className="navbar-brand pb-0"
-      >
+      <SmartLink to="/" title="Sentry error monitoring" className="navbar-brand pb-0">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 75 75">
           <g height="75" width="75" className="loader-spin">
             <path
@@ -28,11 +24,11 @@ export default (): JSX.Element => {
         className="d-md-none btn btn-outline-dark"
         type="button"
         onClick={() => {
-          const el = document.getElementById("sidebar");
-          if (el.style.display === "block") {
-            el.style.display = "none";
+          const el = document.getElementById('sidebar');
+          if (el.style.display === 'block') {
+            el.style.display = 'none';
           } else {
-            el.style.display = "block";
+            el.style.display = 'block';
           }
         }}
         aria-controls="sidebar"
@@ -43,4 +39,4 @@ export default (): JSX.Element => {
       </button>
     </div>
   );
-};
+}

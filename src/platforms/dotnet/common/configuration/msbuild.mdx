@@ -9,7 +9,7 @@ redirect_from:
 The [Sentry CLI](/product/cli) has many useful features that can improve your Sentry experience.
 For .NET, you can use it to upload [debug information files](/product/cli/dif), such as .NET `PDB` symbol files.
 This allows Sentry to show a more complete stack trace, including file names and line numbers.
-You can also use it to upload *source code*, which enables Sentry to display [source context](../../data-management/debug-files/source-context/)
+You can also use it to upload _source code_, which enables Sentry to display [source context](../../data-management/debug-files/source-context/)
 when viewing stack traces.
 
 While you can always run `sentry-cli` from the command line manually, we've made it easier by including it in the `Sentry`
@@ -21,12 +21,12 @@ For this feature to work, you must authenticate to Sentry on the machine that is
 
 <Alert level="info" title="Important">
 
-The Sentry auth token (or legacy API key) should always be treated as secret.  Be careful not to commit authentication information to source control,
+The Sentry auth token (or legacy API key) should always be treated as secret. Be careful not to commit authentication information to source control,
 or use it in any way that it would be written to log files.
 
 </Alert>
 
-Any of the authentication methods accepted by the Sentry CLI can be used.  See [Configuration and Authentication](/product/cli/configuration/).
+Any of the authentication methods accepted by the Sentry CLI can be used. See [Configuration and Authentication](/product/cli/configuration/).
 However, we generally recommend the following:
 
 - If building your releases on a developer workstation, [install the Sentry CLI](/product/cli/installation/) and then
@@ -40,14 +40,13 @@ However, we generally recommend the following:
 
   ```yaml
   steps:
-  - name: Build
-    run: dotnet build -c Release
-    env:
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    - name: Build
+      run: dotnet build -c Release
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
   ```
 
   You do not need to separately install Sentry CLI on your build server, as it is already provided by the Sentry NuGet package.
-
 
 ## Configuration
 
@@ -56,6 +55,7 @@ You may also want to configure other [optional properties](#optional-msbuild-pro
 
 The slugs can be found in various places from the Sentry UI, such as in the URL after selecting a project.
 For example, the organization slug is `example-org` and the project slug is `example-project` in the following URLs:
+
 - `https://example-org.sentry.io/projects/example-project/?project=1234567`
 - `https://sentry.io/organizations/example-org/projects/example-project/?project=1234567`
 
@@ -67,7 +67,7 @@ Any of the [Sentry CLI configuration values](/product/cli/configuration/#configu
 or in configuration files, such as shown in the above authentication steps.
 
 However, other than authentication, you should consider setting configuration values via the MSBuild properties described below,
-such that they are part of your code that is commited to source control.  This allows them to be consistent across environments,
+such that they are part of your code that is commited to source control. This allows them to be consistent across environments,
 and also allows the settings to differ per each project in your solution, if desired.
 
 If _both_ MSBuild properties and environment variables are provided, the MSBuild properties will take precedence.
@@ -81,10 +81,10 @@ or the `dotnet` CLI (`YourProject.csproj`, `YourProject.vbproj`, `Directory.Buil
 We recommend using a dedicated property group, so that you can control when these features are used.
 
 In the following example, `Condition="'$(Configuration)' == 'Release'"` ensures that these features are enabled
-only for release builds.  This is the usual recommendation, because sending data to Sentry during debug builds
+only for release builds. This is the usual recommendation, because sending data to Sentry during debug builds
 can slow down your development workflow.
 
-Alternatively, you could control this using any MSBuild property or environment variable you like.  For example,
+Alternatively, you could control this using any MSBuild property or environment variable you like. For example,
 if you only want these features enabled in a GitHub Actions CI workflow, you could use `Condition="'$(GITHUB_ACTIONS)' == 'true'"`.
 
 ```xml
@@ -110,7 +110,7 @@ if you only want these features enabled in a GitHub Actions CI workflow, you cou
 
 ```
 
-Alternatively, they could be passed as parameters when building your project.  For example:
+Alternatively, they could be passed as parameters when building your project. For example:
 
 ```shell
 dotnet build YourProject.csproj -c Release -p:SentryOrg=___ORG_SLUG___ -p:SentryProject=___PROJECT_SLUG___ -p:SentryUploadSymbols=true -p:SentryUploadSources=true
@@ -142,7 +142,7 @@ The project slug for the specific Sentry project you are using.
 
 <ConfigKey name="SentryUrl">
 
-The URL to your Sentry server.  Required only if self-hosting Sentry.  (Do not use with sentry.io.)
+The URL to your Sentry server. Required only if self-hosting Sentry. (Do not use with sentry.io.)
 
 </ConfigKey>
 
@@ -152,17 +152,17 @@ There are a few additional properties available to control the Sentry CLI:
 
 <ConfigKey name="SentryUploadSymbols">
 
-Controls uploading symbols to Sentry during the build.  Defaults to `false` (disabled).
+Controls uploading symbols to Sentry during the build. Defaults to `false` (disabled).
 
 Set this property to `true` to opt-in to sending symbols to Sentry as [debug information files](../../data-management/debug-files/),
-which are used to perform symbolication of stack traces.  This will allow you to view file names and line numbers within
+which are used to perform symbolication of stack traces. This will allow you to view file names and line numbers within
 a stack trace, instead of just a function name.
 
 </ConfigKey>
 
 <ConfigKey name="SentryUploadSources">
 
-Controls whether source code files are uploaded to Sentry during the build.  Defaults to `false` (disabled).
+Controls whether source code files are uploaded to Sentry during the build. Defaults to `false` (disabled).
 
 Set this property to `true` to opt-in to sending source code to Sentry.
 This enables the display of [source context](../../data-management/debug-files/source-context/) when viewing stack traces.
@@ -170,7 +170,7 @@ This enables the display of [source context](../../data-management/debug-files/s
 <Note>
 
 If you are already embedding source code in your symbol files using [`EmbedAllSources`](https://github.com/dotnet/sourcelink/blob/main/docs/README.md#embedallsources),
-you do not need to upload them to Sentry separately.  In other words, use *either* `SentryUploadSources` or `EmbedAllSources`, not both.
+you do not need to upload them to Sentry separately. In other words, use _either_ `SentryUploadSources` or `EmbedAllSources`, not both.
 
 </Note>
 
@@ -187,7 +187,7 @@ Set to `false` to disable the Sentry CLI completely, ignoring the settings of ea
 <Alert level="info" title="Important">
 
 There are two more properties, `SentryAuthToken` and `SentryApiKey`, that are available for authentication.
-However we recommend that they are used only for simple testing, and not for production.  If you decide to use
+However we recommend that they are used only for simple testing, and not for production. If you decide to use
 them, be very careful that their values are not committed to source control or appear in build logs.
 A more secure approach is to set authentication via environment variable or `~/.sentryclirc` file,
 

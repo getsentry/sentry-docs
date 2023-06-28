@@ -1,28 +1,28 @@
-import React from "react";
-import { NavDropdown } from "react-bootstrap";
-import { PlatformIcon } from "platformicons";
+import React, {Fragment} from 'react';
+import {NavDropdown} from 'react-bootstrap';
+import {PlatformIcon} from 'platformicons';
 
-import usePlatform, { usePlatformList } from "./hooks/usePlatform";
-import SmartLink from "./smartLink";
+import {usePlatform, usePlatformList} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
-export default () => {
+export function NavbarPlatformDropdown() {
   const platformList = usePlatformList();
   const [currentPlatform] = usePlatform(null, false, false);
   return (
     <NavDropdown
       title={
         currentPlatform ? (
-          <React.Fragment>
+          <Fragment>
             <PlatformIcon
               platform={currentPlatform.key}
               size={16}
-              style={{ marginRight: "0.5rem" }}
-              format="lg"
+              style={{marginRight: '0.5rem'}}
+              format="sm"
             />
             {currentPlatform.title}
-          </React.Fragment>
+          </Fragment>
         ) : (
-          "Platforms"
+          'Platforms'
         )
       }
       id="nd-platforms"
@@ -30,9 +30,7 @@ export default () => {
       {platformList.map(platform => (
         <SmartLink
           className={`dropdown-item ${
-            currentPlatform && currentPlatform.key == platform.key
-              ? "active"
-              : ""
+            currentPlatform && currentPlatform.key === platform.key ? 'active' : ''
           }`}
           key={platform.key}
           to={platform.url}
@@ -40,8 +38,8 @@ export default () => {
           <PlatformIcon
             platform={platform.key}
             size={16}
-            style={{ marginRight: "0.5rem" }}
-            format="lg"
+            style={{marginRight: '0.5rem'}}
+            format="sm"
           />
           {platform.title}
         </SmartLink>
@@ -52,4 +50,4 @@ export default () => {
       </SmartLink>
     </NavDropdown>
   );
-};
+}

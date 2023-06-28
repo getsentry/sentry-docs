@@ -31,7 +31,7 @@ const app = new Koa();
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
 app.on("error", (err, ctx) => {
-  Sentry.withScope(scope => {
+  Sentry.withScope((scope) => {
     scope.setSDKProcessingMetadata({ request: ctx.request });
     Sentry.captureException(err);
   });
@@ -67,8 +67,8 @@ const requestHandler = (ctx, next) => {
   return new Promise((resolve, reject) => {
     Sentry.runWithAsyncContext(async () => {
       const hub = Sentry.getCurrentHub();
-      hub.configureScope(scope =>
-        scope.addEventProcessor(event =>
+      hub.configureScope((scope) =>
+        scope.addEventProcessor((event) =>
           Sentry.addRequestDataToEvent(event, ctx.request, {
             include: {
               user: false,
@@ -77,7 +77,11 @@ const requestHandler = (ctx, next) => {
         )
       );
 
-      await next();
+      try {
+        await next();
+      } catch (err) {
+        reject(err);
+      }
       resolve();
     });
   });
@@ -105,7 +109,7 @@ const tracingMiddleWare = async (ctx, next) => {
   ctx.__sentry_transaction = transaction;
 
   // We put the transaction on the scope so users can attach children to it
-  Sentry.getCurrentHub().configureScope(scope => {
+  Sentry.getCurrentHub().configureScope((scope) => {
     scope.setSpan(transaction);
   });
 
@@ -130,8 +134,8 @@ app.use(tracingMiddleWare);
 
 // usual error handler
 app.on("error", (err, ctx) => {
-  Sentry.withScope(scope => {
-    scope.addEventProcessor(event => {
+  Sentry.withScope((scope) => {
+    scope.addEventProcessor((event) => {
       return Sentry.addRequestDataToEvent(event, ctx.request);
     });
     Sentry.captureException(err);

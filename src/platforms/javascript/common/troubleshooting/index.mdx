@@ -80,7 +80,9 @@ When you are using our CDN, ad-blocking or script-blocking extensions may preven
 
 Additionally, even when the SDK is downloaded and initialized correctly, Sentry endpoints that need to receive captured data may be blocked as well. This prevents any error reports, sessions health, or performance data from being delivered, making it effectively unavailable in [sentry.io](https://sentry.io).
 
-You can work around the first issue in multiple ways explained above. However, the endpoint blockage can be only resolved using the tunnel.
+Furthermore, some browsers, like [Brave](https://brave.com/), have built-in ad-blockers that may block requests sent to our endpoint. Even if users deactivate your domain from blocking, Brave might continue to block [requests made from service workers](https://github.com/getsentry/sentry/issues/47912#issuecomment-1573714875).
+
+You can work around our CDN bundles being blocked by [using our NPM packages](#using-the-npm-package) and bundling our SDK with your app. However, the endpoint blockage can only be resolved by using a tunnel as explained below.
 
 ### Using the `tunnel` Option
 
@@ -205,9 +207,11 @@ Check out our [examples repository](https://github.com/getsentry/examples/tree/m
 
 If your use-case is related to the SDK package itself being blocked, any of the following solutions will help you resolve this issue.
 
-### Using Package Directly
+### Using the NPM Package
 
 The best way to deal with script-blocking extensions is to use the SDK package directly through the `npm` and bundle it with your application. This way, you can be sure that the code will be always be there as you expect it to be.
+
+### Self-hosting CDN bundles
 
 The second way is to download the SDK from our CDN and host it yourself. This way, the SDK will still be separated from the rest of your code, but you'll be certain that it won't be blocked since its origin will be the same as the origin of your website.
 
@@ -226,8 +230,8 @@ Place this snippet immediately **above** the `<script>` tag containing our CDN b
 ```javascript
 if ("Proxy" in window) {
   var handler = {
-    get: function(_, key) {
-      return new Proxy(function(cb) {
+    get: function (_, key) {
+      return new Proxy(function (cb) {
         if (key === "flush" || key === "close") return Promise.resolve();
         if (typeof cb === "function") return cb(window.Sentry);
         return window.Sentry;
@@ -244,8 +248,8 @@ If you would like to copy and paste the snippet directly, here it is minified:
 <script>
   if ("Proxy" in window) {
     var n = {
-      get: function(o, e) {
-        return new Proxy(function(n) {
+      get: function (o, e) {
+        return new Proxy(function (n) {
           return "flush" === e || "close" === e
             ? Promise.resolve()
             : "function" == typeof n
@@ -302,7 +306,7 @@ const client = new BrowserClient({
 
 const hub = new Hub(client);
 
-hub.configureScope(function(scope) {
+hub.configureScope(function (scope) {
   scope.setTag("a", "b");
 });
 
@@ -315,7 +319,7 @@ try {
   hub.captureException(e);
 }
 
-hub.withScope(function(scope) {
+hub.withScope(function (scope) {
   hub.addBreadcrumb({ message: "crumb 2" });
   hub.captureMessage("test2");
 });
@@ -336,7 +340,7 @@ class HappyIntegration {
   }
 
   setupOnce() {
-    Sentry.addGlobalEventProcessor(event => {
+    Sentry.addGlobalEventProcessor((event) => {
       const self = Sentry.getCurrentHub().getIntegration(HappyIntegration);
       // Run the integration ONLY when it was installed on the current Hub
       if (self) {
@@ -373,18 +377,18 @@ const client2 = new Sentry.BrowserClient({
 });
 const hub2 = new Sentry.Hub(client2);
 
-hub1.run(currentHub => {
+hub1.run((currentHub) => {
   // The `hub.run` method makes sure that `Sentry.getCurrentHub()` returns this hub during the callback
   currentHub.captureMessage("a");
-  currentHub.configureScope(function(scope) {
+  currentHub.configureScope(function (scope) {
     scope.setTag("a", "b");
   });
 });
 
-hub2.run(currentHub => {
+hub2.run((currentHub) => {
   // The `hub.run` method makes sure that `Sentry.getCurrentHub()` returns this hub during the callback
   currentHub.captureMessage("x");
-  currentHub.configureScope(function(scope) {
+  currentHub.configureScope(function (scope) {
     scope.setTag("c", "d");
   });
 });
@@ -411,7 +415,7 @@ By default, Sentry does not capture errors when a resource (like an image or a c
 ```javascript
 document.body.addEventListener(
   "error",
-  event => {
+  (event) => {
     if (!event.target) return;
 
     if (event.target.tagName === "IMG") {

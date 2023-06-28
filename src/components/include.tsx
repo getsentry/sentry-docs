@@ -1,11 +1,11 @@
-import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
+import React from 'react';
+import {graphql, useStaticQuery} from 'gatsby';
 
-import Content from "./content";
+import {Content} from './content';
 
 const includeQuery = graphql`
   query IncludeQuery {
-    allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
+    allFile(filter: {sourceInstanceName: {eq: "includes"}}) {
       nodes {
         id
         relativePath
@@ -22,15 +22,14 @@ type Props = {
   name: string;
 };
 
-export default ({ name }: Props): JSX.Element => {
+export function Include({name}: Props): JSX.Element {
   const {
-    allFile: { nodes: files },
+    allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
 
-  const match = files.find(node => node.relativePath == name);
+  const match = files.find(node => node.relativePath === name);
   if (match) {
     return <Content file={match} />;
-  } else {
-    throw Error(`could not find include file for ${name}`);
   }
-};
+  throw Error(`could not find include file for ${name}`);
+}

@@ -4,14 +4,14 @@ sidebar_order: 5000
 supported:
   - android
   - apple
+  - go
   - python
-  - rust
+  - ruby
 notSupported:
   - unity
   - dart
   - flutter
   - native
-  - ruby
   - javascript
   - javascript.vue
   - react-native
@@ -19,31 +19,31 @@ notSupported:
   - java
   - java.spring-boot
   - java.spring
-  - go
   - javascript.cordova
   - native.breakpad
   - native.crashpad
   - native.minidumps
   - unreal
   - native.wasm
+  - rust
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
 
-<PlatformSection supported={["apple", "android", "python", "node"]}>
+<PlatformSection supported={["go"]}>
 
 <Note>
 
-Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony. If you have any questions or feedback, please email us at [profiling@sentry.io](mailto:profiling@sentry.io).
+Go Profiling is currently in alpha. Alpha features are still in progress and may have bugs. We recognize the irony.
 
 </Note>
 
 </PlatformSection>
 
-<PlatformSection supported={["rust"]}>
+<PlatformSection supported={["ruby"]}>
 
 <Note>
 
-Rust Profiling is currently in alpha. Alpha features are still in-progress and may have bugs. We recognize the irony. If you have any questions or feedback, please email us at [profiling@sentry.io](mailto:profiling@sentry.io).
+Ruby Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony.
 
 </Note>
 
@@ -57,11 +57,22 @@ Profiling depends on Sentry’s performance monitoring product being enabled bef
 
 <PlatformSection supported={["apple"]}>
 
-```swift
+```swift {tabTitle:Swift}
+import Sentry
+
 SentrySDK.start { options in
     options.dsn = "___DSN___"
     options.tracesSampleRate = 1.0
 }
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___DSN___";
+    options.tracesSampleRate = @1.0;
+}];
 ```
 
 </PlatformSection>
@@ -79,6 +90,19 @@ In `AndroidManifest.xml`:
 
 </PlatformSection>
 
+<PlatformSection supported={["go"]}>
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	EnableTracing: true,
+	// We recommend adjusting this value in production:
+	TracesSampleRate: 1.0,
+})
+```
+
+</PlatformSection>
+
 <PlatformSection supported={["python"]}>
 
 ```python
@@ -90,33 +114,53 @@ sentry_sdk.init(
 
 </PlatformSection>
 
-<PlatformSection supported={["rust"]}>
+<PlatformSection supported={["ruby"]}>
 
-```rust
-sentry::init((
-    "___DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        ..Default::default()
-    },
-));
+```ruby
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  config.traces_sample_rate = 1.0
+end
 ```
 
 </PlatformSection>
 
-Check out the <PlatformLink to="/performance/">performance setup documentation</PlatformLink> for more detailed information on how to configure sampling. Setting the sample rate to 1.0 means all transactions will be captured. By default, some transactions will be created automatically for common operations like loading a view controller/activity and app startup.
+Check out the <PlatformLink to="/performance/">performance setup documentation</PlatformLink> for more detailed information on how to configure sampling. Setting the sample rate to 1.0 means all transactions will be captured.
+
+<PlatformSection supported={["apple", "android"]}>
+
+By default, some transactions will be created automatically for common operations like loading a view controller/activity and app startup.
+
+</PlatformSection>
 
 ## Enable Profiling
 
 <PlatformSection supported={["apple"]}>
 
-```swift
+<Note>
+
+iOS profiling is available starting in SDK version `8.3.1`.
+
+</Note>
+
+```swift {tabTitle:Swift}
+import Sentry
+
 SentrySDK.start { options in
     options.dsn = "___DSN___"
-    options.tracesSampleRate = 1.0
-    options.profilesSampleRate = 1.0
+    options.tracesSampleRate = 1.0 // tracing must be enabled for profiling
+    options.profilesSampleRate = 1.0 // see also `profilesSampler` if you need custom sampling logic
 }
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___DSN___";
+    options.tracesSampleRate = @1.0; // tracing must be enabled for profiling
+    options.profilesSampleRate = @1.0; // see also `profilesSampler` if you need custom sampling logic
+}];
 ```
 
 <Note>
@@ -128,6 +172,12 @@ The <PlatformIdentifier name="profiles-sample-rate" /> setting is _relative_ to 
 </PlatformSection>
 
 <PlatformSection supported={["android"]}>
+
+<Note>
+
+Android profiling is available starting in SDK version `6.16.0`.
+
+</Note>
 
 In `AndroidManifest.xml`:
 
@@ -151,7 +201,7 @@ The `io.sentry.traces.profiling.sample-rate` setting is _relative_ to the `io.se
 
 <Note>
 
-Python profiling beta is available starting in SDK version `1.18.0`.
+Python profiling is available starting in SDK version `1.18.0`.
 
 </Note>
 
@@ -199,56 +249,58 @@ sentry_sdk.init(
 
 </PlatformSection>
 
-<PlatformSection supported={["node"]}>
-
-```javascript
-import * as Sentry from "@sentry/node";
-import { ProfilingIntegration } from "@sentry/profiling-node";
-
-Sentry.init({
-  dsn: "___DSN___",
-  tracesSampleRate: 1,
-  profilesSampleRate: 1,
-  integrations: [new ProfilingIntegration()],
-});
-```
+<PlatformSection supported={["go"]}>
 
 <Note>
 
-The <PlatformIdentifier name="profilesSampleRate" /> setting is _relative_ to the <PlatformIdentifier name="tracesSampleRate" /> setting.
+Go Profiling alpha is available since SDK version `0.22.0`.
 
 </Note>
+
+To enable profiling, set the `ProfilesSampleRate`:
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	EnableTracing: true,
+	// We recommend adjusting these values in production:
+	TracesSampleRate: 1.0,
+	// The sampling rate for profiling is relative to TracesSampleRate:
+	ProfilesSampleRate: 1.0,
+})
+```
 
 </PlatformSection>
 
-<PlatformSection supported={["rust"]}>
+<PlatformSection supported={["ruby"]}>
 
 <Note>
 
-Rust Profiling alpha is available starting in SDK version `0.29.0`.
+Ruby profiling beta is available starting in SDK version `5.9.0`.
 
 </Note>
 
-In order to use Profiling, you first need to enable the `profiling` feature in the `sentry` dependency inside the project `Cargo.toml`:
+We use the [`stackprof` gem](https://github.com/tmm1/stackprof) to collect profiles for Ruby.
 
-```cargo
-[dependencies]
-sentry = { version = "{{ packages.version('sentry.rust') }}", features = ["profiling"] }
+First add `stackprof` to your `Gemfile` and make sure it is loaded before `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'stackprof'
+gem 'sentry-ruby'
 ```
 
-Once you've completed the step above, you can proceed by enabling it in the SDK:
+Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your sentry initializer.
 
-```rust
-sentry::init((
-    "___DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        enable_profiling: true,
-        profiles_sample_rate: 1.0,
-        ..Default::default()
-    },
-));
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "___DSN___"
+  config.traces_sample_rate = 1.0
+  config.profiles_sample_rate = 1.0
+end
 ```
 
 <Note>
@@ -258,12 +310,3 @@ The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to 
 </Note>
 
 </PlatformSection>
-
-## Troubleshooting
-
-If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
-
-- Ensure that performance monitoring <PlatformLink to="/performance/">is enabled</PlatformLink>.
-- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
-- If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
-- Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.

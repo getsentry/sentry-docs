@@ -3,12 +3,11 @@ title: Configuration
 sidebar_order: 4100
 notSupported:
   - javascript.cordova
-  - javascript.electron
   - javascript.wasm
 description: "Learn about the general Session Replay configuration fields."
 ---
 
-<Include name="beta-note-session-replay.mdx" />
+<Include name="feature-stage-beta-session-replay.mdx" />
 
 ## General Integration Configuration
 
@@ -19,62 +18,85 @@ The following options can be configured on the root level of your browser-based 
 | replaysSessionSampleRate | number | `0`     | The sample rate for replays that begin recording immediately and last the entirety of the user's session. `1.0` collects all replays, and `0` collects none.                                                                                                      |
 | replaysOnErrorSampleRate | number | `0`     | The sample rate for replays that are recorded when an error happens. This type of replay will record up to a minute of events prior to the error and continue recording until the session ends. `1.0` captures all sessions with an error, and `0` captures none. |
 
-The following options can be configured as options to the integration, in `new Replay({})`:
+The following can be configured as integration options in `new Replay({})`:
 
-| Key           | Type    | Default | Description                                                                                                                                                                        |
-| ------------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stickySession | boolean | `true`  | Keep track of the user across page loads. Note, a single user using multiple tabs will result in multiple sessions. Closing a tab will result in the session being closed as well. |
+| Key                     | Type                     | Default  | Description                                                                                                                                                   |
+| ----------------------- | ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| stickySession           | boolean                  | `true`   | Keep track of users across page loads. Note, because closing a tab ends the session, a single user using multiple tabs will be recorded as multiple sessions. |
+| mutationLimit           | number                   | 10000    | The upper bound of mutations to process before Session Replay stops recording due to performance impacts. See [Mutation Limits](#mutation-limits)             |
+| mutationBreadcrumbLimit | number                   | 750      | The upper bound of mutations to process before Session Replay sends a breadcrumb to warn of large mutations. See [Mutation Limits](#mutation-limits)          |
+| networkDetailAllowUrls  | (string \| RegExp)[]     | `[]`     | Capture request and response details for XHR and fetch requests that match the given URLs.                                                                    |
+| networkCaptureBodies    | boolean                  | `true`   | Decide whether to capture request and response bodies for URLs defined in `networkDetailAllowUrls`.                                                           |
+| networkRequestHeaders   | string[]                 | `[]`     | Additional request headers to capture for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                    |
+| networkResponseHeaders  | string[]                 | `[]`     | Additional response headers to capture for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                   |
+| beforeAddRecordingEvent | (event) => event \| null | `i => i` | Filter additional recording events that include console logs and network requests/responses.                                                                  |
+
+### Sampling
+
+To learn more about how session sampling works, check out our <PlatformLink to="/session-replay/understanding-sessions/#default-session-initialization">Default Session Initialization</PlatformLink> docs.
+
+### Network Details
+
+By default, Replay will capture basic information about all outgoing fetch and XHR requests in your application. This includes the URL, request and response body size, method, and status code. The intention is to limit the chance of collecting private data.
+
+To capture additional information such as request and response headers or bodies, you'll need to opt-in via `networkDetailAllowUrls` (requires SDK version >= [7.50.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.50.0)). This will make it possible for you to elect to only add URLs that are safe for capturing bodies and avoid any endpoints that may contain Personal Identifiable Information, (PII).
+
+<Note>
+
+Content in bodies will be PII-sanitized server-side, based on object keys and values.
+Refer to our <PlatformLink to="/session-replay/privacy/#network-request-and-response-bodies-and-headers">Replay Privacy section</PlatformLink> for more details.
+
+</Note>
+
+Any URL matching the given pattern(s) will then be captured with additional details:
+
+```javascript
+new Replay({
+  networkDetailAllowUrls: [window.location.origin],
+});
+```
+
+If you give us a string, we'll match any URL that contains that string. You can use a regex to handle exact or more complex matches.
+
+Requests to a URL matched by the configured patterns will be enhanced with the request and response body, as well as the following default headers:
+
+- `Content-Type`
+- `Content-Length`
+- `Accept`
+
+If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`, for example:
+
+```javascript
+new Replay({
+  networkDetailAllowUrls: [
+    window.location.origin,
+    "api.example.com",
+    /^https:\/\/api\.example\.com/,
+  ],
+  networkRequestHeaders: ["Cache-Control"],
+  networkResponseHeaders: ["Referrer-Policy"],
+});
+```
+
+<Note>Captured bodies will be truncated to 150k characters max.</Note>
+
+## Mutation Limits
+
+Session Replay works by recording incremental DOM changes that occur in your web application. Generally these changes occur in small batches and cause minimal overhead. However, it can be easy to overlook cases that will cause a large amount of DOM mutations to happen in a single update. An example is a custom dropdown component that has an unbounded list of options to render. This can negatively impact performance without Session Replay and its effects will be magnified with Session Replay enabled. In order to avoid this scenario, Session Replay will stop recording if it detects a large number of mutations (default: 10,000), which can be configured by setting `mutationLimit`. Additionally, we provide breadcrumbs in the replay to warn you when a large number of mutations are detected (default: 750).
+
+```javascript
+new Replay({
+  mutationBreadcrumbLimit: 1000,
+  mutationLimit: 1500,
+});
+```
 
 ## Identifying Users
 
-You can use the Sentry SDK to set the user of a session. To associate a user identity to a session replay, refer to the <PlatformLink to="/enriching-events/identify-user">Identifying User Docs</PlatformLink>.
+You can use the Sentry SDK to link a user to a session. Read more about it in our <PlatformLink to="/enriching-events/identify-user">docs</PlatformLink>.
 
 ```javascript
 Sentry.setUser({ email: "jane.doe@example.com" });
-```
-
-## Start and Stop Recording
-
-Replay recording starts if it's included in the `integrations` array when calling `Sentry.init` or, when `addIntegration` is called from a Sentry client instance. To stop recording, call `stop()`:
-
-```javascript {tabTitle: ESM}
-const replay = new Replay();
-
-// Load replay when you configure Sentry SDK
-Sentry.init({
-  integrations: [replay],
-});
-
-// Or if you want to defer loading Replay
-getCurrentHub()
-  .getClient()
-  .addIntegration(replay);
-
-// sometime later
-await replay.flush(); // wait for any pending recording data to be sent
-replay.stop();
-
-replay.start();
-```
-
-```javascript {tabTitle: CDN}
-const replay = new Sentry.Replay();
-
-// Load replay when you configure Sentry SDK
-Sentry.init({
-  integrations: [replay],
-});
-
-// Or if you want to defer loading Replay
-Sentry.getCurrentHub()
-  .getClient()
-  .addIntegration(replay);
-
-// sometime later
-await replay.flush(); // wait for any pending recording data to be sent
-replay.stop();
-
-replay.start();
 ```
 
 ## Privacy

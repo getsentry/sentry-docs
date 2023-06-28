@@ -13,7 +13,6 @@ notSupported:
   - php.laravel
   - php.symfony
   - elixir
-
 ---
 
 When an event is captured and sent to Sentry, SDKs will merge that event data with extra
@@ -43,10 +42,11 @@ routes or controllers.
 As you start using an SDK, a scope and hub are automatically created for you out
 of the box. It's unlikely that you'll interact with the hub directly unless you're
 writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call `configure-scope` at any point in
+other hand are more user facing. You can call <PlatformIdentifier name="configure-scope" /> at any point in
 time to modify data stored on the scope. This is useful for doing things like
 [modifying the context](../context/).
 
+<PlatformSection supported={["python", "dotnet"]}>
 <Alert>
 If you are very curious about how thread locality works: On platforms such as .NET
 or on Python 3.7 and later we will use "ambient data" to have either the hub flow
@@ -55,9 +55,11 @@ with your code or the hub is already a singleton that internally manages the sco
 Effectively this means that when you spawn a task in .NET and the execution flow is
 not suppressed all the context you have bound to the scope in Sentry will flow along.
 If however you suppress the flow, you get new scope data.
-</Alert>
 
-When you call a global function such as `capture_event` internally Sentry
+</Alert>
+</PlatformSection>
+
+When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
 discovers the current hub and asks it to capture an event. Internally the hub will
 then merge the event with the topmost scope's data.
 
@@ -74,7 +76,7 @@ For details on how this affects performance monitoring, check out the [Connect E
 
 ## Configuring the Scope
 
-The most useful operation when working with scopes is the `configure-scope` function. It can be used to reconfigure the current scope.
+The most useful operation when working with scopes is the <PlatformIdentifier name="configure-scope" /> function. It can be used to reconfigure the current scope.
 
 <PlatformSection supported={["javascript", "node"]}>
 
@@ -108,32 +110,29 @@ To learn what useful information can be associated with scopes see
 ## Local Scopes
 
 We also support pushing and configuring a scope within a single call. This is typically
-called `with-scope`, `push-scope` or implemented as a function parameter on the capture methods, depending on the SDK. It's very helpful if
+called <PlatformIdentifier name="with-scope" />, <PlatformIdentifier name="push-scope" /> or implemented as a function parameter on the capture methods, depending on the SDK. It's very helpful if
 you only want to send data for one specific event.
 
 <PlatformSection supported={["go", "java", "javascript", "php", "python", "ruby", "rust"]} notSupported={["android", "kotlin-multiplatform"]}>
 
-### Using `with-scope`
+### Using <PlatformIdentifier name="with-scope" />
 
-In the following example we use
-`with-scope` to attach a `level` and a `tag` to only one specific error:
+In the following example we use <PlatformIdentifier name="with-scope" /> to attach a `level` and a `tag` to only one specific error:
 
 <PlatformContent includePath="enriching-events/scopes/with-scope" />
 
-While this example looks similar to `configure-scope`, it is actually very different.
-Calls to `configure-scope` change the current active scope; all successive calls
-to `configure-scope` will maintain previously set changes unless they are explicitly
-unset.
+While this example looks similar to <PlatformIdentifier name="configure-scope" />, it is actually very different.
+Calls to <PlatformIdentifier name="configure-scope" /> change the current active scope; all successive calls to <PlatformIdentifier name="configure-scope" /> will maintain previously set changes unless they are explicitly unset.
 
-On the other hand, `with-scope` creates a clone of the current scope, and the changes
-made will stay isolated within the `with-scope` callback function. This allows you to
+On the other hand, <PlatformIdentifier name="with-scope" /> creates a clone of the current scope, and the changes
+made will stay isolated within the <PlatformIdentifier name="with-scope" /> callback function. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
-even call `clear` to briefly remove all context information.
+even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
 
 <PlatformSection notSupported={["ruby"]}>
 <Alert level="info" title="Important">
 
-Any exceptions that occur within the callback function for `with-scope` will not be
+Any exceptions that occur within the callback function for <PlatformIdentifier name="with-scope" /> will not be
 caught, and all errors that occur will be silently ignored and **not** reported.
 
 </Alert>
@@ -177,16 +176,16 @@ Sentry's SDK for Java stores the scope and the context in a thread-local variabl
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-kotlin-extensions</artifactId>
-    <version>{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}</version>
+    <version>{{@inject packages.version('sentry.java.kotlin-extensions', '5.0.0') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-kotlin-extensions:{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}'
+implementation 'io.sentry:sentry-kotlin-extensions:{{@inject packages.version('sentry.java.kotlin-extensions', '5.0.0') }}'
 ```
 
 ```scala {tabTitle: SBT}
-libraryDependencies += "io.sentry" % "sentry-kotlin-extensions" % "{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}"
+libraryDependencies += "io.sentry" % "sentry-kotlin-extensions" % "{{@inject packages.version('sentry.java.kotlin-extensions', '5.0.0') }}"
 ```
 
 ### Usage
