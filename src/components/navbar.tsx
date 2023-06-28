@@ -31,9 +31,9 @@ export function Navbar({platforms}: Props): JSX.Element {
             </SmartLink>
           </Nav.Item>
           <Nav.Item>
-            <SmartLink className="nav-link" to="https://changelog.getsentry.com/">
+            <Nav.Link href="https://changelog.getsentry.com/">
               Changelog
-            </SmartLink>
+            </Nav.Link>
           </Nav.Item>
           <SandboxOnly>
             <Nav.Item>
