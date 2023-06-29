@@ -9,6 +9,30 @@ protected function schedule(Schedule $schedule)
 {
     $schedule->command('emails:send')
         ->everyHour()
-        ->sentryMonitor('<monitor-slug>'); // add this line
+        ->sentryMonitor(); // add this line
+}
+```
+
+## Configure a Job Monitor
+
+By default, the Laravel SDK will infer various parameters of your scheduled task.
+For greater control, we expose some optional parameters on the `sentryMonitor()` macro.
+
+```php {filename:app/Console/Kernel.php}
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('emails:send')
+        ->everyHour()
+        ->sentryMonitor(
+            // Specify the slug of the job monitor in case of duplicate commands or if the monitor was created in the UI
+            monitorSlug: null,
+            // Check-in margin in minutes
+            checkInMargin: 5,
+            // Max runtime in minutes
+            maxRuntime: 15,
+            // In case you want to configure the job monitor exclusively in the UI, you can turn off sending the monitor config with the check-in.
+            // Passing a monitor-slug is required in this case.
+            updateMonitorConfig: false,
+        )
 }
 ```
