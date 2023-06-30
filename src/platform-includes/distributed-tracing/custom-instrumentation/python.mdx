@@ -1,0 +1,87 @@
+On this page you will learn how to manually propagate trace information into and out of your Python application. Please note, that you do not need to do this manually, if you <PlatformLink to="/usage/distributed-tracing/#how-to-use-distributed-tracing">use one of our supported frameworks</PlatformLink>, or you have our <PlatformLink to="/performance/">performance monitoring feature</PlatformLink> turned on.
+
+To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+
+## Extract Incoming Tracing Information
+
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continue_trace()` function to help you with this. Incoming tracing information can come from different places:
+
+- In a web environment it will be sent with HTTP headers, for example, by another Sentry SDK used in your frontend project.
+- In a job queue, like Celery, it can be retrieved from meta or header variables.
+- You also can pick up tracing information from environment variables.
+
+Here's an example of how to extract and store incoming tracing information using `continue_trace()`:
+
+```python
+import sentry_sdk
+from my_project import get_incoming_headers_as_dict
+
+headers = get_incoming_headers_as_dict()
+
+sentry_sdk.continue_trace(headers)
+```
+
+In this example, `get_incoming_headers_as_dict()` returns a dictionary that contains tracing information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
+
+Sentry's `continue_trace()` function will extract the given headers, try to find the `sentry-trace` and `baggage` headers, and store them in memory for later use.
+
+
+## Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must now also be added to outgoing requests.
+
+If you are sending outgoing HTTP requests with [Requests](https://requests.readthedocs.io/en/latest/), [AIOHTTP](https://docs.aiohttp.org/en/stable/), the low level [http.client](https://docs.python.org/3/library/http.client.html), or [httplib](https://docs.python.org/2/library/httplib.html) on Python 2, this tracing information is automatically added to outgoing requests.
+
+If your using none of the above, you can generate this tracing information with the Sentry SDK's `get_traceparent()` and `get_baggage()` functions. Here's an example:
+
+```python
+import sentry_sdk
+from my_project import make_an_outgoing_request
+
+headers = {}
+headers["sentry-trace"] = sentry_sdk.get_traceparent()
+headers["baggage"] = sentry_sdk.get_baggage()
+
+make_an_outgoing_request(to="https://example.com", headers=headers)
+```
+
+In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses the Sentry Python SDK, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+
+
+
+
+### Inject Tracing Information Into Rendered HTML
+
+To propagate tracing information into JavaScript running in rendered HTML you have to inject HTML `meta` tags for `sentry-trace` and `baggage` data into your rendered HTML. Here's an example:
+
+```python
+import sentry_sdk
+from my_project import render
+
+meta = ""
+meta += '<meta name="sentry-trace" content="%s">' % sentry_sdk.get_traceparent()
+meta += '<meta name="baggage" content="%s">' % sentry_sdk.get_baggage()
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        {additional_meta}
+    </head>
+    <body>
+        <p>This is a website.</p>
+    </body>
+</html>
+""".format(additional_meta=meta)
+
+render(html)
+
+```
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
