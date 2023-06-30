@@ -119,7 +119,7 @@ To upload your source code to Sentry so it can be shown in stack traces, use our
             </configuration>
             <executions>
                 <execution>
-                    <phase>install</phase>
+                    <phase>generate-resources</phase>
                     <goals>
                         <goal>uploadSourceBundle</goal>
                     </goals>
