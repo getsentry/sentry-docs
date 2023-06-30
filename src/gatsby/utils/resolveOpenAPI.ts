@@ -6,7 +6,7 @@ import {promises as fs} from 'fs';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = 'da92eb10889538e4b73bd00f0bda017105c04af0';
+const SENTRY_API_SCHEMA_SHA = '2bbf774ae0ac48463822705df21b66f79fe5c74b';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
