@@ -1,0 +1,84 @@
+On this page you will learn how to manually propagate trace information into and out of your JavaScript application. Please note, that you do not need to do this manually, if you [use one of our supported frameworks](/platforms/javascript/usage/distributed-tracing/#how-to-use-distributed-tracing), or you have our <PlatformLink to="/performance/">performance monitoring feature</PlatformLink> turned on.
+
+To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+
+To enable distributed tracing, add the `BrowserTracing` integration to your `Sentry.init` options, as described in the Performance <PlatformLink to="/performance/instrumentation/automatic-instrumentation/"> Automatic Instrumentation</PlatformLink> docs. The [Next.js](/platforms/javascript/guides/nextjs/) and [SvelteKit](/platforms/javascript/guides/sveltekit/) SDKs include this integration by default.
+
+If you are using one of the frameworks listed above, see the <PlatformLink to="/distributed-tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink>. page on how to configure distributed tracing.
+
+If you prefer to implement custom distributed tracing, you must:
+
+- Extract and store incoming tracing information from HTML `meta` tags when loading the page
+- Inject tracing information to the outgoing request when sending outgoing requests.
+
+To learn more, see our <PlatformLink to="/distributed-tracing/">Distributed Tracing</PlatformLink> docs.
+
+## Extract Tracing Information From HTML `meta` Tags
+
+Assuming the backend that renders the HTML has injected tracing information into the HTML as `meta` tags, you can extract that tracing information on `pageload` and use it to create new transactions connected to that incoming trace.
+
+See the docs on how to [Inject Tracing Information Into Rendered HTML](/platforms/python/distributed-tracing/instrumentation/custom-instrumentation/#inject-tracing-information-into-rendered-html) to learn more about how to configure your backend to inject this information.
+
+For example, on `pageload` you could do the following:
+
+```javascript
+// Read meta tag values
+const sentryTraceMetaTagValue = getMetaContent("sentry-trace");
+const baggageMetaTagValue = getMetaContent("baggage");
+
+// Extract Sentry trace information
+const traceParentData = extractTraceparentData(sentryTraceMetaTagValue);
+
+// Create Dynamic Sampling Context
+const dynamicSamplingContext =
+  baggageHeaderToDynamicSamplingContext(baggageMetaTagValue);
+
+// Create transaction context
+const transactionContext = {
+  ...traceParentData,
+  metadata: {
+    dynamicSamplingContext: dynamicSamplingContext,
+  },
+};
+
+// Start transaction with tracing information of meta tags
+const pageLoadTransaction = startTransaction(hub, transactionContext);
+```
+
+In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` HTML `meta` tags.
+
+## Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers that you extracted and stored in the `pageLoadTransaction`, `sentry-trace` and `baggage`, must be added to outgoing XHR/fetch requests.
+
+Here's an example of how to collect and inject this tracing information to outgoing requests:
+
+```javascript
+// Create `sentry-trace` header
+const sentryTraceHeader = pageLoadTransaction.toTraceparent();
+
+// Create `baggage` header
+const dynamicSamplingContext = pageLoadTransaction.getDynamicSamplingContext();
+const sentryBaggageHeader = dynamicSamplingContextToSentryBaggageHeader(
+  dynamicSamplingContext
+);
+
+// Make outgoing request
+fetch("https://example.com", {
+  method: "GET",
+  headers: {
+    baggage: sentryBaggageHeader,
+    "sentry-trace": sentryTraceHeader,
+  },
+}).then((response) => {
+  // ...
+});
+```
+
+In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses a Sentry SDK, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
