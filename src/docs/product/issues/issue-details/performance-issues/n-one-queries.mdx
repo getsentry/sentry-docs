@@ -6,7 +6,7 @@ redirect_from:
 description: "Learn more about N+1 queries and how to diagnose and fix them."
 ---
 
-_N+1 queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
+_N+1 queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns or modifies all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
 
 ## Detection Criteria
 
@@ -64,3 +64,18 @@ def books(request):
 Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query. Instead of a long waterfall, there is a single `SELECT` query:
 
 ![Solved N+1 queries in an example application](n-plus-one-queries-after.png)
+
+N+1s can also happen when modifying data. For example, instead of creating objects in a loop:
+
+```python
+for i in range(1, 11):
+    Book.objects.create(title: f"Book {i}")
+```
+
+You can instead create the objects in a single query:
+
+```python
+Book.objects.bulk_create(
+    [Book(title: f"Book {i}") for i in range(1, 11)]
+)
+```

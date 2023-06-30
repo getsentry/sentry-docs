@@ -6,7 +6,6 @@ supported:
   - apple
   - go
   - python
-  - rust
   - ruby
 notSupported:
   - unity
@@ -26,6 +25,7 @@ notSupported:
   - native.minidumps
   - unreal
   - native.wasm
+  - rust
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
 
@@ -44,16 +44,6 @@ Go Profiling is currently in alpha. Alpha features are still in progress and may
 <Note>
 
 Ruby Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony.
-
-</Note>
-
-</PlatformSection>
-
-<PlatformSection supported={["rust"]}>
-
-<Note>
-
-Rust Profiling is currently in alpha. Alpha features are still in-progress and may have bugs. We recognize the irony.
 
 </Note>
 
@@ -131,21 +121,6 @@ Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
   config.traces_sample_rate = 1.0
 end
-```
-
-</PlatformSection>
-
-<PlatformSection supported={["rust"]}>
-
-```rust
-sentry::init((
-    "___DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        ..Default::default()
-    },
-));
 ```
 
 </PlatformSection>
@@ -333,71 +308,5 @@ end
 The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
 
 </Note>
-
-</PlatformSection>
-
-<PlatformSection supported={["rust"]}>
-
-<Note>
-
-Rust Profiling alpha is available starting in SDK version `0.29.0`.
-
-</Note>
-
-In order to use Profiling, you first need to enable the `profiling` feature in the `sentry` dependency inside the project `Cargo.toml`:
-
-```toml
-[dependencies]
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["profiling"] }
-```
-
-Once you've completed the step above, you can proceed by enabling it in the SDK:
-
-```rust
-sentry::init((
-    "___DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        enable_profiling: true,
-        profiles_sample_rate: 1.0,
-        ..Default::default()
-    },
-));
-```
-
-<Note>
-
-The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
-
-</Note>
-
-</PlatformSection>
-
-## Troubleshooting
-
-If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
-
-- Ensure that performance monitoring <PlatformLink to="/performance/">is enabled</PlatformLink>.
-- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
-- If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
-- Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
-
-<PlatformSection supported={["go"]}>
-
-### Limitations
-
-Profile samples are collected periodically for each goroutine.
-If your program uses a large number of concurrent goroutines, make sure to check whether the overhead is within the acceptable range for your use case.
-
-As always, and especially with Profiling in Go being an alpha feature, feedback is welcome on [Discord](https://discord.com/channels/621778831602221064/621786587939864586) or [GitHub](https://github.com/getsentry/sentry-go/issues/630).
-
-</PlatformSection>
-
-<PlatformSection supported={["ruby"]}>
-
-### Limitations
-
-Profiles for multi-threaded servers like `puma` might not capture frames correctly when async I/O is happening. This is a limitation of `stackprof`.
 
 </PlatformSection>

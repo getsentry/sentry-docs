@@ -76,6 +76,9 @@ function IndexPage() {
                   API
                 </SmartLink>
               </Nav.Item>
+              <Nav.Item>
+                <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
+              </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
                   <Nav.Link
