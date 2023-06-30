@@ -63,7 +63,7 @@ addContentView(breakWorld, ViewGroup.LayoutParams(
 
 ## Next Steps
 
-- [Manual Configuration](/platforms/android/configuration/manual-init/): Customize the SDK initialization behavior.
+- [Manual Configuration](/platforms/android/configuration/manual-init/#manual-initialization): Customize the SDK initialization behavior.
 - [ProGuard/R8](/platforms/android/configuration/gradle/#proguardr8--dexguard): Deobfuscate and get readable stacktraces in your Sentry errors.
 - [Jetpack Compose](/platforms/android/configuration/integrations/jetpack-compose/): Learn about our first class integration with Jetpack Compose.
 - [Source Context](/platforms/android/enhance-errors/source-context/): See your source code as part of your stacktraces in Sentry.
