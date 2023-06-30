@@ -1,6 +1,6 @@
 ---
 title: Enable Suspect Commits & Stack Trace Linking
-sidebar_order: 6
+sidebar_order: 5
 redirect_from:
   - /guides/integrate-frontend/configure-scms/
   - /product/sentry-basics/guides/integrate-frontend/configure-scms/
@@ -13,62 +13,26 @@ Sentry uses commit metadata from your source code repositories to help you resol
 
 Now that you've created a release, you can tell Sentry which commits are associated with this latest version of your code; this is called _commit tracking_.
 
-## Step 1: Integrate your GitHub account and repositories
+## Step 1: Integrate Your GitHub Account and Repository
 
 1. To integrate GitHub with your Sentry org, follow the instructions in [our GitHub documentation](/product/integrations/source-code-mgmt/github/).
 
-2. Add the `frontend-monitoring` repository from your GitHub account.
+2. Add the `frontend-tutorial` repository from your GitHub account.
 
    ![Add project repository](configure-scms-01.png)
 
 3. Click the "Code Mappings" tab
 
-4. Add a code mapping between the `frontend-monitoring` repository and your Sentry project and the `main` or `master` branch depending on your repository. Tell Sentry that your components live in the `src/` directory:
+4. Add a code mapping between the `frontend-tutorial` repository and your Sentry project and the `main` or `master` branch depending on your repository. Tell Sentry that your components live in the `src/` directory:
 
    ![Add code mapping](configure-scms-09.png)
 
-## Step 2: Set commit tracking
+## Step 2: Set Up Commit Tracking
 
-Now that you've set up releases in Sentry as part of your CI/CD process and integrated your source code repositories, you can associate commits from your linked repository to your releases.
+A *release* is a version of your code deployed to an environment. See the [Releases](/product/releases/) documentation to learn more. Sentry uses releases to match up your source maps and source code. Releases can also be used to enable Sentry's [Suspect Commits](/product/issues/suspect-commits/) feature.
 
-<Note>
+The Sentry webpack plugin automatically configures release information and sends it to Sentry when you create a new build of your project.
 
-In the demo project, we use a `Makefile` to handle our build-related tasks. If you are not using the provided React demo code and do not have a `Makefile`, you can run the `sentry-cli` commands used in this tutorial directly from the `command line` or integrate the commands into the relevant build script.
-
-</Note>
-
-1. Open the `Makefile` in your project.
-
-2. Add the following target at the bottom of the file:
-
-   ```bash
-   associate_commits:
-       sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) set-commits --auto $(REACT_APP_RELEASE_VERSION)
-   ```
-
-   > The command associates commits with the release. The _auto_ flag automatically determines the repository name, and associates commits between the previous release’s commit and the current head commit with the release.
-
-3. The new target, `associate_commits`, will be invoked as part of the `setup_release` target. Add it at the end:
-
-   ```bash
-   setup_release: create_release upload_sourcemaps associate_commits
-   ```
-
-   Your `Makefile` should look like this:
-
-   ![Updated Makefile](configure-scms-02.png)
-
-4. If your terminal is still serving the demo app on localhost, press `^C` to shut it down.
-
-5. Build, serve, and restart the project on your localhost by running:
-
-   ```bash
-   > npm run deploy
-   ```
-
-> In the terminal log, notice that the `sentry-cli` identified the GitHub repository.
-
-![Updated Makefile](configure-scms-03.png)
 
 ## Step 3: Suspect commits and suggested assignees
 
