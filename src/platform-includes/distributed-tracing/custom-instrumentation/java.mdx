@@ -1,0 +1,66 @@
+On this page you will learn how to manually propagate trace information into and out of your Java application. Please note, that you do not need to do this manually, if you [use one of our supported frameworks](/platforms/java/usage/distributed-tracing/#how-to-use-distributed-tracing), or you have our <PlatformLink to="/performance/">performance monitoring feature</PlatformLink> turned on.
+
+To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+
+## Step 1) Extract Incoming Tracing Information
+
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continueTrace()` function to help you with this. Incoming tracing information can come from different places:
+
+- In a web environment it will be sent with HTTP headers, for example, by another Sentry SDK used in your frontend project.
+
+Here's an example of how to extract and store incoming tracing information using `continueTrace()`:
+
+```java
+import io.sentry.BaggageHeader;
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.SentryTraceHeader;
+import io.sentry.TransactionContext;
+
+final String sentryTraceHeader = httpRequest.getHeader(SentryTraceHeader.SENTRY_TRACE_HEADER);
+final List<String> baggageHeader = Collections.list(httpRequest.getHeaders(BaggageHeader.BAGGAGE_HEADER));
+
+final TransactionContext transactionContext = Sentry.continueTrace(sentryTraceHeader, baggageHeader);
+if (transactionContext != null) {
+    final ITransaction transaction = Sentry.startTransaction(transactionContext);
+}
+```
+
+In this example, `getHeader()` returns a single `String` or `null` and `getHeaders()` returns an enumeration of `Strings` which may be empty.
+
+By passing these headers to Sentry's `continueTrace()` function it will store them in memory for later use.
+
+## Step 2) Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must now also be added to outgoing requests.
+
+### Inject Tracing Information Into HTTP Requests
+
+If you are sending outgoing HTTP requests with <PlatformLink to="/guides/spring/performance/instrumentation/automatic-instrumentation/">RestTemplate</PlatformLink>, [WebClient](https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html), <PlatformLink to="/configuration/integrations/okhttp/">OkHttp</PlatformLink>, <PlatformLink to="/performance/instrumentation/apollo/">Apollo</PlatformLink>, <PlatformLink to="/performance/instrumentation/apollo3/">Apollo 3</PlatformLink>, <PlatformLink to="/performance/instrumentation/open-feign/">OpenFeign</PlatformLink> and have our integration for it enabled, this tracing information is automatically added to outgoing requests.
+
+If your using none of the above, you can generate this tracing information with the Sentry SDK's `getTraceparent()` and `getTaggage()` functions. Here's an example:
+
+```java
+import io.sentry.BaggageHeader;
+import io.sentry.Sentry;
+import io.sentry.SentryTraceHeader;
+
+final SentryTraceHeader traceparent = Sentry.getTraceparent();
+if (traceparent != null) {
+    httpHeaders.add(traceparent.getName(), traceparent.getValue());
+}
+final BaggageHeader baggage = Sentry.getBaggage();
+if (baggage != null) {
+    httpHeaders.add(baggage.getName(), baggage.getValue());
+}
+
+// ... make an outgoing request using httpHeaders
+```
+
+In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses the Sentry Java SDK, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
