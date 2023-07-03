@@ -1,4 +1,5 @@
 import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import styled from '@emotion/styled';
 import {
   Hit,
   Result,
@@ -9,8 +10,15 @@ import DOMPurify from 'dompurify';
 import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
 
+import {DocsBot} from 'sentry-docs/components/docsbot';
+
 import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
 import {Logo} from './logo';
+
+const SearchBar = styled.div`
+  display: flex;
+  flex-direction: row;
+`;
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {
@@ -174,7 +182,7 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
   }, []);
 
   return (
-    <div ref={ref}>
+    <SearchBar ref={ref}>
       <input
         type="search"
         placeholder="Search"
@@ -185,7 +193,8 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
         onFocus={() => setInputFocus(true)}
         ref={inputRef}
       />
-
+      <p style={{margin: '6px 8px'}}>OR</p>
+      <DocsBot />
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
           {loading && <Logo loading />}
@@ -279,6 +288,6 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
           )}
         </div>
       )}
-    </div>
+    </SearchBar>
   );
 }

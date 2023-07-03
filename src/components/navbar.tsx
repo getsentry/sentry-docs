@@ -16,7 +16,9 @@ export function Navbar({platforms}: Props): JSX.Element {
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
-      <Search path={location.pathname} platforms={platforms} />
+      <div className="index-search" style={{width: '45rem', margin: '0 0.8rem'}}>
+        <Search path={location.pathname} platforms={platforms} />
+      </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
           <NavbarPlatformDropdown />
