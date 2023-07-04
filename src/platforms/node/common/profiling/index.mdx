@@ -64,13 +64,13 @@ Under the hood, the Sentry profiler uses V8's [CpuProfiler](https://v8docs.nodes
 
 ## Runtime Flags
 
-The **Profiling** package enables you to run the profiler in either [eager or lazy mode](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374). When a profile is started while no other profiles are running, the default profiling mode (lazy) sometimes causes `startProfiling` calls to take a long time (sometimes in the range of a couple hundred milliseconds). The benefit of lazy logging is that it doesn't add any overhead when profiles aren't running.
+The default mode of the v8 CpuProfiler is [kEagerLoggin](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374) which enables the profiler even when no profiles are active - this is good because it makes calls to startProfiling fast at the tradeoff for constant CPU overhead. The behavior can be controlled via the SENTRY_PROFILER_LOGGING_MODE environment variable with values of eager|lazy. If you opt to use the lazy logging mode, calls to startProfiling may be slow (depending on environment and node version, it can be in the order of a few hundred ms).
 
-If this behavior is prohibitive for your use case, you can set the environment flag shown below, which will cause the profiler to run in eager mode. Eager mode improves the performance of calls to `startProfiling`, but the tradeoff is small, constant CPU overhead.
+Example of starting a server with lazy logging mode.
 
 ```bash
-# Run profiler in eager mode
-SENTRY_PROFILER_LOGGING_MODE=eager node script.js
+# Run profiler in lazy mode
+SENTRY_PROFILER_LOGGING_MODE=lazy node server.js
 ```
 
 We recommend you have your own CPU resource-monitoring in place, because the actual resource use could be environment-dependent.
