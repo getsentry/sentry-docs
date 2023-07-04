@@ -166,26 +166,20 @@ time offsets without violating the 30 day constraint that relay imposes.
 Add the following to `conftest.py` in the project root:
 
 ```python
-import itertools
-import pytest
-from django.conf import settings
-from django.db import connection, connections, reset_queries
-from django.template import Template, Context
-
 @pytest.fixture(scope="function", autouse=True)
-def log_sql():
+def log_sql(request):
+    from django.conf import settings
+    from django.db import connections, reset_queries
+
     reset_queries()
     settings.DEBUG = True
 
     yield
 
-    time = sum([float(q["time"]) for q in connection.queries])
-    t = Template(
-        "{% for sql in sqllog %}{{sql.sql|safe}}{% if not forloop.last %}\n\n{% endif %}{% endfor %}"
-    )
-    queries = list(itertools.chain.from_iterable([conn.queries for conn in connections.all()]))
-    log = t.render(Context({"sqllog": queries, "count": len(queries), "time": time}))
-    print(log)
+    print(f"\nQuery Log from {request.node.nodeid}")
+    for connection in connections.all():
+        for query in connection.queries:
+            print(f"{connection.alias}: {query['sql']}")
 ```
 
 Now all SQL executed during tests will be printed to stdout. It's recommended
