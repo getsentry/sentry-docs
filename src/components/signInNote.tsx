@@ -1,11 +1,21 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {useLocation} from '@reach/router';
 
+import {CodeContext} from './codeContext';
 import {ExternalLink} from './externalLink';
 import {Note} from './note';
 
 export function SignInNote(): JSX.Element {
   const location = useLocation();
+
+  const {codeKeywords} = useContext(CodeContext);
+
+  const user = codeKeywords.USER;
+
+  // This means the user is signed in
+  if (user) {
+    return null;
+  }
 
   return (
     <Note>

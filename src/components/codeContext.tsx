@@ -16,8 +16,14 @@ type ProjectCodeKeywords = {
   title: string;
 };
 
+type UserCodeKeywords = {
+  ID: number;
+  NAME: string;
+};
+
 type CodeKeywords = {
   PROJECT: ProjectCodeKeywords[];
+  USER: UserCodeKeywords | undefined;
 };
 
 type Dsn = {
@@ -31,11 +37,18 @@ type Dsn = {
 type ProjectApiResult = {
   dsn: string;
   dsnPublic: string;
-  id: string;
-  organizationId: string;
+  id: number;
+  organizationId: number;
   organizationSlug: string;
   projectSlug: string;
   slug: string;
+};
+
+type UserApiResult = {
+  avatarUrl: string;
+  id: number;
+  isAuthenticated: boolean;
+  name: string;
 };
 
 // only fetch them once
@@ -60,6 +73,7 @@ const DEFAULTS: CodeKeywords = {
       title: `example-org / example-project`,
     },
   ],
+  USER: undefined,
 };
 
 type CodeContextType = {
@@ -99,8 +113,8 @@ const formatApiUrl = ({scheme, host}: Dsn) => {
 /**
  * Fetch project details from sentry
  */
-export async function fetchCodeKeywords() {
-  let json: {projects: ProjectApiResult[]} | null = null;
+export async function fetchCodeKeywords(): Promise<CodeKeywords> {
+  let json: {projects: ProjectApiResult[]; user: UserApiResult} | null = null;
 
   const url =
     process.env.NODE_ENV === 'development'
@@ -125,7 +139,7 @@ export async function fetchCodeKeywords() {
     return makeDefaults();
   }
 
-  const {projects} = json;
+  const {projects, user} = json;
 
   if (projects?.length === 0) {
     return makeDefaults();
@@ -150,6 +164,12 @@ export async function fetchCodeKeywords() {
         title: `${project.organizationSlug} / ${project.projectSlug}`,
       };
     }),
+    USER: user.isAuthenticated
+      ? {
+          ID: user.id,
+          NAME: user.name,
+        }
+      : undefined,
   };
 }
 
