@@ -7,7 +7,7 @@ import {ExternalLink} from './externalLink';
 import {Note} from './note';
 
 const siteMetaQuery = graphql`
-  query DefaultSEOQuery {
+  query SignInNoteQuery {
     site {
       siteMetadata {
         siteUrl
