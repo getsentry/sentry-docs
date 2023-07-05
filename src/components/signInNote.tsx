@@ -22,8 +22,10 @@ export function SignInNote(): JSX.Element {
       The following code sample will let you chose your personal config from the dropdown,
       once you're{' '}
       <ExternalLink
-        href={'https://sentry.io/auth/login/?nextUri=' + location.href}
-        target=""
+        href={`https://sentry.io/auth/login/${
+          location && location.href ? `?nextUri=${location.href}` : ''
+        }`}
+        target="_blank"
       >
         logged in
       </ExternalLink>
