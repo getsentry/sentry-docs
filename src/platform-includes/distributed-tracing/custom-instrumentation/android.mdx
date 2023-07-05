@@ -1,10 +1,12 @@
-On this page you will learn how to manually propagate trace information into and out of your Java application. Please note, that you do not need to do this manually, if you [use one of our supported frameworks](/platforms/java/usage/distributed-tracing/#how-to-use-distributed-tracing), or you have our <PlatformLink to="/performance/">performance monitoring feature</PlatformLink> turned on.
+On this page you will learn how to manually propagate trace information into and out of your Android application. Please note, that you do not need to do this manually, if you [use one of our supported frameworks](/platforms/android/usage/distributed-tracing/#how-to-use-distributed-tracing), or you have our <PlatformLink to="/performance/">performance monitoring feature</PlatformLink> turned on.
 
-To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+To set it up manually, all you have to do is to make sure your application extracts incoming tracing information and to attach it again when making an outgoing request within your application.
+
+Your Android application is likely going to be the first in a chain of requests which means there probably won't be any tracing information to extract but instead your application starts a new trace and sends out tracing information so other applications in the chain can keep the trace going.
 
 ## Step 1) Extract Incoming Tracing Information
 
-Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continueTrace()` function to help you with this. Incoming tracing information can come from HTTP headers, for example, by another Sentry SDK used in your frontend project.
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continueTrace()` function to help you with this.
 
 Here's an example of how to extract and store incoming tracing information using `continueTrace()`:
 
@@ -32,7 +34,7 @@ By passing these headers to Sentry's `continueTrace()` function it will store th
 
 For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must now also be added to outgoing requests.
 
-If you are sending outgoing HTTP requests with <PlatformLink to="/guides/spring/performance/instrumentation/automatic-instrumentation/">RestTemplate</PlatformLink>, [WebClient](https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html), <PlatformLink to="/performance/instrumentation/apollo/">Apollo</PlatformLink>, <PlatformLink to="/performance/instrumentation/apollo3/">Apollo 3</PlatformLink> or <PlatformLink to="/performance/instrumentation/open-feign/">OpenFeign</PlatformLink> and have our integration for it enabled, this tracing information is automatically added to outgoing requests. NOTE: You do not have to enable Performance for distributed tracing to work.
+If you are sending outgoing HTTP requests with <PlatformLink to="/configuration/integrations/okhttp/">OkHttp</PlatformLink>, <PlatformLink to="/performance/instrumentation/apollo/">Apollo</PlatformLink> or <PlatformLink to="/performance/instrumentation/apollo3/">Apollo 3</PlatformLink> and have our integration for it enabled, this tracing information is automatically added to outgoing requests. NOTE: You do not have to enable Performance for distributed tracing to work.
 
 If your using none of the above, you can generate this tracing information with the Sentry SDK's `getTraceparent()` and `getTaggage()` functions. Here's an example:
 
