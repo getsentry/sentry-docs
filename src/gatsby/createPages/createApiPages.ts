@@ -1,6 +1,10 @@
+import {GatsbyNode} from 'gatsby';
+
 import {getDataOrPanic} from '../helpers';
 
-async function main({actions, graphql, reporter}) {
+type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
+
+export const createApiPages = async ({actions, graphql, reporter}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
       query {
@@ -31,6 +35,4 @@ async function main({actions, graphql, reporter}) {
       },
     });
   });
-}
-
-export default main;
+};
