@@ -21,7 +21,9 @@ If this is your situation, please read [Info.plist Is Missing in Xcode 13 — He
 
 Use the `sentry-cli debug-files upload` command to upload dSYMs to Sentry. The command will recursively scan the provided folders or ZIP archives. Files that have already been uploaded will be skipped automatically.
 
-Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry. For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds.
+Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+
+For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds.
 
 ```bash
 sentry-cli debug-files upload --auth-token YOUR_AUTH_TOKEN \
@@ -68,7 +70,9 @@ Follow these steps to upload the debug symbols:
 1.  Download and install [sentry-cli](/product/cli/installation/).
 2.  Copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_.
 
-Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry. For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds. If you don't want Sentry to upload your sorce code, remove the `--include-sources` argument from the copied script.
+Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+
+For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds. If you don't want Sentry to upload your source code, remove the `--include-sources` argument from the copied script.
 
 <Alert level="" title="Warnings vs. Errors">
 
@@ -129,11 +133,11 @@ export SENTRY_URL=https://mysentry.invalid/
 
 Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>.
 
-To use this feature you have three options:
+There are three options for setting up source context:
 
-### 1.Manual use of sentry-cli
+### 1. Manually upload with the Sentry CLI
 
-By adding `--include-sources` to the sentry-cli command, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+If you add the `--include-sources` flag to the sentry-cli `debug-files upload` command, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
 ```bash
 sentry-cli debug-files upload --auth-token YOUR_AUTH_TOKEN \
@@ -159,7 +163,7 @@ sentry_upload_dif(
 
 ### 3. Xcode Build Phase
 
-You can upload your source to sentry after every build when using Xcode. To do this, add `--include-sources` to the sentry-cli command in the [Upload debug symbols](#xcode-build-phase) Xcode build phase script.
+You can upload your sources to Sentry after every build through Xcode. To do this, add the `--include-sources` flag to the sentry-cli `debug-files upload` command in the [Upload Debug Symbols](#xcode-build-phase) Xcode build phase script.
 
 ```bash {tabTitle:Warn on failures - nonblocking}
 if which sentry-cli >/dev/null; then
