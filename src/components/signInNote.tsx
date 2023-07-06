@@ -35,7 +35,7 @@ export function SignInNote(): JSX.Element {
         const url = data.site.siteMetadata.siteUrl + location.pathname;
         return (
           <Note>
-            The following code sample will let you chose your personal config from the
+            The following code sample will let you choose your personal config from the
             dropdown, once you're{' '}
             <ExternalLink
               href={`https://sentry.io/auth/login/?nextUri=${url}`}
