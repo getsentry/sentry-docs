@@ -1,16 +1,13 @@
-/* eslint-env node */
-/* eslint import/no-nodejs-modules:0 */
-
+import {GatsbyNode, Node} from 'gatsby';
 import {createFilePath} from 'gatsby-source-filesystem';
 
-export default function onCreateNode({
+const onCreateNode: GatsbyNode['onCreateNode'] = ({
   node,
-  actions,
+  actions: {createNodeField, createNode},
   getNode,
   createContentDigest,
   createNodeId,
-}) {
-  const {createNodeField, createNode} = actions;
+}) => {
   if (
     (node.internal.type === 'Mdx' || node.internal.type === 'MarkdownRemark') &&
     node.fileAbsolutePath
@@ -26,8 +23,13 @@ export default function onCreateNode({
       node,
       value: value.indexOf('/clients/') === 0,
     });
-  } else if (node.internal.type === 'ApiEndpoint') {
+
+    return;
+  }
+
+  if (node.internal.type === 'ApiEndpoint') {
     const value = createFilePath({node, getNode});
+
     createNodeField({
       name: 'slug',
       node,
@@ -39,13 +41,20 @@ export default function onCreateNode({
       value: false,
     });
 
-    const markdownNode = {
+    // TODO(epurkhiser): We need to adctually correctly type the ApiEndpoint
+    // node types and discriminate the type to correctly represent fields like
+    // description on the node (otherwise it falls into the Record<string,
+    // unknown> type)
+    const description = node.description as string;
+
+    const markdownNode: Node = {
       id: createNodeId(`${node.id} >>> MarkdownRemark`),
       children: [],
       parent: node.id,
       internal: {
-        content: node.description,
-        contentDigest: createContentDigest(node.description),
+        owner: 'internal',
+        content: description,
+        contentDigest: createContentDigest(description),
         mediaType: `text/markdown`,
         type: `ApiEndpointMarkdown`,
       },
@@ -57,5 +66,9 @@ export default function onCreateNode({
       name: 'description___NODE',
       value: markdownNode.id,
     });
+
+    return;
   }
-}
+};
+
+export default onCreateNode;
