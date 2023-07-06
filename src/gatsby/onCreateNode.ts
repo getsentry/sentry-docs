@@ -41,7 +41,7 @@ const onCreateNode: GatsbyNode['onCreateNode'] = ({
       value: false,
     });
 
-    // TODO(epurkhiser): We need to adctually correctly type the ApiEndpoint
+    // TODO(epurkhiser): We need to actually correctly type the ApiEndpoint
     // node types and discriminate the type to correctly represent fields like
     // description on the node (otherwise it falls into the Record<string,
     // unknown> type)
