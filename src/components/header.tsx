@@ -25,10 +25,8 @@ export function Header() {
         type="button"
         onClick={() => {
           const el = document.getElementById('sidebar');
-          if (el.style.display === 'block') {
-            el.style.display = 'none';
-          } else {
-            el.style.display = 'block';
+          if (el) {
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
           }
         }}
         aria-controls="sidebar"
