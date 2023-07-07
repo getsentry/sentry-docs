@@ -9,5 +9,10 @@ type Props = {
 
 export function PlatformIdentifier({name, platform}: Props): JSX.Element {
   const [currentPlatform] = usePlatform(platform);
+
+  if (!currentPlatform) {
+    return null;
+  }
+
   return <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>;
 }
