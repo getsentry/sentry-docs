@@ -25,7 +25,7 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
       parent: null,
       children: [],
       internal: {
-        type: `Layer`,
+        type: `AwsLambdaLayer`,
         content,
         contentDigest: createContentDigest(data),
       },
