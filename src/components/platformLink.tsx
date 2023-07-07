@@ -4,7 +4,7 @@ import {usePlatform} from './hooks/usePlatform';
 import {SmartLink} from './smartLink';
 
 type Props = {
-  children: JSX.Element;
+  children: React.ReactNode;
   to?: string;
 };
 
