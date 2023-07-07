@@ -1,52 +1,56 @@
+import {GatsbyNode} from 'gatsby';
+
 import {getChild, getDataOrPanic} from '../helpers';
 
-async function main({actions, graphql, reporter}) {
+type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
+
+export const createDocPages = async ({actions, graphql, reporter}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
-          query {
-            allFile(filter: { sourceInstanceName: { eq: "docs" } }) {
-              nodes {
-                id
-                childMarkdownRemark {
-                  frontmatter {
-                    title
-                    description
-                    draft
-                    noindex
-                    notoc
-                    sidebar_order
-                    sidebar_title
-                    redirect_from
-                    keywords
-                  }
-                  fields {
-                    slug
-                    legacy
-                  }
-                  excerpt(pruneLength: 5000)
-                }
-                childMdx {
-                  frontmatter {
-                    title
-                    description
-                    draft
-                    noindex
-                    notoc
-                    sidebar_order
-                    sidebar_title
-                    redirect_from
-                    keywords
-                  }
-                  fields {
-                    slug
-                    legacy
-                  }
-                  excerpt(pruneLength: 5000)
-                }
+      query {
+        allFile(filter: { sourceInstanceName: { eq: "docs" } }) {
+          nodes {
+            id
+            childMarkdownRemark {
+              frontmatter {
+                title
+                description
+                draft
+                noindex
+                notoc
+                sidebar_order
+                sidebar_title
+                redirect_from
+                keywords
               }
+              fields {
+                slug
+                legacy
+              }
+              excerpt(pruneLength: 5000)
+            }
+            childMdx {
+              frontmatter {
+                title
+                description
+                draft
+                noindex
+                notoc
+                sidebar_order
+                sidebar_title
+                redirect_from
+                keywords
+              }
+              fields {
+                slug
+                legacy
+              }
+              excerpt(pruneLength: 5000)
             }
           }
-        `,
+        }
+      }
+    `,
     graphql,
     reporter
   );
@@ -67,6 +71,4 @@ async function main({actions, graphql, reporter}) {
       });
     }
   });
-}
-
-export default main;
+};

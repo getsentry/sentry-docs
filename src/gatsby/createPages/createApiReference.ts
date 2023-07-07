@@ -1,50 +1,58 @@
+import {GatsbyNode} from 'gatsby';
+
 import {getChild, getDataOrPanic} from '../helpers';
 
-async function main({actions, graphql, reporter}) {
+type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
+
+export const createApiReference = async ({
+  actions,
+  graphql,
+  reporter,
+}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
-          query {
-            allFile(filter: {absolutePath: {}, relativePath: {in: ["permissions.mdx", "auth.mdx", "index.mdx", "requests.mdx", "pagination.mdx", "ratelimits.mdx"]}, dir: {regex: "/api/"}}) {
-              nodes {
-                id
-                childMarkdownRemark {
-                  frontmatter {
-                    title
-                    description
-                    draft
-                    noindex
-                    sidebar_order
-                    sidebar_title
-                    redirect_from
-                    keywords
-                  }
-                  fields {
-                    slug
-                    legacy
-                  }
-                  excerpt(pruneLength: 5000)
-                }
-                childMdx {
-                  frontmatter {
-                    title
-                    description
-                    draft
-                    noindex
-                    sidebar_order
-                    sidebar_title
-                    redirect_from
-                    keywords
-                  }
-                  fields {
-                    slug
-                    legacy
-                  }
-                  excerpt(pruneLength: 5000)
-                }
+      query {
+        allFile(filter: {absolutePath: {}, relativePath: {in: ["permissions.mdx", "auth.mdx", "index.mdx", "requests.mdx", "pagination.mdx", "ratelimits.mdx"]}, dir: {regex: "/api/"}}) {
+          nodes {
+            id
+            childMarkdownRemark {
+              frontmatter {
+                title
+                description
+                draft
+                noindex
+                sidebar_order
+                sidebar_title
+                redirect_from
+                keywords
               }
+              fields {
+                slug
+                legacy
+              }
+              excerpt(pruneLength: 5000)
+            }
+            childMdx {
+              frontmatter {
+                title
+                description
+                draft
+                noindex
+                sidebar_order
+                sidebar_title
+                redirect_from
+                keywords
+              }
+              fields {
+                slug
+                legacy
+              }
+              excerpt(pruneLength: 5000)
             }
           }
-        `,
+        }
+      }
+    `,
     graphql,
     reporter
   );
@@ -65,6 +73,4 @@ async function main({actions, graphql, reporter}) {
       });
     }
   });
-}
-
-export default main;
+};
