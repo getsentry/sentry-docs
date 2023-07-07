@@ -9,11 +9,20 @@ project no longer supports our version of Python.
 Additionally, all these dependencies run on the server, making them riskier as they have direct access to customer
 data if they turn out to be malicious.
 
-## Adding a new dependency
+## Adding or updating a dependency
 
-Any new dependency needs to be thoroughly reviewed and approved by [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members).
+Any new dependency needs to be thoroughly reviewed and approved by [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members). This group is already automatically tagged in your PR to `sentry` or `getsentry` as soon as you edit relevant files. For other repos you might need to do it manually.
 
-This group is already automatically tagged in your PR to `sentry` or `getsentry` as soon as you edit relevant files. For other repos you might need to do it manually.
+To add or update a dependency:
+
+1. Clone https://github.com/getsentry/pypi/.
+2. `cd` into your clone and run `python3 -m add_pkg PKGNAME` (or `python3 -m add_pkg PKGNAME==PKGVERSION` if you want a version other than the latest).
+3. Commit the resulting changes to a branch, open a PR in `getsentry/pypi`, and tag someone on your team (any engineer can approve PRs on this repo).
+4. Once your PR is merged, go back to the main repo whose dependencies you want to change (`sentry`, `getsentry`, etc.).
+5. In that repo, add to or update `requirements-base.txt` or `requirements-dev.txt`, as appropriate. Note that many of our dependencies are pinned with lower bounds only, to encourage updating to latest versions, though we do use exact pins for certain core dependencies like `django`. Choose whichever one feels most appropriate in your case.
+6. Run `make freeze-requirements`. You might need to wait a few minutes for the changes to `getsentry/pypi` to be deployed before this will work without erroring.
+7. Commit your changes (which should consist of changes to both one of the `requirements` files and its corresponding lockfile) to a branch and open a PR in the relevant repo. If it's not obvious, explain why you're adding or updating the dependency. Tag `owners-python-build` if they haven't already been auto-tagged.
+8. Merge your PR, pull `master`, and run `make install py-dev`.
 
 ## Depending on forks
 
@@ -27,17 +36,6 @@ function,** because they won't be included in the PyPI distribution of Sentry.
 1. Fork into the `getsentry` organization.
 2. Depend on the fork using `library-name @ https://github.com/getsentry/<repo>/archive/<40 char sha>.zip` in `getsentry`'s `requirements-base.txt`.
 3. The requirement in `sentry` stays the same, because we upload `sentry` to PyPI, and PyPI does not allow us to depend on URLs.
-
-## Updating Dependencies
-
-We generate frozen requirements files from requirements-base.txt and requirements-dev.txt,
-so if you're updating dependencies, change those source files and run `make freeze-requirements`,
-which will refreeze.
-
-Note that many of the pins in the source files are lower bounds to encourage updating to latest versions,
-though this isn't a strict requirement. For example if you're upgrading something like Django,
-you will want to have a tighter pin.
-
 
 ## Unclear?
 
