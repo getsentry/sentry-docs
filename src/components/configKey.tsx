@@ -17,7 +17,7 @@ export function ConfigKey({
   notSupported = [],
   children,
   platform,
-}: Props): JSX.Element {
+}: Props) {
   // This is a literal copypaste of the HTML Gatsby outputs for regular
   // Markdown headings because we can't figure out how to make Gatsby
   // render component content like regular markdown/MDX content. We tried

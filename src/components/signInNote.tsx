@@ -16,7 +16,7 @@ const siteMetaQuery = graphql`
   }
 `;
 
-export function SignInNote(): JSX.Element {
+export function SignInNote() {
   const location = useLocation();
 
   const {codeKeywords} = useContext(CodeContext);

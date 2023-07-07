@@ -6,7 +6,7 @@ type Props =
     }
   | React.HTMLProps<HTMLAnchorElement>;
 
-export function ExternalLink({children, ...props}: Props): JSX.Element {
+export function ExternalLink({children, ...props}: Props) {
   return (
     <a {...props}>
       {children}

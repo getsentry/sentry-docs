@@ -64,7 +64,7 @@ const getFileForPlatform = (
   return contentMatch;
 };
 
-export function PlatformContent({includePath, platform, children}: Props): JSX.Element {
+export function PlatformContent({includePath, platform, children}: Props) {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);

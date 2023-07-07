@@ -54,7 +54,7 @@ type ChildProps = Props & {
   };
 };
 
-export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element {
+export function SidebarContent({platform, guide, data}: ChildProps) {
   const platformName = platform.name;
   const guideName = guide ? guide.name : null;
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
@@ -132,7 +132,7 @@ export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element
   );
 }
 
-export function PlatformSidebar(props: Props): JSX.Element {
+export function PlatformSidebar(props: Props) {
   return (
     <StaticQuery
       query={navQuery}

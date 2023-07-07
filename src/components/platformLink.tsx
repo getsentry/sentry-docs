@@ -8,7 +8,7 @@ type Props = {
   to?: string;
 };
 
-export function PlatformLink({children, to}: Props): JSX.Element {
+export function PlatformLink({children, to}: Props) {
   const [currentPlatform] = usePlatform(null);
   let path = currentPlatform ? currentPlatform.url : `/platform-redirect/`;
   if (to) {
