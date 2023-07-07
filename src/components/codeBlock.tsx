@@ -214,7 +214,9 @@ const KeywordDropdown = styled('span')`
   }
 `;
 
-const KeywordIndicator = styled(ArrowDown)<{isOpen: boolean}>`
+const KeywordIndicator = styled(ArrowDown, {shouldForwardProp: p => p !== 'isOpen'})<{
+  isOpen: boolean;
+}>`
   user-select: none;
   margin-right: 2px;
   transition: transform 200ms ease-in-out;
