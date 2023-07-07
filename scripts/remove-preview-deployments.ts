@@ -226,7 +226,11 @@ async function run(next: number): Promise<void> {
   console.log(`Waiting for ${Math.round(timeout / 1000)} seconds`);
   await new Promise(resolve => setTimeout(resolve, timeout));
 
-  run(rateLimit ? next : pagination.next);
+  const nextPage = rateLimit ? next : pagination.next;
+
+  if (nextPage) {
+    run(nextPage);
+  }
 }
 
 // Start the script with a date 30 days ago
