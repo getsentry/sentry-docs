@@ -23,7 +23,7 @@ export function useOnClickOutside<E extends HTMLElement>({
       if (!(event.target instanceof Element)) {
         return;
       }
-      if (!ref.current.contains(event.target)) {
+      if (!ref.current?.contains(event.target)) {
         handler(event);
       }
     };
