@@ -2,7 +2,7 @@
 name: WinForms
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/winforms/
 support_level: production
-type: language
+type: framework
 ---
 
 ## Install the NuGet package
