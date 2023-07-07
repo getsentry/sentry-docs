@@ -2,7 +2,7 @@ import React from 'react';
 
 import {SmartLink} from './smartLink';
 
-export function Header(): JSX.Element {
+export function Header() {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
       <SmartLink to="/" title="Sentry error monitoring" className="navbar-brand pb-0">

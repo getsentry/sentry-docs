@@ -24,7 +24,7 @@ type Props = {
   children: JSX.Element | JSX.Element[];
 };
 
-export function CodeTabs({children}: Props): JSX.Element {
+export function CodeTabs({children}: Props) {
   if (!Array.isArray(children)) {
     children = [children];
   } else {

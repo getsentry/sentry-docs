@@ -11,7 +11,7 @@ type Props = {
   platforms?: string[];
 };
 
-export function Navbar({platforms}: Props): JSX.Element {
+export function Navbar({platforms}: Props) {
   const location = useLocation();
 
   return (

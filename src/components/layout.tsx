@@ -26,7 +26,7 @@ type Props = {
   sidebar?: JSX.Element;
 };
 
-export function Layout({children, sidebar, pageContext = {}}: Props): JSX.Element {
+export function Layout({children, sidebar, pageContext = {}}: Props) {
   const searchPlatforms = [pageContext.platform?.name, pageContext.guide?.name].filter(
     Boolean
   );
