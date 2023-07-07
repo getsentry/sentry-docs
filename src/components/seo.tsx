@@ -45,7 +45,7 @@ export function BaseSEO({
   keywords = [],
   title,
   noindex,
-}: ChildProps): JSX.Element {
+}: ChildProps) {
   const metaDescription = description || data.site.siteMetadata.description;
 
   return (
@@ -127,7 +127,7 @@ export function BaseSEO({
   );
 }
 
-export function SEO(props: Props): JSX.Element {
+export function SEO(props: Props) {
   return (
     <StaticQuery
       query={detailsQuery}

@@ -30,7 +30,7 @@ export function PlatformSection({
   platform,
   noGuides,
   children,
-}: Props): JSX.Element {
+}: Props) {
   const [currentPlatform] = usePlatform(platform);
   if (noGuides && !(currentPlatform as Platform).guides) {
     return null;
