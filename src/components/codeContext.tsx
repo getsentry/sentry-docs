@@ -185,11 +185,11 @@ export function useCodeContextState(fetcher = fetchCodeKeywords): CodeContextTyp
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
-      setStatus('loaded');
+      setStatus('loading');
       fetcher().then((config: CodeKeywords) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
-        setStatus('loading');
+        setStatus('loaded');
       });
     }
   }, [setStatus, setCodeKeywords, fetcher]);
