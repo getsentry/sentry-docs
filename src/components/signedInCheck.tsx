@@ -8,7 +8,7 @@ export function SignedInCheck({
 }: {
   children: React.ReactNode;
   isUserAuthenticated: boolean;
-}): JSX.Element {
+}) {
   const {codeKeywords, status} = useContext(CodeContext);
 
   // Never render until loaded
