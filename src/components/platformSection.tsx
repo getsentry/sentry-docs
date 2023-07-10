@@ -32,6 +32,11 @@ export function PlatformSection({
   children,
 }: Props) {
   const [currentPlatform] = usePlatform(platform);
+
+  if (!currentPlatform) {
+    return null;
+  }
+
   if (noGuides && !(currentPlatform as Platform).guides) {
     return null;
   }
@@ -40,7 +45,7 @@ export function PlatformSection({
 
   let result: boolean | null = null;
   // eslint-disable-next-line no-cond-assign
-  for (let platformKey, i = 0; (platformKey = platformsToSearch[i]); i++) {
+  for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
     if (!platformKey) {
       continue;
     }
