@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import {graphql, StaticQuery} from 'gatsby';
+import {graphql, useStaticQuery} from 'gatsby';
 
 const detailsQuery = graphql`
   query DefaultSEOQuery {
@@ -128,10 +128,7 @@ export function BaseSEO({
 }
 
 export function SEO(props: Props) {
-  return (
-    <StaticQuery
-      query={detailsQuery}
-      render={data => <BaseSEO data={data} {...props} />}
-    />
-  );
+  const data = useStaticQuery(detailsQuery);
+
+  return <BaseSEO data={data} {...props} />;
 }

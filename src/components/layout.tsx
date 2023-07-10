@@ -3,7 +3,7 @@ import {Nav} from 'react-bootstrap';
 
 import 'sentry-docs/css/screen.scss';
 
-import {breadcrumb as Breadcrumbs} from './breadcrumbs';
+import {Breadcrumbs} from './breadcrumbs';
 import {Header} from './header';
 import {Navbar} from './navbar';
 import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
