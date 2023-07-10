@@ -11,6 +11,7 @@ which can be used to show more accurate information on the time spent in the scr
 Being spans, they don't impact user quota.
 
 The SDK starts them as soon as a new screen is created, as long as there is an active transaction for the screen load.
+Note: When the app is started, the SDK aligns the start timestamp of the Time to Initial Display and Time to Full Display to the app start timestamp.
 
 ## Time to Initial Display
 
@@ -47,6 +48,12 @@ Scenario: Option enabled
     When the SDK creates a new screen load transaction
     Then the Full Display span is started
 
+Scenario: App started
+    Given the enableTimeToFullDisplay option is enabled
+    When the app starts
+    Then the SDK sets the start timestamp of the Time to Initial Display and Time to Full Display span to the app start timestamp
+    And the SDK updates the `time_to_initial_display` and `time_to_full_display` measurements accordingly
+
 Scenario: Screen displayed
     Given an ongoing Full Display span
     And the SDK finished the  Initial Display span
@@ -60,6 +67,7 @@ Scenario: API not called
     Then the SDK finishes the span
     And sets the status to deadline_exceeded
     And sets the timestamp to the timestamp of the Initial Display span
+    And the SDK updates the `time_to_full_display` measurement accordingly
 
 Scenario: API called
     Given an ongoing Full Display span
@@ -72,14 +80,16 @@ Scenario: API called too early
     And the user called the API `reportFullyDisplayed`
     When the SDK finishes the Initial Display span
     Then the SDK sets the status to ok
-    And adjusts the Full Display span end timestamp to the Initial Display span end timestamp
+    And the SDK adjusts the Full Display span end timestamp to the Initial Display span end timestamp
+    And the SDK updates the `time_to_full_display` measurement accordingly
 
 Scenario: Another screen load/navigation transaction occurs
     Given an ongoing Full Display span
     When a new screen load/navigation transaction is started
     Then the SDK finishes the Full Display span
-    And sets the status to deadline_exceeded
-    And sets the end timestamp to the Initial Display span end timestamp
+    And the SDK sets the status to deadline_exceeded
+    And the SDK sets the end timestamp to the Initial Display span end timestamp
+    And the SDK updates the `time_to_full_display` measurement accordingly
 
 Scenario: No ongoing screen load transaction
     Given there is no active screen load transaction
