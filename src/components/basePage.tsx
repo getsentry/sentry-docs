@@ -1,4 +1,4 @@
-import React, {Fragment, useRef} from 'react';
+import React, {Fragment, useState} from 'react';
 
 import {getCurrentTransaction} from '../utils';
 
@@ -55,7 +55,7 @@ export function BasePage({
   const {title, excerpt, description} = pageContext;
   const hasToc = !pageContext.notoc;
 
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentElement, setContentElement] = useState<HTMLElement | null>(null);
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
@@ -76,7 +76,7 @@ export function BasePage({
           }
         >
           <h1 className="mb-3">{title}</h1>
-          <div id="main" ref={contentRef}>
+          <div id="main" ref={setContentElement}>
             <CodeContext.Provider value={useCodeContextState()}>
               {children}
             </CodeContext.Provider>
@@ -95,8 +95,8 @@ export function BasePage({
               <Banner isModule />
               <Fragment>
                 {prependToc}
-                {hasToc && (
-                  <TableOfContents contentRef={contentRef} pageContext={pageContext} />
+                {hasToc && contentElement && (
+                  <TableOfContents content={contentElement} pageContext={pageContext} />
                 )}
               </Fragment>
             </div>
