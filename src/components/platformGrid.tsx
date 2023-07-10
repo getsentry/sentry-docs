@@ -61,7 +61,7 @@ type Props = {
   noGuides: boolean;
 };
 
-export function PlatformGrid({noGuides = false}: Props): JSX.Element {
+export function PlatformGrid({noGuides = false}: Props) {
   const platformList = usePlatformList();
   return (
     <div className="row">

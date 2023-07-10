@@ -56,7 +56,7 @@ export function BasePage({
   sidebar,
   children,
   prependToc,
-}: Props): JSX.Element {
+}: Props) {
   const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('ok');

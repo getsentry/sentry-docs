@@ -3,14 +3,25 @@
 import fs from 'fs';
 import path from 'path';
 
-export const piiFieldsNodes = ({actions, createNodeId, createContentDigest}) => {
+import {SourceNodesArgs} from 'gatsby';
+
+interface PiiField {
+  additional_properties: string;
+  path: string;
+}
+
+export const piiFieldsNodes = ({
+  actions,
+  createNodeId,
+  createContentDigest,
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const data = fs.readFileSync(
     path.join(__dirname, '..', '..', 'data', 'relay_event_pii.json'),
     'utf-8'
   );
-  const fields = JSON.parse(data);
+  const fields: PiiField[] = JSON.parse(data);
 
   fields.forEach((field, index) => {
     const fieldNode = {

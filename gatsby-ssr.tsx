@@ -2,22 +2,25 @@
 /* eslint import/no-nodejs-modules:0 */
 
 import React from 'react';
+import {GatsbySSR} from 'gatsby';
 
 import {PageContext} from 'sentry-docs/components/pageContext';
 
 const sentryEnvironment = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 const sentryLoaderUrl = process.env.SENTRY_LOADER_URL;
 
-export const wrapPageElement = ({element, props: {pageContext}}) => (
-  <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>
-);
+export const wrapPageElement: GatsbySSR['wrapPageElement'] = ({
+  element,
+  props: {pageContext},
+}) => <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>;
 
-export const onPreRenderHTML = ({getHeadComponents}) => {
+export const onPreRenderHTML: GatsbySSR['onPreRenderHTML'] = ({getHeadComponents}) => {
   if (process.env.NODE_ENV !== 'production') {
     return;
   }
 
-  getHeadComponents().forEach(el => {
+  // TODO(epurkhiser): We should figure out if this is actually still necessary
+  getHeadComponents().forEach((el: any) => {
     // Remove inline css. https://github.com/gatsbyjs/gatsby/issues/1526
     if (el.type === 'style') {
       el.type = 'link';
@@ -61,7 +64,7 @@ Sentry.onLoad(function() {
   );
 }
 
-export const onRenderBody = ({setHeadComponents}) => {
+export const onRenderBody: GatsbySSR['onRenderBody'] = ({setHeadComponents}) => {
   // Sentry SDK setup
   if (sentryLoaderUrl) {
     setHeadComponents([SentryLoaderScript(), SentryLoaderConfig()]);

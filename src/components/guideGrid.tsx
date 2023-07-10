@@ -9,7 +9,7 @@ type Props = {
   platform?: string;
 };
 
-export function GuideGrid({platform, className}: Props): JSX.Element {
+export function GuideGrid({platform, className}: Props) {
   const [currentPlatform] = usePlatform(platform);
   // platform might actually not be a platform, so lets handle that case gracefully
   if (!(currentPlatform as Platform).guides) {
