@@ -4,19 +4,19 @@ import {CodeContext} from './codeContext';
 
 export function SignedInCheck({
   children,
-  ifIsAuthenticated,
+  isUserAuthenticated,
 }: {
-  children: any;
+  children: React.ReactNode;
   ifIsAuthenticated: boolean;
 }): JSX.Element {
   const {codeKeywords, status} = useContext(CodeContext);
-
-  const user = codeKeywords.USER;
 
   // Never render until loaded
   if (status !== 'LOADED') {
     return null;
   }
+  
+   const user = codeKeywords.USER;
 
   const hasUser = !!user;
   if (hasUser !== ifIsAuthenticated) {
