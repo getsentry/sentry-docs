@@ -1,4 +1,4 @@
-import React, {forwardRef, Fragment, useRef} from 'react';
+import React, {Fragment, useRef} from 'react';
 
 import {getCurrentTransaction} from '../utils';
 
@@ -19,16 +19,6 @@ export type PageContext = {
   };
   title?: string;
 };
-
-type WrappedTOCProps = {
-  pageContext: PageContext;
-};
-
-const WrappedTOC = forwardRef(
-  (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
-    return <TableOfContents {...props} contentRef={ref} />;
-  }
-);
 
 type Props = {
   children?: React.ReactNode;
@@ -105,7 +95,9 @@ export function BasePage({
               <Banner isModule />
               <Fragment>
                 {prependToc}
-                {hasToc && <WrappedTOC ref={contentRef} pageContext={pageContext} />}
+                {hasToc && (
+                  <TableOfContents contentRef={contentRef} pageContext={pageContext} />
+                )}
               </Fragment>
             </div>
           </div>
