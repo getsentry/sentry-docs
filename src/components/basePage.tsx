@@ -31,7 +31,7 @@ const WrappedTOC = forwardRef(
 );
 
 type Props = {
-  children?: JSX.Element;
+  children?: React.ReactNode;
   data?: {
     file?: {
       [key: string]: any;
@@ -44,9 +44,9 @@ type Props = {
     notoc?: boolean;
     title?: string;
   };
-  prependToc?: JSX.Element;
+  prependToc?: React.ReactNode;
   seoTitle?: string;
-  sidebar?: JSX.Element;
+  sidebar?: React.ReactNode;
 };
 
 export function BasePage({
