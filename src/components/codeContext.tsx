@@ -1,5 +1,7 @@
 import {createContext, useEffect, useState} from 'react';
 
+type CodeContextStatus = 'loading' | 'loaded';
+
 type ProjectCodeKeywords = {
   API_URL: string;
   DSN: string;
@@ -80,6 +82,7 @@ type CodeContextType = {
   codeKeywords: CodeKeywords;
   sharedCodeSelection: any;
   sharedKeywordSelection: any;
+  status: CodeContextStatus;
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
@@ -173,21 +176,28 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
   };
 }
 
-export function useCodeContextState(fetcher = fetchCodeKeywords) {
+export function useCodeContextState(fetcher = fetchCodeKeywords): CodeContextType {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
+
+  const [status, setStatus] = useState<CodeContextStatus>(
+    cachedCodeKeywords ? 'loaded' : 'loading'
+  );
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
+      setStatus('loaded');
       fetcher().then((config: CodeKeywords) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
+        setStatus('loading');
       });
     }
-  });
+  }, [setStatus, setCodeKeywords, fetcher]);
 
   return {
     codeKeywords,
     sharedCodeSelection: useState(null),
     sharedKeywordSelection: useState({}),
+    status,
   };
 }
