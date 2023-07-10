@@ -10,7 +10,7 @@ type Props = {
   url?: string;
 };
 
-export function PlatformLinkWithLogo({platform, label, url}: Props): JSX.Element {
+export function PlatformLinkWithLogo({platform, label, url}: Props) {
   const [currentPlatform] = usePlatform(platform);
   let linkText = currentPlatform.title;
 

@@ -1,9 +1,11 @@
+import {SourceNodesArgs} from 'gatsby';
+
 import awsLambdaRegistry from '../utils/awsLambdaLayerRegistry';
 
 export const sourceAwsLambdaLayerRegistryNodes = async ({
   actions,
   createContentDigest,
-}) => {
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const layerMap = await awsLambdaRegistry.getLayerMap();
@@ -23,7 +25,7 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
       parent: null,
       children: [],
       internal: {
-        type: `Layer`,
+        type: `AwsLambdaLayer`,
         content,
         contentDigest: createContentDigest(data),
       },

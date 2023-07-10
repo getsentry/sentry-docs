@@ -214,7 +214,9 @@ const KeywordDropdown = styled('span')`
   }
 `;
 
-const KeywordIndicator = styled(ArrowDown)<{isOpen: boolean}>`
+const KeywordIndicator = styled(ArrowDown, {shouldForwardProp: p => p !== 'isOpen'})<{
+  isOpen: boolean;
+}>`
   user-select: none;
   margin-right: 2px;
   transition: transform 200ms ease-in-out;
@@ -317,7 +319,7 @@ const ItemButton = styled('button')<{isActive: boolean}>`
   `}
 `;
 
-function CodeWrapper(props): JSX.Element {
+function CodeWrapper(props) {
   const {children, class: className, ...rest} = props;
 
   return (
@@ -327,7 +329,7 @@ function CodeWrapper(props): JSX.Element {
   );
 }
 
-function SpanWrapper(props): JSX.Element {
+function SpanWrapper(props) {
   const {children, class: className, ...rest} = props;
   return (
     <span className={className} {...rest}>
@@ -343,7 +345,7 @@ type Props = {
   title?: string;
 };
 
-export function CodeBlock({filename, language, children}: Props): JSX.Element {
+export function CodeBlock({filename, language, children}: Props) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 

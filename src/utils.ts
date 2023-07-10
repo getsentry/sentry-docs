@@ -32,7 +32,7 @@ export function useOnClickOutside<E extends HTMLElement>({
   }, [enabled, handler, ref]);
 }
 
-export const sortBy = (arr: any[], comp: (any) => any): any[] => {
+export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   return arr.sort((a, b) => {
     const aComp = comp(a);
     const bComp = comp(b);
@@ -44,7 +44,7 @@ export const sortBy = (arr: any[], comp: (any) => any): any[] => {
     }
     return 0;
   });
-};
+}
 
 type Page = {
   context: {
