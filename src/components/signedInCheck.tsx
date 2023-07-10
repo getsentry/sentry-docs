@@ -7,19 +7,19 @@ export function SignedInCheck({
   isUserAuthenticated,
 }: {
   children: React.ReactNode;
-  ifIsAuthenticated: boolean;
+  isUserAuthenticated: boolean;
 }): JSX.Element {
   const {codeKeywords, status} = useContext(CodeContext);
 
   // Never render until loaded
-  if (status !== 'LOADED') {
+  if (status !== 'loaded') {
     return null;
   }
-  
-   const user = codeKeywords.USER;
+
+  const user = codeKeywords.USER;
 
   const hasUser = !!user;
-  if (hasUser !== ifIsAuthenticated) {
+  if (hasUser !== isUserAuthenticated) {
     return null;
   }
 

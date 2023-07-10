@@ -1,6 +1,6 @@
 import {createContext, useEffect, useState} from 'react';
 
-type CodeContextStatus = 'LOADING' | 'LOADED';
+type CodeContextStatus = 'loading' | 'loaded';
 
 type ProjectCodeKeywords = {
   API_URL: string;
@@ -180,16 +180,16 @@ export function useCodeContextState(fetcher = fetchCodeKeywords): CodeContextTyp
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
 
   const [status, setStatus] = useState<CodeContextStatus>(
-    cachedCodeKeywords ? 'LOADED' : 'LOADING'
+    cachedCodeKeywords ? 'loaded' : 'loading'
   );
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
-      setStatus('LOADING');
+      setStatus('loaded');
       fetcher().then((config: CodeKeywords) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
-        setStatus('LOADED');
+        setStatus('loading');
       });
     }
   }, [setStatus, setCodeKeywords, fetcher]);

@@ -20,7 +20,7 @@ export function SignInNote(): JSX.Element {
   const location = useLocation();
 
   return (
-    <SignedInCheck ifIsAuthenticated={false}>
+    <SignedInCheck isUserAuthenticated={false}>
       <StaticQuery
         query={siteMetaQuery}
         render={data => {
