@@ -58,7 +58,7 @@ type UserApiResult = {
 };
 
 // only fetch them once
-let cachedCodeKeywords = null;
+let cachedCodeKeywords: CodeKeywords | null = null;
 
 const DEFAULTS: CodeKeywords = {
   PROJECT: [
@@ -84,15 +84,22 @@ const DEFAULTS: CodeKeywords = {
 
 type CodeContextType = {
   codeKeywords: CodeKeywords;
-  sharedCodeSelection: any;
-  sharedKeywordSelection: any;
+  sharedCodeSelection: [string | null, React.Dispatch<string | null>];
+  sharedKeywordSelection: [
+    Record<string, number>,
+    React.Dispatch<Record<string, number>>
+  ];
   status: CodeContextStatus;
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
 
-const parseDsn = function (dsn: string): Dsn {
+function parseDsn(dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
+
+  if (match === null) {
+    throw new Error('Failed to parse DSN');
+  }
 
   return {
     scheme: match[1],
@@ -101,7 +108,7 @@ const parseDsn = function (dsn: string): Dsn {
     host: escape(match[4]),
     pathname: escape(match[5]),
   };
-};
+}
 
 const formatMinidumpURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/minidump/?sentry_key=${publicKey}`;
@@ -146,6 +153,10 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
     return makeDefaults();
   }
 
+  if (json === null) {
+    return makeDefaults();
+  }
+
   const {projects, user} = json;
 
   if (projects?.length === 0) {
@@ -159,7 +170,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         DSN: project.dsn,
         PUBLIC_DSN: project.dsnPublic,
         PUBLIC_KEY: parsedDsn.publicKey,
-        SECRET_KEY: parsedDsn.secretKey,
+        SECRET_KEY: parsedDsn.secretKey ?? 'exampleSecretKey',
         API_URL: formatApiUrl(parsedDsn),
         PROJECT_ID: project.id,
         PROJECT_SLUG: project.projectSlug,
@@ -198,10 +209,22 @@ export function useCodeContextState(fetcher = fetchCodeKeywords): CodeContextTyp
     }
   }, [setStatus, setCodeKeywords, fetcher]);
 
-  return {
+  // sharedKeywordSelection maintains a global mapping for each "keyword"
+  // namespace to the index of the selected item.
+  //
+  // NOTE: This ONLY does anything for the `PROJECT` keyword namespace, since
+  // that is the only namespace that actually has a list
+  const sharedKeywordSelection = useState<Record<string, number>>({});
+
+  // Maintains the global selection for which code block tab is selected
+  const sharedCodeSelection = useState<string | null>(null);
+
+  const result: CodeContextType = {
     codeKeywords,
-    sharedCodeSelection: useState(null),
-    sharedKeywordSelection: useState({}),
+    sharedCodeSelection,
+    sharedKeywordSelection,
     status,
   };
+
+  return result;
 }
