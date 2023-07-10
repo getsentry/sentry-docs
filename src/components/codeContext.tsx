@@ -40,10 +40,14 @@ type ProjectApiResult = {
   dsn: string;
   dsnPublic: string;
   id: number;
+  name: string;
   organizationId: number;
+  organizationName: string;
   organizationSlug: string;
+  projectName: string;
   projectSlug: string;
-  slug: string;
+  publicKey: string;
+  secretKey: string;
 };
 
 type UserApiResult = {
