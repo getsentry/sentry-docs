@@ -1,6 +1,11 @@
+import {SourceNodesArgs} from 'gatsby';
+
 import getPackageRegistry from '../utils/packageRegistry';
 
-export const sourcePackageRegistryNodes = async ({actions, createContentDigest}) => {
+export const sourcePackageRegistryNodes = async ({
+  actions,
+  createContentDigest,
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const packageRegistry = await getPackageRegistry();

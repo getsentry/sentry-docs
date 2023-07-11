@@ -1,4 +1,4 @@
-import React, {forwardRef, Fragment, useRef} from 'react';
+import React, {Fragment, useRef} from 'react';
 
 import {getCurrentTransaction} from '../utils';
 
@@ -20,18 +20,8 @@ export type PageContext = {
   title?: string;
 };
 
-type WrappedTOCProps = {
-  pageContext: PageContext;
-};
-
-const WrappedTOC = forwardRef(
-  (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
-    return <TableOfContents {...props} contentRef={ref} />;
-  }
-);
-
 type Props = {
-  children?: JSX.Element;
+  children?: React.ReactNode;
   data?: {
     file?: {
       [key: string]: any;
@@ -44,9 +34,9 @@ type Props = {
     notoc?: boolean;
     title?: string;
   };
-  prependToc?: JSX.Element;
+  prependToc?: React.ReactNode;
   seoTitle?: string;
-  sidebar?: JSX.Element;
+  sidebar?: React.ReactNode;
 };
 
 export function BasePage({
@@ -56,7 +46,7 @@ export function BasePage({
   sidebar,
   children,
   prependToc,
-}: Props): JSX.Element {
+}: Props) {
   const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('ok');
@@ -105,7 +95,9 @@ export function BasePage({
               <Banner isModule />
               <Fragment>
                 {prependToc}
-                {hasToc && <WrappedTOC ref={contentRef} pageContext={pageContext} />}
+                {hasToc && (
+                  <TableOfContents contentRef={contentRef} pageContext={pageContext} />
+                )}
               </Fragment>
             </div>
           </div>

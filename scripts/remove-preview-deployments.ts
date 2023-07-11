@@ -32,64 +32,116 @@ if (!VERCEL_PROJECT_ID) {
   throw new Error('VERCEL_PROJECT_ID is not set');
 }
 
-/** This object contains information related to the pagination of the current request, including the necessary parameters to get the next or previous page of data. */
+/**
+ * This object contains information related to the pagination of the current
+ * request, including the necessary parameters to get the next or previous page
+ * of data.
+ */
 interface Pagination {
-  /** Amount of items in the current page. */
+  /**
+   * Amount of items in the current page.
+   */
   count: number;
-  /** Timestamp that must be used to request the next page. */
+  /**
+   * Timestamp that must be used to request the next page.
+   */
   next: number | null;
-  /** Timestamp that must be used to request the previous page. */
+  /**
+   * Timestamp that must be used to request the previous page.
+   */
   prev: number | null;
 }
 
 interface Response {
   deployments: {
-    /** Timestamp of when the deployment got created. */
+    /**
+     * Timestamp of when the deployment got created.
+     * */
     created: number;
-    /** Metadata information of the user who created the deployment. */
+    /**
+     * Metadata information of the user who created the deployment.
+     */
     creator: {
-      /** The unique identifier of the user. */
+      /**
+       * The unique identifier of the user.
+       */
       uid: string;
-      /** The email address of the user. */
+      /**
+       * The email address of the user.
+       */
       email?: string;
-      /** The GitHub login of the user. */
+      /**
+       * The GitHub login of the user.
+       */
       githubLogin?: string;
-      /** The GitLab login of the user. */
+      /**
+       * The GitLab login of the user.
+       */
       gitlabLogin?: string;
-      /** The username of the user. */
+      /**
+       * The username of the user.
+       */
       username?: string;
     };
-    /** Vercel URL to inspect the deployment. */
+    /**
+     * Vercel URL to inspect the deployment.
+     */
     inspectorUrl: string | null;
-    /** The name of the deployment. */
+    /**
+     * The name of the deployment.
+     */
     name: string;
-    /** The type of the deployment. */
+    /**
+     * The type of the deployment.
+     */
     type: 'LAMBDAS';
-    /** The unique identifier of the deployment. */
+    /**
+     * The unique identifier of the deployment.
+     */
     uid: string;
-    /** The URL of the deployment. */
+    /**
+     * The URL of the deployment.
+     */
     url: string;
     aliasAssigned?: (number | boolean) | null;
-    /** An error object in case aliasing of the deployment failed. */
+    /**
+     * An error object in case aliasing of the deployment failed.
+     */
     aliasError?: {
       code: string;
       message: string;
     } | null;
-    /** Timestamp of when the deployment started building at. */
+    /**
+     * Timestamp of when the deployment started building at.
+     */
     buildingAt?: number;
-    /** Conclusion for checks */
+    /**
+     * Conclusion for checks
+     */
     checksConclusion?: 'succeeded' | 'failed' | 'skipped' | 'canceled';
-    /** State of all registered checks */
+    /**
+     * State of all registered checks
+     */
     checksState?: 'registered' | 'running' | 'completed';
-    /** The ID of Vercel Connect configuration used for this deployment */
+    /**
+     * The ID of Vercel Connect configuration used for this deployment
+     */
     connectConfigurationId?: string;
-    /** Timestamp of when the deployment got created. */
+    /**
+     * Timestamp of when the deployment got created.
+     */
     createdAt?: number;
-    /** Deployment can be used for instant rollback */
+    /**
+     * Deployment can be used for instant rollback
+     */
     isRollbackCandidate?: boolean | null;
-    /** An object containing the deployment's metadata */
+    /**
+     * An object containing the deployment's metadata
+     */
     meta?: {[key: string]: string};
-    /** The project settings which was used for this deployment */
+    /**
+     * The project settings which was used for this deployment
+     */
     projectSettings?: {
       buildCommand?: string | null;
       commandForIgnoringBuildStep?: string | null;
@@ -151,13 +203,21 @@ interface Response {
       skipGitConnectDuringLink?: boolean;
       sourceFilesOutsideRootDirectory?: boolean;
     };
-    /** Timestamp of when the deployment got ready. */
+    /**
+     * Timestamp of when the deployment got ready.
+     */
     ready?: number;
-    /** The source of the deployment. */
+    /**
+     * The source of the deployment.
+     */
     source?: 'cli' | 'git' | 'import' | 'import/repo' | 'clone/repo';
-    /** In which state is the deployment. */
+    /**
+     * In which state is the deployment.
+     */
     state?: 'BUILDING' | 'ERROR' | 'INITIALIZING' | 'QUEUED' | 'READY' | 'CANCELED';
-    /** On which environment has the deployment been deployed to. */
+    /**
+     * On which environment has the deployment been deployed to.
+     */
     target?: ('production' | 'staging') | null;
   }[];
   pagination: Pagination;
@@ -226,7 +286,11 @@ async function run(next: number): Promise<void> {
   console.log(`Waiting for ${Math.round(timeout / 1000)} seconds`);
   await new Promise(resolve => setTimeout(resolve, timeout));
 
-  run(rateLimit ? next : pagination.next);
+  const nextPage = rateLimit ? next : pagination.next;
+
+  if (nextPage) {
+    run(nextPage);
+  }
 }
 
 // Start the script with a date 30 days ago

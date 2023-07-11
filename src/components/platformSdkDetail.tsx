@@ -45,7 +45,7 @@ const PackageDetail = styled.div`
   }
 `;
 
-export function PlatformSdkDetail(): JSX.Element {
+export function PlatformSdkDetail() {
   const [platform] = usePlatform();
 
   const {

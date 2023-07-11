@@ -2,7 +2,7 @@
 name: Xamarin
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/xamarin/
 support_level: production
-type: library
+type: framework
 ---
 
 ## Install the NuGet package

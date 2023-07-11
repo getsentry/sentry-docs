@@ -1,3 +1,5 @@
+import {SourceNodesArgs} from 'gatsby';
+
 import PlatformRegistry from '../../shared/platformRegistry';
 
 export const sourcePlatformNodes = async ({
@@ -5,7 +7,7 @@ export const sourcePlatformNodes = async ({
   reporter,
   createNodeId,
   createContentDigest,
-}) => {
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const platformRegistry = new PlatformRegistry();

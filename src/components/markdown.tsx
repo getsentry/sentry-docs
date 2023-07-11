@@ -27,6 +27,7 @@ import {PlatformSection} from './platformSection';
 import {RelayMetrics} from './relayMetrics';
 import {PiiFields} from './relayPiifields';
 import {SandboxLink, SandboxOnly} from './sandboxLink';
+import {SignInNote} from './signInNote';
 import {SmartLink} from './smartLink';
 import {VimeoEmbed, YouTubeEmbed} from './video';
 
@@ -59,6 +60,7 @@ const mdxComponents = {
   YouTubeEmbed,
   SandboxLink,
   SandboxOnly,
+  SignInNote,
 };
 
 export function Markdown({value}) {
