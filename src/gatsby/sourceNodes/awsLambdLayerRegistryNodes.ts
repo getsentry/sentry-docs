@@ -10,7 +10,7 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
 
   const layerMap = await awsLambdaRegistry.getLayerMap();
 
-  Object.entries(layerMap).forEach(([cannonicalName, layerData]) => {
+  Object.entries(layerMap ?? {}).forEach(([cannonicalName, layerData]) => {
     const data = {
       canonical: layerData.canonical,
       regions: layerData.regions,

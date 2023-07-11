@@ -11,7 +11,7 @@ export const sourcePackageRegistryNodes = async ({
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
 
-  Object.entries(allSdks).forEach(([sdkName, sdkData]) => {
+  Object.entries(allSdks ?? {}).forEach(([sdkName, sdkData]) => {
     const data = {
       canonical: sdkData.canonical,
       name: sdkData.name,
