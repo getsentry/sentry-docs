@@ -11,7 +11,7 @@ export const sourceAppRegistryNodes = async ({
   const appRegistry = await getAppRegistry();
   const allApps = appRegistry.data;
 
-  Object.entries(allApps).forEach(([appName, appData]) => {
+  Object.entries(allApps ?? {}).forEach(([appName, appData]) => {
     const data = {
       canonical: appData.canonical,
       name: appData.name,
