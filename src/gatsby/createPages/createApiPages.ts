@@ -2,7 +2,7 @@ import {GatsbyNode} from 'gatsby';
 
 import {getDataOrPanic} from '../helpers';
 
-type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
+type CreatePageArgs = Parameters<NonNullable<GatsbyNode['createPages']>>[0];
 
 export const createApiPages = async ({actions, graphql, reporter}: CreatePageArgs) => {
   const data = await getDataOrPanic(

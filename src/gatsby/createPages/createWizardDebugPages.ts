@@ -2,7 +2,7 @@ import {GatsbyNode} from 'gatsby';
 
 import {getChild, getDataOrPanic} from '../helpers';
 
-type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
+type CreatePageArgs = Parameters<NonNullable<GatsbyNode['createPages']>>[0];
 
 export const createWizardDebugPages = async ({
   actions,
