@@ -23,8 +23,11 @@ Use the `sentry-cli debug-files upload` command to upload dSYMs to Sentry. The c
 
 Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
+For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds.
+
 ```bash
 sentry-cli debug-files upload --auth-token YOUR_AUTH_TOKEN \
+  --include-sources \
   --org ___ORG_SLUG___ \
   --project ___PROJECT_SLUG___ \
   PATH_TO_DSYMS
@@ -67,7 +70,9 @@ Follow these steps to upload the debug symbols:
 1.  Download and install [sentry-cli](/product/cli/installation/).
 2.  Copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_.
 
-Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry. Simply change `sentry-cli debug-files upload` to `sentry-cli debug-files upload --include-sources` in the copied script.
+Sentry can display snippets of your code next to the event stacktraces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+
+For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds. If you don't want Sentry to upload your source code, remove the `--include-sources` argument from the copied script.
 
 <Alert level="" title="Warnings vs. Errors">
 
@@ -82,7 +87,7 @@ if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
-ERROR=$(sentry-cli debug-files upload "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "warning: sentry-cli - $ERROR"
 fi
@@ -96,7 +101,7 @@ if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
-ERROR=$(sentry-cli debug-files upload "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
+ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "error: sentry-cli - $ERROR"
 fi
