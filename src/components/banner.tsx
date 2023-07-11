@@ -5,11 +5,10 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
-const BANNER_TEXT =
-  'Instrumenting Sentry for your backend project? Join us July 11th, at 10 AM PT for the Backend Error Monitoring 101 livestream.';
-const BANNER_LINK_URL = 'https://bit.ly/backend-error-monitoring-101-7';
-const BANNER_LINK_TEXT = 'Register now.';
+const SHOW_BANNER = false;
+const BANNER_TEXT = '';
+const BANNER_LINK_URL = '';
+const BANNER_LINK_TEXT = '';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
