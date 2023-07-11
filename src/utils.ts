@@ -5,14 +5,14 @@ import qs from 'query-string';
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
 interface UseClickOutsideOpts<E extends HTMLElement> {
-  enabled: boolean;
   handler: ClickOutsideCallback;
   ref: React.RefObject<E>;
+  enabled?: boolean;
 }
 
 export function useOnClickOutside<E extends HTMLElement>({
   ref,
-  enabled,
+  enabled = true,
   handler,
 }: UseClickOutsideOpts<E>) {
   useEffect(() => {
