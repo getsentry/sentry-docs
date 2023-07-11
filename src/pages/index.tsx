@@ -3,7 +3,7 @@ import {Nav} from 'react-bootstrap';
 import {PlatformIcon} from 'platformicons';
 
 import {Banner} from 'sentry-docs/components/banner';
-import {usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
+import {Platform, usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
 import {NavbarPlatformDropdown} from 'sentry-docs/components/navbarPlatformDropdown';
 import {getSandboxURL, SandboxOnly} from 'sentry-docs/components/sandboxLink';
 import {Search} from 'sentry-docs/components/search';
@@ -38,13 +38,14 @@ function IndexPage() {
   const platformList = usePlatformList();
 
   let totalPlatformCount = 0;
-  const visiblePlatforms = [];
+  const visiblePlatforms: Platform[] = [];
+
   platformList.forEach(platform => {
     totalPlatformCount += 1;
     if (HIGHLIGHTED_PLATFORMS.indexOf(platform.key) !== -1) {
       visiblePlatforms.push(platform);
     }
-    platform.guides.forEach(guide => {
+    platform.guides?.forEach(guide => {
       totalPlatformCount += 1;
       if (HIGHLIGHTED_PLATFORMS.indexOf(guide.key) !== -1) {
         visiblePlatforms.push(guide);
@@ -75,6 +76,9 @@ function IndexPage() {
                 <SmartLink className="nav-link" to="/api/">
                   API
                 </SmartLink>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
               </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>

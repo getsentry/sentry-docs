@@ -2,7 +2,7 @@
 name: WPF
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/wpf/
 support_level: production
-type: language
+type: framework
 ---
 
 ## Install the NuGet package

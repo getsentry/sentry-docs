@@ -2,7 +2,7 @@
 name: UWP
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/uwp/
 support_level: production
-type: language
+type: framework
 ---
 
 ## Install the NuGet package

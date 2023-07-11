@@ -13,7 +13,7 @@ type LayerData = {
 
 const query = graphql`
   query LambdaLayer {
-    allLayer {
+    allAwsLambdaLayer {
       nodes {
         id
         canonical
@@ -35,10 +35,10 @@ const toOption = ({region}: RegionData) => {
   };
 };
 
-export function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element {
+export function LambdaLayerDetail({canonical}: {canonical: string}) {
   const {
-    allLayer: {nodes: layerList},
-  }: {allLayer: {nodes: LayerData[]}} = useStaticQuery(query);
+    allAwsLambdaLayer: {nodes: layerList},
+  }: {allAwsLambdaLayer: {nodes: LayerData[]}} = useStaticQuery(query);
 
   const layer = layerList.find(l => l.canonical === canonical);
   // if we don't find a matching layer, let the page blow up

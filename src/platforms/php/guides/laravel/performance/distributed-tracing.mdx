@@ -1,0 +1,21 @@
+---
+title: Distributed Tracing
+sidebar_order: 40
+description: "Learn how to connect backend and frontend transactions."
+---
+
+If you're also using Performance Monitoring for [JavaScript](/platforms/javascript/performance/), you can use a helper function to continue the trace and propagate the trace context started from your backend in order to enable [Distributed Tracing](/platforms/javascript/usage/distributed-tracing/). (The trace context contains additional trace-related data that is used for trace-based sampling.)
+Add the following line to your blade template rendering the `<head/>` of your page:
+
+```php {filename:app.blade.php}
+<head>
+...
+{!! \Sentry\Laravel\Integration::sentryMeta() !!}
+...
+</head>
+```
+
+This helper function will render two meta tags similar to `<meta name="sentry-trace" content="49879feb76c84743ba5034bd2d3f1ca3-7cb5535c930d4666-1"/>` and `<meta name="baggage" content="sentry-trace_id=49879feb76c84743ba5034bd2d3f1ca3,sentry-sample_rate=0.2,sentry-transaction=my-transaction,sentry-public_key=public,sentry-release=1.0.0,sentry-environment=prod>`. Our JavaScript SDK will pick these up and then continue the trace and propagate the trace context.
+As a result, your frontend and your backend are connected by way of the same trace.
+
+Otherwise, other backend services with Performance Monitoring will connect automatically.

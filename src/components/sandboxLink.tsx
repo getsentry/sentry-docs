@@ -81,11 +81,14 @@ export function SandboxLink({children, platform, target, ...params}: Props) {
   if (isSandboxHidden()) {
     return children;
   }
+
+  const currentPlatformkey = currentPlatform?.key ?? 'unknown';
+
   if (!params.projectSlug) {
-    if ((SANDBOX_PLATFORMS as readonly string[]).includes(currentPlatform.key)) {
-      params.projectSlug = currentPlatform.key;
-    } else if (SANDBOX_PLATFORM_MAP[currentPlatform.key]) {
-      params.projectSlug = SANDBOX_PLATFORM_MAP[currentPlatform.key];
+    if ((SANDBOX_PLATFORMS as readonly string[]).includes(currentPlatformkey)) {
+      params.projectSlug = currentPlatformkey;
+    } else if (SANDBOX_PLATFORM_MAP[currentPlatformkey]) {
+      params.projectSlug = SANDBOX_PLATFORM_MAP[currentPlatformkey];
     }
   }
 

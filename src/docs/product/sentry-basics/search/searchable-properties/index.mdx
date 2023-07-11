@@ -1,0 +1,60 @@
+---
+title: Searchable Properties
+sidebar_order: 10
+description: "Learn more about searchable properties."
+---
+
+Sentry's search provides you with reserved keywords, like `is`, `user`, `server`, and `browser`, that you can use to search on the properties of issues, events and replays (as well as the special case of releases). You can also create [custom tags](#custom-tags) on which to search. This page provides guidance for how to use these properties and links you to the respective seachable property lists.
+
+## Search Properties
+
+Sentry's searchable properties fall into one of four categories:
+
+- [Issue properties](/product/sentry-basics/search/searchable-properties/issues/)
+- [Event properties](/product/sentry-basics/search/searchable-properties/events/)
+- [Session replay properties](/product/sentry-basics/search/searchable-properties/session-replay/)
+- [Release properties](/product/sentry-basics/search/searchable-properties/releases/)
+
+## Search Tips
+
+Search terms should auto-complete, and when they don't that means you have an invalid dataset. If you enter an invalid search term and tap Return or Enter, an error message is displayed. For example, in **Discover**, you cannot search using a grouping function (properties with a parentheses in the key, for example `epm()`) if you don't already have a grouping function included in the "Results" table columns.
+
+When you search using a property that's a function, if the key includes a parameter, you still need to add a filter or value to have a complete search token. For example, the function `count_unique(field)` takes whichever field you choose as the parameter and then you add a number as your value to filter on. So a typical search might look like: `count_unique(user):>=20`.
+
+Other things to note:
+
+- Search properties that are duration or number types are typically used with a [comparison operator](/product/sentry-basics/search/#comparison-operators) rather than just a colon (`:`) to find exact matches, as an exact match is unlikely to exist.
+- Properties with the notation "Doesn't take a parameter" still require a filter or value, but don't take a parameter inside the parentheses. For example, `epm():>12`.
+- Default fields/parameters in search functions can be updated. For example, the default parameters `column`, `operator`, and `value` can be updated for `count_if(column,operator,value)`.
+
+## Custom Tags
+
+Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by <PlatformLink to="/enriching-events/tags/">configuring the scope</PlatformLink>.
+
+Several common uses for tags include:
+
+- The hostname of the server
+- The version of your platform (for example, iOS 5.0)
+- The user’s language
+
+## Device Classification
+
+`device.class` provides a simple way for developers to understand the performance level of an event's client device in a single searchable property. This is particularly useful for projects that serve a large range of mobile devices, in which case developers would typically have had to parse through a vast range of specs and models across iOS and Android.
+
+Possible values for `device.class` are `high`, `medium`, and `low`, indicating the estimated performance level of the device. This is a calculated property that is based on the following specs:
+
+| `device.class` for iOS | `model`                             |
+| ---------------------- | ----------------------------------- |
+| high                   | iPhone 12 series or higher          |
+| medium                 | iPhone 7 series to iPhone 11 series |
+| low                    | iPhone 6 series or lower            |
+
+| `device.class` for Android | `processor_count` | `processor_frequency` | `memory_size` |
+| -------------------------- | ----------------- | --------------------- | ------------- |
+| high                       | >= 8              | >= 2500 MHz           | >= 6 GiB      |
+| medium                     | >= 8              | >= 2000 MHz           | >= 4 GiB      |
+| low                        | < 8               | < 2000 MHz            | < 4 GiB       |
+
+These classifications are based on an analysis of the mobile devices available in the market today and are subject to change as the market evolves.

@@ -61,12 +61,13 @@ type Props = {
   noGuides: boolean;
 };
 
-export function PlatformGrid({noGuides = false}: Props): JSX.Element {
+export function PlatformGrid({noGuides = false}: Props) {
   const platformList = usePlatformList();
   return (
     <div className="row">
       {platformList
         .sort((a, b) => a.title.localeCompare(b.title))
+        .filter(platform => !platform.key.match('perl'))
         .map(platform => {
           return (
             <div className="col-lg-6 col-md-12 platform-link mb-3" key={platform.key}>
