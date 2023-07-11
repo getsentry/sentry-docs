@@ -64,7 +64,10 @@ export function LambdaLayerDetail({canonical}: {canonical: string}) {
 
   return (
     <Wrapper>
-      <StyledSelect
+      <Select
+        styles={{
+          control: base => ({...base, width: 300}),
+        }}
         placeholder="Select Region"
         options={layer.regions.map(toOption)}
         value={regionOption}
@@ -83,10 +86,6 @@ export function LambdaLayerDetail({canonical}: {canonical: string}) {
 // need a min-height so we don't get cropped at the bottom of the page
 const Wrapper = styled('div')`
   min-height: 200px;
-`;
-
-const StyledSelect = styled(Select)`
-  width: 300px;
 `;
 
 const ArnWrapper = styled('div')`
