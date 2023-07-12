@@ -46,7 +46,7 @@ export function DocsBot(): JSX.Element {
         rel="noreferrer"
       >
         <img width="50" style={{marginRight: '10px'}} src={SentryDocsBot} />
-        <span>ask our Bot</span>
+        <span>Feeling bold? Ask a Bot.</span>
       </a>
     </DocsBotStyle>
   );
