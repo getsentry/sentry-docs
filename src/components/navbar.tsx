@@ -16,7 +16,7 @@ export function Navbar({platforms}: Props) {
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
-      <div className="index-search" style={{width: '45rem', margin: '0 0.8rem'}}>
+      <div>
         <Search path={location.pathname} platforms={platforms} />
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">

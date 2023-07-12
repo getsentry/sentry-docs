@@ -165,7 +165,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         type="search"
         placeholder="Search"
         aria-label="Search"
-        className="form-control"
+        className="form-control search-input"
         value={query}
         onChange={({target: {value}}) => searchFor(value)}
         onFocus={() => setInputFocus(true)}
