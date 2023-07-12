@@ -11,7 +11,7 @@ type Props = {
   platforms?: string[];
 };
 
-export function Navbar({platforms}: Props): JSX.Element {
+export function Navbar({platforms}: Props) {
   const location = useLocation();
 
   return (
@@ -29,6 +29,9 @@ export function Navbar({platforms}: Props): JSX.Element {
             <SmartLink className="nav-link" to="/api/">
               API
             </SmartLink>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
           </Nav.Item>
           <SandboxOnly>
             <Nav.Item>

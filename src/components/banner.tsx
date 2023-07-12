@@ -6,11 +6,9 @@ import React, {useEffect, useState} from 'react';
 // we put a more robust solution in place.
 //
 const SHOW_BANNER = false;
-const BANNER_TEXT =
-  'Join us on May 30th at 10am PT for a 20-minute session on frontend error monitoring with Sentry.';
-const BANNER_LINK_URL =
-  'https://sentry.io/resources/livestream-ama-frontend-error-monitoring-101/?utm_medium=banner&utm_source=sentry-app&utm_campaign=frontend-error-webinar-may&utm_content=docs-banner';
-const BANNER_LINK_TEXT = 'Register now.';
+const BANNER_TEXT = '';
+const BANNER_LINK_URL = '';
+const BANNER_LINK_TEXT = '';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //

@@ -1,4 +1,4 @@
-import React, {forwardRef, Fragment, useRef} from 'react';
+import React, {Fragment, useState} from 'react';
 
 import {getCurrentTransaction} from '../utils';
 
@@ -20,18 +20,8 @@ export type PageContext = {
   title?: string;
 };
 
-type WrappedTOCProps = {
-  pageContext: PageContext;
-};
-
-const WrappedTOC = forwardRef(
-  (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
-    return <TableOfContents {...props} contentRef={ref} />;
-  }
-);
-
 type Props = {
-  children?: JSX.Element;
+  children?: React.ReactNode;
   data?: {
     file?: {
       [key: string]: any;
@@ -44,9 +34,9 @@ type Props = {
     notoc?: boolean;
     title?: string;
   };
-  prependToc?: JSX.Element;
+  prependToc?: React.ReactNode;
   seoTitle?: string;
-  sidebar?: JSX.Element;
+  sidebar?: React.ReactNode;
 };
 
 export function BasePage({
@@ -56,7 +46,7 @@ export function BasePage({
   sidebar,
   children,
   prependToc,
-}: Props): JSX.Element {
+}: Props) {
   const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('ok');
@@ -65,7 +55,7 @@ export function BasePage({
   const {title, excerpt, description} = pageContext;
   const hasToc = !pageContext.notoc;
 
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentElement, setContentElement] = useState<HTMLElement | null>(null);
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
@@ -86,7 +76,7 @@ export function BasePage({
           }
         >
           <h1 className="mb-3">{title}</h1>
-          <div id="main" ref={contentRef}>
+          <div id="main" ref={setContentElement}>
             <CodeContext.Provider value={useCodeContextState()}>
               {children}
             </CodeContext.Provider>
@@ -105,7 +95,9 @@ export function BasePage({
               <Banner isModule />
               <Fragment>
                 {prependToc}
-                {hasToc && <WrappedTOC ref={contentRef} pageContext={pageContext} />}
+                {hasToc && contentElement && (
+                  <TableOfContents content={contentElement} pageContext={pageContext} />
+                )}
               </Fragment>
             </div>
           </div>

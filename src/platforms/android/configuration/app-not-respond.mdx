@@ -1,8 +1,12 @@
 ---
 title: Application Not Responding (ANR)
-sidebar_order: 3
+sidebar_order: 4
 description: "Learn how to turn off or specify ANR."
 ---
+
+Application Not Responding (ANR) errors are triggered when the main UI thread of an application is blocked for more than five seconds. The Android SDK reports ANR errors as Sentry events. In addition, Sentry calculates [ANR rate](/platforms/android/performance/instrumentation/performance-metrics/#application-not-responding-anr-rate) based on these events and user sessions.
+
+## ANR implementation details
 
 The Android SDK uses different implementations to detect ANRs, depending on what version of Android the device is running:
 
@@ -54,7 +58,51 @@ and asynchronously sends ANR events to Sentry for each ANR in the history, enric
 
 The integration reports ANR events with `mechanism:AppExitInfo`.
 
+<Note>
+
+If [ApplicationExitInfo#getTraceInputStream](<https://developer.android.com/reference/android/app/ApplicationExitInfo#getTraceInputStream()>) returns `null`, the SDK will no longer report an ANR event, since these events won't be actionable without it.
+
+</Note>
+
 ![ANR](app-not-respond.png)
+
+#### Historical ANRs
+
+By default, the SDK only reports and enriches the latest ANR and it's the only one counted towards the ANR rate. However, there's also a `setReportHistoricalAnrs` option available in `SentryOptions`, which enables the SDK to report all ANRs from the [getHistoricalExitReasons](<https://developer.android.com/reference/android/app/ActivityManager?hl=en#getHistoricalProcessExitReasons(java.lang.String,%20int,%20int)>) list:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  options.isReportHistoricalAnrs = true
+}
+```
+
+```java
+SentryAndroid.init(context) { options ->
+  options.setReportHistoricalAnrs(true)
+}
+```
+
+This option is useful after updating the SDK to the version where the new ANR implementation was introduced, in order to report all ANRs that took place prior to the SDK update. Other than that, the SDK will always pick up the latest ANR from the historical exit reasons list on next app restart, and there won't be any historical ANRs to report.
+
+The integration reports ANR events with `mechanism:HistoricalAppExitInfo`.
+
+#### Attaching Thread Dump
+
+The SDK makes it possible to send the ANR thread dump from [ApplicationExitInfo#getTraceInputStream](<https://developer.android.com/reference/android/app/ApplicationExitInfo#getTraceInputStream()>) as an attachment. This is useful for performing deeper investigations using all available information from the OS (in addition to the SDK parsing the thread dump into threads with stack traces):
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  options.isAttachAnrThreadDump = true
+}
+```
+
+```java
+SentryAndroid.init(context) { options ->
+  options.setAttachAnrThreadDump(true)
+}
+```
+
+![ANR Thread Dump](app-not-respond-thread-dump.png)
 
 ## ANR Root Cause Analysis
 

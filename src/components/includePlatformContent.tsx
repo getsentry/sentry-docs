@@ -22,7 +22,7 @@ type Props = {
   name: string;
 };
 
-export function IncludePlatformContent({name}: Props): JSX.Element {
+export function IncludePlatformContent({name}: Props) {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includePlatformContentQuery);

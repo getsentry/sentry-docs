@@ -5,14 +5,14 @@ import qs from 'query-string';
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
 interface UseClickOutsideOpts<E extends HTMLElement> {
-  enabled: boolean;
   handler: ClickOutsideCallback;
   ref: React.RefObject<E>;
+  enabled?: boolean;
 }
 
 export function useOnClickOutside<E extends HTMLElement>({
   ref,
-  enabled,
+  enabled = true,
   handler,
 }: UseClickOutsideOpts<E>) {
   useEffect(() => {
@@ -23,7 +23,7 @@ export function useOnClickOutside<E extends HTMLElement>({
       if (!(event.target instanceof Element)) {
         return;
       }
-      if (!ref.current.contains(event.target)) {
+      if (!ref.current?.contains(event.target)) {
         handler(event);
       }
     };
@@ -32,7 +32,7 @@ export function useOnClickOutside<E extends HTMLElement>({
   }, [enabled, handler, ref]);
 }
 
-export const sortBy = (arr: any[], comp: (any) => any): any[] => {
+export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   return arr.sort((a, b) => {
     const aComp = comp(a);
     const bComp = comp(b);
@@ -44,7 +44,7 @@ export const sortBy = (arr: any[], comp: (any) => any): any[] => {
     }
     return 0;
   });
-};
+}
 
 type Page = {
   context: {

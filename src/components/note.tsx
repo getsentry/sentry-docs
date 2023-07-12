@@ -4,7 +4,7 @@ type Props = {
   children?: any;
 };
 
-export function Note({children}: Props): JSX.Element {
+export function Note({children}: Props) {
   //   let className = "";
   //   if (children.props && typeof children.props.children === "string") {
   //     className += " markdown-text-only";

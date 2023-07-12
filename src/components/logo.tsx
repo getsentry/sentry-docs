@@ -4,7 +4,7 @@ type Props = {
   loading?: boolean;
 };
 
-export function Logo({loading}: Props): JSX.Element {
+export function Logo({loading}: Props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
