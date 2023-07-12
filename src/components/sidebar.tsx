@@ -38,7 +38,7 @@ type ChildProps = {
   };
 };
 
-export function BaseSidebar({data}: ChildProps): JSX.Element {
+export function BaseSidebar({data}: ChildProps) {
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   return (
     <ul className="list-unstyled" data-sidebar-tree>

@@ -23,12 +23,9 @@ import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
-  dsn: "___DSN___",
-  tracesSampleRate: 1,
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
-      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.remixRouterInstrumentation(
         useEffect,
         useLocation,
@@ -36,6 +33,10 @@ Sentry.init({
       ),
     }),
   ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 });
 ```
 
@@ -47,7 +48,7 @@ import { prisma } from "~/db.server";
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1,
   integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
 });

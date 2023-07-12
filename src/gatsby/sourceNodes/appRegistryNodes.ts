@@ -1,12 +1,17 @@
+import {SourceNodesArgs} from 'gatsby';
+
 import getAppRegistry from '../utils/appRegistry';
 
-export const sourceAppRegistryNodes = async ({actions, createContentDigest}) => {
+export const sourceAppRegistryNodes = async ({
+  actions,
+  createContentDigest,
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const appRegistry = await getAppRegistry();
   const allApps = appRegistry.data;
 
-  Object.entries(allApps).forEach(([appName, appData]) => {
+  Object.entries(allApps ?? {}).forEach(([appName, appData]) => {
     const data = {
       canonical: appData.canonical,
       name: appData.name,

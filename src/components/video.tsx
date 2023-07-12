@@ -25,7 +25,7 @@ export function VimeoEmbed({id, className}: Video) {
   return (
     <ResponsiveEmbed className={className}>
       <StyledVimeoIframe
-        src={`https://player.vimeo.com/video/${id}`}
+        src={`https://player.vimeo.com/video/${id}?dnt=true`}
         frameBorder="0"
         allowFullScreen
       />

@@ -11,6 +11,7 @@ import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
 
 import {DocsBot} from 'sentry-docs/components/docsbot';
+import {useOnClickOutside} from 'sentry-docs/utils';
 
 import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
 import {Logo} from './logo';
@@ -54,32 +55,6 @@ const search = new SentryGlobalSearch([
   'blog',
 ]);
 
-const useClickOutside = (
-  ref: React.RefObject<HTMLElement>,
-  handler: () => void,
-  events?: string[]
-) => {
-  if (!events) {
-    events = [`mousedown`, `touchstart`];
-  }
-
-  const detectClickOutside = (event: MouseEvent) => {
-    return !ref.current.contains(event.target as HTMLElement) && handler();
-  };
-
-  useEffect(() => {
-    for (const event of events) {
-      document.addEventListener(event, detectClickOutside);
-    }
-
-    return () => {
-      for (const event of events) {
-        document.removeEventListener(event, detectClickOutside);
-      }
-    };
-  });
-};
-
 function relativizeUrl(url: string) {
   return url.replace(/^.*:\/\/docs\.sentry\.io/, '');
 }
@@ -90,17 +65,20 @@ type Props = {
   platforms?: string[];
 };
 
-export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
+export function Search({path, autoFocus, platforms = []}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  useClickOutside(ref, () => {
+
+  const handleClickOutside = useCallback(() => {
     setInputFocus(false);
     setShowOffsiteResults(false);
-  });
+  }, []);
+
+  useOnClickOutside({ref, handler: handleClickOutside});
 
   const inputRef = useRef<HTMLInputElement>(null);
 

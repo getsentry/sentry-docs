@@ -1,6 +1,10 @@
+import {GatsbyNode} from 'gatsby';
+
 import {getDataOrPanic} from '../helpers';
 
-async function main({actions, graphql, reporter}) {
+type CreatePageArgs = Parameters<NonNullable<GatsbyNode['createPages']>>[0];
+
+export const createApiDocPages = async ({actions, graphql, reporter}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
       query {
@@ -17,7 +21,7 @@ async function main({actions, graphql, reporter}) {
   );
 
   const component = require.resolve(`../../templates/apiDoc.tsx`);
-  data.openApi.tags.forEach((node: any) => {
+  data.openApi.tags.forEach(node => {
     const name = node.x_sidebar_name || node.name;
     actions.createPage({
       path: `/api/${node.name.toLowerCase()}/`,
@@ -28,6 +32,4 @@ async function main({actions, graphql, reporter}) {
       },
     });
   });
-}
-
-export default main;
+};

@@ -27,7 +27,7 @@ import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.Replay()],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
@@ -41,7 +41,7 @@ Initialize Sentry in your entry point for the server to capture exceptions and g
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
 });
 ```
 

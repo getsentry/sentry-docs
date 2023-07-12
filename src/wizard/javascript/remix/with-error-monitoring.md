@@ -27,7 +27,7 @@ import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
 });
 ```
 
@@ -37,7 +37,7 @@ Initialize Sentry in your entry point for the server to capture exceptions and g
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
 });
 ```
 

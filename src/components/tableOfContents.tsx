@@ -1,98 +1,118 @@
-import React, {Fragment, useEffect, useState} from 'react';
-
-import {captureException} from '../utils';
+import React, {Fragment, useMemo} from 'react';
 
 import {PageContext} from './basePage';
 import {GuideGrid} from './guideGrid';
 
-type Item = {
-  items: Item[];
-  title?: string;
-  url?: string;
-};
+interface Heading {
+  id: string;
+  level: number;
+  title: string;
+}
 
-const getHeadings = (element: HTMLElement): Item[] => {
-  const levels = [2, 3];
-  const headingSelector = levels.map(level => `h${level}`).join(`, `);
-  const htmlNodes: HTMLElement[] = Array.from(element.querySelectorAll(headingSelector));
-  const headings = [];
-  const tree = [];
-  let lastDepth = null;
-  // XXX(dcramer): someone please rewrite this code to be less terrible, i hate trees
-  // TODO(dcramer): this doesnt handle jumping heading levels properly (probably)
-  htmlNodes.forEach(node => {
-    if (!node.id) {
-      return;
-    }
-    const item = {
-      items: [],
-      url: `#${node.id}`,
+interface GetAnchorHeadingOptions {
+  /**
+   * The DOM element to extract heading nodes from
+   */
+  content: HTMLElement;
+  /**
+   * The levels to look for. These should be in consecutive order.
+   */
+  levels?: `h${number}`[];
+}
+
+/**
+ * Extract a list of Heading objects from the content of a HTML element
+ * containing various headings.
+ */
+function getAnchorHeadings({content, levels = ['h2', 'h3']}: GetAnchorHeadingOptions) {
+  const headingNodes = [
+    ...content.querySelectorAll<HTMLHeadingElement>(levels.join(', ')),
+  ];
+
+  const headings: Heading[] = headingNodes
+    .filter(node => !!node.id)
+    .map(node => ({
       title: node.innerText,
-    };
+      level: Number(node.nodeName[1]),
+      id: node.id,
+    }));
 
-    const depth = Number(node.nodeName[1]);
-    if (!lastDepth) {
-      headings.push(item);
-      tree.push(item);
-    } else if (lastDepth === depth) {
-      if (tree.length === 1) {
-        headings.push(item);
-      } else {
-        tree[tree.length - 2].items.push(item);
-      }
-      tree[tree.length - 1] = item;
-    } else if (depth > lastDepth) {
-      tree[tree.length - 1].items.push(item);
-      tree.push(item);
-    } else if (depth < lastDepth) {
-      tree.pop();
-      if (tree.length === 1) {
-        headings.push(item);
-      } else {
-        tree[tree.length - 2].items.push(item);
-      }
-      tree[tree.length - 1] = item;
-    }
-    lastDepth = depth;
-  });
   return headings;
-};
+}
+
+interface TocItem extends Heading {
+  /**
+   * Child elements of the TocItem
+   */
+  items: TocItem[];
+}
+
+/**
+ * Constructs a tree of `TocItem` nodes given a HTMLElement containing various
+ * headings. The tree will be constructed as each heading apperas within the list.
+ */
+export function buildTocTree(headings: Heading[]): TocItem[] {
+  // Maintains our final constructed tree of TocItem's
+  const items: TocItem[] = [];
+
+  // Used to aid in cosntructing our tree by maintaining the stack of items
+  // ordered by depth.
+  const stack: TocItem[] = [];
+
+  for (const heading of headings) {
+    const item: TocItem = {...heading, items: []};
+
+    // pop from the stack until the we reach the item with a level greater than
+    // the heading we currently have
+    while (stack.length > 0 && stack[stack.length - 1].level >= heading.level) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      // Heading is at the highest level
+      items.push(item);
+    } else {
+      // Heading is a child of the most recent item in the stack
+      stack[stack.length - 1].items.push(item);
+    }
+
+    stack.push(item);
+  }
+
+  return items;
+}
 
 type Props = {
-  contentRef: React.RefObject<HTMLElement>;
-  pageContext?: PageContext;
+  /**
+   * Page content element to extract the TOC tree from
+   */
+  content: HTMLElement;
+  /**
+   * Page context used to display related guides
+   */
+  pageContext: PageContext;
 };
 
-function recursiveRender(items) {
+function recursiveRender(items: TocItem[]) {
   return items.map(i => {
     if (!i.title) {
       return recursiveRender(i.items);
     }
     return (
-      <li className="toc-entry" key={i.url}>
-        <a href={i.url}>{i.title}</a>
+      <li className="toc-entry" key={i.id}>
+        <a href={`#${i.id}`}>{i.title}</a>
         {i.items && <ul>{recursiveRender(i.items)}</ul>}
       </li>
     );
   });
 }
 
-export function TableOfContents({contentRef, pageContext}: Props) {
-  const [items, setItems] = useState<Item[]>(null);
+export function TableOfContents({content, pageContext}: Props) {
   const {platform} = pageContext;
 
-  useEffect(() => {
-    if (!items && contentRef.current) {
-      try {
-        setItems(getHeadings(contentRef.current));
-      } catch (err) {
-        captureException(err);
-        setItems([]);
-      }
-    }
-  }, [contentRef, items]);
+  const items = useMemo(() => buildTocTree(getAnchorHeadings({content})), [content]);
 
-  if (!items || !items.length) {
+  if (items.length === 0) {
     return null;
   }
 
