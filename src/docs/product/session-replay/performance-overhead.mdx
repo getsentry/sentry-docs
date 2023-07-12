@@ -10,7 +10,37 @@ Session Replay works by observing and recording changes to your web application'
 
 **For most web applications, the performance overhead of our client SDK is imperceptible to end-users.**
 
-Below, you can learn more about the individual measures we've taken to ensure smooth performance of our Session Replay SDK.
+Performance overhead depends on the complexity of your application. Applications with a large DOM and numerous DOM node mutations will have a higher overhead than a more simpler, mostly static site. The only way to get accurate overhead metrics is to measure it yourself. We have written a blog post, [Measuring Session Replay Overhead](https://sentry.engineering/blog/measuring-session-replay-overhead), that outlines how you can get started measuring overhead of Replay on your applications without deploying to production. We measured the overhead of the Replay SDK on Sentry's web UI using the methodology from the blog. Here are the results (median values are shown):
+
+| metric                           | Without Sentry | Sentry SDK only | Sentry + Replay SDK |
+| -------------------------------- | -------------- | --------------- | ------------------- |
+| Largest Contentful Paint (LCP)\* | 1336.05 ms     | 1896.80 ms      | 1643.00 ms          |
+| Cumulative Layout Shift (CLS)    | 0.39 ms        | 0.39ms          | 0.39 ms             |
+| First Input Delay (FID)          | 1.30 ms        | 1.30 ms         | 1.60 ms             |
+| Total Blocking Time (TBT)        | 2629.00ms      | 2742.00 ms      | 3267.50 ms          |
+| Average Memory                   | 118.79 MB      | 113.79 MB       | 132.05 MB           |
+| Max Memory                       | 311.4 MB       | 316.57 MB       | 334.82 MB           |
+| Network Upload                   | 21 B           | 3.79 KB         | 392.98 KB           |
+| Network Download                 | 7.11 MB        | 6.93 MB         | 6.87 MB             |
+
+<hr />
+<sub>
+  \*: The standard deviation for LCP was 386, 511, 354 ms respectively, meaning
+  that the LCP values are quite spread out and explains why the only-Sentry LCP
+  value is higher than Sentry with Replay.
+</sub>
+
+The benchmarks were run on an Apple M1 MacBook Pro against a remote preview server against a remote API backend with 100 iterations. The scenario can be summarized as loading Sentry, navigating to Discover, adding 4 columns, waiting for results, adding another column, and finally waiting for results a second time. The benchmark tests a rather strenuous recording scenario as the Discover data table is one of our most complex in regards to DOM nodes and mutations. A simpler scenario run consisting of navigation to four different "Settings" pages produced an increase of ~100 ms of total JS blocking time.
+
+<Note>
+  There is a known performance issue when recording replays with many DOM
+  mutations. This generally occurs when rendering large data grids. We are
+  currently working on improving the performance of this situation, but in the
+  mean time it is recommended to [use the blocking
+  feature](https://docs.sentry.io/platforms/javascript/session-replay/privacy/#blocking)
+  in order to not record these large mutations which can degrade performance for
+  your customers.
+</Note>
 
 ## How is Session Replay optimized?
 
