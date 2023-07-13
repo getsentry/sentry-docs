@@ -1,13 +1,13 @@
 ---
-title: Using Sentry's APIs
+title: Create and List Teams with the Sentry API
 sidebar_order: 10
 ---
 
-This guide walks you through the basics of authenticating with Sentry's API and using the API with cURL to list the teams in an organization and create a new team.
+This guide walks you through the basics of authenticating with Sentry's API and using the API to list the teams in an organization and create a new team.
 
 ## Prerequisites
 
-- A Sentry account with an organization-level role of <TODO SHANA> or higher
+- A Sentry account with an organization-level role of Admin or higher <TODO SHANA confirm>
 
 You can use a free [Sentry developer account](https://sentry.io/pricing/) for this tutorial.
 
@@ -65,18 +65,18 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
 1. Paste the following cURL command into your terminal:
 
     ```bash
-    curl https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/ \
+    curl "https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/?detailed=0" \
         -H 'Authorization: Bearer '$SENTRY_AUTH_TOKEN
     ```
 
-1. Here's an example of what the output of the command should be, for an organization called "test" with one project named "test-project":
+1. Here's an example of what the output of the command should be, for an organization that has a team called "test-team":
 
     ```json
     [
         {
             "id": "4505449964175360",
-            "slug": "test",
-            "name": "test",
+            "slug": "test-team",
+            "name": "test-team",
             "dateCreated": "2023-06-30T18:44:59.196618Z",
             "isMember": false,
             "teamRole": null,
@@ -100,6 +100,26 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
                 "avatarType": "letter_avatar",
                 "avatarUuid": null
             },
+            "orgRole": null,
+        }
+    ]
+    ```
+
+    The output gives you details about the teams within the specified organization.
+
+1. [Optional] To also list information about the projects associated with each team you can use the set the `detailed` query parameter to `1`:
+
+    ```bash
+    curl "https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/?detailed=1" \
+        -H 'Authorization: Bearer '$SENTRY_AUTH_TOKEN
+    ```
+
+    Here's an example of what that output might look like if "test-team" has one associated project named "test-project":
+
+    ```json
+    [
+        {
+        ...
             "orgRole": null,
             "externalTeams": [],
             "projects": [
@@ -142,7 +162,7 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
     ]
     ```
 
-    This output gives you information about both the organization and the projects in that organization.
+    If your organization has enough teams, the API will return paginated results. See our docs on [Pagination](/api/pagination/) to learn how to handle paginated results.
 
 ## Create a Team
 
