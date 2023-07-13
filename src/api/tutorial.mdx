@@ -9,7 +9,7 @@ This guide walks you through the basics of authenticating with Sentry's API and 
 
 - A Sentry account with an organization-level role of Admin or higher <TODO SHANA confirm>
 
-You can use a free [Sentry developer account](https://sentry.io/pricing/) for this tutorial.
+We recommend using a free [Sentry developer account](https://sentry.io/pricing/) for this tutorial.
 
 ## Get an Sentry Authentication Token
 
@@ -43,7 +43,7 @@ For this guide, we will generate an organization auth token by creating an inter
 
 ## List an Organization's Teams
 
-First, you will use the [List an Organization's Teams](https://docs.sentry.io/api/teams/list-an-organizations-teams/) API to list all the teams in our organization.
+First, you will use the [List an Organization's Teams](/api/teams/list-an-organizations-teams/) API to list all the teams in our organization.
 
 ### Find your organization ID
 
@@ -55,7 +55,7 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
 
 1. Open your terminal.
 
-1. Save your auth token and your organization ID as environment variables for ease of use. Paste the following commands into your terminal, replacing `<organization_id>` with your organization ID and `<auth_token>` with the auth token you copied previously:
+1. Save your auth token and organization ID as environment variables for ease of use. Paste the following commands into your terminal, replacing `<organization_id>` with your organization ID and `<auth_token>` with the auth token you copied previously:
 
     ```bash
     export SENTRY_ORG_ID=<organization_id>
@@ -67,7 +67,7 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
     ```bash
     curl "https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/?detailed=0" \
         -H 'Authorization: Bearer '$SENTRY_AUTH_TOKEN
-    ```
+    ``
 
 1. Here's an example of what the output of the command should be, for an organization that has a team called "test-team":
 
@@ -107,7 +107,9 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
 
     The output gives you details about the teams within the specified organization.
 
-1. [Optional] To also list information about the projects associated with each team you can use the set the `detailed` query parameter to `1`:
+    If your organization has enough teams, the API will return paginated results. See our docs on [Pagination](/api/pagination/) to learn how to handle paginated results.
+
+1. [Optional] To list information about the projects associated with each team you can use the set the `detailed` query parameter to `1`:
 
     ```bash
     curl "https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/?detailed=1" \
@@ -162,8 +164,64 @@ You can find your organization ID in the browser URL of your Sentry instance. Fo
     ]
     ```
 
-    If your organization has enough teams, the API will return paginated results. See our docs on [Pagination](/api/pagination/) to learn how to handle paginated results.
-
 ## Create a Team
 
+Now that you know what teams already exist in your org, use the [Create a New Team](/api/teams/create-a-new-team/) API to create another.
+
+1. Make sure your auth token and organization ID are both still stored as environment variables in your shell.
+
+1. Paste the following cURL command into your terminal:
+
+    ```bash
+    curl -d "name=tutorial-team" -X POST "https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/" \
+        -H 'Authorization: Bearer '$SENTRY_AUTH_TOKEN
+    ```
+
+    The `name` query parameter means the name of the created team should be "tutorial-team".
+
+1. Here's an example of what the output of the command should be:
+
+    ```json
+    {
+        "id": "4505524553711616",
+        "slug": "tutorial-team",
+        "name": "tutorial-team",
+        "dateCreated": "2023-07-13T22:54:05.074990Z",
+        "isMember": false,
+        "teamRole": null,
+        "flags": {
+            "idp:provisioned": false
+        },
+        "access": [
+            "event:write",
+            "member:read",
+            "alerts:read",
+            "project:releases",
+            "project:read",
+            "event:read",
+            "team:read",
+            "org:read"
+        ],
+        "hasAccess": true,
+        "isPending": false,
+        "memberCount": 0,
+        "avatar": {
+            "avatarType": "letter_avatar",
+            "avatarUuid": null
+        },
+        "orgRole": null
+    }
+    ```
+
+1. [Optional] To create a team where the `slug` value is different than the `name` value, you can specify both in your POST call, like so:
+
+    ```bash
+    curl -d "name=tutorial-team&slug=tutorial-team-slug" -X POST "https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/" \
+        -H 'Authorization: Bearer '$SENTRY_AUTH_TOKEN
+    ```
+
 ## List an Organization's Teams
+
+Finally, call the [List an Organization's Teams](/api/teams/list-an-organizations-teams/) API one more time to make sure your new team is returned.
+
+1.
