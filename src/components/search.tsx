@@ -16,11 +16,6 @@ import {useOnClickOutside} from 'sentry-docs/utils';
 import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
 import {Logo} from './logo';
 
-const SearchBar = styled.div`
-  display: flex;
-  flex-direction: row;
-`;
-
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {
   let dt = new Date().getTime();
@@ -171,7 +166,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         onFocus={() => setInputFocus(true)}
         ref={inputRef}
       />
-      <p style={{margin: '6px 8px'}}>OR</p>
+      <Separator>Feeling bold?</Separator>
       <DocsBot />
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
@@ -269,3 +264,13 @@ export function Search({path, autoFocus, platforms = []}: Props) {
     </SearchBar>
   );
 }
+
+const SearchBar = styled('div')`
+  display: flex;
+  flex-direction: row;
+`;
+
+const Separator = styled('div')`
+  margin: 6px 8px;
+  white-space: nowrap;
+`;

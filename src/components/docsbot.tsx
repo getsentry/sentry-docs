@@ -11,7 +11,7 @@ export function DocsBot() {
       rel="noreferrer"
     >
       <img width="50" src={SentryDocsBot} />
-      <span>Ask our Bot</span>
+      <span>Ask A Bot</span>
     </DocsBotLink>
   );
 }
