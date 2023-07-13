@@ -3,7 +3,7 @@ title: Using Sentry's APIs
 sidebar_order: 10
 ---
 
-This guide walks you through the basics of using Sentry's APIs to list the teams in an organization and create a new team.
+This guide walks you through the basics of authenticating with Sentry's API and using the API with cURL to list the teams in an organization and create a new team.
 
 ## Prerequisites
 
@@ -16,8 +16,6 @@ You can use a free [Sentry developer account](https://sentry.io/pricing/) for th
 You must pass an authentication token along with your API calls to authenticate with Sentry. Auth tokens can be associated with a user or with an organization. We recommend using tokens associated with an organization when possible, because user tokens stop working once a user is removed from an organization.
 
 For this guide, we will generate an organization auth token by creating an internal integration.
-
-### Create an Internal Integration
 
 [Internal Integrations](/product/integrations/integration-platform/internal-integration/) can be used to create custom Sentry integrations for your organization. However, they can also be used as a tool to create and manage your organization auth tokens.
 
@@ -43,9 +41,108 @@ For this guide, we will generate an organization auth token by creating an inter
 
     You'll need this token for all your future API calls.
 
-### Generate an Organization Authentication Token
-
 ## List an Organization's Teams
+
+First, you will use the [List an Organization's Teams](https://docs.sentry.io/api/teams/list-an-organizations-teams/) API to list all the teams in our organization.
+
+### Find your organization ID
+
+The list teams API requires you to pass in the an organization id to list teams for.
+
+You can find your organization ID in the browser URL of your Sentry instance. For example, https://test-org.sentry.io/.
+
+### Run the command
+
+1. Open your terminal.
+
+1. Save your auth token and your organization ID as environment variables for ease of use. Paste the following commands into your terminal, replacing `<organization_id>` with your organization ID and `<auth_token>` with the auth token you copied previously:
+
+    ```bash
+    export SENTRY_ORG_ID=<organization_id>
+    export SENTRY_AUTH_TOKEN=<auth_token>
+    ```
+
+1. Paste the following cURL command into your terminal:
+
+    ```bash
+    curl https://sentry.io/api/0/organizations/$SENTRY_ORG_ID/teams/ \
+        -H 'Authorization: Bearer '$SENTRY_AUTH_TOKEN
+    ```
+
+1. Here's an example of what the output of the command should be, for an organization called "test" with one project named "test-project":
+
+    ```json
+    [
+        {
+            "id": "4505449964175360",
+            "slug": "test",
+            "name": "test",
+            "dateCreated": "2023-06-30T18:44:59.196618Z",
+            "isMember": false,
+            "teamRole": null,
+            "flags": {
+                "idp:provisioned": false
+            },
+            "access": [
+                "alerts:read",
+                "team:read",
+                "member:read",
+                "org:read",
+                "project:releases",
+                "project:read",
+                "event:write",
+                "event:read"
+            ],
+            "hasAccess": true,
+            "isPending": false,
+            "memberCount": 1,
+            "avatar": {
+                "avatarType": "letter_avatar",
+                "avatarUuid": null
+            },
+            "orgRole": null,
+            "externalTeams": [],
+            "projects": [
+                {
+                    "id": "4505506997403648",
+                    "slug": "test-project",
+                    "name": "test-project",
+                    "platform": "javascript-react",
+                    "dateCreated": "2023-07-10T20:29:17.426792Z",
+                    "isBookmarked": false,
+                    "isMember": false,
+                    "features": [
+                        "alert-filters",
+                        "minidump",
+                        "race-free-group-creation",
+                        "similarity-indexing",
+                        "similarity-view",
+                        "releases"
+                    ],
+                    "firstEvent": "2023-07-10T20:39:35.811000Z",
+                    "firstTransactionEvent": true,
+                    "access": [],
+                    "hasAccess": true,
+                    "hasMinifiedStackTrace": true,
+                    "hasMonitors": false,
+                    "hasProfiles": false,
+                    "hasReplays": true,
+                    "hasSessions": true,
+                    "isInternal": false,
+                    "isPublic": false,
+                    "avatar": {
+                        "avatarType": "letter_avatar",
+                        "avatarUuid": null
+                    },
+                    "color": "#bf853f",
+                    "status": "active"
+                }
+            ]
+        }
+    ]
+    ```
+
+    This output gives you information about both the organization and the projects in that organization.
 
 ## Create a Team
 
