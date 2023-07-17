@@ -95,7 +95,7 @@ const createSentryRequestHandler =
 app.all("*", createSentryRequestHandler(/* ... */));
 ```
 
-Also, wrap your Remix root with `withSentry` to catch React component errors and to get parameterized router transactions.
+Also, wrap your Remix root with `withSentry` to catch React component errors (Remix v1) and routing transactions. If you use the Remix `v2_errorBoundary` future flag, you need to configure a [v2 ErrorBoundary](#v2-errorboundary) in addition.
 
 ```typescript {filename: root.tsx}
 import {
@@ -131,7 +131,7 @@ export default withSentry(App);
 
 You can disable or configure `ErrorBoundary` using a second parameter to `withSentry`.
 
-```ts
+```typescript
 withSentry(App, {
   wrapWithErrorBoundary: false,
 });
@@ -143,6 +143,46 @@ withSentry(App, {
     fallback: <p>An error has occurred</p>,
   },
 });
+```
+
+## Remix v2 features
+
+_Available from SDK version 7.59.0_
+
+[Remix v2](https://remix.run/docs/en/main/pages/v2) will introduce new features that require additional configuration to work with Sentry. These features are also available from version [1.17.0](https://github.com/remix-run/remix/releases/tag/remix%401.17.0) with [future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags).
+
+### v2 ErrorBoundary
+
+To capture errors from [v2 ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary-v2), you should define your own `ErrorBoundary` in `root.tsx` and use `Sentry.captureRemixErrorBoundaryError` inside of it. You can also create route-specific error capturing behaviour by defining `ErrorBoundary` in your route components. The `ErrorBoundary` you define in `root.tsx` will be used as a fallback for all routes.
+
+```typescript {filename: root.tsx}
+import { captureRemixErrorBoundaryError } from "@sentry/remix";
+
+export const ErrorBoundary: V2_ErrorBoundaryComponent = () => {
+  const error = useRouteError();
+
+  captureRemixErrorBoundaryError(error);
+
+  return <div> ... </div>;
+};
+```
+
+## v2 Server-side Errors
+
+When using `v2_errorBoundary` future flag, Sentry can't capture your server-side errors automatically. Instead, define a [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point. Then, you should use `Sentry.captureRemixServerError` to capture errors in your server-side code.
+
+```typescript {filename: entry.server.tsx}
+export function handleError(
+  error: unknown,
+  { request }: DataFunctionArgs
+): void {
+  if (error instanceof Error) {
+    Sentry.captureRemixServerException(error, "remix.server", request);
+  } else {
+    // Optionally capture non-Error objects
+    Sentry.captureException(error);
+  }
+}
 ```
 
 Once you've done this set up, the SDK will automatically capture unhandled errors and promise rejections, and monitor performance in the client. You can also [manually capture errors](/platforms/javascript/guides/remix/usage).
