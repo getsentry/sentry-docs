@@ -105,7 +105,16 @@ For the rest of the documentation, we'll use `@extend_schema` on the various end
 @extend_schema(
   operation_id="Create a New Team", # What goes in the doc sidebar for the name of the API page
   parameters=[GlobalParams.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
-  request=TeamPostSerializer, # this will usually be a DRF Serializer if the endpoint takes a body
+  request=TeamPostSerializer, # this will usually be a DRF Serializer if the endpoint takes a body,
+  # but can also be an inline_serializer if you need more customization
+  # request=inline_serializer(
+  #     name="SCIMTeamRequestBody",
+  #     fields={
+  #         "schemas": serializers.ListField(serializers.CharField()),
+  #         "displayName": serializers.CharField(),
+  #         "members": serializers.ListField(serializers.IntegerField()),
+  #     },
+  # ),
   responses={
       201: TeamSerializer, # the Sentry Response Serializer
       400: RESPONSE_BAD_REQUEST,
