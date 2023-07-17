@@ -38,6 +38,8 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
   ],
@@ -46,9 +48,6 @@ Sentry.init({
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-
-  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 });
 
 enableProdMode();
