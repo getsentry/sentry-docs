@@ -1,6 +1,5 @@
-import {createContext, useEffect, useState} from 'react';
-
-type CodeContextStatus = 'loading' | 'loaded';
+import React, {createContext, useEffect, useState} from 'react';
+import Cookies from 'js-cookie';
 
 type ProjectCodeKeywords = {
   API_URL: string;
@@ -60,7 +59,7 @@ type UserApiResult = {
 // only fetch them once
 let cachedCodeKeywords: CodeKeywords | null = null;
 
-const DEFAULTS: CodeKeywords = {
+export const DEFAULTS: CodeKeywords = {
   PROJECT: [
     {
       DSN: 'https://examplePublicKey@o0.ingest.sentry.io/0',
@@ -84,12 +83,12 @@ const DEFAULTS: CodeKeywords = {
 
 type CodeContextType = {
   codeKeywords: CodeKeywords;
+  isLoading: boolean;
   sharedCodeSelection: [string | null, React.Dispatch<string | null>];
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>
   ];
-  status: CodeContextStatus;
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
@@ -191,23 +190,71 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
   };
 }
 
-export function useCodeContextState(fetcher = fetchCodeKeywords): CodeContextType {
+function getCsrfToken(): string | null {
+  // is sentry-sc in production, but may also be sc in other envs
+  // So we just try both variants
+  const cookieNames = ['sentry-sc', 'sc'];
+
+  return cookieNames
+    .map(cookieName => Cookies.get(cookieName))
+    .find(token => token !== null);
+}
+
+export async function createOrgAuthToken({
+  orgSlug,
+  name,
+}: {
+  name: string;
+  orgSlug: string;
+}) {
+  const baseUrl =
+    process.env.NODE_ENV === 'development'
+      ? 'http://dev.getsentry.net:8000/'
+      : 'https://sentry.io';
+
+  const url = `${baseUrl}/api/0/organizations/${orgSlug}/org-auth-tokens/`;
+
+  const body = {name};
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json; charset=utf-8',
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+    });
+
+    if (!resp.ok) {
+      return null;
+    }
+
+    const json = await resp.json();
+
+    return json.token;
+  } catch {
+    return null;
+  }
+}
+
+export function CodeContextProvider({children}: {children: React.ReactNode}) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
 
-  const [status, setStatus] = useState<CodeContextStatus>(
-    cachedCodeKeywords ? 'loaded' : 'loading'
-  );
+  const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
-      setStatus('loading');
-      fetcher().then((config: CodeKeywords) => {
+      setIsLoading(true);
+      fetchCodeKeywords().then((config: CodeKeywords) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
-        setStatus('loaded');
+        setIsLoading(false);
       });
     }
-  }, [setStatus, setCodeKeywords, fetcher]);
+  }, [setIsLoading, setCodeKeywords]);
 
   // sharedKeywordSelection maintains a global mapping for each "keyword"
   // namespace to the index of the selected item.
@@ -223,8 +270,13 @@ export function useCodeContextState(fetcher = fetchCodeKeywords): CodeContextTyp
     codeKeywords,
     sharedCodeSelection,
     sharedKeywordSelection,
-    status,
+    isLoading,
   };
 
-  return result;
+  return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;
+}
+
+/** For tests only. */
+export function _setCachedCodeKeywords(codeKeywords: CodeKeywords) {
+  cachedCodeKeywords = codeKeywords;
 }

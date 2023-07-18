@@ -32,9 +32,21 @@ yarn add @sentry/webpack-plugin --dev
 
 Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
 
-Example:
-
 <PlatformSection notSupported={["javascript.gatsby"]}>
+
+You'll have to setup your environment variables first. In most cases, you'll either want to add the env. variables to a `.env` file (e.g. when deploying locally), or you'll have to add them to your CI/CD environment.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+# Auth tokens can be obtained from
+# https://sentry.io/settings/auth-tokens/
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+And the following Webpack config:
 
 ```javascript {filename:webpack.config.js}
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
@@ -45,11 +57,8 @@ module.exports = {
   devtool: "source-map", // Source map generation must be turned on
   plugins: [
     sentryWebpackPlugin({
-      org: "___ORG_SLUG___",
-      project: "___PROJECT_SLUG___",
-
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and need `project:releases` and `org:read` scopes
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],

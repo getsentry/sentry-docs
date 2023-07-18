@@ -17,6 +17,7 @@ import {IncludePlatformContent} from './includePlatformContent';
 import {JsCdnTag} from './jsCdnTag';
 import {LambdaLayerDetail} from './lambdaLayerDetail';
 import {Note} from './note';
+import {OrgAuthTokenNote} from './orgAuthTokenNote';
 import {PageGrid} from './pageGrid';
 import {ParamTable} from './paramTable';
 import {PlatformContent} from './platformContent';
@@ -61,6 +62,7 @@ const mdxComponents = {
   SandboxLink,
   SandboxOnly,
   SignInNote,
+  OrgAuthTokenNote,
 };
 
 export function Markdown({value}) {
