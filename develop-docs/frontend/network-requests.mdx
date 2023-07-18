@@ -163,7 +163,7 @@ Mutations, unlike queries, do not fire automatically. Instead of `data`, it retu
 
 ### Quick start
 
-Let’s say you have a button that creates a project with `POST /organizations/<org>/projects/`:
+Let’s say you have a button that creates a project with `POST /organizations/<org>/projects/`. You will need to define the response type (`CreateProjectResponse` in this example) as well as the shape of the object you will pass to the mutation function (`CreateProjectVariables` in this example). You can then use the `mutate` function to trigger the mutation:
 
 ```tsx
 import {useMutation} from 'sentry/utils/queryClient';
@@ -180,8 +180,8 @@ function Component() {
     CreateProjectVariables
   >({
     ...options,
-    mutationFn: ({org, name}: CreateSavedSearchVariables) =>
-      api.requestPromise(`/organizations/${org}/projects/`, {
+    mutationFn: ({name, orgSlug}: CreateProjectVariables) =>
+      api.requestPromise(`/organizations/${orgSlug}/projects/`, {
         method: 'POST',
         data: {name},
       }),
@@ -191,7 +191,9 @@ function Component() {
   });
 
   return (
-    <button onClick={() => mutate({org: '...', name: '...'})}>Create project</button>
+    <button onClick={() => mutate({name: 'My new project', orgSlug: 'my-org'})}>
+      Create project
+    </button>
   );
 }
 ```
