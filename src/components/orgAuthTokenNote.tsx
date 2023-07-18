@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
+import {Alert} from './alert';
 import {ExternalLink} from './externalLink';
 import {Note} from './note';
 import {SignedInCheck} from './signedInCheck';
@@ -39,10 +40,10 @@ export function OrgAuthTokenNote() {
       </SignedInCheck>
 
       <SignedInCheck isUserAuthenticated>
-        <Note>
+        <Alert level="warning">
           A created token will only be visible once right after creation - make sure to
           copy it!
-        </Note>
+        </Alert>
       </SignedInCheck>
     </Fragment>
   );
