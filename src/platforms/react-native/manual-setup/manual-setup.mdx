@@ -99,7 +99,18 @@ apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 
 ### Enable Sentry AGP
 
-You can enable native symbol upload and other features by adding [Sentry Android Gradle Plugin (SAGP)](/platforms/android/configuration/gradle) to `android/app/build.gradle`.
+You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle) dependency to `android/build.gradle`.
+
+```groovy {filename:android/build.gradle}
+buildscript {
+    dependencies {
+        // Other dependencies ...
+        classpath("io.sentry:sentry-android-gradle-plugin:{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}")
+    }
+}
+```
+
+You can configure the plugin options in `android/app/build.gradle`, as shown below:
 
 ```groovy {filename:android/app/build.gradle}
 apply plugin: "io.sentry.android.gradle"
@@ -117,6 +128,15 @@ sentry {
     // This option has an effect only when [uploadNativeSymbols] is enabled.
     // Default is disabled.
     includeNativeSources = true
+
+    // `@sentry/react-native` ships with compatible `sentry-android`
+    // This option would install the latest version that ships with the SDK or SAGP (Sentry Android Gradle Plugin)
+    // which might be incompatible with the React Native SDK
+    // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
+    // Default is enabled.
+    autoInstallation {
+      enabled = false
+    }
 }
 ```
 
