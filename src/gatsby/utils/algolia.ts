@@ -1,7 +1,7 @@
 /* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
 
-import fs from 'fs';
+import {promises as fs} from 'fs';
 import {join, resolve} from 'path';
 
 import {
@@ -49,20 +49,21 @@ const flatten = async (pages: any[]) => {
 
           const {context, path} = page;
           const htmlFile = join(pub, path, 'index.html');
-          const html = (await fs.promises.readFile(htmlFile)).toString();
+          const html = (await fs.readFile(htmlFile)).toString();
 
           // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
-          let platforms = [];
+          let platforms: string[] = [];
+
           if (context.platform) {
-            const {slug} = standardSDKSlug(context.platform.name);
+            const slug = standardSDKSlug(context.platform.name)?.slug;
 
             let fullSlug = slug;
 
             if (context.guide) {
-              const {slug: guideSlug} = standardSDKSlug(context.guide.name);
+              const guideSlug = standardSDKSlug(context.guide.name)?.slug;
               fullSlug += `.${guideSlug}`;
             }
-            platforms = extrapolate(fullSlug, '.');
+            platforms = extrapolate(fullSlug ?? 'generic', '.');
           }
 
           const newRecords = htmlToAlgoliaRecord(

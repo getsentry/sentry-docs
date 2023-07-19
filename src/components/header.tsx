@@ -2,7 +2,7 @@ import React from 'react';
 
 import {SmartLink} from './smartLink';
 
-export function Header(): JSX.Element {
+export function Header() {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
       <SmartLink to="/" title="Sentry error monitoring" className="navbar-brand pb-0">
@@ -25,10 +25,8 @@ export function Header(): JSX.Element {
         type="button"
         onClick={() => {
           const el = document.getElementById('sidebar');
-          if (el.style.display === 'block') {
-            el.style.display = 'none';
-          } else {
-            el.style.display = 'block';
+          if (el) {
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
           }
         }}
         aria-controls="sidebar"

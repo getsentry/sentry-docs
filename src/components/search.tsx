@@ -1,4 +1,5 @@
 import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import styled from '@emotion/styled';
 import {
   Hit,
   Result,
@@ -8,6 +9,9 @@ import {
 import DOMPurify from 'dompurify';
 import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
+
+import {DocsBot} from 'sentry-docs/components/docsbot';
+import {useOnClickOutside} from 'sentry-docs/utils';
 
 import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
 import {Logo} from './logo';
@@ -46,32 +50,6 @@ const search = new SentryGlobalSearch([
   'blog',
 ]);
 
-const useClickOutside = (
-  ref: React.RefObject<HTMLElement>,
-  handler: () => void,
-  events?: string[]
-) => {
-  if (!events) {
-    events = [`mousedown`, `touchstart`];
-  }
-
-  const detectClickOutside = (event: MouseEvent) => {
-    return !ref.current.contains(event.target as HTMLElement) && handler();
-  };
-
-  useEffect(() => {
-    for (const event of events) {
-      document.addEventListener(event, detectClickOutside);
-    }
-
-    return () => {
-      for (const event of events) {
-        document.removeEventListener(event, detectClickOutside);
-      }
-    };
-  });
-};
-
 function relativizeUrl(url: string) {
   return url.replace(/^.*:\/\/docs\.sentry\.io/, '');
 }
@@ -82,17 +60,20 @@ type Props = {
   platforms?: string[];
 };
 
-export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
+export function Search({path, autoFocus, platforms = []}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  useClickOutside(ref, () => {
+
+  const handleClickOutside = useCallback(() => {
     setInputFocus(false);
     setShowOffsiteResults(false);
-  });
+  }, []);
+
+  useOnClickOutside({ref, handler: handleClickOutside});
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -174,18 +155,19 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
   }, []);
 
   return (
-    <div ref={ref}>
+    <SearchBar ref={ref}>
       <input
         type="search"
         placeholder="Search"
         aria-label="Search"
-        className="form-control"
+        className="form-control search-input"
         value={query}
         onChange={({target: {value}}) => searchFor(value)}
         onFocus={() => setInputFocus(true)}
         ref={inputRef}
       />
-
+      <Separator>Feeling bold?</Separator>
+      <DocsBot />
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
           {loading && <Logo loading />}
@@ -279,6 +261,16 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
           )}
         </div>
       )}
-    </div>
+    </SearchBar>
   );
 }
+
+const SearchBar = styled('div')`
+  display: flex;
+  flex-direction: row;
+`;
+
+const Separator = styled('div')`
+  margin: 6px 8px;
+  white-space: nowrap;
+`;

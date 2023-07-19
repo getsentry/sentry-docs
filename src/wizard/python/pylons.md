@@ -27,7 +27,7 @@ Configuration is handled via the sentry namespace:
 
 ```ini
 [sentry]
-dsn=___DSN___
+dsn=___PUBLIC_DSN___
 include_paths=my.package,my.other.package,
 exclude_paths=my.package.crud
 ```

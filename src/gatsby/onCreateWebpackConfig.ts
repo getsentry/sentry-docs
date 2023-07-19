@@ -4,8 +4,9 @@
 import path from 'path';
 
 import {sentryWebpackPlugin} from '@sentry/webpack-plugin';
+import {GatsbyNode} from 'gatsby';
 
-function main({actions}) {
+const onCreateWebpackConfig: GatsbyNode['onCreateWebpackConfig'] = ({actions}) => {
   actions.setWebpackConfig({
     resolve: {
       fallback: {
@@ -25,6 +26,6 @@ function main({actions}) {
       }),
     ],
   });
-}
+};
 
-export default main;
+export default onCreateWebpackConfig;

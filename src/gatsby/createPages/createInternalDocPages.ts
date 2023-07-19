@@ -1,6 +1,14 @@
+import {GatsbyNode} from 'gatsby';
+
 import {getChild, getDataOrPanic} from '../helpers';
 
-async function main({actions, graphql, reporter}) {
+type CreatePageArgs = Parameters<NonNullable<GatsbyNode['createPages']>>[0];
+
+export const createInternalDocPages = async ({
+  actions,
+  graphql,
+  reporter,
+}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
       query {
@@ -65,6 +73,4 @@ async function main({actions, graphql, reporter}) {
       });
     }
   });
-}
-
-export default main;
+};

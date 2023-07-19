@@ -1,10 +1,10 @@
-import React, {useContext} from 'react';
+import React from 'react';
 import {useLocation} from '@reach/router';
-import {graphql, StaticQuery} from 'gatsby';
+import {graphql, useStaticQuery} from 'gatsby';
 
-import {CodeContext} from './codeContext';
 import {ExternalLink} from './externalLink';
 import {Note} from './note';
+import {SignedInCheck} from './signedInCheck';
 
 const siteMetaQuery = graphql`
   query SignInNoteQuery {
@@ -16,37 +16,22 @@ const siteMetaQuery = graphql`
   }
 `;
 
-export function SignInNote(): JSX.Element {
+export function SignInNote() {
   const location = useLocation();
+  const data = useStaticQuery(siteMetaQuery);
 
-  const {codeKeywords} = useContext(CodeContext);
-
-  const user = codeKeywords.USER;
-
-  // This means the user is signed in
-  if (user) {
-    return null;
-  }
+  const url = data.site.siteMetadata.siteUrl + location.pathname;
 
   return (
-    <StaticQuery
-      query={siteMetaQuery}
-      render={data => {
-        const url = data.site.siteMetadata.siteUrl + location.pathname;
-        return (
-          <Note>
-            The following code sample will let you choose your personal config from the
-            dropdown, once you're{' '}
-            <ExternalLink
-              href={`https://sentry.io/auth/login/?next=${url}`}
-              target="_blank"
-            >
-              logged in
-            </ExternalLink>
-            .
-          </Note>
-        );
-      }}
-    />
+    <SignedInCheck isUserAuthenticated={false}>
+      <Note>
+        The following code sample will let you choose your personal config from the
+        dropdown, once you're{' '}
+        <ExternalLink href={`https://sentry.io/auth/login/?next=${url}`}>
+          logged in
+        </ExternalLink>
+        .
+      </Note>
+    </SignedInCheck>
   );
 }

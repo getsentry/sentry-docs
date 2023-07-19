@@ -6,7 +6,7 @@ redirect_from:
 description: "Learn more about JSON Decoding on Main Thread issues and how to diagnose and fix them."
 ---
 
-The main, (or UI) thread in a mobile app is responsible for handling all user interaction and needs to be able to respond to gestures and taps in real time. If a long-running operation blocks the main thread, the app becomes unresponsive, impacting the quality of the user experience.
+The main (or UI) thread in a mobile app is responsible for handling all user interaction and needs to be able to respond to gestures and taps in real time. If a long-running operation blocks the main thread, the app becomes unresponsive, impacting the quality of the user experience.
 
 The process of decoding a JSON blob into a data structure, is an example of a long-running operation that may impact app responsiveness. If a long-running JSON decoding operation is detected on the main thread, Sentry will flag it as an issue.
 
@@ -14,20 +14,19 @@ Decoding a JSON blob into a data structure can be a long running operation, espe
 
 ## Detection Criteria
 
-Once [Profiling](/product/profiling/) has been enabled, Sentry will be able to detect JSON Decoding on Main Thread issues by looking for functions related to JSON decoding that have been running on the main thread for at least 40ms. This threshold has been chosen so that we can see the function appear in a sufficient number of samples collected by the profile, (~10ms per sample x 4 = ~40ms total), before we detect the issue.
+[Profiling](/product/profiling/) must be enabled for Sentry to detect JSON Decoding on Main Thread issues. Sentry looks for functions related to JSON decoding that have been running on the main thread for at least 40ms. This threshold ensures the function appears in a sufficient number of samples collected by the profile (~10ms per sample x 4 = ~40ms total) before it gets detected as an issue.
 
 ## Function Evidence
 
-You can find additional information about your JSON Decoding on Main Thread problem by looking at four main aspects in the "Function Evidence" section:
+To find additional information about your JSON Decoding on Main Thread problem, go to its **Issue Details** page and scroll down to the "Function Evidence" section, which shows the following:
 
 - **Transaction Name:** The name of the transaction where the issue was detected.
 - **Suspect function:** The function that triggered the issue detection (in this case, a JSON decoding function).
-- **Duration:** How long the function took to execute.
-- **Sample count:** The number of consecutive samples collected by the profiler that contained the function.
-
-View it by going to the **Issues** page in Sentry, clicking on the issue you want to examine, then scrolling down to the "Function Evidence" section in the "Details" tab. To view the entire profile associated with the issue, click the “View Profile” button:
+- **Duration:** How long the function took to execute and the number of consecutive samples collected by the profiler that contained the function.
 
 ![JSON Decoding on Main Thread Function Evidence](json-decoding-function-evidence.png)
+
+To view the entire profile associated with the issue, click the “View Profile” button.
 
 The profile will indicate where the suspect function was called from, along with other functions being called _by_ the suspect function:
 
