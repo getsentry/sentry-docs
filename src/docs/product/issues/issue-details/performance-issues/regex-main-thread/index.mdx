@@ -62,3 +62,33 @@ DispatchQueue.global(qos: .userInitiated).async {
 	}
 }
 ```
+
+### Android
+
+The following code calls `String.matches` on the UI thread to search for matches against a regular expression in a large text:
+
+```kotlin
+fun matchRegex(text: String, regexPattern: String) {
+  val matches = text.matches(regexPattern.toRegex())
+  if (matches) {
+    // Do something
+  }
+}
+```
+
+Performance could be improved by moving the match to a coroutine:
+
+```kotlin
+fun showImage(text: String, regexPattern: String) {
+  lifecycleScope.launch(Dispatchers.IO) {
+    val pattern = Pattern.compile(regexPattern)
+    val matches = pattern.matcher(text).matches()
+
+    withContext(Dispatchers.Main) {
+      if (matches) {
+        // Do something
+      }
+    }
+  }
+}
+```
