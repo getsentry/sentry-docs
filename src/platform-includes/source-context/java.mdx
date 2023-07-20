@@ -194,6 +194,49 @@ sentry {
 
 </PlatformSection>
 
+
+<PlatformSection supported={["android"]}>
+
+### Include NDK Source Context with Gradle Plugin
+
+By default the native code is not uploaded with the Java/Kotlin code. Add the following options to enable Source Context for native code:
+
+```groovy
+sentry {
+    // Includes the source code of native code when uploading native symbols for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually. This only works with uploadNativeSymbols enabled.
+    //
+    // Default is disabled.
+    includeNativeSources = true
+
+    // Enables the automatic configuration of Native Symbols for Sentry.
+    // This executes sentry-cli automatically so you don't need to do it manually.
+    //
+    // Default is disabled.
+    uploadNativeSymbols = true
+}
+```
+
+```kotlin
+sentry {
+    // Includes the source code of native code when uploading native symbols for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually. This only works with uploadNativeSymbols enabled.
+    //
+    // Default is disabled.
+    includeNativeSources.set(true)
+
+    // Enables the automatic configuration of Native Symbols for Sentry.
+    // This executes sentry-cli automatically so you don't need to do it manually.
+    //
+    // Default is disabled.
+    uploadNativeSymbols.set(true)
+}
+```
+
+</PlatformSection>
+
 <PlatformSection notSupported={["android"]}>
 
 ## Using the Maven Build Tool Plugin
@@ -269,6 +312,18 @@ First, create the source bundle containing your source files:
 sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VALID_UUID path/to/source-code
 ```
 
+<PlatformSection supported={["android"]}>
+
+### Creating the Native Source Bundle
+
+If you're using NDK, create the native source bundle containing your source files:
+
+```
+sentry-cli difutil bundle-sources /path/to/files
+```
+
+</PlatformSection>
+
 ### Uploading the Source Bundle
 
 Next, upload that source bundle to Sentry:
@@ -276,6 +331,18 @@ Next, upload that source bundle to Sentry:
 ```
 sentry-cli debug-files upload --type jvm path/to/bundle
 ```
+
+<PlatformSection supported={["android"]}>
+
+### Uploading including the Native Source Bundle
+
+Include the native source bundle with `--include-sources` and upload it to Sentry:
+
+```
+sentry-cli debug-files upload --include-sources /path/to/files --type jvm path/to/bundle
+```
+
+</PlatformSection>
 
 ### Configuring the SDK
 
