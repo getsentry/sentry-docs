@@ -3,6 +3,7 @@ import {GatsbyNode} from 'gatsby';
 import {createApiDocPages} from './createApiDocPages';
 import {createApiPages} from './createApiPages';
 import {createApiReference} from './createApiReference';
+import {createApiTutorials} from './createApiTutorials';
 import {createDocPages} from './createDocPages';
 import {createPlatformPages} from './createPlatformPages';
 import {createWizardDebugPages} from './createWizardDebugPages';
@@ -14,6 +15,7 @@ const createPages: GatsbyNode['createPages'] = async params => {
     createApiPages(params),
     createApiDocPages(params),
     createApiReference(params),
+    createApiTutorials(params),
   ];
   if (process.env.NODE_ENV !== 'production') {
     promises.push(createWizardDebugPages(params));
