@@ -31,7 +31,7 @@ using System;
 using System.Web;
 using Sentry;
 using Sentry.AspNet;
-using Sentry.EntityFramework; // if you also installed Sentry.EntityFramework
+using Sentry.EntityFramework; // If you also installed Sentry.EntityFramework
 using Sentry.Extensibility;
 
 public class MvcApplication : HttpApplication
@@ -46,11 +46,14 @@ public class MvcApplication : HttpApplication
             o.Dsn = "___PUBLIC_DSN___";
             // When configuring for the first time, to see what the SDK is doing:
             o.Debug = true;
-            // Set TracesSampleRate to 1.0 to capture 100%
-            // of transactions for performance monitoring.
-            // We recommend adjusting this value in production
-            o.TracesSampleRate = 1.0;
-            // if you also installed the Sentry.EntityFramework package
+
+            // This option will enable Sentry's tracing features. You still need to start transactions and spans.
+            o.EnableTracing = true;
+
+            // Example sample rate for your transactions: captures 10% of transactions
+            o.TracesSampleRate = 0.1;
+
+            // If you also installed the Sentry.EntityFramework package
             o.AddEntityFramework();
             o.AddAspNet();
         });
@@ -86,13 +89,10 @@ When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically 
 <SignInNote />
 
 ```csharp
-SentrySdk.Init(o =>
-{
-  o.AddAspNet();
-  o.Dsn = "___PUBLIC_DSN___";
-  // Opt-in to send things like UserId and UserName if a user is logged-in
-  o.SendDefaultPii = true;
-});
+options.AddAspNet();
+options.Dsn = "___PUBLIC_DSN___";
+// Opt-in to send things like UserId and UserName if a user is logged-in
+options.SendDefaultPii = true;
 ```
 
 ### SendDefaultPii
@@ -105,10 +105,7 @@ It's helpful to troubleshoot a problem in the API when the payload that hit the 
 Opt-in to send the request body to Sentry:
 
 ```csharp
-SentrySdk.Init(o =>
-{
-  o.AddAspNet(RequestSize.Always);
-}
+options.AddAspNet(RequestSize.Always);
 ```
 
 ## Troubleshooting
