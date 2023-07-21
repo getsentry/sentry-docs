@@ -311,18 +311,6 @@ First, create the source bundle containing your source files:
 sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VALID_UUID path/to/source-code
 ```
 
-<PlatformSection supported={["android"]}>
-
-### Creating the Native Source Bundle
-
-If you're using NDK, create the native source bundle containing your source files:
-
-```
-sentry-cli difutil bundle-sources /path/to/files
-```
-
-</PlatformSection>
-
 ### Uploading the Source Bundle
 
 Next, upload that source bundle to Sentry:
@@ -333,12 +321,18 @@ sentry-cli debug-files upload --type jvm path/to/bundle
 
 <PlatformSection supported={["android"]}>
 
-### Uploading including the Native Source Bundle
+### Uploading Native Symbols and Source Code
 
-Include the native source bundle with `--include-sources` and upload it to Sentry:
+Upload the native symbols manually using the `debug-files upload command`, here's a typical example for Android:
 
 ```
-sentry-cli debug-files upload --include-sources /path/to/files --type jvm path/to/bundle
+sentry-cli debug-files upload app/build/intermediates/merged_native_libs/
+```
+
+In order to upload the native source files as well, you can use the `--include-sources` flag. Using this flag sentry-cli will automatically generate source bundles on the fly during the upload.
+
+```
+sentry-cli debug-files upload app/build/intermediates/merged_native_libs/ --include-sources
 ```
 
 </PlatformSection>
