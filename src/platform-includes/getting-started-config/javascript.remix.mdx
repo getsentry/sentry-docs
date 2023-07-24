@@ -55,51 +55,15 @@ Sentry.init({
 });
 ```
 
-Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as Prisma, to get spans for your database calls.
+Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/v1/api/conventions#action) and [`loader`](https://remix.run/docs/en/v1/api/conventions#loader) functions. You can also initialize Sentry's database integrations, such as <Link to="/platforms/node/performance/database/opt-in/#prisma-orm-integration">Prisma</Link>, to get spans for your database calls.
 
-<SignInNote />
-
-```typescript {filename: entry.server.tsx}
-import { prisma } from "~/db.server";
-
-import * as Sentry from "@sentry/remix";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1,
-  integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
-  // ...
-});
-```
+To catch React component errors (in Remix v1) and routing transactions, wrap your Remix root with `withSentry`.
 
 <Note>
 
-Learn more about <Link to="/platforms/node/performance/database/opt-in/#prisma-orm-integration">Sentry's Prisma integration </Link>.
+If you use the Remix `v2_errorBoundary` future flag, you must also configure a [v2 ErrorBoundary](#v2-errorboundary).
 
 </Note>
-
-If you use a custom Express server in your Remix application, you should wrap your [`createRequestHandler` function](https://remix.run/docs/en/v1/other-api/adapter#createrequesthandler) manually with `wrapExpressCreateRequestHandler`. This is not required if you use the built-in Remix App Server.
-
-<Alert level="info">
-
-`wrapExpressCreateRequestHandler` is available starting with version 7.11.0.
-
-</Alert>
-
-```typescript {filename: server/index.ts}
-import { wrapExpressCreateRequestHandler } from "@sentry/remix";
-import { createRequestHandler } from "@remix-run/express";
-
-// ...
-
-const createSentryRequestHandler =
-  wrapExpressCreateRequestHandler(createRequestHandler);
-
-// Use createSentryRequestHandler like you would with createRequestHandler
-app.all("*", createSentryRequestHandler(/* ... */));
-```
-
-Also, wrap your Remix root with `withSentry` to catch React component errors (Remix v1) and routing transactions. If you use the Remix `v2_errorBoundary` future flag, you need to configure a [v2 ErrorBoundary](#v2-errorboundary) in addition.
 
 ```typescript {filename: root.tsx}
 import {
@@ -147,6 +111,29 @@ withSentry(App, {
     fallback: <p>An error has occurred</p>,
   },
 });
+```
+
+## Custom Express Server
+
+If you use a custom Express server in your Remix application, you should wrap your [`createRequestHandler` function](https://remix.run/docs/en/v1/other-api/adapter#createrequesthandler) manually with `wrapExpressCreateRequestHandler`. This is not required if you use the built-in Remix App Server.
+
+<Note>
+
+`wrapExpressCreateRequestHandler` is available starting with version 7.11.0.
+
+</Note>
+
+```typescript {filename: server/index.ts}
+import { wrapExpressCreateRequestHandler } from "@sentry/remix";
+import { createRequestHandler } from "@remix-run/express";
+
+// ...
+
+const createSentryRequestHandler =
+  wrapExpressCreateRequestHandler(createRequestHandler);
+
+// Use createSentryRequestHandler like you would with createRequestHandler
+app.all("*", createSentryRequestHandler(/* ... */));
 ```
 
 ## Remix v2 features
