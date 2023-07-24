@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 
 import SentryDocsBot from 'sentry-docs/logos/chatbot.svg';
 
-export function DocsBot() {
+export function DocsBotButton() {
   return (
     <DocsBotLink
       href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"

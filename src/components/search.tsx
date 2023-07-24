@@ -10,7 +10,7 @@ import DOMPurify from 'dompurify';
 import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
 
-import {DocsBot} from 'sentry-docs/components/docsbot';
+import {DocsBotButton} from 'sentry-docs/components/docsBotButton';
 import {useOnClickOutside} from 'sentry-docs/utils';
 
 import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
@@ -155,19 +155,21 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   }, []);
 
   return (
-    <SearchBar ref={ref}>
-      <input
-        type="search"
-        placeholder="Search"
-        aria-label="Search"
-        className="form-control search-input"
-        value={query}
-        onChange={({target: {value}}) => searchFor(value)}
-        onFocus={() => setInputFocus(true)}
-        ref={inputRef}
-      />
-      <Separator>Feeling bold?</Separator>
-      <DocsBot />
+    <div ref={ref}>
+      <SearchBar>
+        <input
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+          className="form-control search-input"
+          value={query}
+          onChange={({target: {value}}) => searchFor(value)}
+          onFocus={() => setInputFocus(true)}
+          ref={inputRef}
+        />
+        <Separator>Feeling bold?</Separator>
+        <DocsBotButton />
+      </SearchBar>
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
           {loading && <Logo loading />}
@@ -261,16 +263,17 @@ export function Search({path, autoFocus, platforms = []}: Props) {
           )}
         </div>
       )}
-    </SearchBar>
+    </div>
   );
 }
 
 const SearchBar = styled('div')`
   display: flex;
   flex-direction: row;
+  align-items: center;
+  gap: 1rem;
 `;
 
 const Separator = styled('div')`
-  margin: 6px 8px;
   white-space: nowrap;
 `;
