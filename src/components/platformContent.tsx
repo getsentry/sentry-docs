@@ -1,12 +1,9 @@
 import React, {Fragment, useState} from 'react';
 import {graphql, useStaticQuery} from 'gatsby';
 
-import {
-  getPlatform,
-  getPlatformsWithFallback,
-  Platform,
-  usePlatform,
-} from './hooks/usePlatform';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
+
+import {getPlatform, getPlatformsWithFallback, usePlatform} from './hooks/usePlatform';
 import {Content} from './content';
 import {SmartLink} from './smartLink';
 
@@ -53,7 +50,7 @@ type Props = {
 
 const getFileForPlatform = (
   fileList: FileNode[],
-  platform: Platform
+  platform: Platform | PlatformGuide
 ): FileNode | null => {
   const platformsToSearch = getPlatformsWithFallback(platform);
   platformsToSearch.push('_default');

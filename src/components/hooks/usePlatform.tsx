@@ -4,6 +4,7 @@ import {graphql, navigate, useStaticQuery} from 'gatsby';
 import {parse} from 'query-string';
 
 import {PageContext} from 'sentry-docs/components/pageContext';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {useLocalStorage} from './useLocalStorage';
 
@@ -33,62 +34,6 @@ const query = graphql`
     }
   }
 `;
-
-export const formatCaseStyle = (style: string, value: string): string => {
-  switch (style) {
-    case 'snake_case':
-      return value.replace(/-/g, '_');
-    case 'camelCase':
-      return value
-        .split(/-/g)
-        .map((val, idx) =>
-          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substring(1)
-        )
-        .join('');
-    case 'PascalCase':
-      return value
-        .split(/-/g)
-        .map(val => val.charAt(0).toUpperCase() + val.substring(1))
-        .join('');
-    default:
-      return value;
-  }
-};
-
-// export enum CaseStyle {
-//   canonical,
-//   camelCase,
-//   PascalCase,
-//   snake_case,
-// }
-
-// export enum SupportLevel {
-//   production,
-//   community,
-// }
-
-export type Guide = {
-  caseStyle: string;
-  fallbackPlatform: string;
-  key: string;
-  name: string;
-  sdk: string;
-  supportLevel: string;
-  title: string;
-  url: string;
-};
-
-export type Platform = {
-  caseStyle: string;
-  key: string;
-  name: string;
-  sdk: string;
-  supportLevel: string;
-  title: string;
-  url: string;
-  fallbackPlatform?: string;
-  guides?: Guide[];
-};
 
 export const DEFAULT_PLATFORM = 'javascript';
 
@@ -161,8 +106,9 @@ const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
 export const usePlatformList = (): Platform[] => {
   const {
     allPlatform: {nodes: platformList},
-  } = useStaticQuery(query);
-  return platformList.sort((a: Platform, b: Platform) => {
+  } = useStaticQuery<{allPlatform: {nodes: Platform[]}}>(query);
+
+  return platformList.sort((a, b) => {
     // Exclude leading non-alphanumeric characters to order .NET between Native and NodeJS instead of the beginning.
     const skippedPrefix = /^[^a-zA-Z]+/;
     return a.title
@@ -176,7 +122,7 @@ export const usePlatformList = (): Platform[] => {
 
  * @param value platform key in format of `platformName[.guideName]`
  */
-export const getPlatform = (key: string): Platform | Guide | null => {
+export const getPlatform = (key: string): Platform | PlatformGuide | null => {
   // XXX(epurkhiser): This is almost certinally a mistake, we should figure out
   // if `getPlatforms` should actually be something more like `useGetPlatforms`
   // or something
@@ -191,14 +137,13 @@ export const getPlatform = (key: string): Platform | Guide | null => {
   const [platformName, guideName] = key.split('.', 2);
   const activePlatform = platformList.find((p: Platform) => p.key === platformName);
   const activeGuide =
-    activePlatform &&
-    (activePlatform as Platform).guides.find((g: Guide) => g.name === guideName);
+    activePlatform && activePlatform.guides.find(g => g.name === guideName);
 
   return activeGuide ?? activePlatform ?? null;
 };
 
 type UsePlatform = [
-  Platform | Guide | null,
+  Platform | PlatformGuide | null,
   (value: string, options?: SetPlatformOptions) => void,
   boolean
 ];
@@ -207,7 +152,9 @@ type SetPlatformOptions = {
   noQueryString?: boolean;
 };
 
-export const getPlatformsWithFallback = (platform: Platform | Guide): string[] => {
+export const getPlatformsWithFallback = (
+  platform: Platform | PlatformGuide
+): string[] => {
   const result = [platform.key];
   let curPlatform = platform;
   while (curPlatform.fallbackPlatform) {
@@ -258,7 +205,7 @@ export function usePlatform(
 
   const [stateValue, setStateValue] = useState(currentValue);
 
-  const setValue = (newValue: string, options: SetPlatformOptions = {}) => {
+  const setPlatform = (newValue: string, options: SetPlatformOptions = {}) => {
     if (newValue === currentValue) {
       return;
     }
@@ -276,8 +223,8 @@ export function usePlatform(
     setStateValue(newValue);
   };
 
-  const activeValue: Platform | Guide | null =
+  const activePlatform: Platform | PlatformGuide | null =
     getPlatform(stateValue) ?? (useDefault ? getPlatform(defaultValue) : null);
 
-  return [activeValue, setValue, isFixed];
+  return [activePlatform, setPlatform, isFixed];
 }
