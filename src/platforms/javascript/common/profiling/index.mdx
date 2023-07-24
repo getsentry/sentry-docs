@@ -1,0 +1,76 @@
+---
+title: Profiling
+sidebar_order: 1
+supported:
+  - javascript
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+Because our browser profiling integration is built on top of the profiler exposed by the [JS Self-Profiling API](https://wicg.github.io/js-self-profiling/), it's in beta and will likely only move out once the official spec progresses and gains adoption. As with any beta package, there are risks involved in using it - see platform [status](https://chromestatus.com/feature/5170190448852992)
+
+Please note, that since profiling API is currently only implemented in Chromium based browsers, the profiles collected will inherently be biased towards that demographic - this is something you need consider if you are basing your decisions on the data collected. We hope that as the API gains adoption, other browsers will implement it as well. If you find browser profiling feature helpful and would like to see it gain further adoption, please consider supporting the spec at the official [WICG repository](https://github.com/WICG/js-self-profiling).
+
+
+In order to get started with browser profiling, you will need to:
+- Install the @sentry/browser SDK
+- Configure document response header to include `Document-Policy: js-profiling`
+- Configure the SDK to use the BrowserProfilingIntegration and set profilesSampleRate
+
+#### Installation
+
+Install our JavaScript browser SDK using either `yarn` or `npm`, the minimum version that supports profiling is **7.60.0**
+
+```bash
+# Using yarn
+yarn add @sentry/browser
+
+# Using npm
+npm install --save @sentry/browser
+```
+
+#### Add Document-Policy:js-profiling header
+
+In order for the profiler to start, the document response header has to include a `Document-Policy` header key with the `js-profiling` value.
+
+How you do this will depend on your server. If you're using a server like express, you'll be able to use the [response.set](https://expressjs.com/en/4x/api.html#res.set) function.
+
+```js
+app.get("/", (request, response) => {
+  response.set("Document-Policy", "js-profiling");
+  response.sendFile("index.html");
+});
+```
+
+#### Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+Once this is done, Sentry's JavaScript SDK will capture all unhandled exceptions and transactions.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add browser profiling integration to the list of integrations
+    new Sentry.BrowserProfilingIntegration(),
+    new Sentry.BrowserTracing({
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    }),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Set profilesSampleRate to 1.0 to profile every transaction.
+  // Since profilesSampleRate is relative to tracesSampleRate,
+  // the final profiling rate can be computed as tracesSampleRate * profilesSampleRate
+  // For example, a tracesSampleRate of 0.5 and profilesSampleRate of 0.5 would
+  // results in 25% of transactions being profiled (0.5*0.5=0.25)
+  profilesSampleRate: 1.0,
+});
+```
