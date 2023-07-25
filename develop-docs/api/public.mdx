@@ -89,13 +89,17 @@ class OrganizationSCIMMemberDetails(...):
   public = {"GET"}
 ```
 
-Tag the endpoint view if needed (a parent class may already be tagged), this is how the endpoint makes it into a particular [sidebar endpoint grouping](https://docs.sentry.io/api/). You can see the current list of tags or add tags [here](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/build.py).
+Specify the endpoint's [sidebar tab](https://docs.sentry.io/api/) by using
+`@extend_schema`. You can see the current list of tags or add tags
+[here](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/build.py). In the below
+example the [endpoint](https://docs.sentry.io/api/discover/query-discover-events-in-table-format/)
+is tagged in the `Discover` sidebar tab.
 
 ```python
 from drf_spectacular.utils import extend_schema
 
-@extend_schema(tags=["SCIM"])
-class SCIMEndpoint(...):
+@extend_schema(tags=["Discover"])
+class OrganizationEventsEndpoint(...):
   public = {"GET"}
 ```
 
@@ -105,16 +109,16 @@ For the rest of the documentation, we'll use `@extend_schema` on the various end
 @extend_schema(
   operation_id="Create a New Team", # What goes in the doc sidebar for the name of the API page
   parameters=[GlobalParams.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
-  request=TeamPostSerializer, # this will usually be a DRF Serializer if the endpoint takes a body,
+  request=TeamPostSerializer, # this will usually be a DRF Serializer if the endpoint takes a body
   # but can also be an inline_serializer if you need more customization
-  # request=inline_serializer(
-  #     name="SCIMTeamRequestBody",
-  #     fields={
-  #         "schemas": serializers.ListField(serializers.CharField()),
-  #         "displayName": serializers.CharField(),
-  #         "members": serializers.ListField(serializers.IntegerField()),
-  #     },
-  # ),
+  request=inline_serializer(
+      name="SCIMTeamRequestBody",
+      fields={
+          "schemas": serializers.ListField(serializers.CharField()),
+          "displayName": serializers.CharField(),
+          "members": serializers.ListField(serializers.IntegerField()),
+      },
+  ),
   responses={
       201: TeamSerializer, # the Sentry Response Serializer
       400: RESPONSE_BAD_REQUEST,
@@ -124,7 +128,9 @@ For the rest of the documentation, we'll use `@extend_schema` on the various end
   examples=TeamExamples.CREATE_TEAM, # use examples defined in `src/sentry/apidocs/examples`
 )
 def post(self, request: Request, organization, member, team_slug: str,) -> Response:
-  pass
+    """
+    Create a new team bound to an organization.
+    """
 ```
 
 Specify an `operation_id` (this is what is shown as the title under the docs site sidebar).
@@ -142,6 +148,7 @@ Specify the request and response serializers.
   for an example of this.
 - If the response is a wrapper or you need more customization, you can use the `inline_sentry_response_serializer` function.
 
+Specify the endpoint description on the docs by adding a function docstring to the request.
 ```python
 from sentry.apidocs.utils import inline_sentry_response_serializer
 
@@ -197,7 +204,7 @@ docs.**
 In `sentry`:
 
 1. Run `make watch-api-docs`. This command will watch API docs files and continuously build an intermediate asset `tests/apidocs/openapi-derefed.json`.
-2. Copy the full path to `{YOUR_SYSTEM_FOLDER}/tests/apidocs/openapi-derefed.json`, e.g. `/Users/yourname/code/sentry/tests/apidocs/openapi-derefed.json`
+2. Copy the full path to `{YOUR_SYSTEM_FOLDER}/tests/apidocs/openapi-derefed.json`, e.g. `/Users/yourname/code/sentry/tests/apidocs/openapi-derefed.json`.
 
 In `sentry-docs`:
 
