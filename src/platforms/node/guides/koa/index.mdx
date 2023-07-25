@@ -68,31 +68,24 @@ Sentry.init({
 });
 
 const requestHandler = (ctx, next) => {
-  return new Promise((resolve, reject) => {
-    Sentry.runWithAsyncContext(async () => {
-      const hub = Sentry.getCurrentHub();
-      hub.configureScope((scope) =>
-        scope.addEventProcessor((event) =>
-          Sentry.addRequestDataToEvent(event, ctx.request, {
-            include: {
-              user: false,
-            },
-          })
-        )
-      );
+  Sentry.runWithAsyncContext(() => {
+    const hub = Sentry.getCurrentHub();
+    hub.configureScope((scope) =>
+      scope.addEventProcessor((event) =>
+        Sentry.addRequestDataToEvent(event, ctx.request, {
+          include: {
+            user: false,
+          },
+        })
+      )
+    );
 
-      try {
-        await next();
-      } catch (err) {
-        reject(err);
-      }
-      resolve();
-    });
+    next();
   });
 };
 
 // this tracing middleware creates a transaction per request
-const tracingMiddleWare = async (ctx, next) => {
+const tracingMiddleWare = (ctx, next) => {
   const reqMethod = (ctx.method || "").toUpperCase();
   const reqUrl = ctx.url && stripUrlQueryAndFragment(ctx.url);
 
@@ -130,7 +123,7 @@ const tracingMiddleWare = async (ctx, next) => {
     });
   });
 
-  await next();
+  next();
 };
 
 app.use(requestHandler);
