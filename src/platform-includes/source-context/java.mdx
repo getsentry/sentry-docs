@@ -194,6 +194,48 @@ sentry {
 
 </PlatformSection>
 
+<PlatformSection supported={["android"]}>
+
+### Include NDK Source Context with Gradle Plugin
+
+By default native code (C/C++) is not uploaded with the Java/Kotlin code. Add the following options to enable Source Context for native code:
+
+```groovy
+sentry {
+    // Includes the source code of native code when uploading native symbols for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually. This only works with uploadNativeSymbols enabled.
+    //
+    // Default is disabled.
+    includeNativeSources = true
+
+    // Enables the automatic configuration of Native Symbols for Sentry.
+    // This executes sentry-cli automatically so you don't need to do it manually.
+    //
+    // Default is disabled.
+    uploadNativeSymbols = true
+}
+```
+
+```kotlin
+sentry {
+    // Includes the source code of native code when uploading native symbols for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually. This only works with uploadNativeSymbols enabled.
+    //
+    // Default is disabled.
+    includeNativeSources.set(true)
+
+    // Enables the automatic configuration of Native Symbols for Sentry.
+    // This executes sentry-cli automatically so you don't need to do it manually.
+    //
+    // Default is disabled.
+    uploadNativeSymbols.set(true)
+}
+```
+
+</PlatformSection>
+
 <PlatformSection notSupported={["android"]}>
 
 ## Using the Maven Build Tool Plugin
@@ -310,3 +352,15 @@ sentry.bundle-ids=A_VALID_UUID`
 ```Java
 options.addBundleId("A_VALID_UUID");
 ```
+
+<PlatformSection supported={["android"]}>
+
+## Manually Uploading Debug Symbols and Native Source Code
+
+Upload the native debug symbols manually using the `debug-files upload command`. Adding the `--include-sources` flag, sentry-cli will automatically generate source bundles on the fly and upload them. Here's a typical example for Android:
+
+```
+sentry-cli debug-files upload app/build/intermediates/merged_native_libs/ --include-sources
+```
+
+</PlatformSection>

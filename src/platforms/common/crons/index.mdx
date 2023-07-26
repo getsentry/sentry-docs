@@ -49,41 +49,24 @@ Check-in monitoring allows you to track a job's progress by completing two check
 <SignInNote />
 
 ```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
 # 🟡 Notify Sentry your job is running:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "in_progress"}'
+curl "${SENTRY_CRONS}?status=in_progress"
 
 # Execute your scheduled task here...
 
 # 🟢 Notify Sentry your job has completed successfully:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok"}'
+curl "${SENTRY_CRONS}?status=ok"
 ```
 
 ```http {tabTitle: HTTP}
-POST /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=in_progress HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 
-{
-    "status": "in_progress"
-}
-
-PUT /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
-
-{
-    "status": "ok"
-}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 ```
 
 If your job execution fails:
@@ -92,22 +75,12 @@ If your job execution fails:
 
 ```bash {tabTitle: cURL}
 # 🔴 Notify Sentry your job has failed:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "error"}'
+curl "${SENTRY_CRONS}?status=error"
 ```
 
 ```http {tabTitle: HTTP}
-PUT /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
-
-{
-    "status": "error"
-}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 ```
 
 <Note>
@@ -137,21 +110,16 @@ In the future it will be possible to delete environments for a specified monitor
 <SignInNote />
 
 ```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
 # 🟡 Notify Sentry your job is running in the dev environment:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "in_progress", "environment": "dev"}'
+curl "${SENTRY_CRONS}?environment=dev&status=in_progress"
 
 # Execute your scheduled task here...
 
 # 🟢 Notify Sentry your dev environment job has completed successfully:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok", "environment": "dev"}'
+curl "${SENTRY_CRONS}?environment=dev&status=ok"
 ```
 
 ### Creating or Updating a Monitor Through a Check-In (Optional)
