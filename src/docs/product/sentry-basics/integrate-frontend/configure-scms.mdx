@@ -13,55 +13,71 @@ Sentry uses commit metadata from your source code repositories to help you resol
 
 Now that you've created a release, you can tell Sentry which commits are associated with this latest version of your code; this is called _commit tracking_.
 
-## Step 1: Integrate Your GitHub Account and Repository
+## 1. Integrate Your GitHub Account and Repository
 
-1. To integrate GitHub with your Sentry org, follow the instructions in [our GitHub documentation](/product/integrations/source-code-mgmt/github/).
+Use Sentry's GitHub integration to link your source code repository to your Sentry project. This enables Sentry to use commit metadata to help you streamline issue triaging.
 
-2. Add the `frontend-tutorial` repository from your GitHub account.
+1. To integrate GitHub with your Sentry org, follow the [GitHub Integration Install instructions](/product/integrations/source-code-mgmt/github/#install). Be sure to give the integration access to the appropriate repository — in this case, the `frontend-tutorial` repo you forked.
 
-   ![Add project repository](configure-scms-01.png)
+   After you've added the integration, you should be redirected to a page showing your GitHub repositories in Sentry. Verify that the right repos have been added.
 
-3. Click the "Code Mappings" tab
+1. Go to the "Code Mappings" tab.
 
-4. Add a code mapping between the `frontend-tutorial` repository and your Sentry project and the `main` or `master` branch depending on your repository. Tell Sentry that your components live in the `src/` directory:
+1. Click "Add Code Mapping".
+
+1. Fill out the information requested to add a code mapping between your Sentry project and the `frontend-tutorial` repository's `main` or `master` branch. Tell Sentry that your components live in the `src/` directory:
 
    ![Add code mapping](configure-scms-09.png)
 
-## Step 2: Set Up Commit Tracking
+### UI Walkthrough
+
+Follow along with the animated gif below to see how to integrate your GitHub account and repository.
+
+<div style="position: relative; padding-bottom: calc(48.66707997520149% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/OlEYtzImezSBwsV8SVc8?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="FE Tutorial -> Install GitHub Config & Add Code Mapping"></iframe></div>
+
+## 2. Set Up Commit Tracking
 
 A _release_ is a version of your code deployed to an environment. See the [Releases](/product/releases/) documentation to learn more. Sentry uses releases to match up your source maps and source code. Releases can also be used to enable Sentry's [Suspect Commits](/product/issues/suspect-commits/) feature.
 
-The Sentry webpack plugin can automatically configure release information and send it to Sentry when you create a new build of your project. To enable this feature, add the following lines of code to `webpack.config.js` in your Sentry webpack plugin config:
+The Sentry Webpack plugin can automatically configure release information and send it to Sentry when you create a new build of your project. Let's enable this feature.
 
-```javascript {filename:webpack.config.js}
-    sentryWebpackPlugin({
-      org: "shana-et",
-      project: "test-tutorial",
+1. Go back to your `frontend-tutorial` project and stop it with `Ctrl + C`.
 
-      // Auth tokens can be obtained by creating an internal integration
-      // at https://<organiaztion_id>.sentry.io/settings/developer-settings/
-      // and need "Release: Admin" and "Organization: Read & Write" permissions
-      authToken: process.env.SENTRY_AUTH_TOKEN,
+1. To start associating commits and releases, add the following lines of code to `webpack.config.js` in your Sentry Webpack plugin config:
 
-      // Enable automatically creating releases and associating commits
-      release: {
-        create: true,
-        setCommits: {
-          auto: true,
-        },
-      },
-    }),
-```
+   ```javascript {filename:webpack.config.js}
+      sentryWebpackPlugin({
+         org: "<your_org>",
+         project: "<your_project>",
 
-We need to add some commits for Sentry to detect!
+         // Auth tokens can be obtained by creating an internal integration
+         // at https://<organiaztion_id>.sentry.io/settings/developer-settings/
+         // and need "Release: Admin" and "Organization: Read & Write" permissions
+         authToken: process.env.SENTRY_AUTH_TOKEN,
 
-1. Go back to your `frontend-tutorial` project and stop it with Ctrl + C.
+         // Enable automatically creating releases and associating commits
+         release: {
+         create: true,
+         setCommits: {
+            auto: true,
+         },
+         },
+      }),
+   ```
 
-1. Edit line 97. This will make sure Sentry recognizes a new error that it can associate with the release you will create:
+1. Save the file.
+
+## 3. Create a New Error and Commit
+
+Now that releases are set up to track commits, tweak the error and create a new commit to verify that this works.
+
+1. In `src/components/App.js`, edit line 97. This will make sure Sentry recognizes a new error that it can associate with the release you will create.
 
    ```javascript {filename:src/components/App.js}
    this.myCodeIsMorePerfect();
    ```
+
+1. Save the file.
 
 1. Add all your changes to git with:
 
@@ -82,53 +98,70 @@ We need to add some commits for Sentry to detect!
    npx serve build
    ```
 
-## Step 3: Suspect commits and suggested assignees
+1. Create a new issue for Sentry by generating another error in your app. Open the URL your app is running is, add products to your cart, and click "Checkout". You should soon see a new issue in Sentry.
+
+## 4. Verify Suspect Commits and Suggested Assignees
 
 Now suspect commits and suggested assignees should start appearing on the **Issue Details** page. Sentry determines these using files observed in the stack trace, authors of those files, and ownership rules.
 
-1. Refresh the browser and generate an error by adding products to your cart and clicking "Checkout".
-
 1. Check your email for the alert about the new error. Notice that a new "Suspect Commits" section has been added to the email.
 
-   ![Suspect Commits email](configure-scms-08.png)
+   ![Suspect Commits email](issue_email_suspect_commits.png)
 
 1. Click "View on Sentry" to open the **Issue Details** page.
 
-1. In the main area of the page, notice the "SUSPECT COMMITS" section now points to a commit that most likely introduced the error. You can click on the commit button to see the actual commit details on GitHub.
+1. Verify that the "Suspect Commits" section now points to the suspected commit that likely introduced the error. You can click on the commit link to see the actual commit details on GitHub.
 
-1. In the right side panel, under "Suggested Assignees", you'll see that the author of the suspect commit is listed as a suggested assignee for this issue.
+1. In the right side panel, click under "Assigned To" to open the dropdown to see suggested assignees. You'll see that the author of the suspect commit is listed as a suggested assignee for this issue.
 
-   ![Suggested Assignees](configure-scms-04.png)
+   ![Suggested Assignees](suggested_assignees.png)
 
-   You can assign the suggested assignee to the issue by clicking on the icon. However, in this case, the commit originates in the repository upstream, and the suggested assignee is not part of your organization. Alternatively, you can manually assign the issue to other users or teams assigned to the project.
+   You can assign the issue to the suggested assignee by clicking on their email. Alternatively, you can choose to assign the issue to other users or teams associated with the project.
 
-1. Click on the "ASSIGNEE" dropdown and select one of the project users or teams.
+### UI Walkthrough
 
-   ![Suspect Commit](configure-scms-05.png)
+The gif below shows how to view suspect commits and suggested assignees for an issue.
 
-1. In the main area of the page, under "TAGS", find the `release` tag and **hover over** the "i" icon.
+<div style="position: relative; padding-bottom: calc(43.44919786096257% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/XIrI8grPiEtHHSfCpCOt?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="FE Tutorial -> See Suspect Commits & Suggested Assignees"></iframe></div>
 
-1. In the popup that appears, notice the release now contains the commit data.
+## 5. Verify Release Configuration
 
-   ![Assign Manually](configure-scms-06.png)
+Verify that releases have been configured correctly.
 
-1. Click on the release "i" icon to open the **Release Details** page.
+1. In the main panel's "Tags" section, find the `release` tag and hover over the release id link. You should see in the popup that the release now contains commit data.
+
+1. Click on the release ID link to open the **Release Details** page.
 
 1. Select the "Commits" tab. Notice that release now contains the associated list of commits.
 
-   ![Release with Commits](configure-scms-07.png)
+### UI Walkthrough
+The gif below shows how to view commits associated with the release.
 
-## Step 4: Using Stack Trace Links
+<div style="position: relative; padding-bottom: calc(43.44919786096257% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/9MPvlig6reJdsDgm9TDZ?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="FE Tutorial -> See Release Commit Data"></iframe></div>
+
+## 6. Use Stack Trace Links
 
 Stack trace links allows you to jump from a stack trace in [sentry.io](https://sentry.io) to the corresponding file in your source code provider. This is done by matching the file path in the stack trace to the file path in your source code provider.
 
 1. Go to the **Issue Details** page for the error you generated in the previous step.
 
-2. If the code mapping is set up correctly, in the stack trace you should see a link with "Open this line in GitHub":
+1. Click "Tell us where your source code is" so Sentry can verify your code mapping.
 
-   ![Stacktrace Link](configure-scms-10.png)
+1. In the popup, verify or enter the file path and the correct GitHub URL.
+
+1. Click "Save". You should now see that the stack trace is linked to the code file in GitHub.
+
+1. Click "Open this line in GitHub" to go directly to the line of code causing the error.
+
+### UI Walkthrough
+
+The gif below walks through how to set up and view stack trace links in the UI.
+
+<div style="position: relative; padding-bottom: calc(51.714285714285715% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/HR7uFBvdCNskDARgf4hi?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="FE Tutorial -> Add Stack Trace Linking"></iframe></div>
 
 ## More Information
+
+With GitHub integrated and your releases configured to track your source maps and commits, you can use Sentry's suspect commits, suggested assignees, and stack trace links to help you triage and resolve issues faster. To learn more about how to get the most value out of releases and integrations, check out these resources:
 
 - [Create Release and Associate Commits](/product/releases/setup/)
 - [Global Integrations](/product/integrations/)
