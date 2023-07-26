@@ -6,7 +6,8 @@ import nodePath from 'path';
 import {GatsbyNode, Node} from 'gatsby';
 import {createFilePath} from 'gatsby-source-filesystem';
 
-import PlatformRegistry, {Guide, Platform} from '../../shared/platformRegistry';
+import {buildPlatformRegistry} from '../../shared/platformRegistry';
+import {Platform, PlatformGuide} from '../../types';
 import {getChild, getDataOrPanic} from '../helpers';
 
 type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
@@ -221,9 +222,6 @@ export const createPlatformPages = async ({
     reporter
   );
 
-  const platformRegistry = new PlatformRegistry();
-  await platformRegistry.init();
-
   // filter out nodes with no markdown content
   const {common, platforms} = buildPlatformPages(
     nodes.filter((n: FileNode) => getChild(n))
@@ -362,7 +360,7 @@ export const createPlatformPages = async ({
   const createPlatformGuidePages = (
     platform: Platform,
     platformData,
-    guide: Guide,
+    guide: PlatformGuide,
     guideData,
     sharedCommon: FileNode[],
     sharedContext: {[key: string]: any}
@@ -454,7 +452,9 @@ export const createPlatformPages = async ({
     });
   };
 
-  platformRegistry.platforms.forEach(platform => {
+  const registry = await buildPlatformRegistry();
+
+  registry.platforms.forEach(platform => {
     makePlatformPage(platform, platforms[platform.name], common);
   });
 

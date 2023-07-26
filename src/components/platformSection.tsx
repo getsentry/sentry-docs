@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
 
-import {getPlatformsWithFallback, Platform, usePlatform} from './hooks/usePlatform';
+import {getPlatformsWithFallback, usePlatform} from './hooks/usePlatform';
 
 type Props = {
   children?: React.ReactNode;
@@ -37,7 +37,7 @@ export function PlatformSection({
     return null;
   }
 
-  if (noGuides && !(currentPlatform as Platform).guides) {
+  if (noGuides && currentPlatform.type !== 'platform') {
     return null;
   }
 
