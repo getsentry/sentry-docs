@@ -69,6 +69,31 @@ new Sentry.Replay({
 });
 ```
 
+### Example: Capturing 500 Status Codes Only
+
+Here is an example that will only capture fetch requests that return a 500 status code. Non-fetch requests will continue to be captured as normal.
+
+```javascript
+new Sentry.Replay({
+  beforeAddRecordingEvent: event => {
+    // Capture non-fetch requests as normal
+    if (
+      event.data.tag !== 'performanceSpan' ||
+      event.data.payload.op !== 'resource.fetch'
+    ) {
+      return event;
+    }
+
+    // Only capture requests that result in a 500 status code
+    if (event.data.payload.data?.statusCode !== 500) {
+      return null;
+    }
+
+    return event;
+  },
+});
+```
+
 Note that we also have [server-side PII scrubbing](/product/data-management-settings/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
 
 ### Deprecated Options
