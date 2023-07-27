@@ -396,6 +396,89 @@ The `fingerprints` field should be set to `["$operationName", "$operationType", 
 }
 ```
 
+## GraphQL Performance
+
+### Server
+
+The GraphQL Performance integration should match the guidelines for [GraphQL Client Integrations](/sdk/features/#graphql-client-integrations) with a few differences:
+
+The transaction's name should be set with the GraphQL operation name, if possible, otherwise fallback to something unique that makes sense, e.g. the canonical name of the actual/generated class.
+
+The transaction's description should be set with the GraphQL operation name, operation type (`query`, `mutation` or `subscription`) and status code, if possible.
+
+The `request.api_target` should be set with `graphql`.
+
+The `request.data` should be set with the raw GraphQL request payload, if possible. This should be guarded by an opt-in flag, e.g. `sendDefaultPii`.
+
+The `contexts.response.data` should be set with the raw GraphQL response payload, only if there were `errors`. This should be guarded by an opt-in flag, e.g. `sendDefaultPii` and `maxResponseBodySize`.
+
+Some frameworks may use a `Stream` object for the response, in this case, the object can't be consumed twice, so the SDK should try check and clone the object, if possible.
+
+Spans should be created for [resolvers](https://www.apollographql.com/docs/apollo-server/data/resolvers/), if possible. These are sometimes also called [data fetchers](https://www.graphql-java.com/documentation/data-fetching/).
+
+Spans should be created for [data loaders](https://graphql.org/learn/best-practices/#server-side-batching-caching/), if possible.
+
+The operation type should follow the [Span Operation Conventions](/sdk/performance/span-operations/).
+
+Extra (`data`) attributes for transactions and/or spans, there are [Span Data](/sdk/performance/span-data-conventions/) and [OTel GraphQL](https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/instrumentation/graphql/) conventions.
+
+Instrumenting APM for GraphQL will depend on the instrumented GraphQL library, if there are available hooks for it, the SDK should use them, otherwise, the SDK could try to monkeypatch the library or instrument the transport layer using heuristics, for example, if the URL ends with `graphql`, if there are HTTP Headers, etc.
+
+If there are hooks available and the transport layer is also instrumented (e.g. Apollo Interceptors for GraphQL and Spring), the SDK should give preference to the layer that has more information and avoid creating duplicate transactions/spans, or merge the information, if possible.
+
+Spring GraphQL has its own [observation package](https://github.com/spring-projects/spring-graphql/tree/main/spring-graphql/src/main/java/org/springframework/graphql/observation).
+
+GraphQL Java has its own [instrumentation package](https://github.com/graphql-java/graphql-java/tree/master/src/main/java/graphql/execution/instrumentation).
+
+Apollo GraphQL has its own [tracing extensions](https://github.com/apollographql/apollo-tracing#response-format), in this case it'd even be possible to create synthethic transactions and spans out of the tracing extension.
+
+Changes in the product may be necessary, e.g. if `request.api_target` is set to `graphql`, the `request.data` and `contexts.response.data` should do syntax highlighting.
+
+Performance issues can be created for GraphQL transactions and spans, for example, N+1, query complexity, etc.
+
+### Client
+
+GraphQL Performance for Clients is very similar to the implementation for Servers, the difference is that you'll create a `span` instead of a `transaction`.
+
+Spans don't contain the `request` and `response` interfaces, but set the span description similarly to the transaction description.
+
+### Breadcrumbs
+
+Breadcrumbs should be added for each GraphQL operation (resolvers, data loaders, etc), if possible.
+
+The Breadcrumb `type` should be `graphql` and the `category` should be the operation type, otherwise `graphql.operation` if not available.
+
+Additional fields for breadcrumbs:
+
+- data (all fields are optional but recommended):
+  - `operation_name` - The GraphQL operation name
+  - `operation_type` - The GraphQL operation type, i.e: `query`, `mutation`, `subscription`
+  - `operation_id` - The GraphQL operation ID
+
+Avoid setting the `query` String as part of the `data` field since the event can be dropped due to size limit.
+
+In case more additional fields are needed, the `data` field can be used to add more context, e.g. `graphql.path`, `graphql.field`, `graphql.type`, etc.
+
+The `category` can also be adapted to its own type, e.g. `graphql.resolver`, `graphql.data_loader`, etc.
+
+For resolvers or data fetchers a breadcrumb could have the following fields:
+- `type` = `graphql`
+- `category` = `graphql.fetcher`
+- `path` - Path in the query, e.g. `project/status`
+- `field` - Field being fetched, e.g. `status`
+- `type` - Type being fetched, e.g. `String`
+- `object_type` - Object type being fetched, e.g. `Project`
+
+For data loaders a breadcrumb could have the following fields:
+- `type` = `graphql`
+- `category` = `graphql.data_loader`
+- `keys` - Keys that should be loaded by the data loader
+- `key_type` - Type of the key
+- `value_type` - Type of the value
+- `name` - Name of the data loader
+
+If there are hooks available and the transport layer is also instrumented (e.g. Apollo Interceptors for GraphQL and Spring), the SDK should give preference to the layer that has more information and avoid creating duplicate breadcrumbs, or merge the information, if possible.
+
 ## Attaching Request Body in Server SDKs
 
 Ability for the SDK to attach request body to events and triggered during the execution of request.
