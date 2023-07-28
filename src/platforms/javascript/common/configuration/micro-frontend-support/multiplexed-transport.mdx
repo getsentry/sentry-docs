@@ -1,13 +1,12 @@
 ---
-title: Micro Frontend Support
-sidebar_order: 200
-description: ""
-keywords: ["micro frontend", "multiplexed transport"]
+title: Multiplexed Transport
+sidebar_order: 30
+description: "Send events to different Sentry projects based on the attributes on an event."
 ---
 
-The recommended way to use the Sentry SDK with Micro Frontend is to set up a multiplexed transport when calling `Sentry.init`. The multiplexed transport will send events to different Sentry projects based on the attributes on that event, which is how you can isolate events from a specific micro-frontend to a specific Sentry project.
-
 Requires SDK version `7.50.0` or higher.
+
+The multiplexed transport can send events to different Sentry projects based on the attributes on an event, which is how you can isolate events from a specific micro-frontend to a specific Sentry project.
 
 The example below uses the `feature` tag to determine which Sentry project to send the event to by using different DSNs. If the event does not have a `feature` tag, we send it to the fallback DSN defined in `Sentry.init`.
 
@@ -19,9 +18,9 @@ function dsnFromFeature({ getEvent }) {
   const event = getEvent();
   switch (event?.tags?.feature) {
     case "cart":
-      return ["__CART_DSN__"];
+      return [{ dsn: "__CART_DSN__" }];
     case "gallery":
-      return ["__GALLERY_DSN__"];
+      return [{ dsn: "__GALLERY_DSN__" }];
     default:
   }
   return [];
@@ -39,12 +38,6 @@ captureException(new Error("oh no!"), (scope) => {
 ```
 
 You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to.
-
-<Alert level="warning" title="Note">
-
-Currently, there is no way to isolate tags/contexts/breadcrumbs/spans to events sent to a specific Sentry project. This is because browsers do not have support for async contexts, which is required for this functionality to work. Once the [tc39 Async Context](https://github.com/tc39/proposal-async-context) proposal is implemented in all browsers, we will be able to add this functionality.
-
-</Alert>
 
 ## `makeMultiplexedTransport` API
 

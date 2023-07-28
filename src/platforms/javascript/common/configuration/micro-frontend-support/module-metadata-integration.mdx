@@ -1,0 +1,42 @@
+---
+title: ModuleMetadata Integration
+sidebar_order: 20
+description: "Read injected metadata and attach it to relevant error stack frames."
+---
+
+Requires SDK version `7.59.0` or higher.
+
+The `ModuleMetadata` integration looks up module metadata that has been <PlatformLink
+to="/configuration/micro-frontend-support/metadata-injection/">injected
+into bundles</PlatformLink> and attaches it to stack frames with matching file names. This
+metadata is then available in other integrations or in the `beforeSend` callback
+as the `module_metadata` property on each `StackFrame`. This can be used to
+identify which bundles may be responsible for an error and used to tag or route
+events.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { ModuleMetadata } from "@sentry/core";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [ new ModuleMetadata() ]
+  beforeSend: (event) => {
+    const frames = event?.exception?.values?.[0].stacktrace.frames || [];
+    // Get all team names in this stack trace
+    const teams = frames.filter(frame => "module_metadata" in frame && "team" in frame.module_metadata)
+                        .map(frame => frame.module_metadata.team);
+    // If there are teams, add them as extra data to the event
+    if(teams.length > 0){
+      event.extra = {
+        ...event.extra,
+        teams
+      };
+    }
+
+    return event;
+  },
+});
+
+Sentry.captureException(new Error("oh no!"));
+```

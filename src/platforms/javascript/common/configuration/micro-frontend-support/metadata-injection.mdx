@@ -1,0 +1,36 @@
+---
+title: Metadata Injection
+sidebar_order: 10
+description: "Inject metadata into bundles which can later be used to identify which bundles may be responsible for an error."
+---
+
+Requires version `2.5.0` or higher of `@sentry/webpack-plugin`.
+
+Before you can use the <PlatformLink
+to="/configuration/micro-frontend-support/module-metadata-integration/">
+`ModuleMetadata` integration </PlatformLink>, you should include
+metadata in your bundles. This is achieved using `@sentry/webpack-plugin` via
+the `_experiments.moduleMetadata` option.
+
+ `moduleMetadata` can be any serializable data or alternatively a function that
+ returns serializable data. If you supply a function it will be passed an object
+ containing the `org`, `project`, and `release` strings.
+
+```javascript
+// webpack.config.js
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  devtool: "source-map",
+  plugins: [
+    sentryWebpackPlugin({
+      /* Other plugin config */
+      _experiments: {
+        moduleMetadata: ({ org, project, release }) => {
+          return { team: 'frontend', release },
+        }
+      },
+    }),
+  ],
+};
+```
