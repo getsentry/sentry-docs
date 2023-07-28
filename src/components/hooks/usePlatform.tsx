@@ -119,7 +119,7 @@ export const usePlatformList = (): Platform[] => {
 
 /**
  * Return the active platform or guide.
-
+ *
  * @param value platform key in format of `platformName[.guideName]`
  */
 export const getPlatform = (key: string): Platform | PlatformGuide | null => {
