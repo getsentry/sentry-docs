@@ -1,7 +1,7 @@
 import React from 'react';
 import {PlatformIcon} from 'platformicons';
 
-import {Platform, usePlatform} from './hooks/usePlatform';
+import {usePlatform} from './hooks/usePlatform';
 import {SmartLink} from './smartLink';
 
 type Props = {
@@ -11,14 +11,14 @@ type Props = {
 
 export function GuideGrid({platform, className}: Props) {
   const [currentPlatform] = usePlatform(platform);
-  // platform might actually not be a platform, so lets handle that case gracefully
-  if (!(currentPlatform as Platform).guides) {
+
+  if (currentPlatform.type === 'guide') {
     return null;
   }
 
   return (
     <ul className={className}>
-      {(currentPlatform as Platform).guides.map(guide => (
+      {currentPlatform.guides.map(guide => (
         <li key={guide.key}>
           <SmartLink to={guide.url}>
             <PlatformIcon

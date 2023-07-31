@@ -3,7 +3,7 @@ import React, {Fragment, useState} from 'react';
 import {getCurrentTransaction} from '../utils';
 
 import {Banner} from './banner';
-import {CodeContext, useCodeContextState} from './codeContext';
+import {CodeContextProvider} from './codeContext';
 import {GitHubCTA} from './githubCta';
 import {Layout} from './layout';
 import {SEO} from './seo';
@@ -77,9 +77,7 @@ export function BasePage({
         >
           <h1 className="mb-3">{title}</h1>
           <div id="main" ref={setContentElement}>
-            <CodeContext.Provider value={useCodeContextState()}>
-              {children}
-            </CodeContext.Provider>
+            <CodeContextProvider>{children}</CodeContextProvider>
 
             {file && (
               <GitHubCTA

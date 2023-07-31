@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 
-import PlatformRegistry from '../src/shared/platformRegistry';
+import {buildPlatformRegistry} from '../src/shared/platformRegistry';
 
 enum Level {
   error,
@@ -45,11 +45,10 @@ const testConfig = config => {
 };
 
 const main = async () => {
-  const platformRegistry = new PlatformRegistry();
-  await platformRegistry.init();
+  const {platforms} = await buildPlatformRegistry();
 
   const violations: Violation[] = [];
-  platformRegistry.platforms.forEach(platform => {
+  platforms.forEach(platform => {
     // test for wizard
     testConfig(platform).forEach(violation => {
       violations.push({...violation, context: platform.key});

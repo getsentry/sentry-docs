@@ -25,7 +25,7 @@ You can combine this integration with a logging library like `log4net`, `NLog`, 
 
 All `ASP.NET Core` configurations are valid here. But one configuration in particular is relevant.
 
-`FlushOnCompletedRequest` ensures all events are flushed out. This is beacause the general ASP.NET Core hooks for when the process is exiting are not guaranteed to run in a serverless environment. This setting ensures that no event is lost if AWS recycles the process.
+`FlushOnCompletedRequest` ensures all events are flushed out. This is because the general ASP.NET Core hooks for when the process is exiting are not guaranteed to run in a serverless environment. This setting ensures that no event is lost if AWS recycles the process.
 
 ```csharp
 public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFunction

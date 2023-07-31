@@ -67,7 +67,7 @@ Any of the [Sentry CLI configuration values](/product/cli/configuration/#configu
 or in configuration files, such as shown in the above authentication steps.
 
 However, other than authentication, you should consider setting configuration values via the MSBuild properties described below,
-such that they are part of your code that is commited to source control. This allows them to be consistent across environments,
+such that they are part of your code that is committed to source control. This allows them to be consistent across environments,
 and also allows the settings to differ per each project in your solution, if desired.
 
 If _both_ MSBuild properties and environment variables are provided, the MSBuild properties will take precedence.
@@ -86,6 +86,8 @@ can slow down your development workflow.
 
 Alternatively, you could control this using any MSBuild property or environment variable you like. For example,
 if you only want these features enabled in a GitHub Actions CI workflow, you could use `Condition="'$(GITHUB_ACTIONS)' == 'true'"`.
+
+<SignInNote />
 
 ```xml
 <!-- We recommend only using these features for release builds. -->
@@ -106,11 +108,16 @@ if you only want these features enabled in a GitHub Actions CI workflow, you cou
   <!-- Sends sources to Sentry, enabling display of source context. -->
   <SentryUploadSources>true</SentryUploadSources>
 
+  <!-- If you are targeting Android, sends proguard mapping file to Sentry. -->
+  <SentryUploadAndroidProguardMapping>true</SentryUploadAndroidProguardMapping>
+
 </PropertyGroup>
 
 ```
 
 Alternatively, they could be passed as parameters when building your project. For example:
+
+<SignInNote />
 
 ```shell
 dotnet build YourProject.csproj -c Release -p:SentryOrg=___ORG_SLUG___ -p:SentryProject=___PROJECT_SLUG___ -p:SentryUploadSymbols=true -p:SentryUploadSources=true

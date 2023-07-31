@@ -43,6 +43,8 @@ _(Available in version 7.21.0 and above)_
 
 If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) from the `react-router-dom` package, you can use `Sentry.wrapCreateBrowserRouter` to wrap it with the instrumentation:
 
+<SignInNote />
+
 ```javascript
 import { createBrowserRouter } from "react-router-dom";
 import * as Sentry from "@sentry/react";
@@ -79,7 +81,9 @@ You can instrument [`createMemoryRouter`](https://reactrouter.com/en/main/router
 
 ### Usage With `<Routes />` Component
 
-If you use the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context, as in the example below:
+If you're using the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV6Routing` for `Routes` inside `BrowserRouter`. `MemoryRouter`, and `HashRouter` components:
+
+<SignInNote />
 
 ```javascript
 import React from "react";
@@ -96,6 +100,7 @@ import {
 import * as Sentry from "@sentry/react";
 
 Sentry.init({
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV6Instrumentation(
@@ -134,6 +139,8 @@ If you specify your route definitions as an object to the [`useRoutes` hook](htt
 `wrapUseRoutes` should be called outside of a React component, as in the example below. It's also recommended that you assign the wrapped hook to a variable name starting with `use`, as per the [React documentation](https://reactjs.org/docs/hooks-custom.html#extracting-a-custom-hook).
 
 </Alert>
+
+<SignInNote />
 
 ```javascript
 import {
@@ -186,9 +193,11 @@ Make sure you use a `Router` component combined with `createBrowserHistory` (or 
 
 ### Parameterized Transaction Names
 
-To get parameterized transaction names (for example, `/teams/:teamid/user/:userid` instead of `/teams/123/user/345`), you must explicitly set the routes you want paramaterized. That's because there is no static route config that the SDK can use in React Router v4/v5.
+To get parameterized transaction names (for example, `/teams/:teamid/user/:userid` instead of `/teams/123/user/345`), you must explicitly set the routes you want parameterized. That's because there is no static route config that the SDK can use in React Router v4/v5.
 
 We recommend you use the `withSentryRouting` higher order component to create a `SentryRoute` component that will update the match path on render.
+
+<SignInNote />
 
 ```javascript
 import {Route, Router, Switch } from 'react-router-dom';
@@ -202,6 +211,7 @@ const SentryRoute = Sentry.withSentryRouting(Route);
 const history = createBrowserHistory();
 
 Sentry.init({
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
@@ -228,6 +238,8 @@ render() {
 
 If you don't want to wrap individual routes, you can still specify parameterized routes manually by passing an array of route config objects, per [react-router-config](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config), to the instrumentation function call. You'll also need to provide the `matchPath` function exported from the `react-router-dom` or `react-router` packages.
 
+<SignInNote />
+
 ```javascript
 import { Route, Router, Switch, matchPath } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
@@ -241,6 +253,7 @@ const history = createBrowserHistory();
 const routes = [{ path: '/users/:userid' }, { path: '/users' }, { path: '/' }];
 
 Sentry.init({
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV5Instrumentation(history, routes, matchPath),
@@ -270,6 +283,8 @@ render() {
 
 To use the router integration, import and set a custom routing instrumentation and pass it the history, your routes and a match function. React Router v3 support is maintained for React Router >= 3.2.0 and < 4.0.0.
 
+<SignInNote />
+
 ```javascript
 import * as Router from "react-router";
 
@@ -286,6 +301,7 @@ const routes = (
 );
 
 Sentry.init({
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
       routingInstrumentation: Sentry.reactRouterV3Instrumentation(

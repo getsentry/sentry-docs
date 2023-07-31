@@ -20,7 +20,7 @@ The plugin will automatically add the Sentry Android SDK to your app.
 
 ## Configure
 
-Configuration is done via the application `AndroidManifest.xml`. Under the hood Sentry uses a `ContentProvider` to initalize the SDK based on the values provided below. This way the SDK can capture important crashes and metrics right from the app start.
+Configuration is done via the application `AndroidManifest.xml`. Under the hood Sentry uses a `ContentProvider` to initialize the SDK based on the values provided below. This way the SDK can capture important crashes and metrics right from the app start.
 
 Here's an example config which should get you started:
 

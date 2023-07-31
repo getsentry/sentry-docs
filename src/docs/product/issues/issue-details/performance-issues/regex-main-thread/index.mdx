@@ -12,7 +12,7 @@ Evaluating matches between strings and regular expressions (regex) can be long-r
 
 ## Detection Criteria
 
-[Profiling](/product/profiling/) needs to be enabled for Sentry to detect Regex on Main Thread issues. Sentry looks for functions related to regular expressions that have been running on the main thread for at least 40ms. This threshold was chosen so that the function appears in a sufficient number of samples collected by the profile (~10ms per sample x 4 = ~40ms total) before it gets detected as an issue.
+[Profiling](/product/profiling/) must be enabled for Sentry to detect Regex on Main Thread issues. Sentry looks for functions related to regular expressions that have been running on the main thread for at least 40ms. This threshold ensures the function appears in a sufficient number of samples collected by the profile (~10ms per sample x 4 = ~40ms total) before it gets detected as an issue.
 
 ## Function Evidence
 
@@ -60,5 +60,35 @@ DispatchQueue.global(qos: .userInitiated).async {
 	DispatchQueue.main.async {
 		// display results...
 	}
+}
+```
+
+### Android
+
+The following code calls `String.matches` on the UI thread to search for matches against a regular expression in a large text:
+
+```kotlin
+fun matchRegex(text: String, regexPattern: String) {
+  val matches = text.matches(regexPattern.toRegex())
+  if (matches) {
+    // Do something
+  }
+}
+```
+
+Performance could be improved by moving the match to a coroutine:
+
+```kotlin
+fun matchRegex(text: String, regexPattern: String) {
+  lifecycleScope.launch(Dispatchers.Default) {
+    val pattern = Pattern.compile(regexPattern)
+    val matches = pattern.matcher(text).matches()
+
+    withContext(Dispatchers.Main) {
+      if (matches) {
+        // Do something
+      }
+    }
+  }
 }
 ```
