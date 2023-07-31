@@ -1,12 +1,17 @@
+import {SourceNodesArgs} from 'gatsby';
+
 import getPackageRegistry from '../utils/packageRegistry';
 
-export const sourcePackageRegistryNodes = async ({actions, createContentDigest}) => {
+export const sourcePackageRegistryNodes = async ({
+  actions,
+  createContentDigest,
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
 
-  Object.entries(allSdks).forEach(([sdkName, sdkData]) => {
+  Object.entries(allSdks ?? {}).forEach(([sdkName, sdkData]) => {
     const data = {
       canonical: sdkData.canonical,
       name: sdkData.name,

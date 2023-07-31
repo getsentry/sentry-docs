@@ -8,13 +8,7 @@ type Props = {
   title?: string;
 };
 
-export function Alert({
-  title,
-  children,
-  level,
-  deepLink,
-  dismiss = false,
-}: Props): JSX.Element {
+export function Alert({title, children, level, deepLink, dismiss = false}: Props) {
   let className = 'alert';
   if (level) {
     className += ` alert-${level}`;

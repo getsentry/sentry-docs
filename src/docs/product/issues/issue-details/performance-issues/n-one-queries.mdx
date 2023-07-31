@@ -6,18 +6,22 @@ redirect_from:
 description: "Learn more about N+1 queries and how to diagnose and fix them."
 ---
 
-_N+1 queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
+_N+1 queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns or modifies all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
 
 ## Detection Criteria
 
 The detector for performance issues looks for a set of sequential, non-overlapping database spans with similar descriptions. It also uses the following criteria:
 
-- Total duration of involved spans must exceed a threshold (usually 100 ms)
+- Total duration of involved spans must exceed a `90ms`
 - Total count of involved spans must exceed a threshold (usually five spans)
 - Involved spans must have full queries as their descriptions (some SDKs truncate queries and add an ellipsis to the end)
 - There must be at least one database span that precedes the repeating spans (this is called the "source" span, and is used for fingerprinting)
 
 If Sentry is not detecting an N+1 issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
+
+You can configure detector thresholds for N+1 queries issues in **Project Settings > Performance**:
+
+![N+1 Query detector threshold settings](n-plus-one-queries-detector-settings.png)
 
 ## Span Evidence
 
@@ -64,3 +68,18 @@ def books(request):
 Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query. Instead of a long waterfall, there is a single `SELECT` query:
 
 ![Solved N+1 queries in an example application](n-plus-one-queries-after.png)
+
+N+1s can also happen when modifying data. For example, instead of creating objects in a loop:
+
+```python
+for i in range(1, 11):
+    Book.objects.create(title: f"Book {i}")
+```
+
+You can instead create the objects in a single query:
+
+```python
+Book.objects.bulk_create(
+    [Book(title: f"Book {i}") for i in range(1, 11)]
+)
+```

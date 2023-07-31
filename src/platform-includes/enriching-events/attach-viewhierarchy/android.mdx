@@ -4,6 +4,62 @@
 </application>
 ```
 
+### Customize View Hierarchy Capturing
+
+<Note>
+
+Requires SDK version `6.24.0` or higher.
+
+</Note>
+
+Because capturing view hierarchy can be a resource-intensive operation on Android, it's limited to one view hierarchy every 2 seconds using a debouncing mechanism. This behavior can be overruled if you supply a `BeforeCaptureCallback` for view hierarchies in the `SentryAndroidOptions`.
+
+The `BeforeCaptureCallback` also allows you to customize behavior based on event data so you can decide when to capture view hierarchy and when not to. For example, you can decide to only capture view hierarchy for crashed and fatal events:
+
+```java
+import io.sentry.SentryLevel;
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setBeforeViewHierarchyCaptureCallback((event, hint, debounce) -> {
+        // always capture crashed events
+        if (event.isCrashed()) {
+            return true;
+        }
+
+        // if debounce is active, skip capturing
+        if (debounce) {
+            return false;
+        } else {
+            // also capture fatal events
+            return event.getLevel() == SentryLevel.FATAL;
+        }
+    });
+});
+```
+
+```kotlin
+import io.sentry.SentryLevel
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setBeforeViewHierarchyCaptureCallback { event, hint, debounce ->
+        // always capture crashed events
+        if (event.isCrashed) {
+            return@setBeforeScreenshotCaptureCallback true
+        }
+
+        // if debounce is active, skip capturing
+        if (debounce) {
+            return@setBeforeScreenshotCaptureCallback false
+        } else {
+            // also capture fatal events
+            return@setBeforeScreenshotCaptureCallback event.level == SentryLevel.FATAL
+        }
+    }
+}
+```
+
 ### Jetpack Compose Support using the Sentry Kotlin Compiler Plugin
 
 <Note>
@@ -12,7 +68,7 @@ The Sentry Kotlin Compiler plugin is considered _experimental_. Give it a try an
 
 </Note>
 
-If your application uses Jetpack Compose, you can use the <PlatformLink to="/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> to see the function names of your `@Composable` elements. You must add the plugin to all modules that contain `@Composable` elements.
+If your application uses Jetpack Compose, you can use the <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> to see the function names of your `@Composable` elements. You must add the plugin to all modules that contain `@Composable` elements.
 
 ```groovy {filename:app/build.gradle}
 plugins {

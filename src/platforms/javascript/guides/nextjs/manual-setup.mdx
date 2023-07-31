@@ -28,6 +28,8 @@ Create three files in the root directory of your project, `sentry.client.config.
 
 Please note that there are slight differences between these files since they run in different places (browser, server, edge), so copy them carefully!
 
+<SignInNote />
+
 ```javascript {tabTitle:Client} {filename:sentry.client.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -54,6 +56,8 @@ Sentry.init({
 });
 ```
 
+<SignInNote />
+
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -72,6 +76,8 @@ Sentry.init({
   // that it will also get attached to your source maps
 });
 ```
+
+<SignInNote />
 
 ```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -102,6 +108,8 @@ Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will
 - Generate and upload source maps to Sentry, so that your stacktraces contain readable code.
 
 Include the following in your `next.config.js` or `next.config.mjs`:
+
+<SignInNote />
 
 ```JavaScript {filename:next.config.(js|mjs)}
 // This file sets a custom webpack configuration to use your Next.js app
@@ -135,11 +143,15 @@ const sentryWebpackPluginOptions = {
   // Additional config options for the Sentry Webpack plugin. Keep in mind that
   // the following options are set automatically, and overriding them is not
   // recommended:
-  //   release, url, authToken, configFile, stripPrefix,
-  //   urlPrefix, include, ignore
+  //   release, url, configFile, stripPrefix, urlPrefix, include, ignore
 
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
+
+  // An auth token is required for uploading source maps.
+  // You can get an auth token from https://sentry.io/settings/account/api/auth-tokens/
+  // The token must have `project:releases` and `org:read` scopes for uploading source maps
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   silent: true, // Suppresses all logs
 
@@ -312,7 +324,7 @@ If the automatic instrumentation doesn't work for your use case, you can turn it
 For API routes, use the `wrapApiHandlerWithSentry` function:
 
 ```javascript {filename:pages/api/*}
-import { withSentry } from "@sentry/nextjs";
+import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
 
 const handler = (req, res) => {
   res.status(200).json({ name: "John Doe" });
@@ -323,7 +335,7 @@ export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
 
 ```typescript {filename:pages/api/*}
 import type { NextApiRequest, NextApiResponse } from "next";
-import { withSentry } from "@sentry/nextjs";
+import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
 
 const handler = (req: NextApiRequest, res: NextApiResponse) => {
   res.status(200).json({ name: "John Doe" });

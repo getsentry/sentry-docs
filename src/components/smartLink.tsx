@@ -26,7 +26,7 @@ export function SmartLink({
   className = '',
   isActive,
   ...props
-}: Props): JSX.Element {
+}: Props) {
   const realTo = to || href || '';
 
   const [forcedUrl, setForcedUrl] = useState(realTo);

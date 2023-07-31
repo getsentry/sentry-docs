@@ -1,0 +1,31 @@
+---
+title: ProGuard & DexGuard
+sidebar_order: 100
+description: "Learn about using the Sentry Gradle Plugin or sentry-cli to upload ProGuard/R8 and DexGuard mappings to Sentry."
+redirect_from:
+  - /platforms/android/proguard/
+---
+
+If you want to see de-obfuscated stack traces, you'll need to use [ProGuard](https://www.guardsquare.com/proguard) with Sentry. To do so, upload the ProGuard mapping files by either the recommended method of using our [Gradle integration](/platforms/android/configuration/gradle/) or manually by using [sentry-cli](/product/cli/dif/#proguard-mapping-upload).
+
+It works the same either way. A (random) UUID will be or has to be generated and placed into the `AndroidManifest.xml`. The same UUID has to be used to upload the mapping file(s). In case a crash happens in the app, the Sentry Android SDK will send the UUID along with the stacktrace to the Sentry server instance. Sentry will then de-obfuscate the stacktrace by searching for the associated mapping file with the same UUID.
+
+If [Source Context](/platforms/android/enhance-errors/source-context) is enabled, Sentry can show snippets of code (_source context_) around the location of stack frames, which helps to quickly pinpoint problematic code.
+
+Support for Guardsquare's ProGuard and [DexGuard](https://www.guardsquare.com/dexguard) was added in version 3.0.0 of the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/).
+
+<Note>
+
+The Android SDK ships with ProGuard rules automatically defined; no further configuration is needed.
+
+</Note>
+
+## In-app Frames
+
+If you have an deobfuscated build, the Android SDK will automatically set all frames coming from the app as in-app, based on the `applicationId/packageName`. This is not possible on the client side for obfuscated builds. However, you can define server-side rules for identifying the in-app frames, for example:
+
+```discover {tabTitle:Enhancement Rules}
+stack.module:com.mycompany.** +app
+```
+
+For more information see [StackTrace Rules](/product/data-management-settings/event-grouping/stack-trace-rules/#mark-in-app-frames).

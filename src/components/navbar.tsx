@@ -11,12 +11,14 @@ type Props = {
   platforms?: string[];
 };
 
-export function Navbar({platforms}: Props): JSX.Element {
+export function Navbar({platforms}: Props) {
   const location = useLocation();
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
-      <Search path={location.pathname} platforms={platforms} />
+      <div>
+        <Search path={location.pathname} platforms={platforms} />
+      </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
           <NavbarPlatformDropdown />
@@ -29,6 +31,9 @@ export function Navbar({platforms}: Props): JSX.Element {
             <SmartLink className="nav-link" to="/api/">
               API
             </SmartLink>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
           </Nav.Item>
           <SandboxOnly>
             <Nav.Item>

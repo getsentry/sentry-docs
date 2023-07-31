@@ -55,7 +55,7 @@ You can add an ownership rule from **[Project] > Settings > Ownership Rules** an
 
 ![Configuration options for defining ownership rules in project settings.](project_settings_edit_ownership_rules.png)
 
-You can also add an owership rule from the **Issue Details** page by clicking the cog icon in the "Assigned To" section of the sidebar:
+You can also add an ownership rule from the **Issue Details** page by clicking the cog icon in the "Assigned To" section of the sidebar:
 
 ![Assigned to with cog](assigned_to_cog.png)
 
@@ -113,12 +113,17 @@ Create external team/user mappings for your GitHub/GitLab teams and users by nav
 
 ## Evaluation Flow
 
-If you have both ownership rules and code owners, Sentry evaluates an event against the rules in the following order:
+If you have both ownership rules and code owners, Sentry evaluates an event’s in-app frames against the rules in the following order:
 
 1. Code owners, top-to-bottom
+
+   a. If there are multiple owners in the rule, left-to-right
+
 2. Ownership rules, top-to-bottom
 
-After evaluation, the last rule matching returns the assignment.
+   a. If there are multiple owners in the rule, left-to-right
+
+After evaluation, the last rule matching returns the assignment. The order of the event’s stacktrace filepaths is irrelevant in determining the rule assignment.
 
 ### Example
 
@@ -131,15 +136,18 @@ codeowners:*.js                    #ecosystem
 **Ownership Rules:**
 
 ```
-path:*.js                          #ecosystem
+path:*.js                          #ecosystem #frontend
 path:sentry/api/*                  #api
 url:*subscription*                 #billing
 path:dist/frontend/components/*               #frontend
 ```
 
-When Sentry recieves an event with a stacktrace filepath: `dist/frontend/components/sidebar.js`, we:
+When Sentry receives an event with a stacktrace filepath: `dist/frontend/components/sidebar.js`, we:
 
-1. Evaluate against the code owners top-to-bottom; we get one match.
+1. Evaluate against the code owners top-to-bottom; we get one match with two owners in the rule.
+
+   a. Evaluate the rule left-to-right; we choose the first owner.
+
 2. Evaluate against the ownership rules top-to-bottom; we get two matches.
 
 The matches, in order, are:
