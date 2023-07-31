@@ -1,0 +1,121 @@
+## Check-Ins (Recommended)
+
+Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+
+```go
+// 🟡 Notify Sentry your job is running:
+checkinId := sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusInProgress,
+	},
+	nil,
+)
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		ID:          *checkinId,
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusOK,
+	},
+	nil,
+)
+```
+
+If your job execution fails, you can notify Sentry about the failure:
+
+```go
+// 🔴 Notify Sentry your job has failed:
+sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		ID:          *checkinId,
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusError,
+	},
+	nil,
+)
+```
+
+## Heartbeat
+
+Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
+
+```go
+// Execute your scheduled task...
+
+// 🟢 Notify Sentry your job completed successfully:
+sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusOK,
+	},
+	nil,
+)
+```
+
+If your job execution fails, you can:
+
+```go
+// 🔴 Notify Sentry your job has failed:
+sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusError,
+	},
+	nil,
+)
+```
+
+## Upserting Cron Monitors
+
+You can create and update your Monitors programmatically with code
+rather than [creating and configuring them in Sentry.io](https://sentry.io/crons/create/).
+
+```go
+// Create a crontab schedule object (every 10 minutes)
+monitorSchedule := sentry.CrontabSchedule("*/10 * * * *")
+
+// Or create an interval schedule object (every 10 minutes)
+monitorSchedule := sentry.IntervalSchedule(10, sentry.MonitorScheduleUnitMinute)
+```
+
+Supported units are:
+
+- MonitorScheduleUnitMinute
+- MonitorScheduleUnitHour
+- MonitorScheduleUnitDay
+- MonitorScheduleUnitWeek
+- MonitorScheduleUnitMonth
+- MonitorScheduleUnitYear
+
+```go
+// Create a monitor config object
+monitorConfig := &sentry.MonitorConfig{
+	Schedule:      monitorSchedule,
+	MaxRuntime:    2,
+	CheckInMargin: 1,
+}
+
+// 🟡 Notify Sentry your job is running:
+checkinId := sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusInProgress,
+	},
+	monitorConfig,
+)
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusOK,
+	},
+	monitorConfig,
+)
+```
