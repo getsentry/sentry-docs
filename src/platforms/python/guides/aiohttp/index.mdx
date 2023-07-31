@@ -58,6 +58,8 @@ web.run_app(app)
 
 - All exceptions leading to an Internal Server Error are reported.
 
+- AIOHTTP client requests will be instrumented.
+
 - _The AIOHTTP integration currently does not attach the request body._ See
   [the relevant GitHub
   issue](https://github.com/getsentry/sentry-python/issues/220).
@@ -65,6 +67,8 @@ web.run_app(app)
 - Logging with any logger will create breadcrumbs when
   the [Logging](/platforms/python/guides/logging/)
   integration is enabled (done by default).
+
+- GraphQL errors encountered when using the AIOHTTP client will be captured.
 
 ## Options
 
@@ -82,3 +86,12 @@ You can pass the following keyword arguments to `AioHttpIntegration()`:
   - `<module_name>.hello` if you set `transaction_style="handler_name"`
 
   The default is `"handler_name"`.
+
+- `capture_graphql_errors`:
+
+  If enabled, the SDK will automatically create an error event whenever the response
+  to a request to an endpoint called `/graphql` contains an `errors` array. The
+  error event will contain the request as well as response content if the SDK has
+  been set up with `send_default_pii=True`.
+
+  The default is `True`. Set to `False` to stop capturing client GraphQL errors.
