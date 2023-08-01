@@ -4,15 +4,11 @@ import {getChild, getDataOrPanic} from '../helpers';
 
 type CreatePageArgs = Parameters<NonNullable<GatsbyNode['createPages']>>[0];
 
-export const createApiTutorials = async ({
-  actions,
-  graphql,
-  reporter,
-}: CreatePageArgs) => {
+export const createApiGuides = async ({actions, graphql, reporter}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
       query {
-        allFile(filter: {absolutePath: {}, relativePath: {in: ["tutorials/index.mdx", "tutorials/create-auth-token.mdx", "tutorials/teams-tutorial.mdx"]}, dir: {regex: "/api/"}}) {
+        allFile(filter: {absolutePath: {}, relativePath: {in: ["guides/index.mdx", "guides/create-auth-token.mdx", "guides/teams-tutorial.mdx"]}, dir: {regex: "/api/"}}) {
           nodes {
             id
             childMarkdownRemark {
