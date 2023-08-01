@@ -73,6 +73,13 @@ For example, the following stack traces:
   at io.sentry.HubAdapter.captureEvent (HubAdapter.java:29)
 ```
 
+## Kotlin
+
+Stack trace elements referring to Kotlin inline functions from files different than the call site are incorrect, due to how they are compiled.
+A .class file with inline functions contains code from many source files. When the JVM generates a stacktrace, it will contain a different line number, because it doesn't substitute the class and line in which the error occurred with the original file and line number.
+As a result, if an exception is thrown inside an inline function, the line number of the stack trace of the Exception could be wrong.
+This is a missing feature in the JVM itself, so "Sentry can't fix this".
+
 ## NDK
 
 If you're using a version of `sentry-android` before 5.0, due to current limitations in how `sentry-native` works, it cannot identify native libraries loaded directly from `.apk` files. Instead, it needs to have access to the extracted libraries on the file system.
