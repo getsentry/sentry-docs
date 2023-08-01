@@ -20,6 +20,7 @@ const query = graphql`
         caseStyle
         supportLevel
         fallbackPlatform
+        type
         guides {
           key
           name
@@ -29,6 +30,7 @@ const query = graphql`
           caseStyle
           supportLevel
           fallbackPlatform
+          type
         }
       }
     }
