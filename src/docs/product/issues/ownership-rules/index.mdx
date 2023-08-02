@@ -16,6 +16,8 @@ description: "Learn how to automatically assign issues to their respective owner
 
 Sentry offers multiple ways to define the "ownership" of an issue. With ownership defined, we can automatically assign issues and send alerts to the owner. Sentry defines ownership with _code owners_ and _ownership rules_. Code owners functionality lets you import your [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) or [GitLab](https://docs.gitlab.com/ee/user/project/code_owners.html) CODEOWNERS file, and then we assign issues according to those file paths. Ownership rules allow you to override the assignments based on code owners and provide advanced matcher types (for example, urls and tags). These rules can also match on the file paths of files in the stack trace, URL of the request, or event tags.
 
+If a user manually assigns an issue after it has been automatically assigned by Sentry, future auto-assignment will be turned off for that issue.
+
 ## Methods
 
 Ownership rules and code owners are matched against individual events in an issue. This matching is relied upon in other areas of [sentry.io](https://sentry.io), as described in the following sections.
@@ -116,7 +118,12 @@ Create external team/user mappings for your GitHub/GitLab teams and users by nav
 If you have both ownership rules and code owners, Sentry evaluates an event’s in-app frames against the rules in the following order:
 
 1. Code owners, top-to-bottom
+
+   a. If there are multiple owners in the rule, left-to-right
+
 2. Ownership rules, top-to-bottom
+
+   a. If there are multiple owners in the rule, left-to-right
 
 After evaluation, the last rule matching returns the assignment. The order of the event’s stacktrace filepaths is irrelevant in determining the rule assignment.
 
@@ -131,7 +138,7 @@ codeowners:*.js                    #ecosystem
 **Ownership Rules:**
 
 ```
-path:*.js                          #ecosystem
+path:*.js                          #ecosystem #frontend
 path:sentry/api/*                  #api
 url:*subscription*                 #billing
 path:dist/frontend/components/*               #frontend
@@ -139,7 +146,10 @@ path:dist/frontend/components/*               #frontend
 
 When Sentry receives an event with a stacktrace filepath: `dist/frontend/components/sidebar.js`, we:
 
-1. Evaluate against the code owners top-to-bottom; we get one match.
+1. Evaluate against the code owners top-to-bottom; we get one match with two owners in the rule.
+
+   a. Evaluate the rule left-to-right; we choose the first owner.
+
 2. Evaluate against the ownership rules top-to-bottom; we get two matches.
 
 The matches, in order, are:
