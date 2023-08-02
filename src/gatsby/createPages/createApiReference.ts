@@ -12,7 +12,7 @@ export const createApiReference = async ({
   const data = await getDataOrPanic(
     `
       query {
-        allFile(filter: {absolutePath: {}, relativePath: {in: ["permissions.mdx", "auth.mdx", "index.mdx", "requests.mdx", "pagination.mdx", "ratelimits.mdx", "create-auth-token.mdx", "teams-tutorial.mdx"]}, dir: {regex: "/api/"}}) {
+        allFile(filter: {absolutePath: {}, relativePath: {in: ["permissions.mdx", "auth.mdx", "index.mdx", "requests.mdx", "pagination.mdx", "ratelimits.mdx"]}, dir: {regex: "/api/"}}) {
           nodes {
             id
             childMarkdownRemark {
