@@ -1,0 +1,64 @@
+---
+title: Working on Getting Started Docs
+---
+
+## Introduction
+
+This guide serves to explain the workings of the new structure and provides step-by-step instructions on adding and updating the Getting Started documents.
+
+## Structure
+
+The structure for the documentation is built on React and follows the following format:
+
+1. **Install**: Provide instructions on how to install the language/framework. It usually contains a simple code snippet with the installation command.
+2. **Configure**: Explain how to configure the language/framework after installation. This section includes an example of a code snippet already providing the DSN of the created project.
+3. **Verify**: This section should provide instructions and a code snippet demonstrating how users can simulate an error in their application to verify the successful setup of both installation and configuration steps.
+4. **Next Steps:** Other configurations, usually for features, that users might be interested in.
+
+## Adding documentation for a platform
+
+### Language
+
+1. Create a new folder with the name of the language under [gettingStartedDocs](https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs).
+2. Inside the folder create an `index.tsx` file.
+3. Copy the content from another file, such as [react.tsx](https://github.com/getsentry/sentry/blob/master/static/app/gettingStartedDocs/javascript/react.tsx), and adapt or update its content to match the requirements of the current platform. Ensure to give the function of the new file, an appropriate name.
+4. Update the [MIGRATED_GETTING_STARTD_DOCS](https://github.com/getsentry/sentry/blob/c2d4d527dcf640b616c73921a1294834720c76bd/src/sentry/models/project.py#L54) list by adding the slug of the platform that is currently being added. This will avoid the backend error “Platform invalid” to be thrown. We can rethink this validation afterward.
+5. Makes sure that the [platformicons](https://github.com/getsentry/platformicons) repository contains the icon for the language you are adding.
+6. Update the list [platformIntegrations](https://github.com/getsentry/sentry/blob/0f1dab84775d0d4c7eebbd167dce5835e7a4ee8c/static/app/data/platforms.tsx#L64) with a new entry for your language. This entry is responsible for displaying the language icon in the “Select the platform you want to monitor/Choose your platform” list
+7. To ensure proper functionality, create `index.spec.tsx` file with unit tests for the new platform. You can refer to one of the existing tests, for example, [react.spec.tsx](https://github.com/getsentry/sentry/blob/master/static/app/gettingStartedDocs/javascript/react.spec.tsx), copy its content, and modify it accordingly to suit the newly migrated platform.
+8. Finally, before concluding, please run Sentry locally (it has to be locally due to the backend changed described in step number 4) and perform a manual test to ensure that the getting started documentation renders correctly in both the onboarding process of a new organization and in the project creation flow. This step is essential for verifying the proper functioning and visual appearance of the documentation.
+
+### Framework
+
+1. Locate the framework's language folder within [gettingStartedDocs](https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs).
+2. Within the folder, create a file named after the framework's slug, and use the `.tsx` extension
+3. Copy the content from another file, such as [react.tsx](https://github.com/getsentry/sentry/blob/master/static/app/gettingStartedDocs/javascript/react.tsx), and adapt or update its content to match the requirements of the current platform. Ensure to give the function of the new file, an appropriate name.
+4. Update the [MIGRATED_GETTING_STARTD_DOCS](https://github.com/getsentry/sentry/blob/c2d4d527dcf640b616c73921a1294834720c76bd/src/sentry/models/project.py#L54) list by adding the slug of the platform that is currently being added. This will avoid the backend error “Platform invalid” to be thrown. We can rethink this validation afterward.
+5. Makes sure that the [platformicons](https://github.com/getsentry/platformicons) repository contains the icon for the framework you are adding.
+6. Update the list [platformIntegrations](https://github.com/getsentry/sentry/blob/0f1dab84775d0d4c7eebbd167dce5835e7a4ee8c/static/app/data/platforms.tsx#L64) with a new entry for your framework. This entry is responsible for displaying the framework icon in the “Select your platform” list.
+7. To ensure proper functionality, create a test file named after the framework's slug, and use the `.spec.tsx` extension. This file shall contain unit tests for the newly created documentation. You can refer to one of the existing tests, for example, [react.spec.tsx](https://github.com/getsentry/sentry/blob/master/static/app/gettingStartedDocs/javascript/react.spec.tsx), copy its content, and modify it accordingly to suit the newly migrated platform.
+8. Finally, before concluding, please run Sentry locally (it has to be locally due to the backend changed described in step number 4) and perform a manual test to ensure that the getting started documentation renders correctly in both the onboarding process of a new organization and in the project creation flow. This step is essential for verifying the proper functioning and visual appearance of the documentation.
+
+## Editing documentation of a platform
+
+### Language
+
+1. Locate the language folder within [gettingStartedDocs](https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs).
+2. Update the file `index.tsx` with the necessary changes.
+3. You might need to update the tests present in the file `index.spec.tsx`
+4. Finally, before concluding, please run Sentry locally or use the command `yarn dev-ui` and perform a manual test to ensure that the getting started documentation renders correctly in both the onboarding process of a new organization and in the project creation flow. This step is essential for verifying the proper functioning and visual appearance of the documentation.
+
+### Framework
+
+1. Locate the framework's language folder within [gettingStartedDocs](https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs).
+2. Within the folder, find the file named after the framework's slug and update it with the necessary changes.
+3. You might need to update the tests present in the file named after the framework’s slug with the extension `.spec.tsx`
+4. Finally, before concluding, please run Sentry locally or use the command `yarn dev-ui` and perform a manual test to ensure that the getting started documentation renders correctly in both the onboarding process of a new organization and in the project creation flow. This step is essential for verifying the proper functioning and visual appearance of the documentation.
+
+## Notes
+
+- When documenting a new language/framework, use the "Install," "Configure," and "Verify" structure. Include extra information only if essential for new users to get started. Onboarding docs should be straightforward, while advanced configurations belong to the full documentation on the [docs website](https://docs.sentry.io/). Keep it simple for a smooth user experience.
+- You may encounter some documentation that doesn't fit the structure described above, but rest assured, we are actively working on consolidating them.
+- To accommodate diverse documentation during migration, we have implemented a dynamic steps structure. Sometimes, you might question whether to use "additionalInformation" or "description" to explain certain aspects. If the extra information covers everything in the block and “description” is already taken, use "additionalInformation", otherwise, use "description." We are actively working on simplifying this structure to eliminate confusion in the near future.
+- Currently, not all documentation contains “Next Steps” and that is fine.
+- The Getting Started docs are rendered during new organization onboarding and project creation flow
