@@ -49,53 +49,12 @@ xcode-select --install
 ### Brew
 
 Install [Homebrew](http://brew.sh), and then run the following command to install
-the various system packages (like Docker, openssl, ...) as listed in Sentry's [Brewfile](https://github.com/getsentry/sentry/blob/master/Brewfile).
+the various system packages (like docker, openssl, ...) as listed in Sentry's [Brewfile](https://github.com/getsentry/sentry/blob/master/Brewfile).
 
 ```shell
 brew bundle --verbose
 ```
 
-### Docker (Mac specific)
-
-Docker was installed by `brew bundle`.
-
-On macOS, `docker` (which brew has already installed for you under `/Applications/Docker.app`) needs some manual
-intervention. You can run this command to set it up automatically for you:
-
-```shell
-open -g -a Docker.app
-```
-
-You should soon see the Docker icon in your macOS menubar. Docker will automatically run on system restarts,
-so this should be the only time you do this.
-
-#### Increasing the memory limit
-
-It's recommended to increase the Docker memory limit to something higher than the default (2048MB).
-
-On Docker Desktop, you can adjust the memory limits by going to:
-
-`[Cog Symbol] > Preferences > Resources > Advanced > Memory`
-
-Or you can change the memory limit via the CLI:
-
-```shell
-# quit Docker if its running
-osascript -e 'quit app "Docker"'
-
-# check what the default is configured currently
-cat /Users/`id -un`/Library/Group\ Containers/group.com.docker/settings.json | grep "memoryMiB"
-
-# increase configured memory to something reasonable
-sed -i .bak 's/"memoryMiB":.*/"memoryMiB": 7168,/g' /Users/`id -un`/Library/Group\ Containers/group.com.docker/settings.json
-
-# check configuration
-cat /Users/`id -un`/Library/Group\ Containers/group.com.docker/settings.json | grep "memoryMiB"
-
-# start up docker with next steps
-```
-
-You can verify that Docker is running by running `docker ps` in your terminal.
 
 ## Python
 
@@ -213,7 +172,7 @@ Once this command has finished you'll have Sentry installed in development mode 
 
 If the command is done you should see a "Finished bootstrapping!" message.
 
-**Note**: This command is meant to be run only once. If the command fails please remove all existing Docker containers, all Docker volumes, and `~/.sentry/` and try running it again.
+**Note**: This command is meant to be run only once. If the command fails please remove all existing Docker containers and all Docker volumes with `sentry devservices rm`, and `~/.sentry/` and try running it again.
 
 ### (Optional) Bringing your services up-to-date
 
@@ -495,23 +454,4 @@ sentry devservices up
 
 ```shell
 docker ps
-```
-
---
-
-**Problem:** If you see the following error about Kafka
-
-```shell
-%3|1687815512.814|FAIL|rdkafka#producer-1| [thrd:127.0.0.1:9092/bootstrap]: 127.0.0.1:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
-```
-
-**Solution:** You need to start up additional services with:
-
-```shell
-# In the file ~/.sentry/sentry.conf.py
-# Insert this line at the bottom
-SENTRY_EVENTSTREAM = 'sentry.eventstream.kafka.KafkaEventStream'
-
-# You should see Kafka and Zookeeper
-sentry devservices down && sentry devservices up
 ```
