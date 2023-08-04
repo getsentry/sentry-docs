@@ -1,0 +1,232 @@
+---
+title: Micro Frontend Support
+sidebar_order: 200
+keywords: ["micro frontend", "multiplexed transport", "module federation", "module metadata"]
+---
+
+If your frontend includes JavaScript bundles from multiple sources with
+differing release cycles, you may want to identify these or route events to
+those specific projects.
+
+## Identifying the source of errors
+
+The help identification of modules, we can inject metadata which can later
+be used to help identify which bundles were responsible for an error. This can
+be achieved using `@sentry/webpack-plugin` via the `_experiments.moduleMetadata`
+option.
+
+Requires version `2.5.0` or higher of `@sentry/webpack-plugin`.
+
+`moduleMetadata` can be any serializable data or alternatively a function that
+returns serializable data. If you supply a function it will be passed an object
+containing the `org`, `project`, and `release` strings.
+
+```javascript
+// webpack.config.js
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  devtool: "source-map",
+  plugins: [
+    sentryWebpackPlugin({
+      /* Other plugin config */
+      _experiments: {
+        moduleMetadata: ({ org, project, release }) => {
+          return { team: 'frontend', release },
+        }
+      },
+    }),
+  ],
+};
+```
+
+### `ModuleMetadata` Integration
+
+Requires SDK version `7.59.0` or higher.
+
+Once metadata has been injected into modules, the `ModuleMetadata` integration
+can be used to look up that metadata and attach it to stack frames with
+matching file names. This metadata is then available in other integrations or in
+the `beforeSend` callback as the `module_metadata` property on each
+`StackFrame`. This can be used to identify which bundles may be responsible
+for an error and used to tag or route events.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { ModuleMetadata } from "@sentry/core";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [ new ModuleMetadata() ]
+  beforeSend: (event) => {
+    const frames = event?.exception?.values?.[0].stacktrace.frames || [];
+    // Get all team names in the stack frames
+    const teams = frames.filter(frame => frame.module_metadata && frame.module_metadata.team)
+                        .map(frame => frame.module_metadata.team);
+    // If there are teams, add them as extra data to the event
+    if(teams.length > 0){
+      event.extra = {
+        ...event.extra,
+        teams
+      };
+    }
+
+    return event;
+  },
+});
+
+Sentry.captureException(new Error("oh no!"));
+```
+
+## Routing events to different projects
+
+Once you've identified which module or modules are likely to be responsible for
+an error, you may want to send these events to different Sentry projects. The
+multiplexed transport can route events to different Sentry projects based on the
+attributes on an event.
+
+Requires SDK version `7.50.0` or higher.
+
+The example below uses a `feature` tag to determine which Sentry project to
+send the event to. If the event does not have a `feature` tag, we send it to the
+fallback DSN defined in `Sentry.init`.
+
+```typescript
+import { captureException, init, makeFetchTransport } from "@sentry/browser";
+import { makeMultiplexedTransport } from "@sentry/core";
+
+function dsnFromFeature({ getEvent }) {
+  const event = getEvent();
+  switch (event?.tags?.feature) {
+    case "cart":
+      return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
+    case "gallery":
+      return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
+    default:
+  }
+  return [];
+}
+
+init({
+  dsn: "__FALLBACK_DSN__",
+  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromFeature),
+});
+
+captureException(new Error("oh no!"), (scope) => {
+  scope.setTag("feature", "cart");
+  return scope;
+});
+```
+
+You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to.
+
+### `makeMultiplexedTransport` API
+
+`makeMultiplexedTransport` takes an instance of a transport (we recommend
+`makeFetchTransport`) and a matcher function that returns an array of objects
+containing the DSN and optionally the release.
+
+```typescript
+type EnvelopeItemType =
+  | "client_report"
+  | "user_report"
+  | "session"
+  | "sessions"
+  | "transaction"
+  | "attachment"
+  | "event"
+  | "profile"
+  | "replay_event"
+  | "replay_recording"
+  | "check_in";
+
+interface MatchParam {
+  /** The envelope to be sent */
+  envelope: Envelope;
+  /**
+   * A function that returns an event from the envelope if one exists. You can optionally pass an array of envelope item
+   * types to filter by - only envelopes matching the given types will be returned.
+   *
+   * @param types Defaults to ['event'] (only error events will be returned)
+   */
+  getEvent(types?: EnvelopeItemType[]): Event | undefined;
+}
+
+interface RouteTo {
+  dsn: string;
+  release?: string;
+}
+
+type Matcher = (param: MatchParam) => RouteTo[];
+
+declare function makeMultiplexedTransport(
+  transport: (options: TransportOptions) => Transport,
+  matcher: Matcher
+): (options: TransportOptions) => Transport;
+```
+
+The matcher function runs after all client processing (`beforeSend` option, event processors from integrations).
+
+## Combining `ModuleMetadata` and `makeMultiplexedTransport`
+
+`ModuleMetadata` and `makeMultiplexedTransport` can be used together to route
+events to different Sentry projects based on the module where the error
+occurred.
+
+Ensure your modules have injected metadata containing the project DSN and release:
+```javascript
+// webpack.config.js
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  devtool: "source-map",
+  plugins: [
+    sentryWebpackPlugin({
+      _experiments: {
+        moduleMetadata: ({ release }) => ({ dsn: '__MODULE_DSN__', release }),
+      },
+    }),
+  ],
+};
+```
+Then when you initialize Sentry:
+- Add the `ModuleMetadata` integration so metadata is attached to stack frames
+- Add a `beforeSend` callback that sets an `extra` property with the target DSN/release
+- Create a transport that routes events when the `extra` property is present
+
+```javascript
+import { init, makeFetchTransport } from "@sentry/browser";
+import { makeMultiplexedTransport, ModuleMetadata } from "@sentry/core";
+
+const EXTRA_KEY = 'ROUTE_TO';
+
+const transport = makeMultiplexedTransport(makeFetchTransport, args => {
+  const event = args.getEvent();
+  if (event && event.extra && EXTRA_KEY in event.extra && Array.isArray(event.extra[EXTRA_KEY])) {
+    return event.extra[EXTRA_KEY];
+  }
+  return [];
+});
+
+init({
+  dsn: '__DEFAULT_DSN__',
+  integrations: [new ModuleMetadata()],
+  transport,
+  beforeSend: (event) => {
+    if (event?.exception?.values?.[0].stacktrace.frames) {
+      const frames = event.exception.values[0].stacktrace.frames;
+      // Find the last frame with module metadata containing a DSN
+      const routeTo = frames.findLast(frame => frame.module_metadata && frame.module_metadata.dsn) || [];
+
+      if (routeTo.length) {
+        event.extra = {
+          ...event.extra,
+          EXTRA_KEY: routeTo,
+        };
+      }
+    }
+
+    return event;
+  }
+})
+```
