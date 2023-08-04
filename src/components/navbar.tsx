@@ -33,6 +33,11 @@ export function Navbar({platforms}: Props) {
             </SmartLink>
           </Nav.Item>
           <Nav.Item>
+            <SmartLink className="nav-link" to="/redoc/">
+              Redoc Demo
+            </SmartLink>
+          </Nav.Item>
+          <Nav.Item>
             <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
           </Nav.Item>
           <SandboxOnly>
