@@ -10,6 +10,7 @@ import {Search} from 'sentry-docs/components/search';
 import {SEO} from 'sentry-docs/components/seo';
 import {SmartLink} from 'sentry-docs/components/smartLink';
 import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import 'sentry-docs/css/screen.scss';
 
@@ -38,13 +39,14 @@ function IndexPage() {
   const platformList = usePlatformList();
 
   let totalPlatformCount = 0;
-  const visiblePlatforms = [];
+  const visiblePlatforms: Array<Platform | PlatformGuide> = [];
+
   platformList.forEach(platform => {
     totalPlatformCount += 1;
     if (HIGHLIGHTED_PLATFORMS.indexOf(platform.key) !== -1) {
       visiblePlatforms.push(platform);
     }
-    platform.guides.forEach(guide => {
+    platform.guides?.forEach(guide => {
       totalPlatformCount += 1;
       if (HIGHLIGHTED_PLATFORMS.indexOf(guide.key) !== -1) {
         visiblePlatforms.push(guide);

@@ -5,9 +5,24 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 ## Install
 
-Add the [Sentry Android Gradle plugin](/platforms/android/gradle/) to your `app` module:
+Add the [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) to your `app` module:
 
 ```groovy {filename:app/build.gradle}
 plugins {
@@ -20,7 +35,7 @@ The plugin will automatically add the Sentry Android SDK to your app.
 
 ## Configure
 
-Configuration is done via the application `AndroidManifest.xml`. Under the hood Sentry uses a `ContentProvider` to initalize the SDK based on the values provided below. This way the SDK can capture important crashes and metrics right from the app start.
+Configuration is done via the application `AndroidManifest.xml`. Under the hood Sentry uses a `ContentProvider` to initialize the SDK based on the values provided below. This way the SDK can capture important crashes and metrics right from the app start.
 
 Here's an example config which should get you started:
 
@@ -63,7 +78,7 @@ addContentView(breakWorld, ViewGroup.LayoutParams(
 
 ## Next Steps
 
-- [Manual Configuration](/platforms/android/configuration/manual-init/): Customize the SDK initialization behavior.
-- [ProGuard/R8](/platforms/android/gradle/#proguardr8--dexguard): Deobfuscate and get readable stacktraces in your Sentry errors.
+- [Manual Configuration](/platforms/android/configuration/manual-init/#manual-initialization): Customize the SDK initialization behavior.
+- [ProGuard/R8](/platforms/android/configuration/gradle/#proguardr8--dexguard): Deobfuscate and get readable stacktraces in your Sentry errors.
 - [Jetpack Compose](/platforms/android/configuration/integrations/jetpack-compose/): Learn about our first class integration with Jetpack Compose.
-- [Source Context](/platforms/android/source-context/): See your source code as part of your stacktraces in Sentry.
+- [Source Context](/platforms/android/enhance-errors/source-context/): See your source code as part of your stacktraces in Sentry.

@@ -5,6 +5,21 @@ support_level: production
 type: language
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 Sentry captures data by using an SDK within your application’s runtime.
 
 > If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
@@ -17,7 +32,7 @@ npx @sentry/wizard -s -i reactNative
 
 [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [setup manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer.
 
-- iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. ```
+- iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps.
 - Android Specifics: We hook into Gradle for the source map build process. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry. If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build by setting `org.gradle.configureondemand=false` or remove it.
 
 ### Initialize the SDK

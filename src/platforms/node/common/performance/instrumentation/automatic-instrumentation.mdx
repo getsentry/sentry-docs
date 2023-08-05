@@ -15,9 +15,15 @@ Read more about [Custom Instrumentation](./../custom-instrumentation/) to learn 
 
 <Note>
 
-If you’re adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service’s performance characteristics maintain expectations.
+If you're adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service's performance characteristics maintain expectations.
+
+Note, that calling `Sentry.autoDiscoverNodePerformanceMonitoringIntegrations` will degrade startup performance of your app due to file I/O operations.
+This is especially a concern in Serverless functions.
+We recommend manually adding <PlatformLink to="/performance/database" >database integrations</PlatformLink> of your choice manually (see example below).
 
 </Note>
+
+<SignInNote />
 
 ```javascript
 const Sentry = require("@sentry/node");
@@ -28,7 +34,11 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // Automatically instrument Node.js libraries and frameworks
+    // (This function is slow because of file I/O, consider manually adding additional integrations instead)
     ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+    // Or manually add integrations of your choice. For example:
+    Sentry.Integrations.Apollo(),
+    Sentry.Integraionts.Postgres(),
   ],
 
   // We recommend adjusting this value in production, or using tracesSampler

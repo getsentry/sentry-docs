@@ -6,7 +6,7 @@ import fs from 'fs';
 
 import jsdom from 'jsdom';
 
-import PlatformRegistry from '../shared/platformRegistry';
+import {buildPlatformRegistry, PlatformRegistry} from '../shared/platformRegistry';
 
 const rmDirSync = (dirPath: string) => {
   let files;
@@ -59,9 +59,6 @@ export default async function onPostBuild({graphql}) {
     }
   );
 
-  const platformRegistry = new PlatformRegistry();
-  await platformRegistry.init();
-
   const nodes = results.data.allFile.edges.map(e => e.node.childMarkdownRemark);
   if (!nodes.length) {
     const msg = 'No platform data found for wizard!';
@@ -72,6 +69,8 @@ export default async function onPostBuild({graphql}) {
     console.warn(msg);
     return;
   }
+
+  const platformRegistry = await buildPlatformRegistry();
 
   await writeJson(output, nodes, platformRegistry);
 }
@@ -160,7 +159,7 @@ const writeJson = (path: string, nodes, platformRegistry: PlatformRegistry) => {
       categories: [],
     };
 
-    const platform = platformRegistry.get(key);
+    const platform = platformRegistry.platformGuideMapping[key];
     if (platform) {
       data.name = platform.title;
       data.aliases = platform.aliases || [];

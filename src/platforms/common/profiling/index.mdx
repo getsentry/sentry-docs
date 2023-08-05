@@ -7,6 +7,7 @@ supported:
   - go
   - python
   - ruby
+  - react-native
 notSupported:
   - unity
   - dart
@@ -14,7 +15,6 @@ notSupported:
   - native
   - javascript
   - javascript.vue
-  - react-native
   - dotnet
   - java
   - java.spring-boot
@@ -28,6 +28,16 @@ notSupported:
   - rust
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
+
+<PlatformSection supported={["react-native"]}>
+
+<Note>
+
+React Native Profiling is currently in alpha. Alpha features are still in progress and may have bugs. We recognize the irony.
+
+</Note>
+
+</PlatformSection>
 
 <PlatformSection supported={["go"]}>
 
@@ -57,11 +67,13 @@ Profiling depends on Sentry’s performance monitoring product being enabled bef
 
 <PlatformSection supported={["apple"]}>
 
+<SignInNote />
+
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
-    options.dsn = "___DSN___"
+    options.dsn = "___PUBLIC_DSN___"
     options.tracesSampleRate = 1.0
 }
 ```
@@ -70,7 +82,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___DSN___";
+    options.dsn = @"___PUBLIC_DSN___";
     options.tracesSampleRate = @1.0;
 }];
 ```
@@ -83,14 +95,27 @@ In `AndroidManifest.xml`:
 
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="___DSN___" />
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
 ```
 
 </PlatformSection>
 
+<PlatformSection supported={["react-native"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  tracesSampleRate: 1.0,
+});
+```
+
+</PlatformSection>
+
 <PlatformSection supported={["go"]}>
+
+<SignInNote />
 
 ```go
 err := sentry.Init(sentry.ClientOptions{
@@ -105,9 +130,11 @@ err := sentry.Init(sentry.ClientOptions{
 
 <PlatformSection supported={["python"]}>
 
+<SignInNote />
+
 ```python
 sentry_sdk.init(
-  dsn="___DSN___",
+  dsn="___PUBLIC_DSN___",
   traces_sample_rate=1.0,
 )
 ```
@@ -115,6 +142,8 @@ sentry_sdk.init(
 </PlatformSection>
 
 <PlatformSection supported={["ruby"]}>
+
+<SignInNote />
 
 ```ruby
 Sentry.init do |config|
@@ -143,11 +172,13 @@ iOS profiling is available starting in SDK version `8.3.1`.
 
 </Note>
 
+<SignInNote />
+
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
-    options.dsn = "___DSN___"
+    options.dsn = "___PUBLIC_DSN___"
     options.tracesSampleRate = 1.0 // tracing must be enabled for profiling
     options.profilesSampleRate = 1.0 // see also `profilesSampler` if you need custom sampling logic
 }
@@ -157,7 +188,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___DSN___";
+    options.dsn = @"___PUBLIC_DSN___";
     options.tracesSampleRate = @1.0; // tracing must be enabled for profiling
     options.profilesSampleRate = @1.0; // see also `profilesSampler` if you need custom sampling logic
 }];
@@ -181,9 +212,11 @@ Android profiling is available starting in SDK version `6.16.0`.
 
 In `AndroidManifest.xml`:
 
+<SignInNote />
+
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="___DSN___" />
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
     <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
 </application>
@@ -205,6 +238,8 @@ Python profiling is available starting in SDK version `1.18.0`.
 
 </Note>
 
+<SignInNote />
+
 ```python
 import sentry_sdk
 
@@ -213,7 +248,7 @@ def profiles_sampler(sampling_context):
     # return a number between 0 and 1 or a boolean
 
 sentry_sdk.init(
-    dsn="___DSN___",
+    dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
 
     # To set a uniform sample rate
@@ -237,14 +272,40 @@ The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to 
 
 The feature was experimental prior to version `1.17.0`. To update to the latest SDK, remove `profiles_sample_rate` from `_experiments` and set it in the top-level options.
 
+<SignInNote />
+
 ```python
 sentry_sdk.init(
-    dsn="___DSN___",
+    dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
     _experiments={
       "profiles_sample_rate": 1.0,  # for versions before 1.17.0
     },
 )
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["react-native"]}>
+
+<Note>
+
+Profiling for React Native is available in alpha in SDK versions `5.8.0` and above.
+
+</Note>
+
+To enable profiling, set the `profilesSampleRate`:
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  tracesSampleRate: 1.0,
+  _experiments: {
+    // profilesSampleRate is relative to tracesSampleRate.
+    // Here, we'll capture profiles for 100% of transactions.
+    profilesSampleRate: 1.0,
+  },
+});
 ```
 
 </PlatformSection>
@@ -258,6 +319,8 @@ Go Profiling alpha is available since SDK version `0.22.0`.
 </Note>
 
 To enable profiling, set the `ProfilesSampleRate`:
+
+<SignInNote />
 
 ```go
 err := sentry.Init(sentry.ClientOptions{
@@ -293,11 +356,13 @@ gem 'sentry-ruby'
 
 Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your sentry initializer.
 
+<SignInNote />
+
 ```ruby
 # config/initializers/sentry.rb
 
 Sentry.init do |config|
-  config.dsn = "___DSN___"
+  config.dsn = "___PUBLIC_DSN___"
   config.traces_sample_rate = 1.0
   config.profiles_sample_rate = 1.0
 end

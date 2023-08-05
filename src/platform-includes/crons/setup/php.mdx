@@ -4,37 +4,30 @@ Check-in monitoring allows you to track a job's progress by completing two check
 
 ```php
 // 🟡 Notify Sentry your job is running:
-$event = Event::createCheckIn();
-$checkIn = new CheckIn(
-    monitorSlug: '<monitor-slug>',
-    status: CheckInStatus::inProgress(),
+$checkInId = \Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
+    status: CheckInStatus::inProgress()
 );
-$event->setCheckIn($checkIn);
-SentrySdk::getCurrentHub()->captureEvent($event);
 
 // Execute your scheduled task here...
 
 // 🟢 Notify Sentry your job has completed successfully:
-$event = Event::createCheckIn();
-$event->setCheckIn(new CheckIn(
-    monitorSlug: '<monitor-slug>',
+\Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
     status: CheckInStatus::ok(),
-    id: $checkIn->getId(),
-));
-SentrySdk::getCurrentHub()->captureEvent($event);
+    checkInId: $checkInId,
+);
 ```
 
 If your job execution fails, you can notify Sentry about the failure:
 
 ```php
 // 🔴 Notify Sentry your job has failed:
-$event = Event::createCheckIn();
-$event->setCheckIn(new CheckIn(
-    monitorSlug: '<monitor-slug>',
-    status: CheckInStatus::error(),
-    id: $checkIn->getId(),
-));
-SentrySdk::getCurrentHub()->captureEvent($event);
+\Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
+    status: CheckInStatus::error()
+    checkInId: $checkInId,
+);
 ```
 
 ## Heartbeat
@@ -45,32 +38,22 @@ Heartbeat monitoring notifies Sentry of a job's status through one check-in. Thi
 // Execute your scheduled task...
 
 // 🟢 Notify Sentry your job completed successfully:
-$event = Event::createCheckIn();
-$checkIn = new CheckIn(
-    monitorSlug: '<monitor-slug>',
+\Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
     status: CheckInStatus::ok(),
-    release: '1.0.0', // Optional release of your application
-    environment: 'production', // Optional environment your cron is running on
     duration: 10, // Optional duration in seconds
 );
-$event->setCheckIn($checkIn);
-SentrySdk::getCurrentHub()->captureEvent($event);
 ```
 
 If your job execution fails, you can:
 
 ```php
 // 🔴 Notify Sentry your job has failed:
-$event = Event::createCheckIn();
-$event->setCheckIn(new CheckIn(
-    monitorSlug: '<monitor-slug>',
+\Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
     status: CheckInStatus::error(),
-    id: $checkIn->getId(),
-    release: '1.0.0', // Optional release of your application
-    environment: 'production', // Optional environment your cron is running on
     duration: 10, // Optional duration in seconds
-));
-SentrySdk::getCurrentHub()->captureEvent($event);
+);
 ```
 
 ## Upserting Cron Monitors
@@ -80,10 +63,10 @@ rather than [creating and configuring them in Sentry.io](https://sentry.io/crons
 
 ```php
 // Create a crontab schedule object (every 10 minutes)
-$monitorSchedule = MonitorSchedule::crontab('*/10 * * * *');
+$monitorSchedule = \Sentry\MonitorSchedule::crontab('*/10 * * * *');
 
 // Or create an interval schedule object (every 10 minutes)
-$monitorSchedule = MonitorSchedule::interval(10, MonitorScheduleUnit::minute());
+$monitorSchedule = \Sentry\MonitorSchedule::interval(10, MonitorScheduleUnit::minute());
 ```
 
 Supported units are:
@@ -97,7 +80,7 @@ Supported units are:
 
 ```php
 // Create a config object
-$monitorConfig = new MonitorConfig(
+$monitorConfig = new \Sentry\MonitorConfig(
     $monitorSchedule,
     checkinMargin: 5, // Optional check-in margin in minutes
     maxRuntime: 15, // Optional max runtime in minutes
@@ -105,28 +88,18 @@ $monitorConfig = new MonitorConfig(
 );
 
 // 🟡 Notify Sentry your job is running:
-$event = Event::createCheckIn();
-$checkIn = new CheckIn(
-    monitorSlug: '<monitor-slug>',
+$checkInId = \Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
     status: CheckInStatus::inProgress(),
-    release: '1.0.0', // Optional release of your application
-    environment: 'production', // Optional environment your cron is running on
     monitorConfig: $monitorConfig,
 );
-$event->setCheckIn($checkIn);
-SentrySdk::getCurrentHub()->captureEvent($event);
 
 // Execute your scheduled task here...
 
 // 🟢 Notify Sentry your job has completed successfully:
-$event = Event::createCheckIn();
-$event->setCheckIn(new CheckIn(
-    monitorSlug: '<monitor-slug>',
-    status: CheckInStatus::ok(),
-    id: $checkIn->getId(),
-    release: '1.0.0', // Optional release of your application
-    environment: 'production', // Optional environment your cron is running on
-    monitorConfig: $monitorConfig,
-));
-SentrySdk::getCurrentHub()->captureEvent($event);
+\Sentry\captureCheckIn(
+    slug: '<monitor-slug>',
+    status: CheckInStatus::inProgress(),
+    checkInId: $checkInId,
+);
 ```

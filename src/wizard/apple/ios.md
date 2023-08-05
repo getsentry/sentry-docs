@@ -5,6 +5,21 @@ support_level: production
 type: language
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 ## Install
 
 We recommend installing the SDK with Swift Package Manager (SPM), but we also support [alternate installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project using SPM, open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the Git repo url in the top right search field:
@@ -96,7 +111,7 @@ SentrySDK.start { options in
     options.attachViewHierarchy = true
     options.enablePreWarmedAppStartTracing = true
     options.enableMetricKit = true
-    options.enableTimeToFullDisplay = true
+    options.enableTimeToFullDisplayTracing = true
     options.swiftAsyncStacktraces = true
 }
 ```
