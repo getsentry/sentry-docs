@@ -1,0 +1,34 @@
+You can create your own event processors by implementing the `ISentryEventProcessor` interfact. You can also create custom processors for transactions by implementing the `ISentryTransactionProcessor`.
+
+```csharp
+using Sentry;
+using Sentry.Extensibility;
+
+public class CustomEventProcessor : ISentryEventProcessor
+{
+    public SentryEvent? Process(SentryEvent @event)
+    {
+        // Add anything to the event here
+        // returning `null` will drop the event
+        return @event;
+    }
+}
+```
+
+There are multie ways of adding the event processors. Processors run on every event sent after they were added.
+Adding it to the options ensures the processor runs with every event after initialization
+
+```csharp
+options.AddEventProcessor(new CustomEventProcessor());
+```
+
+After adding it to the scope the processor applies to the current and following scopes
+```csharp
+SentrySdk.ConfigureScope(scope => scope.AddEventProcessor(new CustomEventProcessor()));
+```
+
+Event processors added to a local scope using `withScope` only apply to events captured inside that scope.
+
+```csharp
+SentrySdk.WithScope(scope => scope.AddEventProcessor(new CustomEventProcessor()));
+```
