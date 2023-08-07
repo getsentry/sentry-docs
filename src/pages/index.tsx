@@ -79,6 +79,11 @@ function IndexPage() {
                 </SmartLink>
               </Nav.Item>
               <Nav.Item>
+                <SmartLink className="nav-link" to="/redoc-api/">
+                  Redoc API
+                </SmartLink>
+              </Nav.Item>
+              <Nav.Item>
                 <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
               </Nav.Item>
               <SandboxOnly>
