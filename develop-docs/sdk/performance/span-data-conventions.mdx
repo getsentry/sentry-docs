@@ -16,7 +16,7 @@ Below describes the conventions for the Span interface for the `data` field on t
 | ----------------------------------- | ------ | ----------------------------------------------------- | ------------------ |
 | `http.query`                        | string | The Query string present in the URL.                  | `?foo=bar&bar=baz` |
 | `http.fragment`                     | string | The Fragments present in the URI (Browser SDKs only). | `#foo=bar`         |
-| `http.method`                       | string | The HTTP method used.                                 | `GET`              |
+| `http.request.method`               | string | The HTTP method used.                                 | `GET`              |
 | `http.response.status_code`         | int    | The status HTTP response.                             | `404`              |
 | `http.response_content_length`      | number | The encoded body size of the response.                | `123`              |
 | `http.decoded_response_body_length` | number | The decoded body size of the response.                | `456`              |
@@ -41,10 +41,15 @@ Below describes the conventions for the Span interface for the `data` field on t
 
 ## Database
 
-| Attribute      | Type   | Description                                                                                                                                                                                                                                                                                                                | Examples     |
-| -------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| `db.system`    | string | An identifier for the database management system (DBMS) product being used. See [OpenTelemetry docs for a list of well-known identifiers](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md#notes-and-well-known-identifiers-for-dbsystem).     | `postgresql` |
-| `db.operation` | string | The name of the operation being executed, e.g. the MongoDB command name such as findAndModify, or the SQL keyword. Based on [OpenTelemetry's call level db attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md#call-level-attributes) | `SELECT`     |
+| Attribute               | Type   | Description                                                                                                                                                                                                                                                                                                                | Examples      |
+| ----------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `db.system`             | string | An identifier for the database management system (DBMS) product being used. See [OpenTelemetry docs for a list of well-known identifiers](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md#notes-and-well-known-identifiers-for-dbsystem).     | `postgresql`  |
+| `db.operation`          | string | The name of the operation being executed, e.g. the MongoDB command name such as findAndModify, or the SQL keyword. Based on [OpenTelemetry's call level db attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md#call-level-attributes) | `SELECT`      |
+| `db.name`               | string | This attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).                                                                                                                                    | `customers`   |
+| `server.address`        | string | Name of the database host.                                                                                                                                                                                                                                                                                                 | `example.com` |
+| `server.port`           | int    | Logical server port number host.                                                                                                                                                                                                                                                                                           | `8080`        |
+| `server.socket.address` | string | Physical server IP address or Unix socket address. host.                                                                                                                                                                                                                                                                   | `10.5.3.2`    |
+| `server.socket.port`    | int    | Physical server port. host.                                                                                                                                                                                                                                                                                                | `16456`       |
 
 ## Web Server
 
@@ -59,7 +64,8 @@ Names that SDKs are still sending so we cannot remove them yet, but should not b
 
 | Attribute           | New name                            |
 | ------------------- | ----------------------------------- |
-| `method`            | `http.method`                       |
+| `method`            | `http.request.method`               |
+| `http.method`       | `http.request.method`               |
 | `Encoded Body Size` | `http.response_content_length`      |
 | `Decoded Body Size` | `http.decoded_response_body_length` |
 | `Transfer Size`     | `http.response_transfer_size `      |
