@@ -42,7 +42,7 @@ ___PUBLIC_DSN___
 
 ## Crash Reporter Client
 
-For Windows and Mac, [Crash Reporter Client](/platforms/unreal/setup-crashreporter/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
+For Windows and Mac, [Crash Reporter Client](/platforms/unreal/configuration/setup-crashreporter/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
 
 ### Include the UE4 Crash Reporter
 
