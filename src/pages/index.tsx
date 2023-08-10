@@ -113,12 +113,17 @@ function IndexPage() {
             </Nav>
           </div>
 
-          <h1>Sentry Documentation</h1>
+          <h1>Welcome to Sentry Docs</h1>
+          <center>
+            <p>
+              Sentry is a developer-first error tracking and performance monitoring
+              platform.
+            </p>
+          </center>
 
           <div className="index-search">
             <Search autoFocus />
           </div>
-
           <div className="integrations-logo-row">
             {visiblePlatforms.map(platform => (
               <SmartLink to={platform.url} className="hover-card-link" key={platform.key}>
