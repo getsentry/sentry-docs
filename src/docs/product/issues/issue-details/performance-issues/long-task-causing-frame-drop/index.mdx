@@ -43,20 +43,6 @@ The “Stack Trace” section shows a full stack trace for where the detected im
 #### Objective-C Concurrency
 
 The following code executes a long-running `while` loop on the main thread:
-
-```swift
-func foo() {
-    var numbers = NSMutableArray<String>()
-    for i in 0..<10_000_000 {
-        numbers.addObject(String(i))
-    }
-    var sortedEvenNumbers = NSOrderedSet<String>()
-    strings.
-}
-```
-
-Performance could be improved by moving the long computation off of the main thread by dispatching it to a lower Quality of Service (QoS) queue:
-
 ```objective-c
 // given an array of number strings...
 
@@ -68,13 +54,8 @@ NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSStri
 }];
 ```
 
-Specifically for loops, another possible solution is to parallelize iterations. There are several options for doing this:
 
-1. The simplest approach is to dispatch all the work to a lower QoS queue (or `NSOperationQueue`).
-
-1. If you're iterating through a Foundation collection, you may already be using `enumerateObjects` or `enumerateKeysAndObjects`. Change this to `-[NSArray|NSSet|NSOrderedSet enumerateObjectsWithOptions:usingBlock:]` or `-[NSDictionary enumerateKeysAndObjectsWithOptions:usingBlock:]`, with option `NSEnumerationConcurrent`. Note that modifying the collection from inside the block will result in an exception being thrown. This is roughly equivalent to dispatching each iteration of the loop body to a concurrent GCD queue.
-
-1. Use `dispatch_apply` to perform iterations of a general loop on a concurrent queue. Note that this function is synchronous, so will not return until all iterations have completed. The call to `dispatch_apply()` itself can be dispatched asynchronously off the main queue to avoid waiting.
+Performance could be improved by moving the long computation off of the main thread by dispatching it to a lower Quality of Service (QoS) queue (or `NSOperationQueue`):
 
 ```objective-c {tabTitle:Dispatch to Background Queue}
 // given an array of number strings...
@@ -88,6 +69,12 @@ dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
     }];
 });
 ```
+
+Specifically for loops, another avenue to consider is to parallelize iterations. There are several options for doing this:
+
+1. If you're iterating through a Foundation collection, you may already be using `enumerateObjects` or `enumerateKeysAndObjects`. Change this to `-[NSArray|NSSet|NSOrderedSet enumerateObjectsWithOptions:usingBlock:]` or `-[NSDictionary enumerateKeysAndObjectsWithOptions:usingBlock:]`, with option `NSEnumerationConcurrent`. Note that modifying the collection from inside the block will result in an exception being thrown. This is roughly equivalent to dispatching each iteration of the loop body to a concurrent GCD queue.
+
+1. Use `dispatch_apply` to perform iterations of a general loop on a concurrent queue.
 
 ```objective-c {tabTitle:Foundation Collection Concurrent Enumeration}
 // given an array of number strings...
@@ -112,7 +99,7 @@ dispatch_apply(numberOfNumbers, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0),
 });
 ```
 
-Keep in mind that concurrent solutions require analysis of thread safety for the code you're parallelizing. You may need to `@synchronize` critical sections, use semaphores, or dispatch back to a serial queue (or the main queue for UI work).
+Keep in mind that concurrent solutions require analysis of thread safety for the code you're parallelizing. You may need to `@synchronize` critical sections, use semaphores, or dispatch back to a serial queue (or the main queue for UI work). Note that both `enumerateObjects...` and `dispatch_apply` are synchronous, so will not return until all iterations have completed; dispatch their invocation asynchronously off the main queue to avoid waiting.
 
 #### Swift Concurrency
 
