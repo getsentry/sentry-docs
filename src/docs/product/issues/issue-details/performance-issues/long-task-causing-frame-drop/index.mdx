@@ -1,0 +1,41 @@
+---
+title: "Long Task Causing Frame Drop"
+sidebar_order: 30
+redirect_from:
+  - /product/issues/performance-issues/long-task-causing-frame-drop/
+description: "Learn more about how we detect Long Task Causing Frame Drop and what you can do to help fix them."
+---
+
+The main (or UI) thread in a mobile app is responsible for handling all user interaction and needs to be able to respond to gestures and taps in real time. If a long-running operation blocks the main thread, the app becomes unresponsive, impacting the quality of the user experience.
+
+We can detect some specific causes for a main thread stall, like decoding [images](LINK) or [JSON](LINK), or [searching strings with regexes](LINK), but there are arbitrarily many things that could cause one. If a main thread stall occurs that doesn't match one of our specific detectors, but is causing your app to drop UI frames, it gets reported under this generic issue type.
+
+## Detection Criteria
+
+[Profiling](/product/profiling/) must be enabled for Sentry to detect Long Task Causing Frame Drop issues. Sentry looks for profiles that recorded a [frozen](LINK) UI frame, and then searches for the bottom-most function call from application code that persisted for the longest time while the display link waited to draw the frozen frame.
+
+## Function Evidence
+
+To find additional information about your Long Task Causing Frame Drop problem, go to its **Issue Details** page and scroll down to the "Function Evidence" section, which shows the following:
+
+- **Transaction Name:** The name of the transaction where the issue was detected.
+- **Suspect function:** The function that triggered the issue detection.
+- **Duration:** How long the function took to execute and the number of consecutive samples collected by the profiler that contained the function.
+
+![Image Decoding on Main Thread Function Evidence](image-decoding-function-evidence.png)
+
+To view the entire profile associated with the issue, click the “View Profile” button.
+
+The profile will indicate where the suspect function was called from, along with other functions being called _by_ the suspect function:
+
+![Image Decoding on Main Thread Profile](image-decoding-profile.png)
+
+## Stack Trace
+
+The “Stack Trace” section shows a full stack trace for where the detected image decoding function was called from:
+
+![Image Decoding on Main Thread Stack Trace](image-decoding-stack-trace.png)
+
+## Example
+
+### iOS
