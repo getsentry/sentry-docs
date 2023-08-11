@@ -3,7 +3,7 @@ title: "Long Task Causing Frame Drop"
 sidebar_order: 30
 redirect_from:
   - /product/issues/performance-issues/long-task-causing-frame-drop/
-description: "Learn more about how we detect Long Task Causing Frame Drop and what you can do to help fix them."
+description: "Learn more about how we detect Long Task Causing Frame Drop issues and what you can do to help fix them."
 ---
 
 The main (or UI) thread in a mobile app is responsible for handling all user interaction and needs to be able to respond to gestures and taps in real time. If a long-running operation blocks the main thread, the app becomes unresponsive, impacting the quality of the user experience.
@@ -28,14 +28,92 @@ To view the entire profile associated with the issue, click the “View Profile�
 
 The profile will indicate where the suspect function was called from, along with other functions being called _by_ the suspect function:
 
-![Image Decoding on Main Thread Profile](image-decoding-profile.png)
+![Long Task Causing Frame Drop Profile](long-task-frame-drop-profile.png)
 
 ## Stack Trace
 
 The “Stack Trace” section shows a full stack trace for where the detected image decoding function was called from:
 
-![Image Decoding on Main Thread Stack Trace](image-decoding-stack-trace.png)
+![Long Task Causing Frame Drop Stack Trace](long-task-frame-drop-stack-trace.png)
 
 ## Example
 
 ### iOS
+
+#### Objective-C Concurrency
+
+The following code executes a long-running `while` loop on the main thread:
+```swift
+func foo() {
+    var numbers = NSMutableArray<String>()
+    for i in 0..<10_000_000 {
+        numbers.addObject(String(i))
+    }
+    var sortedEvenNumbers = NSOrderedSet<String>()
+    strings.
+}
+```
+
+
+Performance could be improved by moving the long computation off of the main thread by dispatching it to a lower Quality of Service (QoS) queue:
+
+```objective-c
+// given an array of number strings...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+[numbers enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger __unused idx, BOOL * _Nonnull __unused stop) {
+    if (obj.integerValue % 2 == 0) {
+        [sortedEvenNumbers addObject:obj];
+    }
+}];
+```
+
+Specifically for loops, another possible solution is to parallelize iterations. There are several options for doing this:
+
+1. The simplest approach is to dispatch all the work to a lower QoS queue (or `NSOperationQueue`).
+
+1. If you're iterating through a Foundation collection, you may already be using `enumerateObjects` or `enumerateKeysAndObjects`. Change this to `-[NSArray|NSSet|NSOrderedSet enumerateObjectsWithOptions:usingBlock:]` or `-[NSDictionary enumerateKeysAndObjectsWithOptions:usingBlock:]`, with option `NSEnumerationConcurrent`. Note that modifying the collection from inside the block will result in an exception being thrown. This is roughly equivalent to dispatching each iteration of the loop body to a concurrent GCD queue.
+
+1. Use `dispatch_apply` to perform iterations of a general loop on a concurrent queue. Note that this function is synchronous, so will not return until all iterations have completed. The call to `dispatch_apply()` itself can be dispatched asynchronously off the main queue to avoid waiting.
+
+```objective-c {tabTitle:Dispatch to Background Queue}
+// given an array of number strings...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+    [numbers enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger __unused idx, BOOL * _Nonnull __unused stop) {
+        if (obj.integerValue % 2 == 0) {
+            [sortedEvenNumbers addObject:obj];
+        }
+    }];
+});
+```
+
+```objective-c {tabTitle:Foundation Collection Concurrent Enumeration}
+// given an array of number strings...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+[numbers enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(NSString * _Nonnull obj, NSUInteger __unused idx, BOOL * _Nonnull __unused stop) {
+    if (obj.integerValue % 2 == 0) {
+        [sortedEvenNumbers addObject:obj];
+    }
+}];
+```
+
+```objective-c {tabTitle:dispatch_apply}
+// given an array of number strings...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+dispatch_apply(numberOfNumbers, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t iteration) {
+    NSString *number = numbers[iteration];
+    if (number.integerValue % 2 == 0) {
+        [sortedEvenNumbers addObject:number];
+    }
+});
+```
+
+Keep in mind that concurrent solutions require analysis of thread safety for the code you're parallelizing. You may need to `@synchronize` critical sections, use semaphores, or dispatch back to a serial queue (or the main queue for UI work).
+
+#### Swift Concurrency
+
+TODO
