@@ -32,7 +32,7 @@ sentry = "{{@inject packages.version('sentry.rust') }}"
 
 The most convenient way to use this library is the `sentry::init` function, which starts a Sentry client with a default set of integrations, and binds it to the current Hub.
 
-The `sentry::init` function returns a guard that, when dropped, will flush Events that were not yet sent to the Sentry service. It has a two second deadline for this, so shutdown of applications might slightly delay as a result. Keeping the guard around or sending events will not work.
+The `sentry::init` function returns a guard that, when dropped, will flush Events that were not yet sent to the Sentry service. It has a two second deadline for this, so shutdown of applications might slightly delay as a result. Keep the guard around or sending events will not work.
 
 <SignInNote />
 
@@ -44,6 +44,44 @@ let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
 ```
 
 **Important:** Note your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, view Settings -> Projects -> Client Keys (DSN) in sentry.io.
+
+### Async main function
+
+The Sentry client must be initialized before any async runtime is started or threads are spawned. Unfortunately, this makes it impossible to use macros such as `#[tokio::main]` or `#[actix_web::main]`, because they start the runtime first. Thus, instead of
+
+```rust {filename:main.rs}
+// WRONG
+#[tokio::main]
+async fn main() {
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    ..Default::default()
+}));
+
+// implementation of main
+}
+```
+
+do this:
+
+```rust {filename:main.rs}
+// RIGHT
+fn main() {
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    ..Default::default()
+}));
+
+tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            // implementation of main
+        });
+}
+```
+
 
 ## Verify Setup
 
