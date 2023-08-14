@@ -7,7 +7,7 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT = `Want to know if your recurring jobs are running on schedule? 
-Join us August 20th to learn how to get started with Sentry Cron Monitoring.`;
+Join us August 29th to learn how to get started with Sentry Cron Monitoring.`;
 const BANNER_LINK_URL = `https://sentry.io/resources/getting-started-with-sentry-cron-monitoring/?utm_medium=event&utm_source=sentry-app&utm_campaign=docs-crons-webinar&utm_content=docs-banner&utm_term=`;
 const BANNER_LINK_TEXT = 'Learn More';
 const OPTIONAL_BANNER_IMAGE = null;
