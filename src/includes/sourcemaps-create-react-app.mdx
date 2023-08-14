@@ -1,0 +1,114 @@
+<Include name="debug-id-requirement.mdx" />
+
+## Automatic Setup
+
+The easiest way to configure uploading source maps with Sentry CLI is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source maps upload with the CLI, follow the steps below.
+
+## Manual Setup
+
+### 1. Generate Source Maps
+
+Verify that you are generating source maps when building your React app.
+This should already be the case, unless you set the `GENERATE_SOURCEMAPS` environment variable to "false".
+
+**Make sure to run a production build.**
+In the next steps we will modify and updload the artifacts that were generated during the build.
+Running a development build will not emit the necessary files.
+
+### 2. Configure Sentry CLI
+
+Install Sentry CLI as a dev-dependency with the package manager of your choice:
+
+```bash {tabTitle:npm}
+npm install @sentry/cli --save-dev
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/cli --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cli --save-dev
+```
+
+<Note>
+
+For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/product/cli/configuration/).
+
+</Note>
+
+Make sure `sentry-cli` is configured for your project. For that you can use environment variables:
+
+<SignInNote />
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+# Auth tokens can be obtained from
+# https://sentry.io/settings/auth-tokens/
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+### 3. Inject Debug IDs Into Build Artifacts
+
+Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file.
+Visit [What are Artifact Bundles](/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/) if you want to learn more about Artifact Bundles and Debug IDs.
+
+To inject Debug IDs, use the following command **every time after building your application**:
+
+```bash
+sentry-cli sourcemaps inject /path/to/build
+```
+
+Make sure to replace `/path/to/build` with the actual path where your build output is generated.
+In a Create React App application, this is usually the `build` folder.
+
+#### Verify Debug IDs Were Injected Into Build Artifacts
+
+After running the `sentry-cli sourcemaps inject` command, minified source files should contain a `debugId` comment at the end:
+
+```javascript {filename:exampleMinifiedFile.js}
+...
+//# debugId=<debug_id>
+//# sourceMappingURL=<sourcemap_url>
+```
+
+Source maps should now contain a field named `debug_id`:
+
+```json {filename:exampleSourceMap.js.map}
+{
+    ...
+    "debug_id":"<debug_id>",
+    ...
+}
+```
+
+### 4. Upload Artifacts
+
+After you've injected Debug IDs into your artifacts, upload them using the following command:
+
+```bash
+sentry-cli sourcemaps upload /path/to/build
+```
+
+#### Verify That Artifact Bundles Were Uploaded
+
+Open up Sentry and navigate to **Project Settings > Source Maps**.
+If you choose “Artifact Bundles” in the tabbed navigation, you'll see all the artifact bundles that have been successfully uploaded to Sentry.
+
+### 5. Deploy your Application
+
+If you're following this guide from your local machine, then you've successfully:
+
+1. Generated minified source and source map files (artifacts) by running your application's build process
+2. Injected Debug IDs into the artifacts you've just generated
+3. Uploaded those artifacts to Sentry with our upload command
+
+The last step is deploying a new version of your application using the generated artifacts you created in step one.
+**We strongly recommend running all of the things you have configured above to run inside your CI/CD Pipeline**, to ensure each subsequent deploy will have readable stack traces in Sentry error events.
