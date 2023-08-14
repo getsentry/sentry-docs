@@ -6,9 +6,9 @@ import React, {useEffect, useState} from 'react';
 // we put a more robust solution in place.
 //
 const SHOW_BANNER = false;
-const BANNER_TEXT = '';
-const BANNER_LINK_URL = '';
-const BANNER_LINK_TEXT = '';
+const BANNER_TEXT = 'Want to know if your recurring jobs are running on schedule? Join us August 29.';
+const BANNER_LINK_URL = 'https://sentry.io/resources/getting-started-with-sentry-cron-monitoring/?utm_medium=event&utm_source=sentry-app&utm_campaign=docs-crons-webinar&utm_content=docs-banner&utm_term=';
+const BANNER_LINK_TEXT = 'Learn More';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
