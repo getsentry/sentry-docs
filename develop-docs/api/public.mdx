@@ -4,25 +4,34 @@ title: 'Making an API Public'
 
 ## Introduction
 
-In this document, we explain both how you make an API public and the considerations to take into account before doing so.
+In this document, we explain both how you make an API public and the considerations to take into
+account before doing so.
 
 ## Definitions
 
 ### Managed Client
 
-A managed client is one that Sentry controls, such as our frontend. In this type of client, we control both which endpoints are used and the attributes used by those endpoints.
+A managed client is one that Sentry controls, such as our frontend. In this type of client, we
+control both which endpoints are used and the attributes used by those endpoints.
 
 ### Partially Managed Client
 
-A partially-managed client is one that we only partially control, since we do not control the version of the client that is running for our users; for example, our Sentry CLI. While we control the endpoints the CLI uses, once the CLI is installed and running in a customer's implementation, we don't control the version of the client a user runs.
+A partially-managed client is one that we only partially control, since we do not control the
+version of the client that is running for our users; for example, our Sentry CLI. While we control
+the endpoints the CLI uses, once the CLI is installed and running in a customer's implementation, we
+don't control the version of the client a user runs.
 
 ### External Client
 
-An external client is a client that Sentry does not control; for example, a script written by a customer run in their repository, or an integration written using the Integration Platform. For this type of client, we have no control over the endpoints they choose to use, nor can we require that they immediately update their endpoint.
+An external client is a client that Sentry does not control; for example, a script written by a
+customer run in their repository, or an integration written using the Integration Platform. For this
+type of client, we have no control over the endpoints they choose to use, nor can we require that
+they immediately update their endpoint.
 
 ### Private API
 
-A private API is an undocumented API. Sentry can make breaking changes to this type of API, and no one will blink an eye.
+A private API is an undocumented API. Sentry can make breaking changes to this type of API, and no
+one will blink an eye.
 
 ### Public API
 
@@ -32,7 +41,9 @@ Our public API is documented at [https://docs.sentry.io/api/](https://docs.sentr
 
 You can have private attributes within a public endpoint.
 
-As an example: [https://docs.sentry.io/api/teams/retrieve-a-team/](https://docs.sentry.io/api/teams/retrieve-a-team/). The response has multiple attributes:
+As an example:
+[https://docs.sentry.io/api/teams/retrieve-a-team/](https://docs.sentry.io/api/teams/retrieve-a-team/). 
+The response has multiple attributes:
 
 ```json
 {
@@ -42,195 +53,371 @@ As an example: [https://docs.sentry.io/api/teams/retrieve-a-team/](https://docs.
 }
 ```
 
-Let's say we also return a `nickname` for a team. If what is returned is not documented as a response in our public documentation, that attribute is a private attribute within a public endpoint.
+Let's say we also return a `nickname` for a team. If what is returned is not documented as a
+response in our public documentation, that attribute is a private attribute within a public
+endpoint.
+
+### DRF (Django REST Framework)
+
+[Django REST framework](https://www.django-rest-framework.org/) is a powerful and flexible toolkit
+for building Web APIs. Sentry APIs are built using DRF.
 
 ## API Versioning
 
-Currently, Sentry's API is v0 and is considered to be in draft phase. While we don't expect our public endpoints to change greatly, keep in mind that our API is still under development.
+Currently, Sentry's API is `v0` and considered to be in draft phase. While we don't expect our
+public endpoints to change greatly, keep in mind that our API is still under development.
 
 ## Making an endpoint public
 
-When you make an endpoint public, you're committing to always returning at least the set of defined attributes when that endpoint is called. As a result, the attribute(s) **cannot be removed** from an endpoint after they are public. Additionally, the type of the attribute **cannot be changed** once the attribute is public. The reason the attribute and its type cannot be changed is because both external and managed clients are relying on the public attribute to be returned from that endpoint.
+When you make an endpoint public, you're committing to always returning at least the set of defined
+attributes when that endpoint is called. As a result, the attribute(s) **cannot be removed** from an
+endpoint after they are public. Additionally, the type of the attribute **cannot be changed** once
+the attribute is public. The reason the attribute and its type cannot be changed is because both
+external and managed clients are relying on the public attribute to be returned from that endpoint.
 
 You **can** add attributes to a public endpoint.
 
 ## When to make an API public?
 
-Making an API public offers considerable benefits. A public API allows our customers to incorporate Sentry into their workflows. It also gives Sentry more visibility in our customers' organizations ("Woah that's cool data, where'd it come from?"..."Sentry!"). Remember, however, making an API public means that once an endpoint is public, you can only add to it: You cannot make _any_ breaking changes.
+Making an API public offers considerable benefits. A public API allows our customers to incorporate
+Sentry into their workflows. It also gives Sentry more visibility in our customers' organizations
+("Woah that's cool data, where'd it come from?"..."Sentry!"). Remember, however, making an API
+public means that once an endpoint is public, you can only add to it: You cannot make _any_ breaking
+changes.
 
 As a guide, use these questions:
 
 1. Is the feature for which you're making the public endpoint stable?
 2. Will the API change substantially in the future?
 
-If your answers are Yes and No, you're in business - make the endpoint public. Head over to the [public API checklist](/api/checklist/) and ensure that your endpoint conforms to the checklist.
+If your answers are Yes and No, you're in business - make the endpoint public. Head over to the
+[public API checklist](/api/checklist/) and ensure that your endpoint conforms to the checklist.
 
 ## How to make an endpoint public?
 
-We use [Open API Spec 3](https://swagger.io/docs/specification/about/) and the [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/readme.html) library to document our APIs.
-You can find the tests here: [https://github.com/getsentry/sentry/tree/master/tests/apidocs](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
+We use [Open API Spec 3](https://swagger.io/docs/specification/about/) and the
+[drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/readme.html) library to document
+our APIs.
 
-### Local development
+**API Documentation consists of**:
 
-**To add documentation for a new endpoint**:
-API Documentation consists of a few items:
+1. Declaring the Endpoint Public
+2. Sidebar Tab
+3. Method Decorator
+    - Title
+    - Path and Query Parameters
+    - Request Schema
+    - Success Responses
+    - Error Responses
+    - Sample Response Body
+4. Endpoint Description
 
-- URL and query parameters
-- Request Schema (None if no body)
-- Response Schema
-- Examples
+We utilize the drf-spectacular's
+[`@extend_schema`](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema)
+decorator to perform the documentation. The sections below outline each step to use this decorator.
 
-Below we'll describe how to document these for an endpoint.
+### 1. Declaring the Endpoint Public
 
-Declare the endpoint public by setting the `public` attribute with the appropriate HTTP verbs.
+Declare the endpoint public by setting the `public` attribute with the appropriate HTTP request
+methods.
 
 ```python
-class OrganizationSCIMMemberDetails(...):
-  public = {"GET"}
+class OrganizationTeamsEndpoint(...):
+    public = {"GET", "POST"}
 ```
 
-Specify the endpoint's [sidebar tab](https://docs.sentry.io/api/) by using
-`@extend_schema`. You can see the current list of tags or add tags
-[here](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/build.py). In the below
-example the [endpoint](https://docs.sentry.io/api/discover/query-discover-events-in-table-format/)
-is tagged in the `Discover` sidebar tab.
+### 2. Sidebar Tab
+
+Specify the endpoint's [sidebar tab](https://docs.sentry.io/api/) by using the 
+`@extend_schema` decorator on the endpoint class. You can see the current list of tags or add tags
+[here](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/build.py). In the example
+below the [endpoint](https://docs.sentry.io/api/teams/create-a-new-team/)
+is tagged in the `Teams` sidebar tab.
 
 ```python
 from drf_spectacular.utils import extend_schema
 
-@extend_schema(tags=["Discover"])
-class OrganizationEventsEndpoint(...):
-  public = {"GET"}
+@extend_schema(tags=["Teams"])
+class OrganizationTeamsEndpoint(...):
+    public = {"GET", "POST"}
 ```
 
-For the rest of the documentation, we'll use `@extend_schema` on the various endpoint methods, for example:
+### 3. Method Decorator
+
+We utilize another `@extend_schema` decorator on the endpoint function to perform the majority of
+the documentation. The code below provides an example of a fully documented endpoint.
+
+```python
+@extend_schema(tags=["Teams"])
+class OrganizationTeamsEndpoint(...):
+    public = {"GET", "POST"}
+
+    @extend_schema(
+        operation_id="Create a New Team",
+        parameters=[
+            GlobalParams.ORG_SLUG,
+            GlobalParams.name("The name for the team.", required=True),
+            GlobalParams.slug("Optional slug for the team."),
+        ],
+        request=TeamPostSerializer,
+        responses={
+            201: TeamSerializer,
+            400: RESPONSE_BAD_REQUEST,
+            403: RESPONSE_FORBIDDEN,
+            404: OpenApiResponse(description="A team with this slug already exists."),
+        },
+        examples=TeamExamples.CREATE_TEAM,
+    )
+    def post(self, request, organization, **kwargs):
+        """
+        Create a new team bound to an organization.
+        """
+```
+
+#### Title
+
+Specify an `operation_id` that will be shown as the title of the endpoint's page in the
+documentation.
 
 ```python
 @extend_schema(
-  operation_id="Create a New Team", # What goes in the doc sidebar for the name of the API page
-  parameters=[GlobalParams.ORG_SLUG, SCIMQueryParamSerializer], # use the global params, and/or a DRF Serializer
-  request=TeamPostSerializer, # this will usually be a DRF Serializer if the endpoint takes a body
-  # but can also be an inline_serializer if you need more customization
-  request=inline_serializer(
-      name="SCIMTeamRequestBody",
-      fields={
-          "schemas": serializers.ListField(serializers.CharField()),
-          "displayName": serializers.CharField(),
-          "members": serializers.ListField(serializers.IntegerField()),
-      },
-  ),
-  responses={
-      201: TeamSerializer, # the Sentry Response Serializer
-      400: RESPONSE_BAD_REQUEST,
-      403: RESPONSE_FORBIDDEN,
-      404: OpenApiResponse(description="A team with this slug already exists."),
-  },
-  examples=TeamExamples.CREATE_TEAM, # use examples defined in `src/sentry/apidocs/examples`
+    operation_id="Create a New Team",
+    ...
 )
-def post(self, request: Request, organization, member, team_slug: str,) -> Response:
-    """
-    Create a new team bound to an organization.
-    """
 ```
 
-Specify an `operation_id` (this is what is shown as the title under the docs site sidebar).
+#### Path and Query Parameters
 
-Specify the parameters using a list, and a serializer if needed.
+Specify the parameters using a list of parameters and serializers.
 
-- DRF serializers work very well for query parameters, try to use them where possible.
-
-Specify the request and response serializers.
-
-- Request serializers, since they use DRF serializers, can generally just be the serializer itself. There is plenty of customization and if needed can be overriden with `inline_serializer`. These will be passed to the `request` parameter in `extend_schema`.
-- For our response serializers, you must type the `serialize` function's return with a `TypedDict`
-  and pass the serializer as a parameter in `extend_schema`. See
-  [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/models/organization_member/scim.py)
+- You can find existing parameters in this 
+  [file](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/parameters.py). Note
+  that the `description` field in `OpenApiParameter` populates the parameter's description in the
+  documentation.
+- DRF serializers conveniently translate into query parameters. See
+  [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/endpoints/organization_stats_v2.py#L145)
   for an example of this.
-- If the response is a wrapper or you need more customization, you can use the `inline_sentry_response_serializer` function.
 
-Specify the endpoint description on the docs by adding a function docstring to the request.
 ```python
-from sentry.apidocs.utils import inline_sentry_response_serializer
-
-@extend_schema(
-  responses={
-    200: inline_sentry_response_serializer(
-      "OrganizationList",
-      List[OrganizationSerializerResponse])
-      # A common use case is to return a list of serialized items
-  }
-)
+parameters=[
+    GlobalParams.ORG_SLUG,
+    GlobalParams.name("The name for the team.", required=True),
+    GlobalParams.slug("Optional slug for the team."),
+],
 ```
-- Note that you can instead provide OpenAPI JSON, so you can fall back to this if you are running into issues.
 
-Examples can be directly inserted using `OpenApiExample`, and multiple can be provided. If needed,
-create new examples in `src/sentry/apidocs/examples/*.py` in the appropriate file.
+#### Request Schema
+
+Specify the request serializer.
+
+- Request serializer can generally just be the DRF serializer of endpoint itself. If you need more
+  customization or the endpoint doesn't use a serializer, you can use drf-spectacular's
+  [inline_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.inline_serializer)
+  to create a one-off serializer.
+  See
+  [here](https://github.com/getsentry/sentry/blob/b04c1c04f1e86bc040a671ad5b545d3b70132140/src/sentry/scim/endpoints/members.py#L434-L440)
+  for an example of this.
+- If the endpoint has no request body, you can either omit the `request` field or set it to `None`.
 
 ```python
+request=TeamPostSerializer,
+```
+
+#### Success Responses
+
+Specify the return type of success responses, which are used to generate the response schema and 
+validate the sample response body. There are three ways to do this:
+
+1. If the success response is a single object instead of a list, you can pass a DRF serializer as
+  the response. In order for this serializer to generate a schema, its `serialize` method must be
+  typed to return a [TypedDict](https://peps.python.org/pep-0589/). 
+
+  For example, this [sample
+  code](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/scim/endpoints/members.py#L202)
+  has the `200` status code returning an `OrganizationMemberSCIMSerializer`. It's
+  [`serialize`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/scim.py#L14-L16)
+  method is typed to return an
+  [`OrganizationMemberSCIMSerializerResponse`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/response.py#L60)
+  TypedDict which specifies the typing of the response body.
+
+  Note that in order indicate optional fields that may or may not be set in the response, you must
+  inherit from a TypedDict with `total=False` in it's class header. Optional fields should be
+  grouped together and cannot exist in the same class as required fields.
+  See
+  [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/response.py#L53)
+  for an example of this.
+  ```python
+  class ExampleResponseOptional(TypedDict, total=False):
+      optionalStringField: str
+  ```
+
+  For fields that may be null, use `Optional` followed by the field's type.
+  ```python
+  class ExampleResponse(TypedDict, ExampleResponseOptional):
+      potentiallyNullStringField: Optional[str]
+  ```
+
+  Note that a field can be both optional and null.
+
+2. To return a list of objects or for additional customization, use the
+  [inline_sentry_response_serializer](https://github.com/getsentry/sentry/blob/aa61724035370a47fdc112c14d1467be2609d9a2/src/sentry/apidocs/utils.py#L24)
+  function.
+
+  ```python
+  from sentry.apidocs.utils import inline_sentry_response_serializer
+
+  @extend_schema(
+      responses={
+          200: inline_sentry_response_serializer(
+              "ListOrgTeamResponse", List[TeamSerializerResponse]
+          ),
+      }
+  )
+  ```
+
+  Note that we HIGHLY recommend using the first method when your endpoint returns a single
+  object and utilizes an existing serializer. The first method ensures the documentation stays 
+  up-to-date as the endpoint evolves, and provides a higher quality API experience for our users.
+
+3. You can also provide OpenAPI JSON if you are running into issues, although we recommend avoiding
+   this if possible.
+
+#### Error Responses
+
+Specify error responses using the existing `OpenApiResponse` constants in this
+[file](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/constants.py). You can
+also define your own for more detailed messages like the example below.
+
+```python
+responses={
+    201: TeamSerializer,
+    400: RESPONSE_BAD_REQUEST,
+    403: RESPONSE_FORBIDDEN,
+    404: OpenApiResponse(description="A team with this slug already exists."),
+},
+```
+
+#### Sample Response Body
+
+Specify the endpoint's sample response using the `examples` field. We keep all our examples in this
+[folder](https://github.com/getsentry/sentry/tree/master/src/sentry/apidocs/examples) sorted by
+sidebar tags. 
+
+```python
+@extend_schema(
+    ...
+    examples=TeamExamples.CREATE_TEAM,
+)
+
 from drf_spectacular.types import OpenApiExample
 
 class TeamExamples:
   CREATE_TEAM = [
       OpenApiExample(
-          "Create a new team", # description of example
-          value={"slug": "my-team", "name": "My Team"}, # response body
-          status_codes=["201"], # the status code(s) this example applies to
-          response_only=True, # You MUST INCLUDE this for all examples!!!
+          # description of example, not used for anything
+          "Create a new team",
+          # actual response body
+          value={"slug": "my-team", "name": "My Team"},
+          # the status code(s) this example applies to
+          status_codes=["201"], 
+          # You MUST INCLUDE this for all examples
+          response_only=True,
       )
   ]
 ```
 
-See [here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/endpoints/organization_teams.py) for an example of an endpoint documented using drf-spectacular, and the [drf-spectacular docs here](https://drf-spectacular.readthedocs.io/en/latest/) to learn more.
+- Note that the statment `response_only=True` is required for all examples.
+- We currently only support showing one response example per endpoint.
 
-**Note that if the endpoint you're modifying previously had JSON documentation, you will need to
-delete the old documentation path found in [this
-file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json) along with its
-corresponding JSON build in [this
+### 4. Endpoint Description
+
+Specify the endpoint description in the documentation using the endpoint's docstring.
+
+```python
+def post(self, request, organization, **kwargs):
+    """
+    Create a new team bound to an organization.
+    """
+```
+
+### Caveats
+
+- **If the endpoint you're modifying had previous JSON documentation, you must delete the 
+old documentation path in [this
+file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json)
+and its corresponding JSON build in [this
 folder](https://github.com/getsentry/sentry/blob/master/api-docs/paths).**
 
-**Additionally if there are multiple request types in the same endpoint using the old JSON
+- **Additionally if there are multiple request types in the same endpoint using the old JSON
 documentation, you must update both of them in the same PR. Updating only one request and
-deleting the documentation path/JSON will cause the other unedited request to disappear from the
-docs.**
+deleting the old documentation will cause all other requests to disappear from the docs.**
 
-**Tips**:
+### Building and Testing Locally
 
-- `make test-api-docs` builds the OpenAPI JSON and runs all API docs tests.
-- To only build the docs, run `make build-api-docs`. The build will fail if there are any warnings.
-- To see the diff of your newly generated docs with prod, run `make diff-api-docs`. This requires you to have built the OpenAPI JSON already.
+**Commands**:
+
+- `make test-api-docs` builds the OpenAPI JSON, validates the schema for all examples, and runs all
+  API docs tests.
+- `make build-api-docs` builds the OpenAPI JSON. The build will fail if there are any warnings.
+- `make diff-api-docs` produces a diff of your local OpenAPI JSON with production.
+- `make watch-api-docs` autmatoically rebuilds the OpenAPI JSON on change.
 
 **To see your changes in the docs locally**:
 
 In `sentry`:
 
-1. Run `make watch-api-docs`. This command will watch API docs files and continuously build an intermediate asset `tests/apidocs/openapi-derefed.json`.
-2. Copy the full path to `{YOUR_SYSTEM_FOLDER}/tests/apidocs/openapi-derefed.json`, e.g. `/Users/yourname/code/sentry/tests/apidocs/openapi-derefed.json`.
+1. Use `make watch-api-docs` to continuously build the intermediate asset
+   `tests/apidocs/openapi-derefed.json` locally.
+2. Copy the full path to `{YOUR_SYSTEM_FOLDER}/tests/apidocs/openapi-derefed.json`, 
+
+  e.g. `/Users/yourname/code/sentry/tests/apidocs/openapi-derefed.json`.
 
 In `sentry-docs`:
 
-1. Run `OPENAPI_LOCAL_PATH=COPIED_FULL_PATH DISABLE_THUMBNAILS=1 yarn start` and substitute `COPIED_FULL_PATH` with the copied path to your local openapi-derefed.json
+1. Run `OPENAPI_LOCAL_PATH=<COPIED_FULL_PATH> DISABLE_THUMBNAILS=1 yarn start` and substitute
+   `<COPIED_FULL_PATH>` with the path to your local openapi-derefed.json. 
+   
+   Unfortunately changes do not automatically reflect in your local server, so you will need to
+   rerun this commmand on every change. We hope to add this feature in the future.
 
 See [here](https://docs.sentry.io/contributing/environment/) for detailed doc build instructions.
 
 When you open the pull request, please add a screenshot of the page or pages you're adding.
 
-### Build process
+### Build Process
 
-The openapi-diff test will fail when CI runs on your pull request, this is expected and meant to highlight the diff. It is not required to merge.
+The openapi-diff test will fail when CI runs on your pull request, this is expected and meant to
+highlight the diff. It is not required to merge.
 
-Once you make changes to an endpoint and merge the change into Sentry, a series of GitHub Actions will be triggered to make your changes automatically go live:
+Once you make changes to an endpoint and merge the change into Sentry, a series of GitHub Actions
+will be triggered to make your changes automatically go live:
 
-1. The [`openapi` workflow in `sentry`](https://github.com/getsentry/sentry/blob/master/.github/workflows/openapi.yml) updates the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the OpenAPI build artifact.
-2. The [`cascade-to-sentry-docs` workflow in `sentry-api-schema`](https://github.com/getsentry/sentry-api-schema/blob/main/.github/workflows/cascade-to-sentry-docs.yml) reacts to the push to `main` in (1) by triggering the [`bump-api-schema-sha` workflow in `sentry-docs`](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml).
-3. The [`bump-api-schema-sha` workflow in `sentry-docs`](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml) fetches the latest commit SHA from `sentry-api-schema` and writes it into the correct file, then makes and merges a PR in `sentry-docs`, which kicks off a deploy via Vercel to https://docs.sentry.io/api/.
+1. The [`openapi` workflow in
+   `sentry`](https://github.com/getsentry/sentry/blob/master/.github/workflows/openapi.yml) updates
+   the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the
+   OpenAPI build artifact.
+2. The [`cascade-to-sentry-docs` workflow in
+   `sentry-api-schema`](https://github.com/getsentry/sentry-api-schema/blob/main/.github/workflows/cascade-to-sentry-docs.yml)
+   reacts to the push to `main` in (1) by triggering the [`bump-api-schema-sha` workflow in
+   `sentry-docs`](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml).
+3. The [`bump-api-schema-sha` workflow in
+   `sentry-docs`](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml)
+   fetches the latest commit SHA from `sentry-api-schema` and writes it into the correct file, then
+   makes and merges a PR in `sentry-docs`, which kicks off a deploy via Vercel to
+   https://docs.sentry.io/api/.
 
 ### Requesting an API to be public
 
 Want an endpoint to be public?
 
-Look at the [issues on sentry with the `Component: API` label](https://github.com/getsentry/sentry/issues?q=is%3Aopen+is%3Aissue+label%3A%22Component%3A+API%22). If a request has already been made to make the endpoint public, give it a thumbs up. If not, create a [feature request](https://github.com/getsentry/sentry/issues/new?template=feature.yml) on Sentry and add the `Component: API` label.
+Look at the [issues on sentry with the `Component: API`
+label](https://github.com/getsentry/sentry/issues?q=is%3Aopen+is%3Aissue+label%3A%22Component%3A+API%22).
+If a request has already been made to make the endpoint public, give it a thumbs up. If not, create
+a [feature request](https://github.com/getsentry/sentry/issues/new?template=feature.yml) on Sentry
+and add the `Component: API` label.
 
-The team responsible for the endpoint will review the stability of the endpoint. If the endpoint will not have breaking changes in future, they can determine whether to make it public.
+The team responsible for the endpoint will review the stability of the endpoint. If the endpoint
+will not have breaking changes in future, they can determine whether to make it public.
 
 ### FAQs
 
@@ -240,7 +427,10 @@ An attribute is `required` if it will always be returned by the API.
 
 **What does it mean when a response doesn't have a schema?**
 
-Some endpoints have no response schema. This means that while the endpoint is public, the attributes within that endpoint can change at any time. This is a relic from migrating the documentation from our prior approach. Note that, going forward, we recommend new endpoints always provide response schema.
+Some endpoints have no response schema. This means that while the endpoint is public, the attributes
+within that endpoint can change at any time. This is a relic from migrating the documentation from
+our prior approach. Note that, going forward, we recommend new endpoints always provide response
+schema.
 
 **I have a question and it has not been answered.**
 
@@ -248,4 +438,5 @@ No problem. Send us an [email](mailto:partners@sentry.io) so we can answer your 
 
 ## Can customers use private endpoints?
 
-Yes, if they wish. However, private endpoints can change at any time, without notice. As a result, the customer's code could break.
+Yes, if they wish. However private endpoints are liable to change without notice at any time,
+potentially breaking the customer's code. Please be careful using them.
