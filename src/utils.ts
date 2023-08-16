@@ -55,7 +55,6 @@ type Page = {
 };
 
 export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] => {
-  console.log(arr);
   return arr.sort((a, b) => {
     a = extractor(a);
     b = extractor(b);
