@@ -1,0 +1,25 @@
+---
+title: Metrics
+sidebar_order: 50
+redirect_from:
+  - /profiling/mobile-app-profiling/metrics/
+description: "Measurements taken by the Sentry profiler that help us contextualize the work your mobile app does and detect possible issues impacting performance."
+---
+
+The Sentry profiler records several system measurements to help analyze the backtraces it gathers. Some like CPU and heap usage are taken on a regular sampling interval, albeit with a lower frequency than backtrace sampling. Others, like GPU information, are taken as events occur.
+
+## CPU Usage
+
+Every 100 ms, the amount of CPU used by the app process, as a scaled percentage of total CPU capacity (which varies depending on the number of cores) is measured. The value is calculated using `THREAD_BASIC_INFO`, which returns a CPU usage value per thread, and summing the values for all threads.
+
+## Heap Usage
+
+Every 100 ms, the amount of heap memory used by the application is recorded using `TASK_VM_INFO`.
+
+## GPU Information
+
+Previously, Sentry counted the number of [slow and frozen UI frame renders](/product/performance/mobile-vitals/#slow-and-frozen-frames) for Mobile Vitals. This implementation has been expanded to record the timestamp for every such frame, so we can overlay this information over profiling flame charts:
+
+[Sentry displays slow/frozen frames above the flamechart of a particular profile.](flamechart-with-gpu-overlay.png)
+
+The profiler records the current frame rate when it starts, as well as any time it changes, like when a user puts their device into low-power mode.
