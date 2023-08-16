@@ -23,6 +23,7 @@ type UserCodeKeywords = {
 };
 
 type CodeKeywords = {
+  ORGANIZATIONS: OrganizationsApiResult[];
   PROJECT: ProjectCodeKeywords[];
   USER: UserCodeKeywords | undefined;
 };
@@ -56,10 +57,19 @@ type UserApiResult = {
   name: string;
 };
 
+type OrganizationsApiResult = {id: number; name: string; slug: string};
+
 // only fetch them once
 let cachedCodeKeywords: CodeKeywords | null = null;
 
 export const DEFAULTS: CodeKeywords = {
+  ORGANIZATIONS: [
+    {
+      id: 1234,
+      name: 'Example Organization',
+      slug: 'example-org',
+    },
+  ],
   PROJECT: [
     {
       DSN: 'https://examplePublicKey@o0.ingest.sentry.io/0',
@@ -127,7 +137,11 @@ const formatApiUrl = ({scheme, host}: Dsn) => {
  * Fetch project details from sentry
  */
 export async function fetchCodeKeywords(): Promise<CodeKeywords> {
-  let json: {projects: ProjectApiResult[]; user: UserApiResult} | null = null;
+  let json: {
+    organizations: OrganizationsApiResult[];
+    projects: ProjectApiResult[];
+    user: UserApiResult;
+  } | null = null;
 
   const url =
     process.env.NODE_ENV === 'development'
@@ -156,13 +170,14 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
     return makeDefaults();
   }
 
-  const {projects, user} = json;
+  const {projects, user, organizations} = json;
 
   if (projects?.length === 0) {
     return makeDefaults();
   }
 
   return {
+    ORGANIZATIONS: organizations,
     PROJECT: projects.map(project => {
       const parsedDsn = parseDsn(project.dsn);
       return {

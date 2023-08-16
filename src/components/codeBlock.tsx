@@ -100,7 +100,7 @@ const getPortal = memoize((): HTMLElement => {
 });
 
 type KeywordSelectorProps = {
-  group: string;
+  group: 'PROJECT' | 'USER' | 'ORGANIZATIONS';
   index: number;
   keyword: string;
 };
@@ -198,6 +198,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
       <AnimatedContainer>
         <Arrow style={styles.arrow} data-placement={state?.placement} data-popper-arrow />
         <Selections>
+          {/* <div>foo</div> */}
           {choices.map((item, idx) => {
             const isActive = idx === currentSelectionIdx;
             return (
