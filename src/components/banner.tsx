@@ -5,10 +5,10 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
-const BANNER_TEXT = '';
-const BANNER_LINK_URL = '';
-const BANNER_LINK_TEXT = '';
+const SHOW_BANNER = true;
+const BANNER_TEXT = `Learn how to use Sentry's Cron Monitoring. Join us on August 29.`;
+const BANNER_LINK_URL = `https://sentry.io/resources/getting-started-with-sentry-cron-monitoring/?utm_medium=event&utm_source=sentry-app&utm_campaign=docs-crons-webinar&utm_content=docs-banner&utm_term=`;
+const BANNER_LINK_TEXT = 'Learn More';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
