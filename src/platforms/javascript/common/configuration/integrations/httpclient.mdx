@@ -1,0 +1,83 @@
+---
+title: HttpClient
+excerpt: ""
+description: "Captures errors on failed requests from Fetch and XHR and attaches request and response information."
+sidebar_order: 100
+---
+
+This integration captures errors on failed requests from Fetch and XHR and attaches request and response information.
+
+By default, error events don't contain header or cookie data. You can change this behavior by setting `sendDefaultPii: true`.
+
+```javascript {tabTitle: ESM}
+import * as Sentry from "@sentry/browser";
+import { HttpClient } from "@sentry/integrations";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new HttpClient()],
+});
+```
+
+```html {tabTitle: Loader}
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/httpclient.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.onLoad(function () {
+    Sentry.init({
+      integrations: [new Sentry.Integrations.HttpClient()],
+    });
+  });
+</script>
+```
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/httpclient.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [new Sentry.Integrations.HttpClient()],
+  });
+</script>
+```
+
+<Alert level="warning" title="Note">
+
+Due to the limitations of both the Fetch and XHR API, the cookie and header collection for both requests and responses is based on best effort. Certain headers may be missing in the event created by the integration.
+
+</Alert>
+
+## Options
+
+- `sendDefaultPii` (boolean)
+
+This option is required for capturing headers and cookies.
+
+- `failedRequestStatusCodes` (array)
+
+This array can contain tuples of `[begin, end]` (both inclusive),
+single status codes, or a combination of both.
+Default: `[[500, 599]]`
+
+- `failedRequestTargets` (array)
+
+An array of request targets that should be considered, for example `['http://example.com/api/test']` would consider any request to this URL for failure. This array can contain Regexes, strings, or a combination of both.
+Default: `[/.*/]`

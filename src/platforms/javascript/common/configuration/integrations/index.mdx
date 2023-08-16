@@ -4,4 +4,62 @@ sidebar_order: 30
 description: "Learn more about how integrations extend the functionality of our SDK to cover common libraries and environments automatically."
 ---
 
-<PageGrid />
+Sentry provides a number of integrations which are designed to add automatic instrumentation to your application.
+
+Some of these integrations are enabled by default, while others have to be explicitly enabled.
+
+## Available Integrations
+
+<PageGrid exclude={["custom"]} />
+
+## Modifying Default Integrations
+
+To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
+
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
+
+<SignInNote />
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    new Sentry.Integrations.Breadcrumbs({
+      console: false,
+    }),
+  ],
+});
+```
+
+## Adding an Integration
+
+You can add additional integrations in your `init` call:
+
+<PlatformContent includePath="configuration/enable-pluggable-integrations" />
+
+Alternatively, you can add integrations lazily via `client.addIntegration()`.
+This is useful if you only want to enable an integration in a specific environment or if you want to lazy-load an integration.
+For all other cases, we recommend you use the `integrations` option.
+
+<PlatformContent includePath="configuration/enable-pluggable-integrations-lazy" />
+
+## Removing an Integration
+
+This example removes the default-enabled integration for adding breadcrumbs to the event:
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: function (integrations) {
+    // integrations will be all default integrations
+    return integrations.filter(function (integration) {
+      return integration.name !== "Breadcrumbs";
+    });
+  },
+});
+```
+
+## Custom Integrations
+
+You can also create custom integrations. [Read more about custom integrations here.](/custom)

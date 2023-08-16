@@ -1,0 +1,67 @@
+---
+title: CaptureConsole
+excerpt: ""
+description: "Captures all Console API calls via `captureException` or `captureMessage`."
+sidebar_order: 100
+---
+
+This integration captures all Console API calls and redirects them to Sentry using the SDK's captureMessage or captureException call, depending on the log level. It then re-triggers to preserve default native behavior:
+
+This integration requires you to install `@sentry/integrations` next to your main SDK package.
+
+```javascript {tabTitle: ESM}
+import * as Sentry from "@sentry/browser";
+import { CaptureConsole } from "@sentry/integrations";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new CaptureConsole()],
+});
+```
+
+```html {tabTitle: Loader}
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/captureconsole.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'captureconsole.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.onLoad(function () {
+    Sentry.init({
+      integrations: [new Sentry.Integrations.CaptureConsole()],
+    });
+  });
+</script>
+```
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/captureconsole.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'captureconsole.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [new Sentry.Integrations.CaptureConsole()],
+  });
+</script>
+```
+
+## Options
+
+- `levels` (string[])
+
+Array of methods that should be captured.
+Defaults to `['log', 'info', 'warn', 'error', 'debug', 'assert']`

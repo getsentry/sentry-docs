@@ -1,0 +1,52 @@
+---
+title: Net
+excerpt: ""
+description: "Captures breadcrumbs and tracing spans for Electrons `net` module. (default)"
+sidebar_order: 10
+---
+
+Captures breadcrumbs and tracing spans for Electrons `net` module. By default breadcrumbs and tracing spans are enabled and `sentry-trace` headers are added to requests for all origins.
+
+The integration can be configured via constructor options:
+
+```typescript
+interface NetOptions {
+  /**
+   * Whether breadcrumbs should be captured for net requests
+   *
+   * Defaults to: true
+   */
+  breadcrumbs: boolean;
+  /**
+   * Whether to capture transaction spans for net requests
+   *
+   * Defaults to: true
+   */
+  tracing: boolean | (method: string, url: string) => boolean;
+  /**
+   * Whether to add 'sentry-trace' headers to outgoing requests
+   *
+   * Defaults to: true
+   */
+  tracingOrigins: boolean | (method: string, url: string) => boolean;
+}
+```
+
+For example, to disable breadcrumb capture and addition of `sentry-trace` headers and only capture spans for `POST` requests:
+
+<SignInNote />
+
+```javascript
+import * as Sentry from "@sentry/electron";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.Integrations.Net({
+      breadcrumbs: false,
+      tracing: (method) => method == "POST",
+      tracingOrigins: false,
+    }),
+  ],
+});
+```

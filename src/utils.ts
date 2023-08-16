@@ -55,11 +55,16 @@ type Page = {
 };
 
 export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] => {
+  console.log(arr);
   return arr.sort((a, b) => {
     a = extractor(a);
     b = extractor(b);
-    const aso = a.context.sidebar_order >= 0 ? a.context.sidebar_order : 10;
-    const bso = b.context.sidebar_order >= 0 ? b.context.sidebar_order : 10;
+
+    const aBase = a.context.sidebar_order ?? 10;
+    const bBase = b.context.sidebar_order ?? 10;
+    const aso = aBase >= 0 ? aBase : 10;
+    const bso = bBase >= 0 ? bBase : 10;
+
     if (aso > bso) {
       return 1;
     }
