@@ -45,14 +45,17 @@ function makeOrgAuthTokenClickable(arr: ChildrenItem[], str: string) {
 }
 
 function makeProjectKeywordsClickable(arr: ChildrenItem[], str: string) {
-  runRegex(arr, str, KEYWORDS_REGEX, (lastIndex, match) => (
-    <KeywordSelector
-      key={`project-keyword-${lastIndex}`}
-      index={lastIndex}
-      group={match[1] || 'PROJECT'}
-      keyword={match[2]}
-    />
-  ));
+  runRegex(arr, str, KEYWORDS_REGEX, (lastIndex, match) => {
+    return (
+      <KeywordSelector
+        key={`project-keyword-${lastIndex}`}
+        index={lastIndex}
+        group={match[1] || 'ORGANIZATIONS'}
+        // group={match[1] || 'PROJECT'}
+        keyword={match[2]}
+      />
+    );
+  });
 }
 
 function runRegex(
@@ -160,6 +163,8 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const codeContext = useContext(CodeContext);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [activeGroup, setActiveGroup] = useState(group);
+  const [currentOrg, setOrg] = useState(undefined);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
 
@@ -183,9 +188,13 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const [sharedSelection, setSharedSelection] = codeContext.sharedKeywordSelection;
 
   const {codeKeywords} = useContext(CodeContext);
-  const choices = codeKeywords?.[group] ?? [];
+  const choices = group === 'USER' ? [] : codeKeywords?.[group] ?? [];
   const currentSelectionIdx = sharedSelection[group] ?? 0;
   const currentSelection = choices[currentSelectionIdx];
+
+  console.log('currentSelection', currentSelection);
+  console.log('choices', choices);
+  console.log('keyword', keyword);
 
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -193,12 +202,21 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
     return <Fragment>keyword</Fragment>;
   }
 
+  function parseTitle(target) {
+    if (group === 'PROJECT') {
+      return target?.title;
+    }
+    if (group === 'ORGANIZATIONS') {
+      return target?.name;
+    }
+    return '';
+  }
+
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
       <AnimatedContainer>
         <Arrow style={styles.arrow} data-placement={state?.placement} data-popper-arrow />
         <Selections>
-          {/* <div>foo</div> */}
           {choices.map((item, idx) => {
             const isActive = idx === currentSelectionIdx;
             return (
@@ -212,7 +230,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
                   setIsOpen(false);
                 }}
               >
-                {item.title}
+                {parseTitle(item)}
               </ItemButton>
             );
           })}
@@ -223,6 +241,14 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
 
   const portal = getPortal();
 
+  function parseKeyword() {
+    if (group === 'ORGANIZATIONS') {
+      return currentSelection.name;
+    }
+
+    return currentSelection[keyword];
+  }
+
   return (
     <Fragment>
       <KeywordDropdown
@@ -230,7 +256,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
         ref={setReferenceEl}
         role="button"
         tabIndex={0}
-        title={currentSelection?.title}
+        title={parseTitle(currentSelection)}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
       >
@@ -249,7 +275,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               onAnimationComplete={() => setIsAnimating(false)}
               key={currentSelectionIdx}
             >
-              {currentSelection[keyword]}
+              {parseKeyword()}
             </Keyword>
           </AnimatePresence>
         </span>
