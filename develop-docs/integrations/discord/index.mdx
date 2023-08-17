@@ -1,0 +1,62 @@
+---
+title: "Discord Integration"
+---
+
+## Create a Discord bot
+
+To use Sentry's Discord integration in your Sentry instance, you must first create a Discord bot. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click __New Application__.
+
+![Create bot](./create_bot.png)
+
+After you create the bot, you should be redirected to its settings.
+
+## Update your Sentry configuration
+
+Sentry needs the following Discord credentials, which you can find in the bot's settings:
+
+- *Application ID* and *Public key* are located in __General Information__.
+- *Client secret* is located in __OAuth2__ > __General__.
+- *Bot token* is located in __Bot__.
+
+Add these to your Sentry instance's <code>config.yml</code> as follows:
+
+```yaml
+discord.application-id: "<application id>"
+discord.public-key: "<public key>"
+discord.client-secret: "<client secret>"
+discord.bot-token: "<bot token>"
+```
+
+**NOTE**: If you're doing local Sentry development, you should use a tool like Ngrok and add `system.url-prefix: "https://<your_subdomain>.ngrok.io"` to your `~/.sentry/config.yml`. Otherwise, installing the Discord bot won't work, as it will not be able to communicate with your local Sentry instance.
+
+After you update the <code>config.yml</code>, restart you Sentry server to continue the setup process.
+
+## Configure your Discord interactions endpoint
+
+Now that Sentry is running and it knows your Discord credentials, we need to set up a way for Discord to interact with Sentry.
+
+Head back to your Discord application setttings, navigate to __General Information__ and look for __Interactions Endpoint URL__.
+
+![Interactions Endpoint URL](./interactions_endpoint_url.png)
+
+Here you'll need to enter the Discord interactions endpoint provided by Sentry:
+```
+Interactions Endpoint URL: {YOUR_DOMAIN}/extensions/discord/interactions/
+```
+
+Click __Save Changes__. 
+
+<Alert level="info">
+When you enter the Interactions Endpoint URL, Discord will try to verify it. The verification will fail if you haven't configured the bot credentials properly, haven't restarted your server since adding them, or don't have your server properly exposed to the internet.
+</Alert>
+
+You're now all set to use the Discord integration in Sentry! See our [documentation on installing and configuring the Discord integration](https://docs.sentry.io/product/integrations/notification-incidents/discord/) for some next steps.
+
+## Enable the feature flags
+
+Until the Discord integration is fully released and the feature flags removed, you will need to enable the feature flags in `sentry.conf.py` in order for the integration to work:
+
+```python
+SENTRY_FEATURES['organizations:integrations-discord'] = True
+SENTRY_FEATURES['organizations:integrations-discord-notifications'] = True
+```
