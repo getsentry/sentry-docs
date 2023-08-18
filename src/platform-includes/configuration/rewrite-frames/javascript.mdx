@@ -2,22 +2,11 @@
 
 ```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
-import { RewriteFrames as RewriteFramesIntegration } from "@sentry/integrations";
+import { RewriteFrames } from "@sentry/integrations";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new RewriteFramesIntegration(
-    {
-      // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
-      root: string;
-
-      // a custom prefix that will be used by the default iteratee (default: `app://`)
-      prefix: string;
-
-      // function that takes the frame, applies a transformation, and returns it
-      iteratee: (frame) => frame;
-    }
-  )],
+  integrations: [new RewriteFrames()],
 });
 ```
 
@@ -33,22 +22,9 @@ Sentry.init({
 ></script>
 
 <script>
-  Sentry.onLoad(function() {
+  Sentry.onLoad(function () {
     Sentry.init({
-      integrations: [new Sentry.Integrations.RewriteFrames(
-        {
-          // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
-          root: string;
-
-          // a custom prefix that will be used by the default iteratee (default: `app://`)
-          prefix: string;
-
-          // function that takes the frame, applies a transformation, and returns it
-          // See the default implementation for some inspiration:
-          // https://github.com/getsentry/sentry-javascript/blob/master/packages/integrations/src/rewriteframes.ts
-          iteratee: (frame) => frame;
-        }
-      )],
+      integrations: [new Sentry.Integrations.RewriteFrames()],
     });
   });
 </script>
@@ -69,30 +45,7 @@ Sentry.init({
 <script>
   Sentry.init({
     dsn: "___PUBLIC_DSN___",
-    integrations: [new Sentry.Integrations.RewriteFrames(
-      {
-        // root path that will be stripped from the current frame's filename by the default iteratee if the filename is an absolute path
-        root: string;
-
-        // a custom prefix that will be used by the default iteratee (default: `app://`)
-        prefix: string;
-
-        // function that takes the frame, applies a transformation, and returns it
-        // See the default implementation for some inspiration:
-        // https://github.com/getsentry/sentry-javascript/blob/master/packages/integrations/src/rewriteframes.ts
-        iteratee: (frame) => frame;
-      }
-    )],
+    integrations: [new Sentry.Integrations.RewriteFrames()],
   });
 </script>
 ```
-
-#### Usage Examples
-
-For example, if the full path to your file is `/www/src/app/file.js`:
-
-| Usage                             | Path in Stack Trace      | Description                                                                                                                   |
-| --------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `RewriteFrames()`                 | `app:///file.js`         | The default behavior is to replace the absolute path, except the filename, and prefix it with the default prefix (`app:///`). |
-| `RewriteFrames({prefix: 'foo/'})` | `foo/file.js`            | Prefix `foo/` is used instead of the default prefix `app:///`.                                                                |
-| `RewriteFrames({root: '/www'})`   | `app:///src/app/file.js` | `root` is defined as `/www`, so only that part is trimmed from beginning of the path.                                         |

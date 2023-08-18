@@ -7,57 +7,11 @@ sidebar_order: 100
 
 This integration captures errors on failed requests from Fetch and XHR and attaches request and response information.
 
-By default, error events don't contain header or cookie data. You can change this behavior by setting `sendDefaultPii: true`.
+By default, error events don't contain header or cookie data. You can change this behavior by setting `sendDefaultPii: true` in your root `Sentry.init({})` config.
 
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/browser";
-import { HttpClient } from "@sentry/integrations";
+This integration requires you to install `@sentry/integrations` next to your main SDK package.
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new HttpClient()],
-});
-```
-
-```html {tabTitle: Loader}
-<script
-  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
-  crossorigin="anonymous"
-></script>
-<script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/httpclient.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<script>
-  Sentry.onLoad(function () {
-    Sentry.init({
-      integrations: [new Sentry.Integrations.HttpClient()],
-    });
-  });
-</script>
-```
-
-```html {tabTitle: CDN}
-<script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-<script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/httpclient.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<script>
-  Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    integrations: [new Sentry.Integrations.HttpClient()],
-  });
-</script>
-```
+<PlatformContent includePath="configuration/http-client" />
 
 <Alert level="warning" title="Note">
 
@@ -66,10 +20,6 @@ Due to the limitations of the Fetch and XHR API, the cookie and header collectio
 </Alert>
 
 ## Options
-
-- `sendDefaultPii` (boolean)
-
-This option is required for capturing headers and cookies.
 
 - `failedRequestStatusCodes` (array)
 
@@ -81,3 +31,12 @@ Default: `[[500, 599]]`
 
 An array of request targets that should be considered, for example `['http://example.com/api/test']` would interpret any request to this URL as a failure. This array can contain Regexes, strings, or a combination of the two.
 Default: `[/.*/]`
+
+- `sendDefaultPii` (boolean)
+
+<Alert type="warning">
+  This option has to be specified on the root Sentry.init options, not the
+  integration options!
+</Alert>
+
+This option is required for capturing headers and cookies.
