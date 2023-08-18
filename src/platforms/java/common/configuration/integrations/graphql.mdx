@@ -8,14 +8,16 @@ notSupported:
   - java.jul
 ---
 
-Sentry GraphQL integration provides an integration with [GraphQL Java](https://github.com/graphql-java/graphql-java/) through:
+Sentry's [GraphQL Java](https://github.com/graphql-java/graphql-java/) integration is provided through:
 
-- `SentryGenericDataFetcherExceptionHandler` which checks for exceptions thrown during data fetcher executions and passes them to `SentryInstrumentation`.
-- `SentryInstrumentation` which creates spans around each data fetcher execution, captures exceptions and adds breadcrumbs.
+- `SentryGenericDataFetcherExceptionHandler`, which checks for exceptions thrown during data fetcher executions and then passes them to `SentryInstrumentation`.
+- `SentryInstrumentation`, which creates spans around each data fetcher execution, captures exceptions, and adds breadcrumbs.
 
-If you're using `spring-graphql`, we offer automatic configuration of our GraphQL integration when using our `sentry-spring-boot-starter` or `sentry-spring-boot-jakarta-starter` integrations.
+Our GraphQL integration can be configured automatically if you're using `spring-graphql` with either the `sentry-spring-boot-starter` or the `sentry-spring-boot-jakarta-starter` integration.
 
 ## Install
+
+To install use:
 
 ```groovy {tabTitle:Gradle Plugin}
 plugins {
@@ -41,7 +43,7 @@ libraryDependencies += "io.sentry" % "sentry-graphql" % "{{@inject packages.vers
 
 For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-graphql).
 
-## Setup
+## Set Up
 
 Create a new instance of `SentryGenericDataFetcherExceptionHandler`, pass the delegate that handles the exception, and configure `defaultDataFetcherExceptionHandler` when building a `GraphQL` instance.
 Create a new instance of `SentryInstrumentation` and configure `instrumentation` when building a `GraphQL` instance.
@@ -90,17 +92,17 @@ val graphql = GraphQL.newGraphQL()
 
 <Note>
 
-If you've been using the now deprecated `SentryDataFetcherExceptionHandler`, please upgrade to `SentryGenericDataFetcherExceptionHandler` and also make sure `SentryInstrumentation` is configured to have more exceptions captured, more detailed exceptions, breacrumbs and better hub propagation. You may want to filter some of the errors by using `beforeSend` or an `EventProcessor` (see <PlatformLink to="/configuration/filtering/">Filters</PlatformLink>).
+The `SentryDataFetcherExceptionHandler` has been deprecated. Please upgrade to `SentryGenericDataFetcherExceptionHandler` and make sure `SentryInstrumentation` is configured to have more exceptions captured, more detailed exceptions, breadcrumbs, and better hub propagation. You may want to filter  the errors by using `beforeSend` or an `EventProcessor` (read more about <PlatformLink to="/configuration/filtering/">Filters</PlatformLink>).
 
 </Note>
 
 ## Capture Performance
 
-Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+To be able to capture transactions, you have to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>.
 
 ### Modify or Drop Spans
 
-Spans created around requests can be modified (by returning a modified Span) or dropped (by returning `null`) using `SentryInstrumentation.BeforeSpanCallback` passed to `SentryInstrumentation`:
+Spans created around requests can be modified by returning a modified Span, or dropped by returning `null`, using `SentryInstrumentation.BeforeSpanCallback` passed to `SentryInstrumentation`:
 
 ```java
 import io.sentry.graphql.SentryInstrumentation;
@@ -136,7 +138,7 @@ val graphql = GraphQL.newGraphQL()
 
 ## Using with Netflix DGS
 
-[Netflix DGS](https://netflix.github.io/dgs) automatically detects and configures `Instrumentation` and `DataFetcherExceptionHandler` beans. To use Sentry GraphQL integration, create `SentryGenericDataFetcherExceptionHandler` and `SentryInstrumentation` beans:
+[Netflix DGS](https://netflix.github.io/dgs) automatically detects and configures `Instrumentation` and `DataFetcherExceptionHandler` beans. To use the Sentry GraphQL integration, create `SentryGenericDataFetcherExceptionHandler` and `SentryInstrumentation` beans:
 
 ```java
 import com.netflix.graphql.dgs.exceptions.DefaultDataFetcherExceptionHandler;
