@@ -6,15 +6,15 @@ redirect_from:
 description: "Measurements taken by the Sentry profiler that help us contextualize the work your mobile app does and detect possible issues impacting performance."
 ---
 
-The Sentry profiler records several system measurements to help analyze the backtraces it gathers. Some like CPU and heap usage are taken on a regular sampling interval, albeit with a lower frequency than backtrace sampling. Others, like GPU information, are taken as events occur.
+The Sentry profiler records several system measurements to help analyze the backtraces it gathers. Some like CPU and heap usage are taken on a regular sampling interval using functions from `mach/mach.h`, albeit with a lower frequency than backtrace sampling. Others, like GPU information, are taken from `CADisplayLink` callback invocations as they're received.
 
 ## CPU Usage
 
-Every 100 ms, the amount of CPU used by the app process, as a scaled percentage of total CPU capacity (which varies depending on the number of cores) is measured. The value is calculated using `THREAD_BASIC_INFO`, which returns a CPU usage value per thread, and summing the values for all threads.
+Every 100 ms, the amount of CPU used by the app process, as a scaled percentage of total CPU capacity (which varies depending on the number of cores) is measured. The value is calculated using `thread_info` with `THREAD_BASIC_INFO`, which returns a CPU usage value per thread, and summing the values for all threads.
 
 ## Heap Usage
 
-Every 100 ms, the amount of heap memory used by the application is recorded using `TASK_VM_INFO`.
+Every 100 ms, the amount of heap memory used by the application is recorded using `task_info` with `TASK_VM_INFO`.
 
 ## GPU Information
 
@@ -26,4 +26,4 @@ The profiler records the current frame rate when it starts, as well as any time 
 
 ## Energy Usage
 
-Every 100 ms, the amount of energy expended by CPU work allocated to the app process since the previous sample is calculated using `TASK_POWER_INFO_V2`.
+Every 100 ms, the amount of energy expended by CPU work allocated to the app process since the previous sample is calculated using `task_info` with `TASK_POWER_INFO_V2`.
