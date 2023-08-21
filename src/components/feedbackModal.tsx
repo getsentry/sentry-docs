@@ -220,7 +220,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                   formRef.current.requestSubmit();
                 }
               }}
-              name="title"
+              name="comment"
               placeholder="Explain what bothers you"
             />
           </Label>
