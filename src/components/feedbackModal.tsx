@@ -31,6 +31,9 @@ const Content = styled.div`
   background-color: #fff;
   width: 500px;
   max-width: 100%;
+  max-height: calc(100% - 64px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease-in-out;
   transform: translate(0, 0) scale(1);
@@ -49,6 +52,7 @@ const Header = styled.h2`
 
 const Form = styled.form`
   display: flex;
+  overflow: auto;
   flex-direction: column;
   gap: 16px;
   padding: 24px;
@@ -145,6 +149,8 @@ const ScreenshotPreview = styled.img`
   height: 200px;
   object-fit: contain;
   background-color: #ccc;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 `;
 
 interface FeedbackModalProps {
@@ -217,8 +223,13 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
   };
 
   const handleScreenshot = async () => {
-    const image = await takeScreenshot();
-    setScreenshotPreview(image);
+    try {
+      const image = await takeScreenshot();
+      setScreenshotPreview(image);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+    }
   };
 
   const handleEditorSubmit = async (newScreenshot: Blob, cutout?: Blob) => {
@@ -234,11 +245,11 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
           <Header>Got any Feedback?</Header>
           <Form ref={formRef} onSubmit={handleSubmit}>
             <Label>
-              Title:
+              Title
               <Input required type="text" name="title" placeholder="Enter a subject" />
             </Label>
             <Label>
-              Comment:
+              Comment
               <TextArea
                 onKeyDown={event => {
                   if (event.key === 'Enter' && event.ctrlKey) {
@@ -249,13 +260,16 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                 placeholder="Explain what bothers you"
               />
             </Label>
-            {screenshotPreview ? (
-              <ScreenshotPreview src={screenshotPreview} />
-            ) : (
-              <ScreenshotButton type="button" onClick={handleScreenshot}>
-                Add Screenshot
-              </ScreenshotButton>
-            )}
+            <Label>
+              Screenshot
+              {screenshotPreview ? (
+                <ScreenshotPreview src={screenshotPreview} />
+              ) : (
+                <ScreenshotButton type="button" onClick={handleScreenshot}>
+                  Add Screenshot
+                </ScreenshotButton>
+              )}
+            </Label>
             <ModalFooter>
               <CancelButton type="button" onClick={onClose}>
                 Cancel

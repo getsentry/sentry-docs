@@ -33,10 +33,10 @@ export function ScreenshotEditorHelp({hide}: {hide: boolean}) {
   const contentRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const initialBoundingRect = contentRef.current!.getBoundingClientRect();
+    let boundingRect = contentRef.current!.getBoundingClientRect();
     const handleMouseMove = (e: MouseEvent) => {
       const {clientX, clientY} = e;
-      const {left, bottom, right} = initialBoundingRect;
+      const {left, bottom, right} = boundingRect;
       const threshold = 50;
       const isNearContent =
         clientX > left - threshold &&
@@ -48,8 +48,17 @@ export function ScreenshotEditorHelp({hide}: {hide: boolean}) {
         setIsHidden(false);
       }
     };
+
+    function handleResize() {
+      boundingRect = contentRef.current!.getBoundingClientRect();
+    }
+
+    window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
   return (

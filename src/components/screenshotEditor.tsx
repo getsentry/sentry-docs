@@ -61,6 +61,19 @@ const canvasToBlob = (canvas: HTMLCanvasElement): Promise<Blob> => {
     });
   });
 };
+interface Point {
+  x: number;
+  y: number;
+}
+
+const constructRect = (start: Point, end: Point) => {
+  return {
+    x: Math.min(start.x, end.x),
+    y: Math.min(start.y, end.y),
+    width: Math.abs(start.x - end.x),
+    height: Math.abs(start.y - end.y),
+  };
+};
 
 export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -68,7 +81,7 @@ export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
   const currentRatio = React.useRef<number>(1);
 
   useEffect(() => {
-    const canvas = document.querySelector('canvas');
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const img = new Image();
     const rectStart: {x: number; y: number} = {x: 0, y: 0};
@@ -93,26 +106,19 @@ export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
         return;
       }
 
-      // draw gray overlay around the selection
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.fillRect(0, 0, canvas.width, rectStart.y);
-      ctx.fillRect(0, rectStart.y, rectStart.x, rectEnd.y - rectStart.y);
-      ctx.fillRect(
-        rectEnd.x,
-        rectStart.y,
-        canvas.width - rectEnd.x,
-        rectEnd.y - rectStart.y
-      );
-      ctx.fillRect(0, rectEnd.y, canvas.width, canvas.height - rectEnd.y);
+      const rect = constructRect(rectStart, rectEnd);
 
+      // draw gray overlay around the selectio
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(0, 0, canvas.width, rect.y);
+      ctx.fillRect(0, rect.y, rect.x, rect.height);
+      ctx.fillRect(rect.x + rect.width, rect.y, canvas.width, rect.height);
+      ctx.fillRect(0, rect.y + rect.height, canvas.width, canvas.height);
+
+      // draw selection border
       ctx.strokeStyle = '#79628c';
       ctx.lineWidth = 6;
-      ctx.strokeRect(
-        rectStart.x,
-        rectStart.y,
-        rectEnd.x - rectStart.x,
-        rectEnd.y - rectStart.y
-      );
+      ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
     }
 
     async function submit(rect?: Rect) {
@@ -159,12 +165,7 @@ export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
         refreshCanvas();
         return;
       }
-      submit({
-        x: rectStart.x,
-        y: rectStart.y,
-        width: rectEnd.x - rectStart.x,
-        height: rectEnd.y - rectStart.y,
-      });
+      submit(constructRect(rectStart, rectEnd));
     }
 
     function handleEnterKey(e) {
@@ -183,16 +184,16 @@ export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
     img.src = dataUrl;
 
     window.addEventListener('resize', setCanvasSize, {passive: true});
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('keydown', handleEnterKey);
 
     return () => {
       window.removeEventListener('resize', setCanvasSize);
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleEnterKey);
     };
   }, [dataUrl]);
