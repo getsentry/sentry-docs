@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 
 import {ScreenshotEditorHelp} from './screenshotEditorHelp';
 
-interface Rect {
+export interface Rect {
   height: number;
   width: number;
   x: number;
