@@ -6,7 +6,7 @@ import {FeedbackModal} from './feedbackModal';
 export function FeebdackWidget() {
   const [open, setOpen] = React.useState(false);
 
-  const handleSubmit = (data: {comment: string; title: string}) => {
+  const handleSubmit = (data: {comment: string; title: string; image?: Blob}) => {
     console.log(data);
     setOpen(false);
   };
