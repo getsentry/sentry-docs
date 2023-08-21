@@ -150,8 +150,23 @@ const ScreenshotPreview = styled.img`
   height: 200px;
   object-fit: contain;
   background-color: #ccc;
+  repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 16px,
+    rgba(0, 0, 0, 0.2) 16px,
+    rgba(0, 0, 0, 0.2) 17.5px
+  );
   border-radius: 4px;
   border: 1px solid #ccc;
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.03) 5px,
+    rgba(0, 0, 0, 0.03) 10px
+  );
 `;
 
 interface FeedbackModalProps {
