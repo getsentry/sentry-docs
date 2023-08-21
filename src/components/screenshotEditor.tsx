@@ -27,13 +27,13 @@ const Container = styled.div`
   width: 100vw;
   top: 0;
   left: 0;
-  background-color: #ccc;
+  background-color: #fff;
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
-    transparent 16px,
-    rgba(0, 0, 0, 0.2) 16px,
-    rgba(0, 0, 0, 0.2) 17.5px
+    transparent 5px,
+    rgba(0, 0, 0, 0.03) 5px,
+    rgba(0, 0, 0, 0.03) 10px
   );
 `;
 
@@ -147,14 +147,14 @@ export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
     }
 
     function handleMouseDown(e) {
-      rectStart.x = e.offsetX / currentRatio.current;
-      rectStart.y = e.offsetY / currentRatio.current;
+      rectStart.x = Math.floor(e.offsetX / currentRatio.current);
+      rectStart.y = Math.floor(e.offsetY / currentRatio.current);
       isDragging = true;
       setIsDraggingState(true);
     }
     function handleMouseMove(e) {
-      rectEnd.x = e.offsetX / currentRatio.current;
-      rectEnd.y = e.offsetY / currentRatio.current;
+      rectEnd.x = Math.floor(e.offsetX / currentRatio.current);
+      rectEnd.y = Math.floor(e.offsetY / currentRatio.current);
       refreshCanvas();
     }
     function handleMouseUp() {
