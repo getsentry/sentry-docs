@@ -1,10 +1,11 @@
-import React, {FormEvent} from 'react';
+import React, {FormEvent, useEffect} from 'react';
 import {css} from '@emotion/react';
 import styled from '@emotion/styled';
 
 import {useFocusTrap} from './hooks/useFocusTrap';
 import {useShortcut} from './hooks/useShortcut';
 import {useTakeScreenshot} from './hooks/useTakeScreenhot';
+import {ScreenshotEditor} from './screenshotEditor';
 
 const Dialog = styled.dialog`
   background-color: rgba(0, 0, 0, 0.05);
@@ -116,11 +117,11 @@ const CancelButton = styled.button`
   color: #231c3d;
   font-weight: 500;
   &:hover {
-    background-color: #ccc;
+    background-color: #eee;
   }
   &:focus-visible {
     outline: 1px solid #79628c;
-    background-color: #ccc;
+    background-color: #eee;
   }
 `;
 
@@ -130,11 +131,11 @@ const ScreenshotButton = styled.button`
   color: #231c3d;
   font-weight: 500;
   &:hover {
-    background-color: #ccc;
+    background-color: #eee;
   }
   &:focus-visible {
     outline: 1px solid #79628c;
-    background-color: #ccc;
+    background-color: #eee;
   }
 `;
 
@@ -184,6 +185,17 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
   useShortcut('Escape', onClose);
   const {isInProgress, takeScreenshot} = useTakeScreenshot();
 
+  // Reset on close
+  useEffect(() => {
+    if (!open) {
+      setTimeout(() => {
+        formRef.current.reset();
+        setScreenshot(undefined);
+        setScreenshotPreview(undefined);
+      }, 200);
+    }
+  }, [open]);
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -192,53 +204,59 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
       title: retrieveStringValue(formData, 'title'),
       image: screenshot,
     });
-    formRef.current.reset();
-    setScreenshot(undefined);
-    setScreenshotPreview(undefined);
   };
 
   const handleScreenshot = async () => {
     const image = await takeScreenshot();
-    setScreenshot(image);
-    setScreenshotPreview(await blobToBase64(image));
+    setScreenshotPreview(image);
+  };
+
+  const handleEditorSubmit = async (newScreenshot: Blob) => {
+    setScreenshot(newScreenshot);
+    setScreenshotPreview(await blobToBase64(newScreenshot));
   };
 
   return (
-    <Dialog open={open && !isInProgress} ref={dialogRef} onClick={onClose}>
-      <Content onClick={stopPropagation}>
-        <Header>Got any Feedback?</Header>
-        <Form ref={formRef} onSubmit={handleSubmit}>
-          <Label>
-            Title:
-            <Input required type="text" name="title" placeholder="Enter a subject" />
-          </Label>
-          <Label>
-            Comment:
-            <TextArea
-              onKeyDown={event => {
-                if (event.key === 'Enter' && event.ctrlKey) {
-                  formRef.current.requestSubmit();
-                }
-              }}
-              name="comment"
-              placeholder="Explain what bothers you"
-            />
-          </Label>
-          {screenshot ? (
-            <ScreenshotPreview src={screenshotPreview} />
-          ) : (
-            <ScreenshotButton type="button" onClick={handleScreenshot}>
-              Add Screenshot
-            </ScreenshotButton>
-          )}
-          <ModalFooter>
-            <CancelButton type="button" onClick={onClose}>
-              Cancel
-            </CancelButton>
-            <SubmitButton type="submit">Submit</SubmitButton>
-          </ModalFooter>
-        </Form>
-      </Content>
-    </Dialog>
+    <React.Fragment>
+      <Dialog open={open && !isInProgress} ref={dialogRef} onClick={onClose}>
+        <Content onClick={stopPropagation}>
+          <Header>Got any Feedback?</Header>
+          <Form ref={formRef} onSubmit={handleSubmit}>
+            <Label>
+              Title:
+              <Input required type="text" name="title" placeholder="Enter a subject" />
+            </Label>
+            <Label>
+              Comment:
+              <TextArea
+                onKeyDown={event => {
+                  if (event.key === 'Enter' && event.ctrlKey) {
+                    formRef.current.requestSubmit();
+                  }
+                }}
+                name="comment"
+                placeholder="Explain what bothers you"
+              />
+            </Label>
+            {screenshotPreview ? (
+              <ScreenshotPreview src={screenshotPreview} />
+            ) : (
+              <ScreenshotButton type="button" onClick={handleScreenshot}>
+                Add Screenshot
+              </ScreenshotButton>
+            )}
+            <ModalFooter>
+              <CancelButton type="button" onClick={onClose}>
+                Cancel
+              </CancelButton>
+              <SubmitButton type="submit">Submit</SubmitButton>
+            </ModalFooter>
+          </Form>
+        </Content>
+      </Dialog>
+      {screenshotPreview && !screenshot && (
+        <ScreenshotEditor dataUrl={screenshotPreview} onSubmit={handleEditorSubmit} />
+      )}
+    </React.Fragment>
   );
 }

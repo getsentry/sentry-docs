@@ -17,6 +17,13 @@ const Button = styled.button`
   text-align: center;
   text-decoration: none;
   z-index: 9000;
+  &:hover {
+    background-color: #eee;
+  }
+  &:focus-visible {
+    outline: 1px solid #79628c;
+    background-color: #eee;
+  }
 `;
 
 export function FeebdackButton(props) {

@@ -1,8 +1,11 @@
 import {useCallback, useState} from 'react';
 
-const takeScreenshot = async (): Promise<Blob> => {
+const takeScreenshot = async (): Promise<string> => {
   const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
+    video: {
+      width: window.innerWidth * window.devicePixelRatio,
+      height: window.innerHeight * window.devicePixelRatio,
+    },
     audio: false,
     preferCurrentTab: true,
     surfaceSwitching: 'exclude',
@@ -27,17 +30,15 @@ const takeScreenshot = async (): Promise<Blob> => {
     video.play();
   });
 
-  return new Promise(resolve => {
-    canvas.toBlob(resolve);
-  });
+  return canvas.toDataURL();
 };
 
 export const useTakeScreenshot = () => {
   const [isInProgress, setIsInProgress] = useState(false);
 
-  const takeScreenshotCallback = useCallback(async (): Promise<Blob> => {
+  const takeScreenshotCallback = useCallback(async (): Promise<string> => {
     setIsInProgress(true);
-    let image: Blob | null = null;
+    let image: string | null = null;
     try {
       image = await takeScreenshot();
     } catch (error) {
