@@ -21,27 +21,41 @@ function getGitHubSourcePage(): string {
   return matchingElement === null ? '' : matchingElement.href;
 }
 
+async function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
+  const blobData = await blob.arrayBuffer();
+  return new Uint8Array(blobData);
+}
+
 export function FeebdackWidget() {
   const [open, setOpen] = React.useState(false);
 
-  const handleSubmit = async (data: {comment: string; title: string; image?: Blob}) => {
+  const handleSubmit = async (data: {
+    comment: string;
+    title: string;
+    image?: Blob;
+    imageCutout?: Blob;
+  }) => {
     console.log('handleSubmit data:', data);
     setOpen(false);
 
     let eventId: string;
-    let imageBlob: Uint8Array = null;
-
-    if (data.image && data.image.size > 0) {
-      const blobData = await data.image.arrayBuffer();
-      console.log('blobdata:', blobData);
-      imageBlob = new Uint8Array(blobData);
-    }
+    const imageData = data.image && (await blobToUint8Array(data.image));
+    const imageCutoutData =
+      data.imageCutout && (await blobToUint8Array(data.imageCutout));
 
     Sentry.withScope(scope => {
-      if (imageBlob) {
+      if (imageData) {
+        scope.addAttachment({
+          filename: 'screenshot-2.png',
+          data: imageData,
+          contentType: 'image/png',
+        });
+      }
+
+      if (imageCutoutData) {
         scope.addAttachment({
           filename: 'screenshot.png',
-          data: imageBlob,
+          data: imageCutoutData,
           contentType: 'image/png',
         });
       }

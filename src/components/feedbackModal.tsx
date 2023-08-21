@@ -149,7 +149,12 @@ const ScreenshotPreview = styled.img`
 
 interface FeedbackModalProps {
   onClose: () => void;
-  onSubmit: (data: {comment: string; title: string; image?: Blob}) => void;
+  onSubmit: (data: {
+    comment: string;
+    title: string;
+    image?: Blob;
+    imageCutout?: Blob;
+  }) => void;
   open: boolean;
 }
 
@@ -175,6 +180,9 @@ function blobToBase64(blob: Blob) {
 
 export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
   const [screenshot, setScreenshot] = React.useState<Blob | undefined>(undefined);
+  const [screenshotCutout, setScreenshotCutout] = React.useState<Blob | undefined>(
+    undefined
+  );
   const [screenshotPreview, setScreenshotPreview] = React.useState<string | undefined>(
     undefined
   );
@@ -191,6 +199,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
       setTimeout(() => {
         formRef.current.reset();
         setScreenshot(undefined);
+        setScreenshotCutout(undefined);
         setScreenshotPreview(undefined);
       }, 200);
     }
@@ -203,6 +212,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
       comment: retrieveStringValue(formData, 'comment'),
       title: retrieveStringValue(formData, 'title'),
       image: screenshot,
+      imageCutout: screenshotCutout,
     });
   };
 
@@ -211,8 +221,9 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     setScreenshotPreview(image);
   };
 
-  const handleEditorSubmit = async (newScreenshot: Blob) => {
+  const handleEditorSubmit = async (newScreenshot: Blob, cutout?: Blob) => {
     setScreenshot(newScreenshot);
+    setScreenshotCutout(cutout);
     setScreenshotPreview(await blobToBase64(newScreenshot));
   };
 
