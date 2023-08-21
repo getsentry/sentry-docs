@@ -38,9 +38,6 @@ export function FeebdackWidget() {
     }
 
     Sentry.withScope(scope => {
-      // We don't need breadcrumbs for now
-      scope.clearBreadcrumbs();
-
       if (imageBlob) {
         scope.addAttachment({
           filename: 'screenshot.png',
@@ -57,6 +54,13 @@ export function FeebdackWidget() {
         });
       }
 
+      const pageTitle = document.title;
+      if (pageTitle) {
+        scope.setTag('page_title', pageTitle);
+      }
+
+      // We don't need breadcrumbs for now
+      scope.clearBreadcrumbs();
       eventId = Sentry.captureMessage(data.title);
     });
 
