@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback, useEffect} from 'react';
 import * as Sentry from '@sentry/browser';
 
 import {FeebdackButton} from './feedbackButton';
@@ -68,6 +68,20 @@ export function FeebdackWidget() {
     };
     Sentry.captureUserFeedback(userFeedback);
   };
+
+  const handleKeyPress = useCallback(event => {
+    // Shift+Enter
+    if (event.shiftKey && event.keyCode === 13) {
+      setOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleKeyPress]);
 
   return (
     <React.Fragment>
