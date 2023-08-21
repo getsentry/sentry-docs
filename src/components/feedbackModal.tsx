@@ -4,6 +4,7 @@ import styled from '@emotion/styled';
 
 import {useFocusTrap} from './hooks/useFocusTrap';
 import {useShortcut} from './hooks/useShortcut';
+import {useTakeScreenshot} from './hooks/useTakeScreenhot';
 
 const Dialog = styled.dialog`
   background-color: rgba(0, 0, 0, 0.05);
@@ -16,6 +17,8 @@ const Dialog = styled.dialog`
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
   &:not([open]) {
     opacity: 0;
     pointer-events: none;
@@ -28,6 +31,11 @@ const Content = styled.div`
   width: 500px;
   max-width: 100%;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-in-out;
+  transform: translate(0, 0) scale(1);
+  dialog:not([open]) & {
+    transform: translate(0, -16px) scale(0.98);
+  }
 `;
 
 const Header = styled.h2`
@@ -73,17 +81,26 @@ const TextArea = styled.textarea`
   resize: vertical;
 `;
 
-const SubmitButton = styled.button`
-  background-color: #79628c;
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+`;
+
+const buttonStyles = css`
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: #fff;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   padding: 6px 16px;
-  align-self: flex-end;
-  margin-top: 8px;
+`;
+
+const SubmitButton = styled.button`
+  ${buttonStyles}
+  background-color: #79628c;
+  color: #fff;
   &:hover {
     background-color: #5f4b73;
   }
@@ -93,9 +110,45 @@ const SubmitButton = styled.button`
   }
 `;
 
+const CancelButton = styled.button`
+  ${buttonStyles}
+  background-color: #fff;
+  color: #231c3d;
+  font-weight: 500;
+  &:hover {
+    background-color: #ccc;
+  }
+  &:focus-visible {
+    outline: 1px solid #79628c;
+    background-color: #ccc;
+  }
+`;
+
+const ScreenshotButton = styled.button`
+  ${buttonStyles}
+  background-color: #fff;
+  color: #231c3d;
+  font-weight: 500;
+  &:hover {
+    background-color: #ccc;
+  }
+  &:focus-visible {
+    outline: 1px solid #79628c;
+    background-color: #ccc;
+  }
+`;
+
+const ScreenshotPreview = styled.img`
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  background-color: #ccc;
+`;
+
 interface FeedbackModalProps {
   onClose: () => void;
-  onSubmit: (data: {comment: string; title: string}) => void;
+  onSubmit: (data: {comment: string; title: string; image?: Blob}) => void;
   open: boolean;
 }
 
@@ -111,13 +164,25 @@ const retrieveStringValue = (formData: FormData, key: string) => {
   return '';
 };
 
+function blobToBase64(blob: Blob) {
+  return new Promise<string>((resolve, _) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
+}
+
 export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
+  const [screenshot, setScreenshot] = React.useState<Blob | undefined>(undefined);
+  const [screenshotPreview, setScreenshotPreview] = React.useState<string | undefined>(
+    undefined
+  );
   const dialogRef = React.useRef<HTMLDialogElement>(null);
   const formRef = React.useRef<HTMLFormElement>(null);
 
   useFocusTrap(dialogRef, open);
-
   useShortcut('Escape', onClose);
+  const {isInProgress, takeScreenshot} = useTakeScreenshot();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -125,12 +190,21 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     onSubmit({
       comment: retrieveStringValue(formData, 'comment'),
       title: retrieveStringValue(formData, 'title'),
+      image: screenshot,
     });
     formRef.current.reset();
+    setScreenshot(undefined);
+    setScreenshotPreview(undefined);
+  };
+
+  const handleScreenshot = async () => {
+    const image = await takeScreenshot();
+    setScreenshot(image);
+    setScreenshotPreview(await blobToBase64(image));
   };
 
   return (
-    <Dialog open={open} ref={dialogRef} onClick={onClose}>
+    <Dialog open={open && !isInProgress} ref={dialogRef} onClick={onClose}>
       <Content onClick={stopPropagation}>
         <Header>Got any Feedback?</Header>
         <Form ref={formRef} onSubmit={handleSubmit}>
@@ -150,7 +224,19 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
               placeholder="Explain what bothers you"
             />
           </Label>
-          <SubmitButton type="submit">Submit</SubmitButton>
+          {screenshot ? (
+            <ScreenshotPreview src={screenshotPreview} />
+          ) : (
+            <ScreenshotButton type="button" onClick={handleScreenshot}>
+              Add Screenshot
+            </ScreenshotButton>
+          )}
+          <ModalFooter>
+            <CancelButton type="button" onClick={onClose}>
+              Cancel
+            </CancelButton>
+            <SubmitButton type="submit">Submit</SubmitButton>
+          </ModalFooter>
         </Form>
       </Content>
     </Dialog>
