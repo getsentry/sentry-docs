@@ -11,7 +11,7 @@ interface Rect {
 }
 interface ScreenshotEditorProps {
   dataUrl: string;
-  onSubmit: (screenshot: Blob, selection?: Rect) => void;
+  onSubmit: (screenshot: Blob, cutout?: Blob, selection?: Rect) => void;
 }
 
 const Canvas = styled.canvas`
@@ -52,6 +52,14 @@ const getCanvasRenderSize = (width: number, height: number) => {
   }
 
   return {width, height};
+};
+
+const canvasToBlob = (canvas: HTMLCanvasElement): Promise<Blob> => {
+  return new Promise(resolve => {
+    canvas.toBlob(blob => {
+      resolve(blob);
+    });
+  });
 };
 
 export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
@@ -107,10 +115,29 @@ export function ScreenshotEditor({dataUrl, onSubmit}: ScreenshotEditorProps) {
       );
     }
 
-    function submit(rect?: Rect) {
-      canvasRef.current.toBlob(blob => {
-        onSubmit(blob, rect);
-      });
+    async function submit(rect?: Rect) {
+      const imageBlob = await canvasToBlob(canvas);
+      if (!rect) {
+        onSubmit(imageBlob);
+        return;
+      }
+      const cutoutCanvas = document.createElement('canvas');
+      cutoutCanvas.width = rect.width;
+      cutoutCanvas.height = rect.height;
+      const cutoutCtx = cutoutCanvas.getContext('2d');
+      cutoutCtx.drawImage(
+        canvas,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
+        0,
+        0,
+        rect.width,
+        rect.height
+      );
+      const cutoutBlob = await canvasToBlob(cutoutCanvas);
+      onSubmit(imageBlob, cutoutBlob, rect);
     }
 
     function handleMouseDown(e) {
