@@ -5,7 +5,7 @@ import styled from '@emotion/styled';
 import {useFocusTrap} from './hooks/useFocusTrap';
 import {useShortcut} from './hooks/useShortcut';
 import {useTakeScreenshot} from './hooks/useTakeScreenhot';
-import {ScreenshotEditor} from './screenshotEditor';
+import {Rect, ScreenshotEditor} from './screenshotEditor';
 
 const Dialog = styled.dialog`
   background-color: rgba(0, 0, 0, 0.05);
@@ -23,6 +23,7 @@ const Dialog = styled.dialog`
   &:not([open]) {
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
   }
 `;
 
@@ -160,6 +161,7 @@ interface FeedbackModalProps {
     title: string;
     image?: Blob;
     imageCutout?: Blob;
+    selection?: Rect;
   }) => void;
   open: boolean;
 }
@@ -192,6 +194,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
   const [screenshotPreview, setScreenshotPreview] = React.useState<string | undefined>(
     undefined
   );
+  const selectionRef = React.useRef<Rect | undefined>(undefined);
   const dialogRef = React.useRef<HTMLDialogElement>(null);
   const formRef = React.useRef<HTMLFormElement>(null);
 
@@ -219,6 +222,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
       title: retrieveStringValue(formData, 'title'),
       image: screenshot,
       imageCutout: screenshotCutout,
+      selection: selectionRef.current,
     });
   };
 
@@ -232,15 +236,25 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     }
   };
 
-  const handleEditorSubmit = async (newScreenshot: Blob, cutout?: Blob) => {
+  const handleEditorSubmit = async (
+    newScreenshot: Blob,
+    cutout?: Blob,
+    selection?: Rect
+  ) => {
     setScreenshot(newScreenshot);
     setScreenshotCutout(cutout);
     setScreenshotPreview(await blobToBase64(newScreenshot));
+    selectionRef.current = selection;
   };
 
   return (
     <React.Fragment>
-      <Dialog open={open && !isInProgress} ref={dialogRef} onClick={onClose}>
+      <Dialog
+        id="feedbackModal"
+        open={open && !isInProgress}
+        ref={dialogRef}
+        onClick={onClose}
+      >
         <Content onClick={stopPropagation}>
           <Header>Got any Feedback?</Header>
           <Form ref={formRef} onSubmit={handleSubmit}>
