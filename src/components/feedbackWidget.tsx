@@ -24,22 +24,30 @@ function getGitHubSourcePage(): string {
 export function FeebdackWidget() {
   const [open, setOpen] = React.useState(false);
 
-  const handleSubmit = (data: {comment: string; title: string; image?: Blob}) => {
-    console.log(data);
+  const handleSubmit = async (data: {comment: string; title: string; image?: Blob}) => {
+    console.log('handleSubmit data:', data);
     setOpen(false);
 
     let eventId: string;
-    const imageBlob: Uint8Array = Uint8Array.from('', c => c.charCodeAt(0));
+    let imageBlob: Uint8Array = null;
+
+    if (data.image && data.image.size > 0) {
+      const blobData = await data.image.arrayBuffer();
+      console.log('blobdata:', blobData);
+      imageBlob = new Uint8Array(blobData);
+    }
 
     Sentry.withScope(scope => {
-      scope.addAttachment({
-        filename: 'screenshot.png',
-        data: imageBlob,
-        contentType: 'image/png',
-      });
-
       // We don't need breadcrumbs for now
       scope.clearBreadcrumbs();
+
+      if (imageBlob) {
+        scope.addAttachment({
+          filename: 'screenshot.png',
+          data: imageBlob,
+          contentType: 'image/png',
+        });
+      }
 
       const sourcePage = getGitHubSourcePage();
       console.log('GitHub source page:', sourcePage);
