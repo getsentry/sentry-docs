@@ -5,6 +5,7 @@ import styled from '@emotion/styled';
 import {useFocusTrap} from './hooks/useFocusTrap';
 import {useShortcut} from './hooks/useShortcut';
 import {useTakeScreenshot} from './hooks/useTakeScreenhot';
+import {ImageEditorWrapper} from './imageEditorWrapper';
 import {Rect, ScreenshotEditor} from './screenshotEditor';
 
 const Dialog = styled.dialog`
@@ -144,22 +145,53 @@ const ScreenshotButton = styled.button`
   }
 `;
 
-const ScreenshotPreview = styled.img`
-  display: block;
+const ScreenshotWrapper = styled.div`
+  display: flex;
+  gap: 8px;
   width: 100%;
-  height: 200px;
-  object-fit: contain;
-  background-color: #ccc;
-  repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 16px,
-    rgba(0, 0, 0, 0.2) 16px,
-    rgba(0, 0, 0, 0.2) 17.5px
-  );
+`;
+
+const ScreenshotPreview = styled.button`
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+  height: 160px;
   border-radius: 4px;
   border: 1px solid #ccc;
-  background-color: #fff;
+  overflow: hidden;
+  &::after {
+    content: 'Edit';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+  &:hover {
+    &::after {
+      opacity: 1;
+    }
+  }
+`;
+
+const PreviewImage = styled.img`
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  object-fit: contain;
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
@@ -211,6 +243,12 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
   const [screenshotPreview, setScreenshotPreview] = React.useState<string | undefined>(
     undefined
   );
+  const [screenshotCutoutPreview, setScreenshotCutoutPreview] = React.useState<
+    string | undefined
+  >(undefined);
+  const [isEditScreenshotOpen, setIsEditScreenshotOpen] = React.useState(false);
+  const [isEditCutoutOpen, setIsEditCutoutOpen] = React.useState(false);
+
   const selectionRef = React.useRef<Rect | undefined>(undefined);
   const dialogRef = React.useRef<HTMLDialogElement>(null);
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -263,6 +301,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     setScreenshot(newScreenshot);
     setScreenshotCutout(cutout);
     setScreenshotPreview(await blobToBase64(newScreenshot));
+    setScreenshotCutoutPreview(cutout && (await blobToBase64(cutout)));
     selectionRef.current = selection;
   };
 
@@ -293,16 +332,6 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                 placeholder="Explain what bothers you"
               />
             </Label>
-            <Label>
-              Screenshot
-              {screenshotPreview ? (
-                <ScreenshotPreview src={screenshotPreview} />
-              ) : (
-                <ScreenshotButton type="button" onClick={handleScreenshot}>
-                  Add Screenshot
-                </ScreenshotButton>
-              )}
-            </Label>
             <div style={{display: 'flex', flexDirection: 'row'}}>
               <Label>
                 Your Name (optional)
@@ -313,6 +342,29 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                 <Input type="text" name="email" placeholder="you@test.com" />
               </Label>
             </div>
+            <Label>Screenshot</Label>
+            {screenshotPreview ? (
+              <ScreenshotWrapper>
+                <ScreenshotPreview
+                  type="button"
+                  onClick={() => setIsEditScreenshotOpen(true)}
+                >
+                  <PreviewImage src={screenshotPreview} />
+                </ScreenshotPreview>
+                {screenshotCutout && (
+                  <ScreenshotPreview
+                    type="button"
+                    onClick={() => setIsEditCutoutOpen(true)}
+                  >
+                    <PreviewImage src={screenshotCutoutPreview} />
+                  </ScreenshotPreview>
+                )}
+              </ScreenshotWrapper>
+            ) : (
+              <ScreenshotButton type="button" onClick={handleScreenshot}>
+                Add Screenshot
+              </ScreenshotButton>
+            )}
             <ModalFooter>
               <CancelButton type="button" onClick={onClose}>
                 Cancel
@@ -324,6 +376,32 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
       </Dialog>
       {screenshotPreview && !screenshot && (
         <ScreenshotEditor dataUrl={screenshotPreview} onSubmit={handleEditorSubmit} />
+      )}
+      {isEditScreenshotOpen && (
+        <ImageEditorWrapper
+          src={screenshotPreview}
+          onSubmit={async newScreenshot => {
+            setScreenshot(newScreenshot);
+            setScreenshotPreview(await blobToBase64(newScreenshot));
+            setIsEditScreenshotOpen(false);
+          }}
+          onCancel={() => {
+            setIsEditScreenshotOpen(false);
+          }}
+        />
+      )}
+      {isEditCutoutOpen && (
+        <ImageEditorWrapper
+          src={screenshotCutoutPreview}
+          onSubmit={async newCutout => {
+            setScreenshotCutout(newCutout);
+            setScreenshotCutoutPreview(await blobToBase64(newCutout));
+            setIsEditCutoutOpen(false);
+          }}
+          onCancel={() => {
+            setIsEditCutoutOpen(false);
+          }}
+        />
       )}
     </React.Fragment>
   );
