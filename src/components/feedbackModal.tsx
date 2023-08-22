@@ -173,6 +173,8 @@ interface FeedbackModalProps {
   onClose: () => void;
   onSubmit: (data: {
     comment: string;
+    email: string;
+    name: string;
     title: string;
     image?: Blob;
     imageCutout?: Blob;
@@ -235,6 +237,8 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     onSubmit({
       comment: retrieveStringValue(formData, 'comment'),
       title: retrieveStringValue(formData, 'title'),
+      name: retrieveStringValue(formData, 'name'),
+      email: retrieveStringValue(formData, 'email'),
       image: screenshot,
       imageCutout: screenshotCutout,
       selection: selectionRef.current,
@@ -299,6 +303,16 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                 </ScreenshotButton>
               )}
             </Label>
+            <div style={{display: 'flex', flexDirection: 'row'}}>
+              <Label>
+                Your Name (optional)
+                <Input type="text" name="name" placeholder="Anonymous" />
+              </Label>
+              <Label>
+                Your Email (optional)
+                <Input type="text" name="email" placeholder="you@test.com" />
+              </Label>
+            </div>
             <ModalFooter>
               <CancelButton type="button" onClick={onClose}>
                 Cancel
