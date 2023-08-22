@@ -148,10 +148,14 @@ export function FeebdackWidget() {
     setOpen(false);
 
     const selectedElement = data.selection && getSelectedDomElement(data.selection);
+    let nearestHeadingElement: HTMLElement;
+    let nearestIdInViewport: HTMLElement;
     console.log('selected element:', selectedElement);
     if (selectedElement) {
-      console.log('nearest heading:', getNearestHeadingElement(selectedElement));
-      console.log('nearest id:', getNearestIdInViewport(selectedElement));
+      nearestHeadingElement = getNearestHeadingElement(selectedElement);
+      nearestIdInViewport = getNearestIdInViewport(selectedElement);
+      console.log('nearest heading:', nearestHeadingElement);
+      console.log('nearest id:', nearestIdInViewport);
     }
 
     let eventId: string;
@@ -179,14 +183,19 @@ export function FeebdackWidget() {
       const sourcePage = getGitHubSourcePage();
       console.log('GitHub source page:', sourcePage);
       if (sourcePage) {
-        scope.setContext('Edit Content', {
-          'Source file': sourcePage,
+        scope.setContext('Content', {
+          'Edit file': sourcePage,
+          Repository: sourcePage.split('/').slice(0, 5).join('/'),
         });
       }
 
       const pageTitle = document.title;
       if (pageTitle) {
         scope.setTag('page_title', pageTitle);
+      }
+
+      if (nearestHeadingElement && nearestHeadingElement.textContent) {
+        scope.setTag('page_section', nearestHeadingElement.textContent);
       }
 
       // We don't need breadcrumbs for now
