@@ -64,7 +64,7 @@ export function ScreenshotEditorHelp({hide}: {hide: boolean}) {
   return (
     <Wrapper data-hide={isHidden || hide}>
       <Content ref={contentRef}>
-        {'Mark the problem on the sceen ("Enter" to skip)'}
+        {'Mark the problem on the screen (press "Enter" to skip)'}
       </Content>
     </Wrapper>
   );
