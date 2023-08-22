@@ -34,8 +34,8 @@ function getSelectedDomElement(selection: Rect): HTMLElement | null {
   const reducedSelection = {
     x: selection.x + 30,
     y: selection.y + 30,
-    width: selection.width - 60,
-    height: selection.height - 60,
+    width: Math.max(selection.width - 60, 0),
+    height: Math.max(selection.height - 60),
   };
 
   // Retrieve all elements at the center of the selection
