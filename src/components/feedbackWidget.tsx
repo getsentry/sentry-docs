@@ -137,6 +137,8 @@ export function FeebdackWidget() {
 
   const handleSubmit = async (data: {
     comment: string;
+    email: string;
+    name: string;
     title: string;
     image?: Blob;
     imageCutout?: Blob;
@@ -193,9 +195,9 @@ export function FeebdackWidget() {
     });
 
     const userFeedback = {
-      name: 'fixme name',
-      email: 'test@test.com',
-      comments: `${data.title}: ${data.comment}`,
+      name: data.name || 'Anonymous',
+      email: data.email,
+      comments: data.comment,
       event_id: eventId,
     };
     Sentry.captureUserFeedback(userFeedback);
