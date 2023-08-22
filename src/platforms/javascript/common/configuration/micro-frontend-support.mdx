@@ -93,11 +93,24 @@ The example below uses a `feature` tag to determine which Sentry project to
 send the event to. If the event does not have a `feature` tag, we send it to the
 fallback DSN defined in `Sentry.init`.
 
-```javascript
+```typescript
 import { captureException, init, makeFetchTransport } from "@sentry/browser";
 import { makeMultiplexedTransport } from "@sentry/core";
+import { Envelope, EnvelopeItemType } from "@sentry/types";
 
-function dsnFromFeature({ getEvent }) {
+interface MatchParam {
+  /** The envelope to be sent */
+  envelope: Envelope;
+  /**
+   * A function that returns an event from the envelope if one exists. You can optionally pass an array of envelope item
+   * types to filter by - only envelopes matching the given types will be returned.
+   *
+   * @param types Defaults to ['event'] (only error events will be returned)
+   */
+  getEvent(types?: EnvelopeItemType[]): Event | undefined;
+}
+
+function dsnFromFeature({ getEvent }: MatchParam) {
   const event = getEvent();
   switch (event?.tags?.feature) {
     case "cart":
@@ -129,20 +142,6 @@ You can then set tags/contexts on events in individual micro-frontends to decide
 containing the DSN and optionally the release.
 
 ```typescript
-import { Envelope, EnvelopeItemType } from "@sentry/types";
-
-interface MatchParam {
-  /** The envelope to be sent */
-  envelope: Envelope;
-  /**
-   * A function that returns an event from the envelope if one exists. You can optionally pass an array of envelope item
-   * types to filter by - only envelopes matching the given types will be returned.
-   *
-   * @param types Defaults to ['event'] (only error events will be returned)
-   */
-  getEvent(types?: EnvelopeItemType[]): Event | undefined;
-}
-
 interface RouteTo {
   dsn: string;
   release?: string;
