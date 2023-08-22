@@ -5,6 +5,16 @@ import {FeebdackButton} from './feedbackButton';
 import {FeedbackModal} from './feedbackModal';
 import {Rect} from './screenshotEditor';
 
+const replay = new Sentry.Replay();
+Sentry.init({
+  // https://sentry-test.sentry.io/issues/?project=4505742647754752
+  dsn: 'https://db1366bd2d586cac50181e3eaee5c3e1@o19635.ingest.sentry.io/4505742647754752',
+  replaysSessionSampleRate: 1.0,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [replay],
+  debug: true,
+});
+
 function containsRect(bounds: DOMRect, rect: Rect): boolean {
   return (
     rect.x >= bounds.x &&
@@ -110,11 +120,6 @@ function getNearestIdInViewport(element: HTMLElement): HTMLElement | null {
   return null;
 }
 
-Sentry.init({
-  // https://sentry-test.sentry.io/issues/?project=4505742647754752
-  dsn: 'https://db1366bd2d586cac50181e3eaee5c3e1@o19635.ingest.sentry.io/4505742647754752',
-});
-
 function getGitHubSourcePage(): string {
   const xpath = "//a[text()='Suggest an edit to this page']";
   const matchingElement = document.evaluate(
@@ -196,6 +201,14 @@ export function FeebdackWidget() {
 
       if (nearestHeadingElement && nearestHeadingElement.textContent) {
         scope.setTag('page_section', nearestHeadingElement.textContent);
+      }
+
+      // Prepare session replay
+      replay.flush();
+      const replayId = replay.getReplayId();
+      console.log('replayId', replayId);
+      if (replayId) {
+        scope.setTag('replayId', replayId);
       }
 
       // We don't need breadcrumbs for now
