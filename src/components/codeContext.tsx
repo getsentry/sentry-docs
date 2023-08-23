@@ -18,6 +18,7 @@ type ProjectCodeKeywords = {
 };
 
 type UserCodeKeywords = {
+  EMAIL: string;
   ID: number;
   NAME: string;
 };
@@ -51,6 +52,7 @@ type ProjectApiResult = {
 
 type UserApiResult = {
   avatarUrl: string;
+  email: string;
   id: number;
   isAuthenticated: boolean;
   name: string;
@@ -131,7 +133,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
 
   const url =
     process.env.NODE_ENV === 'development'
-      ? 'http://dev.getsentry.net:8000/docs/api/user/'
+      ? 'http://dev.getsentry.net:8000/api/0/auth-details/'
       : 'https://sentry.io/docs/api/user/';
 
   const makeDefaults = () => {
@@ -185,6 +187,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
       ? {
           ID: user.id,
           NAME: user.name,
+          EMAIL: user.email,
         }
       : undefined,
   };
