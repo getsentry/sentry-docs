@@ -28,7 +28,7 @@ const Container = styled.div`
   width: 100vw;
   top: 0;
   left: 0;
-  background-color: #fff;
+  background-color: rgba(240, 236, 243, 1);
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
@@ -51,29 +51,38 @@ const CanvasWrapper = styled.div`
 const ToolbarGroup = styled.div`
   display: flex;
   flex-direction: row;
-  height: 48px;
-  background-color: #7669d3;
-  border-radius: 4px;
+  height: 42px;
+  background-color: white;
+  border: rgba(58, 17, 95, 0.14) 1px solid;
+  border-radius: 10px;
+  padding: 4px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.2);
+  gap: 4px;
+  box-shadow: 0px 1px 2px 1px rgba(43, 34, 51, 0.04);
 `;
 
 const Toolbar = styled.div`
   position: absolute;
   width: 100%;
-  bottom: 8px;
+  bottom: 0px;
+  padding: 12px 16px;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-direction: row;
   justify-content: center;
 `;
 
+const FlexSpacer = styled.div`
+  flex: 1;
+`;
+
 const ToolButton = styled.button<{active: boolean}>`
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   border: none;
-  background-color: transparent;
-  color: #fff;
+  background-color: white;
+  color: rgba(43, 34, 51, 1);
   font-size: 16px;
   font-weight: 600;
   display: flex;
@@ -81,69 +90,56 @@ const ToolButton = styled.button<{active: boolean}>`
   justify-content: center;
   cursor: pointer;
   &:hover {
-    background-color: #4939ba;
-  }
-  &:focus {
-    outline: none;
-  }
-  &:not(:last-child) {
+    background-color: rgba(43, 34, 51, 0.06);
   }
   ${({active}) =>
     active &&
     `
-    background-color: #4939ba;
+    background-color: rgba(108, 95, 199, 1) !important;\
+    color: white;
   `}
 `;
 
 const CancelButton = styled.button`
-  height: 48px;
-  padding: 0 24px;
-  border: none;
-  background-color: #999;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 40px;
+  width: 84px;
+  border: rgba(58, 17, 95, 0.14) 1px solid;
+  background-color: #fff;
+  color: rgba(43, 34, 51, 1);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  border-radius: 10px;
   &:hover {
-    background-color: #4939ba;
-  }
-  &:focus {
-    outline: none;
+    background-color: #eee;
   }
 `;
 
 const SubmitButton = styled.button`
-  height: 48px;
-  padding: 0 24px;
+  height: 40px;
+  width: 84px;
   border: none;
-  background-color: transparent;
+  background-color: rgba(108, 95, 199, 1);
   color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  border-radius: 10px;
   &:hover {
-    background-color: #4939ba;
-  }
-  &:focus {
-    outline: none;
+    background-color: rgba(88, 74, 192, 1);
   }
 `;
 
-const ColorInput = styled.label<{background: string}>`
+const ColorInput = styled.label`
   position: relative;
-  display: block;
-  width: 48px;
-  height: 48px;
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   cursor: pointer;
-  ${({background}) => `background-color: ${background};`}
-  & input {
+  & input[type='color'] {
     position: absolute;
     top: 0;
     left: 0;
@@ -151,14 +147,13 @@ const ColorInput = styled.label<{background: string}>`
     width: 0;
     height: 0;
   }
-  &::after {
-    content: '';
-    display: block;
-    position: absolute;
-    inset: 0;
-    border: 4px solid rgba(0, 0, 0, 0.2);
-    pointer-events: none;
-  }
+`;
+
+const ColorDisplay = styled.div<{color: string}>`
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  ${({color}) => `background-color: ${color};`}
 `;
 
 const iconMap: Record<ToolKey, ComponentType> = {
@@ -241,15 +236,8 @@ export function ImageEditorWrapper({src, onCancel, onSubmit}: ImageEditorWrapper
         <Canvas ref={setCanvas} />
       </CanvasWrapper>
       <Toolbar>
-        <ToolbarGroup>
-          <ColorInput background={selectedColor}>
-            <input
-              type="color"
-              value={selectedColor}
-              onChange={e => setSelectedColor(e.target.value)}
-            />
-          </ColorInput>
-        </ToolbarGroup>
+        <CancelButton onClick={() => onCancel()}>Cancel</CancelButton>
+        <FlexSpacer />
         <ToolbarGroup>
           {Tools.map(tool => (
             <ToolButton
@@ -262,13 +250,17 @@ export function ImageEditorWrapper({src, onCancel, onSubmit}: ImageEditorWrapper
           ))}
         </ToolbarGroup>
         <ToolbarGroup>
-          <CancelButton onClick={() => onCancel()}>Cancel</CancelButton>
+          <ColorInput>
+            <ColorDisplay color={selectedColor} />
+            <input
+              type="color"
+              value={selectedColor}
+              onChange={e => setSelectedColor(e.target.value)}
+            />
+          </ColorInput>
         </ToolbarGroup>
-        <ToolbarGroup>
-          <SubmitButton onClick={async () => onSubmit(await getBlob())}>
-            Save
-          </SubmitButton>
-        </ToolbarGroup>
+        <FlexSpacer />
+        <SubmitButton onClick={async () => onSubmit(await getBlob())}>Save</SubmitButton>
       </Toolbar>
     </Container>
   );

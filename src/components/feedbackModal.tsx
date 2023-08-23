@@ -74,8 +74,8 @@ const inputStyles = css`
   font-size: 14px;
   padding: 6px 8px;
   &:focus {
-    outline: 1px solid #79628c;
-    border-color: #79628c;
+    outline: 1px solid rgba(108, 95, 199, 1);
+    border-color: rgba(108, 95, 199, 1);
   }
 `;
 
@@ -107,14 +107,14 @@ const buttonStyles = css`
 
 const SubmitButton = styled.button`
   ${buttonStyles}
-  background-color: #79628c;
+  background-color: rgba(108, 95, 199, 1);
   color: #fff;
   &:hover {
-    background-color: #5f4b73;
+    background-color: rgba(88, 74, 192, 1);
   }
   &:focus-visible {
-    outline: 1px solid #79628c;
-    background-color: #5f4b73;
+    outline: 1px solid rgba(108, 95, 199, 1);
+    background-color: rgba(88, 74, 192, 1);
   }
 `;
 
@@ -127,7 +127,7 @@ const CancelButton = styled.button`
     background-color: #eee;
   }
   &:focus-visible {
-    outline: 1px solid #79628c;
+    outline: 1px solid rgba(108, 95, 199, 1);
     background-color: #eee;
   }
 `;
@@ -141,7 +141,7 @@ const ScreenshotButton = styled.button`
     background-color: #eee;
   }
   &:focus-visible {
-    outline: 1px solid #79628c;
+    outline: 1px solid rgba(108, 95, 199, 1);
     background-color: #eee;
   }
 `;

@@ -12,8 +12,9 @@ export interface IDrawing {
   isInPath: (ctx: CanvasRenderingContext2D, point: IPoint) => boolean;
   get isValid(): boolean;
   moveBy: (point: IPoint) => void;
+  scaleBy: (point: IPoint) => void;
   setColor: (color: string) => void;
-  setScalingFactor: (scalingFactor: number) => void;
+  setStrokeScalingFactor: (scalingFactor: number) => void;
   setStrokeSize: (strokeSize: number) => void;
   start: (point: IPoint) => void;
 }

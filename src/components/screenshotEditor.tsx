@@ -27,7 +27,7 @@ const Container = styled.div`
   width: 100vw;
   top: 0;
   left: 0;
-  background-color: #fff;
+  background-color: rgba(240, 236, 243, 1);
   background-image: repeating-linear-gradient(
     45deg,
     transparent,

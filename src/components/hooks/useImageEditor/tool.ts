@@ -21,7 +21,7 @@ class Tool implements ITool {
 
   startDrawing(point: IPoint, color: string, scalingFactor: number) {
     this.drawing = new this.DrawingConstructor();
-    this.drawing.setScalingFactor(scalingFactor);
+    this.drawing.setStrokeScalingFactor(scalingFactor);
     this.drawing.setColor(color);
     this.drawing.start(point);
   }
@@ -53,7 +53,9 @@ class Drawing implements IDrawing {
   protected translate: IPoint = {x: 0, y: 0};
   protected color = 'red';
   protected strokeSize = 6;
-  protected scalingFactor = 1;
+  protected strokeScalingFactor = 1;
+  protected scalingFactorX = 1;
+  protected scalingFactorY = 1;
 
   public id = Math.random().toString();
 
@@ -70,6 +72,20 @@ class Drawing implements IDrawing {
     return true;
   }
 
+  get topLeftPoint() {
+    return Point.fromNumber(
+      Math.min(this.startPoint.x, this.endPoint.x),
+      Math.min(this.startPoint.y, this.endPoint.y)
+    );
+  }
+
+  get bottomRightPoint() {
+    return Point.fromNumber(
+      Math.max(this.startPoint.x, this.endPoint.x),
+      Math.max(this.startPoint.y, this.endPoint.y)
+    );
+  }
+
   start(point: IPoint): void {
     this.startPoint = point;
     this.endPoint = point;
@@ -84,14 +100,20 @@ class Drawing implements IDrawing {
   }
 
   getBoundingBox() {
-    return getPointsBoundingBox([
+    const box = getPointsBoundingBox([
       Point.add(this.startPoint, this.translate),
       Point.add(this.endPoint, this.translate),
     ]);
+
+    return {
+      ...box,
+      width: box.width * this.scalingFactorX,
+      height: box.height * this.scalingFactorY,
+    };
   }
 
-  setScalingFactor(scalingFactor: number) {
-    this.scalingFactor = scalingFactor;
+  setStrokeScalingFactor(strokeScalingFactor: number) {
+    this.strokeScalingFactor = strokeScalingFactor;
   }
 
   setColor(color: string) {
@@ -103,12 +125,41 @@ class Drawing implements IDrawing {
   }
 
   isInPath(context: CanvasRenderingContext2D, point: IPoint) {
-    context.translate(this.translate.x, this.translate.y);
-    const isCollision = context.isPointInStroke(this.path, point.x, point.y);
+    return this.withTransform(
+      context,
+      () =>
+        // we check for multiple points to make selection easier
+        context.isPointInStroke(this.path, point.x, point.y) ||
+        context.isPointInStroke(this.path, point.x + this.strokeSize, point.y) ||
+        context.isPointInStroke(this.path, point.x - this.strokeSize, point.y) ||
+        context.isPointInStroke(this.path, point.x, point.y + this.strokeSize) ||
+        context.isPointInStroke(this.path, point.x, point.y - this.strokeSize) ||
+        context.isPointInStroke(
+          this.path,
+          point.x + this.strokeSize,
+          point.y + this.strokeSize
+        ) ||
+        context.isPointInStroke(
+          this.path,
+          point.x - this.strokeSize,
+          point.y - this.strokeSize
+        )
+    );
+  }
 
+  private withTransform<T>(context: CanvasRenderingContext2D, callback: () => T): T {
+    context.setTransform(
+      this.scalingFactorX,
+      0,
+      0,
+      this.scalingFactorY,
+      this.translate.x + this.topLeftPoint.x * (1 - this.scalingFactorX),
+      this.translate.y + this.topLeftPoint.y * (1 - this.scalingFactorY)
+    );
+    const result = callback();
     // Reset current transformation matrix to the identity matrix
     context.setTransform(1, 0, 0, 1, 0, 0);
-    return isCollision;
+    return result;
   }
 
   drawToCanvas(context: CanvasRenderingContext2D) {
@@ -119,13 +170,24 @@ class Drawing implements IDrawing {
     context.lineCap = 'round';
     context.lineJoin = 'round';
     context.strokeStyle = this.color;
-    context.lineWidth = this.strokeSize * this.scalingFactor;
+    context.lineWidth = this.strokeSize * this.strokeScalingFactor;
 
-    context.translate(this.translate.x, this.translate.y);
-    context.stroke(this.path);
+    this.withTransform(context, () => {
+      context.stroke(this.path);
+    });
+  }
 
-    // Reset current transformation matrix to the identity matrix
-    context.setTransform(1, 0, 0, 1, 0, 0);
+  scaleBy(delta: IPoint) {
+    const originalWidth = this.topLeftPoint.x - this.bottomRightPoint.x;
+    const originalHeight = this.topLeftPoint.y - this.bottomRightPoint.y;
+    const currentWidth = originalWidth * this.scalingFactorX;
+    const currentHeight = originalHeight * this.scalingFactorY;
+
+    const newWidth = currentWidth - delta.x;
+    const newHeight = currentHeight - delta.y;
+
+    this.scalingFactorX = newWidth / originalWidth;
+    this.scalingFactorY = newHeight / originalHeight;
   }
 
   moveBy(point: IPoint) {
@@ -162,7 +224,23 @@ class PenDrawing extends Drawing {
   private boundingBox: Rect;
 
   getBoundingBox(): Rect {
-    return translateRect(this.boundingBox, this.translate);
+    const rect = translateRect(this.boundingBox, this.translate);
+    return {
+      ...rect,
+      width: rect.width * this.scalingFactorX,
+      height: rect.height * this.scalingFactorY,
+    };
+  }
+
+  get topLeftPoint() {
+    return Point.fromNumber(this.boundingBox.x, this.boundingBox.y);
+  }
+
+  get bottomRightPoint() {
+    return Point.fromNumber(
+      this.boundingBox.x + this.boundingBox.width,
+      this.boundingBox.y + this.boundingBox.height
+    );
   }
 
   start = (point: IPoint) => {
@@ -213,11 +291,11 @@ class ArrowDrawing extends Drawing {
     const rightVector = unitVector.rotate(-Math.PI / 5);
     const leftPoint = Point.add(
       this.endPoint,
-      Point.multiply(leftVector, 20 * this.scalingFactor)
+      Point.multiply(leftVector, 20 * this.strokeScalingFactor)
     );
     const rightPoint = Point.add(
       this.endPoint,
-      Point.multiply(rightVector, 20 * this.scalingFactor)
+      Point.multiply(rightVector, 20 * this.strokeScalingFactor)
     );
     this.path.lineTo(leftPoint.x, leftPoint.y);
     this.path.moveTo(this.endPoint.x, this.endPoint.y);
