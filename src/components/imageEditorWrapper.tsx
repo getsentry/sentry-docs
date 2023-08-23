@@ -1,7 +1,8 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {ComponentType, useCallback, useEffect, useMemo, useState} from 'react';
 import styled from '@emotion/styled';
 
-import {Tools, useImageEditor} from './hooks/useImageEditor';
+import {ToolKey, Tools, useImageEditor} from './hooks/useImageEditor';
+import {ArrowIcon, HandIcon, PenIcon, RectangleIcon} from './hooks/useImageEditor/icons';
 
 export interface Rect {
   height: number;
@@ -160,6 +161,12 @@ const ColorInput = styled.label<{background: string}>`
   }
 `;
 
+const iconMap: Record<ToolKey, ComponentType> = {
+  arrow: ArrowIcon,
+  pen: PenIcon,
+  rectangle: RectangleIcon,
+};
+
 const getCanvasRenderSize = (
   canvas: HTMLCanvasElement,
   containerElement: HTMLDivElement
@@ -192,6 +199,11 @@ const srcToImage = (src: string): HTMLImageElement => {
   image.src = src;
   return image;
 };
+
+function ToolIcon({tool}: {tool: ToolKey}) {
+  const Icon = tool ? iconMap[tool] : HandIcon;
+  return <Icon />;
+}
 
 export function ImageEditorWrapper({src, onCancel, onSubmit}: ImageEditorWrapperProps) {
   const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -245,7 +257,7 @@ export function ImageEditorWrapper({src, onCancel, onSubmit}: ImageEditorWrapper
               active={selectedTool === tool}
               onClick={() => setSelectedTool(tool)}
             >
-              {tool?.[0] || 'h'}
+              <ToolIcon tool={tool} />
             </ToolButton>
           ))}
         </ToolbarGroup>
