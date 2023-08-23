@@ -42,8 +42,8 @@ export class Vector implements IPoint {
 export class Point {
   static fromMouseEvent(e: MouseEvent): IPoint {
     return {
-      x: e.offsetX,
-      y: e.offsetY,
+      x: e.clientX,
+      y: e.clientY,
     };
   }
 
@@ -138,7 +138,11 @@ export function translateBoundingBoxToDocument(
 
 export function translateMouseEvent(e: MouseEvent, canvas: HTMLCanvasElement): IPoint {
   const ratio = getCanvasScaleRatio(canvas);
-  return Point.round(translatePoint(Point.fromMouseEvent(e), ratio));
+  const clientRect = canvas.getBoundingClientRect();
+  const canvasOffset = Point.fromNumber(clientRect.left, clientRect.top);
+  return Point.round(
+    translatePoint(Point.subtract(Point.fromMouseEvent(e), canvasOffset), ratio)
+  );
 }
 
 export function translatePointToCanvas(point: IPoint, canvas: HTMLCanvasElement): IPoint {

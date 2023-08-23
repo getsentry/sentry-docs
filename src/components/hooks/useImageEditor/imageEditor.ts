@@ -16,7 +16,13 @@ class Resizer {
   private boundingBox: Rect;
   private box: HTMLDivElement;
   private isDragging: boolean = false;
-  constructor(boundingBox: Rect, onDrag?: (event: MouseEvent) => void) {
+  private isDraggingHandle: boolean = false;
+
+  constructor(
+    boundingBox: Rect,
+    onDrag?: (event: MouseEvent) => void,
+    onResize?: (event: MouseEvent) => void
+  ) {
     this.boundingBox = boundingBox;
 
     const box = document.createElement('div');
@@ -40,18 +46,18 @@ class Resizer {
 
     const topBorder = document.createElement('div');
     topBorder.style.position = 'absolute';
-    topBorder.style.width = '100%';
+    topBorder.style.width = 'calc(100% + 16px)';
     topBorder.style.height = '2px';
-    topBorder.style.top = '0';
-    topBorder.style.left = '0';
+    topBorder.style.top = '-8px';
+    topBorder.style.left = '-8px';
     topBorder.style.backgroundImage = horizontalDashedGradient;
 
     const bottomBorder = document.createElement('div');
     bottomBorder.style.position = 'absolute';
-    bottomBorder.style.width = '100%';
+    bottomBorder.style.width = 'calc(100% + 16px)';
     bottomBorder.style.height = '2px';
-    bottomBorder.style.bottom = '0';
-    bottomBorder.style.left = '0';
+    bottomBorder.style.bottom = '-8px';
+    bottomBorder.style.left = '-8px';
     bottomBorder.style.backgroundImage = horizontalDashedGradient;
 
     this.box.appendChild(topBorder);
@@ -59,34 +65,54 @@ class Resizer {
 
     const leftBorder = document.createElement('div');
     leftBorder.style.position = 'absolute';
-    leftBorder.style.height = '100%';
+    leftBorder.style.height = 'calc(100% + 16px)';
     leftBorder.style.width = '2px';
-    leftBorder.style.top = '0';
-    leftBorder.style.left = '0';
+    leftBorder.style.top = '-8px';
+    leftBorder.style.left = '-8px';
     leftBorder.style.backgroundImage = verticalDashedGradient;
 
     const rightBorder = document.createElement('div');
     rightBorder.style.position = 'absolute';
-    rightBorder.style.height = '100%';
+    rightBorder.style.height = 'calc(100% + 16px)';
     rightBorder.style.width = '2px';
-    rightBorder.style.top = '0';
-    rightBorder.style.right = '0';
+    rightBorder.style.top = '-8px';
+    rightBorder.style.right = '-8px';
     rightBorder.style.backgroundImage = verticalDashedGradient;
 
     this.box.appendChild(leftBorder);
     this.box.appendChild(rightBorder);
 
+    const handle = document.createElement('div');
+    handle.style.position = 'absolute';
+    handle.style.width = '10px';
+    handle.style.height = '10px';
+    handle.style.borderRadius = '50%';
+    handle.style.backgroundColor = 'white';
+    handle.style.border = '2px solid black';
+    handle.style.right = '-12px';
+    handle.style.bottom = '-12px';
+    handle.style.cursor = 'nwse-resize';
+    handle.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      this.isDraggingHandle = true;
+    });
+    this.box.appendChild(handle);
+
     this.box.addEventListener('mousedown', () => {
       this.isDragging = true;
     });
 
-    this.box.addEventListener('mouseup', () => {
+    window.addEventListener('mouseup', () => {
       this.isDragging = false;
+      this.isDraggingHandle = false;
     });
 
     window.addEventListener('mousemove', e => {
       if (this.isDragging) {
         onDrag?.(e);
+      }
+      if (this.isDraggingHandle) {
+        onResize?.(e);
       }
     });
 
@@ -106,18 +132,38 @@ class Resizer {
     this.updateStyles();
   }
 
+  resize(x: number, y: number) {
+    this.boundingBox = {
+      ...this.boundingBox,
+      width: this.boundingBox.width + x,
+      height: this.boundingBox.height + y,
+    };
+    this.updateStyles();
+  }
+
   private updateStyles() {
     this.box.style.position = 'fixed';
     this.box.style.zIndex = '90000';
-    this.box.style.width = `${this.boundingBox.width + 12}px`;
-    this.box.style.height = `${this.boundingBox.height + 12}px`;
-    this.box.style.left = `${this.boundingBox.x - 6}px`;
-    this.box.style.top = `${this.boundingBox.y - 6}px`;
+    this.box.style.width = `${Math.abs(this.boundingBox.width)}px`;
+    this.box.style.height = `${Math.abs(this.boundingBox.height)}px`;
+    this.box.style.left = `${this.boundingBox.x}px`;
+    this.box.style.top = `${this.boundingBox.y}px`;
     this.box.style.cursor = 'move';
+    this.box.style.transformOrigin = 'top left';
+
+    if (this.boundingBox.width < 0 && this.boundingBox.height < 0) {
+      this.box.style.transform = 'scale(-1)';
+    } else if (this.boundingBox.width < 0) {
+      this.box.style.transform = 'scaleX(-1)';
+    } else if (this.boundingBox.height < 0) {
+      this.box.style.transform = 'scaleY(-1)';
+    } else {
+      this.box.style.transform = 'none';
+    }
   }
 }
 
-const SCALEING_BASE = 800 * 800;
+const SCALEING_BASE = 1000 * 1000;
 
 const getScaling = (width: number, height: number) => {
   const area = width * height;
@@ -162,18 +208,18 @@ export class ImageEditor {
       });
     }
 
-    this.canvas.addEventListener('mousedown', this.handleMouseDown);
-    this.canvas.addEventListener('mousemove', this.handleMouseMove, {passive: true});
-    this.canvas.addEventListener('mouseup', this.handleMouseUp);
     this.canvas.addEventListener('click', this.handleClick);
+    this.canvas.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener('mousemove', this.handleMouseMove, {passive: true});
+    window.addEventListener('mouseup', this.handleMouseUp);
     window.addEventListener('keydown', this.handleDelete);
   }
 
   destroy() {
-    this.canvas.removeEventListener('mousedown', this.handleMouseDown);
-    this.canvas.removeEventListener('mousemove', this.handleMouseMove);
-    this.canvas.removeEventListener('mouseup', this.handleMouseUp);
     this.canvas.removeEventListener('click', this.handleClick);
+    this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+    window.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mouseup', this.handleMouseUp);
     window.removeEventListener('keydown', this.handleDelete);
     this.resizer?.destroy();
     this.drawings = [];
@@ -252,7 +298,8 @@ export class ImageEditor {
       const boundingBox = drawing.getBoundingBox();
       this.resizer = new Resizer(
         translateBoundingBoxToDocument(boundingBox, this.canvas),
-        this.handleDrag
+        this.handleDrag,
+        this.handleResize
       );
     }
   };
@@ -307,6 +354,17 @@ export class ImageEditor {
     const delta = Point.fromNumber(e.movementX, e.movementY);
     selectedDrawing.moveBy(translatePointToCanvas(delta, this.canvas));
     this.resizer.move(e.movementX, e.movementY);
+    this.sheduleUpdateCanvas();
+  };
+
+  private handleResize = (e: MouseEvent) => {
+    const selectedDrawing = this.drawings.find(d => d.id === this.selectedDrawingId);
+    if (!this.resizer || !this.selectedDrawingId) {
+      return;
+    }
+    const delta = Point.fromNumber(e.movementX, e.movementY);
+    selectedDrawing.scaleBy(translatePointToCanvas(delta, this.canvas));
+    this.resizer.resize(e.movementX, e.movementY);
     this.sheduleUpdateCanvas();
   };
 

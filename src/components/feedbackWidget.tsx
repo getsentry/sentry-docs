@@ -1,8 +1,9 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import * as Sentry from '@sentry/browser';
 
 import {FeebdackButton} from './feedbackButton';
 import {FeedbackModal} from './feedbackModal';
+import {FeedbackSuccessMessage} from './feedbackSuccessMessage';
 import {Rect} from './screenshotEditor';
 
 const replay = new Sentry.Replay();
@@ -138,7 +139,20 @@ async function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
 }
 
 export function FeebdackWidget() {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  useEffect(() => {
+    if (!showSuccessMessage) {
+      return () => {};
+    }
+    const timeout = setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 6000);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [showSuccessMessage]);
 
   const handleSubmit = async (data: {
     comment: string;
@@ -149,18 +163,13 @@ export function FeebdackWidget() {
     imageCutout?: Blob;
     selection?: Rect;
   }) => {
-    console.log('handleSubmit data:', data);
-    setOpen(false);
-
     const selectedElement = data.selection && getSelectedDomElement(data.selection);
     let nearestHeadingElement: HTMLElement;
     let nearestIdInViewport: HTMLElement;
-    console.log('selected element:', selectedElement);
+
     if (selectedElement) {
       nearestHeadingElement = getNearestHeadingElement(selectedElement);
       nearestIdInViewport = getNearestIdInViewport(selectedElement);
-      console.log('nearest heading:', nearestHeadingElement);
-      console.log('nearest id:', nearestIdInViewport);
     }
 
     let eventId: string;
@@ -186,7 +195,6 @@ export function FeebdackWidget() {
       }
 
       const sourcePage = getGitHubSourcePage();
-      console.log('GitHub source page:', sourcePage);
       if (sourcePage) {
         scope.setContext('Content', {
           'Edit file': sourcePage,
@@ -206,7 +214,6 @@ export function FeebdackWidget() {
       // Prepare session replay
       replay.flush();
       const replayId = replay.getReplayId();
-      console.log('replayId', replayId);
       if (replayId) {
         scope.setTag('replayId', replayId);
       }
@@ -223,6 +230,8 @@ export function FeebdackWidget() {
       event_id: eventId,
     };
     Sentry.captureUserFeedback(userFeedback);
+    setOpen(false);
+    setShowSuccessMessage(true);
   };
 
   const handleKeyPress = useCallback(event => {
@@ -243,6 +252,7 @@ export function FeebdackWidget() {
     <React.Fragment>
       {!open && <FeebdackButton onClick={() => setOpen(true)} />}
       <FeedbackModal open={open} onSubmit={handleSubmit} onClose={() => setOpen(false)} />
+      <FeedbackSuccessMessage show={showSuccessMessage} />
     </React.Fragment>
   );
 }
