@@ -19,8 +19,9 @@ class Tool implements ITool {
     this.DrawingConstructor = DrawingConstructor;
   }
 
-  startDrawing(point: IPoint, color: string) {
+  startDrawing(point: IPoint, color: string, scalingFactor: number) {
     this.drawing = new this.DrawingConstructor();
+    this.drawing.setScalingFactor(scalingFactor);
     this.drawing.setColor(color);
     this.drawing.start(point);
   }
@@ -52,6 +53,7 @@ class Drawing implements IDrawing {
   protected translate: IPoint = {x: 0, y: 0};
   protected color = 'red';
   protected strokeSize = 6;
+  protected scalingFactor = 1;
 
   public id = Math.random().toString();
 
@@ -88,6 +90,10 @@ class Drawing implements IDrawing {
     ]);
   }
 
+  setScalingFactor(scalingFactor: number) {
+    this.scalingFactor = scalingFactor;
+  }
+
   setColor(color: string) {
     this.color = color;
   }
@@ -113,7 +119,7 @@ class Drawing implements IDrawing {
     context.lineCap = 'round';
     context.lineJoin = 'round';
     context.strokeStyle = this.color;
-    context.lineWidth = this.strokeSize;
+    context.lineWidth = this.strokeSize * this.scalingFactor;
 
     context.translate(this.translate.x, this.translate.y);
     context.stroke(this.path);
@@ -205,8 +211,14 @@ class ArrowDrawing extends Drawing {
     ).normalize();
     const leftVector = unitVector.rotate(Math.PI / 5);
     const rightVector = unitVector.rotate(-Math.PI / 5);
-    const leftPoint = Point.add(this.endPoint, Point.multiply(leftVector, 20));
-    const rightPoint = Point.add(this.endPoint, Point.multiply(rightVector, 20));
+    const leftPoint = Point.add(
+      this.endPoint,
+      Point.multiply(leftVector, 20 * this.scalingFactor)
+    );
+    const rightPoint = Point.add(
+      this.endPoint,
+      Point.multiply(rightVector, 20 * this.scalingFactor)
+    );
     this.path.lineTo(leftPoint.x, leftPoint.y);
     this.path.moveTo(this.endPoint.x, this.endPoint.y);
     this.path.lineTo(rightPoint.x, rightPoint.y);
