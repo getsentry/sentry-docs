@@ -343,11 +343,11 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
             </Label>
             <FlexColumns>
               <Label>
-                Your Name (optional)
+                Name (optional)
                 <Input type="text" name="name" placeholder="Anonymous" />
               </Label>
               <Label>
-                Your Email (optional)
+                Email (optional)
                 <Input type="text" name="email" placeholder="you@test.com" />
               </Label>
             </FlexColumns>
