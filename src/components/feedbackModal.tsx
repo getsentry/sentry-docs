@@ -201,6 +201,15 @@ const PreviewImage = styled.img`
   );
 `;
 
+const FlexColumns = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  & > * {
+    flex: 1;
+  }
+`;
+
 interface FeedbackModalProps {
   onClose: () => void;
   onSubmit: (data: {
@@ -332,7 +341,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                 placeholder="Explain what bothers you"
               />
             </Label>
-            <div style={{display: 'flex', flexDirection: 'row'}}>
+            <FlexColumns>
               <Label>
                 Your Name (optional)
                 <Input type="text" name="name" placeholder="Anonymous" />
@@ -341,7 +350,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                 Your Email (optional)
                 <Input type="text" name="email" placeholder="you@test.com" />
               </Label>
-            </div>
+            </FlexColumns>
             <Label>Screenshot</Label>
             {screenshotPreview ? (
               <ScreenshotWrapper>

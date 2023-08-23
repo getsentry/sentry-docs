@@ -13,6 +13,7 @@ export interface IDrawing {
   get isValid(): boolean;
   moveBy: (point: IPoint) => void;
   setColor: (color: string) => void;
+  setScalingFactor: (scalingFactor: number) => void;
   setStrokeSize: (strokeSize: number) => void;
   start: (point: IPoint) => void;
 }
@@ -22,7 +23,7 @@ export interface ITool {
   endDrawing: (point: IPoint) => IDrawing | null;
   getDrawingBuffer: () => IDrawing | null;
   isDrawing: boolean;
-  startDrawing: (point: IPoint, color: string) => void;
+  startDrawing: (point: IPoint, color: string, scalingFactor: number) => void;
 }
 
 export interface Rect {

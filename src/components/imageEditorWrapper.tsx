@@ -228,7 +228,6 @@ export function ImageEditorWrapper({src, onCancel, onSubmit}: ImageEditorWrapper
       <CanvasWrapper ref={wrapperRef}>
         <Canvas ref={setCanvas} />
       </CanvasWrapper>
-
       <Toolbar>
         <ToolbarGroup>
           <ColorInput background={selectedColor}>
@@ -251,7 +250,7 @@ export function ImageEditorWrapper({src, onCancel, onSubmit}: ImageEditorWrapper
           ))}
         </ToolbarGroup>
         <ToolbarGroup>
-          <CancelButton onClick={() => onCancel()}>Clear</CancelButton>
+          <CancelButton onClick={() => onCancel()}>Cancel</CancelButton>
         </ToolbarGroup>
         <ToolbarGroup>
           <SubmitButton onClick={async () => onSubmit(await getBlob())}>

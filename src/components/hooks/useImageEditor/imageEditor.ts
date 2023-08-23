@@ -117,6 +117,13 @@ class Resizer {
   }
 }
 
+const SCALEING_BASE = 800 * 800;
+
+const getScaling = (width: number, height: number) => {
+  const area = width * height;
+  return Math.max(Math.sqrt(area / SCALEING_BASE), 1);
+};
+
 export class ImageEditor {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -126,6 +133,7 @@ export class ImageEditor {
   private isInteractive: boolean = false;
   private selectedDrawingId: string | null = null;
   private resizer: Resizer | null = null;
+  private drawingScaling: number = 1;
   private _tool: ITool | null = null;
   private _color: string = '#79628c';
   private _strokeSize: number = 6;
@@ -140,6 +148,7 @@ export class ImageEditor {
       this.isInteractive = true;
       this.canvas.width = image.width;
       this.canvas.height = image.height;
+      this.drawingScaling = getScaling(image.width, image.height);
       this.sheduleUpdateCanvas();
       onLoad?.();
     } else {
@@ -147,6 +156,7 @@ export class ImageEditor {
         this.isInteractive = true;
         this.canvas.width = image.width;
         this.canvas.height = image.height;
+        this.drawingScaling = getScaling(image.width, image.height);
         this.sheduleUpdateCanvas();
         onLoad();
       });
@@ -165,6 +175,7 @@ export class ImageEditor {
     this.canvas.removeEventListener('mouseup', this.handleMouseUp);
     this.canvas.removeEventListener('click', this.handleClick);
     window.removeEventListener('keydown', this.handleDelete);
+    this.resizer?.destroy();
     this.drawings = [];
   }
 
@@ -261,7 +272,11 @@ export class ImageEditor {
     if (!this._tool || this._tool.isDrawing || !this.isInteractive) {
       return;
     }
-    this._tool.startDrawing(translateMouseEvent(e, this.canvas), this._color);
+    this._tool.startDrawing(
+      translateMouseEvent(e, this.canvas),
+      this._color,
+      this.drawingScaling
+    );
     this.sheduleUpdateCanvas();
   };
 
