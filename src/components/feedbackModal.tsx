@@ -1,10 +1,11 @@
-import React, {FormEvent, useEffect} from 'react';
+import React, {FormEvent, useContext, useEffect} from 'react';
 import {css} from '@emotion/react';
 import styled from '@emotion/styled';
 
 import {useFocusTrap} from './hooks/useFocusTrap';
 import {useShortcut} from './hooks/useShortcut';
 import {useTakeScreenshot} from './hooks/useTakeScreenhot';
+import {CodeContext} from './codeContext';
 import {ImageEditorWrapper} from './imageEditorWrapper';
 import {Rect, ScreenshotEditor} from './screenshotEditor';
 
@@ -278,6 +279,18 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     }
   }, [open]);
 
+  const codeContext = useContext(CodeContext);
+  console.log('codeContext', codeContext);
+  let defaultUserName: string;
+  let defaultEmail: string;
+  if (codeContext && codeContext.codeKeywords) {
+    const userData = codeContext.codeKeywords.USER;
+    if (userData) {
+      defaultUserName = userData.NAME;
+      defaultEmail = userData.EMAIL;
+    }
+  }
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -343,12 +356,22 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
             </Label>
             <FlexColumns>
               <Label>
-                Name (optional)
-                <Input type="text" name="name" placeholder="Anonymous" />
+                Your Name (optional)
+                <Input
+                  type="text"
+                  name="name"
+                  placeholder="Anonymous"
+                  defaultValue={defaultUserName}
+                />
               </Label>
               <Label>
-                Email (optional)
-                <Input type="text" name="email" placeholder="you@test.com" />
+                Your Email (optional)
+                <Input
+                  type="text"
+                  name="email"
+                  placeholder="you@test.com"
+                  defaultValue={defaultEmail}
+                />
               </Label>
             </FlexColumns>
             <Label>Screenshot</Label>
