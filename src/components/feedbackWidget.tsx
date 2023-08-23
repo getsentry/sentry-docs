@@ -95,7 +95,7 @@ function isElementInViewport(el) {
   );
 }
 
-function getNearestIdInViewport(element: HTMLElement): HTMLElement | null {
+function getNearestIdInViewport(element: HTMLElement): string | null {
   let currentElement: HTMLElement | null = element;
   while (currentElement !== null) {
     const nextElement = currentElement.previousElementSibling;
@@ -111,11 +111,11 @@ function getNearestIdInViewport(element: HTMLElement): HTMLElement | null {
       currentElement.id !== '' &&
       isElementInViewport(currentElement) &&
       // Ignore elements that are fixed or absolute as they most likely won't help with scrolling the element into view
-      ['fixed', 'absolute'].includes(
+      !['fixed', 'absolute'].includes(
         currentElement.computedStyleMap().get('position').toString()
       )
     ) {
-      return currentElement;
+      return currentElement.id;
     }
   }
   return null;
@@ -165,12 +165,13 @@ export function FeebdackWidget() {
   }) => {
     const selectedElement = data.selection && getSelectedDomElement(data.selection);
     let nearestHeadingElement: HTMLElement;
-    let nearestIdInViewport: HTMLElement;
+    let nearestIdInViewport: string;
 
     if (selectedElement) {
       nearestHeadingElement = getNearestHeadingElement(selectedElement);
       nearestIdInViewport = getNearestIdInViewport(selectedElement);
     }
+    console.log('selected element', selectedElement);
 
     let eventId: string;
     const imageData = data.image && (await blobToUint8Array(data.image));
@@ -216,6 +217,12 @@ export function FeebdackWidget() {
       const replayId = replay.getReplayId();
       if (replayId) {
         scope.setTag('replayId', replayId);
+      }
+
+      if (nearestIdInViewport) {
+        const currentUrl = new URL(document.location.href);
+        currentUrl.hash = nearestIdInViewport;
+        scope.setTag('element_url', currentUrl.toString());
       }
 
       // We don't need breadcrumbs for now
