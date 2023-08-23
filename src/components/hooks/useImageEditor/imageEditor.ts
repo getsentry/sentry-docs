@@ -244,6 +244,7 @@ export class ImageEditor {
     if (this.selectedDrawingId) {
       const selectedDrawing = this.drawings.find(d => d.id === this.selectedDrawingId);
       selectedDrawing?.setColor(color);
+      this.sheduleUpdateCanvas();
     }
   }
 
