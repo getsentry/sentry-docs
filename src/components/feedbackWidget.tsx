@@ -195,21 +195,31 @@ export function FeebdackWidget() {
         });
       }
 
+      const contentContext: any = {};
       const sourcePage = getGitHubSourcePage();
       if (sourcePage) {
-        scope.setContext('Content', {
-          'Edit file': sourcePage,
-          Repository: sourcePage.split('/').slice(0, 5).join('/'),
-        });
+        contentContext['Edit file'] = sourcePage;
+        contentContext.Repository = sourcePage.split('/').slice(0, 5).join('/');
       }
 
       const pageTitle = document.title;
       if (pageTitle) {
         scope.setTag('page_title', pageTitle);
+        contentContext['Page title'] = pageTitle;
       }
 
       if (nearestHeadingElement && nearestHeadingElement.textContent) {
-        scope.setTag('page_section', nearestHeadingElement.textContent);
+        const pageSection = nearestHeadingElement.textContent;
+        scope.setTag('page_section', pageSection);
+        contentContext['Page section'] = pageSection;
+      }
+
+      if (nearestIdInViewport) {
+        const currentUrl = new URL(document.location.href);
+        currentUrl.hash = nearestIdInViewport;
+        const elementUrl = currentUrl.toString();
+        scope.setTag('element_url', elementUrl);
+        contentContext['Element URL'] = elementUrl;
       }
 
       // Prepare session replay
@@ -219,10 +229,8 @@ export function FeebdackWidget() {
         scope.setTag('replayId', replayId);
       }
 
-      if (nearestIdInViewport) {
-        const currentUrl = new URL(document.location.href);
-        currentUrl.hash = nearestIdInViewport;
-        scope.setTag('element_url', currentUrl.toString());
+      if (contentContext) {
+        scope.setContext('Content', contentContext);
       }
 
       // We don't need breadcrumbs for now
