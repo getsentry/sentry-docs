@@ -8,11 +8,11 @@ description: "Learn more about how we detect Frame Drop issues and what you can 
 
 The main (or UI) thread in a mobile app is responsible for handling all user interaction and needs to be able to respond to gestures and taps in real time. If a long-running operation blocks the main thread, the app becomes unresponsive, impacting the quality of the user experience.
 
-We can detect some specific causes for a main thread stall, like decoding [images](https://docs.sentry.io/product/issues/issue-details/performance-issues/image-decoding-main-thread/) or [JSON](https://docs.sentry.io/product/issues/issue-details/performance-issues/json-decoding-main-thread/), or [searching strings with regexes](https://docs.sentry.io/product/issues/issue-details/performance-issues/regex-main-thread/), but there are many other things that could cause a stall. If a main thread stall causes your app to drop UI frames, but doesn't match one of our specific detectors, Sentry reports it under the generic Frame Drop issue type.
+We can detect some specific causes for a main thread stall, like decoding [images](/product/issues/issue-details/performance-issues/image-decoding-main-thread/) or [JSON](/product/issues/issue-details/performance-issues/json-decoding-main-thread/), or [searching strings with regexes](/product/issues/issue-details/performance-issues/regex-main-thread/), but there are many other things that could cause a stall. If a main thread stall causes your app to drop UI frames, but doesn't match one of our specific detectors, Sentry reports it under the generic Frame Drop issue type.
 
 ## Detection Criteria
 
-[Profiling](/product/profiling/) must be enabled for Sentry to detect Frame Drop issues. Once set up, Sentry will look for profiles that record a frozen UI frame and then search for the application function call occupying the majority of time that the display link waited to draw the frozen frame. If multiple functions simply call through to the next, the deepest call is chosen.
+[Profiling](/product/profiling/) must be enabled for Sentry to detect Frame Drop issues. Once set up, Sentry will look for profiles that record a frozen UI frame and then search for the most time-consuming application function call delaying the display link's next vsync. In a run of functions calling through without any self-time, the deepest call will be chosen.
 
 ## Function Evidence
 
@@ -97,4 +97,8 @@ dispatch_apply(numberOfNumbers, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0),
 });
 ```
 
-There are several things to Keep in mind when introducing concurrency: - you may need to `@synchronize` critical sections, use semaphores, or dispatch back to a serial queue (or the main queue for UI work) - you may not be able to parallelize loops whose iterations are dependent or where order is significant - parallelization may not be more efficient for small collections, as [thread spawning has its own costs](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/AboutThreads/AboutThreads.html#//apple_ref/doc/uid/10000057i-CH6-SW20); always measure first! - both `enumerateObjects...` and `dispatch_apply` are synchronous and won't return until all iterations have completed. Dispatch their invocation asynchronously off the main queue to avoid waiting.
+There are several things to keep in mind when introducing concurrency: 
+- You may need to `@synchronize` critical sections, use semaphores, or dispatch back to a serial queue (or the main queue for UI work). 
+- You may be unable to parallelize loops whose iterations are dependent or where order is significant. 
+- Parallelization may be less efficient for small collections because [thread spawning has its own costs](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/AboutThreads/AboutThreads.html#//apple_ref/doc/uid/10000057i-CH6-SW20). So always measure first! 
+- Both `enumerateObjects...` and `dispatch_apply` are synchronous and won't return until all iterations have completed. Dispatch their invocation asynchronously off the main queue to avoid waiting.
