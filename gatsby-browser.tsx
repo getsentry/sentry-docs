@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {GatsbyBrowser} from 'gatsby';
 
 import {CodeContextProvider} from 'sentry-docs/components/codeContext';
@@ -9,6 +9,14 @@ export const wrapPageElement: GatsbyBrowser['wrapPageElement'] = ({
   element,
   props: {pageContext},
 }) => {
+  useEffect(() => {
+    const codeBlock = document.querySelector<HTMLDivElement>('.code-tabs-wrapper');
+    if (!codeBlock) {
+      return;
+    }
+    codeBlock.style.position = 'relative';
+    codeBlock.style.right = '-74px';
+  });
   return (
     <React.Fragment>
       {/* FIXME: we're duplicating CodeContextProvider, which is not nice.
