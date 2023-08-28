@@ -8,98 +8,104 @@ notSupported:
   - java.jul
 ---
 
-Sentry GraphQL integration provides an integration with [GraphQL Java](https://github.com/graphql-java/graphql-java/) through:
+Sentry's [GraphQL Java](https://github.com/graphql-java/graphql-java/) integration is provided through:
 
-- `SentryDataFetcherExceptionHandler` which captures exceptions thrown during data fetcher executions.
-- `SentryInstrumentation` which creates spans around each data fetcher execution.
+- `SentryGenericDataFetcherExceptionHandler`, which checks for exceptions thrown during data fetcher executions and then passes them to `SentryInstrumentation`.
+- `SentryInstrumentation`, which creates spans around each data fetcher execution, captures exceptions, and adds breadcrumbs.
+
+Our GraphQL integration can be configured automatically if you're using `spring-graphql` with either the `sentry-spring-boot-starter` or the `sentry-spring-boot-jakarta-starter` integration.
 
 ## Install
+
+To install use:
+
+```groovy {tabTitle:Gradle Plugin}
+plugins {
+  id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.12.0') }}"
+}
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-graphql:{{@inject packages.version('sentry.java.graphql', '6.28.0') }}'
+```
 
 ```xml {tabTitle:Maven}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-graphql</artifactId>
-    <version>{{@inject packages.version('sentry.java.graphql', '5.4.0') }}</version>
+    <version>{{@inject packages.version('sentry.java.graphql', '6.28.0') }}</version>
 </dependency>
 ```
 
-```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-graphql:{{@inject packages.version('sentry.java.graphql', '5.4.0') }}'
-```
-
 ```scala {tabTitle: SBT}
-libraryDependencies += "io.sentry" % "sentry-graphql" % "{{@inject packages.version('sentry.java.graphql', '5.4.0') }}"
+libraryDependencies += "io.sentry" % "sentry-graphql" % "{{@inject packages.version('sentry.java.graphql', '6.28.0') }}"
 ```
 
 For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-graphql).
 
-## Capture Exceptions
+## Set Up
 
-`SentryDataFetcherExceptionHandler` captures the exception, sends it to Sentry, and calls the delegate responsible for handling the exception.
+When building a `GraphQL` instance:
 
-Create a new instance of `SentryDataFetcherExceptionHandler`, pass the delegate that handles the exception, and configure `defaultDataFetcherExceptionHandler` when building a `GraphQL` instance:
+- set `defaultDataFetcherExceptionHandler` to an instance of `SentryGenericDataFetcherExceptionHandler` and pass the delegate that handles the exception to the constructor
+- set `instrumentation` to an instance of `SentryInstrumentation`
+
+You may want to filter some of the errors by using `beforeSend` or an `EventProcessor` (read more about <PlatformLink to="/configuration/filtering/">Filters</PlatformLink>).
 
 ```java
 import graphql.GraphQL;
 import graphql.execution.SimpleDataFetcherExceptionHandler;
-import io.sentry.graphql.SentryDataFetcherExceptionHandler;
+import io.sentry.graphql.SentryGenericDataFetcherExceptionHandler;
+import io.sentry.graphql.SentryInstrumentation;
 
 SimpleDataFetcherExceptionHandler defaultExceptionHandler = new SimpleDataFetcherExceptionHandler();
-SentryDataFetcherExceptionHandler sentryExceptionHandler = new SentryDataFetcherExceptionHandler(defaultExceptionHandler);
+SentryGenericDataFetcherExceptionHandler sentryExceptionHandler = new SentryGenericDataFetcherExceptionHandler(defaultExceptionHandler);
 
 GraphQL graphQL = GraphQL.newGraphQL(...)
     // ...
     .defaultDataFetcherExceptionHandler(sentryExceptionHandler)
+    .instrumentation(new SentryInstrumentation(
+      // If you're not using our Spring integration, please provide NoOpSubscriptionHandler.getInstance() instead.
+      new SentrySpringSubscriptionHandler(),
+      // Set this to false when using Spring WebMVC
+      true
+    ))
     .build();
 ```
 
 ```kotlin
 import graphql.GraphQL
 import graphql.execution.SimpleDataFetcherExceptionHandler
-import io.sentry.graphql.SentryDataFetcherExceptionHandler
+import io.sentry.graphql.SentryGenericDataFetcherExceptionHandler
+import io.sentry.graphql.SentryInstrumentation
 
 val defaultExceptionHandler = SimpleDataFetcherExceptionHandler()
-val sentryExceptionHandler = SentryDataFetcherExceptionHandler(defaultExceptionHandler)
+val sentryExceptionHandler = SentryGenericDataFetcherExceptionHandler(defaultExceptionHandler)
 
 val graphql = GraphQL.newGraphQL()
   .defaultDataFetcherExceptionHandler(sentryExceptionHandler)
+	.instrumentation(SentryInstrumentation(
+    // If you're not using our Spring integration, please provide NoOpSubscriptionHandler.getInstance() instead.
+    SentrySpringSubscriptionHandler(),
+    // Set this to false when using Spring WebMVC
+    true
+  ))
   .build()
 ```
 
-## Capture Performance
-
 <Note>
 
-Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+The `SentryDataFetcherExceptionHandler` has been deprecated. Please upgrade to `SentryGenericDataFetcherExceptionHandler` and make sure `SentryInstrumentation` is configured to have more exceptions captured, more detailed exceptions, breadcrumbs, and better hub propagation. You may want to filter the errors by using `beforeSend` or an `EventProcessor` (read more about <PlatformLink to="/configuration/filtering/">Filters</PlatformLink>).
 
 </Note>
 
-### Configure
+## Capture Performance
 
-Create a new instance of `SentryInstrumentation` and configure `instrumentation` when building a `GraphQL` instance:
-
-```java
-import graphql.GraphQL;
-import io.sentry.graphql.SentryInstrumentation;
-
-GraphQL graphQL = GraphQL.newGraphQL(...)
-    // ...
-    .instrumentation(new SentryInstrumentation())
-    .build();
-```
-
-```kotlin
-import graphql.GraphQL
-import io.sentry.graphql.SentryInstrumentation
-
-val graphql = GraphQL.newGraphQL()
-	.instrumentation(SentryInstrumentation())
-	.build()
-```
+To be able to capture transactions, you have to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>.
 
 ### Modify or Drop Spans
 
-Spans created around requests can be modified or dropped using `SentryInstrumentation.BeforeSpanCallback` passed to `SentryInstrumentation`:
+Spans created around requests can be modified by returning a modified Span, or dropped by returning `null`, using `SentryInstrumentation.BeforeSpanCallback` passed to `SentryInstrumentation`:
 
 ```java
 import io.sentry.graphql.SentryInstrumentation;
@@ -107,12 +113,13 @@ import io.sentry.graphql.SentryInstrumentation;
 import graphql.GraphQL;
 
 GraphQL graphQL = GraphQL.newGraphQL()
+    // ...
     .instrumentation(new SentryInstrumentation((span, environment, result) -> {
       if ("/shows".equals(environment.getExecutionStepInfo().getPath().segmentToString())) {
         span.setTag("tag-name", "tag-value");
       }
       return span;
-    }))
+    }, new SentrySpringSubscriptionHandler(), true))
     .build();
 ```
 
@@ -122,22 +129,23 @@ import io.sentry.graphql.SentryInstrumentation
 import graphql.GraphQL
 
 val graphql = GraphQL.newGraphQL()
-  .instrumentation(SentryInstrumentation() { span: ISpan, env: DataFetchingEnvironment, result: Any? ->
+  // ...
+  .instrumentation(SentryInstrumentation({ span: ISpan, env: DataFetchingEnvironment, result: Any? ->
     if ("/shows" == env.executionStepInfo.path.segmentToString()) {
       span.setTag("tag-name", "tag-value")
     }
     span
-  })
+  }, SentrySpringSubscriptionHandler(), true))
   .build()
 ```
 
-## Using with Netflix DGS
+## Use with Netflix DGS
 
-[Netflix DGS](https://netflix.github.io/dgs) automatically detects and configures `Instrumentation` and `DataFetcherExceptionHandler` beans. To use Sentry GraphQL integration, create `SentryDataFetcherExceptionHandler` and `SentryInstrumentation` beans:
+[Netflix DGS](https://netflix.github.io/dgs) automatically detects and configures `Instrumentation` and `DataFetcherExceptionHandler` beans. To use the Sentry GraphQL integration, create `SentryGenericDataFetcherExceptionHandler` and `SentryInstrumentation` beans:
 
 ```java
 import com.netflix.graphql.dgs.exceptions.DefaultDataFetcherExceptionHandler;
-import io.sentry.graphql.SentryDataFetcherExceptionHandler;
+import io.sentry.graphql.SentryGenericDataFetcherExceptionHandler;
 import io.sentry.graphql.SentryInstrumentation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -147,20 +155,20 @@ class SentryConfiguration {
 
   @Bean
   SentryInstrumentation sentryInstrumentation() {
-    return new SentryInstrumentation();
+    return new SentryInstrumentation(new SentryDgsSubscriptionHandler(), true);
   }
 
   @Bean
-  SentryDataFetcherExceptionHandler sentryDataFetcherExceptionHandler() {
+  SentryGenericDataFetcherExceptionHandler sentryDataFetcherExceptionHandler() {
     // delegate to default Netflix DGS exception handler
-    return new SentryDataFetcherExceptionHandler(new DefaultDataFetcherExceptionHandler());
+    return new SentryGenericDataFetcherExceptionHandler(new DefaultDataFetcherExceptionHandler());
   }
 }
 ```
 
 ```kotlin
 import com.netflix.graphql.dgs.exceptions.DefaultDataFetcherExceptionHandler
-import io.sentry.graphql.SentryDataFetcherExceptionHandler
+import io.sentry.graphql.SentryGenericDataFetcherExceptionHandler
 import io.sentry.graphql.SentryInstrumentation
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -169,9 +177,9 @@ import org.springframework.context.annotation.Configuration
 class SentryConfiguration {
 
   @Bean
-  fun sentryInstrumentation() = SentryInstrumentation()
+  fun sentryInstrumentation() = SentryInstrumentation(SentryDgsSubscriptionHandler(), true)
 
   @Bean
-  fun sentryDataFetcherExceptionHandler() = SentryDataFetcherExceptionHandler(DefaultDataFetcherExceptionHandler())
+  fun sentryDataFetcherExceptionHandler() = SentryGenericDataFetcherExceptionHandler(DefaultDataFetcherExceptionHandler())
 }
 ```

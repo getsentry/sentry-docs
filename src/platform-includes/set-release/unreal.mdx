@@ -1,7 +1,18 @@
-To configure Unreal to send release information, set the release [during
-initialization](/platforms/unreal/setup-crashreporter/#configure-attributes):
-
 ```cpp
-TSharedPtr<FJsonObject> config = MakeShareable(new FJsonObject);
-config->SetStringField("release", "my-project-name@2.3.12");
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    Settings->OverrideReleaseName = true;
+    Settings->Release = FString(TEXT("MyRelease"));
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = ...;
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
 ```
+
+By default, the SDK will call `FApp::GetProjectName()` and read the `ProjectVersion` value from `DefaultGame.ini` to create the release in the format `$"{ProjectName}@{ProjectVersion}"`. It's possible to override the release name manually.
