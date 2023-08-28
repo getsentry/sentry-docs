@@ -2,6 +2,67 @@
 title: Integrations
 sidebar_order: 30
 description: "Learn more about how integrations extend the functionality of our SDK to cover common libraries and environments automatically."
+redirect_from:
+  - /platforms/javascript/configuration/integrations/plugin/
+  - /platforms/javascript/configuration/integrations/default/
 ---
 
-<PageGrid />
+Sentry provides a number of integrations which are designed to add automatic instrumentation to your application. Some of these integrations are enabled by default, while others have to be explicitly enabled.
+
+## Modifying Default Integrations
+
+To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
+
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
+
+<SignInNote />
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    new Sentry.Integrations.Breadcrumbs({
+      console: false,
+    }),
+  ],
+});
+```
+
+## Adding an Integration
+
+You can add additional integrations in your `init` call:
+
+<PlatformContent includePath="configuration/enable-pluggable-integrations" />
+
+Alternatively, you can add integrations lazily via `client.addIntegration()`.
+This is useful if you only want to enable an integration in a specific environment or if you want to lazy-load an integration.
+For all other cases, we recommend you use the `integrations` option.
+
+<PlatformContent includePath="configuration/enable-pluggable-integrations-lazy" />
+
+## Removing a Default Integration
+
+If you only want to remove a single or some of the default integrations, instead of disabling all of them with `defaultIntegrations: false`, you can use the following syntax to filter out the ones you don't want.
+
+This example removes the integration for adding breadcrumbs to the event, which is enabled by default:
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: function (integrations) {
+    // integrations will be all default integrations
+    return integrations.filter(function (integration) {
+      return integration.name !== "Breadcrumbs";
+    });
+  },
+});
+```
+
+## Custom Integrations
+
+You can also create [custom integrations](./custom).
+
+## Available Integrations
+
+<PageGrid exclude={["custom"]} />
