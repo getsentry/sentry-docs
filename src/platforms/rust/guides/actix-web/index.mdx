@@ -9,12 +9,15 @@ The `sentry-actix` crate adds a middleware for [`actix-web`](https://actix.rs/) 
 
 To use this middleware, configure Sentry then add it to your actix web app as a middleware. Because actix is generally working with non sendable objects and is highly concurrent, this middleware creates a new hub per request. As a result, many of the Sentry integrations, such as breadcrumbs, do not work unless you bind the actix hub.
 
+Note: Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sentry client must be initialized before the async runtime is started so that all threads are correctly connected to the Hub.
+
 ## Example
 
 In your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
 [dependencies]
+actix-web = "4.3.1"
 sentry = "{{@inject packages.version('sentry.rust') }}"
 sentry-actix = "{{@inject packages.version('sentry.rust') }}"
 ```
@@ -33,22 +36,26 @@ async fn failing(_req: HttpRequest) -> Result<String, Error> {
     Err(io::Error::new(io::ErrorKind::Other, "An error happens here").into())
 }
 
-#[actix_web::main]
-async fn main() -> io::Result<()> {
-    let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
-        release: sentry::release_name!(),
-        ..Default::default()
-    }));
+fn main() -> io::Result<()> {
+    let _guard = sentry::init((
+        "___PUBLIC_DSN___",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
     std::env::set_var("RUST_BACKTRACE", "1");
 
-    HttpServer::new(|| {
-        App::new()
-            .wrap(sentry_actix::Sentry::new())
-            .service(failing)
-    })
-    .bind("127.0.0.1:3001")?
-    .run()
-    .await?;
+    actix_web::rt::System::new().block_on(async {
+        HttpServer::new(|| {
+            App::new()
+                .wrap(sentry_actix::Sentry::new())
+                .service(failing)
+        })
+        .bind("127.0.0.1:3001")?
+        .run()
+        .await
+    })?;
 
     Ok(())
 }
