@@ -113,8 +113,7 @@ function OrgAuthTokenCreator() {
   );
   const [token, setToken] = useState(null);
   const [sharedSelection] = codeContext.sharedKeywordSelection;
-
-  const {codeKeywords} = useContext(CodeContext);
+  const {codeKeywords} = codeContext;
 
   const choices = codeKeywords?.PROJECT;
 
