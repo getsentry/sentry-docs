@@ -58,7 +58,7 @@ export function OrgAuthTokenNote() {
 
 export function useOrgAuthTokenUrl() {
   const {codeKeywords, sharedKeywordSelection} = useContext(CodeContext);
-  const [sharedSelection] = sharedKeywordSelection
+  const [sharedSelection] = sharedKeywordSelection;
 
   // When not signed in, we use a redirect URL that uses the last org the user visited
   if (!codeKeywords.USER) {
