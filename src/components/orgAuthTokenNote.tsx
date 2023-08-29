@@ -24,7 +24,7 @@ export function OrgAuthTokenNote() {
 
   const url = data.site.siteMetadata.siteUrl + location.pathname;
 
-  const orgAuthTokenUrl = OrgAuthTokenUrl();
+  const orgAuthTokenUrl = useOrgAuthTokenUrl();
 
   return (
     <Fragment>
@@ -56,19 +56,16 @@ export function OrgAuthTokenNote() {
   );
 }
 
-export function OrgAuthTokenUrl() {
-  const codeContext = useContext(CodeContext);
-
-  const [sharedSelection] = codeContext.sharedKeywordSelection;
-  const {codeKeywords} = codeContext;
-
-  const choices = codeKeywords?.PROJECT;
+export function useOrgAuthTokenUrl() {
+  const {codeKeywords, sharedKeywordSelection} = useContext(CodeContext);
+  const [sharedSelection] = sharedKeywordSelection
 
   // When not signed in, we use a redirect URL that uses the last org the user visited
   if (!codeKeywords.USER) {
     return 'https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/';
   }
 
+  const choices = codeKeywords?.PROJECT;
   const currentSelectionIdx = sharedSelection.PROJECT ?? 0;
   const currentSelection = choices[currentSelectionIdx];
 
