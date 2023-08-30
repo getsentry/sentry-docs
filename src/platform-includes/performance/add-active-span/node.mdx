@@ -4,6 +4,26 @@ You can use the `Sentry.startActiveSpan` method to wrap a callback in a span to 
 const result = Sentry.startActiveSpan({ name: "Important Function" }, () => {
   return expensiveFunction();
 });
+
+const result = await Sentry.startActiveSpan(
+  { name: "Important Function" },
+  async () => {
+    const res = Sentry.startActiveSpan({ name: "Child Span" }, () => {
+      return expensiveFunction();
+    });
+
+    return updateRes(res);
+  }
+);
+
+const result = Sentry.startActiveSpan(
+  { name: "Important Function" },
+  (span) => {
+    // Can access the span to add data or set specific status
+    span?.setData("foo", "bar");
+    return expensiveFunction();
+  }
+);
 ```
 
-The span named `Important Function` will become the active span for the duration of the callback, which means that any child spans will be attached to it.
+The span named `Important Function` will become the active span for the duration of the callback.
