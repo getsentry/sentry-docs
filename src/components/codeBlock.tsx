@@ -160,10 +160,10 @@ function OrgAuthTokenCreator() {
 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  if (!codeKeywords.USER) {
-    // User is not logged in - show dummy token
-    return <Fragment>sntrys_YOUR_TOKEN_HERE</Fragment>;
-  }
+  // if (!codeKeywords.USER) {
+  //   // User is not logged in - show dummy token
+  //   return <Fragment>sntrys_YOUR_TOKEN_HERE</Fragment>;
+  // }
 
   if (tokenState.status === 'success') {
     return <Fragment>{tokenState.token}</Fragment>;
@@ -210,20 +210,29 @@ function OrgAuthTokenCreator() {
 
   const portal = getPortal();
 
+  const handlePress = () => {
+    if (orgs.length === 1) {
+      createToken(orgs[0]);
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
+
   return (
     <Fragment>
       <KeywordDropdown
         ref={setReferenceEl}
         role="button"
         title="Click to generate token"
+        tabIndex={0}
         onClick={() => {
-          if (orgs.length === 1) {
-            createToken(orgs[0]);
-          } else {
-            setIsOpen(!isOpen);
+          handlePress();
+        }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            handlePress();
           }
         }}
-        onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
       >
         <span
           style={{
