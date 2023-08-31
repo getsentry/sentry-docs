@@ -105,17 +105,19 @@ type KeywordSelectorProps = {
   keyword: string;
 };
 
+type TokenState =
+  | {status: 'none'}
+  | {status: 'loading'}
+  | {status: 'success'; token: string}
+  | {status: 'error'};
+
 function OrgAuthTokenCreator() {
-  const [tokenState, setTokenState] = useState<
-    | {status: 'none'}
-    | {status: 'loading'}
-    | {status: 'success'; token: string}
-    | {status: 'error'}
-  >({status: 'none'});
+  const {codeKeywords} = useContext(CodeContext);
+
+  const [tokenState, setTokenState] = useState<TokenState>({status: 'none'});
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
-  const {codeKeywords} = useContext(CodeContext);
   const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
     placement: 'bottom',
     modifiers: [
@@ -156,7 +158,7 @@ function OrgAuthTokenCreator() {
   codeKeywords?.PROJECT?.forEach(projectKeyword => {
     orgSet.add(projectKeyword.ORG_SLUG);
   });
-  const orgs = [...orgSet];
+  const orgSlugs = [...orgSet];
 
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -188,7 +190,7 @@ function OrgAuthTokenCreator() {
           />
           <DropdownHeader>Select an organization:</DropdownHeader>
           <Selections>
-            {orgs.map(org => {
+            {orgSlugs.map(org => {
               return (
                 <ItemButton
                   key={org}
@@ -211,8 +213,8 @@ function OrgAuthTokenCreator() {
   const portal = getPortal();
 
   const handlePress = () => {
-    if (orgs.length === 1) {
-      createToken(orgs[0]);
+    if (orgSlugs.length === 1) {
+      createToken(orgSlugs[0]);
     } else {
       setIsOpen(!isOpen);
     }
