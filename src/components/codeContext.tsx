@@ -206,7 +206,7 @@ export async function createOrgAuthToken({
 }: {
   name: string;
   orgSlug: string;
-}) {
+}): Promise<string | null> {
   const baseUrl =
     process.env.NODE_ENV === 'development'
       ? 'http://dev.getsentry.net:8000/'
