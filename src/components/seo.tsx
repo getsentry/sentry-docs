@@ -7,6 +7,7 @@ const detailsQuery = graphql`
     site {
       siteMetadata {
         title
+        lang
         description
         author
         sitePath
