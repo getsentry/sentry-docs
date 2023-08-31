@@ -231,7 +231,7 @@ function OrgAuthTokenCreator() {
           handlePress();
         }}
         onKeyDown={e => {
-          if (e.key === 'Enter') {
+          if (['Enter', 'Space'].includes(e.key)) {
             handlePress();
           }
         }}
