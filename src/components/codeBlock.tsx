@@ -117,7 +117,7 @@ function OrgAuthTokenCreator() {
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
   const {codeKeywords} = useContext(CodeContext);
-  const {styles, attributes} = usePopper(referenceEl, dropdownEl, {
+  const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
     placement: 'bottom',
     modifiers: [
       {
@@ -168,6 +168,7 @@ function OrgAuthTokenCreator() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   if (!codeKeywords.USER) {
+    // User is not logged in - show dummy token
     return <Fragment>sntrys_YOUR_TOKEN_HERE</Fragment>;
   }
 
@@ -184,6 +185,10 @@ function OrgAuthTokenCreator() {
     );
   }
 
+  if (tokenState.status === 'error') {
+    return <Fragment>There was an error while generating your token.</Fragment>;
+  }
+
   if (tokenState.status === 'loading') {
     return <Fragment>Generating token...</Fragment>;
   }
@@ -191,39 +196,42 @@ function OrgAuthTokenCreator() {
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
       <AnimatedContainer>
-        <Selections>
-          <span>Select an organization:</span>
-          {orgs.map(org => {
-            return (
-              <ItemButton
-                key={org}
-                isActive={false}
-                onClick={() => {
-                  setIsOpen(false);
-                }}
-              >
-                {org}
-              </ItemButton>
-            );
-          })}
-        </Selections>
+        <Dropdown>
+          <Arrow
+            style={styles.arrow}
+            data-placement={state?.placement}
+            data-popper-arrow
+          />
+          <DropdownHeader>Select an organization:</DropdownHeader>
+          <Selections>
+            {orgs.map(org => {
+              return (
+                <ItemButton
+                  key={org}
+                  isActive={false}
+                  onClick={() => {
+                    createToken(org);
+                    setIsOpen(false);
+                  }}
+                >
+                  {org}
+                </ItemButton>
+              );
+            })}
+          </Selections>
+        </Dropdown>
       </AnimatedContainer>
     </PositionWrapper>
   );
 
   const portal = getPortal();
 
-  const buttonText =
-    tokenState.status === 'error'
-      ? 'There was an error while generating your token. Click to try again.'
-      : 'Click to generate token';
-
   return (
     <Fragment>
       <KeywordDropdown
         ref={setReferenceEl}
         role="button"
-        title={buttonText}
+        title="Click to generate token"
         onClick={() => {
           if (orgs.length === 1) {
             createToken(orgs[0]);
@@ -246,7 +254,7 @@ function OrgAuthTokenCreator() {
               onAnimationStart={() => setIsAnimating(true)}
               onAnimationComplete={() => setIsAnimating(false)}
             >
-              {buttonText}
+              Click to generate token
             </Keyword>
           </AnimatePresence>
         </span>
@@ -296,26 +304,32 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
       <AnimatedContainer>
-        <Arrow style={styles.arrow} data-placement={state?.placement} data-popper-arrow />
-        <Selections>
-          {choices.map((item, idx) => {
-            const isActive = idx === currentSelectionIdx;
-            return (
-              <ItemButton
-                key={idx}
-                isActive={isActive}
-                onClick={() => {
-                  const newSharedSelection = {...sharedSelection};
-                  newSharedSelection[group] = idx;
-                  setSharedSelection(newSharedSelection);
-                  setIsOpen(false);
-                }}
-              >
-                {item.title}
-              </ItemButton>
-            );
-          })}
-        </Selections>
+        <Dropdown>
+          <Arrow
+            style={styles.arrow}
+            data-placement={state?.placement}
+            data-popper-arrow
+          />
+          <Selections>
+            {choices.map((item, idx) => {
+              const isActive = idx === currentSelectionIdx;
+              return (
+                <ItemButton
+                  key={idx}
+                  isActive={isActive}
+                  onClick={() => {
+                    const newSharedSelection = {...sharedSelection};
+                    newSharedSelection[group] = idx;
+                    setSharedSelection(newSharedSelection);
+                    setIsOpen(false);
+                  }}
+                >
+                  {item.title}
+                </ItemButton>
+              );
+            })}
+          </Selections>
+        </Dropdown>
       </AnimatedContainer>
     </PositionWrapper>
   );
@@ -443,16 +457,19 @@ const Arrow = styled('div')`
   }
 `;
 
+const Dropdown = styled('div')`
+  overflow: hidden;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+`;
+
 const Selections = styled('div')`
   padding: 4px 0;
-  margin-top: -2px;
-  background: #fff;
-  border-radius: 3px;
   overflow: scroll;
   overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 `;
 
 const AnimatedContainer = styled(motion.div)``;
@@ -467,6 +484,13 @@ AnimatedContainer.defaultProps = {
     scale: {duration: 0.3},
   },
 };
+
+const DropdownHeader = styled('div')`
+  padding: 4px 8px;
+  color: #80708f;
+  background-color: #fff;
+  border-bottom: 1px solid #dbd6e1;
+`;
 
 const ItemButton = styled('button')<{isActive: boolean}>`
   font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI';
