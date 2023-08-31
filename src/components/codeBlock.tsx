@@ -1,6 +1,6 @@
 import React, {Children, Fragment, useContext, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {ArrowDown, Check, Clipboard} from 'react-feather';
+import {ArrowDown, Clipboard} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
 import {MDXProvider} from '@mdx-js/react';
@@ -113,7 +113,6 @@ function OrgAuthTokenCreator() {
     | {status: 'error'}
   >({status: 'none'});
   const [isOpen, setIsOpen] = useState(false);
-  const [showCopiedCheckmark, setShowCopiedCheckmark] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
   const {codeKeywords} = useContext(CodeContext);
@@ -133,12 +132,6 @@ function OrgAuthTokenCreator() {
     enabled: isOpen,
     handler: () => setIsOpen(false),
   });
-
-  async function copyTokenToClipboard(token: string) {
-    await navigator.clipboard.writeText(token);
-    setShowCopiedCheckmark(true);
-    setTimeout(() => setShowCopiedCheckmark(false), 3000);
-  }
 
   const createToken = async (orgSlug: string) => {
     setTokenState({status: 'loading'});
@@ -173,16 +166,7 @@ function OrgAuthTokenCreator() {
   }
 
   if (tokenState.status === 'success') {
-    return (
-      <KeywordDropdown
-        onClick={() => {
-          copyTokenToClipboard(tokenState.token);
-        }}
-      >
-        {showCopiedCheckmark ? <Check size={16} /> : <Clipboard size={16} />}
-        {tokenState.token}
-      </KeywordDropdown>
-    );
+    return <Fragment>{tokenState.token}</Fragment>;
   }
 
   if (tokenState.status === 'error') {
