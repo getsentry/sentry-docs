@@ -32,19 +32,19 @@ yarn add @sentry/webpack-plugin --dev
 
 Learn more about configuring the plugin in our [Sentry webpack plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
 
-<PlatformSection notSupported={["javascript.gatsby"]}>
-
-You'll have to setup your environment variables first. In most cases, you'll either want to add the env. variables to a `.env` file (e.g. when deploying locally), or you'll have to add them to your CI/CD environment.
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with a `.env.sentry-build-plugin` file in the working directory when building your project.
+You likely want to add the auth token as an environment variable to your CI/CD environment.
 
 <OrgAuthTokenNote />
 
-<SignInNote />
-
-```bash {filename:.env}
-SENTRY_ORG=___ORG_SLUG___
-SENTRY_PROJECT=___PROJECT_SLUG___
+```bash {filename:.env.sentry-build-plugin}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
+
+<PlatformSection notSupported={["javascript.gatsby"]}>
+
+<SignInNote />
 
 And the following webpack config:
 
@@ -57,8 +57,8 @@ module.exports = {
   devtool: "source-map", // Source map generation must be turned on
   plugins: [
     sentryWebpackPlugin({
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
@@ -68,6 +68,8 @@ module.exports = {
 </PlatformSection>
 
 <PlatformSection supported={["javascript.gatsby"]}>
+
+Add the following to your `gatsby-node.js` file:
 
 <SignInNote />
 
@@ -80,9 +82,6 @@ exports.onCreateWebpackConfig = ({ actions }) => {
       sentryWebpackPlugin({
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
-
-        // Auth tokens can be obtained from
-        // https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/
         authToken: process.env.SENTRY_AUTH_TOKEN,
       }),
     ],
