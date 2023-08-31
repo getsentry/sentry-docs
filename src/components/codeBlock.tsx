@@ -111,6 +111,17 @@ type TokenState =
   | {status: 'success'; token: string}
   | {status: 'error'};
 
+const dropdownPopperOptions = {
+  placement: 'bottom' as const,
+  modifiers: [
+    {
+      name: 'offset',
+      options: {offset: [0, 10]},
+    },
+    {name: 'arrow'},
+  ],
+};
+
 function OrgAuthTokenCreator() {
   const {codeKeywords} = useContext(CodeContext);
 
@@ -118,16 +129,11 @@ function OrgAuthTokenCreator() {
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
-  const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
-    placement: 'bottom',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {offset: [0, 10]},
-      },
-      {name: 'arrow'},
-    ],
-  });
+  const {styles, state, attributes} = usePopper(
+    referenceEl,
+    dropdownEl,
+    dropdownPopperOptions
+  );
 
   useOnClickOutside({
     ref: {current: referenceEl},
@@ -266,16 +272,11 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
 
-  const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
-    placement: 'bottom',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {offset: [0, 10]},
-      },
-      {name: 'arrow'},
-    ],
-  });
+  const {styles, state, attributes} = usePopper(
+    referenceEl,
+    dropdownEl,
+    dropdownPopperOptions
+  );
 
   useOnClickOutside({
     ref: {current: referenceEl},
