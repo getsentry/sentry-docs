@@ -160,10 +160,10 @@ function OrgAuthTokenCreator() {
 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // if (!codeKeywords.USER) {
-  //   // User is not logged in - show dummy token
-  //   return <Fragment>sntrys_YOUR_TOKEN_HERE</Fragment>;
-  // }
+  if (!codeKeywords.USER) {
+    // User is not logged in - show dummy token
+    return <Fragment>sntrys_YOUR_TOKEN_HERE</Fragment>;
+  }
 
   if (tokenState.status === 'success') {
     return <Fragment>{tokenState.token}</Fragment>;
