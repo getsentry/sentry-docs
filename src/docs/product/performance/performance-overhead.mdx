@@ -1,0 +1,30 @@
+---
+title: Performance Overhead
+sidebar_order: 95
+description: "How enabling performance in Sentry SDKs impacts the performance of your application."
+---
+
+Enabling performance in Sentry SDKs adds some overhead, but should have minimal impact on the performance of your application.
+
+Performance monitoring works by instrumenting important parts of typical applications such as:
+
+- Database calls
+- Incoming and outgoing HTTP requests
+- Background worker tasks
+- Browser page loads and navigations
+- Component lifecycle in UI frameworks
+- Web Vitals
+
+To perform this instrumentation, Sentry SDKs wrap or monkeypatch specific functions within popular libraries or frameworks and measure the execution time of these operations. These are then packaged and serialized into a payload containing a [Transaction](/product/performance/transaction-summary/#what-is-a-transaction) (containing Spans) that is transmitted to event ingestion servers via the internet.
+
+The SDKs also make sure to propagate some headers on outgoing requests so that [Distributed Tracing](/product/sentry-basics/tracing/) can work effectively.
+
+<Note>
+
+For most applications, the performance overhead of enabling performance in production is imperceptible to end users.
+
+</Note>
+
+## Will Performance break my application?
+
+Each SDK has limits on the data structures used to record all the above data. If your application is doing too many things, we will simply hit those limits and thus avoid scenarios where the SDK itself takes up too much CPU time or grows memory usage unboundedly. We will also capture Outcomes (statistics) whenever these scenarios occur to be transparent about what events we are dropping for what reason.

@@ -8,6 +8,7 @@ supported:
   - javascript.nextjs
   - javascript.sveltekit
   - javascript.remix
+  - go
 description: "Learn how to enable Cron Monitoring in your app"
 ---
 
@@ -15,7 +16,7 @@ description: "Learn how to enable Cron Monitoring in your app"
 
 Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job. Once implemented, it'll allow you to get alerts and metrics to help you solve errors, detect timeouts, and prevent disruptions to your service.
 
-<PlatformSection supported={["python", "php", "node", "javascript.nextjs", "javascript.sveltekit", "javascript.remix"]}>
+<PlatformSection supported={["python", "php", "node", "javascript.nextjs", "javascript.sveltekit", "javascript.remix", "go"]}>
 
 ## Requirements
 
@@ -31,7 +32,7 @@ To link any exceptions captured during your job's lifecycle, use <PlatformLink t
 
 </PlatformSection>
 
-<PlatformSection notSupported={["python", "php", "node", "javascript.nextjs", "javascript.sveltekit", "javascript.remix"]}>
+<PlatformSection notSupported={["python", "php", "node", "javascript.nextjs", "javascript.sveltekit", "javascript.remix", "go"]}>
 
 ## Requirements
 
@@ -46,64 +47,41 @@ Optionally, you can skip the first step and [create or update (upsert) a monitor
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
+<SignInNote />
+
 ```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
 # 🟡 Notify Sentry your job is running:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "in_progress"}'
+curl "${SENTRY_CRONS}?status=in_progress"
 
 # Execute your scheduled task here...
 
 # 🟢 Notify Sentry your job has completed successfully:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok"}'
+curl "${SENTRY_CRONS}?status=ok"
 ```
 
 ```http {tabTitle: HTTP}
-POST /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=in_progress HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 
-{
-    "status": "in_progress"
-}
-
-PUT /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
-
-{
-    "status": "ok"
-}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 ```
 
 If your job execution fails:
 
+<SignInNote />
+
 ```bash {tabTitle: cURL}
 # 🔴 Notify Sentry your job has failed:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "error"}'
+curl "${SENTRY_CRONS}?status=error"
 ```
 
 ```http {tabTitle: HTTP}
-PUT /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
-
-{
-    "status": "error"
-}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 ```
 
 <Note>
@@ -130,27 +108,33 @@ In the future it will be possible to delete environments for a specified monitor
 
 </Alert>
 
+<SignInNote />
+
 ```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
 # 🟡 Notify Sentry your job is running in the dev environment:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "in_progress", "environment": "dev"}'
+curl "${SENTRY_CRONS}?environment=dev&status=in_progress"
 
 # Execute your scheduled task here...
 
 # 🟢 Notify Sentry your dev environment job has completed successfully:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/latest/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok", "environment": "dev"}'
+curl "${SENTRY_CRONS}?environment=dev&status=ok"
 ```
 
 ### Creating or Updating a Monitor Through a Check-In (Optional)
 
 Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
+
+<Note type="warning">
+
+In the future this feature will use the `ingest.sentry.io` style check in
+format and the `sentry.io/api` format will be deprecated.
+
+</Note>
+
+<SignInNote />
 
 ```bash {tabTitle: cURL}
 # Upsert monitor with a check-in
@@ -220,6 +204,8 @@ It's important to provide a timezone for non-repeating crontab schedules, such a
 
 Sentry Crons can help you better understand your job check-ins by storing a file, such as a log output. You'll be able to use this to debug check-in failures or track job statuses. To upload your attachment, execute the following `HTTP POST (multipart/form-data)` request:
 
+<SignInNote />
+
 ```bash {tabTitle: curl}
 # Perform a POST request to attach a file to a check-in
 curl -X POST \
@@ -264,6 +250,8 @@ If this happens, you have to provide a check-in ID with the second check-in requ
 
 Usage example:
 
+<SignInNote />
+
 ```bash {tabTitle: cURL}
 # 🟡 Notify Sentry your job is running:
 curl -X POST \
@@ -287,6 +275,8 @@ curl -X PUT \
 
 Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
 
+<SignInNote />
+
 ```bash {tabTitle: cURL}
 # 🟢 Notify Sentry your job has completed successfully:
 curl -X POST \
@@ -308,6 +298,8 @@ Content-Type: application/json
 ```
 
 If your job execution fails:
+
+<SignInNote />
 
 ```bash {tabTitle: cURL}
 # 🔴 Notify Sentry your job has failed:

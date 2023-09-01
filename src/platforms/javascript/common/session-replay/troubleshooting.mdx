@@ -69,3 +69,23 @@ To hide this content, block the iframe, as described in our Session Replay <Plat
 ## Replay on My Browser Extension Doesn't Work
 
 This is not a supported use-case. The replay package is built to work on a website and not as an externally-loaded script via browser extension or other mechanism. In fact, Sentry's Session Replay product can help developers find out when a third-party Chrome extension causes otherwise hard to debug or reproduce issues with their website.
+
+## Response data for Apollo GraphQL Client network requests is not captured
+
+Apollo Client sends an abort signal via `AbortController` whenever a query completes, to clean up and cancel all in-flight queries.
+When this happens, the Replay can't capture the response body because the request is handled as aborted before Replay can access the response.
+
+To avoid this, disable this behavior of Apollo Client by configuring your own abort signal:
+
+```js
+const abortController = new AbortController();
+
+const httpLink = createHttpLink({
+  // ... other options
+  fetchOptions: {
+    signal: abortController.signal, // overwrite the default abort signal
+  },
+});
+```
+
+With this configuration, Replay is able to capture response bodies from Apollo Client requests.

@@ -5,6 +5,21 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 ## Installation
 
 Download the latest plugin sources from the [Releases page](https://github.com/getsentry/sentry-unreal/releases) and place it in the project's "Plugins" directory. On the next project launch, UE will prompt to build Sentry module.
@@ -27,9 +42,9 @@ ___PUBLIC_DSN___
 
 ## Crash Reporter Client
 
-For Windows and Mac, [Crash Reporter Client](/platforms/unreal/setup-crashreporter/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
+For Windows and Mac, [Crash Reporter Client](/platforms/unreal/configuration/setup-crashreporter/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
 
-### Include the UE4 Crash Reporter
+### Include the Unreal Engine Crash Reporter
 
 You can add the crash reporter client to your game in **Project Settings**.
 

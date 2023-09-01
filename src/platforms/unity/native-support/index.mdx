@@ -6,11 +6,17 @@ redirect_from:
   - /platforms/unity/native-support/building-ios/
 ---
 
-Currently, the Unity SDK offers native support for Android, iOS, and Windows. The support is set to `enabled` by default and you can opt out for each platform individually in the configuration window.
+Currently, the Unity SDK offers native support for Android, iOS, Windows, macOS and Linux. The support is set to `enabled` by default and you can opt out for each platform individually in the configuration window.
 
 <Note>
 
 The setup for the iOS and Android native SDKs happens during build time, with the options defined in the Sentry editor configuration window. Changes to the options object done through [ScriptableOptionsConfiguration](/platforms/unity/configuration/options/) will not affect events from the native layer.
+
+</Note>
+
+<Note>
+
+The Unity SDK captures C# exceptions and does not break any builds targeting Nintendo Switch.
 
 </Note>
 
@@ -20,7 +26,7 @@ The native crash support for Android and iOS is achieved by modifying the genera
 
 ### Android
 
-When chosing Android as a build target, Unity creates a Gradle project. During the Unity build process, the SDK embeds the [Android SDK](/platforms/android/), as well as the provided options, by adding it to the generated project's Android Manifest.
+When choosing Android as a build target, Unity creates a Gradle project. During the Unity build process, the SDK embeds the [Android SDK](/platforms/android/), as well as the provided options, by adding it to the generated project's Android Manifest.
 
 ### iOS
 
@@ -50,22 +56,22 @@ Sentry requires [debug information files](/platforms/unity/data-management/debug
 
 The automated debug symbols upload is enabled by default but requires configuration. Go to **Tools > Sentry > Editor** to enter the [Auth Token](https://sentry.io/api/), Organization Slug, and the Project Name. Note that the Unity SDK creates a file at `Assets/Plugins/Sentry/SentryCliOptions.asset` to store the configuration, that should **not** be made publicly available.
 
-### iOS - dSYM and Bitcode
+### iOS - dSYM
 
-Debug information files on the iOS platform are called dSYM, and the way to obtain them differs depending on whether `Enable Bitcode` is set to `true` in your Xcode project.
+Debug information files on the iOS platform are called dSYM.
 
-For Sentry to symbolicate your crash logs and with `bitcode` enabled, we need two types of files:
+For Sentry to symbolicate your crash logs we need two types of files:
 
-1. `dSYM` files available only **after** App Store Connect finishes processing the build
+1. `dSYM` that the automated symbols upload will pick up at the end of the build process without further action required.
 2. `BCSymbolMap` files that are created during the archiving process
 
-The automated symbol upload will take care of the `BCSymbolMap` files by processing them during the archiving process. To provide the dSYM files to Sentry, you can either set up the [Sentry App Store Connect Integration](/platforms/apple/guides/ios/dsym/#appstore-connect) so Sentry can fetch them for you, or download them from Apple and then upload them [manually using sentry-cli](/platforms/apple/guides/ios/dsym/#sentry-cli).
-
-With `bitcode` disabled, the automated symbols upload will pick up the `dSYM` files at the end of the build process without further action required.
+The automated symbol upload will take care of the `BCSymbolMap` files by processing them during the archiving process.
 
 ### Manual Upload Using sentry-cli
 
 If you don't want to rely on the automated symbol upload, you can run `sentry-cli` through the commandline. For that, you can use the provided executables from within the package or follow the [sentry-cli documentation](/product/cli/installation/) to make it available globally. To upload debug symbols, run it with:
+
+<SignInNote />
 
 ```bash
 sentry-cli --auth-token YOUR_AUTH_TOKEN debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS

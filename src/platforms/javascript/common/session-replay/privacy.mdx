@@ -69,7 +69,29 @@ new Sentry.Replay({
 });
 ```
 
-Note that we also have [server-side PII scrubbing](/product/data-management-settings/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
+### Example: Capturing 500 Status Codes Only
+
+Here's an example showing how to only capture fetch requests that return a 500 status code. (Non-fetch requests would continue to be captured normally.)
+
+```javascript
+new Sentry.Replay({
+  beforeAddRecordingEvent: (event) => {
+    // Do not capture fetch/xhr requests, unless the response code is 500
+    if (
+      event.data.tag === "performanceSpan" &&
+      (event.data.payload.op === "resource.fetch" ||
+        event.data.payload.op === "resource.xhr") &&
+      event.data.payload.data.statusCode !== 500
+    ) {
+      return null;
+    }
+
+    return event;
+  },
+});
+```
+
+We also have [server-side PII scrubbing](/product/data-management-settings/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
 
 ### Deprecated Options
 

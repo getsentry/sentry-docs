@@ -73,6 +73,52 @@ For example, the following stack traces:
   at io.sentry.HubAdapter.captureEvent (HubAdapter.java:29)
 ```
 
+## Incorrect Line Numbers in Kotlin
+
+Stack trace elements referring to Kotlin inline functions from files different than the call site may refer to the wrong line numbers.
+
+This is due to a [missing feature in the JVM](https://youtrack.jetbrains.com/issue/KT-8628/Line-numbers-are-incorrect-in-exception-stack-trace). `.class` files with inline functions contain code from many source files, and when the JVM generates a stack trace, it doesn't replace the class and line where the error occurred with the original file and line number. So, when an exception is thrown in an inline function, the line number for the stack trace of the Exception may be wrong.
+
+Let's show an example. Here is an Activity with an inline function throwing an Exception.
+
+```
+class MyActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        erroringFunction() // Line 10
+    }
+
+    inline fun erroringFunction() {
+        throw RuntimeException() // Line 14
+    }
+}
+ // Line 17
+```
+
+The stack trace of the Exception points to the line 18 of the `MyActivity.kt` class.
+
+```
+java.lang.RuntimeException
+	at io.sentry.samples.android.MyActivity.onCreate(MyActivity.kt:18)
+	at android.app.Activity.performCreate(Activity.java:8305)
+	at android.app.Activity.performCreate(Activity.java:8284)
+	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1417)
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3626)
+	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3782)
+	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2307)
+	at android.os.Handler.dispatchMessage(Handler.java:106)
+	at android.os.Looper.loopOnce(Looper.java:201)
+	at android.os.Looper.loop(Looper.java:288)
+	at android.app.ActivityThread.main(ActivityThread.java:7872)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+```
+
 ## NDK
 
 If you're using a version of `sentry-android` before 5.0, due to current limitations in how `sentry-native` works, it cannot identify native libraries loaded directly from `.apk` files. Instead, it needs to have access to the extracted libraries on the file system.
@@ -122,7 +168,7 @@ With this information, it might be more clear what's happening. If not, please c
 
 ### Auto-instrumentation Issues
 
-The [Sentry Android Gradle plugin](/platforms/android/gradle/) uses bytecode manipulation to automatically measure the performance of your application. This process requires looking at the dependencies of the application, which can potentially break the build process if there are libraries which have been compiled/minified with a non-default java compiler, like R8/D8.
+The [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) uses bytecode manipulation to automatically measure the performance of your application. This process requires looking at the dependencies of the application, which can potentially break the build process if there are libraries which have been compiled/minified with a non-default java compiler, like R8/D8.
 
 The culprit is usually our [File I/O instrumentation](/platforms/android/configuration/integrations/file-io/), which can be disabled as follows:
 
@@ -171,7 +217,7 @@ Please consider reporting these issues on [GitHub](https://github.com/getsentry/
 
 ### Auto-installation Issues
 
-The [Sentry Android Gradle plugin](/platforms/android/gradle/) offers the automated installation feature of the Sentry Android SDK and the Fragment, Timber, and OkHttp integrations. Because we modify the dependency tree, this might lead to potential issues with Gradle's configuration and build phases.
+The [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) offers the automated installation feature of the Sentry Android SDK and the Fragment, Timber, and OkHttp integrations. Because we modify the dependency tree, this might lead to potential issues with Gradle's configuration and build phases.
 
 #### `StackOverflowError` During Sync or Build
 
@@ -211,7 +257,7 @@ plugins {
 }
 ```
 
-Alternatively, you can tell the plugin to use your version of the sentry NDK:
+Alternatively, you can tell the plugin to use your version of the Sentry NDK:
 
 ```groovy
 sentry {

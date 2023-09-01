@@ -17,6 +17,7 @@ import {IncludePlatformContent} from './includePlatformContent';
 import {JsCdnTag} from './jsCdnTag';
 import {LambdaLayerDetail} from './lambdaLayerDetail';
 import {Note} from './note';
+import {OrgAuthTokenNote} from './orgAuthTokenNote';
 import {PageGrid} from './pageGrid';
 import {ParamTable} from './paramTable';
 import {PlatformContent} from './platformContent';
@@ -27,6 +28,7 @@ import {PlatformSection} from './platformSection';
 import {RelayMetrics} from './relayMetrics';
 import {PiiFields} from './relayPiifields';
 import {SandboxLink, SandboxOnly} from './sandboxLink';
+import {SignInNote} from './signInNote';
 import {SmartLink} from './smartLink';
 import {VimeoEmbed, YouTubeEmbed} from './video';
 
@@ -59,6 +61,8 @@ const mdxComponents = {
   YouTubeEmbed,
   SandboxLink,
   SandboxOnly,
+  SignInNote,
+  OrgAuthTokenNote,
 };
 
 export function Markdown({value}) {

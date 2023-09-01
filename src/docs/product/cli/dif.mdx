@@ -23,10 +23,10 @@ differently in Sentry. For more information see [Source Maps in sentry-cli](/pro
 ## Checking Files
 
 Not all debug information files can be used by Sentry. To see if they are usable
-or not, you can use the `sentry-cli difutil check` command:
+or not, you can use the `sentry-cli debug-files check` command:
 
 ```bash
-sentry-cli difutil check mylibrary.so.debug
+sentry-cli debug-files check mylibrary.so.debug
 
 Debug Info File Check
   Type: elf debug companion
@@ -43,11 +43,11 @@ if it passes basic requirements for Sentry.
 ## Finding Files
 
 If you see in Sentry's UI that debug information files are missing, but you are
-not sure how to locate them, you can use the `sentry-cli difutil find` command
+not sure how to locate them, you can use the `sentry-cli debug-files find` command
 to look for them:
 
 ```bash
-sentry-cli difutil find <identifier>
+sentry-cli debug-files find <identifier>
 ```
 
 Additionally, `sentry-cli debug-files upload` can automatically search for files in a
@@ -64,12 +64,12 @@ This is particularly useful when building and uploading debug information files
 are detached. In this case, a source bundle can be created when building and can
 be uploaded at any later point in time with `sentry-cli debug-files upload`.
 
-To create a source bundle, use the `difutil bundle-sources` command on a list of
+To create a source bundle, use the `debug-files bundle-sources` command on a list of
 debug information files:
 
 ```bash
 # on the build machine:
-sentry-cli difutil bundle-sources /path/to/files...
+sentry-cli debug-files bundle-sources /path/to/files...
 
 # at any later time:
 sentry-cli debug-files upload --type sourcebundle /path/to/bundles...
@@ -175,7 +175,7 @@ information.
 are available on the local file system, they are bundled and uploaded as a
 source archive. This allows Sentry to resolve source context. Only specify
 this command when uploading from the same machine as the build. Otherwise, use
-`difutil bundle-sources` to generate the bundle ahead of time.
+`debug-files bundle-sources` to generate the bundle ahead of time.
 
 `--derived-data`
 
@@ -288,6 +288,18 @@ sentry-cli upload-proguard \
     app/build/outputs/mapping/{BuildVariant}/mapping.txt
 ```
 
+Additionally, you can associate the proguard mapping file to a specific release:
+
+```bash
+# Additionally create an association to the release my.app.id@1.0.0+1
+sentry-cli upload-proguard \
+    --uuid A_VALID_UUID \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt \
+    --app-id my.app.id \
+    --version 1.0.0 \
+    --version-code 1
+```
+
 After the upload, Sentry deobfuscates future events.
 To make sure that it worked, you can check _Project Settings > ProGuard_ and see if the upload mapping files are listed.
 
@@ -318,7 +330,7 @@ If you're using a build tool we don't support, or you prefer not to use Sentry's
 
 See the build tool plugins we currently support here:
 
-- [Android](/platforms/android/source-context/)
+- [Android](/platforms/android/enhance-errors/source-context/)
 - [Java](/platforms/java/source-context/)
 
 You can also upload ProGuard files manually with `sentry-cli` for any JVM-based language like
@@ -344,7 +356,7 @@ sentry-cli debug-files bundle-jvm \
 ```
 
 You must provide the UUID of the source bundle for the Java/Android SDK to send.
-More details can be found in the [Source Context](/platforms/java/source-context/#manually-uploading-source-context) docs for Java and the [Source Context](/platforms/android/source-context/#manually-uploading-source-context) docs for Android.
+More details can be found in the [Source Context](/platforms/java/source-context/#manually-uploading-source-context) docs for Java and the [Source Context](/platforms/android/enhance-errors/source-context/#manually-uploading-source-context) docs for Android.
 
 ### Uploading a Source Bundle
 

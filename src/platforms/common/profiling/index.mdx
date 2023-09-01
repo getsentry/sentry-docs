@@ -6,8 +6,8 @@ supported:
   - apple
   - go
   - python
-  - rust
   - ruby
+  - react-native
 notSupported:
   - unity
   - dart
@@ -15,7 +15,6 @@ notSupported:
   - native
   - javascript
   - javascript.vue
-  - react-native
   - dotnet
   - java
   - java.spring-boot
@@ -26,8 +25,19 @@ notSupported:
   - native.minidumps
   - unreal
   - native.wasm
+  - rust
 description: "Learn how to enable profiling in your app if it is not already set up."
 ---
+
+<PlatformSection supported={["react-native"]}>
+
+<Note>
+
+React Native Profiling is currently in beta. Beta features are still in progress and may have bugs. We recognize the irony.
+
+</Note>
+
+</PlatformSection>
 
 <PlatformSection supported={["go"]}>
 
@@ -49,16 +59,6 @@ Ruby Profiling is currently in beta. Beta features are still in-progress and may
 
 </PlatformSection>
 
-<PlatformSection supported={["rust"]}>
-
-<Note>
-
-Rust Profiling is currently in alpha. Alpha features are still in-progress and may have bugs. We recognize the irony.
-
-</Note>
-
-</PlatformSection>
-
 With [profiling](/product/profiling/), Sentry allows you to collect and analyze performance profiles from real user devices in production to give you a complete picture of how your application performs in a variety of environments.
 
 ## Enable Performance Monitoring
@@ -67,11 +67,13 @@ Profiling depends on Sentry’s performance monitoring product being enabled bef
 
 <PlatformSection supported={["apple"]}>
 
+<SignInNote />
+
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
-    options.dsn = "___DSN___"
+    options.dsn = "___PUBLIC_DSN___"
     options.tracesSampleRate = 1.0
 }
 ```
@@ -80,7 +82,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___DSN___";
+    options.dsn = @"___PUBLIC_DSN___";
     options.tracesSampleRate = @1.0;
 }];
 ```
@@ -93,14 +95,27 @@ In `AndroidManifest.xml`:
 
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="___DSN___" />
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
 ```
 
 </PlatformSection>
 
+<PlatformSection supported={["react-native"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  tracesSampleRate: 1.0,
+});
+```
+
+</PlatformSection>
+
 <PlatformSection supported={["go"]}>
+
+<SignInNote />
 
 ```go
 err := sentry.Init(sentry.ClientOptions{
@@ -115,9 +130,11 @@ err := sentry.Init(sentry.ClientOptions{
 
 <PlatformSection supported={["python"]}>
 
+<SignInNote />
+
 ```python
 sentry_sdk.init(
-  dsn="___DSN___",
+  dsn="___PUBLIC_DSN___",
   traces_sample_rate=1.0,
 )
 ```
@@ -126,26 +143,13 @@ sentry_sdk.init(
 
 <PlatformSection supported={["ruby"]}>
 
+<SignInNote />
+
 ```ruby
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
   config.traces_sample_rate = 1.0
 end
-```
-
-</PlatformSection>
-
-<PlatformSection supported={["rust"]}>
-
-```rust
-sentry::init((
-    "___DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        ..Default::default()
-    },
-));
 ```
 
 </PlatformSection>
@@ -168,11 +172,13 @@ iOS profiling is available starting in SDK version `8.3.1`.
 
 </Note>
 
+<SignInNote />
+
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
-    options.dsn = "___DSN___"
+    options.dsn = "___PUBLIC_DSN___"
     options.tracesSampleRate = 1.0 // tracing must be enabled for profiling
     options.profilesSampleRate = 1.0 // see also `profilesSampler` if you need custom sampling logic
 }
@@ -182,7 +188,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___DSN___";
+    options.dsn = @"___PUBLIC_DSN___";
     options.tracesSampleRate = @1.0; // tracing must be enabled for profiling
     options.profilesSampleRate = @1.0; // see also `profilesSampler` if you need custom sampling logic
 }];
@@ -206,9 +212,11 @@ Android profiling is available starting in SDK version `6.16.0`.
 
 In `AndroidManifest.xml`:
 
+<SignInNote />
+
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="___DSN___" />
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
     <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
     <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
 </application>
@@ -230,6 +238,8 @@ Python profiling is available starting in SDK version `1.18.0`.
 
 </Note>
 
+<SignInNote />
+
 ```python
 import sentry_sdk
 
@@ -238,7 +248,7 @@ def profiles_sampler(sampling_context):
     # return a number between 0 and 1 or a boolean
 
 sentry_sdk.init(
-    dsn="___DSN___",
+    dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
 
     # To set a uniform sample rate
@@ -262,14 +272,40 @@ The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to 
 
 The feature was experimental prior to version `1.17.0`. To update to the latest SDK, remove `profiles_sample_rate` from `_experiments` and set it in the top-level options.
 
+<SignInNote />
+
 ```python
 sentry_sdk.init(
-    dsn="___DSN___",
+    dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
     _experiments={
       "profiles_sample_rate": 1.0,  # for versions before 1.17.0
     },
 )
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["react-native"]}>
+
+<Note>
+
+Profiling for React Native is available in beta in SDK versions `5.8.0` and above. Currently, it supports profiling the JavaScript layer. Combined profiling with native Android/iOS layers isn't supported at this time.
+
+</Note>
+
+To enable profiling, set the `profilesSampleRate`:
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  tracesSampleRate: 1.0,
+  _experiments: {
+    // profilesSampleRate is relative to tracesSampleRate.
+    // Here, we'll capture profiles for 100% of transactions.
+    profilesSampleRate: 1.0,
+  },
+});
 ```
 
 </PlatformSection>
@@ -283,6 +319,8 @@ Go Profiling alpha is available since SDK version `0.22.0`.
 </Note>
 
 To enable profiling, set the `ProfilesSampleRate`:
+
+<SignInNote />
 
 ```go
 err := sentry.Init(sentry.ClientOptions{
@@ -316,13 +354,15 @@ gem 'stackprof'
 gem 'sentry-ruby'
 ```
 
-Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your sentry initializer.
+Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your Sentry initializer.
+
+<SignInNote />
 
 ```ruby
 # config/initializers/sentry.rb
 
 Sentry.init do |config|
-  config.dsn = "___DSN___"
+  config.dsn = "___PUBLIC_DSN___"
   config.traces_sample_rate = 1.0
   config.profiles_sample_rate = 1.0
 end
@@ -333,71 +373,5 @@ end
 The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
 
 </Note>
-
-</PlatformSection>
-
-<PlatformSection supported={["rust"]}>
-
-<Note>
-
-Rust Profiling alpha is available starting in SDK version `0.29.0`.
-
-</Note>
-
-In order to use Profiling, you first need to enable the `profiling` feature in the `sentry` dependency inside the project `Cargo.toml`:
-
-```toml
-[dependencies]
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["profiling"] }
-```
-
-Once you've completed the step above, you can proceed by enabling it in the SDK:
-
-```rust
-sentry::init((
-    "___DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        enable_profiling: true,
-        profiles_sample_rate: 1.0,
-        ..Default::default()
-    },
-));
-```
-
-<Note>
-
-The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
-
-</Note>
-
-</PlatformSection>
-
-## Troubleshooting
-
-If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
-
-- Ensure that performance monitoring <PlatformLink to="/performance/">is enabled</PlatformLink>.
-- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
-- If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
-- Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
-
-<PlatformSection supported={["go"]}>
-
-### Limitations
-
-Profile samples are collected periodically for each goroutine.
-If your program uses a large number of concurrent goroutines, make sure to check whether the overhead is within the acceptable range for your use case.
-
-As always, and especially with Profiling in Go being an alpha feature, feedback is welcome on [Discord](https://discord.com/channels/621778831602221064/621786587939864586) or [GitHub](https://github.com/getsentry/sentry-go/issues/630).
-
-</PlatformSection>
-
-<PlatformSection supported={["ruby"]}>
-
-### Limitations
-
-Profiles for multi-threaded servers like `puma` might not capture frames correctly when async I/O is happening. This is a limitation of `stackprof`.
 
 </PlatformSection>

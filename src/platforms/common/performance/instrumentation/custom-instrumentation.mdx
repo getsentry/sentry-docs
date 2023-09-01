@@ -33,25 +33,63 @@ redirect_from:
 
 <Note>
 
-To capture transactions customized to your organization's needs, you must first <PlatformLink to="/performance/">set up performance monitoring.</PlatformLink>
+To capture transactions and spans customized to your organization's needs, you must first <PlatformLink to="/performance/">set up performance monitoring.</PlatformLink>
 
 </Note>
 
-<PlatformSection supported={["native"]}>
-
-<Note>
-
-Performance monitoring is still an experimental, work-in-progress feature, and its API may be unstable. It may also have bugs. Feedback is appreciated, and should be submitted as an issue in the repository linked on the right side of this page.
-
-</Note>
-
-</PlatformSection>
-
-To instrument certain regions of your code, you can create transactions to capture them.
+<PlatformSection notSupported={["javascript", "node"]}>
 
 <PlatformContent includePath="performance/enable-manual-instrumentation" />
 
 <PlatformContent includePath="performance/add-spans-example" />
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript", "node"]}>
+
+To add custom performance data to your application, you need to create and use spans. Spans are a way to measure the time it takes for a specific action to occur. For example, you can create a span to measure the time it takes for a function to execute.
+
+To start measuring timing data, you first need to import the SDK.
+
+<PlatformContent includePath="enriching-events/import" />
+
+<PlatformContent includePath="performance/span-api-version" />
+
+## Create Active Span
+
+By default created spans are considered active, which means they are put on the Sentry scope. This allows child spans and Sentry errors to be associated with that span. This is the recommended way to create spans.
+
+<PlatformContent includePath="performance/add-active-span" />
+
+## Get Active Span
+
+You can also get the current active span, which is useful for when you need to add new child spans.
+
+<PlatformContent includePath="performance/get-span" />
+
+## Start Independent Spans
+
+If you want to add a span that is not active, you can create a independent spans. This is useful for when you have work that is grouped together under a single parent span, but is independent from the current active span. In most cases you'll want to create and use active spans.
+
+<PlatformContent includePath="performance/add-independent-span" />
+
+## Start Transaction
+
+The root span (the span that is the parent of all other spans) is known as a transaction in Sentry. This can be accessed and created separately if you need more control over the timing data or if you use a version of the SDK that does not support the top level span APIs.
+
+<PlatformContent includePath="performance/enable-manual-instrumentation" />
+
+<PlatformContent includePath="performance/add-spans-example" />
+
+## Adding Span operations
+
+Spans can have an operation associated with them, which help activate Sentry identify additional context about the span. For example database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations and filters for spans with known operations.
+
+Sentry maintains a [list of well known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
+
+<PlatformContent includePath="performance/span-operations" />
+
+</PlatformSection>
 
 <PlatformSection supported={["java", "apple"]}>
 
@@ -59,7 +97,7 @@ To instrument certain regions of your code, you can create transactions to captu
 
 </PlatformSection>
 
-<PlatformSection notSupported={["java", "native", "apple"]}>
+<PlatformSection notSupported={["java", "native", "apple", "javascript", "node"]}>
 
 <PlatformContent includePath="performance/retrieve-transaction" />
 
@@ -74,15 +112,5 @@ To instrument certain regions of your code, you can create transactions to captu
 <PlatformSection supported={["java", "dart", "flutter", "rust", "native", "apple"]}>
 
 <PlatformContent includePath="performance/connect-errors-spans" />
-
-</PlatformSection>
-
-<PlatformSection supported={["java", "dotnet", "dart", "flutter", "rust", "native"]}>
-
-## Distributed Tracing
-
-Traces can bridge across multiple software services. Each span in a trace can be represented as a `sentry-trace` header, containing the trace id, span id, and sampling details. This `sentry-trace` header can be passed to downstream services so that they can create spans that are a continuation of the trace started in the originating service.
-
-<PlatformContent includePath="performance/distributed-tracing" />
 
 </PlatformSection>

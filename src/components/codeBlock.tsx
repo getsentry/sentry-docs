@@ -9,48 +9,80 @@ import memoize from 'lodash/memoize';
 
 import {useOnClickOutside} from 'sentry-docs/utils';
 
-import {CodeContext} from './codeContext';
+import {CodeContext, createOrgAuthToken} from './codeContext';
 
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
+
+const ORG_AUTH_TOKEN_REGEX = /___ORG_AUTH_TOKEN___/g;
+
+type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
 
 function makeKeywordsClickable(children: React.ReactNode) {
   const items = Children.toArray(children);
 
-  KEYWORDS_REGEX.lastIndex = 0;
-
-  return items.reduce((arr: any[], child) => {
+  return items.reduce((arr: ChildrenItem[], child) => {
     if (typeof child !== 'string') {
       arr.push(child);
       return arr;
     }
 
-    let match;
-    let lastIndex = 0;
-    // eslint-disable-next-line no-cond-assign
-    while ((match = KEYWORDS_REGEX.exec(child)) !== null) {
-      const afterMatch = KEYWORDS_REGEX.lastIndex - match[0].length;
-      const before = child.substring(lastIndex, afterMatch);
-      if (before.length > 0) {
-        arr.push(before);
-      }
-      arr.push(
-        <KeywordSelector
-          key={lastIndex}
-          index={lastIndex}
-          group={match[1] || 'PROJECT'}
-          keyword={match[2]}
-        />
-      );
-      lastIndex = KEYWORDS_REGEX.lastIndex;
-    }
-
-    const after = child.substring(lastIndex);
-    if (after.length > 0) {
-      arr.push(after);
+    if (ORG_AUTH_TOKEN_REGEX.test(child)) {
+      makeOrgAuthTokenClickable(arr, child);
+    } else if (KEYWORDS_REGEX.test(child)) {
+      makeProjectKeywordsClickable(arr, child);
+    } else {
+      arr.push(child);
     }
 
     return arr;
-  }, []);
+  }, [] as ChildrenItem[]);
+}
+
+function makeOrgAuthTokenClickable(arr: ChildrenItem[], str: string) {
+  runRegex(arr, str, ORG_AUTH_TOKEN_REGEX, lastIndex => (
+    <OrgAuthTokenCreator key={`org-token-${lastIndex}`} />
+  ));
+}
+
+function makeProjectKeywordsClickable(arr: ChildrenItem[], str: string) {
+  runRegex(arr, str, KEYWORDS_REGEX, (lastIndex, match) => (
+    <KeywordSelector
+      key={`project-keyword-${lastIndex}`}
+      index={lastIndex}
+      group={match[1] || 'PROJECT'}
+      keyword={match[2]}
+    />
+  ));
+}
+
+function runRegex(
+  arr: ChildrenItem[],
+  str: string,
+  regex: RegExp,
+  cb: (lastIndex: number, match: any[]) => React.ReactNode
+): void {
+  regex.lastIndex = 0;
+
+  let match;
+  let lastIndex = 0;
+  // eslint-disable-next-line no-cond-assign
+  while ((match = regex.exec(str)) !== null) {
+    const afterMatch = regex.lastIndex - match[0].length;
+    const before = str.substring(lastIndex, afterMatch);
+
+    if (before.length > 0) {
+      arr.push(before);
+    }
+
+    arr.push(cb(lastIndex, match));
+
+    lastIndex = regex.lastIndex;
+  }
+
+  const after = str.substring(lastIndex);
+  if (after.length > 0) {
+    arr.push(after);
+  }
 }
 
 const getPortal = memoize((): HTMLElement => {
@@ -73,6 +105,188 @@ type KeywordSelectorProps = {
   keyword: string;
 };
 
+type TokenState =
+  | {status: 'none'}
+  | {status: 'loading'}
+  | {status: 'success'; token: string}
+  | {status: 'error'};
+
+const dropdownPopperOptions = {
+  placement: 'bottom' as const,
+  modifiers: [
+    {
+      name: 'offset',
+      options: {offset: [0, 10]},
+    },
+    {name: 'arrow'},
+  ],
+};
+
+function OrgAuthTokenCreator() {
+  const {codeKeywords, sharedKeywordSelection} = useContext(CodeContext);
+
+  const [sharedSelection, setSharedSelection] = sharedKeywordSelection;
+  const [tokenState, setTokenState] = useState<TokenState>({status: 'none'});
+  const [isOpen, setIsOpen] = useState(false);
+  const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
+  const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
+  const {styles, state, attributes} = usePopper(
+    referenceEl,
+    dropdownEl,
+    dropdownPopperOptions
+  );
+
+  useOnClickOutside({
+    ref: {current: referenceEl},
+    enabled: isOpen,
+    handler: () => setIsOpen(false),
+  });
+
+  const updateSelectedOrg = (orgSlug: string) => {
+    const choices = codeKeywords.PROJECT ?? [];
+    const currentSelectionIdx = sharedSelection.PROJECT ?? 0;
+    const currentSelection = choices[currentSelectionIdx];
+
+    // Already selected correct org, nothing to do
+    if (currentSelection && currentSelection.ORG_SLUG === orgSlug) {
+      return;
+    }
+
+    // Else, select first project of the selected org
+    const newSelectionIdx = choices.findIndex(choice => choice.ORG_SLUG === orgSlug);
+    if (newSelectionIdx > -1) {
+      const newSharedSelection = {...sharedSelection};
+      newSharedSelection.PROJECT = newSelectionIdx;
+      setSharedSelection(newSharedSelection);
+    }
+  };
+
+  const createToken = async (orgSlug: string) => {
+    setTokenState({status: 'loading'});
+    const token = await createOrgAuthToken({
+      orgSlug,
+      name: `Generated by Docs on ${new Date().toISOString().slice(0, 10)}`,
+    });
+
+    if (token) {
+      setTokenState({
+        status: 'success',
+        token,
+      });
+
+      updateSelectedOrg(orgSlug);
+    } else {
+      setTokenState({
+        status: 'error',
+      });
+    }
+  };
+
+  const orgSet = new Set<string>();
+  codeKeywords?.PROJECT?.forEach(projectKeyword => {
+    orgSet.add(projectKeyword.ORG_SLUG);
+  });
+  const orgSlugs = [...orgSet];
+
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  if (!codeKeywords.USER) {
+    // User is not logged in - show dummy token
+    return <Fragment>sntrys_YOUR_TOKEN_HERE</Fragment>;
+  }
+
+  if (tokenState.status === 'success') {
+    return <Fragment>{tokenState.token}</Fragment>;
+  }
+
+  if (tokenState.status === 'error') {
+    return <Fragment>There was an error while generating your token.</Fragment>;
+  }
+
+  if (tokenState.status === 'loading') {
+    return <Fragment>Generating token...</Fragment>;
+  }
+
+  const selector = isOpen && (
+    <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
+      <AnimatedContainer>
+        <Dropdown>
+          <Arrow
+            style={styles.arrow}
+            data-placement={state?.placement}
+            data-popper-arrow
+          />
+          <DropdownHeader>Select an organization:</DropdownHeader>
+          <Selections>
+            {orgSlugs.map(org => {
+              return (
+                <ItemButton
+                  key={org}
+                  isActive={false}
+                  onClick={() => {
+                    createToken(org);
+                    setIsOpen(false);
+                  }}
+                >
+                  {org}
+                </ItemButton>
+              );
+            })}
+          </Selections>
+        </Dropdown>
+      </AnimatedContainer>
+    </PositionWrapper>
+  );
+
+  const portal = getPortal();
+
+  const handlePress = () => {
+    if (orgSlugs.length === 1) {
+      createToken(orgSlugs[0]);
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  return (
+    <Fragment>
+      <KeywordDropdown
+        ref={setReferenceEl}
+        role="button"
+        title="Click to generate token"
+        tabIndex={0}
+        onClick={() => {
+          handlePress();
+        }}
+        onKeyDown={e => {
+          if (['Enter', 'Space'].includes(e.key)) {
+            handlePress();
+          }
+        }}
+      >
+        <span
+          style={{
+            // We set inline-grid only when animating the keyword so they
+            // correctly overlap during animations, but this must be removed
+            // after so copy-paste correctly works.
+            display: isAnimating ? 'inline-grid' : undefined,
+          }}
+        >
+          <AnimatePresence initial={false}>
+            <Keyword
+              onAnimationStart={() => setIsAnimating(true)}
+              onAnimationComplete={() => setIsAnimating(false)}
+            >
+              Click to generate token
+            </Keyword>
+          </AnimatePresence>
+        </span>
+      </KeywordDropdown>
+      {portal && createPortal(<AnimatePresence>{selector}</AnimatePresence>, portal)}
+    </Fragment>
+  );
+}
+
 function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const codeContext = useContext(CodeContext);
 
@@ -80,16 +294,11 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
 
-  const {styles, state, attributes} = usePopper(referenceEl, dropdownEl, {
-    placement: 'bottom',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {offset: [0, 10]},
-      },
-      {name: 'arrow'},
-    ],
-  });
+  const {styles, state, attributes} = usePopper(
+    referenceEl,
+    dropdownEl,
+    dropdownPopperOptions
+  );
 
   useOnClickOutside({
     ref: {current: referenceEl},
@@ -113,26 +322,32 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
       <AnimatedContainer>
-        <Arrow style={styles.arrow} data-placement={state?.placement} data-popper-arrow />
-        <Selections>
-          {choices.map((item, idx) => {
-            const isActive = idx === currentSelectionIdx;
-            return (
-              <ItemButton
-                key={idx}
-                isActive={isActive}
-                onClick={() => {
-                  const newSharedSelection = {...sharedSelection};
-                  newSharedSelection[group] = idx;
-                  setSharedSelection(newSharedSelection);
-                  setIsOpen(false);
-                }}
-              >
-                {item.title}
-              </ItemButton>
-            );
-          })}
-        </Selections>
+        <Dropdown>
+          <Arrow
+            style={styles.arrow}
+            data-placement={state?.placement}
+            data-popper-arrow
+          />
+          <Selections>
+            {choices.map((item, idx) => {
+              const isActive = idx === currentSelectionIdx;
+              return (
+                <ItemButton
+                  key={idx}
+                  isActive={isActive}
+                  onClick={() => {
+                    const newSharedSelection = {...sharedSelection};
+                    newSharedSelection[group] = idx;
+                    setSharedSelection(newSharedSelection);
+                    setIsOpen(false);
+                  }}
+                >
+                  {item.title}
+                </ItemButton>
+              );
+            })}
+          </Selections>
+        </Dropdown>
       </AnimatedContainer>
     </PositionWrapper>
   );
@@ -214,7 +429,9 @@ const KeywordDropdown = styled('span')`
   }
 `;
 
-const KeywordIndicator = styled(ArrowDown)<{isOpen: boolean}>`
+const KeywordIndicator = styled(ArrowDown, {shouldForwardProp: p => p !== 'isOpen'})<{
+  isOpen: boolean;
+}>`
   user-select: none;
   margin-right: 2px;
   transition: transform 200ms ease-in-out;
@@ -258,16 +475,19 @@ const Arrow = styled('div')`
   }
 `;
 
+const Dropdown = styled('div')`
+  overflow: hidden;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+`;
+
 const Selections = styled('div')`
   padding: 4px 0;
-  margin-top: -2px;
-  background: #fff;
-  border-radius: 3px;
   overflow: scroll;
   overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 `;
 
 const AnimatedContainer = styled(motion.div)``;
@@ -282,6 +502,13 @@ AnimatedContainer.defaultProps = {
     scale: {duration: 0.3},
   },
 };
+
+const DropdownHeader = styled('div')`
+  padding: 4px 8px;
+  color: #80708f;
+  background-color: #fff;
+  border-bottom: 1px solid #dbd6e1;
+`;
 
 const ItemButton = styled('button')<{isActive: boolean}>`
   font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI';
@@ -317,7 +544,7 @@ const ItemButton = styled('button')<{isActive: boolean}>`
   `}
 `;
 
-function CodeWrapper(props): JSX.Element {
+export function CodeWrapper(props) {
   const {children, class: className, ...rest} = props;
 
   return (
@@ -327,7 +554,7 @@ function CodeWrapper(props): JSX.Element {
   );
 }
 
-function SpanWrapper(props): JSX.Element {
+function SpanWrapper(props) {
   const {children, class: className, ...rest} = props;
   return (
     <span className={className} {...rest}>
@@ -337,13 +564,13 @@ function SpanWrapper(props): JSX.Element {
 }
 
 type Props = {
-  children: JSX.Element;
+  children: React.ReactNode;
   filename?: string;
   language?: string;
   title?: string;
 };
 
-export function CodeBlock({filename, language, children}: Props): JSX.Element {
+export function CodeBlock({filename, language, children}: Props) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 

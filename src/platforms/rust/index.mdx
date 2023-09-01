@@ -1,4 +1,8 @@
 ---
+title: Rust
+sdk: sentry.rust
+caseStyle: snake_case
+supportLevel: production
 redirect_from:
   - /clients/rust/
 ---
@@ -28,7 +32,9 @@ sentry = "{{@inject packages.version('sentry.rust') }}"
 
 The most convenient way to use this library is the `sentry::init` function, which starts a Sentry client with a default set of integrations, and binds it to the current Hub.
 
-The `sentry::init` function returns a guard that, when dropped, will flush Events that were not yet sent to the Sentry service. It has a two second deadline for this, so shutdown of applications might slightly delay as a result. Keeping the guard around or sending events will not work.
+The `sentry::init` function returns a guard that when dropped, will flush Events that weren't yet sent to Sentry. It has a two-second deadline, so application shutdown may be slightly delayed as a result. Be sure to keep the guard or you won't be able to send events.
+
+<SignInNote />
 
 ```rust {filename:main.rs}
 let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
@@ -37,11 +43,50 @@ let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
 }));
 ```
 
-**Important:** Note your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, view Settings -> Projects -> Client Keys (DSN) in sentry.io.
+**Important:** Remember your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it you can find it be going to: Settings -> Projects -> Client Keys (DSN) in sentry.io.
+
+### Async Main Function
+
+In a multithreaded application, spawned threads should inherit the Hub from the main thread. In order for that to happen, the Sentry client must be initialized before starting an async runtime or spawning threads. This means you'll have to avoid using macros such as `#[tokio::main]` or `#[actix_web::main]`, because they start the runtime first. So rather than doing this:
+
+```rust {filename:main.rs}
+// WRONG
+#[tokio::main]
+async fn main() {
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    ..Default::default()
+}));
+
+// implementation of main
+}
+```
+
+Do this instead:
+
+```rust {filename:main.rs}
+// RIGHT
+fn main() {
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    ..Default::default()
+}));
+
+tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            // implementation of main
+        });
+}
+```
 
 ## Verify Setup
 
 The quickest way to verify Sentry in your Rust application is to cause a panic:
+
+<SignInNote />
 
 ```rust {filename:main.rs}
 fn main() {

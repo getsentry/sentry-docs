@@ -28,6 +28,8 @@ Create three files in the root directory of your project, `sentry.client.config.
 
 Please note that there are slight differences between these files since they run in different places (browser, server, edge), so copy them carefully!
 
+<SignInNote />
+
 ```javascript {tabTitle:Client} {filename:sentry.client.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -54,6 +56,8 @@ Sentry.init({
 });
 ```
 
+<SignInNote />
+
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -72,6 +76,8 @@ Sentry.init({
   // that it will also get attached to your source maps
 });
 ```
+
+<SignInNote />
 
 ```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -96,12 +102,14 @@ You can include your DSN directly in these three files, or provide it in either 
 
 ## Extend your Next.js Configuration
 
-Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will do two things:
+Use `withSentryConfig` to extend the default Next.js usage of webpack. This will do two things:
 
 - Automatically call SDK initialization code, at server start up and client page load.
-- Generate and upload source maps to Sentry, so that your stacktraces contain readable code.
+- Generate and upload source maps to Sentry, so that your stack traces contain readable code.
 
 Include the following in your `next.config.js` or `next.config.mjs`:
+
+<SignInNote />
 
 ```JavaScript {filename:next.config.(js|mjs)}
 // This file sets a custom webpack configuration to use your Next.js app
@@ -132,14 +140,17 @@ const nextConfig = {
 };
 
 const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry Webpack plugin. Keep in mind that
+  // Additional config options for the Sentry webpack plugin. Keep in mind that
   // the following options are set automatically, and overriding them is not
   // recommended:
-  //   release, url, authToken, configFile, stripPrefix,
-  //   urlPrefix, include, ignore
+  //   release, url, configFile, stripPrefix, urlPrefix, include, ignore
 
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
+
+  // An auth token is required for uploading source maps.
+  // You can get an auth token from https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   silent: true, // Suppresses all logs
 
@@ -156,7 +167,7 @@ module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
 
 ## Configure Source Maps
 
-By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stacktraces in your Sentry issues.
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
 
 To configure the plugin, pass a `sentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
 
@@ -187,7 +198,7 @@ In that case you can also skip the `sentry-cli` configuration step below.
 
 _(New in version 6.17.1, will default to `true` in 8.0.0 and beyond.)_
 
-Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [Webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
+Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
 
 ```javascript {filename:next.config.(js|mjs)}
 const nextConfig = {
@@ -225,9 +236,11 @@ The URL, organization, and project properties identify your organization and pro
 
 You can commit all the properties to your VCS, except the auth token. You can accomplish this by using the `.sentryclirc` file and including your auth token:
 
+<OrgAuthTokenNote />
+
 ```ini {filename:.sentryclirc}
 [auth]
-token=YOUR_AUTH_TOKEN
+token=___ORG_AUTH_TOKEN___
 ```
 
 Don't forget to ignore `.sentryclirc` in your version control system to prevent it from being leaked!
@@ -301,7 +314,7 @@ const nextConfig = {
 };
 ```
 
-With this option, under the hood, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
+With this option, under the hood, the SDK is using a webpack loader to wrap all your API route handlers and data fetching methods.
 
 ### Opt In to Auto-instrumentation on Specific Routes
 
@@ -312,7 +325,7 @@ If the automatic instrumentation doesn't work for your use case, you can turn it
 For API routes, use the `wrapApiHandlerWithSentry` function:
 
 ```javascript {filename:pages/api/*}
-import { withSentry } from "@sentry/nextjs";
+import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
 
 const handler = (req, res) => {
   res.status(200).json({ name: "John Doe" });
@@ -323,7 +336,7 @@ export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
 
 ```typescript {filename:pages/api/*}
 import type { NextApiRequest, NextApiResponse } from "next";
-import { withSentry } from "@sentry/nextjs";
+import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
 
 const handler = (req: NextApiRequest, res: NextApiResponse) => {
   res.status(200).json({ name: "John Doe" });

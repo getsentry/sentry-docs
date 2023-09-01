@@ -18,17 +18,22 @@ Using a shared initializer provides a single source of truth for your SDK's conf
 
 To initialize the SDK, create a Kotlin file in your `commonMain` e.g. `AppSetup.kt`, (or whatever you decide to call it), and create an initialization function. You'll then be able to call it in an early lifecycle stage in your platforms.
 
+<SignInNote />
+
 ```kotlin {filename:AppSetup.kt}
 import io.sentry.kotlin.multiplatform.Context
 import io.sentry.kotlin.multiplatform.Sentry
 
 // Application context is only needed for Android targets
 fun initializeSentry(context: Context?) {
+  val configuration: (SentryOptions) -> Unit = {
+    it.dsn = "___PUBLIC_DSN___"
+    // Add common configuration here
+  }
   if (context != null) {
-    Sentry.init(context) {
-      it.dsn = "___PUBLIC_DSN___"
-      // Add common configuration here
-    }
+      Sentry.init(context, configuration)
+  } else {
+      Sentry.init(configuration)
   }
 }
 ```
@@ -79,6 +84,8 @@ expect fun initializeSentry(context: Context? = null)
 
 ### androidMain
 
+<SignInNote />
+
 ```kotlin {filename:androidMain/AppSetup.kt}
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.Context
@@ -94,6 +101,8 @@ actual fun initializeSentry(context: Context?) {
 ```
 
 ### iosMain
+
+<SignInNote />
 
 ```kotlin {filename:iosMain/AppSetup.kt}
 import io.sentry.kotlin.multiplatform.Sentry

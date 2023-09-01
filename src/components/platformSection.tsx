@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
 
-import {getPlatformsWithFallback, Platform, usePlatform} from './hooks/usePlatform';
+import {getPlatformsWithFallback, usePlatform} from './hooks/usePlatform';
 
 type Props = {
   children?: React.ReactNode;
@@ -30,9 +30,14 @@ export function PlatformSection({
   platform,
   noGuides,
   children,
-}: Props): JSX.Element {
+}: Props) {
   const [currentPlatform] = usePlatform(platform);
-  if (noGuides && !(currentPlatform as Platform).guides) {
+
+  if (!currentPlatform) {
+    return null;
+  }
+
+  if (noGuides && currentPlatform.type !== 'platform') {
     return null;
   }
 
@@ -40,7 +45,7 @@ export function PlatformSection({
 
   let result: boolean | null = null;
   // eslint-disable-next-line no-cond-assign
-  for (let platformKey, i = 0; (platformKey = platformsToSearch[i]); i++) {
+  for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
     if (!platformKey) {
       continue;
     }

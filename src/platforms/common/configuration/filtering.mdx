@@ -3,7 +3,6 @@ title: Filtering
 sidebar_order: 60
 description: "Learn more about how to configure your SDK to filter events reported to Sentry."
 notSupported:
-  - perl
   - kotlin-multiplatform
 ---
 
@@ -25,7 +24,7 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
 
-<PlatformSection notSupported={["apple", "dotnet", "elixir", "rust"]}>
+<PlatformSection notSupported={["apple", "dotnet", "elixir", "rust", "unreal"]}>
 
 #### Event Hints
 
@@ -39,7 +38,7 @@ When the SDK creates an event or breadcrumb for transmission, that transmission 
 
 </PlatformSection>
 
-<PlatformSection notSupported={["native", "apple", "dotnet"]}>
+<PlatformSection notSupported={["native", "apple", "dotnet", "unreal"]}>
 
 ### Using Hints
 
@@ -80,7 +79,7 @@ In this example, the fingerprint is forced to a common value if an exception of 
 
 ### Using <PlatformIdentifier name="ignore-errors" />
 
-You can use the <PlatformIdentifier name="ignore-errors" /> option to filter out errors that match a certain pattern. This option receives a list of strings and regular expressions to match against the error message.
+You can use the <PlatformIdentifier name="ignore-errors" /> option to filter out errors that match a certain pattern. This option receives a list of strings and regular expressions to match against the error message. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead.
 
 <PlatformContent includePath="configuration/ignore-errors" />
 </PlatformSection>
@@ -93,7 +92,7 @@ You can use the <PlatformIdentifier name="ignore-errors" /> option to filter out
 
 </PlatformSection>
 
-<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dart"]} notSupported={["javascript.cordova"]}>
+<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dart"]} notSupported={["javascript.cordova", "unreal"]}>
 
 ## Filtering Transaction Events
 
@@ -109,6 +108,8 @@ In its simplest form, used just for filtering the transaction, it looks like thi
 
 It also allows you to sample different transactions at different rates.
 
+If the transaction currently being processed has a parent transaction (from an upstream service calling this service), the parent (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
+
 Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
 
 <PlatformSection supported={["node", "javascript", "php", "go", "python", "java", "ruby"]}>
@@ -123,7 +124,7 @@ Learn more about <PlatformLink to="/configuration/sampling/">configuring the sam
 
 ### Using <PlatformIdentifier name="ignore-transactions" />
 
-You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of strings and regular expressions to match against the transaction name.
+You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of strings and regular expressions to match against the transaction name. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead.
 
 <PlatformContent includePath="configuration/ignore-transactions" />
 </PlatformSection>

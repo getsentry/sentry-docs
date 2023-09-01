@@ -7,7 +7,7 @@ import {Content} from 'sentry-docs/components/content';
 import {InternalDocsSidebar} from 'sentry-docs/components/internalDocsSidebar';
 
 export default function Doc(props: any) {
-  let sidebar = null;
+  let sidebar: JSX.Element | null = null;
   if (props.path.startsWith('/api/')) {
     sidebar = <ApiSidebar />;
   } else if (props.path.startsWith('/contributing/')) {

@@ -1,0 +1,24 @@
+If you're using version `7.58.0` or above of our Node SDK and have the HTTP integration set up, distributed tracing will work out of the box.
+
+<SignInNote />
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Sentry.Integrations.Http({ tracing: true })],
+});
+```
+
+If you're using express or an express-compatible framework, you'll also need to use Sentry middleware:
+
+```js
+const app = express();
+
+// RequestHandler creates a separate execution context, so that all
+// transactions/spans/breadcrumbs/tags are isolated across requests
+app.use(Sentry.Handlers.requestHandler());
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+```
+
+If you're using version `7.57.x` or below, you'll need to have our <PlatformLink to="/performance/">performance monitoring feature enabled</PlatformLink> in order for distributed tracing to work.

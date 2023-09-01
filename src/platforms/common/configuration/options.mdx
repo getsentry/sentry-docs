@@ -2,8 +2,6 @@
 title: Basic Options
 sidebar_order: 1
 description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
-notSupported:
-  - perl
 ---
 
 SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
@@ -284,25 +282,25 @@ For ASP.NET and ASP.NET Core applications, the value will default to the server'
 
 <ConfigKey name="ignore-errors" supported={["javascript", "node"]} notSupported={[]}>
 
-A list of strings or regex patterns that match error messages that shouldn't be sent to Sentry. Messages that match these strings or regular expressions will be filtered out before they're sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. By default, all errors are sent.
+<Include name="platforms/configuration/options/ignore-errors.mdx" />
 
 </ConfigKey>
 
 <ConfigKey name="ignore-transactions" supported={["javascript", "node"]} notSupported={[]}>
 
-A list of strings or regex patterns that match transaction names that shouldn't be sent to Sentry. Transactions that match these strings or regular expressions will be filtered out before they're sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. By default, all transactions are sent.
+<Include name="platforms/configuration/options/ignore-transactions.mdx" />
 
 </ConfigKey>
 
 <ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A list of strings or regex patterns that match error URLs that should not be sent to Sentry. Errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will not be sent. As a result, if you add `'foo.com'` to the list, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
+<Include name="platforms/configuration/options/deny-urls.mdx" />
 
 </ConfigKey>
 
 <ConfigKey name="allow-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. If you use this option, only errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will be sent. As a result, if you add `'foo.com'` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
+<Include name="platforms/configuration/options/allow-urls.mdx" />
 
 </ConfigKey>
 
@@ -351,18 +349,7 @@ A list of exception types that will be filtered out before sending to Sentry.
 
 </ConfigKey>
 
-<ConfigKey name="request-bodies" supported={["python"]}>
-
-This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
-
-- `never`: request bodies are never sent
-- `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
-- `medium`: medium and small requests will be captured (typically 10KB)
-- `always`: the SDK will always capture the request body for as long as Sentry can make sense of it
-
-</ConfigKey>
-
-<ConfigKey name="max-request-body-size" supported={["php", "dotnet.aspnet", "dotnet.aspnetcore", "java"]}>
+<ConfigKey name="max-request-body-size" supported={["php", "dotnet.aspnet", "dotnet.aspnetcore", "java", "python"]}>
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
@@ -373,15 +360,14 @@ This parameter controls whether integrations should capture HTTP request bodies.
 
 </ConfigKey>
 
-<ConfigKey name="max-value-length" supported={["php"]}>
+<ConfigKey name="max-value-length" supported={["php", "python"]}>
 
 The number of characters after which the values containing text in the event payload will be truncated (defaults to `1024`).
 
-</ConfigKey>
-
-<ConfigKey name="with-locals" supported={["python"]}>
-
-When enabled, local variables are sent along with stackframes. This can have a performance and PII impact. Enabled by default on platforms where this is available.
+<Note>
+  If the value you set for this is exceptionally large, the event may exceed 1
+  MiB and will be dropped by Sentry.
+</Note>
 
 </ConfigKey>
 
@@ -393,7 +379,7 @@ A path to an alternative CA bundle file in PEM-format.
 
 <ConfigKey name="context-lines" supported={["php"]}>
 
-The number of context lines for each frame in the stacktrace when loading a file.
+The number of context lines for each frame in the stack trace when loading a file.
 
 </ConfigKey>
 
@@ -407,11 +393,29 @@ The number of context lines for each frame when loading a file.
 
 </ConfigKey>
 
+<ConfigKey name="request-bodies" supported={["python"]}>
+
+#### Deprecated
+
+Has been renamed to [max_request_body_size](/platforms/python/configuration/options/#max-request-body-size).
+
+</ConfigKey>
+
+<ConfigKey name="with-locals" supported={["python"]}>
+
+#### Deprecated
+
+Has been renamed to [include_local_variables](/platforms/python/configuration/options/#include-local-variables).
+
+</ConfigKey>
+
 <ConfigKey name="initial-scope" supported={["javascript","node"]} notSupported={["react-native"]}>
 
 Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
 
 Object:
+
+<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -442,6 +446,8 @@ Sentry.init({
 <ConfigKey name="initial-scope" supported={["apple"]}>
 
 A block that configures the initial scope when starting the SDK.
+
+<SignInNote />
 
 ```swift
 import Sentry
@@ -569,7 +575,7 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 </PlatformSection>
 
-<ConfigKey name="enabled" supported={["javascript", "node"]}>
+<ConfigKey name="enabled" supported={["javascript", "node", "java"]}>
 
 Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
 
@@ -691,11 +697,11 @@ This function is called with an SDK-specific transaction event object, and can r
 
 <ConfigKey name="on-crash" supported={["native"]}>
 
-This function is called with a backend-specific event object, and can return a modified event object or nothing to skip reporting the event. In contrast to `before_send`, it is only called when a crash occured. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
+This function is called with a backend-specific event object, and can return a modified event object or nothing to skip reporting the event. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
 
 </ConfigKey>
 
-<ConfigKey name="before-breadcrumb" notSupported={["native"]}>
+<ConfigKey name="before-breadcrumb" notSupported={["native", "unreal"]}>
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
@@ -1064,7 +1070,7 @@ Set this boolean to `false` to disable automatic User Interactions tracing.
 
 <ConfigKey name="proguardUuid" supported={["flutter"]}>
 
-Sets the Proguard uuid for Android platform
+Sets the Proguard UUID for Android platform
 
 </ConfigKey>
 

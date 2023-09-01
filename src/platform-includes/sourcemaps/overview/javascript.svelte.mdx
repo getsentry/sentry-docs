@@ -8,7 +8,15 @@ If you are on an older version and you want to upload source maps we recommend u
 
 </Note>
 
-This page is a guide on how to create releases and upload source maps to Sentry when bundling your Svelte app.
+### Using the Sentry Wizard
+
+The easiest way to configure uploading source maps is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source maps upload manually, follow the guide for your bundler or build tool below.
+
+### Manually Configuring Source Maps Upload
 
 To generate source maps with your Svelte project, you need to set the source map [compiler options](https://svelte.dev/docs#compile-time-svelte-compile) in your Svelte config:
 
@@ -37,7 +45,19 @@ npm install @sentry/vite-plugin --save-dev
 yarn add @sentry/vite-plugin --dev
 ```
 
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with a `.env.sentry-build-plugin` file in the working directory when building your project.
+You likely want to add the auth token as an environment variable to your CI/CD environment.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 Configure Vite to emit source maps and use the Sentry Vite plugin:
+
+<SignInNote />
 
 ```JavaScript {filename:vite.config.js}
 import { defineConfig } from "vite";
@@ -56,13 +76,20 @@ export default defineConfig({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and need `project:releases` and `org:read` scopes
+      // Auth tokens can be obtained from
+      // https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
 });
 ```
+
+<Note>
+
+The Sentry Vite plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your implementation.
+
+</Note>
 
 ### Other Bundlers
 

@@ -5,6 +5,21 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 To instrument your Remix application with Sentry, first install the `@sentry/remix` package:
 
 ```bash
@@ -23,12 +38,9 @@ import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
-  dsn: "___DSN___",
-  tracesSampleRate: 1,
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.BrowserTracing({
-      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
       routingInstrumentation: Sentry.remixRouterInstrumentation(
         useEffect,
         useLocation,
@@ -36,6 +48,10 @@ Sentry.init({
       ),
     }),
   ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 });
 ```
 
@@ -47,7 +63,7 @@ import { prisma } from "~/db.server";
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1,
   integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
 });

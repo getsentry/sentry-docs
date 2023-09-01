@@ -1,13 +1,13 @@
 ---
 title: Angular CLI
-description: "Upload your source maps using the Angular CLI, a custom Angular builder and the Sentry Webpack plugin."
+description: "Upload your source maps using the Angular CLI, a custom Angular builder and the Sentry webpack plugin."
 sidebar_order: 0
 supported:
   - javascript.angular
 ---
 
-You can use the Angular CLI together with our Sentry Webpack plugin to automatically create releases and upload source maps to Sentry when building your app (with `ng build`, for example).
-Due to Angular's closed build system, to register the Webpack plugin, you'll first need to configure a custom builder.
+You can use the Angular CLI together with our Sentry webpack plugin to automatically create releases and upload source maps to Sentry when building your app (with `ng build`, for example).
+Due to Angular's closed build system, to register the webpack plugin, you'll first need to configure a custom builder.
 In the end, you'll be able to automatically upload source maps whenever you're creating a production build of your app.
 
 <Alert level="warning">
@@ -18,7 +18,7 @@ Before you start configuring the source maps upload, make sure that you're [gene
 
 ## Install
 
-Install the custom Webpack builder for Angular and the Sentry Webpack plugin:
+Install the custom webpack builder for Angular and the Sentry webpack plugin:
 
 ```shell {tabTitle:npm}
 npm install --save-dev @angular-builders/custom-webpack @sentry/webpack-plugin
@@ -77,7 +77,19 @@ If you are on an older version and you want to upload source maps we recommend u
 
 </Note>
 
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file in the working directory when building your project.
+We recommend you add the auth token to your CI/CD environment as an environment variable.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 Register the Sentry Webpack plugin in your `webpack.config.js`:
+
+<SignInNote />
 
 ```javascript {filename:webpack.config.js}
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
@@ -91,15 +103,15 @@ module.exports = {
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and need the `project:releases` and `org:read` scopes
+      // Auth tokens can be obtained from
+      // https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
 };
 ```
 
-Learn more about configuring the plugin in our [Sentry Webpack Plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
+Learn more about configuring the plugin in our [Sentry webpack plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
 
 ### 3. Upload
 
@@ -108,3 +120,10 @@ To upload the source maps, build your Angular application:
 ```bash
 ng build # add --prod for Angular versions below 13
 ```
+
+<Note>
+
+The Sentry webpack plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your implementation.
+
+</Note>

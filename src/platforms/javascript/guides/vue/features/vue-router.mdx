@@ -1,0 +1,65 @@
+---
+title: Vue Router
+description: "Learn about Sentry's Vue Routing integration."
+redirect_from:
+  - /sdks/react/integrations/vue-router/
+  - /platforms/javascript/guides/vue/configuration/integrations/vue-router/
+---
+
+If you're using Vue Router, use our provided routing instrumentation to get better parameterized transaction names.
+
+Our routing instrumentation supports `vue-router` v2, v3, and v4.
+
+Here is a full example of how to use it:
+
+<SignInNote />
+
+```javascript {filename:main.js}
+import Vue from "vue";
+import App from "./App";
+import * as Sentry from "@sentry/vue";
+import Router from "vue-router";
+import HelloWorld from "@/components/HelloWorld";
+import Foo from "@/components/Foo";
+import Bar from "@/components/Bar";
+
+Vue.use(Router);
+
+const router = new Router({
+  // your router configuration
+});
+
+Sentry.init({
+  Vue,
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    new Sentry.BrowserTracing({
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+    }),
+  ],
+});
+
+new Vue({
+  el: "#app",
+  router,
+  components: { App },
+  template: "<App/>",
+});
+```
+
+## Configuration
+
+You can pass an optional configuration object as second argument to the router instrumentation:
+
+```javascript
+vueRouterInstrumentation(vueRouter, {
+  routeLabel: "path",
+});
+```
+
+The available options are:
+
+| Key        | Type   | Default | Description                                                                                                                                                                                                                                                           |
+| ---------- | ------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| routeLabel | string | `name`  | The label to use for the route transactions. Can be either `name` or `path`. When this is `name`, the transaction will use `route.name`, if it is set, and else use the path of the route. By setting this to `path` you can opt-out of this and always use the path. |

@@ -34,7 +34,17 @@ Available options:
 
 _Import name: `Sentry.Integrations.CaptureConsole`_
 
-This integration captures all `Console API` calls and redirects them to Sentry using the SDK's `captureMessage` or `captureException` call, depending on the log level. It then re-triggers to preserve default native behavior:
+This integration captures all `Console API` calls and redirects them to Sentry using the SDK's `captureMessage` or `captureException` call, depending on the log level. It then re-triggers to preserve default native behavior.
+
+<PlatformSection supported={["javascript.react"]}>
+
+<Alert level="warning" title="Note">
+
+By default React [logs all errors to the console](https://github.com/facebook/react/blob/493f72b0a7111b601c16b8ad8bc2649d82c184a0/packages/react-reconciler/src/ReactFiberErrorLogger.js#L85), even if you are using an React error boundary. This means that Sentry will capture the error through the `CaptureConsole` integration and not through the error boundary. We recommend disabling logging the `error` level if using React error boundaries and the `CaptureConsole` integration.
+
+</Alert>
+
+</PlatformSection>
 
 <PlatformContent includePath="configuration/capture-console" />
 
@@ -105,5 +115,20 @@ This integration hooks into the ReportingObserver API and sends captured events 
 Available options:
 
 <PlatformContent includePath="configuration/reporting-observer" />
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript"]}>
+
+### ContextLines
+
+_Import name: `Sentry.Integrations.ContextLines`_
+
+This integration adds source code from inline JavaScript of the current page's HTML (e.g. JS in `<script>` tags) to stack traces of captured errors.
+It _can't_ collect source code from assets referenced by your HTML (e.g. `<script src="..." />`).
+
+The `ContextLines` integration is useful when you have inline JS code in HTML pages that can't be accessed by Sentry's backend, for example, due to a login-protected page.
+
+<PlatformContent includePath="configuration/contextlines" />
 
 </PlatformSection>

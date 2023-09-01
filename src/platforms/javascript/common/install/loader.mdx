@@ -14,6 +14,8 @@ The Loader Script is the easiest way to initialize the Sentry SDK. The Loader Sc
 
 To use the loader, go in the Sentry UI to **Settings > Projects > (select project) > Client Keys (DSN)**, and then press the "Configure" button. Copy the script tag from the "JavaScript Loader" section and include it as the first script on your page. By including it first, you allow it to catch and buffer events from any subsequent scripts, while still ensuring the full SDK doesn't load until after everything else has run.
 
+<SignInNote />
+
 ```html
 <script
   src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
@@ -25,7 +27,7 @@ By default, Performance Monitoring and Session Replay is enabled.
 
 ## Source Maps
 
-To have correct stack traces for minified asset files when using the Loader Script, you will have to [upload & host your Source Maps publicly](/platforms/javascript/sourcemaps/uploading/hosting-publicly/).
+To have correct stack traces for minified asset files when using the Loader Script, you will have to either [host your Source Maps publicly](/platforms/javascript/sourcemaps/uploading/hosting-publicly/) or [upload them to Sentry](/platforms/javascript/sourcemaps/).
 
 ## Loader Configuration
 
@@ -119,7 +121,7 @@ For Session Replay, the defaults are set to `replaysSessionSampleRate: 0.1` and 
 
 When using the Loader Script with just errors, the script injects the SDK asynchronously. This means that only _unhandled errors_ and _unhandled promise rejections_ will be caught and buffered before the SDK is fully loaded. Specifically, capturing [breadcrumb data](../../enriching-events/breadcrumbs/) will not be available until the SDK is fully loaded and initialized. To reduce the amount of time these features are unavailable, set `data-lazy="no"` or call `forceLoad()` as described above.
 
-If you want to understand the inner workings of the loader itself, you can read the documented source code in all its glory over at the [sentry repository](https://github.com/getsentry/sentry/blob/master/src/sentry/templates/sentry/js-sdk-loader.ts).
+If you want to understand the inner workings of the loader itself, you can read the documented source code in all its glory over at the [Sentry repository](https://github.com/getsentry/sentry/blob/master/src/sentry/templates/sentry/js-sdk-loader.ts).
 
 ## CDN
 
@@ -186,10 +188,7 @@ Sentry.init({
   release: "my-project-name@" + process.env.npm_package_version,
   integrations: [
     // If you use a bundle with performance monitoring enabled, add the BrowserTracing integration
-    new Sentry.BrowserTracing({
-      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-    }),
+    new Sentry.BrowserTracing(),
     // If you use a bundle with session replay enabled, add the SessionReplay integration
     new Sentry.Replay(),
   ],
@@ -197,6 +196,9 @@ Sentry.init({
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
   tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 });
 ```
 

@@ -1,7 +1,7 @@
 ---
 title: "Grouping Issues"
 sidebar_order: 55
-nodindex: true
+noindex: true
 redirect_from:
   - /guides/grouping-and-fingerprints/
   - /product/sentry-basics/guides/grouping-and-fingerprints/
@@ -9,91 +9,99 @@ description: "Learn more about how Sentry groups issues together as well as diff
 ---
 
 Have you ever had a set of similar-looking issues like this?
+
 ![Issues Dashboard](issues-dashboard.png)
 
-Let's first understand how errors and transactions group into an issue. For example, the issue `testTypeIssue16` has 18 events that Sentry grouped into an issue because they share the same _fingerprint_.
+Ever wonder why some events group into a single issue but others group into separate issues?
+
+Let's first understand how errors and transactions group into an issue. In the example above, the issue `testTypeIssue14` has 718 events that Sentry grouped into an issue because they share the same _fingerprint_.
 
 **What is a fingerprint?**
-A fingerprint is a way to uniquely identify an event. Sentry sets a fingerprint by default for you. Sentry uses its own built-in grouping algorithms to generate a fingerprint based on information available within the event such as a stack trace, exception, and message. Events with the same fingerprint are grouped together.
+A fingerprint is a way to uniquely identify an event. Sentry sets a fingerprint for you by default, using built-in grouping algorithms based on information such as a stack trace, exception type, and message. Events with the same fingerprint are grouped together.
 
-**Do I need to do anything?** No. Sentry automatically generates a fingerprint based on the event type and all available information. If events have the same root cause, they will group into one issue. If you have separate error issues that you'd like to group together, then this guide will show you how.
+**Do I need to do anything?** No. Sentry automatically generates a fingerprint based on the event type and other data in the event. If events have the same root cause, they will group into one issue. If you want to change the way events are grouped, see Changing How Events are Grouped below.
 
-**How do I see the fingerprint?** Open an issue, click the JSON link, and find the _fingerprint_ property. If the default grouping was used, you'll see default written there. If a different grouping was used, you'll see the actual fingerprint value itself.
+**How do I see the fingerprint?** Open an issue, click the JSON link, and find the _fingerprint_ property. If the default grouping was used, you'll see `"{{ default }}"` written there. If a different grouping was used, you'll see the fingerprint value itself.
 
-## Why are similar looking Issues not grouping together?
+## Why are similar-looking issues not grouping together?
 
-If a set of issues in the Issues Stream looks similar, there is something that still differs: in this case it is the stack trace, and therefore the fingerprint. Let's compare two similar looking error issues side-by-side:
+Even if a set of issues in the Issues Stream looks similar, if they are separate then there is something that still differs. In this example, it's the function name at the top of the stack trace:
 ![Issues Dashboard](issue-stacktraces-comparison.png)
 
-Notice the only difference is one had function `testTypeIssue15` and the other had `testTypeIssue14`. This means the stack traces are not identical.
-Sometimes two stack traces are the same function execution path but differ by one frame. This can be due to several things like middleware you've configured, node_modules, the framework itself, or library imports. To have greater control over which stack frames are included or excluded, see [Stack Trace Rules](/product/data-management-settings/event-grouping/stack-trace-rules/).
+## Changing How Events are Grouped
 
 <Note>
 
-Fortunately you can change the default grouping behavior to make certain issue types match on something other than stack trace. You can do this from both the **Server side** and the **SDK side**
+The solutions described in this section are only applicable to [error issues](/product/issues/issue-details/error-issues/). Other categories of issues (such as [performance issues](/product/issues/issue-details/performance-issues/)) do not support this feature.
 
 </Note>
 
-## Solutions
+There are four different ways to change how events are grouped into issues.
 
-<Note>
+**Merging Similar Issues**: This allows already-existing issues to be merged together. No settings or configuration are required to do this.
 
-The solutions described in this section are only applicable for [error issues](/product/issues/issue-details/error-issues/). Other categories of issues (such as, [performance issues](/product/issues/issue-details/performance-issues/)) do not support this feature.
+**Fingerprint Rules**: This allows you to configure rules for directly setting the fingerprint of future events.
 
-</Note>
+**Stack Trace Rules**: This allows you to configure rules for which stack trace frames are used when applying grouping rules to future events.
 
-There are three different approaches for updating how events group into issues. The first approach is for merging together historical issues already created. We'll call this **Merging Similar Issues**. The second is for setting rules so next incoming issues will get grouped together. We'll call this **Fingerprint Rules**. The third is **SDK Side Fingerprinting**. The difference between SDK side and Server side is the data elements on the exception and stack traces which you can use for matching issues.
+**SDK-side Fingerprinting**: This allows you to set a fingerprint directly on an event before it's sent to Sentry.
 
-In **Merging Similar Issues** we'll see how historical issues can be merged together. No settings or configuration are required to do this.
+Note that neither configuring fingerprint and stack trace rules nor using SDK-side fingerprinting will affect existing events or issues, only change how future events are grouped.
 
-In **Fingerprint Rules** we'll see how to set rules for new incoming issues of our choice to get grouped together by. This will not affect historical issues.
-
-More on **SDK Side Fingerprinting** [here](/platform-redirect/?next=/usage/sdk-fingerprinting/).
+See below for more details on each approach.
 
 ### Merging Similar Issues
 
-This is for merging similar issues and will not auto merge the next occurrence of this issue coming in.
+This allows two or more existing issues to be combined, such that any future event which would have fallen into one of the issues will then be added to the merged issue.
 
 Before merge
 ![Before Merge](before-merge-1.png)
 
-After merge, we see that testTypeIssue7 and testTypeIssue8 were merged together.
+After merge, we see that `testTypeIssue7` and `testTypeIssue8` were merged together.
 ![After Merge](after-merge-1.png)
 
 You can also do this from inside a single issue. Click the Similar Issues tab
 ![Similar Issues](similar-issues-1.png)
 
-**Warning:** Future issues will get added to the merged set only if they match one of the stack traces in the merged set.
+**Warning:** This will not affect the creation of future issues. In other words, any future event which would have created a new issue will still do so, regardless of similarity. Only events from the merged issues will be included in the new combined issue.
 
-If you'd like to unmerge issues, you can go to the **Issue Details** page and click the “Merged Issues” tab. You will see the fingerprints that have been merged into that issue. Select the appropriate checkbox(es) and click “Unmerge”.
+If you'd like to unmerge issues, you can go to the **Issue Details** page and click the "Merged Issues" tab. You will see the fingerprints that have been merged into that issue. Select the appropriate checkbox(es) and click "Unmerge".
 
 ### Fingerprint Rules
 
-Here's an overview of what we'll do using **Fingerprint Rules**
+In order to use fingerprint rules, there are two steps.
 
-1. Identify the match logic for grouping issues together. We'll use either the error's **type** or **message**
-2. Set the match logic and its fingerprint for it, in your Project's Settings.
+1. Identify the match logic for grouping issues together. In the examples below, we'll use either the error's **type** or its **message**.
+2. Set the match logic and the corresponding fingerprint in project settings.
 
 #### 1. Identify Match Logic
 
-Let's say you want the following 2 issues to group together:
+Let's say you want the following two issues to group together:
 ![ConnectionTimeouts](connection-timeouts-2.png)
 
-You can do it based on the **type** as in:
+You can do it based on the error **type**:
 ![ConnectionTimeoutType](connection-timeout-type.png)
 
-Or you can do it based on the **message** as in any value after the word host:
+Or you can do it based on the **message**:
 ![ConnectionTimeoutMessage](connection-timeout-message.png)
 
-#### 2. Implement
+#### 2. Add Rules to Project Settings
 
 Here's how to set the match based on the error **type** in **[Project] > Settings > Issue Grouping > Fingerprint Rules**:
 ![ConnectionTimeoutTypeExample](connection-timeout-type-example.png)
 
-Now, all events coming in with ConnectTimeout will get a fingerprint of connect-timeout-type and will get grouped into a single issue. This only applies to future events coming in. Each event for this issue could have a different stack trace, but stack trace is no longer used as the default grouping rule.
+Now all `ConnectTimeout` events will get a fingerprint of `connect-timeout-type` and will get grouped into a single issue, regardless of stack trace. Note that this only applies to future events.
 
-Here's how to set the match based on the error **message** where you want to include all hosts.
+Here's how to set the match based on the error **message**. Note the use of `*` to allow the message to match on any `host` value.
 
 ![ConnectionTimeoutMessageExample](connection-timeout-message-example.png)
 
-You could also do this based on the file path of the erroring function, or on the function name itself. See [Fingerprint Rules](/platform-redirect/?next=/usage/sdk-fingerprinting/).
+You can also do this based on the file path of the erroring function, or on the function name itself. See [Fingerprint Rules](/product/data-management-settings/event-grouping/fingerprint-rules/).
+
+### Stack Trace Rules
+
+Sometimes two stack traces are the same function execution path but differ by one or more frames corresponding to code in middleware, third-party libraries, or the framework itself. Sentry will automatically try to detect and ignore such frames, but this is also configurable. See [Stack Trace Rules](/product/data-management-settings/event-grouping/stack-trace-rules/).
+
+### SDK-side Fingerprinting
+
+For information on setting fingerprints directly on events themselves, see the relevant [SDK docs](/platform-redirect/?next=/usage/sdk-fingerprinting/).
