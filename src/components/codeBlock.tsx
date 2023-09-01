@@ -123,8 +123,9 @@ const dropdownPopperOptions = {
 };
 
 function OrgAuthTokenCreator() {
-  const {codeKeywords} = useContext(CodeContext);
+  const {codeKeywords, sharedKeywordSelection} = useContext(CodeContext);
 
+  const [sharedSelection, setSharedSelection] = sharedKeywordSelection;
   const [tokenState, setTokenState] = useState<TokenState>({status: 'none'});
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
@@ -141,6 +142,25 @@ function OrgAuthTokenCreator() {
     handler: () => setIsOpen(false),
   });
 
+  const updateSelectedOrg = (orgSlug: string) => {
+    const choices = codeKeywords.PROJECT ?? [];
+    const currentSelectionIdx = sharedSelection.PROJECT ?? 0;
+    const currentSelection = choices[currentSelectionIdx];
+
+    // Already selected correct org, nothing to do
+    if (currentSelection && currentSelection.ORG_SLUG === orgSlug) {
+      return;
+    }
+
+    // Else, select first project of the selected org
+    const newSelectionIdx = choices.findIndex(choice => choice.ORG_SLUG === orgSlug);
+    if (newSelectionIdx > -1) {
+      const newSharedSelection = {...sharedSelection};
+      newSharedSelection.PROJECT = newSelectionIdx;
+      setSharedSelection(newSharedSelection);
+    }
+  };
+
   const createToken = async (orgSlug: string) => {
     setTokenState({status: 'loading'});
     const token = await createOrgAuthToken({
@@ -153,6 +173,8 @@ function OrgAuthTokenCreator() {
         status: 'success',
         token,
       });
+
+      updateSelectedOrg(orgSlug);
     } else {
       setTokenState({
         status: 'error',
