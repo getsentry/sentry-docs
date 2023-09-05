@@ -1,8 +1,6 @@
 Sentry requires dSYMs (debug information files) to symbolicate your stack traces. The symbolication process unscrambles the stack traces to reveal the function, file names, and line numbers of the crash.
 
-Every solution requires a **Sentry Auth Token**. We recommend [using internal integrations](https://sentry.io/settings/developer-settings/) for managing Auth Tokens. [Create a new internal integration](https://sentry.io/settings/developer-settings/new-internal/) with the permission `project:read&write`, if you don't have one already. After saving it, you can copy the Auth Token from the integration page.
-
-![Integration Auth Token](integration-tokens.png)
+Every solution requires a **Sentry Auth Token**. You can create tokens on the [Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page.
 
 To view uploaded dSYMs in your project, select an existing project from the "Projects" page, then go to **Settings > Debug Files**. You can upload dSYMs using:
 
@@ -25,10 +23,10 @@ Sentry can display snippets of your code next to the event stack traces. This fe
 
 For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds.
 
-<SignInNote />
+<OrgAuthTokenNote />
 
 ```bash
-sentry-cli debug-files upload --auth-token YOUR_AUTH_TOKEN \
+sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
   --include-sources \
   --org ___ORG_SLUG___ \
   --project ___PROJECT_SLUG___ \
@@ -44,11 +42,11 @@ to upload your dSYMs to Sentry.
 
 Sentry can display snippets of your code next to event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `include_sources` parameter to `true`, the Fastlane plugin will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
-<SignInNote />
+<OrgAuthTokenNote />
 
 ```ruby
 sentry_upload_dif(
-  auth_token: 'YOUR_AUTH_TOKEN',
+  auth_token: '___ORG_AUTH_TOKEN___',
   org_slug: '___ORG_SLUG___',
   project_slug: '___PROJECT_SLUG___',
   include_sources: true, # Optional. For source context.
@@ -86,13 +84,13 @@ Another option is to use warnings, and then set `GCC_TREAT_WARNINGS_AS_ERRORS` t
 
 </Alert>
 
-<SignInNote />
+<OrgAuthTokenNote />
 
 ```bash {tabTitle:Warn on failures - nonblocking}
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
-export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "warning: sentry-cli - $ERROR"
@@ -106,7 +104,7 @@ fi
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
-export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "error: sentry-cli - $ERROR"
