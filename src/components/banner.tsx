@@ -7,7 +7,7 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Learn how to detect, fix, and prevent ANRs. Hear from Sentry's Android experts. Sep 26 | 10am PST';
+  'Learn how to detect, fix, and prevent ANRs. Hear from Sentry Android experts. Sep 26 | 10am PST';
 const BANNER_LINK_URL =
   'https://sentry.io/resources/ama-detect-fix-prevent-anrs/?promo_name=from-docs-banner';
 const BANNER_LINK_TEXT = 'Register Now';
