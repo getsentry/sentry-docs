@@ -278,23 +278,16 @@ Heartbeat monitoring notifies Sentry of a job's status through one check-in. Thi
 <SignInNote />
 
 ```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
 # 🟢 Notify Sentry your job has completed successfully:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok"}'
+curl "${SENTRY_CRONS}?status=ok"
 ```
 
 ```http {tabTitle: HTTP}
-POST /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
-
-{
-    "status": "ok"
-}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 ```
 
 If your job execution fails:
@@ -303,22 +296,12 @@ If your job execution fails:
 
 ```bash {tabTitle: cURL}
 # 🔴 Notify Sentry your job has failed:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "error"}'
+curl "${SENTRY_CRONS}?status=error"
 ```
 
 ```http {tabTitle: HTTP}
-POST /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
-Content-Type: application/json
-
-{
-    "status": "error"
-}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 ```
 
 ## Connecting Errors to Cron Monitors
