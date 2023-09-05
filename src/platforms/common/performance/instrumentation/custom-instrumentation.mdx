@@ -31,86 +31,114 @@ redirect_from:
   - /performance/custom-instrumentation
 ---
 
+
 <Note>
 
-To capture transactions and spans customized to your organization's needs, you must first <PlatformLink to="/performance/">set up performance monitoring.</PlatformLink>
+This is just a THOUGHT experiment and should not be merged!
 
 </Note>
 
-<PlatformSection notSupported={["javascript", "node"]}>
 
-<PlatformContent includePath="performance/enable-manual-instrumentation" />
 
-<PlatformContent includePath="performance/add-spans-example" />
+## Creating Spans
 
-</PlatformSection>
+```javascript
+function doWork() {
+  const result = Sentry.startSpan({ name: "Important Function" }, () => {
+    return expensiveFunction();
+  });
+}
+```
 
-<PlatformSection supported={["javascript", "node"]}>
+## Creacting Nested Spans
 
-To add custom performance data to your application, you need to create and use spans. Spans are a way to measure the time it takes for a specific action to occur. For example, you can create a span to measure the time it takes for a function to execute.
+If you have a distinct sub-operation you’d like to track as a part of another one, you can create spans to represent the relationship:
 
-To start measuring timing data, you first need to import the SDK.
+```javascript
+function doWork() {
+  const result = Sentry.startSpan({ name: "Parent Span" }, () => {
+    return expensiveParentFunction();
 
-<PlatformContent includePath="enriching-events/import" />
+    const res = Sentry.startSpan({ name: "Child Span" }, () => {
+      return expensiveChildFunction();
+    });
+  });
+}
+```
 
-<PlatformContent includePath="performance/span-api-version" />
 
-## Create Active Span
+## Creating Spans with Decorators
 
-By default created spans are considered active, which means they are put on the Sentry scope. This allows child spans and Sentry errors to be associated with that span. This is the recommended way to create spans.
+It’s common to have a single span track the execution of an entire function. In that scenario, there is a decorator you can use to reduce code:
 
-<PlatformContent includePath="performance/add-active-span" />
+```javascript
+???
 
-## Get Active Span
+// TBD
+```
 
-You can also get the current active span, which is useful for when you need to add new child spans.
+Use of the decorator is equivalent to creating the span inside do_work() and ending it when do_work() is finished.
 
-<PlatformContent includePath="performance/get-span" />
+The function name will be used as the spans name.
 
-## Start Independent Spans
 
-If you want to add a span that is not active, you can create a independent spans. This is useful for when you have work that is grouped together under a single parent span, but is independent from the current active span. In most cases you'll want to create and use active spans.
+## Creating Spans That Need Manual Finishing
 
-<PlatformContent includePath="performance/add-independent-span" />
+Sometimes you do not want to use context managers, and do want to finish spans on your own. You can do this:
 
-## Start Transaction
+```javascript
+const parentSpan = Sentry.startSpan({ name: "Parent Span" });
 
-The root span (the span that is the parent of all other spans) is known as a transaction in Sentry. This can be accessed and created separately if you need more control over the timing data or if you use a version of the SDK that does not support the top level span APIs.
+parentWork();
 
-<PlatformContent includePath="performance/enable-manual-instrumentation" />
+const childSpan = Sentry.startSpan({ name: "Child Span" });
 
-<PlatformContent includePath="performance/add-spans-example" />
+childWork();
 
-## Adding Span operations
+childSpan.finish();
+parentSpan.finish();
+```
 
-Spans can have an operation associated with them, which help activate Sentry identify additional context about the span. For example database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations and filters for spans with known operations.
+If you want to create independend spans that are not in a parent/child relation ship a as above you can create them like this:
 
-Sentry maintains a [list of well known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
+```javascript
+const span1 = Sentry.startSpan({ name: "first-step", independend: true });
 
-<PlatformContent includePath="performance/span-operations" />
+firstStep();
 
-</PlatformSection>
+const span2 = Sentry.startSpan({ name: "second-step", independend: true });
 
-<PlatformSection supported={["java", "apple"]}>
+secondStep();
 
-<PlatformContent includePath="performance/create-transaction-bound-to-scope" />
+const span3 = Sentry.startSpan({ name: "third-step", independend: true });
 
-</PlatformSection>
+thirdStep();
 
-<PlatformSection notSupported={["java", "native", "apple", "javascript", "node"]}>
+span1.finish();
+span2.finish();
+span3.finish();
+```
 
-<PlatformContent includePath="performance/retrieve-transaction" />
+Now there will be no child relation between the spans, they will be siblings in the span tree.
 
-</PlatformSection>
 
-<PlatformSection supported={["rust", "native"]}>
+## Accessing the Current Span
 
-<PlatformContent includePath="performance/concurrency" />
+Sometimes it’s helpful to access whatever the current span is at a point in time so that you can enrich it with more information.
 
-</PlatformSection>
+```javascript
+const currentSpan = Sentry.getActiveSpan();
+// enrich 'currentSpan' with some information
+```
 
-<PlatformSection supported={["java", "dart", "flutter", "rust", "native", "apple"]}>
+## Add Data to a Span
 
-<PlatformContent includePath="performance/connect-errors-spans" />
+You can add additional data to a span so it carries more information about the current operation that it’s tracking.
 
-</PlatformSection>
+```javascript
+const currentSpan = Sentry.getActiveSpan();
+
+currentSpan?.setData("operation.value", 1);
+currentSpan?.setData("operation.name", "Saying hello!");
+currentSpan?.setData("operation.other-stuff", [1, 2, 3]);
+```

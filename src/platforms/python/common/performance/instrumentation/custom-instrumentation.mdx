@@ -4,179 +4,133 @@ sidebar_order: 20
 description: "Learn how to capture performance data on any action in your app."
 ---
 
-The Sentry SDK for Python does a very good job of auto instrumenting your application. If you use one of the popular frameworks, we've got you covered because everything is instrumented out of the box. The Sentry SDK will check your installed Python packages and auto enable the matching SDK integrations.
-
-## Add a Transaction
-
-Adding transactions will allow you to instrument and capture certain regions of your code.
-
 <Note>
 
-If you're using one of Sentry's SDK integrations, transactions will be created for you automatically.
+This is just a THOUGHT experiment and should not be merged!
 
 </Note>
 
-The following example creates a transaction for an expensive operation (in this case,`eat_pizza`), and then sends the result to Sentry:
+The Sentry SDK for Python does a very good job of auto instrumenting your application. If you use one of the popular frameworks, we've got you covered because everything is instrumented out of the box. The Sentry SDK will check your installed Python packages and auto enable the matching SDK integrations.
+
+
+## Creating Spans
 
 ```python
 import sentry_sdk
 
-def eat_slice(slice):
-    ...
-
-def eat_pizza(pizza):
-    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
-        while pizza.slices > 0:
-            eat_slice(pizza.slices.pop())
+def do_work():
+    with sentry_sdk.start_span(op="function", name="my-span-name"):
+        # do some work that 'span' will track
+        print("doing some work...")
+        # When the 'with' block goes out of scope, 'span' is finished for you
 ```
 
-## Add Spans to a Transaction
+## Creacting Nested Spans
 
-If you want to have more fine-grained performance monitoring, you can add child spans to your transaction, which can be done by either:
-
-- Using a context manager or
-- Using a decorator, (this works on sync and `async` functions)
-
-Calling a `sentry_sdk.start_span()` will find the current active transaction and attach the span to it.
-
-### Using a Context Manager
+If you have a distinct sub-operation you’d like to track as a part of another one, you can create spans to represent the relationship:
 
 ```python
 import sentry_sdk
 
-def eat_slice(slice):
-    ...
+def do_work():
+    with sentry_sdk.start_span(name="parent") as parent:
+        # do some work that 'parent' tracks
+        print("doing some work...")
+        # Create a nested span to track nested work
+        with sentry_sdk.start_span(name="child") as child:
+            # do some work that 'child' tracks
+            print("doing some nested work...")
+            # the nested span is closed when it's out of scope
 
-def eat_pizza(pizza):
-    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
-        while pizza.slices > 0:
-            with sentry_sdk.start_span(description="Eat Slice"):
-                eat_slice(pizza.slices.pop())
-
+        # This span is also closed when it goes out of scope
 ```
 
-### Using a Decorator
+
+## Creating Spans with Decorators
+
+It’s common to have a single span track the execution of an entire function. In that scenario, there is a decorator you can use to reduce code:
 
 ```python
 import sentry_sdk
 
-@sentry_sdk.trace
-def eat_slice(slice):
-    ...
-
-def eat_pizza(pizza):
-    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
-        while pizza.slices > 0:
-            eat_slice(pizza.slices.pop())
+@sentry_sdk.start_span
+def do_work():
+    print("doing some work...")
 
 ```
 
-## Nested Spans
+Use of the decorator is equivalent to creating the span inside do_work() and ending it when do_work() is finished.
 
-Spans can be nested to form a span tree. If you'd like to learn more, read our [distributed tracing](/product/sentry-basics/tracing/distributed-tracing/) documentation.
+The function name will be used as the spans name.
 
-### Using a Context Manager
+
+## Creating Spans That Need Manual Finishing
+
+Sometimes you do not want to use context managers, and do want to finish spans on your own. You can do this:
 
 ```python
 import sentry_sdk
 
-def chew():
-    ...
 
-def swallow():
-    ...
+parent_span = sentry_sdk.start_span(name="parent")
+do_work_parent()
 
-def eat_slice(slice):
-    with sentry_sdk.start_span(description="Eat Slice"):
-        with sentry_sdk.start_span(description="Chew"):
-            chew()
-        with sentry_sdk.start_span(description="Swallow"):
-            swallow()
+child_span = sentry_sdk.start_span(name="child")
+do_work_child()
+
+child_span.finish()
+parent_span.finish()
 
 ```
 
-### Using a Decorator
+If you want to create independend spans that are not in a parent/child relation ship a as above you can create them like this:
 
 ```python
 import sentry_sdk
 
-@sentry_sdk.trace
-def chew():
-    ...
 
-@sentry_sdk.trace
-def swallow():
-    ...
+span1 = sentry_sdk.start_span(name="step1", independent=True)
 
-@sentry_sdk.trace
-def eat_slice(slice):
-    chew()
-    swallow()
+step1()
+
+span2 = sentry_sdk.start_span(name="step1", independent=True)
+
+step2()
+
+span3 = sentry_sdk.start_span(name="step1", independent=True)
+
+step3()
+
+span1.finish()
+span2.finish()
+span3.finish()
 ```
 
-## Define Span Creation in a Central Place
+Now there will be no child relation between the spans, they will be siblings in the span tree.
 
-To avoid having custom performance instrumentation code scattered all over your code base, pass a parameter <PlatformIdentifier name="functions-to-trace" /> to your `sentry_sdk.init()` call.
-
-<SignInNote />
-
-```python
-import sentry_sdk
-
-functions_to_trace = [
-    {"qualified_name": "myrootmodule.eat_slice"},
-    {"qualified_name": "myrootmodule.swallow"},
-    {"qualified_name": "myrootmodule.chew"},
-    {"qualified_name": "myrootmodule.someothermodule.another.some_function"},
-    {"qualified_name": "myrootmodule.SomePizzaClass.some_method"},
-]
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    functions_to_trace=functions_to_trace,
-)
-```
-
-Now, whenever a function specified in `functions_to_trace` will be executed, a span will be created and attached as a child to the currently running span.
-
-<Alert level="warning" title="Important">
-
-To enable performance monitoring for the functions specified in `functions_to_trace`, the SDK needs to load the function modules. Be aware, there may be code being executed in modules during module loading. To avoid this, use the method described above to trace your functions.
-
-</Alert>
-
-## Accessing the Current Transaction
-
-To change data in an already ongoing transaction, use `Hub.current.scope.transaction`. This property will return a transaction if there's one running, otherwise it will return `None`.
-
-```python
-import sentry_sdk
-
-def eat_pizza(pizza):
-    transaction = sentry_sdk.Hub.current.scope.transaction
-
-    if transaction is not None:
-        transaction.set_tag("num_of_slices", len(pizza.slices))
-
-    while pizza.slices > 0:
-        eat_slice(pizza.slices.pop())
-```
 
 ## Accessing the Current Span
 
-To change data in the current span, use `sentry_sdk.Hub.current.scope.span`. This property will return a span if there's one running, otherwise it will return `None`.
-
-In this example, we'll set a tag in the span created by the `@sentry_sdk.trace` decorator.
+Sometimes it’s helpful to access whatever the current span is at a point in time so that you can enrich it with more information.
 
 ```python
 import sentry_sdk
 
-@sentry_sdk.trace
-def eat_slice(slice):
-    span = sentry_sdk.Hub.current.scope.span
+current_span = sentry_sdk.get_current_span()
+# enrich 'current_span' with some information
+```
 
-    if span is not None:
-        span.set_tag("slice_id", slice.id)
+## Add Data to a Span
 
-    ...
+You can add additional data to a span so it carries more information about the current operation that it’s tracking.
+
+```python
+import sentry_sdk
+
+current_span = sentry_sdk.get_current_span()
+
+if current_span is not None:
+    current_span.set_data("operation.value", 1)
+    current_span.set_data("operation.name", "Saying hello!")
+    current_span.set_data("operation.other-stuff", [1, 2, 3])
 ```
