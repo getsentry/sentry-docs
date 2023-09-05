@@ -4,10 +4,47 @@ sidebar_order: 10
 description: "Learn what instrumentation automatically captures transactions."
 ---
 
-The Laravel integration automatically instruments your application to capture transactions and adds spans for the following features:
+The Laravel SDK automatically instruments your application to capture transactions and adds spans for the following features:
 
 - Views
 - Queue jobs
 - Database queries
+- Redis operations
 - Laravel HTTP Client
 - GraphQL operations (when using [Lighthouse](https://lighthouse-php.com/))
+- [Folio](https://github.com/laravel/folio) page based routes
+- [Livewire](https://laravel-livewire.com/) components
+
+The Laravel SDK is also capable of creating spans for filesystem access operations.
+You can enable this feature by wrapping the configuration for all disks
+with a call to `Sentry\Laravel\Features\Storage\Integration::configureDisks()`:
+
+```php {filename:config/filesystems.php}
+'disks' => Sentry\Laravel\Features\Storage\Integration::configureDisks([
+    'local' => [
+        'driver' => 'local',
+        'root' => storage_path('app'),
+        'throw' => false,
+    ],
+
+    // ...
+], /* enableSpans: */ true, /* enableBreadcrumbs: */ true),
+```
+
+Alternatively, you can enable this feature only for select disks:
+
+```php {filename:config/filesystems.php}
+'disks' => [
+    'local' => [
+        'driver' => 'local',
+        'root' => storage_path('app'),
+        'throw' => false,
+    ],
+
+    's3' => Sentry\Laravel\Features\Storage\Integration::configureDisk('s3', [
+        // ...
+    ], /* enableSpans: */ true, /* enableBreadcrumbs: */ true),
+],
+```
+
+By default, both spans and breadcrumbs are enabled. You may disable them by passing the second argument, `$enableSpans` or the third argument, `$enableBreadcrumbs`.
