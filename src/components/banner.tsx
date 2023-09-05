@@ -6,8 +6,10 @@ import React, {useEffect, useState} from 'react';
 // we put a more robust solution in place.
 //
 const SHOW_BANNER = true;
-const BANNER_TEXT = 'Learn how to detect, fix, and prevent ANRs. Hear from Sentry Android experts: Sep 26 | 10am PST';
-const BANNER_LINK_URL = 'https://sentry.io/resources/ama-detect-fix-prevent-anrs/?promo_name=from-docs-banner';
+const BANNER_TEXT =
+  'Learn how to detect, fix, and prevent ANRs. Hear from Sentry Android experts: Sep 26 | 10am PST';
+const BANNER_LINK_URL =
+  'https://sentry.io/resources/ama-detect-fix-prevent-anrs/?promo_name=from-docs-banner';
 const BANNER_LINK_TEXT = 'Register Now';
 const OPTIONAL_BANNER_IMAGE = null;
 
