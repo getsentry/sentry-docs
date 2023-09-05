@@ -127,34 +127,26 @@ curl "${SENTRY_CRONS}?environment=dev&status=ok"
 
 Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
 
-<Note type="warning">
-
-In the future this feature will use the `ingest.sentry.io` style check in
-format and the `sentry.io/api` format will be deprecated.
-
-</Note>
-
 <SignInNote />
 
 ```bash {tabTitle: cURL}
-# Upsert monitor with a check-in
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟡 Notify Sentry your job is running:
+curl -X POST "${SENTRY_CRONS}" \
     --header 'Content-Type: application/json' \
-    --data-raw '{"monitor_config": {"schedule": "0 * * * *", "schedule_type": "crontab"}, "status": "in_progress"}'
+    --data-raw '{"monitor_config": {"schedule": {"type": "crontab", "value": "0 * * * *"}}, "status": "in_progress"}'
 ```
 
 ```http {tabTitle: HTTP}
-PUT /api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/ HTTP/1.1
-Host: sentry.io
-Authorization: DSN ___PUBLIC_DSN___
+POST /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/ HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
 Content-Type: application/json
 
 {
     "monitor_config": {
-        "schedule": "0 * * * *",
-        "schedule_type": "crontab",
+        "schedule": {"type": "crontab", "value": "0 * * * *"},
         "checkin_margin": 1,
         "max_runtime": 20,
         "timezone": "America/Los_Angeles"
@@ -171,10 +163,14 @@ Monitor `monitor_config` parameters:
 
 `schedule`:
 
-: The job's schedule based on the `schedule_type`:
+: The job's schedule :
 
-- `crontab`: a string crontab expression with five fields, such as ` "0 * * * *"`.
-- `interval`: a tuple for your interval such as `[2, "hour"]`.
+This is an object specifying a `schedule_type` of either `crontab` or `interval`. The structure will vary depending on the type:
+
+```json
+{"type": "crontab", "value": "0 * * * *"}
+{"type": "interval", "value": "2", "unit": "hour"}
+```
 
 `checkin_margin`:
 
