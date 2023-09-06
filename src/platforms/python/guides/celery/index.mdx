@@ -94,7 +94,12 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
 
 - `propagate_traces`
 
-  Propagate Sentry tracing information to the Celery task. This makes it possible to link errors in Celery tasks to the function that triggered the Celery task. If this is set to `False`, errors in Celery tasks can't be matched to the triggering function.
+  Propagate Sentry tracing information to the Celery task. This makes it possible to link errors in Celery tasks to the function that triggered the Celery task.
+
+  If this is set to `False`:
+
+  - errors in Celery tasks can't be matched to the triggering function.
+  - your Celery tasks will start a new trace and not be connected to the trace in the calling function
 
   The default is `True`.
 
@@ -115,3 +120,35 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
   See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
 
   The default is `None`.
+
+
+## Distributed Traces
+
+Distributes tracing means, that the code running in your Celery tasks will be part of the trace that was started in the code that started your Celery task.
+
+You can disable distributing the tracing information into your Celery tasks globally with the `propagate_traces` parameter documented above. If you set `propagate_traces` to `False` all Celery tasks will start their own new trace.
+
+If you want to have more fine grained control over trace distribution, you can overide the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
+
+```python
+import sentry_sdk
+
+# Enable global distributed traces (this is the default, just to be explicit.)
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        CeleryIntegration(propagate_traces=True),
+    ],
+)
+
+# This will propagate the trace:
+my_task_a.delay("some parameter")
+
+# This will propagate the trace:
+my_task_b.apply_async(args=("some_parameter", ))
+
+# This will NOT propagate the trace. (The task will start its own trace):
+my_task_b.apply_async(args=("some_parameter", ), headers={"sentry-propagate-traces": False})
+
+# Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
+```
