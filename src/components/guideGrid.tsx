@@ -12,6 +12,10 @@ type Props = {
 export function GuideGrid({platform, className}: Props) {
   const [currentPlatform] = usePlatform(platform);
 
+  if (currentPlatform === null) {
+    return null;
+  }
+
   if (currentPlatform.type === 'guide') {
     return null;
   }
