@@ -58,18 +58,24 @@ const getFileForPlatform = (
   const contentMatch = platformsToSearch
     .map(name => name && fileList.find(m => slugMatches(m.name, name)))
     .find(m => m);
-  return contentMatch;
+
+  return contentMatch || null;
 };
 
 export function PlatformContent({includePath, platform, children}: Props) {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
-  const [dropdown, setDropdown] = useState(null);
+
+  const [dropdown, setDropdown] = useState(false);
   const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
 
   const matches = files.filter(node => node.relativePath.indexOf(includePath) === 0);
+
+  if (currentPlatform === null) {
+    return null;
+  }
 
   const contentMatch = getFileForPlatform(matches, currentPlatform);
 
@@ -98,7 +104,7 @@ export function PlatformContent({includePath, platform, children}: Props) {
           <div className="dropdown mr-2 mb-1">
             <button
               className="btn btn-sm btn-secondary dropdown-toggle"
-              onClick={() => setDropdown(!dropdown)}
+              onClick={() => setDropdown(prevValue => !prevValue)}
             >
               {currentPlatform.title}
             </button>
