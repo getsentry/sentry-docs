@@ -1,0 +1,136 @@
+# Legacy endpoint migration
+
+In the early beta of the Crons product Check-In endpoints existed under the
+`sentry.io/api/0/` API namespace. This namespace is not designed for ingestion
+level traffic, we have since moved Check-In APIs to use
+[Relay](/product/relay/) for ingestion of Check-In events.
+
+<Alert level="info">
+
+The Legacy endpoints **are deprecated** and will be removed in the future,
+however a date has not yet been set for their removal. We will communicate a
+date when one is set.
+
+</Alert>
+
+## How do I knew what API I am using?
+
+The SDKs and `sentry-cli` do not use the legacy API endpoints.
+
+When using the HTTP endpoints, you can differentiate them like so:
+
+```
+# ❌ Legacy endpoints
+https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug/
+
+# ❌ Legacy endpoint without organization context
+https://sentry.io/api/0/monitors/<monitor_slug/
+
+# ❌ Legacy check-in details endpoint
+https://sentry.io/api/0/monitors/<monitor_slug/checkins/<check_in_id>/
+
+# ✅ Relay Check-In ingestion endpoint
+https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/
+```
+
+### What has changed?
+
+There are a few backward incompatible changes to be aware of.
+
+- There is now only a single Check-In endpoint, there is no "Check-In details"
+  endpoint.
+
+- The API endpoint supports both `POST` with a JSON body, as well as now
+  supporting `GET` and using query parameters to specify `status`,
+  `environment`, etc.
+
+  The API endpoint will always respond with a `202` with no body (unless there
+  is an error).
+
+- Because there is no "details" endpoint the `PUT` method for a Check-In has
+  also been removed. You will always use `POST` or `GET` for Check-Ins.
+
+- For [overlapping
+  jobs](/product/crons/getting-started/http/#overlapping-jobs-optional) it is
+  still possible to specify a `check_in_id` via the query parameters or JSON
+  body. Previously the API would respond with an auto-generated Check-In ID, it
+  no longer does this, if you need a stable Check-In ID you must generate it
+  client side yourself.
+
+- The `monitor_config` structure has changed slightly. `schedule` is now an
+  object of varying shape depending on the schedule type
+
+  ```json
+  {"type": "crontab", "value": "0 * * * *"}
+  {"type": "interval", "value": "2", "unit": "hour"}
+  ```
+
+## Migration examples
+
+### Simple HTTP Check-Ins
+
+```sh
+# ❌ Legacy simple `in_progress` -> `ok` check-in
+curl -X POST \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "in_progress"}'
+
+curl -X POST \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "ok"}'
+
+
+# ✅ New style `in_progress` -> `ok` check-in
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+curl "${SENTRY_CRONS}?status=in_progress"
+
+curl "${SENTRY_CRONS}?status=ok"
+```
+
+### Monitor Upsert Check-In
+
+```sh
+# ❌ Legacy upsert monitor with a check-in
+curl -X POST \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"monitor_config": {"schedule": "0 * * * *", "schedule_type": "crontab"}, "status": "in_progress"}'
+
+# ✅ New style upsert monitor with a check-in
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+curl -X POST "${SENTRY_CRONS}?status=in_progress" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"monitor_config": {"schedule": {"type": "crontab", "value": "0 * * * *"}}, "status": "in_progress"}'
+    # 👉 Note that schedule is now an object ---^
+```
+
+### Overlapping Job Check-Ins (specifying `check_in_id`)
+
+```sh
+# ❌ Legacy Check-In with ID
+curl -X POST \
+    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
+    --header 'Authorization: DSN ___PUBLIC_DSN___' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"status": "in_progress"}'
+# Response { "id": "2bc1a871-a1b7-4577-82fc-fa6d2468aabc" }
+
+# ✅ New style upsert monitor with a check-in
+CHECK_IN_ID="$(uuidgen)"
+# 👉 Note that you now need to generate the Check-In UUID
+
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=in_progress"
+# 👉 Note that no Check-In ID is returned
+```
