@@ -572,10 +572,15 @@ type Props = {
 
 export function CodeBlock({filename, language, children}: Props) {
   const [showCopied, setShowCopied] = useState(false);
-  const codeRef = useRef(null);
+  const codeRef = useRef<HTMLDivElement>(null);
 
   async function copyCode() {
+    if (codeRef.current === null) {
+      return;
+    }
+
     let code = codeRef.current.innerText;
+
     // don't copy leading prompt for bash
     if (language === 'bash' || language === 'shell') {
       const match = code.match(/^\$\s*/);
