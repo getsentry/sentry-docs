@@ -190,14 +190,16 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
   };
 }
 
-function getCsrfToken(): string | null {
+function getCsrfToken(): string {
   // is sentry-sc in production, but may also be sc in other envs
   // So we just try both variants
   const cookieNames = ['sentry-sc', 'sc'];
 
-  return cookieNames
+  const value = cookieNames
     .map(cookieName => Cookies.get(cookieName))
     .find(token => token !== null);
+
+  return value ?? '';
 }
 
 export async function createOrgAuthToken({
