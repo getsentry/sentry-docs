@@ -26,6 +26,6 @@ const Button = styled.button`
   }
 `;
 
-export function FeebdackButton(props) {
+export function FeedbackButton(props) {
   return <Button {...props}>Feedback</Button>;
 }
