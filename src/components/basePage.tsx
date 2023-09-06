@@ -64,7 +64,7 @@ export function BasePage({
     // totally different
     <Layout {...{sidebar, pageContext}}>
       <SEO
-        title={seoTitle || title}
+        title={seoTitle ?? title ?? 'Sentry Docs'}
         description={pageDescription}
         noindex={pageContext.noindex}
       />
