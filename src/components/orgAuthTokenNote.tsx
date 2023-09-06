@@ -57,15 +57,16 @@ export function OrgAuthTokenNote() {
 }
 
 export function useOrgAuthTokenUrl() {
-  const {codeKeywords, sharedKeywordSelection} = useContext(CodeContext);
-  const [sharedSelection] = sharedKeywordSelection;
+  const context = useContext(CodeContext);
 
   // When not signed in, we use a redirect URL that uses the last org the user visited
-  if (!codeKeywords.USER) {
+  if (context === null || !context.codeKeywords.USER) {
     return 'https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/';
   }
 
-  const choices = codeKeywords?.PROJECT;
+  const [sharedSelection] = context.sharedKeywordSelection;
+
+  const choices = context.codeKeywords?.PROJECT;
   const currentSelectionIdx = sharedSelection.PROJECT ?? 0;
   const currentSelection = choices[currentSelectionIdx];
 
