@@ -246,29 +246,25 @@ A job execution that begins before the previous job execution has been completed
 
 A simple example is if you have a job that runs every minute (1), but takes five (5) minutes to complete each execution.
 
-If this happens, you have to provide a check-in ID with the second check-in request to prevent unintended consequences. The check-in ID will be returned upon your first check-in and can be provided to the second check-in request.
+If this happens, you have to provide a stable check-in ID for your execution with each request to prevent unintended consequences.
 
 Usage example:
 
 <SignInNote />
 
 ```bash {tabTitle: cURL}
-# 🟡 Notify Sentry your job is running:
-curl -X POST \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "in_progress"}'
-# Response { "id": "2bc1a871-a1b7-4577-82fc-fa6d2468aabc" }
+CHECK_IN_ID="$(uuidgen)"
+
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟡 Notify Sentry your job is running with a check-in ID:
+curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=in_progress"
 
 # Execute your scheduled task here...
 
-# 🟢 Notify Sentry your job has completed successfully using the returned ID:
-curl -X PUT \
-    'https://sentry.io/api/0/organizations/___ORG_SLUG___/monitors/<monitor_slug>/checkins/2bc1a871-a1b7-4577-82fc-fa6d2468aabc/' \
-    --header 'Authorization: DSN ___PUBLIC_DSN___' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"status": "ok"}'
+# 🟢 Notify Sentry your job has completed successfully with a check-in ID:
+curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=ok"
 ```
 
 ## Heartbeat
