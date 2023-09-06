@@ -12,14 +12,14 @@ function SpanWrapper({children, ...props}: React.ComponentProps<'span'>) {
   return <span {...props}>{children ? makeKeywordsClickable(children) : children}</span>;
 }
 
-type Props = {
+export interface CodeBlockProps {
   children: React.ReactNode;
   filename?: string;
   language?: string;
   title?: string;
-};
+}
 
-export function CodeBlock({filename, language, children}: Props) {
+export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
 
