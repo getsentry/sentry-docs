@@ -1,9 +1,11 @@
-# Legacy endpoint migration
+# Legacy Endpoint Migration
 
-In the early beta of the Crons product Check-In endpoints existed under the
-`sentry.io/api/0/` API namespace. This namespace is not designed for ingestion
-level traffic, we have since moved Check-In APIs to use
+In the early beta of the Crons product, Check-In endpoints existed under the
+`sentry.io/api/0/` API namespace. This namespace is not designed for 
+ingestion-level traffic, so we have since moved Check-In APIs to use
 [Relay](/product/relay/) for ingestion of Check-In events.
+
+If you're using legacy endpoints for Crons, migrate to the new endpoints to avoid issues.
 
 <Alert level="info">
 
@@ -13,7 +15,7 @@ date when one is set.
 
 </Alert>
 
-## How do I knew what API I am using?
+## Am I Using Legacy Endpoints?
 
 The SDKs and `sentry-cli` do not use the legacy API endpoints.
 
@@ -33,32 +35,32 @@ https://sentry.io/api/0/monitors/<monitor_slug/checkins/<check_in_id>/
 https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/
 ```
 
-### What has changed?
+### What Changed?
 
 There are a few backward incompatible changes to be aware of.
 
-- There is now only a single Check-In endpoint, there is no "Check-In details"
-  endpoint.
+- There is now only a single Check-In endpoint. The "Check-In details"
+  endpoint has been removed.
 
 - The API endpoint supports both `POST` with a JSON body, as well as now
-  supporting `GET` and using query parameters to specify `status`,
+  supporting `GET`. You can use query parameters to specify `status`,
   `environment`, etc.
 
   The API endpoint will always respond with a `202` with no body (unless there
   is an error).
 
-- Because there is no "details" endpoint the `PUT` method for a Check-In has
+- Because there is no "details" endpoint, the `PUT` method for a Check-In has
   also been removed. You will always use `POST` or `GET` for Check-Ins.
 
 - For [overlapping
-  jobs](/product/crons/getting-started/http/#overlapping-jobs-optional) it is
+  jobs](/product/crons/getting-started/http/#overlapping-jobs-optional), it is
   still possible to specify a `check_in_id` via the query parameters or JSON
-  body. Previously the API would respond with an auto-generated Check-In ID, it
-  no longer does this, if you need a stable Check-In ID you must generate it
-  client side yourself.
+  body. However, the API no longer responds with an auto-generated Check-In ID.
+  If you need a stable Check-In ID, you must generate it
+  client-side yourself.
 
 - The `monitor_config` structure has changed slightly. `schedule` is now an
-  object of varying shape depending on the schedule type
+  object of varying shape, depending on the schedule type.
 
   ```json
   {"type": "crontab", "value": "0 * * * *"}
@@ -66,6 +68,8 @@ There are a few backward incompatible changes to be aware of.
   ```
 
 ## Migration examples
+
+See the code samples below to help you migrate from the legacy endpoints to the current ones. 
 
 ### Simple HTTP Check-Ins
 
