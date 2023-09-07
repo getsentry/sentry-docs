@@ -1,10 +1,10 @@
-A `Func<SentryEvent, SentryEvent>` can be used to mutate, discard (return null), or return a completely new event.
+A `Func<SentryEvent, Hint, SentryEvent?>` can be used to mutate, discard (return null), or return a completely new event.
 
 ```csharp
 using Sentry;
 
 // Add this to the SDK initialization callback
-options.BeforeSend = sentryEvent =>
+options.SetBeforeSend((sentryEvent, hint) =>
 {
     if (sentryEvent.Exception != null
       && sentryEvent.Exception.Message.Contains("Noisy Exception"))
@@ -14,14 +14,14 @@ options.BeforeSend = sentryEvent =>
 
     sentryEvent.ServerName = null; // Never send Server Name to Sentry
     return sentryEvent;
-};
+});
 ```
 
 ```fsharp
 open Sentry
 
 // Add this to the SDK initialization callback
-options.BeforeSend <- fun (event ->
+options.SetBeforeSend(fun event hint ->
     if event.Exception <> null && event.Exception.Message.Contains("Noisy Exception") then
         null // Don't send this event to Sentry
     else
