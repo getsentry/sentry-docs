@@ -45,90 +45,13 @@ paket add Sentry --version {{@inject packages.version('sentry.dotnet.aspnetcore'
 
 This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
 
-### Configure
+## Initialize
 
-The simplest way to configure the `Sentry.AspNetCore` package is not by calling `SentrySdk.Init` directly but rather using the extension method `UseSentry` to the `WebHostBuilder` in combination with the framework's configuration system.
-The configuration values bind to `SentryAspNetCoreOptions` which extends `SentryLoggingOptions` from the `Sentry.Extensions.Logging` and further extends `SentryOptions` from the `Sentry` package.
-
-This means all options for the inner packages are available to be configured through the configuration system.
-
-When using `WebHost.CreateDefaultBuilder`, the framework automatically loads `appsettings.json` and environment variables, binding to `SentryAspNetCoreOptions`.
-
-For example:
-
-<SignInNote />
-
-```json {filename:appsettings.json}
-  "Sentry": {
-    "Dsn": "___PUBLIC_DSN___",
-    "MaxRequestBodySize": "Always",
-    "SendDefaultPii": true,
-    "MinimumBreadcrumbLevel": "Debug",
-    "MinimumEventLevel": "Warning",
-    "AttachStackTrace": true,
-    "Debug": true,
-    "DiagnosticsLevel": "Error"
-  },
-```
-
-> An example of some of the options that can be configured via `appsettings.json`.
-
-It's also possible to bind properties to the SDK via environment variables, like:
-
-Windows
-
-```shell
-set Sentry__Debug=true
-```
-
-Linux or macOS
-
-```shell
-export Sentry__Debug=true
-```
-
-ASP.NET Core will automatically read this environment variable and bind it to the SDK configuration object.
+The simplest way to initialise Sentry is ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the framework configuration system.
 
 When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information:
 
-ASP.NET Core 2.x:
-
-```csharp
-public static IWebHost BuildWebHost(string[] args) =>
-    WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
-```
-
-```fsharp
-let CreateHostBuilder args =
-    WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
-```
-
-ASP.NET Core 3.0:
-
-```csharp
-public static IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(webBuilder =>
-        {
-            // Add the following line:
-            webBuilder.UseSentry();
-        });
-```
-
-```fsharp
-let CreateHostBuilder args =
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(fun webBuilder ->
-            // Add the following line:
-            webBuilder.UseSentry() |> ignore
-        )
-```
-
-ASP.NET Core 6.0 With minimal API:
+### ASP.NET Core 6.0 With minimal API:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -159,7 +82,83 @@ let main args =
 
 ```
 
-Some of the settings require actual code. For those, like the `BeforeSend` callback you can simply:
+### ASP.NET Core 3.0
+
+```csharp
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            // Add the following line:
+            webBuilder.UseSentry();
+        });
+```
+
+```fsharp
+let CreateHostBuilder args =
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(fun webBuilder ->
+            // Add the following line:
+            webBuilder.UseSentry() |> ignore
+        )
+```
+
+### ASP.NET Core 2.x
+
+```csharp
+public static IWebHost BuildWebHost(string[] args) =>
+    WebHost.CreateDefaultBuilder(args)
+        // Add the following line:
+        .UseSentry()
+```
+
+```fsharp
+let CreateHostBuilder args =
+    WebHost.CreateDefaultBuilder(args)
+        // Add the following line:
+        .UseSentry()
+```
+
+## Configure
+
+The framework takes configuration settings from `appsettings.json`, environment variables or from code. These settings get applied to `Sentry.AspNetCore.SentryAspNetCoreOptions`, which extends `Sentry.Extensions.Logging.SentryLoggingOptions`, which in turn extends `Sentry.SentryOptions`. This means options for `Sentry.AspNetCore` as well as all the inner packages are available to be configured through the configuration system.
+
+### appsettings.json
+
+An example of some of the options that can be configured via `appsettings.json`:
+
+<SignInNote />
+
+```json {filename:appsettings.json}
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "MaxRequestBodySize": "Always",
+    "SendDefaultPii": true,
+    "MinimumBreadcrumbLevel": "Debug",
+    "MinimumEventLevel": "Warning",
+    "AttachStackTrace": true,
+    "Debug": true,
+    "DiagnosticsLevel": "Error"
+  },
+```
+
+### Environment variables
+
+It's also possible to bind properties to the SDK via environment variables, like:
+
+```shell {tabTitle:Windows}
+set Sentry__Debug=true
+```
+
+```shell {tabTitle:Linux or macOS}
+export Sentry__Debug=true
+```
+
+ASP.NET Core will automatically read this environment variable and bind it to the SDK configuration object.
+
+### Using code
+
+Finally, any settings that can be configured via `appsettings.json` or environment variables can also be configured via code and some settings must be configured in code, such as the `BeforeSend` callback:
 
 ```csharp
 .UseSentry(options =>
