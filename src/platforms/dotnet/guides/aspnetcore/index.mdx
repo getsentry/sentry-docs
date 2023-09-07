@@ -47,20 +47,18 @@ This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extens
 
 ## Initialize
 
-The simplest way to initialise Sentry is ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the framework configuration system.
+The simplest way to initialise Sentry is ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-7.0).
 
 When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information:
 
-### ASP.NET Core 6.0 With minimal API:
+### ASP.NET Core 6.0:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
-
-builder.WebHost.UseSentry();
+builder.WebHost.UseSentry(); // Initialize Sentry
 
 var app = builder.Build();
-
-app.UseSentryTracing();
+app.UseSentryTracing(); // <- To enable automatic tracing
 ```
 
 ```fsharp
@@ -91,7 +89,18 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         {
             // Add the following line:
             webBuilder.UseSentry();
+            webBuilder.UseStartup<Startup>();
         });
+
+public partial class Startup
+{
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        app.UseRouting();
+        // Put this immediately after `UseRouting()` on .NET 5 or below
+        app.UseSentryTracing() // <- To enable automatic tracing
+    }
+}
 ```
 
 ```fsharp
@@ -108,8 +117,19 @@ let CreateHostBuilder args =
 ```csharp
 public static IWebHost BuildWebHost(string[] args) =>
     WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
+        .UseSentry()  // <- Initialize Sentry
+        .UseStartup<Startup>()
+        .Build();
+
+public partial class Startup
+{
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        app.UseRouting();
+        // Put this immediately after `UseRouting()` on .NET 5 or below
+        app.UseSentryTracing() // <- To enable automatic tracing
+    }
+}
 ```
 
 ```fsharp
@@ -132,13 +152,14 @@ An example of some of the options that can be configured via `appsettings.json`:
 ```json {filename:appsettings.json}
   "Sentry": {
     "Dsn": "___PUBLIC_DSN___",
-    "MaxRequestBodySize": "Always",
     "SendDefaultPii": true,
+    "MaxRequestBodySize": "Always",
     "MinimumBreadcrumbLevel": "Debug",
     "MinimumEventLevel": "Warning",
     "AttachStackTrace": true,
     "Debug": true,
-    "DiagnosticsLevel": "Error"
+    "DiagnosticsLevel": "Error",
+    "EnableTracing": true
   },
 ```
 
@@ -163,7 +184,8 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 ```csharp
 .UseSentry(options =>
 {
-    options.SetBeforeSend(@event =>
+    options.EnableTracing = true; // <- Set this if using automatic tracing
+    options.SetBeforeSend((@event, hint) =>
     {
         // Never report server names
         @event.ServerName = null;
@@ -174,7 +196,8 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 
 ```fsharp
 .UseSentry (fun options ->
-    options.SetBeforeSend(fun event ->
+    options.EnableTracing <- true
+    options.SetBeforeSend(fun event hint ->
         // Never report server names
         event.ServerName <- null
         event
