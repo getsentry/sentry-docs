@@ -62,6 +62,8 @@ public class Startup
 }
 ```
 
+The order in which middleware gets added to the pipeline is important. If you're running on .NET 5 or below, make sure to put the `UseSentryTracing()` middleware immediately after `UseRouting()`. If Sentry's tracing middleware is registered before the routing middleware, the selected endpoint cannot be determined in traces. Also `UseSentryTracing()` must be called before `UseEndpoints()` as that middleware actually dispatches to the endpoint (which we want to trace).
+
 Transaction names follow the pattern `<HTTP method> <Route>`; for example, a request to the following action will create a transaction named `GET /person/{id}`:
 
 ```csharp
