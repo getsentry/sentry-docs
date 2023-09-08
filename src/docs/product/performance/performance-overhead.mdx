@@ -32,3 +32,10 @@ Each SDK has limits on the data structures used to record all the above data. If
 ### Backpressure Management
 
 The Python SDK, starting with version `1.30.0`, manages backpressure internally by reducing the dynamic sampling rate when the system is in an unhealthy state. This ensures better system stability and lower SDK overhead under heavy load. We will gradually roll this out to other backend languages in the future.
+
+### Hosting Environment
+
+Some hosting environments have mechanisms in place that will have a negative influence on SDK overhead:
+
+- AWS Lambdas completely freeze any code execution when a response is sent. This means that the SDKs generally will block the response from being finished until it has flushed all of the recorded telemetry data to Sentry. This might cause non-trivial overhead in some situations. Here, it might be beneficial to run a Sentry Relay instance physically close to your lambdas to decrease latency.
+- SDKs that are designed to run on the Vercel Edge Runtime will stall responses to requests until the SDK has flushed all of the telemetry for that request to Sentry. This is a limitation imposed by the Edge runtime, since it doesn't allow for I/O operations to be shared or persisted across request handler invocations, meaning the SDK cannot flush its data asynchronously.
