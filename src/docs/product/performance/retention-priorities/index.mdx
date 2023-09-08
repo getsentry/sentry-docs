@@ -1,0 +1,121 @@
+---
+title: Retention Priorities
+sidebar_order: 100
+redirect_from:
+  - /product/data-management-settings/server-side-sampling/
+  - /product/data-management-settings/server-side-sampling/current-limitations/
+  - /product/data-management-settings/server-side-sampling/sampling-configurations/
+  - /product/data-management-settings/dynamic-sampling/current-limitations/
+  - /product/data-management-settings/dynamic-sampling/sampling-configurations/
+  - /product/data-management-settings/dynamic-sampling/
+  - /product/performance/performance-at-scale/
+  - /product/performance/performance-at-scale/getting-started/
+  - /product/performance-at-scale/benefits-performance-at-scale/
+description: "Learn how Sentry determines retention priorities and how to update them."
+---
+
+<Note>
+
+Retention priorities are only available on the latest version of our plans, starting from 1M reserved transactions. Anyone in your org with owner or billing-level permissions can update your plan by going to Settings > Subscription, and clicking the "Manage Subscription" button.
+
+</Note>
+
+While storing all your data makes sense at relatively low volumes, as your application scales, storing a raw copy of all your data has diminishing returns. When data reaches high volumes, Sentry begins to automatically prioritize retaining certain transactions over others with server-side data retention strategies called retention priorities.
+
+It's important to note that even when we begin to only store the most valuable data based on retention priorities, the [performance metrics](/product/performance/metrics/) you see are still based on **all** the events you send to Sentry. This ensures that you get a full and complete view of your application's health.
+
+## Prerequisites
+
+- Latest version of [Sentry Business plan](https://sentry.io/pricing/).
+- Admin-level permissions.
+- Latest version of one of the below SDKs:
+  - Python: 1.7.2 or later
+  - JavaScript: 7.6.0 or later
+  - Apple: 7.23.0 or later
+  - Android: 6.5.0 or later
+  - React Native: 4.3.0 or later
+  - Dart and Flutter: 6.11.0 or later
+  - PHP: 3.9.0 or later
+  - Laravel: 3.0.0 or later
+  - Symfony: 4.4.0 or later
+  - Ruby: 5.5.0 or later
+  - Java: 6.5.0 or later
+  - .NET: 3.22.0 or later
+  - Go: 0.16.0 or later
+
+## Retention Priorities
+
+Below is a list of the transactions we prioritize and deprioritize. They are enabled by default, but can be updated on a per-project basis to better fit your organization's needs.
+
+### Prioritized Transactions
+
+Sentry automatically prioritizes and retains the following types of transactions:
+
+#### Latest Release
+
+Latest releases are a retention priority because when you create a new release, we assume you'll want to have more visibility during the early adoption phase, which improves your ability to catch new issues as your release is gaining traction.
+Because you may want to deploy the same release in different environments, we'll also take your environment into account and prioritize those transactions.
+
+#### Dev Environments
+
+Since dev environments usually generate a small number of transactions as compared to prod environments, we prioritize them during your testing phase so you can get meaningful insights.
+
+#### Low Volume Projects
+
+<Note>
+
+You won't be able to disable the Low Volume Projects retention priority because it's set on an organization-wide level, not on a per-project basis.
+
+</Note>
+
+Some projects within your organization are very high volume compared to others. This means that low-volume projects might get drowned out if we treat all projects equally. To ensure that you have enough samples regardless of project scale, we prioritize low-volume projects.
+
+#### Low Volume Transactions
+
+Transactions can be logically grouped by their name within a project. This means that transactions with the same name most likely indicate the same operation or code path, while transactions with different names usually indicate different operations.
+We prioritize low-volume transactions for the same reason we prioritize low-volume projects – so they don't get drowned out by high-volume transactions. We want to make sure that transactions representing low-volume code paths are sampled in enough quantities to generate a complete view of your application.
+
+### Deprioritized Transactions
+
+Sentry automatically deprioritizes the following transactions:
+
+#### Health Checks
+
+We deprioritize health check type transactions because while they're important for checking the stability of your application, they don't have any value beyond the task associated with them. We consider a transaction to be a health check if its name matches one of the following glob patterns:
+
+- `*healthcheck*`
+- `*healthy*`
+- `*live*`
+- `*ready*`
+- `*heartbeat*`
+- `*/health`
+- `*/healthz`
+- `*/ping`
+
+### How to Change Retention Priorities
+
+To make changes to a project's retention priorities in Sentry, go to **Settings > Projects**, select the project you're interested in, then scroll down to "Performance" in the "PROCESSING" section and make any updates under "RETENTION PRIORITIES" using the toggles. Each of your projects can have an individual set of retention priorities.
+
+<div style="position: relative; padding-bottom: calc(52.60977630488816% + 41px); height: 0; width: 100%">
+  <iframe
+    src="https://demo.arcade.software/ETgxCQqyWN5uuCityFxT?embed"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"
+    title="General Settings — totes-ma-gotes — Sentry"
+  ></iframe>
+</div>
+
+## Deciding on Your SDK Sample Rate
+
+To give Sentry the fullest, most accurate picture of your application’s health, we recommend that you send us 100% of your transactions. You can do this by setting your [tracesSampleRate](/platform-redirect/?next=/performance/) to 1.0. If this isn't feasible for your organization, set a lower value, or switch to sampling selectively by using the [tracesSampler](/platform-redirect/?next=/performance/) to filter your transactions based on contextual data. Note that when calculating throughput, transaction metering is based on received transactions not stored transactions.
+
+<Note>
+  Please note that changes to your SDK sampling configuration may affect your
+  quota. If you increase your SDK sampling rate, you'll also be increasing the
+  volume of transactions you send to Sentry. This may require that you adjust
+  your transaction quota.
+</Note>
