@@ -173,7 +173,6 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
   }, [open]);
 
   const codeContext = useContext(CodeContext);
-  console.log('codeContext', codeContext);
   let defaultUserName: string;
   let defaultEmail: string;
   if (codeContext && codeContext.codeKeywords) {

@@ -4,10 +4,10 @@ import * as Sentry from '@sentry/browser';
 import {FeedbackButton} from './feedbackButton';
 import {FeedbackModal} from './feedbackModal';
 import {FeedbackSuccessMessage} from './feedbackSuccessMessage';
+import {sendFeedbackRequest} from './sendFeedbackRequest';
 
 const replay = new Sentry.Replay();
 Sentry.init({
-  // https://sentry-test.sentry.io/issues/?project=4505742647754752
   dsn: 'https://db1366bd2d586cac50181e3eaee5c3e1@o19635.ingest.sentry.io/4505742647754752',
   replaysSessionSampleRate: 1.0,
   replaysOnErrorSampleRate: 1.0,
@@ -15,16 +15,17 @@ Sentry.init({
   debug: true,
 });
 
-function getGitHubSourcePage(): string {
-  const xpath = "//a[text()='Suggest an edit to this page']";
-  const matchingElement = document.evaluate(
-    xpath,
-    document,
-    null,
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  ).singleNodeValue as HTMLAnchorElement;
-  return matchingElement === null ? '' : matchingElement.href;
+async function sendFeedback(data, replayId, pageUrl): Promise<Response | null> {
+  const feedback = {
+    message: data.comment,
+    email: data.email,
+    name: data.name,
+    replay_id: replayId,
+    url: pageUrl,
+  };
+  console.log('feedback', feedback);
+  const response = await sendFeedbackRequest(feedback);
+  return response;
 }
 
 export function FeedbackWidget() {
@@ -44,64 +45,17 @@ export function FeedbackWidget() {
   }, [showSuccessMessage]);
 
   const handleSubmit = (data: {comment: string; email: string; name: string}) => {
-    let nearestHeadingElement: HTMLElement;
-    let nearestIdInViewport: string;
+    // Prepare session replay
+    replay.flush();
+    const replayId = replay.getReplayId();
 
-    let eventId: string;
+    const pageUrl = document.location.href;
+    // Sentry.setUser({email: 'test@sentry.io'});
 
-    Sentry.withScope(scope => {
-      const contentContext: any = {};
-      const sourcePage = getGitHubSourcePage();
-      if (sourcePage) {
-        contentContext['Edit file'] = sourcePage;
-        contentContext.Repository = sourcePage.split('/').slice(0, 5).join('/');
-      }
-
-      const pageTitle = document.title;
-      if (pageTitle) {
-        scope.setTag('page_title', pageTitle);
-        contentContext['Page title'] = pageTitle;
-      }
-
-      if (nearestHeadingElement && nearestHeadingElement.textContent) {
-        const pageSection = nearestHeadingElement.textContent;
-        scope.setTag('page_section', pageSection);
-        contentContext['Page section'] = pageSection;
-      }
-
-      if (nearestIdInViewport) {
-        const currentUrl = new URL(document.location.href);
-        currentUrl.hash = nearestIdInViewport;
-        const elementUrl = currentUrl.toString();
-        scope.setTag('element_url', elementUrl);
-        contentContext['Element URL'] = elementUrl;
-      }
-
-      // Prepare session replay
-      replay.flush();
-      const replayId = replay.getReplayId();
-      if (replayId) {
-        scope.setTag('replayId', replayId);
-      }
-
-      if (contentContext) {
-        scope.setContext('Content', contentContext);
-      }
-
-      // We don't need breadcrumbs for now
-      scope.clearBreadcrumbs();
-      eventId = Sentry.captureMessage(data.comment);
-    });
-
-    const userFeedback = {
-      name: data.name || 'Anonymous',
-      email: data.email,
-      comments: data.comment,
-      event_id: eventId,
-    };
-    Sentry.captureUserFeedback(userFeedback);
-    setOpen(false);
-    setShowSuccessMessage(true);
+    if (sendFeedback(data, replayId, pageUrl)) {
+      setOpen(false);
+      setShowSuccessMessage(true);
+    }
   };
 
   const handleKeyPress = useCallback(event => {
