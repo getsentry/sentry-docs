@@ -15,14 +15,13 @@ To enable tracing integration for ASP.NET Core, refer to <PlatformLink to="/perf
 
 ## Overview of the features
 
-- Easy ASP.NET Core integration, single line: `UseSentry`
-- Captures unhandled exceptions and exceptions with [custom exception handlers](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-7.0#exception-handler-page)
-- Captures `LogError` or `LogCritical`
+- Single line ASP.NET Core integration: `UseSentry`
+- Capture unhandled exceptions and exceptions with [custom exception handlers](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-7.0#exception-handler-page)
+- Capture `LogError` or `LogCritical`
 - Any event sent will include relevant application log messages
 - Automatically capture request info, browser details, ServerOS and Runtime info, release information etc.
 - Capture Request headers and, if you opt in, Request payload
 - Support for EventProcessors and ExceptionProcessors (registered via Dependency Injection)
-- Supports configuration system (bind to `SentryAspNetCoreOptions`)
 - HTTP Proxy configuration
 - Event flooding protection (429 retry-after and internal bound queue)
 - Tested on Windows, macOS, Linux, .NET Core, .NET Framework and Mono
@@ -56,9 +55,6 @@ When configuring the SDK via the frameworks configuration system, it's possible 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseSentry(); // Initialize Sentry
-
-var app = builder.Build();
-app.UseSentryTracing(); // <- To enable automatic tracing
 ```
 
 ```fsharp
@@ -71,13 +67,9 @@ let main args =
     let builder = WebApplication.CreateBuilder(args)
     builder.WebHost.UseSentry() // you'll need to include Microsoft.AspNetCore.Hosting.
 
-    let app = builder.Build()
-    app.UseSentryTracing()
-
     app.Run()
 
     0 // Exit code
-
 ```
 
 ### ASP.NET Core 3.0
@@ -89,18 +81,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         {
             // Add the following line:
             webBuilder.UseSentry();
-            webBuilder.UseStartup<Startup>();
         });
-
-public partial class Startup
-{
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        app.UseRouting();
-        // Put this immediately after `UseRouting()` on .NET 5 or below
-        app.UseSentryTracing() // <- To enable automatic tracing
-    }
-}
 ```
 
 ```fsharp
@@ -117,19 +98,8 @@ let CreateHostBuilder args =
 ```csharp
 public static IWebHost BuildWebHost(string[] args) =>
     WebHost.CreateDefaultBuilder(args)
-        .UseSentry()  // <- Initialize Sentry
-        .UseStartup<Startup>()
-        .Build();
-
-public partial class Startup
-{
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        app.UseRouting();
-        // Put this immediately after `UseRouting()` on .NET 5 or below
-        app.UseSentryTracing() // <- To enable automatic tracing
-    }
-}
+        // Add the following line:
+        .UseSentry()
 ```
 
 ```fsharp
@@ -163,7 +133,7 @@ An example of some of the options that can be configured via `appsettings.json`:
   },
 ```
 
-Note `TracesSampleRate` in this example. For automatic tracing to work, this must be configured in addition to the calling `UseSentryTracing()`. See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> for further information.
+Note setting `TracesSampleRate` to `1.0` in this example configures Sentry to capture 100% of transactions for performance monitoring. We recommend adjusting this value in production. See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> for further information.
 
 ### Environment variables
 
@@ -198,7 +168,7 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 
 ```fsharp
 .UseSentry (fun options ->
-    options.TracesSampleRate <- 1.0
+    options.TracesSampleRate <- 1.0   // <- Set this to configure automatic traci
     options.SetBeforeSend(fun event hint ->
         // Never report server names
         event.ServerName <- null
