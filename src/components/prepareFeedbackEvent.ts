@@ -15,7 +15,6 @@ export async function prepareFeedbackEvent({
 }: {
   client: Client & {_integrations?: IntegrationIndex};
   event: FeedbackEvent;
-  feedbackId: string;
   scope: Scope;
 }): Promise<FeedbackEvent | null> {
   //   const integrations =

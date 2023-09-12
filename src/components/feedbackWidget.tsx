@@ -23,7 +23,6 @@ async function sendFeedback(data, replayId, pageUrl): Promise<Response | null> {
     replay_id: replayId,
     url: pageUrl,
   };
-  console.log('feedback', feedback);
   const response = await sendFeedbackRequest(feedback);
   return response;
 }
@@ -50,12 +49,13 @@ export function FeedbackWidget() {
     const replayId = replay.getReplayId();
 
     const pageUrl = document.location.href;
-    // Sentry.setUser({email: 'test@sentry.io'});
 
-    if (sendFeedback(data, replayId, pageUrl)) {
-      setOpen(false);
-      setShowSuccessMessage(true);
-    }
+    sendFeedback(data, replayId, pageUrl).then(response => {
+      if (response) {
+        setOpen(false);
+        setShowSuccessMessage(true);
+      }
+    });
   };
 
   const handleKeyPress = useCallback(event => {

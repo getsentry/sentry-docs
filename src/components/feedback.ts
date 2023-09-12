@@ -13,8 +13,3 @@ export interface FeedbackEvent extends Event {
     url: string;
   };
 }
-
-/**
- * NOTE: These types are still considered Beta and subject to change.
- * @hidden
- */

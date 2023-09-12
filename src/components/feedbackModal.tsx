@@ -1,10 +1,9 @@
-import React, {FormEvent, useContext, useEffect} from 'react';
+import React, {FormEvent, useEffect} from 'react';
 import {css} from '@emotion/react';
 import styled from '@emotion/styled';
 
 import {useFocusTrap} from './hooks/useFocusTrap';
 import {useShortcut} from './hooks/useShortcut';
-import {CodeContext} from './codeContext';
 
 const Dialog = styled.dialog`
   background-color: rgba(0, 0, 0, 0.05);
@@ -172,17 +171,6 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     }
   }, [open]);
 
-  const codeContext = useContext(CodeContext);
-  let defaultUserName: string;
-  let defaultEmail: string;
-  if (codeContext && codeContext.codeKeywords) {
-    const userData = codeContext.codeKeywords.USER;
-    if (userData) {
-      defaultUserName = userData.NAME;
-      defaultEmail = userData.EMAIL;
-    }
-  }
-
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -201,22 +189,12 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
           <Form ref={formRef} onSubmit={handleSubmit}>
             <FlexColumns>
               <Label>
-                Your Name (optional)
-                <Input
-                  type="text"
-                  name="name"
-                  placeholder="Anonymous"
-                  defaultValue={defaultUserName}
-                />
+                Your Name
+                <Input type="text" name="name" placeholder="Anonymous" />
               </Label>
               <Label>
-                Your Email (optional)
-                <Input
-                  type="text"
-                  name="email"
-                  placeholder="you@test.com"
-                  defaultValue={defaultEmail}
-                />
+                Your Email
+                <Input type="text" name="email" placeholder="you@test.com" />
               </Label>
             </FlexColumns>
             <Label>

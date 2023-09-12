@@ -21,7 +21,7 @@ export async function sendFeedbackRequest({
   name,
   replay_id,
   url,
-}): Promise<void | Response> {
+}): Promise<Response | null> {
   const hub = getCurrentHub();
   const client = hub.getClient();
   const scope = hub.getScope();
@@ -52,7 +52,7 @@ export async function sendFeedbackRequest({
     // Taken from baseclient's `_processEvent` method, where this is handled for errors/transactions
     // client.recordDroppedEvent('event_processor', 'feedback', baseEvent);
     // logInfo('An event processor returned `null`, will not send event.');
-    return;
+    return null;
   }
 
   /*
@@ -99,22 +99,24 @@ export async function sendFeedbackRequest({
   // have temporarily added, etc. Even if we don't happen to be using it at some point in the future, let's not get rid
   // of this `delete`, lest we miss putting it back in the next time the property is in use.)
   delete feedbackEvent.sdkProcessingMetadata;
-  feedbackEvent.dist = 'dist123';
-  try {
-    const path = 'http://sentry.io/api/0/feedback/';
 
-    const response = await fetch(path, {
+  const path = 'https://sentry.io/api/0/feedback/';
+  let response: Response | undefined = undefined;
+
+  try {
+    response = await fetch(path, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `DSN ${dsn}`,
       },
-      body: JSON.stringify(feedbackEvent),
+      body: JSON.stringify({feedbackEvent}),
     });
-
+    if (!response.ok) {
+      return null;
+    }
     return response;
   } catch (err) {
-    const error = new Error();
-    throw error;
+    return null;
   }
 }

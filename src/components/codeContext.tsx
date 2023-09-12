@@ -133,7 +133,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
 
   const url =
     process.env.NODE_ENV === 'development'
-      ? 'http://dev.getsentry.net:8000/api/0/auth-details/'
+      ? 'http://dev.getsentry.net:8000/docs/api/user/'
       : 'https://sentry.io/docs/api/user/';
 
   const makeDefaults = () => {
