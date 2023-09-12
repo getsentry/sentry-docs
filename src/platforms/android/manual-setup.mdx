@@ -1,0 +1,70 @@
+---
+title: Manual Setup
+sidebar_order: 1
+description: "Learn how to set up the SDK manually."
+---
+
+If you can't (or prefer not to) run the [automatic setup](/platforms/android/#install), you can follow the instructions below to configure your application manually.
+
+## Installation
+
+The easiest way to get started is to install the Sentry Android Gradle plugin to your app module's `build.gradle` file.
+
+```groovy {filename:app/build.gradle}
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id "com.android.application"
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+}
+
+plugins {
+  id("com.android.application")
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+Version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}` of the plugin will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '4.2.0') }}`) to your app.
+
+## Configuration
+
+Configuration is done via the application `AndroidManifest.xml`. Here's an example config which should get you started:
+
+<SignInNote />
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <!-- Required: set your sentry.io project identifier (DSN) -->
+  <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+
+  <!-- enable automatic breadcrumbs for user interactions (clicks, swipes, scrolls) -->
+  <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+  <!-- enable screenshot for crashes -->
+  <meta-data android:name="io.sentry.attach-screenshot" android:value="true" />
+  <!-- enable view hierarchy for crashes -->
+  <meta-data android:name="io.sentry.attach-view-hierarchy" android:value="true" />
+
+  <!-- enable the performance API by setting a sample-rate, adjust in production env -->
+  <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+  <!-- enable profiling when starting transactions, adjust in production env -->
+  <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
+</application>
+```
+
+Under the hood, Sentry uses a `ContentProvider` to initialize the SDK based on the values provided above. This way, the SDK can capture important crashes and metrics right from the app start.
+
+Additional options can be found <PlatformLink to="/configuration/options/">on our dedicated options page</PlatformLink>.
+
+If you want to customize the SDK init behaviour, you can still use the <PlatformLink to="/configuration/manual-init/">Manual Initialization method</PlatformLink>.
