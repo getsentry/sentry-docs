@@ -2,7 +2,8 @@
 title: "Designing a New API"
 sidebar_order: 2
 ---
-Here are some considerations to make when designing new Sentry APIs. 
+[Django REST framework](https://www.django-rest-framework.org/)(DRF) is a powerful and flexible toolkit
+for building Web APIs. Sentry APIs are built using DRF. Here are some considerations to make when designing APIs at Sentry. 
 
 ## URL Patterns
 The API's URL is what developers use to call the endpoint so it’s important that it is meaningful and clear.
@@ -24,3 +25,65 @@ In the above example we flattened `projects`. The table below shows the existing
 | projects | When the resource is under a specific project in the hierarchy but not under an issue | organizations | {organization_slug}/ {project_slug} | [Create a New Client Key](https://docs.sentry.io/api/projects/create-a-new-client-key/)|
 | issues | When the resource is under a specific issue in the hierarchy | projects | {issue_id} | [List an Issue's Events](https://docs.sentry.io/api/events/list-an-issues-events/)|
 | sentry-app-installations | When the resource is mapped to a specific integration | organizations | {integration_slug} | [Delete an External Issue](https://docs.sentry.io/api/integration/delete-an-external-issue/)|
+
+Here are some additional examples:
+- 👍 `/organizations/{organization_slug}/projects/`
+- 👍 `/projects/{organization_slug}/{project_slug}/issues/`
+- 👎 `/projects/`
+
+<Alert title="Note" level="info">
+
+Hierarchy here does not necessarily mean that one collection belongs to a parent collection. For example:
+- `projects/{project_identifier}/teams/` refers to the **teams** that have been added to specific project
+- `teams/{team_identifier}/projects/` refers to the **projects** a specific team has been added to
+
+</Alert>
+
+### Naming Guidance
+- Collection names should be lowercase and hyphenated, e.g. `commit-files`.
+- Collection names must be plural. Avoid using uncountable words because the user can’t know whether the GET returns one item or a list.
+- Query params and body params should be `CamelCase`.
+- For sorting and filtering, stick with the common param names: sortBy (e.g. date_created), orderBy (either asc or desc), groupBy, limit
+- Path params should be `snake_case`
+
+## Functionality
+Each API should be **stateless**, have a clear purpose, and do one specific thing. To achieve that, stick with the standard methods listed below. If your API needs to be more complicated, work with [owners-api](https://github.com/orgs/getsentry/teams/owners-api) on how to create it.
+
+- 👍 An API that updates project settings: PATCH for updating a field or PUT for updating settings
+- 👎 An API that creates a project, creates a team, and creates alerts for that team about that project
+
+| Functionality | HTTP Method | Response Object | Example |
+| --- | ---- | ---- | ---- |
+| Create | POST | Serialized created resource | [Create a Project](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/team_projects.py#L156) |
+| Update | PUT or PATCH | Serialized updated resource | [Update Project Settings](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L474) |
+| Get | GET | Serialized single resource | [Retrieve a Project](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L415) |
+| Delete | DELETE | None | [Delete a Project](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L840) |
+| List | GET | List of multiple serialized resources | [List All the Projects in an Organization](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/organization_projects.py#L49) |
+| Batch Get | GET | List of serialized resources | Get project details for specific project ids |
+| Batch Create | POST | List of serialized created resources | Create multiple projects with the same settings  |
+| Batch Update | PUT | List of serialized updated resources | [Update a list of issues](https://github.com/getsentry/sentry/blob/ea14f740c78b8df68281ffad6a3bf3709ed3d5b5/src/sentry/api/endpoints/organization_group_index.py#L379) |
+| Batch Delete | DELETE | None | [Delete a list of issues](https://github.com/getsentry/sentry/blob/ea14f740c78b8df68281ffad6a3bf3709ed3d5b5/src/sentry/api/endpoints/organization_group_index.py#L467)|
+
+Here are some examples of how to use standard methods to represent complex tasks:
+- Get count of a resource
+    - Count is part of the `List` API and is provided in header X-Total-Count param
+- Get latest of a resource
+    - Order and filtering should happen as part of list api query parameters. Here’s a [good read](https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/).
+    - 👎 `/api/0/issues/{issue_id}/events/latest/`
+    - 👍 `/api/0/issues/{issue_id}/events?orderBy=-date,limit=1`, `-` for descending
+
+### Batch vs. Single Resource Methods
+Here are some notes that can help you decide between similar methods. We use *Get* here as an example but the same applies to all the other methods in the parenthesis.
+- **Get (Update, Delete)**: Use get on the `{resource}DetailsEndpoint` to retrieve a resource. For example, `ProjectDetailsEndpoint`.
+- **List (Create, Batch Create, Batch Update, Batch Delete)**: Use get on the `{resource-parent}{resource}Endpoint` to retreive all resources that belong to that parent. For example `TeamProjectsEndpoint`.
+- **Batch Get (Batch Create, Batch Update, Batch Delete)**: Use get on the `{root-parent}{resource}Endpoint`. The difference between `Batch` and `List` is that batch usually includes a list of `ids` as query parameter and returns details about those ids. This list does not necessarily belong to one parent. For example, we can't retrieve two projects that belong to two different teams in the above example and in that case we use the get method in the root resource, in this case `OrganizationProjectsEndpoint`.
+
+## Response Object
+Each response object returned from an API should be a serialized version of the Django model associated with the resource. You can see all the existing serializers [here](https://github.com/getsentry/sentry/tree/master/src/sentry/api/serializers/models).
+
+ <Alert title="Note" level="info">
+
+ Some models might have different serializers based on use case. For example, `Project` can be serialized into `DetailedProjectSerializer` or `ProjectSerializer`. Decide which one to use based on your use case and API scope but **DO NOT RETURN CUSTOM OBJECTS** like {`slug: project_slug, platform: project_platform`}. We want the API responses to be uniform and useable in multiple automations without adding extra complication to the external developers' code.
+ 
+ 
+ </Alert>
