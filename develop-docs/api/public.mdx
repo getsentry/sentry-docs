@@ -1,76 +1,20 @@
 ---
-title: 'Making an API Public'
+title: 'Publishing an API'
 sidebar_order: 4
 ---
 
 ## Introduction
 
-In this document, we explain both how you make an API public and the considerations to take into
-account before doing so.
-
-## Definitions
-
-### Managed Client
-
-A managed client is one that Sentry controls, such as our frontend. In this type of client, we
-control both which endpoints are used and the attributes used by those endpoints.
-
-### Partially Managed Client
-
-A partially-managed client is one that we only partially control, since we do not control the
-version of the client that is running for our users; for example, our Sentry CLI. While we control
-the endpoints the CLI uses, once the CLI is installed and running in a customer's implementation, we
-don't control the version of the client a user runs.
-
-### External Client
-
-An external client is a client that Sentry does not control; for example, a script written by a
-customer run in their repository, or an integration written using the Integration Platform. For this
-type of client, we have no control over the endpoints they choose to use, nor can we require that
-they immediately update their endpoint.
-
-### Private API
-
-A private API is an undocumented API. Sentry can make breaking changes to this type of API, and no
-one will blink an eye.
-
-### Public API
-
-Our public API is documented at [https://docs.sentry.io/api/](https://docs.sentry.io/api/).
-
-### Private Attributes in a Public Endpoint
-
-You can have private attributes within a public endpoint.
-
-As an example:
-[https://docs.sentry.io/api/teams/retrieve-a-team/](https://docs.sentry.io/api/teams/retrieve-a-team/). 
-The response has multiple attributes:
-
-```json
-{
-  "id": "2",
-  "slug": "the-interstellar-jurisdiction"
-  ...
-}
-```
-
-Let's say we also return a `nickname` for a team. If what is returned is not documented as a
-response in our public documentation, that attribute is a private attribute within a public
-endpoint.
-
-### DRF (Django REST Framework)
-
-[Django REST framework](https://www.django-rest-framework.org/) is a powerful and flexible toolkit
-for building Web APIs. Sentry APIs are built using DRF.
+In this document, we explain when and how to publish API documentation to public Sentry docs.
 
 ## API Versioning
 
 Currently, Sentry's API is `v0` and considered to be in draft phase. While we don't expect our
 public endpoints to change greatly, keep in mind that our API is still under development.
 
-## Making an endpoint public
+## Public APIs
 
-When you make an endpoint public, you're committing to always returning at least the set of defined
+A public API is an API that is stable and well documented at [https://docs.sentry.io/api/](https://docs.sentry.io/api/). When you make an endpoint public, you're committing to always returning at least the set of defined
 attributes when that endpoint is called. As a result, the attribute(s) **cannot be removed** from an
 endpoint after they are public. Additionally, the type of the attribute **cannot be changed** once
 the attribute is public. The reason the attribute and its type cannot be changed is because both
@@ -80,10 +24,20 @@ You **can** add attributes to a public endpoint.
 
 ## When to make an API public?
 
-Making an API public offers considerable benefits. A public API allows our customers to incorporate
-Sentry into their workflows. It also gives Sentry more visibility in our customers' organizations
-("Woah that's cool data, where'd it come from?"..."Sentry!"). Remember, however, making an API
-public means that once an endpoint is public, you can only add to it: You cannot make _any_ breaking
+Should I publish my API? The answer in most cases is **Yes**. As a developer facing company it is critical to make Sentry features available for developers to use in their various automations. Do not try to predict if an automation finds the API useful because we can't predict all the automations our clients might want to build. With that being said, there are 3 exceptions where we don't publish APIs:
+1. **Experimental APIs:** APIs that are not fully launched or will go through multiple iterations in a short time that could cause breaking changes. These are expected to be published or removed after a while.
+2. **Private APIs:** APIs that are controlling a UI feature in Sentry, for example if a button is visible. 
+3. **APIs in getsentry:** If you're a Sentry engineer and building APIs in getsentry repo, know that they won't be published. This is the expected behavior for all the getsentry APIs, but if you have a case that you think it should be published let [owners-api](https://github.com/orgs/getsentry/teams/owners-api) know and we can help with that.
+
+<Alert title="Note" level="info"> 
+
+Always keep in mind that your APIs will be used out of Sentry product even if they're `private`. All the APIs in Sentry repo are accessible to public due to our open-source nature.  
+
+</Alert>
+
+### Before Publishing
+
+Remember, making an API public means that you can only add to it: You cannot make _any_ breaking
 changes.
 
 As a guide, use these questions:
@@ -94,7 +48,9 @@ As a guide, use these questions:
 If your answers are Yes and No, you're in business - make the endpoint public. Head over to the
 [public API checklist](/api/checklist/) and ensure that your endpoint conforms to the checklist.
 
-## How to make an endpoint public?
+
+## Publishing an API 
+
 
 We use [Open API Spec 3](https://swagger.io/docs/specification/about/) and the
 [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/readme.html) library to document
@@ -102,32 +58,45 @@ our APIs.
 
 **API Documentation consists of**:
 
-1. Declaring the Endpoint Public
-2. Sidebar Tab
-3. Method Decorator
+1. Declaring Owner for the Endpoint
+2. Setting Publish Status on Endpoint
+3. Sidebar Tab
+4. Endpoint Description
+5. Method Decorator
     - Title
     - Path and Query Parameters
     - Request Schema
     - Success Responses
     - Error Responses
     - Sample Response Body
-4. Endpoint Description
 
 We utilize the drf-spectacular's
 [`@extend_schema`](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema)
 decorator to perform the documentation. The sections below outline each step to use this decorator.
 
-### 1. Declaring the Endpoint Public
+### 1. Declaring Owner for the Endpoint
 
-Declare the endpoint public by setting the `public` attribute with the appropriate HTTP request
-methods.
+Declare an owner for the endpoint. This would be the team at Sentry responsible to maintain and make publishing decisions about the endpoint methods.
+```python
+class OrganizationTeamsEndpoint(...):
+    owner = ApiOwner.ENTERPRISE
+```
+
+### 2. Setting Publish Status on Endpoint
+
+Declare endpoint methods public by adding them to the publish_status with `PUBLIC` value.
 
 ```python
 class OrganizationTeamsEndpoint(...):
-    public = {"GET", "POST"}
+    owner = ApiOwner.ENTERPRISE
+    publish_status = {
+        'GET': ApiPublishStatus.PUBLIC, 
+        'POST': ApiPublishStatus.PUBLIC,
+        'PUT': ApiPublishStatus.EXPERIMENTAL,
+    }
 ```
 
-### 2. Sidebar Tab
+### 3. Sidebar Tab
 
 Specify the endpoint's [sidebar tab](https://docs.sentry.io/api/) by using the 
 `@extend_schema` decorator on the endpoint class. You can see the current list of tags or add tags
@@ -140,18 +109,38 @@ from drf_spectacular.utils import extend_schema
 
 @extend_schema(tags=["Teams"])
 class OrganizationTeamsEndpoint(...):
-    public = {"GET", "POST"}
+    owner = ApiOwner.ENTERPRISE
+    publish_status = {
+        'GET': ApiPublishStatus.PUBLIC, 
+        'POST': ApiPublishStatus.PUBLIC,
+        'PUT': ApiPublishStatus.EXPERIMENTAL,
+    }
 ```
+### 4. Endpoint Description
 
-### 3. Method Decorator
+Specify the endpoint description in the documentation using the endpoint's docstring. Please make sure to include a description for the resources involved as well if they are not clear. For example, `team` and `organization` here don't require
+description but other words like `external-issue` or `integration` are vague and need description. 
 
-We utilize another `@extend_schema` decorator on the endpoint function to perform the majority of
-the documentation. The code below provides an example of a fully documented endpoint.
+```python
+def post(self, request, organization, **kwargs):
+    """
+    Create a new team bound to an organization.
+    """
+```
+### 5. Method Decorator
+
+We utilize another `@extend_schema` decorator on the endpoint method to perform the majority of
+the documentation. The code below provides an example of a fully documented post API.
 
 ```python
 @extend_schema(tags=["Teams"])
 class OrganizationTeamsEndpoint(...):
-    public = {"GET", "POST"}
+    owner = ApiOwner.ENTERPRISE
+    publish_status = {
+        'GET': ApiPublishStatus.PUBLIC, 
+        'POST': ApiPublishStatus.PUBLIC,
+        'PUT': ApiPublishStatus.EXPERIMENTAL,
+    }
 
     @extend_schema(
         operation_id="Create a New Team",
@@ -175,53 +164,53 @@ class OrganizationTeamsEndpoint(...):
         """
 ```
 
-#### Title
-
-Specify an `operation_id` that will be shown as the title of the endpoint's page in the
+Here's description of each field in the method decorator:
+- **operation_id:** will be shown as the title of the endpoint's page in the
 documentation.
-
-```python
-@extend_schema(
-    operation_id="Create a New Team",
-    ...
-)
-```
-
-#### Path and Query Parameters
-
-Specify the parameters using a list of parameters and serializers.
-
-- You can find existing parameters in this 
+- **parameters:** is a list of path and query parameters, and whether or not they are required. 
+  - You can find existing parameters in this 
   [file](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/parameters.py). Note
   that the `description` field in `OpenApiParameter` populates the parameter's description in the
   documentation.
-- DRF serializers conveniently translate into query parameters. See
+  - DRF serializers conveniently translate into query parameters. See
   [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/endpoints/organization_stats_v2.py#L145)
   for an example of this.
-
-```python
-parameters=[
-    GlobalParams.ORG_SLUG,
-    GlobalParams.name("The name for the team.", required=True),
-    GlobalParams.slug("Optional slug for the team."),
-],
-```
-
-#### Request Schema
-
-Specify the request serializer.
-
-- Request serializer can generally just be the DRF serializer of endpoint itself. If you need more
+- **request:** is the request serializer that can generally just be the DRF serializer of the endpoint itself. If you need more
   customization or the endpoint doesn't use a serializer, you can use drf-spectacular's
   [inline_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.inline_serializer)
   to create a one-off serializer.
   See
   [here](https://github.com/getsentry/sentry/blob/b04c1c04f1e86bc040a671ad5b545d3b70132140/src/sentry/scim/endpoints/members.py#L434-L440)
   for an example of this.
-- If the endpoint has no request body, you can either omit the `request` field or set it to `None`.
+    -  If the endpoint has no request body, you can either omit the `request` field or set it to `None`.
+- **responses:** includes types of response returned for all possible HTTP response cases both in case of success and failure. You can learn more about each in the next section. 
+- **examples:** specifies the endpoint's sample response. We keep all our examples in this
+[folder](https://github.com/getsentry/sentry/tree/master/src/sentry/apidocs/examples) sorted by
+sidebar tags. 
+  - Note that the statement `response_only=True` is required for all examples.
+  - We currently only support showing one response example per endpoint but support for multiple examples is on the way. So, feel free to add multiple examples here.
 
 ```python
-request=TeamPostSerializer,
+@extend_schema(
+    ...
+    examples=TeamExamples.CREATE_TEAM,
+)
+
+from drf_spectacular.types import OpenApiExample
+
+class TeamExamples:
+  CREATE_TEAM = [
+      OpenApiExample(
+          # description of example, not used for anything
+          "Create a new team",
+          # actual response body
+          value={"slug": "my-team", "name": "My Team"},
+          # the status code(s) this example applies to
+          status_codes=["201"], 
+          # You MUST INCLUDE this for all examples
+          response_only=True,
+      )
+  ]
 ```
 
 #### Success Responses
@@ -298,48 +287,26 @@ responses={
 },
 ```
 
-#### Sample Response Body
+### Private Attributes in a Public Endpoint
 
-Specify the endpoint's sample response using the `examples` field. We keep all our examples in this
-[folder](https://github.com/getsentry/sentry/tree/master/src/sentry/apidocs/examples) sorted by
-sidebar tags. 
+You can have private attributes within a public endpoint.
 
-```python
-@extend_schema(
-    ...
-    examples=TeamExamples.CREATE_TEAM,
-)
+As an example:
+[https://docs.sentry.io/api/teams/retrieve-a-team/](https://docs.sentry.io/api/teams/retrieve-a-team/). 
+The response has multiple attributes:
 
-from drf_spectacular.types import OpenApiExample
-
-class TeamExamples:
-  CREATE_TEAM = [
-      OpenApiExample(
-          # description of example, not used for anything
-          "Create a new team",
-          # actual response body
-          value={"slug": "my-team", "name": "My Team"},
-          # the status code(s) this example applies to
-          status_codes=["201"], 
-          # You MUST INCLUDE this for all examples
-          response_only=True,
-      )
-  ]
+```json
+{
+  "id": "2",
+  "slug": "the-interstellar-jurisdiction"
+  ...
+}
 ```
 
-- Note that the statment `response_only=True` is required for all examples.
-- We currently only support showing one response example per endpoint.
+Let's say we also return a `nickname` for a team. If the data returned is not documented as a
+response in our public documentation, that attribute is a private attribute within a public
+endpoint.
 
-### 4. Endpoint Description
-
-Specify the endpoint description in the documentation using the endpoint's docstring.
-
-```python
-def post(self, request, organization, **kwargs):
-    """
-    Create a new team bound to an organization.
-    """
-```
 
 ### Caveats
 
@@ -393,23 +360,23 @@ highlight the diff. It is not required to merge.
 Once you make changes to an endpoint and merge the change into Sentry, a series of GitHub Actions
 will be triggered to make your changes automatically go live:
 
-1. The [`openapi` workflow in
-   `sentry`](https://github.com/getsentry/sentry/blob/master/.github/workflows/openapi.yml) updates
+1. The [openapi workflow in
+   sentry](https://github.com/getsentry/sentry/blob/master/.github/workflows/openapi.yml) updates
    the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the
    OpenAPI build artifact.
-2. The [`cascade-to-sentry-docs` workflow in
-   `sentry-api-schema`](https://github.com/getsentry/sentry-api-schema/blob/main/.github/workflows/cascade-to-sentry-docs.yml)
-   reacts to the push to `main` in (1) by triggering the [`bump-api-schema-sha` workflow in
-   `sentry-docs`](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml).
-3. The [`bump-api-schema-sha` workflow in
-   `sentry-docs`](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml)
+2. The [cascade-to-sentry-docs workflow in
+   sentry-api-schema](https://github.com/getsentry/sentry-api-schema/blob/main/.github/workflows/cascade-to-sentry-docs.yml)
+   reacts to the push to `main` in (1) by triggering the [bump-api-schema-sha workflow in
+   sentry-docs](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml).
+3. The [bump-api-schema-sha workflow in
+   sentry-docs](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml)
    fetches the latest commit SHA from `sentry-api-schema` and writes it into the correct file, then
    makes and merges a PR in `sentry-docs`, which kicks off a deploy via Vercel to
    https://docs.sentry.io/api/.
 
-### Requesting an API to be public
+## Requesting an API to be public
 
-Want an endpoint to be public?
+Are you a Sentry user who wants an endpoint to be public?
 
 Look at the [issues on sentry with the `Component: API`
 label](https://github.com/getsentry/sentry/issues?q=is%3Aopen+is%3Aissue+label%3A%22Component%3A+API%22).
@@ -433,11 +400,13 @@ within that endpoint can change at any time. This is a relic from migrating the 
 our prior approach. Note that, going forward, we recommend new endpoints always provide response
 schema.
 
+** Can customers use private endpoints?**
+
+Yes, if they wish. However private endpoints are liable to change without notice at any time,
+potentially breaking the customer's code. Please be careful using them.
+
 **I have a question and it has not been answered.**
 
 No problem. Send us an [email](mailto:partners@sentry.io) so we can answer your question.
 
-## Can customers use private endpoints?
 
-Yes, if they wish. However private endpoints are liable to change without notice at any time,
-potentially breaking the customer's code. Please be careful using them.
