@@ -1,8 +1,8 @@
 import {getCurrentHub} from '@sentry/core';
+import {DsnComponents} from '@sentry/types';
 
 import type {FeedbackEvent} from './feedback';
 import {prepareFeedbackEvent} from './prepareFeedbackEvent';
-
 /**
  * This error indicates that the transport returned an invalid status code.
  */
@@ -11,6 +11,16 @@ export class TransportStatusCodeError extends Error {
     super(`Transport returned status code ${statusCode}`);
   }
 }
+/**
+ * Function taken from sentry-javascript
+ */
+export function dsnToString(dsn: DsnComponents, withPassword: boolean = false): string {
+  const {host, path, pass, port, projectId, protocol, publicKey} = dsn;
+  return (
+    `${protocol}://${publicKey}${withPassword && pass ? `:${pass}` : ''}` +
+    `@${host}${port ? `:${port}` : ''}/${path ? `${path}/` : path}${projectId}`
+  );
+}
 
 /**
  * Send feedback using `fetch()`
@@ -18,7 +28,6 @@ export class TransportStatusCodeError extends Error {
 export async function sendFeedbackRequest({
   message,
   email,
-  name,
   replay_id,
   url,
 }): Promise<Response | null> {
@@ -108,7 +117,7 @@ export async function sendFeedbackRequest({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `DSN ${dsn}`,
+        Authorization: `DSN "${dsnToString(dsn)}"`,
       },
       body: JSON.stringify({feedbackEvent}),
     });

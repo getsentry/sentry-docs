@@ -19,7 +19,6 @@ async function sendFeedback(data, replayId, pageUrl): Promise<Response | null> {
   const feedback = {
     message: data.comment,
     email: data.email,
-    name: data.name,
     replay_id: replayId,
     url: pageUrl,
   };
@@ -55,6 +54,7 @@ export function FeedbackWidget() {
         setOpen(false);
         setShowSuccessMessage(true);
       } else {
+        // eslint-disable-next-line no-alert
         alert('Error submitting your feedback. Please try again');
       }
     });
