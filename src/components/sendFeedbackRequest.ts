@@ -117,7 +117,7 @@ export async function sendFeedbackRequest({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `DSN "${dsnToString(dsn)}"`,
+        Authorization: `DSN ${dsnToString(dsn)}`,
       },
       body: JSON.stringify({feedbackEvent}),
     });
