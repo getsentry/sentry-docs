@@ -1,6 +1,5 @@
 import type {Scope} from '@sentry/core';
 import {prepareEvent} from '@sentry/core';
-import type {IntegrationIndex} from '@sentry/core/build/types/integration';
 import type {Client} from '@sentry/types';
 
 import type {FeedbackEvent} from './feedback';
@@ -13,7 +12,7 @@ export async function prepareFeedbackEvent({
   scope,
   event,
 }: {
-  client: Client & {_integrations?: IntegrationIndex};
+  client: Client;
   event: FeedbackEvent;
   scope: Scope;
 }): Promise<FeedbackEvent | null> {

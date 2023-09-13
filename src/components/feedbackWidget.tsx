@@ -54,6 +54,8 @@ export function FeedbackWidget() {
       if (response) {
         setOpen(false);
         setShowSuccessMessage(true);
+      } else {
+        alert('Error submitting your feedback. Please try again');
       }
     });
   };
