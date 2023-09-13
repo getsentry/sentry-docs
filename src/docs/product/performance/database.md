@@ -8,10 +8,6 @@ The **Database** page shows you your queries!
 
 - link to `sentry-basics/tracing/distributed-tracing` for help
 
-## The New Widget
-
-- probably this can go in Performance documentation, to explain what it does
-
 ## Database Module Landing Page
 
 - backend SDKs are eligible
@@ -26,7 +22,9 @@ The **Database** page shows you your queries!
 
 ### Query Parameterization
 
-Your queries might not look exactly the same! Click to see details
+Your queries might not look exactly the same! Click to see details of the query
+
+e.g.,
 
 ```sql
 SELECT "users"."id", "users.first_name", "users.last_name"
@@ -34,7 +32,13 @@ FROM "users"
 LIMIT 21
 ```
 
+becomes
 
+```sql
+SELECT ..
+FROM users
+LIMIT 21
+```
 
 - removing parameters
 - collapsing long lists of columns
@@ -45,7 +49,6 @@ LIMIT 21
 
 - the sum of all your spans
 - time spent is the sum of the specific spans
--
 
 ## Query Summary Page
 
