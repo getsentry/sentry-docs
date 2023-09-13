@@ -119,7 +119,7 @@ export async function sendFeedbackRequest({
         'Content-Type': 'application/json',
         Authorization: `DSN ${dsnToString(dsn)}`,
       },
-      body: JSON.stringify({feedbackEvent}),
+      body: JSON.stringify(feedbackEvent),
     });
     if (!response.ok) {
       return null;
