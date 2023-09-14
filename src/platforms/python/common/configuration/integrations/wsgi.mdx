@@ -28,18 +28,39 @@ pip install --upgrade 'sentry-sdk'
 import sentry_sdk
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
-from myapp import wsgi_app
+from my_wsgi_app import app
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
 
-wsgi_app = SentryWsgiMiddleware(wsgi_app)
+app = SentryWsgiMiddleware(app)
+```
+
+## Verify
+
+This minimal WSGI application will create a transaction and send it to Sentry. The error will also be sent to Sentry and associated with the transaction:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+
+sentry_sdk.init(...)  # same as above
+
+def app(env, start_response):
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    response_body = 'Hello World'
+    1/0  # this raises an error
+    return [response_body.encode()]
+
+app = SentryWsgiMiddleware(app)
+
+# Run the application in a mini WSGI server.
+from wsgiref.simple_server import make_server
+make_server('', 8000, app).serve_forever()
 ```
 
 ## Behavior
