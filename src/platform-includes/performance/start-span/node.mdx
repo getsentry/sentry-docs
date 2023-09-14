@@ -1,0 +1,42 @@
+You can use the `Sentry.startSpan` method to wrap a callback in a span to measure how long it will take. The span will automatically be finished when the callback finishes. This works with both synchronous and async callbacks.
+
+```javascript
+const result = Sentry.startSpan({ name: "Important Function" }, () => {
+  return expensiveFunction();
+});
+
+const result = await Sentry.startSpan(
+  { name: "Important Function" },
+  async () => {
+    const res = Sentry.startSpan({ name: "Child Span" }, () => {
+      return expensiveFunction();
+    });
+
+    return updateRes(res);
+  }
+);
+
+const result = Sentry.startSpan({ name: "Important Function" }, (span) => {
+  // You can access the span to add data or set specific status.
+  // The span may be undefined if the span was not sampled or if performance monitoring is disabled.
+  span?.setData("foo", "bar");
+  return expensiveFunction();
+});
+```
+
+In this example, the span named `Important Function` will become the active span for the duration of the callback.
+
+If you need to override when the span finishes, you can use `Sentry.startSpanManual`. This is useful for creating parallel spans that are not related to each other.
+
+```javascript
+// Start a span that tracks the duration of middleware
+function middleware(_req, res, next) {
+  return Sentry.startSpanManual({ name: "middleware" }, (span, finish) => {
+    res.once("finish", () => {
+      span?.setHttpStatus(res.status);
+      finish();
+    });
+    return next();
+  });
+}
+```
