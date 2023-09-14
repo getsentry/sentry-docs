@@ -9,11 +9,7 @@ redirect_from:
   - /platforms/python/guides/tryton/integrations/sqlalchemy/
 ---
 
-<!-- NOTE: Due to being in common, redirects are in vercel.json -->
-
-The SQLAlchemy integration captures queries from
-[SQLAlchemy](https://www.sqlalchemy.org/) as breadcrumbs. The integration is
-being tested with SQLAlchemy 1.2 or later.
+The SQLAlchemy integration captures queries from [SQLAlchemy](https://www.sqlalchemy.org/) as breadcrumbs and spans.
 
 ## Install
 
@@ -25,23 +21,45 @@ pip install --upgrade 'sentry-sdk[sqlalchemy]'
 
 ## Configure
 
-Add `SqlalchemyIntegration()` to your `integrations` list:
-
 <SignInNote />
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        SqlalchemyIntegration(),
-    ],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
 )
 ```
+
+The Redis integration is enabled automatically if you have the `sqlalchemy` package installed.
+
+## Verify
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+
+def main():
+    sentry_sdk.init(...)  # same as above
+
+    engine = create_engine(DATABASE_URL, echo=True)
+    statement = text("SELECT 'Hello World'")
+
+    with engine.connect() as conn:
+        with sentry_sdk.start_transaction(name="testing_sentry"):
+            result = conn.execute(statement)
+
+main()
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of Sentry.io and will create a span for `SELECT` statement.
+
+It takes a couple moments until the data shows up in Sentry.io
 
 ## Supported Versions
 
 - SQLAlchemy: 1.2+
-- Python: 2.7+
+- Python: 2.7+ (SQLAlchemy 1.2, 1.3, and 1.4), 3.7+ (SQLAlchemy 2.0+)
