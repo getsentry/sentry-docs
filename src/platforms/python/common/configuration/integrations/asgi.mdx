@@ -35,7 +35,6 @@ sentry_sdk.init(
 
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
 
@@ -43,6 +42,41 @@ asgi_app = SentryAsgiMiddleware(asgi_app)
 ```
 
 The middleware supports both ASGI 2 and ASGI 3 transparently.
+
+## Verify
+
+Trigger an error on purpose and see as it shows up in Sentry.
+
+```python
+sentry_sdk.init(...) # see above
+
+def app(scope):
+    async def get_body():
+        return f"The number is: {1/0}" # raises an error!
+
+    async def asgi(receive, send):
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"content-type", b"text/plain"]],
+            }
+        )
+        await send({"type": "http.response.body", "body": await get_body()})
+
+    return asgi
+
+app = SentryAsgiMiddleware(app)
+```
+
+Run your ASGI app with unicorn:
+```bash
+uvicorn main:app --port 8000
+```
+
+Point your browser to [http://localhost:8000](http://localhost:8000) and the error will be triggered and sent to Sentry.
+
+Additionally a transaction will show up in the "Performance" section on Sentry.io
 
 ## Behavior
 
