@@ -5,7 +5,9 @@ import {FeedbackModal} from './feedbackModal';
 import {FeedbackSuccessMessage} from './feedbackSuccessMessage';
 import {sendFeedbackRequest} from './sendFeedbackRequest';
 
-const replay = window.Sentry.getCurrentHub().getClient()?.getIntegration(window.Sentry.Replay);
+const replay = window.Sentry.getCurrentHub()
+  .getClient()
+  ?.getIntegration(window.Sentry.Replay);
 
 async function sendFeedback(data, replayId, pageUrl): Promise<Response | null> {
   const feedback = {
