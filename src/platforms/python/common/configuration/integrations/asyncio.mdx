@@ -22,20 +22,41 @@ Add `AsyncioIntegration()` to your list of `integrations` and be sure to call `s
 import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
-
 async def main():
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
         integrations=[
             AsyncioIntegration(),
         ],
     )
 
     # your code goes here.
+    ...
 
+asyncio.run(main())
+```
 
-if __name__ == "__main__":
-    asyncio.run(main())
+## Verify
+
+Trigger an error on purpose and see as it shows up in Sentry.
+
+```python {filename:main.py}
+import asyncio
+
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
+async def my_task():
+    1/0  # raises an error!
+
+async def main():
+    sentry_sdk.init(...)  # same as above
+    asyncio.create_task(my_task())
+
+asyncio.run(main())
 ```
 
 ## Behavior
