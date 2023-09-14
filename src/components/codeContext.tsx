@@ -18,7 +18,6 @@ type ProjectCodeKeywords = {
 };
 
 type UserCodeKeywords = {
-  EMAIL: string;
   ID: number;
   NAME: string;
 };
@@ -52,7 +51,6 @@ type ProjectApiResult = {
 
 type UserApiResult = {
   avatarUrl: string;
-  email: string;
   id: number;
   isAuthenticated: boolean;
   name: string;
@@ -187,7 +185,6 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
       ? {
           ID: user.id,
           NAME: user.name,
-          EMAIL: user.email,
         }
       : undefined,
   };
