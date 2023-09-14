@@ -1,20 +1,12 @@
-import {getCurrentHub} from '@sentry/core';
 import {DsnComponents} from '@sentry/types';
 
 import type {FeedbackEvent} from './feedback';
 import {prepareFeedbackEvent} from './prepareFeedbackEvent';
-/**
- * This error indicates that the transport returned an invalid status code.
- */
-export class TransportStatusCodeError extends Error {
-  public constructor(statusCode: number) {
-    super(`Transport returned status code ${statusCode}`);
-  }
-}
+
 /**
  * Function taken from sentry-javascript
  */
-export function dsnToString(dsn: DsnComponents, withPassword: boolean = false): string {
+function dsnToString(dsn: DsnComponents, withPassword: boolean = false): string {
   const {host, path, pass, port, projectId, protocol, publicKey} = dsn;
   return (
     `${protocol}://${publicKey}${withPassword && pass ? `:${pass}` : ''}` +
@@ -31,17 +23,17 @@ export async function sendFeedbackRequest({
   replay_id,
   url,
 }): Promise<Response | null> {
-  const hub = getCurrentHub();
+  const hub = window.Sentry.getCurrentHub();
   const client = hub.getClient();
   const scope = hub.getScope();
   const transport = client && client.getTransport();
   const dsn = client && client.getDsn();
 
   if (!client || !transport || !dsn) {
-    return;
+    return null;
   }
 
-  const baseEvent: FeedbackEvent = {
+  const baseEvent = {
     feedback: {
       contact_email: email,
       message,
@@ -60,7 +52,6 @@ export async function sendFeedbackRequest({
   if (!feedbackEvent) {
     // Taken from baseclient's `_processEvent` method, where this is handled for errors/transactions
     // client.recordDroppedEvent('event_processor', 'feedback', baseEvent);
-    // logInfo('An event processor returned `null`, will not send event.');
     return null;
   }
 

@@ -1,19 +1,11 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import * as Sentry from '@sentry/browser';
 
 import {FeedbackButton} from './feedbackButton';
 import {FeedbackModal} from './feedbackModal';
 import {FeedbackSuccessMessage} from './feedbackSuccessMessage';
 import {sendFeedbackRequest} from './sendFeedbackRequest';
 
-const replay = new Sentry.Replay();
-Sentry.init({
-  dsn: 'https://db1366bd2d586cac50181e3eaee5c3e1@o19635.ingest.sentry.io/4505742647754752',
-  replaysSessionSampleRate: 1.0,
-  replaysOnErrorSampleRate: 1.0,
-  integrations: [replay],
-  debug: true,
-});
+const replay = window.Sentry.getCurrentHub().getClient()?.getIntegrationById('Replay');
 
 async function sendFeedback(data, replayId, pageUrl): Promise<Response | null> {
   const feedback = {

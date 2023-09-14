@@ -16,17 +16,10 @@ export async function prepareFeedbackEvent({
   event: FeedbackEvent;
   scope: Scope;
 }): Promise<FeedbackEvent | null> {
-  //   const integrations =
-  //     typeof client._integrations === 'object' &&
-  //     client._integrations !== null &&
-  //     !Array.isArray(client._integrations)
-  //       ? Object.keys(client._integrations)
-  //       : undefined;
-  const integrations = [];
   const preparedEvent = (await prepareEvent(
     client.getOptions(),
     event,
-    {integrations},
+    {integrations: []},
     scope
   )) as FeedbackEvent | null;
 
