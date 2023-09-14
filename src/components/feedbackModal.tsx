@@ -181,6 +181,8 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     });
   };
 
+  const user = window.Sentry.getCurrentHub().getScope().getUser();
+
   return (
     <React.Fragment>
       <Dialog id="feedbackModal" open={open} ref={dialogRef} onClick={onClose}>
@@ -190,11 +192,11 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
             <FlexColumns>
               <Label>
                 Your Name
-                <Input type="text" name="name" placeholder="Anonymous" />
+                <Input type="text" name="name" placeholder="Anonymous" defaultValue={user.username} />
               </Label>
               <Label>
                 Your Email
-                <Input type="text" name="email" placeholder="you@test.com" />
+                <Input type="text" name="email" placeholder="you@test.com" defaultValue={user.email} />
               </Label>
             </FlexColumns>
             <Label>
