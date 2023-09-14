@@ -192,11 +192,21 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
             <FlexColumns>
               <Label>
                 Your Name
-                <Input type="text" name="name" placeholder="Anonymous" defaultValue={user.username} />
+                <Input
+                  type="text"
+                  name="name"
+                  placeholder="Anonymous"
+                  defaultValue={user.username}
+                />
               </Label>
               <Label>
                 Your Email
-                <Input type="text" name="email" placeholder="you@test.com" defaultValue={user.email} />
+                <Input
+                  type="text"
+                  name="email"
+                  placeholder="you@test.com"
+                  defaultValue={user.email}
+                />
               </Label>
             </FlexColumns>
             <Label>
