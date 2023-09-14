@@ -9,7 +9,8 @@ export interface FeedbackEvent extends Event {
     contact_email: string;
     message: string;
     replay_id: string;
-    // type: 'feedback_event';
     url: string;
   };
+  // TODO: Add this event type to Event
+  // type: 'feedback_event';
 }

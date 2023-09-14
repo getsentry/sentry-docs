@@ -2,8 +2,8 @@ import React, {FormEvent, useEffect} from 'react';
 import {css} from '@emotion/react';
 import styled from '@emotion/styled';
 
-import {useFocusTrap} from './hooks/useFocusTrap';
-import {useShortcut} from './hooks/useShortcut';
+import {useFocusTrap} from '../hooks/useFocusTrap';
+import {useShortcut} from '../hooks/useShortcut';
 
 const Dialog = styled.dialog`
   background-color: rgba(0, 0, 0, 0.05);

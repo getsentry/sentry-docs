@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {GatsbyBrowser} from 'gatsby';
 
-import {FeedbackWidget} from 'sentry-docs/components/feedbackWidget';
+import {FeedbackWidget} from 'sentry-docs/components/feedback/feedbackWidget';
 import PageContext from 'sentry-docs/components/pageContext';
 
 export const wrapPageElement: GatsbyBrowser['wrapPageElement'] = ({

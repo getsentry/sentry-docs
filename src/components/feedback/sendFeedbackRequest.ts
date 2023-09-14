@@ -1,6 +1,5 @@
 import {DsnComponents} from '@sentry/types';
 
-import type {FeedbackEvent} from './feedback';
 import {prepareFeedbackEvent} from './prepareFeedbackEvent';
 
 /**
