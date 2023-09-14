@@ -1,7 +1,6 @@
 import React, {useEffect} from 'react';
 import {GatsbyBrowser} from 'gatsby';
 
-import {CodeContextProvider} from 'sentry-docs/components/codeContext';
 import {FeedbackWidget} from 'sentry-docs/components/feedbackWidget';
 import PageContext from 'sentry-docs/components/pageContext';
 
@@ -17,15 +16,14 @@ export const wrapPageElement: GatsbyBrowser['wrapPageElement'] = ({
     codeBlock.style.position = 'relative';
     codeBlock.style.right = '-74px';
   });
+
   return (
-    <React.Fragment>
-      {/* FIXME: we're duplicating CodeContextProvider, which is not nice.
-      Ideally, FeedbackWidget is a child of the existing CodeContextProvider. */}
-      <CodeContextProvider>
+    <PageContext.Provider value={pageContext}>
+      <React.Fragment>
         <FeedbackWidget />
-      </CodeContextProvider>
-      <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>
-    </React.Fragment>
+        {element}
+      </React.Fragment>
+    </PageContext.Provider>
   );
 };
 
