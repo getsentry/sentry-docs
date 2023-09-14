@@ -26,6 +26,9 @@ from sentry_sdk.integrations.clickhouse_driver import ClickhouseDriverIntegratio
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         ClickhouseDriverIntegration(),
     ],
@@ -33,6 +36,27 @@ sentry_sdk.init(
 ```
 
 By default, the parameters of the query are not retrieved. To see the query parameters in Sentry, enable `send_default_pii`. See <PlatformLink to="/configuration/options/#send-default-pii">Basic Options</PlatformLink> for details.
+
+## Verify
+
+```python
+from clickhouse_driver import Client
+
+def main():
+    sentry_init(...)  # same as above
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        client = Client(host=DATABASE_HOST)
+        client.execute("DROP TABLE IF EXISTS sentry_test")
+        client.execute("CREATE TABLE sentry_test (x Int32) ENGINE = Memory")
+        client.execute("INSERT INTO sentry_test (x) VALUES", [{"x": 100}])
+
+main()
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of Sentry.io and will create spans for the database operations.
+
+It takes a couple moments until the data shows up in Sentry.io
 
 ## Supported Versions
 
