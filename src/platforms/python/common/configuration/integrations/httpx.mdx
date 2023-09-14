@@ -18,21 +18,33 @@ pip install --upgrade 'sentry-sdk[httpx]'
 
 ## Configure
 
-Add `HttpxIntegration()` to your `integrations` list:
-
-<SignInNote />
-
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.httpx import HttpxIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        HttpxIntegration(),
-    ],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
 )
 ```
+The HTTPX integration is enabled automatically if you have the `httpx` package installed.
+
+## Verify
+
+```python
+import httpx
+
+def main():
+    sentry_init(...)  # same as above
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        r1 = httpx.get("https://sentry.io/")
+        r2 = httpx.post("http://httpbin.org/post")
+
+main()
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of Sentry.io and will create spans for the outgoing HTTP requests.
 
 ## Supported Versions
 
