@@ -2,7 +2,7 @@ import type {Scope} from '@sentry/core';
 import {prepareEvent} from '@sentry/core';
 import type {Client} from '@sentry/types';
 
-import type {FeedbackEvent} from './feedback';
+import type {FeedbackEvent} from './types';
 
 /**
  * Prepare a replay event & enrich it with the SDK metadata.
