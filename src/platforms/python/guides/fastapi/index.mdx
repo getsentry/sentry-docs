@@ -18,22 +18,18 @@ pip install --upgrade 'sentry-sdk[fastapi]'
 
 ## Configure
 
-To configure the Sentry SDK, initialize it before your app has been initialized:
+If you have the `fastapi` package in your dependencies, the FastAPI integration will be enabled automatically. There is nothing to do for you except initializing the Sentry SDK.
 
 <SignInNote />
 
 ```python
 from fastapi import FastAPI
-
 import sentry_sdk
-
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
 
@@ -42,21 +38,21 @@ app = FastAPI()
 
 ## Verify
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
-
 ```python
 from fastapi import FastAPI
 
+sentry_sdk.init(...)  # same as above
 
 app = FastAPI()
 
 @app.get("/sentry-debug")
 async def trigger_error():
     division_by_zero = 1 / 0
-
 ```
 
-Visiting `"/sentry-debug"` will trigger an error that will be captured by Sentry.
+When you point your browser to [http://localhost:8000/sentry-debug](http://localhost:8000/sentry-debug) a transaction in the Performance section of [sentry.io](https://sentry.io) will be created. Additionally an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behaviour
 
@@ -88,43 +84,59 @@ The parameter `traces_sample_rate` needs to be set when initializing the Sentry 
 
 </Note>
 
-## Integration Options
+## Options
 
-If you want to change the default behavior of the FastAPI integration, you need to instantiate the integration manually and then pass it to Sentry's `init` function. Because FastAPI is based on the Starlette framework, both integrations, `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
-
-<ConfigKey name="transaction_style">
-
-You can pass the keyword argument `transaction_style` to `StarletteIntegration()` and `FastApiIntegration()`.
-
-With this option, you can influence how the transactions are named in Sentry. For example:
+By adding `StarletteIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `StarletteIntegration` to change its behavior.
+Because FastAPI is based on the Starlette framework, both integrations, `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
 
 ```python
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 sentry_sdk.init(
-    # ...
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
-        StarletteIntegration(transaction_style="endpoint"),
-        FastApiIntegration(transaction_style="endpoint"),
-    ],
+        StarletteIntegration(transaction_style="endpoint",),
+        FastApiIntegration(transaction_style="endpoint",),
+    ]
 )
-
-app = FastAPI()
-
-@app.get("/catalog/product/{product_id}")
-async def product_detail(product_id):
-    return {...}
 ```
 
-In the above code, the transaction name will be:
+You can pass the following keyword arguments to `StarletteIntegration()` and `StarletteIntegration()`:
 
-- `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
-- `"product_detail"` if you set `transaction_style="endpoint"`
+- `transaction_style`:
 
-The default is `"url"`.
+    With this option, you can influence how the transactions are named in Sentry. For example:
 
-</ConfigKey>
+    ```python
+    import sentry_sdk
+    from sentry_sdk.integrations.starlette import StarletteIntegration
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+    sentry_sdk.init(
+        # ...
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            FastApiIntegration(transaction_style="endpoint"),
+        ],
+    )
+
+    app = FastAPI()
+
+    @app.get("/catalog/product/{product_id}")
+    async def product_detail(product_id):
+        return {...}
+    ```
+
+    In the above code, the transaction name will be:
+
+    - `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
+    - `"product_detail"` if you set `transaction_style="endpoint"`
+
+    The default is `"url"`.
 
 ## Supported Versions
 
