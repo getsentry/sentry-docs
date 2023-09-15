@@ -36,6 +36,29 @@ sentry_sdk.init(
 )
 ```
 
+## Verify
+
+```python
+import asyncio
+import aiohttp
+
+async def main():
+    sentry_sdk.init(...)  # same as above
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://sentry.io/") as response:
+                print("Status:", response.status)
+            async with session.post("http://httpbin.org/post") as response:
+                print("Status:", response.status)
+
+asyncio.run(main())
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create spans for the outgoing HTTP requests.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
 ## Supported Versions
 
 - AIOHTTP: 3.5+
