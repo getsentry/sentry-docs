@@ -1,4 +1,4 @@
-import React, {Fragment, useCallback, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 
 import {FeedbackButton} from './feedbackButton';
 import {FeedbackModal} from './feedbackModal';
@@ -63,20 +63,6 @@ export function FeedbackWidget() {
       }
     });
   };
-
-  const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    // Shift+Enter
-    if (event.shiftKey && event.keyCode === 13) {
-      setOpen(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyPress);
-    return () => {
-      document.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [handleKeyPress]);
 
   return (
     <Fragment>
