@@ -61,8 +61,15 @@ LIMIT 21
 
 ### What is Time Spent
 
-- the sum of all your spans
-- time spent is the sum of the specific spans
+- link to `sentry-basics/tracing/distributed-tracing` for help
+
+Every database query takes some time to execute. When an application sends a query, it waits for the database to receive the query, parse it, execute it, and return the result. In Sentry, the total time taken from sending the query to receiving the full result is called the query's "duration". The query's "time spent" is the sum of all of its durations in a given time period.
+
+For example, an application might send a query like `SELECT * FROM users LIMIT 10` every time a user calls the `/users` endpoint. The query might take anywhere from 100ms to 200ms to run, and the endpoint is called anywhere from 10 times a minute to 100 times in a minute depending on the time of day. The query's "time spent" will be the sum of all of its durations that occurred in a given time period. Another way to think about it is that the "total time" is the product of queries per minute and the average duration. In a high-throughput application, a query's time spent might be measured in weeks or months.
+
+"Time spent" is a useful way to measure a query's relative impact, compared to other queries in an application. For example, if one query's "time spent" is 7 days, and another is just 2 hours, the query with more time spent might be more impactful to fix, since even a small improvement in duration would result in a meaningful overall improvement. "Time spent" can also be a strong signal that something is wrong. Queries that suddenly start taking up more time are often a sign of a problem.
+
+- we'll want to link to this section from the product! It's likely that people will land here from the Database page wondering what "Time Spent" means _exactly_, so this section needs to be descriptive
 
 ## Query Summary Page
 
