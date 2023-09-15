@@ -27,11 +27,34 @@ from sentry_sdk.integrations.asyncpg import AsyncPGIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         AsyncPGIntegration(),
     ],
 )
 ```
+
+## Verify
+
+```python
+import asyncpg
+
+async def main():
+    sentry_sdk.init(...)  # same as above
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        conn = await asyncpg.connect(DATABASE_URL)
+        await conn.fetch("SELECT * FROM pg_catalog.pg_tables;")
+        await conn.close()
+
+asyncio.run(main())
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the `connect` and the `SELECT` operations.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Supported Versions
 
