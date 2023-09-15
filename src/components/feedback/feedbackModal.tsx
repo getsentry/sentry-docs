@@ -164,11 +164,18 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
 
   // Reset on close
   useEffect(() => {
+    let timeoutId: number | undefined;
+
     if (!open) {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         formRef.current.reset();
       }, 200);
     }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [open]);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
