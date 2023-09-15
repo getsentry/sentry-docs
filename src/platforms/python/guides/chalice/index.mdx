@@ -18,50 +18,53 @@ pip install --upgrade sentry-sdk[chalice]
 <SignInNote />
 
 ```python
-import sentry_sdk
 from chalice import Chalice
 
+import sentry_sdk
 from sentry_sdk.integrations.chalice import ChaliceIntegration
-
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         ChaliceIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 
 app = Chalice(app_name="appname")
 
 ```
 
-## Testing
-
-You can create a route that triggers an error for validate your Sentry installation like this:
+## Verify
 
 ```python
-@app.route("/boom")
-def boom():
-    raise Exception("boom goes the dynamite!")
-```
+from chalice import Chalice
 
-when you enter the route will throw an error that will be captured by Sentry.
+sentry_sdk.init(...)  # as above
 
-for everything else (like events)
+app = Chalice(app_name="helloworld")
 
-```python
 @app.schedule(Rate(1, unit=Rate.MINUTES))
-def every_hour(event):
-    raise Exception("only chalice event!")
+def every_minute(event):
+    1/0  # raises an error
+
+@app.route("/")
+def index():
+    1/0  # raises an error
+    return {"hello": "world"}
 ```
+
+When you enter the `"/"` route or the scheduled tasks is run an error event will be sent to [sentry.io](https://sentry.io).
 
 ## Behavior
 
 - Request data is attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set send_default_pii to True.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+## Supported Versions
+
+- Chalice: 1.16.0+
+- Python: 3.6+
