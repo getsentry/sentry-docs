@@ -20,7 +20,7 @@ pip install --upgrade 'sentry-sdk[bottle]==0.16.2'
 
 ## Configure
 
-To configure the SDK, initialize it with the integration before your app has been initialized:
+Add `ArqIntegration()` to your `integrations` list. Call `init()` before your app has been initialized:
 
 <SignInNote />
 
@@ -32,18 +32,37 @@ from sentry_sdk.integrations.bottle import BottleIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         BottleIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 
 app = Bottle()
 ```
+
+## Verify
+
+```python
+from bottle import Bottle, run
+
+sentry_sdk.init(...)  # same as above
+
+app = Bottle()
+
+@app.route('/')
+def hello():
+    1/0
+    return "Hello World!"
+
+run(app, host='localhost', port=8000)
+```
+
+When you point your browser to [http://localhost:8000/](http://localhost:8000/) a transaction in the Performance section of [sentry.io](https://sentry.io) will be created. Additionally an error will be sent to Sentry and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -73,3 +92,8 @@ You can pass the following keyword arguments to `BottleIntegration()`:
   - `myendpoint` if you set `transaction_style="endpoint"`
 
   The default is `"endpoint"`.
+
+## Supported Versions
+
+- Bottle: 0.12+
+- Python: 2.7+
