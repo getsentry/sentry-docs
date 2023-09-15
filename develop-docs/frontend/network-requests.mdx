@@ -269,9 +269,52 @@ function useUpdateProjectNameOptimistic(incomingOptions: UpdateProjectOptions) {
 }
 ```
 
-## Testing components with network requests
+## Testing components & hooks with network requests
 
 We use `MockApiClient` to mock API responses. This is a globally-available class in tests that reimplements `Client` in the test environment. You can read up on the logic [here](https://github.com/getsentry/sentry/blob/master/static/app/__mocks__/api.tsx).
+
+### Test setup for components
+
+```tsx
+import {render, screen} from 'sentry-test/reactTestingLibrary';
+
+describe('useFetchSomeData', () => {
+  it('should fetch', () => {
+    const request = MockApiClient.addMockResponse(...);
+
+    render(<MyComponentThatFetches />);
+
+    expect(request).toHaveBeenCalled();
+  });
+});
+```
+
+### Test setup for hooks
+
+```tsx
+import {makeTestQueryClient} from 'sentry-test/queryClient';
+import {reactHooks} from 'sentry-test/reactTestingLibrary';
+import {QueryClientProvider} from 'sentry/utils/queryClient';
+
+function wrapper({children}: {children?: ReactNode}) {
+  return (
+    <QueryClientProvider client={makeTestQueryClient()}>{children}</QueryClientProvider>
+  );
+}
+
+describe('useFetchSomeData', () => {
+  it('should fetch', () => {
+    const request = MockApiClient.addMockResponse(...);
+
+    const {result, waitFor} = reactHooks.renderHook(useFetchSomeData, {
+      wrapper,
+      initialProps: {organization},
+    });
+    
+    expect(request).toHaveBeenCalled();
+  });
+});
+```
 
 ### Mocking successful responses
 
