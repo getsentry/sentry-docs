@@ -196,26 +196,28 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
         <Header>Got any Feedback?</Header>
         <Form ref={formRef} onSubmit={handleSubmit}>
           <FlexColumns>
-            <Label>
+            <Label htmlFor="sentry-feedback-name">
               Your Name
               <Input
                 type="text"
+                id="sentry-feedback-name"
                 name="name"
                 placeholder="Anonymous"
                 defaultValue={user?.username}
               />
             </Label>
-            <Label>
+            <Label htmlFor="sentry-feedback-email">
               Your Email
               <Input
                 type="text"
+                id="sentry-feedback-email"
                 name="email"
                 placeholder="you@test.com"
                 defaultValue={user?.email}
               />
             </Label>
           </FlexColumns>
-          <Label>
+          <Label htmlFor="sentry-feedback-comment">
             Comment
             <TextArea
               onKeyDown={event => {
@@ -223,6 +225,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
                   formRef.current.requestSubmit();
                 }
               }}
+              id="sentry-feedback-comment"
               name="comment"
               placeholder="Explain what bothers you"
             />

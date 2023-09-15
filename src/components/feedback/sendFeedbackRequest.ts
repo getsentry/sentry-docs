@@ -99,11 +99,9 @@ export async function sendFeedbackRequest({
   // of this `delete`, lest we miss putting it back in the next time the property is in use.)
   delete feedbackEvent.sdkProcessingMetadata;
 
-  const path = 'https://sentry.io/api/0/feedback/';
-  let response: Response | undefined = undefined;
-
   try {
-    response = await fetch(path, {
+    const path = 'https://sentry.io/api/0/feedback/';
+    const response = await fetch(path, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
