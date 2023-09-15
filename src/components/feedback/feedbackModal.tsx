@@ -1,4 +1,4 @@
-import React, {FormEvent, useEffect} from 'react';
+import React, {FormEvent, useEffect, useRef} from 'react';
 import {css} from '@emotion/react';
 import styled from '@emotion/styled';
 
@@ -156,8 +156,8 @@ const retrieveStringValue = (formData: FormData, key: string) => {
 };
 
 export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
-  const dialogRef = React.useRef<HTMLDialogElement>(null);
-  const formRef = React.useRef<HTMLFormElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useFocusTrap(dialogRef, open);
   useShortcut('Escape', onClose);
@@ -181,55 +181,53 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     });
   };
 
-  const user = window.Sentry.getCurrentHub().getScope().getUser();
+  const user = window.Sentry?.getCurrentHub().getScope()?.getUser();
 
   return (
-    <React.Fragment>
-      <Dialog id="feedbackModal" open={open} ref={dialogRef} onClick={onClose}>
-        <Content onClick={stopPropagation}>
-          <Header>Got any Feedback?</Header>
-          <Form ref={formRef} onSubmit={handleSubmit}>
-            <FlexColumns>
-              <Label>
-                Your Name
-                <Input
-                  type="text"
-                  name="name"
-                  placeholder="Anonymous"
-                  defaultValue={user.username}
-                />
-              </Label>
-              <Label>
-                Your Email
-                <Input
-                  type="text"
-                  name="email"
-                  placeholder="you@test.com"
-                  defaultValue={user.email}
-                />
-              </Label>
-            </FlexColumns>
+    <Dialog id="feedbackModal" open={open} ref={dialogRef} onClick={onClose}>
+      <Content onClick={stopPropagation}>
+        <Header>Got any Feedback?</Header>
+        <Form ref={formRef} onSubmit={handleSubmit}>
+          <FlexColumns>
             <Label>
-              Comment
-              <TextArea
-                onKeyDown={event => {
-                  if (event.key === 'Enter' && event.ctrlKey) {
-                    formRef.current.requestSubmit();
-                  }
-                }}
-                name="comment"
-                placeholder="Explain what bothers you"
+              Your Name
+              <Input
+                type="text"
+                name="name"
+                placeholder="Anonymous"
+                defaultValue={user?.username}
               />
             </Label>
-            <ModalFooter>
-              <CancelButton type="button" onClick={onClose}>
-                Cancel
-              </CancelButton>
-              <SubmitButton type="submit">Submit</SubmitButton>
-            </ModalFooter>
-          </Form>
-        </Content>
-      </Dialog>
-    </React.Fragment>
+            <Label>
+              Your Email
+              <Input
+                type="text"
+                name="email"
+                placeholder="you@test.com"
+                defaultValue={user?.email}
+              />
+            </Label>
+          </FlexColumns>
+          <Label>
+            Comment
+            <TextArea
+              onKeyDown={event => {
+                if (event.key === 'Enter' && event.ctrlKey) {
+                  formRef.current.requestSubmit();
+                }
+              }}
+              name="comment"
+              placeholder="Explain what bothers you"
+            />
+          </Label>
+          <ModalFooter>
+            <CancelButton type="button" onClick={onClose}>
+              Cancel
+            </CancelButton>
+            <SubmitButton type="submit">Submit</SubmitButton>
+          </ModalFooter>
+        </Form>
+      </Content>
+    </Dialog>
   );
 }

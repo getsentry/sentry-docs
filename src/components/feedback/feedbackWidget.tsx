@@ -1,15 +1,25 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useState} from 'react';
 
 import {FeedbackButton} from './feedbackButton';
 import {FeedbackModal} from './feedbackModal';
 import {FeedbackSuccessMessage} from './feedbackSuccessMessage';
 import {sendFeedbackRequest} from './sendFeedbackRequest';
 
-const replay = window.Sentry.getCurrentHub()
-  .getClient()
-  ?.getIntegration(window.Sentry.Replay);
+const replay = window.Sentry?.getCurrentHub()
+  ?.getClient()
+  ?.getIntegration(window.Sentry?.Replay);
 
-async function sendFeedback(data, replayId, pageUrl): Promise<Response | null> {
+interface FeedbackForm {
+  comment: string;
+  email: string;
+  name: string;
+}
+
+async function sendFeedback(
+  data: FeedbackForm,
+  replayId: string,
+  pageUrl: string
+): Promise<Response | null> {
   const feedback = {
     message: data.comment,
     email: data.email,
@@ -36,10 +46,10 @@ export function FeedbackWidget() {
     };
   }, [showSuccessMessage]);
 
-  const handleSubmit = (data: {comment: string; email: string; name: string}) => {
+  const handleSubmit = (data: FeedbackForm) => {
     // Prepare session replay
-    replay.flush();
-    const replayId = replay.getReplayId();
+    replay?.flush();
+    const replayId = replay?.getReplayId();
 
     const pageUrl = document.location.href;
 
@@ -54,7 +64,7 @@ export function FeedbackWidget() {
     });
   };
 
-  const handleKeyPress = useCallback(event => {
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
     // Shift+Enter
     if (event.shiftKey && event.keyCode === 13) {
       setOpen(true);
@@ -69,10 +79,10 @@ export function FeedbackWidget() {
   }, [handleKeyPress]);
 
   return (
-    <React.Fragment>
+    <Fragment>
       {!open && <FeedbackButton onClick={() => setOpen(true)} />}
       <FeedbackModal open={open} onSubmit={handleSubmit} onClose={() => setOpen(false)} />
       <FeedbackSuccessMessage show={showSuccessMessage} />
-    </React.Fragment>
+    </Fragment>
   );
 }

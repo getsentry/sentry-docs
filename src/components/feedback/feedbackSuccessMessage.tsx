@@ -58,9 +58,13 @@ const Content = styled.div`
   animation: ${borderColor} 4s alternate infinite;
 `;
 
-export function FeedbackSuccessMessage(props) {
+interface FeedbackSuccessMessageProps extends React.HTMLAttributes<HTMLDivElement> {
+  show: boolean;
+};
+
+export function FeedbackSuccessMessage({show, ...props}: FeedbackSuccessMessageProps) {
   return (
-    <Wrapper data-hide={!props.show} {...props}>
+    <Wrapper data-hide={!show} {...props}>
       <Content>🎉 Thank you for your feedback! 🙌</Content>
     </Wrapper>
   );

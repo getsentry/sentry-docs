@@ -8,10 +8,8 @@ export const wrapPageElement: GatsbyBrowser['wrapPageElement'] = ({
   element,
   props: {pageContext},
 }) => <PageContext.Provider value={pageContext}>
-      <React.Fragment>
         <FeedbackWidget />
         {element}
-      </React.Fragment>
     </PageContext.Provider>
 
 // Disable prefetching altogether so our bw is not destroyed.
