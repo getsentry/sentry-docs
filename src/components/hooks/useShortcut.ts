@@ -1,13 +1,13 @@
 import {useEffect} from 'react';
 
-type ShurtcutConfig = {
+type ShortcutConfig = {
   key: string;
   altKey?: boolean;
   ctrlKey?: boolean;
   shiftKey?: boolean;
 };
 
-export const useShortcut = (key: string | ShurtcutConfig, callback: () => void) => {
+export const useShortcut = (key: string | ShortcutConfig, callback: () => void) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (typeof key === 'string') {

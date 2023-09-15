@@ -5,7 +5,7 @@ import type {Client} from '@sentry/types';
 import type {FeedbackEvent} from './types';
 
 /**
- * Prepare a replay event & enrich it with the SDK metadata.
+ * Prepare a feedback event & enrich it with the SDK metadata.
  */
 export async function prepareFeedbackEvent({
   client,
