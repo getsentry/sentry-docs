@@ -15,57 +15,67 @@ pip install --upgrade "sentry-sdk[arq]"
 
 ## Configure
 
-Job definition in `demo.py`:
+<SignInNote />
+
+Add `ArqIntegration()` to your `integrations` list:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.arq import ArqIntegration
 
-
 sentry_sdk.init(
-    dsn="...",
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         ArqIntegration(),
     ],
-    traces_sample_rate=1.0,
 )
+```
+## Verify
 
+### Enqueing the jobs in `run.py`:
+
+```python
+import asyncio
+
+from arq import create_pool
+from arq.connections import RedisSettings
+
+async def main():
+    sentry_sdk.init(...)  # same as above
+    redis = await create_pool(RedisSettings())
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        r = await redis.enqueue_job("add_numbers", 1, 2)
+
+asyncio.run(main())
+```
+
+When you run `run.sh` it will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create a span for enqueing the job.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+### Job definition in `demo.py`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.arq import ArqIntegration
+
+sentry_sdk.init(...)  # same as above
 
 async def add_numbers(ctx, a, b):
+    1/0 # raises an error!
     return a + b
-
 
 class WorkerSettings:
     functions = [add_numbers]
 ```
 
-Running the jobs in `run.py`:
+When you run a worker with `arq demo.WorkerSettings` it will create a transaction called `add_numbers` in the Performance section of [sentry.io](https://sentry.io), and will also create and issue in Sentry and connect it to the transaction.
 
-```python
-import asyncio
-import sentry_sdk
-from sentry_sdk.integrations.arq import ArqIntegration
-from sentry_sdk.tracing import TRANSACTION_SOURCE_COMPONENT
-
-
-async def main():
-    sentry_sdk.init(
-        dsn="...",
-        integrations=[
-            ArqIntegration(),
-        ],
-        traces_sample_rate=1.0,
-    )
-
-    redis = await create_pool(RedisSettings())
-
-    with sentry_sdk.start_transaction(name="testing_arq_jobs", source=TRANSACTION_SOURCE_COMPONENT):
-        r = await redis.enqueue_job("download_content", 1, 2)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Supported Versions
 
