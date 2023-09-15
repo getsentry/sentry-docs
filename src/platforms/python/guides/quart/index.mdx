@@ -3,18 +3,14 @@ title: Quart
 description: "Learn about using Sentry with Quart."
 ---
 
-The Quart integration adds support for the [Quart Web Framework](https://gitlab.com/pgjones/quart). We support Quart versions 0.16.1 and higher.
-
-Requires `sentry-sdk` version `1.5.2` or higher.
-
-A Python version of 3.7 or higher is also required.
+The Quart integration adds support for the [Quart Web Framework](https://gitlab.com/pgjones/quart).
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
+Install `sentry-sdk` from PyPI with the `quart` extra:
 
 ```bash
-pip install --upgrade sentry-sdk
+pip install --upgrade sentry-sdk[quart]
 ```
 
 ## Configure
@@ -24,24 +20,43 @@ To configure the SDK, initialize it with the integration before or after your ap
 <SignInNote />
 
 ```python
+from quart import Quart
+
 import sentry_sdk
 from sentry_sdk.integrations.quart import QuartIntegration
-from quart import Quart
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         QuartIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 
 app = Quart(__name__)
 ```
+
+# Verify
+
+```python
+from quart import Quart
+
+sentry_sdk.init(...)  # same as above
+
+app = Quart(__name__)
+
+@app.route("/")
+async def hello():
+    1/0  # raises an error
+    return {"hello": "world"}
+
+app.run()
+```
+When you point your browser to [http://localhost:5000/](http://localhost:8000/) a transaction in the Performance section of [sentry.io](https://sentry.io) will be created. Additionally an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -54,3 +69,8 @@ app = Quart(__name__)
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
 - Logging with any logger will create breadcrumbs when the [Logging](/platforms/python/guides/logging/) integration is enabled (done by default).
+
+## Supported Versions
+
+- Quart: 0.16.1+
+- Python: 3.7+
