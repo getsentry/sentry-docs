@@ -54,7 +54,6 @@ Sentry.onLoad(function() {
         unmask: ['.hover-card-link'],
       }),
     ],
-    release: '',
     tracesSampleRate: ${sentryEnvironment === 'development' ? 0 : 1},
     replaysSessionSampleRate: ${sentryEnvironment === 'development' ? 0 : 0.1},
     replaysOnErrorSampleRate: ${sentryEnvironment === 'development' ? 0 : 1},
