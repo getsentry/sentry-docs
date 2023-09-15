@@ -60,7 +60,7 @@ const Content = styled.div`
 
 interface FeedbackSuccessMessageProps extends React.HTMLAttributes<HTMLDivElement> {
   show: boolean;
-};
+}
 
 export function FeedbackSuccessMessage({show, ...props}: FeedbackSuccessMessageProps) {
   return (
