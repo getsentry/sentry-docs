@@ -36,28 +36,14 @@ To view more details, click on a query from the table to open its **Query Summar
 
 ### Query Parameterization
 
-Your queries might not look exactly the same! Click to see details of the query
+In some cases, Sentry processes queries and simplifies them to improve readability. For example:
 
-e.g.,
+- Table names are removed from column selections if possible (e.g., `SELECT "users"."name", "users"."id", "users.age" FROM users` becomes `SELECT name, id, age FROM users`)
+- Long lists of `SELECT` arguments are collapsed (e.g., `SELECT id, name, age, city, country, phone FROM users` becomes `SELECT .. FROM users`)
+- Long lists of `VALUES` arguments are collapsed (e.g., `INSERT INTO users VALUES (%s %s %s %s), (%s %s %s %s)` becomes `INSERT INTO users VALUES ..`)
+- `CASE / WHEN` statements are collapsed
 
-```sql
-SELECT "users"."id", "users.first_name", "users.last_name"
-FROM "users"
-LIMIT 21
-```
-
-becomes
-
-```sql
-SELECT ..
-FROM users
-LIMIT 21
-```
-
-- removing parameters
-- collapsing long lists of columns
-- collapsing long lists of `INSERT` values
-- removing table names from the query
+You can see the full query by hovering on a truncated description, or clicking it to see its Query Summary page.
 
 ### What is Time Spent
 
