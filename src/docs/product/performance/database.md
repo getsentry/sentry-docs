@@ -8,7 +8,7 @@ If your application queries a database, the **Performance** page surfaces the hi
 
 The database widget and pages are only available for backend projects using up-to-date SDK versions. The data shown is pulled from `db` and `db.sql` spans.
 
-- link to `sentry-basics/tracing/distributed-tracing` for help
+- there's a sidebar link to "Database" under "Performance" now, that's another way to access the module
 
 ## Database Page
 
