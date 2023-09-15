@@ -26,17 +26,14 @@ To configure the SDK, initialize it before creating any of PyMongo's MongoClient
 import sentry_sdk
 from sentry_sdk.integrations.pymongo import PyMongoIntegration
 
-
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         PyMongoIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 ```
 
@@ -47,6 +44,29 @@ In the future, we will make this auto-enabling, so you won't need to add the `Py
 automatically.
 
 </Note>
+
+## Verify
+
+```python
+import pymongo
+
+def main():
+    sentry_sdk.init(...)  # same as above
+    client = pymongo.MongoClient(DATABASE_HOST, DATABASE_PORT)
+
+    db = client["sentry_test_db"]
+    collection = db["sentry_test"]
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        collection.insert_one({"test": "sentry"})
+        collection.find_one({"test": "sentry"})
+
+main()
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the database operations.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
