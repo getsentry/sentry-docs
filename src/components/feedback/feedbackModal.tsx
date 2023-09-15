@@ -164,7 +164,7 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
 
   // Reset on close
   useEffect(() => {
-    let timeoutId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     if (!open) {
       timeoutId = setTimeout(() => {
