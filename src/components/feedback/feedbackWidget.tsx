@@ -5,10 +5,6 @@ import {FeedbackModal} from './feedbackModal';
 import {FeedbackSuccessMessage} from './feedbackSuccessMessage';
 import {sendFeedbackRequest} from './sendFeedbackRequest';
 
-const replay = window.Sentry?.getCurrentHub()
-  ?.getClient()
-  ?.getIntegration(window.Sentry?.Replay);
-
 interface FeedbackForm {
   comment: string;
   email: string;
@@ -47,6 +43,10 @@ export function FeedbackWidget() {
   }, [showSuccessMessage]);
 
   const handleSubmit = (data: FeedbackForm) => {
+    const replay = window.Sentry?.getCurrentHub()
+      ?.getClient()
+      ?.getIntegration(window.Sentry?.Replay);
+
     // Prepare session replay
     replay?.flush();
     const replayId = replay?.getReplayId();
