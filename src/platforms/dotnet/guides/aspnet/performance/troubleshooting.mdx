@@ -1,0 +1,31 @@
+---
+title: Troubleshooting
+sidebar_order: 100
+description: "Learn more about how to troubleshoot performance issues with the ASP.NET SDK."
+---
+
+## Transactions get grouped together as `GET /*/*.`
+
+The SDK creates the transaction name as follows
+
+```csharp
+var method = httpContext.Request.HttpMethod;
+var path = httpContext.Request.Path;
+
+var transactionName = $"{method} {path}";
+
+// Since the name is derived from the path and potentially contains identifiers it is marked as such
+transactionContext.NameSource = TransactionNameSource.Url;
+```
+
+Since the `URL` might contain potential identifiers these transactions have their name stripped.
+It is possible to work around this and still rely on automatic performance instrumentation you can access the transaction and set the `Name` and `NameSource` yourself.
+
+```csharp
+if (SentrySdk.GetSpan()?.GetTransaction() is TransactionTracer transactionTracer)
+{
+    transactionTracer.NameSource = TransactionNameSource.Custom;
+    transactionTracer.Name = "my_transaction_name";
+}
+
+```
