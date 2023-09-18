@@ -8,24 +8,31 @@ description: "Learn about using Sentry with RQ."
 
 The RQ integration adds support for the [RQ Job Queue System](https://python-rq.org/).
 
+## Install
+
+Install `sentry-sdk` from PyPI with the `rq` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[rq]'
+```
+
+## Configure
+
+If you have the `rq` package in your dependencies, the RQ integration will be enabled automatically when you initialize the Sentry SDK.
+
 Create a file called `mysettings.py` with the following content:
 
 <SignInNote />
 
 ```python {filename:mysettings.py}
+# mysettings.py
 import sentry_sdk
-from sentry_sdk.integrations.rq import RqIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    integrations=[
-        RqIntegration(),
-    ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
+    dsn="___PUBLIC_DSN___",
 )
 ```
 
@@ -34,32 +41,25 @@ Start your worker with:
 ```shell
 rq worker \
     -c mysettings \  # module name of mysettings.py
-    --sentry-dsn=""  # only necessary for RQ < 1.0
+    --sentry-dsn="___PUBLIC_DSN___"  # only necessary for RQ < 1.0
 ```
 
 The integration will automatically report errors from all RQ jobs.
 
 Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your jobs are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
-In addition, make sure that **`init` is called only once** in your app. For example, if you have a Flask app and a worker that depends on the app, we recommend initializing Sentry with a single configuration that is suitable for Flask and RQ, as in:
+In addition, make sure that **`init` is called only once** in your app. For example, if you have a `Flask` app and a worker that depends on the app, we recommend only initializing Sentry once. Note that because the Flask integration is enabled automatically, you don't need to change the configuration shown above.
 
 <SignInNote />
 
 ```python {filename:app.py}
+# app.py
 import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-from sentry_sdk.integrations.rq import RqIntegration
 
 sentry_sdk.init(
     dsn=___PUBLIC_DSN___,
-    integrations=[
-        FlaskIntegration(),
-        RqIntegration(),
-    ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
 ```
@@ -67,12 +67,76 @@ sentry_sdk.init(
 The worker configuration `mysettings.py` then becomes:
 
 ```python {filename:mysettings.py}
+# mysettings.py
 # This import causes the Sentry SDK to be initialized
 import app
 ```
+
+## Verify
+
+To verify, create a `main.py` script that enqueues a function in RQ, then start an RQ worker to run the function:
+
+### Job definition:
+
+```python {filename:jobs.py}
+# jobs.py
+def hello(name):
+    1/0  # raises an error
+    return "Hello %s!" % name
+```
+
+### Settings for worker
+
+```python {filename:mysettings.py}
+# mysettings.py
+import sentry_sdk
+
+# Sentry configuration for RQ worker processes
+sentry_sdk.init(
+    dsn=___PUBLIC_DSN___,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+)
+```
+
+### Main Python Script
+
+```python {filename:main.py}
+# main.py
+from redis import Redis
+from rq import Queue
+
+from jobs import hello
+
+import sentry_sdk
+
+# Sentry configuration for main.py process
+sentry_sdk.init(
+    dsn=___PUBLIC_DSN___,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+)
+
+q = Queue(connection=Redis())
+with sentry_sdk.start_transaction(name="testing_sentry"):
+    result = q.enqueue(hello, "World")
+```
+
+When you run `python main.py` a transaction named `testing_sentry` will be created in the Performance section of [sentry.io](https://sentry.io) and spans for the enqueueing will be created.
+
+If you run the RQ worker with `rq worker -c mysettings`, a transaction for the execution of `hello()` will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## The `--sentry-dsn` CLI option
 
 Passing `--sentry-dsn=""` to RQ forcibly disables [RQ's shortcut for using Sentry](https://python-rq.org/patterns/sentry/). For RQ versions before 1.0 this is necessary to avoid conflicts, because back then RQ would attempt to use the `raven` package instead of this SDK. Since RQ 1.0 it's possible to use this CLI option and the associated RQ settings for initializing the SDK.
 
 We still recommend against using those shortcuts because it would be harder to provide options to the SDK at a later point. See [the GitHub issue about RQ's Sentry integration](https://github.com/rq/rq/issues/1003) for discussion.
+
+## Supported Versions
+
+- RQ: 0.6+
+- Python: 2.7+ (RQ 0.6+), 3.5+ (RQ 1.4+)
