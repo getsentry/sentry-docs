@@ -4,11 +4,15 @@ description: "Learn about the Socket integration and how it adds support network
 sidebar_order: 90
 ---
 
-Use this integration to create spans for dns resolves and connection creations.
+Use this integration to create spans for DNS resolves and socket connection creations.
 
 ## Install
 
-`socket` is included by default in CPython
+Install `sentry-sdk`` from PyPI.
+
+```bash
+pip install --upgrade 'sentry-sdk'
+```
 
 ## Configure
 
@@ -22,11 +26,33 @@ from sentry_sdk.integrations.socket import SocketIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         SocketIntegration(),
     ],
 )
 ```
+
+## Verify
+
+```python
+import socket
+
+def main():
+    sentry_init(...)  # same as above
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        timeout = 10
+        socket.getaddrinfo("sentry.io", 443)
+        socket.create_connection(("sentry.io", 443), timeout, None)
+main()
+```
+
+This example will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the socket commands.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
 
 ## Supported Versions
 
