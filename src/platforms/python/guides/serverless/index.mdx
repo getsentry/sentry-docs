@@ -5,6 +5,8 @@ redirect_from:
 description: "Learn about using Sentry's Python SDK for a serverless environment."
 ---
 
+The Serverless integration adds support for the [Serverless Framework](https://www.serverless.com/).
+
 It is recommended to use an integration for your particular serverless environment if available, as those are easier to use and capture more useful information:
 
 - <Link to="/platforms/python/guides/gcp-functions">
@@ -13,6 +15,16 @@ It is recommended to use an integration for your particular serverless environme
 - <Link to="/platforms/python/guides/aws-lambda">AWS Lambda Functions</Link>
 
 If you use a serverless provider not directly supported by the SDK, you can use this generic integration.
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash
+pip install --upgrade 'sentry-sdk'
+```
+
+## Configure
 
 Apply the `serverless_function` decorator to each function that might throw errors:
 
@@ -23,12 +35,10 @@ import sentry_sdk
 from sentry_sdk.integrations.serverless import serverless_function
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
+    dsn="___PUBLIC_DSN___",
 )
 
 @serverless_function
@@ -36,9 +46,19 @@ def my_function(...): ...
 ```
 
 Use the generic integration by calling the `serverless_function` decorator.
-Decorators wrap a function and modify its behavior. Then, deploy and test the
-function. Check out Sentry's [sample
-apps](https://github.com/getsentry/examples) for detailed examples.
+Decorators wrap a function and modify its behavior. Then, deploy and test the function.
+
+## Verify
+
+Wrap a functions with the `serverless_function` that triggers an error:
+
+```python
+@serverless_function
+def my_function(...):
+    1/0  # raises an error
+```
+
+Now deploy your function. When you now run your function an error event will be sent to [sentry.io](https://sentry.io).
 
 ## Behavior
 
