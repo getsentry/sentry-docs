@@ -4,7 +4,7 @@
 import React from 'react';
 import {GatsbySSR} from 'gatsby';
 
-import {FeedbackWidget} from 'sentry-docs/components/feedback/feedbackWidget';
+import {FeedbackWidgetLoader} from 'sentry-docs/components/feedback/feedbackWidgetLoader';
 import {PageContext} from 'sentry-docs/components/pageContext';
 
 const sentryEnvironment = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
@@ -15,7 +15,7 @@ export const wrapPageElement: GatsbySSR['wrapPageElement'] = ({
   props: {pageContext},
 }) => (
   <PageContext.Provider value={pageContext}>
-  <FeedbackWidget />
+    <FeedbackWidgetLoader />
     {element}
   </PageContext.Provider>
 );

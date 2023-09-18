@@ -26,7 +26,7 @@ async function sendFeedback(
   return response;
 }
 
-export function FeedbackWidget() {
+export default function FeedbackWidget() {
   const [open, setOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
