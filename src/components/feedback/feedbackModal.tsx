@@ -188,7 +188,10 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     });
   };
 
-  const user = window.Sentry?.getCurrentHub().getScope()?.getUser();
+  const user =
+    typeof window.Sentry?.getCurrentHub === 'function'
+      ? window.Sentry?.getCurrentHub().getScope()?.getUser()
+      : null;
 
   return (
     <Dialog id="feedbackModal" open={open} ref={dialogRef} onClick={onClose}>
