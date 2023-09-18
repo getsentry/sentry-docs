@@ -6,68 +6,76 @@ redirect_from:
 description: "Learn about logging with Python."
 ---
 
-Calling `sentry_sdk.init()` already integrates with the logging module. It is
-equivalent to this explicit configuration:
+Adds support for Python logging.
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash
+pip install --upgrade sentry-sdk
+```
+
+## Configure
+
+The logging integrations is a default integration so it will be enabled automatically when you initialize the Sentry SDK.
 
 <SignInNote />
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+)
+```
+
+## Verify
+
+```python
+import logging
+
+def main():
+    sentry_sdk.init(...)  # same as above
+
+    logging.debug("I am ignored")
+    logging.info("I am a breadcrumb")
+    logging.error("I am an event", extra=dict(bar=43))
+    logging.exception("An exception happened")
+
+main()
+```
+- There will be an error event with the message `"I am an event"`.
+- `"I am a breadcrumb"` will be attached as a breadcrumb to that event.
+- `bar` will end up in the event's `extra` attributes.
+- `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace and everything to the Sentry Python SDK. If there's no exception, the current stack will be attached.
+- The debug message `"I am ignored"` will not surface anywhere. To capture it, you need to lower `level` to `DEBUG` (See below).
+
+## Options
+
+If you want to change the default behavior of the logging integration, you need to instantiate the integration by hand and pass it to Sentry's `init` function:
 
 ```python
 import logging
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-# All of this is already happening by default!
-sentry_logging = LoggingIntegration(
-    level=logging.INFO,        # Capture info and above as breadcrumbs
-    event_level=logging.ERROR  # Send errors as events
-)
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        sentry_logging,
-    ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
+    integrations=[
+        LoggingIntegration(
+            level=logging.INFO,        # Capture info and above as breadcrumbs
+            event_level=logging.ERROR  # Send errors as events
+        ),
+    ],
 )
 ```
-
-## Usage
-
-```python
-import logging
-logging.debug("I am ignored")
-logging.info("I am a breadcrumb")
-logging.error("I am an event", extra=dict(bar=43))
-logging.exception("An exception happened")
-```
-
-- There will be an error event with the message `"I am an event"`.
-- `"I am a breadcrumb"` will be attached as a breadcrumb to that event.
-- `bar` will end up in the event's `extra` attributes.
-- `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace and everything to the Sentry Python SDK. If there's no exception, the current stack will be attached.
-- The debug message `"I am ignored"` will not surface anywhere. To capture it, you need to lower `level` to `DEBUG`.
-
-## Ignoring a logger
-
-Sometimes a logger is extremely noisy and spams you with pointless errors. You can completely ignore that logger by calling `ignore_logger`:
-
-```python
-from sentry_sdk.integrations.logging import ignore_logger
-
-
-ignore_logger("a.spammy.logger")
-
-logger = logging.getLogger("a.spammy.logger")
-logger.error("hi")  # no error sent to sentry
-```
-
-You can also use `before-send` and `before-breadcrumb` to ignore
-only certain messages. See [_Filtering Events_](configuration/filtering/) for more information.
-
-## Options
 
 You can pass the following keyword arguments to `LoggingIntegration()`:
 
@@ -80,6 +88,22 @@ You can pass the following keyword arguments to `LoggingIntegration()`:
 The Sentry Python SDK will honor the configured level of each logger (set with `logger.setLevel(level)`). That means that you will not see any `INFO` events from a logger with the level set to `WARNING`, regardless of how you configure the integration.
 
 </Alert>
+
+## Ignoring a logger
+
+Sometimes a logger is extremely noisy and spams you with pointless errors. You can completely ignore that logger by calling `ignore_logger`:
+
+```python
+from sentry_sdk.integrations.logging import ignore_logger
+
+ignore_logger("a.spammy.logger")
+
+logger = logging.getLogger("a.spammy.logger")
+logger.error("hi")  # no error sent to sentry
+```
+
+You can also use `before-send` and `before-breadcrumb` to ignore
+only certain messages. See [_Filtering Events_](configuration/filtering/) for more information.
 
 ## Handler classes
 
