@@ -1,14 +1,14 @@
 import React from 'react';
 import {GatsbyBrowser} from 'gatsby';
 
-import {FeedbackWidget} from 'sentry-docs/components/feedback/feedbackWidget';
+import {FeedbackWidgetLoader} from 'sentry-docs/components/feedback/feedbackWidgetLoader';
 import PageContext from 'sentry-docs/components/pageContext';
 
 export const wrapPageElement: GatsbyBrowser['wrapPageElement'] = ({
   element,
   props: {pageContext},
 }) => <PageContext.Provider value={pageContext}>
-        <FeedbackWidget />
+        <FeedbackWidgetLoader />
         {element}
     </PageContext.Provider>
 
