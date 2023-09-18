@@ -18,9 +18,9 @@ pip install --upgrade 'sentry-sdk[rq]'
 
 ## Configure
 
-If you have the `rq` package in your dependencies, the RQ integration will be enabled automatically. There is nothing to do for you except initializing the Sentry SDK.
+If you have the `rq` package in your dependencies, the RQ integration will be enabled automatically when you initialize the Sentry SDK.
 
-Create a file called `mysettings.py` with the following content.
+Create a file called `mysettings.py` with the following content:
 
 <SignInNote />
 
@@ -48,7 +48,7 @@ The integration will automatically report errors from all RQ jobs.
 
 Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your jobs are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
-In addition, make sure that **`init` is called only once** in your app. For example, if you have a `Flask` app and a worker that depends on the app, we recommend initializing Sentry only once. (As the Flask integrations is also auto enabled you do not need to change the configuration shown above).
+In addition, make sure that **`init` is called only once** in your app. For example, if you have a `Flask` app and a worker that depends on the app, we recommend only initializing Sentry once. Note that because the Flask integration is enabled automatically, you don't need to change the configuration shown above.
 
 <SignInNote />
 
@@ -74,7 +74,7 @@ import app
 
 ## Verify
 
-To verify lets create a `main.py` script that enqueues a function in RQ and then start a RQ worker to run the function:
+To verify, create a `main.py` script that enqueues a function in RQ, then start an RQ worker to run the function:
 
 ### Job definition:
 
@@ -124,9 +124,9 @@ with sentry_sdk.start_transaction(name="testing_sentry"):
     result = q.enqueue(hello, "World")
 ```
 
-If you now run `python main.py` a transaction named `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) will be created and spans for the enqueueing will be created.
+When you run `python main.py` a transaction named `testing_sentry` will be created in the Performance section of [sentry.io](https://sentry.io) and spans for the enqueueing will be created.
 
-If you run the RQ worker with `rq worker -c mysettings` a transaction for the execution of `hello()` will be created. Additionally an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+If you run the RQ worker with `rq worker -c mysettings`, a transaction for the execution of `hello()` will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
