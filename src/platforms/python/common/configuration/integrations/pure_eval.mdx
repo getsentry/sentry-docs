@@ -4,15 +4,7 @@ description: "Learn about `pure_eval` and how to add it to your integrations lis
 sidebar_order: 40
 ---
 
-<!-- NOTE: Due to being in common, redirects are in vercel.json -->
-
 This integration uses [`pure_eval`](https://github.com/alexmojaki/pure_eval) to safely evaluate additional expressions in the source code and display their values alongside other local variables.
-
-<Note>
-
-**This integration is experimental.** It may be removed in minor versions.
-
-</Note>
 
 ## Install
 
@@ -39,6 +31,22 @@ sentry_sdk.init(
     ],
 )
 ```
+
+## Verify
+```python
+from types import SimpleNamespace
+
+def main():
+    sentry_sdk.init(...)  # same as above
+
+    namespace = SimpleNamespace()
+    namespace.d = {1: 2}
+    print(namespace.d[1] / 0)
+
+main()
+```
+
+When you run this example script an error will be sent to Sentry. Through the `PureEvalIntegration` the stack trace of the error will include the values of `namespace.d` and `namespace.d[1]` which would not be shown without `PureEvalIntegration`.
 
 ## Supported Versions
 
