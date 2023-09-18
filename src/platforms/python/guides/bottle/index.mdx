@@ -15,35 +15,49 @@ However the integration with the development version (0.13) doesn't work properl
 Install `sentry-sdk` from PyPI with the `bottle` extra:
 
 ```bash
-pip install --upgrade 'sentry-sdk[bottle]==0.16.2'
+pip install --upgrade 'sentry-sdk[bottle]'
 ```
 
 ## Configure
 
-To configure the SDK, initialize it with the integration before your app has been initialized:
+If you have the `bottle` package in your dependencies, the Bottle integration will be enabled automatically when you initialize the Sentry SDK.
 
 <SignInNote />
 
 ```python
+from bottle import Bottle
 import sentry_sdk
-
-from bottle import Bottle, run
-from sentry_sdk.integrations.bottle import BottleIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        BottleIntegration(),
-    ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
 
 app = Bottle()
 ```
+
+## Verify
+
+```python
+from bottle import Bottle, run
+
+sentry_sdk.init(...)  # same as above
+
+app = Bottle()
+
+@app.route('/')
+def hello():
+    1/0
+    return "Hello World!"
+
+run(app, host='localhost', port=8000)
+```
+
+When you point your browser to [http://localhost:8000/](http://localhost:8000/) a transaction in the Performance section of [sentry.io](https://sentry.io) will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -56,6 +70,26 @@ app = Bottle()
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
 ## Options
+
+If you add `BottleIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `BottleIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.bottle import BottleIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    integrations = [
+        BottleIntegration(
+          transaction_style="endpoint",
+        ),
+    ],
+)
+
+```
 
 You can pass the following keyword arguments to `BottleIntegration()`:
 
@@ -73,3 +107,8 @@ You can pass the following keyword arguments to `BottleIntegration()`:
   - `myendpoint` if you set `transaction_style="endpoint"`
 
   The default is `"endpoint"`.
+
+## Supported Versions
+
+- Bottle: 0.12.13+
+- Python: 2.7+
