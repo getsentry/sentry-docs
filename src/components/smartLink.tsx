@@ -5,12 +5,13 @@ import {marketingUrlParams} from 'sentry-docs/utils';
 
 import {ExternalLink} from './externalLink';
 
-interface Props extends Omit<React.ComponentProps<typeof Link>, 'to'> {
+interface Props {
   activeClassName?: string;
   children?: React.ReactNode;
   className?: string;
   href?: string;
   isActive?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
   remote?: boolean;
   target?: string;
   title?: string;
