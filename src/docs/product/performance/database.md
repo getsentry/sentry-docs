@@ -42,6 +42,8 @@ To view more details, click on a query from the table to open its **Query Summar
 
 ### Span Eligibility
 
+For best results, please make sure your Sentry SDK is up-to-date.
+
 Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not eligible for this feature. If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink> the database view should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - the span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database)
