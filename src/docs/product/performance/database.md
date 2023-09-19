@@ -75,6 +75,8 @@ Click on an endpoint to open its samples list. This side panel shows summary met
 
 The table shows a sample list of events, their span duration, and the difference in duration compared to average. This table sorted by longest span duration.
 
+Sentry automatically finds a variety of samples to help you investigate performance problems. The chosen events will cover the entire selected time range, as well as a range of durations (both faster than, slower than, and near the average duration). You can get a sense of the performance characteristics by comparing different sample events.
+
 These same events are also represented as triangles shown in the average duration graph above.
 
 You can generate a new list of random sample events by clicking the "Try Different Samples" button at the bottom.
