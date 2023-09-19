@@ -188,7 +188,6 @@ export function FeedbackModal({open, onClose, onSubmit}: FeedbackModalProps) {
     });
   };
 
-  const user =
   const user = window.Sentry?.getCurrentHub?.()?.getScope()?.getUser();
 
   return (
