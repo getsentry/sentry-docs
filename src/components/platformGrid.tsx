@@ -76,7 +76,7 @@ export function PlatformGrid({noGuides = false}: Props) {
                   <SmartLink to={platform.url}>
                     <PlatformIcon
                       size={82}
-                      platform={platform.key}
+                      platform={platform.icon ?? platform.key}
                       format="lg"
                       style={{maxWidth: 'none', border: 0, boxShadow: 'none'}}
                     />

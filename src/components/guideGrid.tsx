@@ -26,7 +26,7 @@ export function GuideGrid({platform, className}: Props) {
         <li key={guide.key}>
           <SmartLink to={guide.url}>
             <PlatformIcon
-              platform={guide.key}
+              platform={guide.icon ?? guide.key}
               style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
               format="sm"
             />

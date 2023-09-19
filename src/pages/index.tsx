@@ -128,7 +128,11 @@ function IndexPage() {
             {visiblePlatforms.map(platform => (
               <SmartLink to={platform.url} className="hover-card-link" key={platform.key}>
                 <div className="image-frame">
-                  <PlatformIcon size={48} platform={platform.key} format="lg" />
+                  <PlatformIcon
+                    size={48}
+                    platform={platform.icon ?? platform.key}
+                    format="lg"
+                  />
                 </div>
                 {platform.title}
               </SmartLink>
