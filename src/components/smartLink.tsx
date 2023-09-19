@@ -5,7 +5,7 @@ import {marketingUrlParams} from 'sentry-docs/utils';
 
 import {ExternalLink} from './externalLink';
 
-type Props = {
+interface Props extends Omit<React.ComponentProps<typeof Link>, 'to'> {
   activeClassName?: string;
   children?: React.ReactNode;
   className?: string;
@@ -15,7 +15,7 @@ type Props = {
   target?: string;
   title?: string;
   to?: string;
-};
+}
 
 export function SmartLink({
   to,
