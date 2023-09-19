@@ -4,6 +4,8 @@ sidebar_order: 50
 description: "Learn more about the Database view, which allows you to see your database queries, and debug their performance."
 ---
 
+The "Database" link in the sidebar opens the **Database** page.
+
 If your application queries a database, the **Performance** page surfaces the highest impact queries in the "Most Time Spent in DB Queries" widget. From there, you can click "View All" to open the **Database** page. This page provides insight into the performance of your database queries for the selected project(s). You can also click on a query from the widget to open its **Query Summary** page.
 
 The database widget and pages are only available for backend projects using up-to-date SDK versions. The data shown is pulled from `db` and `db.sql` spans.
