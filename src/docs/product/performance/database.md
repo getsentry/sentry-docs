@@ -8,8 +8,6 @@ If your application queries a database, the **Performance** page surfaces the hi
 
 The database widget and pages are only available for backend projects using up-to-date SDK versions. The data shown is pulled from `db` and `db.sql` spans.
 
-- there's a sidebar link to "Database" under "Performance" now, that's another way to access the module
-
 <Note>
 
 The Database page collects queries from your application's endpoints. Queries that run in async tasks are not shown. If a query runs in an endpoint _and_ a task, the metrics will reflect its performance within endpoints only.
