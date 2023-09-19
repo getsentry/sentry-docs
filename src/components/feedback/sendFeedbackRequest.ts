@@ -22,7 +22,12 @@ export async function sendFeedbackRequest({
   replay_id,
   url,
 }): Promise<Response | null> {
-  const hub = window.Sentry.getCurrentHub();
+  const hub = window.Sentry?.getCurrentHub();
+
+  if (!hub) {
+    return null;
+  }
+
   const client = hub.getClient();
   const scope = hub.getScope();
   const transport = client && client.getTransport();
