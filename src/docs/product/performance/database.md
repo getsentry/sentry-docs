@@ -30,16 +30,6 @@ You can also use the dropdowns above to filter the table for specific SQL comman
 
 To view more details, click on a query from the table to open its **Query Summary** page.
 
-- backend SDKs are eligible
-- only `db` and `db.sql` spans
-- you need up-to-date SDK versions (maybe I list the exact versions)
-- parameterized queries
-- you see a list of queries
-- you see the average duration of queries
-- you see a table of queries sorted by time spent
-- you can change the sorting
-- filtering by domain or by command
-
 ### Span Eligibility
 
 For best results, please make sure your Sentry SDK is up-to-date.
@@ -63,15 +53,11 @@ You can see the full query by hovering on a truncated description, or clicking i
 
 ### What is Time Spent
 
-- link to `sentry-basics/tracing/distributed-tracing` for help
-
 Every database query takes some time to execute. When an application sends a query, it waits for the database to receive the query, parse it, execute it, and return the result. In Sentry, the total time taken from sending the query to receiving the full result is called the query's "duration". The query's "time spent" is the sum of all of its durations in a given time period.
 
 For example, an application might send a query like `SELECT * FROM users LIMIT 10` every time a user calls the `/users` endpoint. The query might take anywhere from 100ms to 200ms to run, and the endpoint is called anywhere from 10 times a minute to 100 times in a minute depending on the time of day. The query's "time spent" will be the sum of all of its durations that occurred in a given time period. Another way to think about it is that the "total time" is the product of queries per minute and the average duration. In a high-throughput application, a query's time spent might be measured in weeks or months.
 
 "Time spent" is a useful way to measure a query's relative impact, compared to other queries in an application. For example, if one query's "time spent" is 7 days, and another is just 2 hours, the query with more time spent might be more impactful to fix, since even a small improvement in duration would result in a meaningful overall improvement. "Time spent" can also be a strong signal that something is wrong. Queries that suddenly start taking up more time are often a sign of a problem.
-
-- we'll want to link to this section from the product! It's likely that people will land here from the Database page wondering what "Time Spent" means _exactly_, so this section needs to be descriptive
 
 ## Query Summary Page
 
@@ -82,14 +68,6 @@ At the top of the page, queries per minute, average duration, and time spent are
 At the bottom, you can find a list of endpoints the query is found in, sorted by the most time your application spent in that span.
 
 If you want to investigate a specific endpoint, click on it to open a sidebar showing some sample events.
-
-- query details
-- queries per minute
-- average duration
-- time spent
-- QPM
-- average duration
-- Endpoints List
 
 ## Sample List
 
@@ -103,17 +81,7 @@ You can generate a new list of random sample events by clicking the "Try Differe
 
 From sample list, you can drill down to specific good, average, or bad examples of a given query within a given endpoint. Click on an event ID to drill into the query's span details within the span waterfall of the **Event Details** page.
 
-- QPM
-- Avg Duration
-- Duration Chart
-- Samples above, below, etc.
-- Links to specific events
-
 ## UI Walkthrough
 
 - Add arcade
 - Also should add screenshots for each view in the appropriate sections
-
-## Troubleshooting
-
-- Any troubleshooting info we want to add (custom instrumentation, cardinality issues)
