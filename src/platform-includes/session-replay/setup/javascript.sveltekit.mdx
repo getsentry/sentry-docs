@@ -1,0 +1,47 @@
+On your client-side SvelteKit app, add:
+
+```javascript
+import * as Sentry from "@sentry/sveltekit";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
+
+  // If the entire session is not sampled, use the below sample rate to sample
+  // sessions when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+
+  integrations: [
+    new Sentry.Replay({
+      // Additional SDK configuration goes in here, for example:
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+  ],
+});
+```
+
+With the settings above, session replays with errors are always captured.
+You can verify that with the following:
+
+```javascript
+myUndefinedFunction();
+```
+
+### Lazy-loading Replay
+
+Once you've added the integration, Replay will start automatically. If you don't want to start it immediately (lazy-load it), you can use `addIntegration`:
+
+```js
+Sentry.init({
+  // Note, Replay is NOT instantiated below:
+  integrations: [],
+});
+
+// Sometime later
+const { getCurrentHub, Replay } = await import("@sentry/sveltekit");
+getCurrentHub().getClient().addIntegration(new Replay());
+```
