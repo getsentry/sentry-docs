@@ -10,6 +10,12 @@ The database widget and pages are only available for backend projects using up-t
 
 - there's a sidebar link to "Database" under "Performance" now, that's another way to access the module
 
+<Note>
+
+The Database page collects queries from your application's endpoints. Queries that run in async tasks are not shown. If a query runs in an endpoint _and_ a task, the metrics will reflect its performance within endpoints only.
+
+</Note>.
+
 ## Database Page
 
 The **Database** page gives you a quick overview of your application's database performance. You can use this page as a starting point to investigate potential problem queries and drill down to better understand how various queries are affecting your app's performance.
