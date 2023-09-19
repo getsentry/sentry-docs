@@ -1,4 +1,4 @@
-import React, {lazy} from 'react';
+import React, {Fragment, Suspense, lazy} from 'react';
 
 const FeedbackWidget = lazy(() => import('./feedbackWidget'));
 
@@ -9,12 +9,12 @@ export function FeedbackWidgetLoader() {
   const isSSR = typeof window === 'undefined';
 
   return (
-    <React.Fragment>
+    <Fragment>
       {!isSSR && (
-        <React.Suspense fallback={<div />}>
+        <Suspense fallback={<div />}>
           <FeedbackWidget />
-        </React.Suspense>
+        </Suspense>
       )}
-    </React.Fragment>
+    </Fragment>
   );
 }
