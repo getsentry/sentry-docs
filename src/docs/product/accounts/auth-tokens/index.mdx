@@ -4,60 +4,63 @@ sidebar_order: 45
 description: "Learn about the different kinds of Auth Tokens Sentry provides, and when to use which."
 ---
 
-Sentry provides different ways to programatically interact with Sentry. You can use _Auth Tokens_ to authenticate with the Sentry API, but there are also other tooks that require Auth Tokens for authentication under the hood, like [Sentry CLI](/product/cli/) or tools for [source map uploads](/platforms/javascript/sourcemaps/uploading/).
 
-## What Are Auth Tokens?
-
-Auth Tokens (short for _Authentication Tokens_) are a way to authenticate with Sentry. They are similar to passwords, but are designed for programmatic interaction with Sentry. Some examples of what you would use Auth Tokens for include:
+Auth tokens (short for _authentication tokens_) are a way to authenticate with Sentry. They are similar to passwords but are designed for programmatic interaction with Sentry. Some examples of what you would use auth tokens for include:
 
 - Uploading Source Maps during your CI build
 - Using [Sentry CLI](/product/cli/) to interact with Sentry
 - Using the [Sentry API](/api/auth/)
 
-Different kinds of Auth Tokens contain access rights for different things. Under the hood, all Auth Tokens are tied to [Permissions & Scopes](/api/permissions/), which define all the things the Auth Token grants access for.
+Each auth token is created with a certain set of permissions and scopes which are mapped to the Sentry API's [Permissions & Scopes](/api/permissions/). Some types of auth tokens have set permissions that can't be edited, while others can be customized upon token creation and edited later.
 
-Ideally, an Auth Token is only used once. This has the benefit that if the place you stored the Auth Token in is compromised, you can revoke this Auth Token without impacting any other place.
+We recommend using a separate auth token for each use case. For example, you would use a different auth token to upload source maps than the one you use with Sentry CLI. This has the benefit that if an auth token is compromised, you can revoke that auth token without impacting the rest of your workflow.
 
-## What Types of Auth Tokens Are There in Sentry?
+## Types of Auth Tokens
 
-There are three key types of Auth Tokens in Sentry:
+There are three key types of auth tokens in Sentry:
 
 - [Organization Auth Tokens](#organization-auth-tokens):
-  These tokens are bound to an Organization, and have access to all Projects within that Organization. They have a limited set of permissions, and are designed to be used in CI environments as well as for Sentry CLI.
+  These tokens are bound to an organization, and have access to all projects within that organization. They have a limited set of permissions and are designed to be used in CI environments and with Sentry CLI.
 
-* [User Auth Tokens](#user-auth-tokens):
-  These tokens are bound to a User, and have access to all Organizations and Projects that User has access to.
+- [User Auth Tokens](#user-auth-tokens):
+  These tokens are bound to a user, and have access to all organizations and projects that user has access to.
 
-* [Internal Integrations](#internal-integrations):
-  These tokens are bound to an Organization, and have access to all Projects within that Organization. They can be created with a custom set of permissions, and are designed to be used in cases where Organization Auth Tokens do not have sufficient access rights.
+- [Internal Integrations](#internal-integrations):
+  These tokens are bound to an organization, and have access to all projects within that organization. They can be created with a custom set of permissions, and are designed to be used in cases where organization auth tokens don't have sufficient access rights.
 
-## When Should I Use Which?
+### When Should I Use Which?
 
-For most scenarios, we recommend to use [Organization Auth Tokens](#organization-auth-tokens). They are designed to be used in CI environments, and have a limited set of permissions. This means that if the place you stored the Auth Token in is compromised, the attacker can only do limited damage.
+For most scenarios, we recommend using [Organization Auth Tokens](#organization-auth-tokens). They are designed to be used in CI environments and have a limited set of permissions. This means that if the place you stored the auth token is compromised, the attacker can only do limited damage.
 
-They are also designed to be easily usable, they will work for all regular CI-related tasks out of the box.
+Organization auth tokens permissions aren't customizable. They are set to allow most CI-related tasks, without any unnecessary permissions.
 
-[User Auth Tokens](#user-auth-tokens) should be used when interacting with the Sentry API on behalf of a user. For example, if you want to fetch all issues for a user, you would use a User Auth Token. You should avoid using User Auth Tokens for e.g. CI processes, as due to their User-bound nature, if the user who created the token is ever removed from the Organization, the token will stop working.
+[User Auth Tokens](#user-auth-tokens) should be used to interact with the Sentry API on behalf of a user. For example, to fetch all issues for a user, you would use a User auth token. We don't recommend using User auth tokens for CI tasks because if the user who created the token is removed from the Organization, the token will stop working.
 
-[Internal Integrations](#internal-integrations) should be used when you need full API access (which the Organization Auth Tokens cannot grant), and you want to interact with the Sentry API on behalf of an Organization. For example, if you want to create a new Project, you would use an Internal Integration.
+User auth token permissions are customizable and editable. 
 
-## Organization Auth Tokens
+[Internal Integrations](#internal-integrations) should be used when you need full API access (which the organization auth tokens cannot grant), and you want to interact with the Sentry API on behalf of an organization. For example, to programmatically create a new project, you would use an internal integration.
 
-[Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) can be created in the Sentry UI under **Settings > Developer Settings > Auth Tokens**.
+Permissions for auth tokens created as part of an internal integration are customizable and editable.
+
+### Organization Auth Tokens
+
+[Organization auth tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) can be created in [sentry.io](https://sentry.io) on the **Auth Tokens** page under  **Settings > Developer Settings > Auth Tokens**.
 
 ![](org-auth-tokens-overview.png)
 
-Each Auth Token has a user-defined name (which you can also update at a later point). This name is only used for display purposes, and does not have any impact on the Auth Token itself - it helps to identify an Auth Token e.g. in the case you want to revoke it later.
+They can also be generated on certain pages of Sentry's docs if you're signed in, and by using the Sentry Wizard to configure uploading source maps.
 
-For security reasons, Organization Auth Tokens are only visible once right after you created them. If you lose the Auth Token, you will have to create a new one. Because of this, you cannot see the token either on the overview page or on the token detail page - you can only see the last characters of the token, as a help to identify a token.
+Organization auth token names are generated for you unless you create the token through the Sentry UI. This name is only used for display purposes - it helps to identify an auth token in case you want to revoke it later. You can change the name for an organization auth token at [sentry.io](https://sentry.io) on the **Edit Auth Token** page under  **Settings > Developer Settings > Auth Tokens**.
 
-Any user can create Organization Auth Tokens for any of their Organizations. Since Organization Auth Tokens are designed to have limited access, there is very limited abuse potential through them. Since any user (not only e.g. organization owners) may have to setup CI and similar processes, any user can create Organization Auth Tokens in order to keep the process as frictionless as possible.
+For security reasons, organization auth tokens are only visible *once*, right after you create them. If you lose the auth token, you will have to create a new one. This means you can't see the full token on the overview page or on the token detail page, you can only see the last characters of the token to help identify it.
+
+Any user can create organization auth tokens for any of their organizations. This allows any user (not only organization owners) to configure a Sentry SDK and set up CI processes by creating and using organization auth tokens. Since organization auth tokens have limited access, there is limited potential for abuse.
 
 ![](org-auth-token-create.png)
 
-All owners of the Organization will receive a security email when a new Organization Auth Token is created, and can revoke the token at any point. _Only_ Organization owners & managers can revoke Organization Auth Tokens.
+All owners of the organization will receive a security email when a new organization auth token is created and can revoke these tokens at any point. _Only_ organization owners & managers can revoke organization auth tokens .
 
-## User Auth Tokens
+### User Auth Tokens
 
 [User Auth Tokens](https://sentry.io/settings/account/api/auth-tokens/) can be created in the Sentry UI in the Account dropdown in the top left, under **User Auth Tokens**:
 
