@@ -8,34 +8,34 @@ description: "Learn about using Sentry with Celery."
 
 The Celery integration adds support for the [Celery Task Queue System](https://docs.celeryq.dev/).
 
-Just add `CeleryIntegration()` to your `integrations` list:
+## Install
+
+Install `sentry-sdk` from PyPI with the `celery` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[celery]'
+```
+
+## Configure
+
+If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
+
+Make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
 <SignInNote />
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
 
 sentry_sdk.init(
     dsn='___PUBLIC_DSN___',
-    integrations=[
-        CeleryIntegration(),
-    ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
 ```
 
-Additionally, the Sentry Python SDK will set the transaction on the event to the task name, and it will improve the grouping for global Celery errors such as timeouts.
-
-The integration will automatically report errors from all celery jobs.
-
-Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
-
-## Standalone Setup
+### Standalone Setup
 
 If you're using Celery standalone, there are two ways to set this up:
 
@@ -51,16 +51,16 @@ If you're using Celery standalone, there are two ways to set this up:
   #@signals.worker_init.connect
   @signals.celeryd_init.connect
   def init_sentry(**_kwargs):
-      sentry_sdk.init(dsn="...")
+      sentry_sdk.init(...)  # same as above
   ```
 
-## Setup With Django
+### Setup With Django
 
 If you're using Celery with Django in a conventional setup, have already initialized the SDK in [your `settings.py` file](/platforms/python/guides/django/#configure), and have Celery using the same settings with [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), you don't need to initialize the SDK separately for Celery.
 
 ## Verify
 
-To verify if your SDK is initialized on worker start, you can pass `debug=True` to see extra output when the SDK is initialized. If the output appears during worker startup and not only after a task has started, then it's working properly.
+To verify if your SDK is initialized on worker start, you can pass `debug=True` to `sentry_sdk.init()` to see extra output when the SDK is initialized. If the output appears during worker startup and not only after a task has started, then it's working properly.
 
 <Alert level="info" title="Note on distributed tracing">
 
@@ -156,3 +156,8 @@ my_task_b.apply_async(
 
 # Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
 ```
+
+## Supported Versions
+
+- Celery: 3.0+
+- Python: 2.7+ (Celery 3+), 3.6+ (Celery 5.0+), 3.7+ (Celery 5.1+)

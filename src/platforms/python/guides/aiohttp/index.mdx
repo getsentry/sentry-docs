@@ -5,16 +5,14 @@ redirect_from:
 description: "Learn about using Sentry with AIOHTTP."
 ---
 
-The AIOHTTP integration adds support for the [AIOHTTP-Server Web
-Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
-3.6 or greater is required.
+The AIOHTTP integration adds support for the [AIOHTTP-Server Web Framework](https://docs.aiohttp.org/en/stable/web.html).
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
+Install `sentry-sdk` from PyPI with the `aiohttp` extra:
 
 ```bash
-pip install --upgrade sentry-sdk
+pip install --upgrade sentry-sdk[aiohttp]
 ```
 
 If you're on Python 3.6, you also need the `aiocontextvars` package:
@@ -25,34 +23,41 @@ pip install --upgrade aiocontextvars
 
 ## Configure
 
+If you have the `aiohttp` package in your dependencies, the AIOHTTO integration will be enabled automatically when you initialize the Sentry SDK.
+
 <SignInNote />
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[
-        AioHttpIntegration(),
-    ],
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
     traces_sample_rate=1.0,
 )
+```
 
+## Verify
+
+```python
 from aiohttp import web
 
+sentry_sdk.init(...)  # same as above
+
 async def hello(request):
-      return web.Response(text="Hello, world")
+    1/0  # raises an error
+    return web.Response(text="Hello, world")
 
 app = web.Application()
 app.add_routes([web.get('/', hello)])
 
 web.run_app(app)
 ```
+
+When you point your browser to [http://localhost:8080/](http://localhost:8080/) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -70,7 +75,7 @@ web.run_app(app)
 
 ## Options
 
-You can pass the following keyword arguments to `AioHttpIntegration()`:
+By adding `AioHttpIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `AioHttpIntegration` to change its behavior:
 
 ```python
 import sentry_sdk
@@ -86,6 +91,8 @@ sentry_sdk.init(
 )
 ```
 
+You can pass the following keyword arguments to `AioHttpIntegration()`:
+
 ### `transaction_style`
 
 Configure the way Sentry names transactions:
@@ -94,3 +101,8 @@ Configure the way Sentry names transactions:
 - `<module_name>.hello` if you set `transaction_style="handler_name"`
 
 The default is `"handler_name"`.
+
+## Supported Versions
+
+- AIOHTTP: 3.5+
+- Python: 3.7+

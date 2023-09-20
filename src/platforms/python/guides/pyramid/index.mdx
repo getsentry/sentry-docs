@@ -6,7 +6,7 @@ redirect_from:
 description: "Learn about using Sentry with Pyramid."
 ---
 
-The Pyramid integration adds support for the [Pyramid Web Framework](https://trypyramid.com/). It requires Pyramid 1.6 or later.
+The Pyramid integration adds support for the [Pyramid Web Framework](https://trypyramid.com/).
 
 ## Install
 
@@ -24,19 +24,16 @@ To configure the SDK, initialize it with the integration before or after your ap
 
 ```python
 import sentry_sdk
-
 from sentry_sdk.integrations.pyramid import PyramidIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
     integrations=[
         PyramidIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 
 from pyramid.config import Configurator
@@ -44,6 +41,31 @@ from pyramid.config import Configurator
 with Configurator() as config:
     # ...
 ```
+
+## Verify
+
+```python
+from wsgiref.simple_server import make_server
+from pyramid.config import Configurator
+from pyramid.response import Response
+
+sentry_sdk.init(...)  # same as above
+
+def hello_world(request):
+    1/0  # raises an error
+    return Response('Hello World!')
+
+if __name__ == '__main__':
+    with Configurator() as config:
+        config.add_route('hello', '/')
+        config.add_view(hello_world, route_name='hello')
+        app = config.make_wsgi_app()
+
+    server = make_server('0.0.0.0', 6543, app)
+    server.serve_forever()
+```
+
+When you point your browser to [http://localhost:6543/](http://localhost:6543/) an error event will be sent to [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -79,3 +101,8 @@ You can pass the following keyword arguments to `PyramidIntegration()`:
   - `myroute` if you set `transaction_style="route_name"`
 
   The default is `"route_name"`.
+
+## Supported Versions
+
+- Pyramid: 1.6+
+- Python: 2.7+

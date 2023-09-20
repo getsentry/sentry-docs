@@ -4,6 +4,7 @@
 import React from 'react';
 import {GatsbySSR} from 'gatsby';
 
+import {FeedbackWidgetLoader} from 'sentry-docs/components/feedback/feedbackWidgetLoader';
 import {PageContext} from 'sentry-docs/components/pageContext';
 
 const sentryEnvironment = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
@@ -12,7 +13,12 @@ const sentryLoaderUrl = process.env.SENTRY_LOADER_URL;
 export const wrapPageElement: GatsbySSR['wrapPageElement'] = ({
   element,
   props: {pageContext},
-}) => <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>;
+}) => (
+  <PageContext.Provider value={pageContext}>
+    <FeedbackWidgetLoader />
+    {element}
+  </PageContext.Provider>
+);
 
 export const onPreRenderHTML: GatsbySSR['onPreRenderHTML'] = ({getHeadComponents}) => {
   if (process.env.NODE_ENV !== 'production') {

@@ -1,0 +1,112 @@
+---
+title: Flask
+redirect_from:
+  - /platforms/python/flask/
+description: "Learn about using Sentry with Flask."
+---
+
+The Flask integration adds support for the [Flask Web Framework](https://flask.palletsprojects.com).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `flask` extra:
+
+```bash
+pip install --upgrade "sentry-sdk[flask]"
+```
+
+## Configure
+
+If you have the `flask` package in your dependencies, the Flask integration will be enabled automatically when you initialize the Sentry SDK.
+
+<SignInNote />
+
+```python
+from flask import Flask
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+)
+
+app = Flask(__name__)
+```
+
+<Note>
+
+Our Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
+
+</Note>
+
+## Verify
+
+```python
+from flask import Flask
+
+sentry_sdk.init(...)  # same as above
+
+app = Flask(__name__)
+
+@app.route("/")
+def hello_world():
+    1/0  # raises an error
+    return "<p>Hello, World!</p>"
+```
+
+When you point your browser to [http://localhost:5000/](http://localhost:5000/) a transaction in the Performance section of [sentry.io](https://sentry.io) will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+After initialization:
+
+- If you use `flask-login` and set `send_default_pii=True` in your call to `init`, user data (current user id, email address, username) will be attached to the event.
+- Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
+- Logs emitted by `app.logger` or _any_ logger will be recorded as breadcrumbs by the [Logging](/platforms/python/guides/logging/) integration (this integration is enabled by default).
+
+## Options
+
+If you add `FlaskIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `FlaskIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    integrations = [
+        FlaskIntegration(
+          transaction_style="url",
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `FlaskIntegration()`:
+
+- `transaction_style`:
+
+  ```python
+  @app.route("/myurl/<foo>")
+  def myendpoint():
+      return "<p>Hello, World!</p>"
+  ```
+
+  In the above code, you would set the transaction to:
+
+  - `/myurl/<foo>` if you set `transaction_style="url"`.
+  - `myendpoint` if you set `transaction_style="endpoint"`
+
+  The default is `"endpoint"`.
+
+## Supported Versions
+
+- Flask: 0.11+
+- Python: 2.7+ (Flask 0.11+), 3.6 (Flask 2.0+)
