@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 
+import {FeedbackModal} from './feedback/feedbackModal';
 import {SmartLink} from './smartLink';
 
 type GitHubCTAProps = {
@@ -27,9 +28,28 @@ export function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps) {
             Contribute to Docs
           </SmartLink>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
-          <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new/choose">
-            Report a problem
-          </SmartLink>{' '}
+          <FeedbackModal title="Report a Problem">
+            {({showModal}) => (
+              <Fragment>
+                <SmartLink
+                  to="https://github.com/getsentry/sentry-docs/issues/new/choose"
+                  onClick={e => {
+                    if (!window.Sentry?.getCurrentHub?.()) {
+                      return true;
+                    }
+
+                    // Only Stop event propagation if Sentry SDK is loaded
+                    // (i.e. feedback is supported), otherwise will send you to github
+                    e.preventDefault();
+                    showModal();
+                    return false;
+                  }}
+                >
+                  Report a problem
+                </SmartLink>{' '}
+              </Fragment>
+            )}
+          </FeedbackModal>
         </div>
       </small>
     </div>
