@@ -34,7 +34,6 @@ export function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps) {
                 <SmartLink
                   to="https://github.com/getsentry/sentry-docs/issues/new/choose"
                   onClick={e => {
-                    return true;
                     if (!window.Sentry?.getCurrentHub?.()) {
                       return true;
                     }
