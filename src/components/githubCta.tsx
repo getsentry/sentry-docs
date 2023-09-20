@@ -34,13 +34,16 @@ export function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps) {
                 <SmartLink
                   to="https://github.com/getsentry/sentry-docs/issues/new/choose"
                   onClick={e => {
-                    if (window.Sentry?.getCurrentHub?.()) {
-                      // Only Stop event propagation if Sentry SDK is loaded
-                      // (i.e. feedback is supported), otherwise will send you to github
-                      e.preventDefault();
-                      showModal();
-                      return false;
+                    return true;
+                    if (!window.Sentry?.getCurrentHub?.()) {
+                      return true;
                     }
+
+                    // Only Stop event propagation if Sentry SDK is loaded
+                    // (i.e. feedback is supported), otherwise will send you to github
+                    e.preventDefault();
+                    showModal();
+                    return false;
                   }}
                 >
                   Report a problem
