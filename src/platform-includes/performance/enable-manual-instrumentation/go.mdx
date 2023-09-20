@@ -1,14 +1,30 @@
 To instrument certain regions of your code, you can create transactions to capture them.
 
-The following example creates a transaction span to time runs of an expensive operation on items from a channel. Timing for each operation is sent to Sentry and grouped by transaction name:
+The following example creates a transaction based on an incoming request:
 
 ```go
-ctx := context.Background()
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	if hub == nil {
+		// Check the concurrency guide for more details: https://docs.sentry.io/platforms/go/concurrency/
+		hub = sentry.CurrentHub().Clone()
+		ctx = sentry.SetHubOnContext(ctx, hub)
+	}
 
-for item := range ch {
-	span := sentry.StartSpan(ctx, "doWork",
-		sentry.WithTransactionName(fmt.Sprintf("doWork: %s", item.Type)))
-	doWork(span.Context(), item) // doWork may create additional spans
-	span.Finish()
-}
+	options := []sentry.SpanOption{
+		// Set the OP based on values from https://develop.sentry.dev/sdk/performance/span-operations/
+		sentry.WithOpName("http.server"),
+		sentry.ContinueFromRequest(r),
+		sentry.WithTransactionSource(sentry.SourceURL),
+	}
+
+	transaction := sentry.StartTransaction(ctx,
+		fmt.Sprintf("%s %s", r.Method, r.URL.Path),
+		options...,
+	)
+	defer transaction.Finish()
+
+	doWork(transaction.Context());
+})
 ```
