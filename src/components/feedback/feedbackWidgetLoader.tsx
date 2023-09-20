@@ -1,4 +1,4 @@
-import React, {Fragment, Suspense, lazy} from 'react';
+import React, {Fragment, lazy, Suspense} from 'react';
 
 const FeedbackWidget = lazy(() => import('./feedbackWidget'));
 
