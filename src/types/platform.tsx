@@ -97,6 +97,10 @@ export interface PlatformConfig {
    */
   fallbackPlatform?: string;
   /**
+   * The icon to use for this platform. This is the name of the icon as defined
+   */
+  icon?: string;
+  /**
    * Keywords used for search etc.
    */
   keywords?: string[];

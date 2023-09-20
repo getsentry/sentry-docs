@@ -17,6 +17,7 @@ const query = graphql`
         title
         url
         sdk
+        icon
         caseStyle
         supportLevel
         fallbackPlatform
@@ -26,6 +27,7 @@ const query = graphql`
           name
           title
           url
+          icon
           sdk
           caseStyle
           supportLevel

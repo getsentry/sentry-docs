@@ -29,7 +29,7 @@ function BasePlatformRedirect({path = '/'}: Props) {
             <SmartLink to={`/platforms/${platform.key}${path}`}>
               <PlatformIcon
                 size={16}
-                platform={platform.key}
+                platform={platform.icon ?? platform.key}
                 style={{marginRight: '0.5rem'}}
                 format="sm"
               />

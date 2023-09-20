@@ -21,7 +21,7 @@ export function PlatformLinkWithLogo({platform, label, url}: Props) {
     <SmartLink to={url}>
       <PlatformIcon
         size={20}
-        platform={currentPlatform.key}
+        platform={currentPlatform.icon ?? currentPlatform.key}
         style={{
           marginRight: '0.5rem',
           marginTop: '0.2rem',
