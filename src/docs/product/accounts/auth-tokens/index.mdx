@@ -21,11 +21,11 @@ There are three key types of auth tokens in Sentry:
 - [Organization Auth Tokens](#organization-auth-tokens):
   These tokens are bound to an organization, and have access to all projects within that organization. They have a limited set of permissions and are designed to be used in CI environments and with Sentry CLI.
 
-- [User Auth Tokens](#user-auth-tokens):
-  These tokens are bound to a user, and have access to all organizations and projects that user has access to.
-
 - [Internal Integrations](#internal-integrations):
   These tokens are bound to an organization, and have access to all projects within that organization. They can be created with a custom set of permissions, and are designed to be used in cases where organization auth tokens don't have sufficient access rights.
+
+- [User Auth Tokens](#user-auth-tokens):
+  These tokens are bound to a user, and have access to all organizations and projects that user has access to.
 
 ### When Should I Use Which?
 
@@ -33,13 +33,13 @@ For most scenarios, we recommend using [Organization Auth Tokens](#organization-
 
 Organization auth tokens permissions aren't customizable. They are set to allow most CI-related tasks, without any unnecessary permissions.
 
-[User Auth Tokens](#user-auth-tokens) should be used to interact with the Sentry API on behalf of a user. For example, to fetch all issues for a user, you would use a User auth token. We don't recommend using User auth tokens for CI tasks because if the user who created the token is removed from the Organization, the token will stop working.
-
-User auth token permissions are customizable and editable.
-
 [Internal Integrations](#internal-integrations) should be used when you need full API access (which the organization auth tokens cannot grant), and you want to interact with the Sentry API on behalf of an organization. For example, to programmatically create a new project, you would use an internal integration.
 
 Permissions for auth tokens created as part of an internal integration are customizable and editable.
+
+[User Auth Tokens](#user-auth-tokens) should be used to interact with the Sentry API on behalf of a user. For example, to fetch all issues for a user, you would use a user auth token. We don't recommend using user auth tokens for CI tasks because if the user who created the token is removed from the Organization, the token will stop working.
+
+User auth token permissions are customizable but cannot be edited later.
 
 ### Organization Auth Tokens
 
@@ -59,6 +59,12 @@ Any user can create organization auth tokens for any of their organizations. Thi
 
 All owners of the organization will receive a security email when a new organization auth token is created and can revoke these tokens at any point. _Only_ organization owners & managers can revoke organization auth tokens .
 
+### Internal Integrations
+
+We recommend only using an internal integration when you want to interact with the Sentry API on behalf of an organization. See Sentry's API [Authentication](/api/auth/) docs for more information on how to do this.
+
+To get started, see our docs on [Internal Integrations](/product/integrations/integration-platform/).
+
 ### User Auth Tokens
 
 [User auth tokens](https://sentry.io/settings/account/api/auth-tokens/) can be created in [sentry.io](https://sentry.io) on the **User Auth Tokens** page under the Account dropdown in the top left.
@@ -76,9 +82,3 @@ Currently, you can view user auth tokens in the UI after creating them. This is 
 ![](user-auth-tokens-overview.png)
 
 We recommend only using a user auth token to interact with the Sentry API on behalf of a user. See Sentry's API [Authentication](/api/auth/) docs for more information on how to do this.
-
-### Internal Integrations
-
-We recommend only using an internal integration when you want to interact with the Sentry API on behalf of an organization. See Sentry's API [Authentication](/api/auth/) docs for more information on how to do this.
-
-See our docs on [Internal Integrations](/product/integrations/integration-platform/) to learn more.
