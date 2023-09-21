@@ -32,31 +32,30 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
 
   return (
     <Form ref={formRef} onSubmit={handleSubmit}>
-      <FlexColumns>
-        <Label htmlFor="sentry-feedback-name">
-          Your Name
-          <Input
-            type="text"
-            id="sentry-feedback-name"
-            name="name"
-            placeholder="Anonymous"
-            defaultValue={user?.username}
-          />
-        </Label>
-        <Label htmlFor="sentry-feedback-email">
-          Your Email
-          <Input
-            type="text"
-            id="sentry-feedback-email"
-            name="email"
-            placeholder="you@test.com"
-            defaultValue={user?.email}
-          />
-        </Label>
-      </FlexColumns>
+      <Label htmlFor="sentry-feedback-name">
+        Name
+        <Input
+          type="text"
+          id="sentry-feedback-name"
+          name="name"
+          placeholder="Anonymous"
+          defaultValue={user?.username}
+        />
+      </Label>
+      <Label htmlFor="sentry-feedback-email">
+        Email
+        <Input
+          type="text"
+          id="sentry-feedback-email"
+          name="email"
+          placeholder="you@test.com"
+          defaultValue={user?.email}
+        />
+      </Label>
       <Label htmlFor="sentry-feedback-comment">
-        Comment
+        Description
         <TextArea
+          rows={5}
           onKeyDown={event => {
             if (event.key === 'Enter' && event.ctrlKey) {
               formRef.current.requestSubmit();
@@ -64,25 +63,25 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
           }}
           id="sentry-feedback-comment"
           name="comment"
-          placeholder="Explain what bothers you"
+          placeholder="What's the bug? What did you expect?"
         />
       </Label>
-      <ModalFooter>
+      <ButtonGroup>
+        <SubmitButton type="submit">Send Bug Report</SubmitButton>
         <CancelButton type="button" onClick={onClose}>
           Cancel
         </CancelButton>
-        <SubmitButton type="submit">Submit</SubmitButton>
-      </ModalFooter>
+      </ButtonGroup>
     </Form>
   );
 }
 
 const Form = styled.form`
-  display: flex;
+  display: grid;
   overflow: auto;
   flex-direction: column;
   gap: 16px;
-  padding: 24px;
+  padding: 0;
 `;
 
 const Label = styled.label`
@@ -93,12 +92,12 @@ const Label = styled.label`
 `;
 
 const inputStyles = css`
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(41, 35, 47, 0.13);
+  border-radius: 6px;
   font-size: 14px;
-  padding: 6px 8px;
+  padding: 6px 12px;
   &:focus {
-    outline: 1px solid rgba(108, 95, 199, 1);
     border-color: rgba(108, 95, 199, 1);
   }
 `;
@@ -109,20 +108,18 @@ const Input = styled.input`
 
 const TextArea = styled.textarea`
   ${inputStyles}
-  min-height: 64px;
   resize: vertical;
 `;
 
-const ModalFooter = styled.div`
-  display: flex;
-  justify-content: flex-end;
+const ButtonGroup = styled.div`
+  display: grid;
   gap: 8px;
   margin-top: 8px;
 `;
 
 const buttonStyles = css`
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -132,12 +129,9 @@ const buttonStyles = css`
 const SubmitButton = styled.button`
   ${buttonStyles}
   background-color: rgba(108, 95, 199, 1);
+  border-color: rgba(108, 95, 199, 1);
   color: #fff;
   &:hover {
-    background-color: rgba(88, 74, 192, 1);
-  }
-  &:focus-visible {
-    outline: 1px solid rgba(108, 95, 199, 1);
     background-color: rgba(88, 74, 192, 1);
   }
 `;
@@ -149,18 +143,5 @@ const CancelButton = styled.button`
   font-weight: 500;
   &:hover {
     background-color: #eee;
-  }
-  &:focus-visible {
-    outline: 1px solid rgba(108, 95, 199, 1);
-    background-color: #eee;
-  }
-`;
-
-const FlexColumns = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  & > * {
-    flex: 1;
   }
 `;

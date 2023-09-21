@@ -137,11 +137,18 @@ const Dialog = styled.dialog`
 `;
 
 const Content = styled.div`
-  border-radius: 4px;
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+
+  border: 1px solid rgba(41, 35, 47, 0.13);
+  padding: 24px;
+  border-radius: 20px;
   background-color: #fff;
-  width: 500px;
+
+  width: 320px;
   max-width: 100%;
-  max-height: calc(100% - 64px);
+  max-height: calc(100% - 2rem);
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -155,7 +162,7 @@ const Content = styled.div`
 const Header = styled.h2`
   font-size: 20px;
   font-weight: 600;
-  border-bottom: 1px solid #ccc;
-  padding: 20px 24px;
-  margin: 0px;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 16px;
 `;

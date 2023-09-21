@@ -10,7 +10,7 @@ interface FeedbackWidgetProps {
 /**
  * The "Widget" connects the default Feedback button with the Feedback Modal
  */
-export default function FeedbackWidget({title = 'Got Feedback?'}: FeedbackWidgetProps) {
+export default function FeedbackWidget({title = 'Report a Bug'}: FeedbackWidgetProps) {
   // Don't render anything if Sentry is not already loaded
   if (!window.Sentry?.getCurrentHub?.()) {
     return null;
