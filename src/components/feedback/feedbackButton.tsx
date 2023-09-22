@@ -24,6 +24,11 @@ const Button = styled.button`
   &:hover {
     background-color: #eee;
   }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const ButtonText = styled.span`
