@@ -24,6 +24,7 @@ import {PlatformContent} from './platformContent';
 import {PlatformIdentifier} from './platformIdentifier';
 import {PlatformLink} from './platformLink';
 import {PlatformLinkWithLogo} from './platformLinkWithLogo';
+import {PlatformLinkWithLogo2} from './platformLinkWithLogo2';
 import {PlatformSection} from './platformSection';
 import {RelayMetrics} from './relayMetrics';
 import {PiiFields} from './relayPiifields';
@@ -53,6 +54,7 @@ const mdxComponents = {
   PlatformContent,
   PlatformLink,
   PlatformLinkWithLogo,
+  PlatformLinkWithLogo2,
   PlatformSection,
   PlatformIdentifier,
   RelayMetrics,
