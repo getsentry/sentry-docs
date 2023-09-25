@@ -7,9 +7,9 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Learn how to detect and fix slow page loads, rendering, and other frontend performance monitoring basics. Sep 20 | 10am PST';
+  '[Workshop] How to detect, fix and prevent ANRs. Join us live. Sept 27 | 10 AM PT.';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/frontend-performance-monitoring-101/';
+  'https://sentry.io/resources/ama-detect-fix-prevent-anrs/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2F';
 const BANNER_LINK_TEXT = 'Register Now';
 const OPTIONAL_BANNER_IMAGE = null;
 
