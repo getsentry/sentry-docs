@@ -1,24 +1,62 @@
 ---
-title: Database
+title: Query Insights
 sidebar_order: 50
 description: "Learn more about the Database view, which allows you to see your database queries, and debug their performance."
 ---
 
-The "Database" link in the sidebar opens the **Database** page.
+If you have performance monitoring enabled and your application queries a database, you can see how your queries are performing in Sentry.
 
-If your application queries a database, the **Performance** page surfaces the highest impact queries in the "Most Time Spent in DB Queries" widget. From there, you can click "View All" to open the **Database** page. This page provides insight into the performance of your database queries for the selected project(s). You can also click on a query from the widget to open its **Query Summary** page.
+## Overview
 
-The database widget and pages are only available for backend projects using up-to-date SDK versions. The data shown is pulled from `db` and `db.sql` spans.
+The Query Insights flow helps you investigate the performance of your queries and get more information to improve them.
+
+Starting with the **Queries** page, you get a high-level overview of how your queries are doing. From there, you can drill into a specific query that might be consuming a lot of application time and then investigate sample events in a specific endpoint to help you better understand the context of its performance.
+
+The gif below demonstrates how to use Query Insights.
+
+<div style="position: relative; padding-bottom: calc(49.96436208125446% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/D5eQ8zzun3iYBF4Ha3mh?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Walkthrough"></iframe></div>
+
+</br>
+
+### Prerequisites and Limitations
+
+The queries widget and pages are only available for backend projects with performance monitoring enabled. Up-to-date SDK versions are required.
+
+Currently, Query Insights data is **not** available for Ruby on Rails projects.
 
 <Note>
 
-The Database page collects queries from your application's endpoints. Queries that run in async tasks are not shown. If a query runs in an endpoint _and_ a task, the metrics will reflect its performance within endpoints only.
+The **Queries** page collects queries from your application's endpoints. Queries that run in async tasks are not shown. If a query runs in an endpoint _and_ a task, the metrics will reflect its performance within endpoints only.
 
-</Note>.
+</Note>
 
-## Database Page
+#### Span Eligibility
 
-The **Database** page gives you a quick overview of your application's database performance. You can use this page as a starting point to investigate potential problem queries and drill down to better understand how various queries are affecting your app's performance.
+The data shown is pulled from `db` and `db.sql` spans.
+
+Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not eligible for this feature.
+
+If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, the database view should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
+
+- The span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database).
+- The span's description contains the full SQL query.
+- The `db.system` span data value is set to the correct identifier (e.g., `"postgresql"` or `"mysql"`).
+
+### What is Time Spent
+
+By default, queries are sorted by **time spent**, which serves as a proxy for the relative impact of a given query.7
+
+Every database query takes some time to execute. When an application sends a query, it waits for the database to receive the query, parse it, execute it, and return the result. In Sentry, the total time taken from sending the query to receiving the full result is called the query's "duration". The query's "time spent" is the sum of all of its durations in a given time period.
+
+For example, an application might send a query like `SELECT * FROM users LIMIT 10` every time a user calls the `/users` endpoint. The query might take anywhere from 100ms to 200ms to run, and the endpoint is called anywhere from 10 times a minute to 100 times in a minute depending on the time of day. The query's "time spent" will be the sum of all of its durations that occurred in a given time period. Another way to think about it is that the "total time" is the product of queries per minute and the average duration. In a high-throughput application, a query's time spent might be measured in weeks or months.
+
+"Time spent" is a useful way to measure a query's relative impact, compared to other queries in an application. For example, if one query's "time spent" is 7 days, and another is just 2 hours, the query with more time spent might be more impactful to fix, since even a small improvement in duration would result in a meaningful overall improvement. "Time spent" can also be a strong signal that something is wrong. Queries that suddenly start taking up more time are often a sign of a problem.
+
+## Queries Page
+
+The **Queries** page gives you a quick overview of your application's query performance for the selected project(s). You can use this page as a starting point to investigate potential problem queries and drill down to better understand how various queries are affecting your app's performance.
+
+Open the **Queries** page by clicking "Query Insights" in the sidebar, under "Performance". Alternatively, the **Performance** page also surfaces the highest impact queries in the "Most Time-Consuming Queries" widget. From there, you can click "View All" to open the **Queries** page.
 
 At the top of the page, summary graphs for queries per minute (throughput) and average duration provide high-level insight into your database performance. If you see an anomaly or want to investigate a time range further, you can click and drag to select a range directly in a graph to filter data for that time range.
 
@@ -30,15 +68,9 @@ You can also use the dropdowns above to filter the table for specific SQL comman
 
 To view more details, click on a query from the table to open its **Query Summary** page.
 
-### Span Eligibility
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/v66mxydrZRsNxRgNMYUl?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Queries Page Walkthrough"></iframe></div>
 
-For best results, please make sure your Sentry SDK is up-to-date.
-
-Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not eligible for this feature. If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink> the database view should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
-
-- the span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database)
-- the span's description contains the full SQL query
-- the `db.system` span data value is set to the correct identifier (e.g., `"postgresql"` or `"mysql"`)
+</br>
 
 ### Query Parameterization
 
@@ -49,15 +81,7 @@ In some cases, Sentry processes queries and simplifies them to improve readabili
 - Long lists of `VALUES` arguments are collapsed (e.g., `INSERT INTO users VALUES (%s %s %s %s), (%s %s %s %s)` becomes `INSERT INTO users VALUES ..`)
 - `CASE / WHEN` statements are collapsed
 
-You can see the full query by hovering on a truncated description, or clicking it to see its Query Summary page.
-
-### What is Time Spent
-
-Every database query takes some time to execute. When an application sends a query, it waits for the database to receive the query, parse it, execute it, and return the result. In Sentry, the total time taken from sending the query to receiving the full result is called the query's "duration". The query's "time spent" is the sum of all of its durations in a given time period.
-
-For example, an application might send a query like `SELECT * FROM users LIMIT 10` every time a user calls the `/users` endpoint. The query might take anywhere from 100ms to 200ms to run, and the endpoint is called anywhere from 10 times a minute to 100 times in a minute depending on the time of day. The query's "time spent" will be the sum of all of its durations that occurred in a given time period. Another way to think about it is that the "total time" is the product of queries per minute and the average duration. In a high-throughput application, a query's time spent might be measured in weeks or months.
-
-"Time spent" is a useful way to measure a query's relative impact, compared to other queries in an application. For example, if one query's "time spent" is 7 days, and another is just 2 hours, the query with more time spent might be more impactful to fix, since even a small improvement in duration would result in a meaningful overall improvement. "Time spent" can also be a strong signal that something is wrong. Queries that suddenly start taking up more time are often a sign of a problem.
+You can see the full query by hovering on a truncated description, or clicking it to see its **Query Summary** page.
 
 ## Query Summary Page
 
@@ -69,11 +93,15 @@ At the bottom, you can find a list of endpoints the query is found in, sorted by
 
 If you want to investigate a specific endpoint, click on it to open a sidebar showing some sample events.
 
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/MTzviZtIiN7ZCmNFVJg4?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Query Summary Page Walkthrough"></iframe></div>
+
+</br>
+
 ## Sample List
 
 Click on an endpoint to open its samples list. This side panel shows summary metrics (QPM and average duration) for the query in the specific endpoint.
 
-The table shows a sample list of events, their span duration, and the difference in duration compared to average. This table sorted by longest span duration.
+The table shows a sample list of events, their span duration, and the difference in duration compared to average. This table is sorted by longest span duration.
 
 Sentry automatically finds a variety of samples to help you investigate performance problems. The chosen events will cover the entire selected time range, as well as a range of durations (both faster than, slower than, and near the average duration). You can get a sense of the performance characteristics by comparing different sample events.
 
@@ -81,9 +109,8 @@ These same events are also represented as triangles shown in the average duratio
 
 You can generate a new list of random sample events by clicking the "Try Different Samples" button at the bottom.
 
-From sample list, you can drill down to specific good, average, or bad examples of a given query within a given endpoint. Click on an event ID to drill into the query's span details within the span waterfall of the **Event Details** page.
+From the sample list, you can drill down to specific good, average, or bad examples of a given query within a given endpoint. Click on an event ID to drill into the query's span details within the span waterfall of the **Event Details** page.
 
-## UI Walkthrough
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/dr7yesA9RCqfpSyICbmP?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Sampled Events Walkthrough"></iframe></div>
 
-- Add arcade
-- Also should add screenshots for each view in the appropriate sections
+</br>
