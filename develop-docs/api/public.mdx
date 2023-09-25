@@ -9,12 +9,13 @@ In this document, we explain when and how to publish API documentation to public
 
 ## API Versioning
 
-Currently, Sentry's API is `v0` and considered to be in draft phase. While we don't expect our
+Currently, Sentry's API is **`v0`** and considered to be in draft phase. While we don't expect our
 public endpoints to change greatly, keep in mind that our API is still under development.
 
 ## Public APIs
 
-A public API is an API that is stable and well documented at [https://docs.sentry.io/api/](https://docs.sentry.io/api/). When you make an endpoint public, you're committing to always returning at least the set of defined
+A public API is an API that is stable and well documented at [https://docs.sentry.io/api/](https://docs.sentry.io/api/).
+When you make an endpoint public, you're committing to always returning at least the set of defined
 attributes when that endpoint is called. As a result, the attribute(s) **cannot be removed** from an
 endpoint after they are public. Additionally, the type of the attribute **cannot be changed** once
 the attribute is public. The reason the attribute and its type cannot be changed is because both
@@ -24,14 +25,23 @@ You **can** add attributes to a public endpoint.
 
 ## When to make an API public?
 
-Should I publish my API? The answer in most cases is **Yes**. As a developer facing company it is critical to make Sentry features available for developers to use in their various automations. Do not try to predict if an automation finds the API useful because we can't predict all the automations our clients might want to build. With that being said, there are 3 exceptions where we don't publish APIs:
-1. **Experimental APIs:** APIs that are not fully launched or will go through multiple iterations in a short time that could cause breaking changes. These are expected to be published or removed after a while.
-2. **Private APIs:** APIs that are controlling a UI feature in Sentry, for example if a button is visible. 
-3. **APIs in getsentry:** If you're a Sentry engineer and building APIs in getsentry repo, know that they won't be published. This is the expected behavior for all the getsentry APIs, but if you have a case that you think it should be published let [owners-api](https://github.com/orgs/getsentry/teams/owners-api) know and we can help with that.
+Should I publish my API? The answer in most cases is **Yes**. As a developer facing company it is critical to
+make Sentry features available for developers to use in their various automations. Do not try to predict if
+an automation finds the API useful because we can't predict all the automations our clients might want to
+build. With that being said, there are 3 exceptions where we don't publish APIs:
+
+1. **Experimental APIs:** APIs that are either in development or undergoing frequent iterations,
+   which may result in breaking changes. These are expected to be published or removed after a while.
+2. **Private APIs:** APIs that control UI features in Sentry, such as the visibility of a button.
+3. **APIs in getsentry:** If you're a Sentry engineer building APIs in the getsentry repo, they will
+   not be published. This is the expected behavior for all the getsentry APIs, but if you have a case
+   that you think it should be published let [owners-api](https://github.com/orgs/getsentry/teams/owners-api)
+   know and we can help with that.
 
 <Alert title="Note" level="info"> 
 
-Always keep in mind that your APIs will be used out of Sentry product even if they're `private`. All the APIs in Sentry repo are accessible to public due to our open-source nature.  
+Always keep in mind that your APIs may still be used even if they're `private`. All the APIs
+in the Sentry repo are accessible due to our open-source nature.
 
 </Alert>
 
@@ -58,33 +68,35 @@ our APIs.
 
 **API Documentation consists of**:
 
-1. Declaring Owner for the Endpoint
-2. Setting Publish Status on Endpoint
+1. Owner
+2. Publish Status
 3. Sidebar Tab
 4. Endpoint Description
 5. Method Decorator
     - Title
     - Path and Query Parameters
-    - Request Schema
+    - Body Parameters
     - Success Responses
     - Error Responses
     - Sample Response Body
 
 We utilize the drf-spectacular's
-[`@extend_schema`](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema)
+[`extend_schema`](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema)
 decorator to perform the documentation. The sections below outline each step to use this decorator.
 
-### 1. Declaring Owner for the Endpoint
+### 1. Owner
 
-Declare an owner for the endpoint. This would be the team at Sentry responsible to maintain and make publishing decisions about the endpoint methods.
+Specify an owner for the endpoint. This would be the team at Sentry responsible for maintaining
+and owning the endpoint. You can see the full list of teams
+[here](https://github.com/getsentry/sentry/blob/master/src/sentry/api/api_owners.py).
 ```python
 class OrganizationTeamsEndpoint(...):
     owner = ApiOwner.ENTERPRISE
 ```
 
-### 2. Setting Publish Status on Endpoint
+### 2. Publish Status
 
-Declare endpoint methods public by adding them to the publish_status with `PUBLIC` value.
+Declare endpoint methods public by setting their publish_status to `PUBLIC`.
 
 ```python
 class OrganizationTeamsEndpoint(...):
@@ -98,11 +110,10 @@ class OrganizationTeamsEndpoint(...):
 
 ### 3. Sidebar Tab
 
-Specify the endpoint's [sidebar tab](https://docs.sentry.io/api/) by using the 
-`@extend_schema` decorator on the endpoint class. You can see the current list of tags or add tags
+Specify the endpoint's sidebar tab by using the `extend_schema` decorator on
+the endpoint class. You can see the current list of tags or add tags
 [here](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/build.py). In the example
-below the [endpoint](https://docs.sentry.io/api/teams/create-a-new-team/)
-is tagged in the `Teams` sidebar tab.
+below the [endpoint](https://docs.sentry.io/api/teams/create-a-new-team/) is tagged in the `Teams` sidebar tab.
 
 ```python
 from drf_spectacular.utils import extend_schema
@@ -118,8 +129,10 @@ class OrganizationTeamsEndpoint(...):
 ```
 ### 4. Endpoint Description
 
-Specify the endpoint description in the documentation using the endpoint's docstring. Please make sure to include a description for the resources involved as well if they are not clear. For example, `team` and `organization` here don't require
-description but other words like `external-issue` or `integration` are vague and need description. 
+Specify the endpoint description in the documentation using the endpoint's docstring.
+Please include a description for all resources if they are not immediately clear.
+For example, `team` and `organization` don't require a description, but other vague terms like
+`external-issue` or `integration` would require a description.
 
 ```python
 def post(self, request, organization, **kwargs):
@@ -130,7 +143,7 @@ def post(self, request, organization, **kwargs):
 ### 5. Method Decorator
 
 We utilize another `@extend_schema` decorator on the endpoint method to perform the majority of
-the documentation. The code below provides an example of a fully documented post API.
+the documentation. The code below provides an example of a fully documented POST API.
 
 ```python
 @extend_schema(tags=["Teams"])
@@ -144,11 +157,7 @@ class OrganizationTeamsEndpoint(...):
 
     @extend_schema(
         operation_id="Create a New Team",
-        parameters=[
-            GlobalParams.ORG_SLUG,
-            GlobalParams.name("The name for the team.", required=True),
-            GlobalParams.slug("Optional slug for the team."),
-        ],
+        parameters=[GlobalParams.ORG_SLUG],
         request=TeamPostSerializer,
         responses={
             201: TeamSerializer,
@@ -164,63 +173,83 @@ class OrganizationTeamsEndpoint(...):
         """
 ```
 
-Here's description of each field in the method decorator:
-- **operation_id:** will be shown as the title of the endpoint's page in the
-documentation.
-- **parameters:** is a list of path and query parameters, and whether or not they are required. 
+Here's description of each argument in the decorator:
+
+- **operation_id:** will be shown as the title of the endpoint's page in the documentation.
+
+- **parameters:** is a list of path and query parameters.
   - You can find existing parameters in this 
   [file](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/parameters.py). Note
   that the `description` field in `OpenApiParameter` populates the parameter's description in the
   documentation.
-  - DRF serializers conveniently translate into query parameters. See
+  - DRF serializers conveniently translate into parameters. See
   [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/endpoints/organization_stats_v2.py#L145)
   for an example of this.
-- **request:** is the request serializer that can generally just be the DRF serializer of the endpoint itself. If you need more
-  customization or the endpoint doesn't use a serializer, you can use drf-spectacular's
+  - Note that the ordering of the list determines the order of the parameters in the documentation.
+  Required parameters will automatically be placed at the top of the section.
+
+- **request:** is a serializer that generates body parameters.
+  - It can generally just be the DRF serializer of the endpoint itself.
+    - The `help_text` argument of each serializer field populates the body
+      parameter's description in the documentation.
+    - To exclude certain body parameters, you can pass `exclude_fields` to the
+    [extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
+    decorator. See [here](https://github.com/getsentry/sentry/blob/5573be76bcbbf8cc8f5d36c72bea57c6ca207122/src/sentry/api/endpoints/organization_teams.py#L51)
+    for an example of this.
+    - Note that the ordering of the serializer fields determines the order of the body
+      parameters. Required parameters will automatically be placed at the top of
+      the section.
+  - If you need more customization or the endpoint doesn't use a serializer, you can use an
   [inline_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.inline_serializer)
   to create a one-off serializer.
-  See
-  [here](https://github.com/getsentry/sentry/blob/b04c1c04f1e86bc040a671ad5b545d3b70132140/src/sentry/scim/endpoints/members.py#L434-L440)
+    - Note that our documentation has trouble displaying serializer fields defined by a nested
+    serializer. We recommend using the `inline_serializer` to avoid this issue.
+  - For custom serializer fields, you must explicitly type them using the
+  [extend_schema_field](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_field)
+  decorator. See [here](https://github.com/getsentry/sentry/blob/236cc90daa1db5fcedade1db2b0bd7bb1ce9bdcd/src/sentry/api/serializers/rest_framework/project.py#L9-L10)
   for an example of this.
-    -  If the endpoint has no request body, you can either omit the `request` field or set it to `None`.
-- **responses:** includes types of response returned for all possible HTTP response cases both in case of success and failure. You can learn more about each in the next section. 
-- **examples:** specifies the endpoint's sample response. We keep all our examples in this
+  -  If there is no request body, you can either omit the `request` field or set it to `None`.
+
+- **responses:** include all possible success and failure HTTP response cases. You can learn more about them in the next section.
+
+- **examples:** specify the endpoint's sample response. We keep all our examples in this
 [folder](https://github.com/getsentry/sentry/tree/master/src/sentry/apidocs/examples) sorted by
 sidebar tags. 
   - Note that the statement `response_only=True` is required for all examples.
-  - We currently only support showing one response example per endpoint but support for multiple examples is on the way. So, feel free to add multiple examples here.
+  - We currently only show one response example per endpoint but plan to support
+   this  in the future, so feel free to add multiple examples here.
 
-```python
-@extend_schema(
-    ...
-    examples=TeamExamples.CREATE_TEAM,
-)
+    ```python
+    @extend_schema(
+        ...
+        examples=TeamExamples.CREATE_TEAM,
+    )
 
-from drf_spectacular.types import OpenApiExample
+    from drf_spectacular.types import OpenApiExample
 
-class TeamExamples:
-  CREATE_TEAM = [
-      OpenApiExample(
-          # description of example, not used for anything
-          "Create a new team",
-          # actual response body
-          value={"slug": "my-team", "name": "My Team"},
-          # the status code(s) this example applies to
-          status_codes=["201"], 
-          # You MUST INCLUDE this for all examples
-          response_only=True,
-      )
-  ]
-```
+    class TeamExamples:
+    CREATE_TEAM = [
+        OpenApiExample(
+            # description of example, not used for anything
+            "Create a new team",
+            # actual response body
+            value={"slug": "my-team", "name": "My Team"},
+            # the status code(s) this example applies to
+            status_codes=["201"],
+            # You MUST INCLUDE this for all examples
+            response_only=True,
+        )
+    ]
+    ```
 
 #### Success Responses
 
 Specify the return type of success responses, which are used to generate the response schema and 
-validate the sample response body. There are three ways to do this:
+validate any included example responses. There are three ways to do this:
 
 1. If the success response is a single object instead of a list, you can pass a DRF serializer as
   the response. In order for this serializer to generate a schema, its `serialize` method must be
-  typed to return a [TypedDict](https://peps.python.org/pep-0589/). 
+  typed to return a [TypedDict](https://peps.python.org/pep-0589/)`*`
 
   For example, this [sample
   code](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/scim/endpoints/members.py#L202)
@@ -230,28 +259,28 @@ validate the sample response body. There are three ways to do this:
   [`OrganizationMemberSCIMSerializerResponse`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/response.py#L60)
   TypedDict which specifies the typing of the response body.
 
-  Note that in order indicate optional fields that may or may not be set in the response, you must
-  inherit from a TypedDict with `total=False` in it's class header. Optional fields should be
-  grouped together and cannot exist in the same class as required fields.
-  See
-  [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/response.py#L53)
+  In order to indicate optional fields that may or may not be set in the response, you must use 
+  [totality](https://peps.python.org/pep-0589/#totality) and separate your TypedDict into 
+  two classes. The first class should only contain optional fields and inherit from a TypedDict 
+  with `total=False` in it's class header. The second class should only contain required fields, 
+  and inherit from the first class. See
+  [here](https://github.com/getsentry/sentry/blob/4404deda8376bf1a011b76964b45b58671c2a33b/src/sentry/monitors/serializers.py#L35-L48)
   for an example of this.
-  ```python
-  class ExampleResponseOptional(TypedDict, total=False):
-      optionalStringField: str
-  ```
 
-  For fields that may be null, use `Optional` followed by the field's type.
+  For fields that may be null, use `Optional` followed by the field's type. Note
+  that a field may be both optional and null.
   ```python
-  class ExampleResponse(TypedDict, ExampleResponseOptional):
+  class ExampleResponse(TypedDict):
       potentiallyNullStringField: Optional[str]
   ```
 
-  Note that a field can be both optional and null.
+  `*`Similar to the request serializer, use the
+    [extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
+    to exclude any private fields from the response schema. The TypedDict must
+    also exclude this field.
 
-2. To return a list of objects or for additional customization, use the
-  [inline_sentry_response_serializer](https://github.com/getsentry/sentry/blob/aa61724035370a47fdc112c14d1467be2609d9a2/src/sentry/apidocs/utils.py#L24)
-  function.
+2. To return a list of objects or for more customization, use the
+  [inline_sentry_response_serializer](https://github.com/getsentry/sentry/blob/aa61724035370a47fdc112c14d1467be2609d9a2/src/sentry/apidocs/utils.py#L24).
 
   ```python
   from sentry.apidocs.utils import inline_sentry_response_serializer
@@ -328,7 +357,7 @@ deleting the old documentation will cause all other requests to disappear from t
   API docs tests.
 - `make build-api-docs` builds the OpenAPI JSON. The build will fail if there are any warnings.
 - `make diff-api-docs` produces a diff of your local OpenAPI JSON with production.
-- `make watch-api-docs` autmatoically rebuilds the OpenAPI JSON on change.
+- `make watch-api-docs` automatically rebuilds the OpenAPI JSON on change.
 
 **To see your changes in the docs locally**:
 
@@ -346,7 +375,7 @@ In `sentry-docs`:
    `<COPIED_FULL_PATH>` with the path to your local openapi-derefed.json. 
    
    Unfortunately changes do not automatically reflect in your local server, so you will need to
-   rerun this commmand on every change. We hope to add this feature in the future.
+   rerun this command on every change. We hope to add this feature in the future.
 
 See [here](https://docs.sentry.io/contributing/environment/) for detailed doc build instructions.
 
