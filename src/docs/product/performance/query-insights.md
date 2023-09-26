@@ -40,9 +40,6 @@ Query Insights work best with up-to-date SDK versions. The following minimum ver
 - [Ruby SDK v5.11.0](https://github.com/getsentry/sentry-ruby/releases/tag/5.11.0)
 - [.NET SDK v3.39.0](https://github.com/getsentry/sentry-dotnet/releases/tag/3.39.0)
 - [Symfony SDK v4.11.0](https://github.com/getsentry/sentry-symfony/releases/tag/4.11.0)
-- Android SDK v
-
-Currently, Query Insights data is **not** available for Ruby on Rails projects.
 
 #### Span Eligibility
 
