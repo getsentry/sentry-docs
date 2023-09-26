@@ -20,15 +20,29 @@ The gif below demonstrates how to use Query Insights.
 
 ### Prerequisites and Limitations
 
-The queries widget and pages are only available for backend projects with performance monitoring enabled. Up-to-date SDK versions are required.
-
-Currently, Query Insights data is **not** available for Ruby on Rails projects.
+The queries widget and pages are only available for backend projects with performance monitoring enabled.
 
 <Note>
 
 The **Queries** page collects queries from your application's endpoints. Queries that run in async tasks are not shown. If a query runs in an endpoint _and_ a task, the metrics will reflect its performance within endpoints only.
 
 </Note>
+
+#### Recommended SDK Versions
+
+Query Insights work best with up-to-date SDK versions. The following minimum versions are recommended:
+
+- [Python SDK v1.29.2](https://github.com/getsentry/sentry-python/releases/tag/1.29.2)
+- [JavaScript SDKs v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0)
+- [Laravel SDK v3.8.0](https://github.com/getsentry/sentry-laravel/releases/tag/3.8.0)
+- [Cocoa SDK v8.11.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.11.0)
+- [Java SDK v6.29.0](https://github.com/getsentry/sentry-java/releases/tag/6.29.0)
+- [Ruby SDK v5.11.0](https://github.com/getsentry/sentry-ruby/releases/tag/5.11.0)
+- [.NET SDK v3.39.0](https://github.com/getsentry/sentry-dotnet/releases/tag/3.39.0)
+- [Symfony SDK v4.11.0](https://github.com/getsentry/sentry-symfony/releases/tag/4.11.0)
+- Android SDK v
+
+Currently, Query Insights data is **not** available for Ruby on Rails projects.
 
 #### Span Eligibility
 
@@ -44,13 +58,13 @@ If you are using <PlatformLink to="/performance/instrumentation/automatic-instru
 
 ### What is Time Spent
 
-By default, queries are sorted by **time spent**, which serves as a proxy for the relative impact of a given query.7
+By default, queries are sorted by **time spent**, which serves as a proxy for the relative impact of a given query.
 
-Every database query takes some time to execute. When an application sends a query, it waits for the database to receive the query, parse it, execute it, and return the result. In Sentry, the total time taken from sending the query to receiving the full result is called the query's "duration". The query's "time spent" is the sum of all of its durations in a given time period.
+Every database query takes some time to execute. When an application sends a query, it waits for the database to receive the query, parse it, execute it, and return the result. In Sentry, the total time taken from sending the query to receiving the full result is called the query's **duration**. The query's **time spent** is the sum of all its durations in a given time period.
 
-For example, an application might send a query like `SELECT * FROM users LIMIT 10` every time a user calls the `/users` endpoint. The query might take anywhere from 100ms to 200ms to run, and the endpoint is called anywhere from 10 times a minute to 100 times in a minute depending on the time of day. The query's "time spent" will be the sum of all of its durations that occurred in a given time period. Another way to think about it is that the "total time" is the product of queries per minute and the average duration. In a high-throughput application, a query's time spent might be measured in weeks or months.
+For example, an application might send a query like `SELECT * FROM users LIMIT 10` every time a user calls the `/users` endpoint. The query might take anywhere from 100ms to 200ms to run, and the endpoint is called anywhere from 10 times a minute to 100 times in a minute depending on the time of day. The query's time spent is the sum of all of its durations that occurred in a given time period. Put another way, the time spent is the product of the average duration and queries per minute. In a high-throughput application, a query's time spent might be measured in weeks or months.
 
-"Time spent" is a useful way to measure a query's relative impact, compared to other queries in an application. For example, if one query's "time spent" is 7 days, and another is just 2 hours, the query with more time spent might be more impactful to fix, since even a small improvement in duration would result in a meaningful overall improvement. "Time spent" can also be a strong signal that something is wrong. Queries that suddenly start taking up more time are often a sign of a problem.
+Time spent is a useful way to measure a query's relative impact, compared to other queries in an application. For example, if one query's time spent is 7 days, and another is just 2 hours, the query with more time spent is probably more impactful to fix. Even a small improvement in duration would result in a meaningful overall improvement. Time spent can also be a strong signal that something is wrong. Queries that suddenly start taking up more time are often signal a problem.
 
 ## Queries Page
 
