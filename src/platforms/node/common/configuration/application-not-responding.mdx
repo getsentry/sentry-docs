@@ -17,7 +17,7 @@ Application Not Responding (ANR) errors, or Event Loop Stall errors, are trigger
 
 _(Available in version 7.72.0 and above)_
 
-To enable ANR detection, import and use the `enableANRDetection` function from the `@sentry/node` package before you run the rest of your application code. Any application code run before `enableANRDetection` will not be detected by the SDK.
+To enable ANR detection, import and use the `enableANRDetection` function from the `@sentry/node` package before you run the rest of your application code. Any event loop blocking before calling `enableANRDetection` will not be detected by the SDK.
 
 <Alert level="info">
 
@@ -101,7 +101,7 @@ interface Options {
 
 ANR detection with the Node SDK works with a forked child process. The child process runs the same entry point as the main app. To ensure that the main app code does not run in the child process, we use a promise that only resolves in the main process.
 
-The child process sends a heartbeat message to the main process every 50ms. If the main process does not receive a heartbeat message for 5 seconds, it triggers an ANR event. If the `captureStackTrace` option is enabled, the child process uses WebSockets to capture stack traces via the [v8 inspector API](https://nodejs.org/api/inspector.html).
+The main app process sends a heartbeat message to the child process every 50ms. If the child process does not receive a heartbeat message for 5 seconds, it triggers an ANR event. If the `captureStackTrace` option is enabled, the child process uses WebSockets to capture stack traces via the [v8 inspector API](https://nodejs.org/api/inspector.html).
 
 Once an ANR event has been reported, the child process exits to prevent further duplicate events. The main process will still continue to run like usual.
 
