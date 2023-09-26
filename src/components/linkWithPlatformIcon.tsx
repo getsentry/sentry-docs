@@ -1,7 +1,6 @@
 import React from 'react';
 import {PlatformIcon} from 'platformicons';
 
-import {usePlatform} from './hooks/usePlatform';
 import {SmartLink} from './smartLink';
 
 type Props = {
@@ -10,15 +9,13 @@ type Props = {
   url?: string;
 };
 
-export function PlatformLinkWithLogo2({platform, label, url}: Props) {
-  const [currentPlatform] = usePlatform(platform);
-
+export function linkWithPlatformIcon({platform, label, url}: Props) {
   return (
     <span style={{whiteSpace: 'nowrap'}}>
       <SmartLink to={url}>
         <PlatformIcon
           size={20}
-          platform={currentPlatform.icon ?? currentPlatform.key}
+          platform={platform}
           style={{
             marginRight: '0.5rem',
             marginTop: '0.2rem',
@@ -27,7 +24,7 @@ export function PlatformLinkWithLogo2({platform, label, url}: Props) {
           }}
           format="sm"
         />
-        {label ?? currentPlatform.title}
+        {label ?? 'default value not set! xxx'}
       </SmartLink>
     </span>
   );

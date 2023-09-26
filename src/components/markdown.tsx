@@ -16,6 +16,7 @@ import {Include} from './include';
 import {IncludePlatformContent} from './includePlatformContent';
 import {JsCdnTag} from './jsCdnTag';
 import {LambdaLayerDetail} from './lambdaLayerDetail';
+import {linkWithPlatformIcon} from './linkWithPlatformIcon';
 import {Note} from './note';
 import {OrgAuthTokenNote} from './orgAuthTokenNote';
 import {PageGrid} from './pageGrid';
@@ -24,7 +25,6 @@ import {PlatformContent} from './platformContent';
 import {PlatformIdentifier} from './platformIdentifier';
 import {PlatformLink} from './platformLink';
 import {PlatformLinkWithLogo} from './platformLinkWithLogo';
-import {PlatformLinkWithLogo2} from './platformLinkWithLogo2';
 import {PlatformSection} from './platformSection';
 import {RelayMetrics} from './relayMetrics';
 import {PiiFields} from './relayPiifields';
@@ -54,7 +54,7 @@ const mdxComponents = {
   PlatformContent,
   PlatformLink,
   PlatformLinkWithLogo,
-  PlatformLinkWithLogo2,
+  linkWithPlatformIcon,
   PlatformSection,
   PlatformIdentifier,
   RelayMetrics,
