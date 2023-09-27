@@ -79,7 +79,7 @@ In some cases, Sentry processes queries and simplifies them to improve readabili
 
 - Table names are removed from column selections if possible (e.g., `SELECT "users"."name", "users"."id", "users.age" FROM users` becomes `SELECT name, id, age FROM users`)
 - Long lists of `SELECT` arguments are collapsed (e.g., `SELECT id, name, age, city, country, phone FROM users` becomes `SELECT .. FROM users`)
-- Long lists of `VALUES` arguments are collapsed (e.g., `INSERT INTO users VALUES (%s %s %s %s), (%s %s %s %s)` becomes `INSERT INTO users VALUES ..`)
+- Long lists of `VALUES` arguments are collapsed (e.g., `INSERT INTO users (id, email, name, age) VALUES (%s %s %s %s)` becomes `INSERT INTO users (..) VALUES (%s)`)
 - `CASE / WHEN` statements are collapsed
 
 You can see the full query by hovering on a truncated description, or clicking it to see its **Query Summary** page.
