@@ -40,7 +40,7 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
           type="text"
           id="sentry-feedback-name"
           name="name"
-          placeholder="Anonymous"
+          placeholder="Your name"
           defaultValue={user?.username}
         />
       </Label>
@@ -55,7 +55,9 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
         />
       </Label>
       <Label htmlFor="sentry-feedback-comment">
-        <div>Description<Required>*</Required></div>
+        <div>
+          Description<Required>*</Required>
+        </div>
         <TextArea
           rows={5}
           onChange={event => {
