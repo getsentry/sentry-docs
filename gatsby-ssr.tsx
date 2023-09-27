@@ -61,7 +61,7 @@ Sentry.onLoad(function() {
       }),
     ],
     tracesSampleRate: ${sentryEnvironment === 'development' ? 0 : 1},
-    replaysSessionSampleRate: ${sentryEnvironment === 'development' ? 0 : 0.1},
+    replaysSessionSampleRate: ${sentryEnvironment === 'development' ? 0 : 1},
     replaysOnErrorSampleRate: ${sentryEnvironment === 'development' ? 0 : 1},
     networkDetailAllowUrls: ['https://sentry.io/docs/api/*'],
     networkResponseHeaders: [
