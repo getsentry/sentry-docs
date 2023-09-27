@@ -1,18 +1,21 @@
 ---
-title: Query Insights
+title: Queries
 sidebar_order: 50
-description: "Learn more about the Query Insights flow, which allows you to see your database queries, and debug their performance."
+description: "Learn more about query performance monitoring, which allows you to see your database queries, and debug their performance."
+redirect_from:
+  - /product/performance/database/
+  - /product/performance/query-insights/
 ---
 
 If you have performance monitoring enabled and your application queries a database, you can see how your queries are performing in Sentry.
 
-The Query Insights flow helps you investigate the performance of your queries and get more information to improve them.
+Sentry's query monitoring helps you investigate the performance of your queries and get more information to improve them.
 
 Starting with the [**Queries** page](#queries-page), you get a high-level overview of how your queries are doing. From there, you can drill into a specific query's [**Query Summary** page](#query-summary-page) and then investigate sample events from the [Sample List](#sample-list) to better understand the context of its performance in a specific endpoint.
 
-The gif below demonstrates how to use Query Insights.
+The gif below demonstrates how to use performance monitoring for queries.
 
-<div style="position: relative; padding-bottom: calc(49.96436208125446% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/D5eQ8zzun3iYBF4Ha3mh?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Walkthrough"></iframe></div>
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/miaHF3SwPiABh9bZnMoq?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Walkthrough"></iframe></div>
 
 </br>
 
@@ -28,7 +31,7 @@ The **Queries** page collects queries from your application's endpoints. Queries
 
 ### Recommended SDK Versions
 
-Query Insights work best with up-to-date SDK versions. The following minimum versions are recommended:
+Query monitoring works best with up-to-date SDK versions. The following minimum versions are recommended:
 
 - [Python SDK v1.29.2](https://github.com/getsentry/sentry-python/releases/tag/1.29.2)
 - [JavaScript SDKs v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0)
@@ -45,7 +48,7 @@ The data shown is pulled from `db` and `db.sql` spans.
 
 Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not currently eligible for this feature.
 
-If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, Query Insights should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
+If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, query monitoring should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - The span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database).
 - The span's description contains the full SQL query.
@@ -55,7 +58,7 @@ If you are using <PlatformLink to="/performance/instrumentation/automatic-instru
 
 The **Queries** page gives you a quick overview of your application's query performance for the selected project(s). You can use this page as a starting point to investigate potential problem queries and drill down to better understand how various queries are affecting your app's performance.
 
-Open the **Queries** page by clicking "Query Insights" in the sidebar, under "Performance". Alternatively, the **Performance** page also surfaces the highest impact queries in the "Most Time-Consuming Queries" widget. From there, you can click "View All" to open the **Queries** page.
+Open the **Queries** page by clicking "Queries" in the sidebar, under "Performance". Alternatively, the **Performance** page also surfaces the highest impact queries in the "Most Time-Consuming Queries" widget. From there, you can click "View All" to open the **Queries** page.
 
 At the top of the page, summary graphs for queries per minute (throughput) and average duration provide high-level insight into your database performance. If you see an anomaly or want to investigate a time range further, you can click and drag to select a range directly in a graph to filter data for that time range.
 
@@ -69,7 +72,7 @@ To view more details, click on a query from the table to open its **Query Summar
 
 The gif below provides a detailed walkthrough of the **Queries** page.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/v66mxydrZRsNxRgNMYUl?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Queries Page Walkthrough"></iframe></div>
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/v66mxydrZRsNxRgNMYUl?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Queries Page Walkthrough"></iframe></div>
 
 </br>
 
@@ -96,7 +99,7 @@ If you want to investigate a specific endpoint, click on it to open a sidebar sh
 
 The gif below provides a detailed walkthrough of the **Query Summary** page.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/MTzviZtIiN7ZCmNFVJg4?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Query Summary Page Walkthrough"></iframe></div>
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/MTzviZtIiN7ZCmNFVJg4?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Query Summary Page Walkthrough"></iframe></div>
 
 </br>
 
@@ -116,7 +119,7 @@ From the sample list, you can drill down to specific good, average, or bad examp
 
 The gif below explains how to navigate the sample list.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/dr7yesA9RCqfpSyICbmP?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Query Insights - Sampled Events Walkthrough"></iframe></div>
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/dr7yesA9RCqfpSyICbmP?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Sample List Walkthrough"></iframe></div>
 
 </br>
 
