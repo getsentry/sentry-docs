@@ -126,7 +126,7 @@ export function CodeTabs({children}: CodeTabProps) {
   return (
     <Container ref={containerRef}>
       <TabBar>{buttons}</TabBar>
-      <div className="tab-content">{code}</div>
+      <div className="tab-content" data-sentry-mask>{code}</div>
     </Container>
   );
 }

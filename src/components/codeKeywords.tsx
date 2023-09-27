@@ -220,6 +220,7 @@ function OrgAuthTokenCreator() {
             {orgSlugs.map(org => {
               return (
                 <ItemButton
+                  data-sentry-mask
                   key={org}
                   isActive={false}
                   onClick={() => {
@@ -332,6 +333,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               const isActive = idx === currentSelectionIdx;
               return (
                 <ItemButton
+                  data-sentry-mask
                   key={idx}
                   isActive={isActive}
                   onClick={() => {

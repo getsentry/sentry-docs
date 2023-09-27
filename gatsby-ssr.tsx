@@ -57,7 +57,8 @@ Sentry.onLoad(function() {
   Sentry.init({
     integrations: [
       new Sentry.Replay({
-        unmask: ['.hover-card-link'],
+        maskAllText: false,
+        blockAllMedia: false,
       }),
     ],
     tracesSampleRate: ${sentryEnvironment === 'development' ? 0 : 1},
