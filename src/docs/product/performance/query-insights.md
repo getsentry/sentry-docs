@@ -43,13 +43,13 @@ Query Insights work best with up-to-date SDK versions. The following minimum ver
 
 The data shown is pulled from `db` and `db.sql` spans.
 
-Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not eligible for this feature.
+Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not currently eligible for this feature.
 
 If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, Query Insights should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - The span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database).
 - The span's description contains the full SQL query.
-- The `db.system` span data value is set to the correct identifier (e.g., `"postgresql"` or `"mysql"`).
+- The `db.system` span data value is set to the [correct identifier](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md#notes-and-well-known-identifiers-for-dbsystem) (e.g., `"postgresql"` or `"mysql"`).
 
 ## Queries Page
 
