@@ -15,29 +15,16 @@ To enable tracing integration for ASP.NET Core, refer to <PlatformLink to="/perf
 
 ## Overview of the features
 
-- Easy ASP.NET Core integration, single line: `UseSentry`
-- Captures unhandled exceptions in the middleware pipeline
-- Captures exceptions handled by the framework `UseExceptionHandler` and Error page display
-- Captures process-wide unhandled exceptions (AppDomain)
-- Captures `LogError` or `LogCritical`
+- Single line ASP.NET Core integration: `UseSentry`
+- Capture unhandled exceptions and exceptions with [custom exception handlers](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-7.0#exception-handler-page)
+- Capture `LogError` or `LogCritical`
 - Any event sent will include relevant application log messages
-- RequestId as tag
-- URL as tag
-- Environment is automatically set (IHostingEnvironment)
-- Release automatically set (`AssemblyInformationalVersionAttribute`, `AssemblyVersion` or environment variable)
-- Request payload can be captured if opt-in
-- Support for EventProcessors registered with DI
-- Support for ExceptionProcessors registered with DI
-- Supports configuration system (bind to `SentryAspNetCoreOptions`)
-- Server OS info sent
-- Server Runtime info sent
-- Request headers sent
+- Automatically capture request info, browser details, ServerOS and Runtime info, release information etc.
+- Capture request headers and, if you opt in, request payload
+- Support for EventProcessors and ExceptionProcessors (registered via Dependency Injection)
 - HTTP Proxy configuration
-- Request body compressed
 - Event flooding protection (429 retry-after and internal bound queue)
-- Assembly Strong named
-- Tested on Windows, Linux and macOS
-- Tested on .NET Core, .NET Framework and Mono
+- Tested on Windows, macOS, Linux, .NET Core, .NET Framework and Mono
 
 ## Install
 
@@ -57,69 +44,35 @@ paket add Sentry --version {{@inject packages.version('sentry.dotnet.aspnetcore'
 
 This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
 
-### Configure
+## Initialize
 
-The simplest way to configure the `Sentry.AspNetCore` package is not by calling `SentrySdk.Init` directly but rather using the extension method `UseSentry` to the `WebHostBuilder` in combination with the framework's configuration system.
-The configuration values bind to `SentryAspNetCoreOptions` which extends `SentryLoggingOptions` from the `Sentry.Extensions.Logging` and further extends `SentryOptions` from the `Sentry` package.
-
-This means all options for the inner packages are available to be configured through the configuration system.
-
-When using `WebHost.CreateDefaultBuilder`, the framework automatically loads `appsettings.json` and environment variables, binding to `SentryAspNetCoreOptions`.
-
-For example:
-
-<SignInNote />
-
-```json {filename:appsettings.json}
-  "Sentry": {
-    "Dsn": "___PUBLIC_DSN___",
-    "MaxRequestBodySize": "Always",
-    "SendDefaultPii": true,
-    "MinimumBreadcrumbLevel": "Debug",
-    "MinimumEventLevel": "Warning",
-    "AttachStackTrace": true,
-    "Debug": true,
-    "DiagnosticsLevel": "Error"
-  },
-```
-
-> An example of some of the options that can be configured via `appsettings.json`.
-
-It's also possible to bind properties to the SDK via environment variables, like:
-
-Windows
-
-```shell
-set Sentry__Debug=true
-```
-
-Linux or macOS
-
-```shell
-export Sentry__Debug=true
-```
-
-ASP.NET Core will automatically read this environment variable and bind it to the SDK configuration object.
+The simplest way to initialize Sentry in ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-7.0).
 
 When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information:
 
-ASP.NET Core 2.x:
+### ASP.NET Core 6.0:
 
 ```csharp
-public static IWebHost BuildWebHost(string[] args) =>
-    WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry(); // Initialize Sentry
 ```
 
 ```fsharp
-let CreateHostBuilder args =
-    WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
+open Microsoft.AspNetCore.Builder
+open Microsoft.Extensions.Hosting
+open Microsoft.AspNetCore.Hosting
+
+[<EntryPoint>]
+let main args =
+    let builder = WebApplication.CreateBuilder(args)
+    builder.WebHost.UseSentry() // you'll need to include Microsoft.AspNetCore.Hosting.
+
+    app.Run()
+
+    0 // Exit code
 ```
 
-ASP.NET Core 3.0:
+### ASP.NET Core 3.0
 
 ```csharp
 public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -140,43 +93,71 @@ let CreateHostBuilder args =
         )
 ```
 
-ASP.NET Core 6.0 With minimal API:
+### ASP.NET Core 2.x
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-builder.WebHost.UseSentry();
-
-var app = builder.Build();
-
-app.UseSentryTracing();
+public static IWebHost BuildWebHost(string[] args) =>
+    WebHost.CreateDefaultBuilder(args)
+        // Add the following line:
+        .UseSentry()
 ```
 
 ```fsharp
-open Microsoft.AspNetCore.Builder
-open Microsoft.Extensions.Hosting
-open Microsoft.AspNetCore.Hosting
-
-[<EntryPoint>]
-let main args =
-    let builder = WebApplication.CreateBuilder(args)
-    builder.WebHost.UseSentry() // you'll need to include Microsoft.AspNetCore.Hosting.
-
-    let app = builder.Build()
-    app.UseSentryTracing()
-
-    app.Run()
-
-    0 // Exit code
-
+let CreateHostBuilder args =
+    WebHost.CreateDefaultBuilder(args)
+        // Add the following line:
+        .UseSentry()
 ```
 
-Some of the settings require actual code. For those, like the `BeforeSend` callback you can simply:
+## Configure
+
+The framework takes configuration settings from `appsettings.json`, environment variables, or from code. These settings get applied to `Sentry.AspNetCore.SentryAspNetCoreOptions`, which extends `Sentry.Extensions.Logging.SentryLoggingOptions`, which in turn extends `Sentry.SentryOptions`. This means options for `Sentry.AspNetCore` as well as all the inner packages are available to be configured through the configuration system.
+
+### appsettings.json
+
+An example of some of the options that can be configured via `appsettings.json`:
+
+<SignInNote />
+
+```json {filename:appsettings.json}
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "SendDefaultPii": true,
+    "MaxRequestBodySize": "Always",
+    "MinimumBreadcrumbLevel": "Debug",
+    "MinimumEventLevel": "Warning",
+    "AttachStackTrace": true,
+    "Debug": true,
+    "DiagnosticsLevel": "Error",
+    "TracesSampleRate": 1.0
+  },
+```
+
+Setting `TracesSampleRate` to `1.0` in this example configures Sentry to capture 100% of transactions for performance monitoring. We recommend adjusting this value in production. See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> for further information.
+
+### Environment variables
+
+It's also possible to bind properties to the SDK via environment variables, like:
+
+```shell {tabTitle:Windows}
+set Sentry__Debug=true
+```
+
+```shell {tabTitle:Linux or macOS}
+export Sentry__Debug=true
+```
+
+ASP.NET Core will automatically read this environment variable and bind it to the SDK configuration object.
+
+### Using code
+
+Finally, any settings that can be configured via `appsettings.json` or environment variables can also be configured via code. Some settings can only be configured in code, such as the `BeforeSend` callback:
 
 ```csharp
 .UseSentry(options =>
 {
-    options.SetBeforeSend(@event =>
+    options.TracesSampleRate = 1.0; // <- Set this to configure automatic tracing
+    options.SetBeforeSend((@event, hint) =>
     {
         // Never report server names
         @event.ServerName = null;
@@ -187,7 +168,8 @@ Some of the settings require actual code. For those, like the `BeforeSend` callb
 
 ```fsharp
 .UseSentry (fun options ->
-    options.SetBeforeSend(fun event ->
+    options.TracesSampleRate <- 1.0   // <- Set this to configure automatic tracing
+    options.SetBeforeSend(fun event hint ->
         // Never report server names
         event.ServerName <- null
         event
