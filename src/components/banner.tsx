@@ -7,9 +7,9 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Learn how to detect and fix slow page loads, rendering, and other frontend performance monitoring basics. Sep 20 | 10am PST';
+  'Curious how distributed tracing can help you debug faster? Join us Oct 10 | 10am PST';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/frontend-performance-monitoring-101/';
+  'https://sentry.io/resources/debugging-errors-faster-with-distributed-tracing/';
 const BANNER_LINK_TEXT = 'Register Now';
 const OPTIONAL_BANNER_IMAGE = null;
 
