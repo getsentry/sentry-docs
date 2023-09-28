@@ -97,3 +97,77 @@ await replay.flush();
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
 
 Note that it's safe to call `flush()` at any time, even if Session Replay is stopped, in which case, it will do nothing.
+
+## Examples of Custom Sampling
+
+### Replays For Specific Users
+
+Here is an example of always recording a replay for a specific segment of your users. In this case, we would like to have error-based sampling for all users and we want to enable session-based replays for employees only. The `user` object has a field `isEmployee` to express if they are an employee or not.
+
+```javascript
+const replay = new Sentry.Replay();
+
+/**
+ * Initialize the Sentry SDK as normal.
+ * `replaysSessionSampleRate` is set to "0" so that we have manual control over session-based replays
+ * `replaysOnErrorSampleRate` is set to "1.0" to always record a replay when an error occurs
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [replay],
+});
+
+
+// ...
+// Sometime after your users are authenticated, check if they are an employee
+// If they are, we call `replay.start()` to start recording a replay for the employee
+// ...
+
+// Check if user is an employee, if so, always record a replay
+if (loggedInUser.isEmployee) {
+  // You can get a reference to the Sentry Replay integration like so:
+  const replay = Sentry.getCurrentHub().getIntegration(Sentry.Replay);
+  // or alternatively
+  // const replay = Sentry.getCurrentHub().getClient().getIntegrationById('Replay');
+
+  // Start the replay!
+  replay.start();
+}
+```
+
+### Replays on Specific URLs
+
+Here is an example of always recording a replay when a user lands on a specific URL. Maybe this specific page has been buggy and you would like to always record a replay when a user lands on it so that your developers have a better opportunity to debug. Using the [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) we can listen to navigation events for a specific URL, start the replay recording, and then stop the replay when the user leaves the URL.
+
+```javascript
+const replay = new Sentry.Replay();
+
+/**
+ * Initialize the Sentry SDK as normal.
+ * `replaysSessionSampleRate` is set to its default value of "0.1" so that only ~10% of users are sampled
+ * `replaysOnErrorSampleRate` is set to its default value of "1.0" to always record a replay when an error occurs
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [replay],
+});
+
+// Listen to navigation events for when users land on our buggy URL, appropriately named: "/buggy-page/"
+// and then start recording a replay.
+navigation.addEventListener("navigate", (event) => {
+  const url = new URL(event.destination.url);
+
+  if (url.pathname.startsWith("/buggy-page/")) {
+    // User navigates to the buggy page, let's start recording
+    replay.start();
+  } else if (window.location.pathname.startsWith("/buggy-page/")) {
+    // Stop replay when the user leaves the buggy page
+    replay.stop();
+  }
+});
+```
+
