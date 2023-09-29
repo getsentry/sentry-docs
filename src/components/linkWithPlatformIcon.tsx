@@ -24,7 +24,7 @@ export function linkWithPlatformIcon({platform, label, url}: Props) {
           }}
           format="sm"
         />
-        {label ?? 'default value not set! xxx'}
+        {label ?? platform}
       </SmartLink>
     </span>
   );
