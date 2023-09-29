@@ -122,7 +122,7 @@ export function TableOfContents({content, pageContext}: Props) {
         <h6>On this page</h6>
       </div>
       <ul className="section-nav">{recursiveRender(items)}</ul>
-      {platform && (
+      {platform && platform.name !== 'python' && (
         <Fragment>
           <div className="doc-toc-title">
             <h6>Related Guides</h6>
