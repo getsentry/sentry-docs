@@ -7,9 +7,9 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  '[Workshop] How to detect, fix and prevent ANRs. Join us live. Sept 27 | 10 AM PT.';
+  'Curious how distributed tracing can help you debug faster? Join us Oct 17 | 10 AM PST.';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/ama-detect-fix-prevent-anrs/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2F';
+  'https://sentry.io/resources/debugging-errors-faster-with-distributed-tracing/';
 const BANNER_LINK_TEXT = 'Register Now';
 const OPTIONAL_BANNER_IMAGE = null;
 

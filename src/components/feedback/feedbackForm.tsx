@@ -1,4 +1,4 @@
-import React, {FormEvent, useRef} from 'react';
+import React, {FormEvent, useRef, useState} from 'react';
 import {css} from '@emotion/react';
 import styled from '@emotion/styled';
 
@@ -17,10 +17,12 @@ const retrieveStringValue = (formData: FormData, key: string) => {
 
 export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const [hasDescription, setHasDescription] = useState(false);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+
     onSubmit({
       name: retrieveStringValue(formData, 'name'),
       email: retrieveStringValue(formData, 'email'),
@@ -38,7 +40,7 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
           type="text"
           id="sentry-feedback-name"
           name="name"
-          placeholder="Anonymous"
+          placeholder="Your name"
           defaultValue={user?.username}
         />
       </Label>
@@ -53,12 +55,17 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
         />
       </Label>
       <Label htmlFor="sentry-feedback-comment">
-        Description
+        <div>
+          Description<Required>*</Required>
+        </div>
         <TextArea
           rows={5}
+          onChange={event => {
+            setHasDescription(!!event.target.value);
+          }}
           onKeyDown={event => {
             if (event.key === 'Enter' && event.ctrlKey) {
-              formRef.current.requestSubmit();
+              formRef.current?.requestSubmit();
             }
           }}
           id="sentry-feedback-comment"
@@ -67,7 +74,13 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
         />
       </Label>
       <ButtonGroup>
-        <SubmitButton type="submit">Send Bug Report</SubmitButton>
+        <SubmitButton
+          type="submit"
+          disabled={!hasDescription}
+          aria-disabled={!hasDescription}
+        >
+          Send Bug Report
+        </SubmitButton>
         <CancelButton type="button" onClick={onClose}>
           Cancel
         </CancelButton>
@@ -76,7 +89,7 @@ export function FeedbackForm({onClose, onSubmit}: FeedbackFormProps) {
   );
 }
 
-const Form = styled.form`
+const Form = styled('form')`
   display: grid;
   overflow: auto;
   flex-direction: column;
@@ -84,7 +97,7 @@ const Form = styled.form`
   padding: 0;
 `;
 
-const Label = styled.label`
+const Label = styled('label')`
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -96,28 +109,29 @@ const inputStyles = css`
   border: 1.5px solid rgba(41, 35, 47, 0.13);
   border-radius: 6px;
   font-size: 14px;
+  font-weight: 500;
   padding: 6px 12px;
   &:focus {
     border-color: rgba(108, 95, 199, 1);
   }
 `;
 
-const Input = styled.input`
+const Input = styled('input')`
   ${inputStyles}
 `;
 
-const TextArea = styled.textarea`
+const TextArea = styled('textarea')`
   ${inputStyles}
   resize: vertical;
 `;
 
-const ButtonGroup = styled.div`
+const ButtonGroup = styled('div')`
   display: grid;
   gap: 8px;
   margin-top: 8px;
 `;
 
-const buttonStyles = css`
+const BaseButton = styled('button')`
   border: 1px solid #ccc;
   border-radius: 6px;
   cursor: pointer;
@@ -126,22 +140,29 @@ const buttonStyles = css`
   padding: 6px 16px;
 `;
 
-const SubmitButton = styled.button`
-  ${buttonStyles}
+const SubmitButton = styled(BaseButton)`
   background-color: rgba(108, 95, 199, 1);
   border-color: rgba(108, 95, 199, 1);
   color: #fff;
   &:hover {
     background-color: rgba(88, 74, 192, 1);
   }
+
+  &[disabled] {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 `;
 
-const CancelButton = styled.button`
-  ${buttonStyles}
+const CancelButton = styled(BaseButton)`
   background-color: #fff;
   color: #231c3d;
   font-weight: 500;
   &:hover {
     background-color: #eee;
   }
+`;
+
+const Required = styled('span')`
+  color: rgba(223, 51, 56, 1);
 `;
