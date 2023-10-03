@@ -12,11 +12,12 @@ export const useFocusTrap = (ref: React.RefObject<HTMLElement>, autofocus?: bool
     if (!element) {
       return () => {};
     }
-    const focusable = element.querySelectorAll(focusableElements);
-    const firstFocusable = focusable[0] as HTMLElement;
-    const lastFocusable = focusable[focusable.length - 1] as HTMLElement;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      const focusable = element.querySelectorAll(focusableElements);
+      const firstFocusable = focusable[0] as HTMLElement;
+      const lastFocusable = focusable[focusable.length - 1] as HTMLElement;
+
       if (event.key === 'Tab') {
         if (event.shiftKey) {
           if (document.activeElement === firstFocusable) {
