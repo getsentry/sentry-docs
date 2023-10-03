@@ -11,9 +11,15 @@ keywords:
   ]
 ---
 
-Application Not Responding (ANR) errors, or Event Loop Stall errors, are triggered when the Node.js main thread event loop of an application is blocked for more than five seconds. The Node SDK reports ANR errors as Sentry events and can optionally attach a stacktrace of the blocking code to the ANR event.
+Application Not Responding (ANR) errors, or Event Loop Stall errors, are triggered when the Node.js main thread event loop of an application is blocked for more than five seconds. The Node SDK reports ANR errors as Sentry events and can optionally attach a stack trace of the blocking code to the ANR event.
 
 <Include name="feature-stage-beta.mdx" />
+
+<Note>
+
+ANR detection is not supported for [Node.js clusters](https://nodejs.org/api/cluster.html).
+
+</Note>
 
 _(Available in version 7.72.0 and above)_
 
@@ -53,12 +59,6 @@ Sentry.enableANRDetection({ captureStackTrace: true }).then(() => {
 ```
 
 ![Example of an ANR error event](anr-node-example.png)
-
-<Alert level="warning">
-
-ANR detection is not supported for [Node.js clusters](https://nodejs.org/api/cluster.html).
-
-</Alert>
 
 ## Configuration options
 
@@ -103,10 +103,10 @@ interface Options {
 
 ## ANR Implementation and Overhead
 
-ANR detection with the Node SDK works with a forked child process. The child process runs the same entry point as the main app. To ensure that the main app code does not run in the child process, we use a promise that only resolves in the main process.
+ANR detection with the Node SDK uses a forked child process. The child process runs the same entry point as the main app. To ensure that the main app code does not run in the child process, the SDK uses a promise that only resolves in the main process.
 
 The main app process sends a heartbeat message to the child process every 50ms. If the child process does not receive a heartbeat message for 5 seconds, it triggers an ANR event. If the `captureStackTrace` option is enabled, the child process uses WebSockets to capture stack traces via the [v8 inspector API](https://nodejs.org/api/inspector.html).
 
-Once an ANR event has been reported, the child process exits to prevent further duplicate events. The main process will still continue to run like usual.
+Once an ANR event is reported, the child process exits to prevent further duplicate events. The main process will continue to run as usual.
 
-In general overhead from using Node.js ANR tracking is expected to be minimal. With no ANR detected, the only overhead in the main app process is polling the child process over IPC by default every 50ms. The ANR child process consumes around 50-60 MB or RAM and simply keeps track of the polling. Once ANR has been detected, the main process will get paused briefly in the debugger to capture a stack trace frames. At this point, the event loop has been blocked for seconds so the debugging overhead can be considered negligible.
+Overhead from Node.js ANR tracking should be minimal. With no ANR detected, the only overhead in the main app process is polling the child process over IPC every 50ms by default. The ANR child process consumes around 50-60 MB or RAM to keep track of the polling. Once an ANR has been detected, the main process is paused briefly in the debugger to capture a stack trace frames. At this point, the event loop has been blocked for seconds so the debugging overhead is negligible.
