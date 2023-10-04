@@ -39,11 +39,14 @@ for line in labels:
     current.append(line)
 
 for area in product_owners['by_area']:
-    if "'" in area:
-        product_areas.append(f'- name: "Product Area: {area}"\n')
-    else:
-        product_areas.append(f"- name: 'Product Area: {area}'\n")
-    product_areas.append("  color: '8D5494'\n")
+    # These are specifically placed at the front and end of the list of product areas.
+    # They will always exist, so ignore what is coming in from security-as-code as a workaround.
+    if area != 'Other' and area != 'Unknown':
+        if "'" in area:
+            product_areas.append(f'- name: "Product Area: {area}"\n')
+        else:
+            product_areas.append(f"- name: 'Product Area: {area}'\n")
+        product_areas.append("  color: '8D5494'\n")
 
 product_areas += ["- name: 'Product Area: Other'\n", "  color: '8D5494'\n"]
 
