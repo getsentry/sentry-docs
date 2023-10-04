@@ -4,30 +4,38 @@ To set it up manually, all you have to do is to make sure your application extra
 
 ## Step 1) Extract Incoming Tracing Information
 
-Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `ContinueTrace()` function to help you with this. Incoming tracing information can come from HTTP headers, for example, by another Sentry SDK used in your frontend project.
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `ContinueTrace()` function to help you with this. Tracing information can come from incoming headers, for example, by another Sentry SDK used in your frontend project.
 
-Here's an example of how to extract and store incoming tracing information using `ContinueTrace()`:
+Here's an example using RabbitMQ of how to extract and store incoming tracing information using `ContinueTrace()`:
 
 ```csharp
-using System;
-using System.Net.Http;
+using System.Text;
+using RabbitMQ.Client.Events;
 using Sentry;
 
-var httpContext = ...;
-
-var sentryTraceHeader = httpContext.Request.Headers.GetValueOrDefault("sentry-trace");
-var sentryBaggageHeader = httpContext.Request.Headers.GetValueOrDefault("baggage");
-
-try
+using var channel = ...;
+var consumer = new EventingBasicConsumer(channel);
+consumer.Received += (model, ea) =>
 {
-    var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
-    var transaction = Sentry.startTransaction(transactionContext);
-}
-catch (FormatException e)
-{
-    // Handle invalid trace header
-    e.Data["bad-sentry-header"] = sentryTraceHeader;
-    SentrySdk.CaptureException(e);
+    // Extract headers from the incoming message
+    var headers = ea.BasicProperties.Headers;
+    if (headers != null)
+    {
+        var sentryTraceHeader = string.Empty;
+        var sentryBaggageHeader = string.Empty;
+
+        if (headers.TryGetValue("sentry-trace", out var traceHeader))
+        {
+            sentryTraceHeader = Encoding.UTF8.GetString((byte[])traceHeader);
+        }
+        if (headers.TryGetValue("baggage", out var baggageHeader))
+        {
+            sentryBaggageHeader = Encoding.UTF8.GetString((byte[])baggageHeader);
+        }
+
+        var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
+        var transaction = SentrySdk.StartTransaction(transactionContext);
+    }
 }
 ```
 
@@ -39,23 +47,26 @@ For distributed tracing to work, the two headers `sentry-trace` and `baggage`, m
 
 If you send outgoing HTTP requests with an HTTP client that uses `SentryHttpMessageHandler`, this tracing information is automatically added to outgoing requests. You do not have to enable Performance for distributed tracing to work.
 
-If you're not using the `SentryHttpMessageHandler`, you can generate this tracing information with the Sentry SDK's `GetTraceHeader()` and `GetBaggage()` functions. Here's an example:
+If you're not using the `SentryHttpMessageHandler`, you can generate this tracing information with the Sentry SDK's `GetTraceHeader()` and `GetBaggage()` functions. Here's an example using RabbitMQ:
 
 ```csharp
-using System;
-using System.Net.Http;
+using RabbitMQ.Client;
 using Sentry;
 
-var sentryTraceHeader = SentrySdk.GetTraceHeader();
-var sentryBaggageHeader = SentrySdk.GetBaggage();
+using var channel = ...;
 
-using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
-request.Headers.Add("sentry-trace", sentryTraceHeader.ToString());
-request.Headers.Add("baggage", sentryBaggageHeader.ToString());
+var properties = channel.CreateBasicProperties();
+properties.Headers = new Dictionary<string, object>();
+properties.Headers.Add("sentry-trace", SentrySdk.GetTraceHeader()?.ToString());
+properties.Headers.Add("baggage", SentrySdk.GetBaggage()?.ToString());
 
+channel.BasicPublish(exchange: ...,
+    routingKey: ...,
+    basicProperties: properties,
+    body: ...);
 ```
 
-In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses the Sentry .NET SDK, it will extract and save the tracing information for later use.
+This way, tracing information is propagated to the project receiving the message. If this project uses the Sentry .NET SDK, it will extract and save the tracing information for later use.
 
 The two services are now connected with your custom distributed tracing implementation.
 
