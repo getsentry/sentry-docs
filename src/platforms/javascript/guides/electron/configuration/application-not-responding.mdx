@@ -60,16 +60,23 @@ Sentry.enableAnrDetection({ mainProcess: { captureStackTrace: true } }).then(
 // runApp();
 ```
 
-![Example of an ANR error event](anr-node-example.png)
-
 ## Configuration options
 
 You can pass in a configuration object to the `enableANRDetection` function to customize the ANR detection behavior.
 
 ```Typescript
-declare function enableAnrDetection(options: Partial<Options>): Promise<void>;
+declare function enableAnrDetection(options: Options): Promise<void>;
 
 interface Options {
+  /**
+   * Main process ANR options.
+   *
+   * Set to false to disable ANR detection in the main process.
+   */
+  mainProcess?: MainProcessOptions | false;
+}
+
+interface MainProcessOptions {
   /**
    * The app entry script. This is used to run the same script as the child process.
    *
@@ -111,4 +118,4 @@ The main app process sends a heartbeat message to the child process every 50ms. 
 
 Once an ANR event is reported, the child process exits to prevent further duplicate events. The main process will continue to run as usual.
 
-Overhead from Node.js ANR tracking should be minimal. With no ANR detected, the only overhead in the main app process is polling the child process over IPC every 50ms by default. The ANR child process consumes around 50-60 MB or RAM to keep track of the polling. Once an ANR has been detected, the main process is paused briefly in the debugger to capture a stack trace frames. At this point, the event loop has been blocked for seconds so the debugging overhead is negligible.
+Overhead from Electron ANR tracking should be minimal. With no ANR detected, the only overhead in the main app process is polling the child process over IPC every 50ms by default. The ANR child process consumes around 50-60 MB or RAM to keep track of the polling. Once an ANR has been detected, the main process is paused briefly in the debugger to capture a stack trace frames. At this point, the event loop has been blocked for seconds so the debugging overhead is negligible.
