@@ -38,8 +38,6 @@ Query monitoring works best with up-to-date SDK versions. The following minimum 
 
 ### Span Eligibility
 
-The data shown is pulled from `db` and `db.sql` spans.
-
 Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not currently eligible for this feature.
 
 If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, query monitoring should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
