@@ -103,7 +103,93 @@ Sentry.init({
 });
 ```
 
-Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here's an example for your server component:
+Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry.
+
+### Using a Tunneling Server
+
+Here's an example for your server component:
+
+```js {tabTitle:Express}
+// Change this to suit your needs
+const SENTRY_HOST = "oXXXXXX.ingest.sentry.io";
+const SENTRY_KNOWN_PROJECTS = ["123456"];
+
+app.post("/bugs", async (req, res) => {
+  try {
+    const envelope = req.body;
+
+    const piece = envelope.toString().split("\n")[0];
+    const header = JSON.parse(piece);
+
+    const dsn = new URL(header.dsn);
+    if (dsn.hostname !== SENTRY_HOST) {
+      throw new Error(`Invalid Sentry host: ${dsn.hostname}`);
+    }
+
+    const projectId = dsn.pathname.substring(1);
+    if (!SENTRY_KNOWN_PROJECTS.includes(projectId)) {
+      throw new Error(`Invalid Project ID: ${projectId}`);
+    }
+
+    const url = `https://${SENTRY_HOST}/api/${projectId}/envelope/`;
+    await fetch(url, {
+      method: "POST",
+      body: envelope,
+      headers: {
+        "Content-Type": "application/x-sentry-envelope",
+      },
+    });
+  } catch (error) {
+    return res.sendStatus(400).send({ message: error.message });
+  }
+  return res.sendStatus(204);
+});
+```
+
+```js {tabTitle:Fastify}
+// Change this to suit your needs
+const SENTRY_HOST = "oXXXXXX.ingest.sentry.io";
+const SENTRY_KNOWN_PROJECTS = ["123456"];
+
+// Handle replay packets where no content-type header is available
+fastify.addContentTypeParser(
+  "*",
+  { parseAs: "buffer" },
+  function (req, body, done) {
+    done(null, body);
+  }
+);
+fastify.post("/bugs", async (request, reply) => {
+  try {
+    const envelope = request.body;
+
+    const piece = envelope.toString().split("\n")[0];
+    const header = JSON.parse(piece);
+
+    const dsn = new URL(header.dsn);
+    if (dsn.hostname !== SENTRY_HOST) {
+      throw new Error(`Invalid Sentry host: ${dsn.hostname}`);
+    }
+
+    const projectId = dsn.pathname.substring(1);
+    if (!SENTRY_KNOWN_PROJECTS.includes(projectId)) {
+      throw new Error(`Invalid Project ID: ${projectId}`);
+    }
+
+    const url = `https://${SENTRY_HOST}/api/${projectId}/envelope/`;
+    await fetch(url, {
+      method: "POST",
+      body: envelope,
+      headers: {
+        "Content-Type": "application/x-sentry-envelope",
+      },
+    });
+  } catch (error) {
+    return reply.code(400).send({ message: error.message });
+  }
+  return reply.code(204).send();
+});
+```
 
 ```csharp
 // Requires .NET Core 3.1 and C# 9 or higher
