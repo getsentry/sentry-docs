@@ -18,7 +18,7 @@ When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sam
 
 If `replaysOnErrorSampleRate > 0`, we'll start recording in buffering mode and keep checking `replaysOnErrorSampleRate` whenever an error occurs. Once we see that it's sampled, we'll upload the Replay to Sentry and continue recording normally.
 
-If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-recording">record manually</PlatformLink>.
+If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">record manually</PlatformLink>.
 
 ## Session Mode
 
@@ -53,15 +53,17 @@ async function init(sessionSampleRate, errorSampleRate) {
 You can manually start a Replay session with:
 
 ```javascript
-// This initializes Replay without starting any session
-const replay = new Sentry.Replay();
-
 Sentry.init({
   dsn: "...",
+  // This initializes Replay without starting any session
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
-  integrations: [replay],
+  integrations: [new Sentry.Replay()],
 });
+
+// You can access the active replay instance from anywhere in your code like this:
+const client = Sentry.getCurrentHub().getClient();
+const replay = client?.getIntegration(Sentry.Replay);
 
 // This starts in `session` mode, regardless of sample rates
 replay.start();
@@ -93,3 +95,5 @@ await replay.flush();
 ```
 
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
+
+Note that it is safe to call `flush()` any time, even if Session Replay is stopped. In that case, it will simply do nothing.
