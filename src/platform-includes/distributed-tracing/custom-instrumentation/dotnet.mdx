@@ -10,10 +10,20 @@ Here's an example using RabbitMQ of how to extract and store incoming tracing in
 
 ```csharp
 using System.Text;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Sentry;
 
-using var channel = ...;
+var factory = new ConnectionFactory()
+{
+    HostName = "localhost",
+    UserName = "guest",
+    Password = "guest"
+};
+
+using var connection = factory.CreateConnection();
+using var channel = connection.CreateModel();
+
 var consumer = new EventingBasicConsumer(channel);
 consumer.Received += (model, ea) =>
 {
@@ -28,6 +38,7 @@ consumer.Received += (model, ea) =>
         {
             sentryTraceHeader = Encoding.UTF8.GetString((byte[])traceHeader);
         }
+
         if (headers.TryGetValue("baggage", out var baggageHeader))
         {
             sentryBaggageHeader = Encoding.UTF8.GetString((byte[])baggageHeader);
@@ -36,7 +47,7 @@ consumer.Received += (model, ea) =>
         var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
         var transaction = SentrySdk.StartTransaction(transactionContext);
     }
-}
+};
 ```
 
 If you pass these headers to Sentry's `ContinueTrace()` function it will store them in memory for later use.
@@ -53,17 +64,26 @@ If you're not using the `SentryHttpMessageHandler`, you can generate this tracin
 using RabbitMQ.Client;
 using Sentry;
 
-using var channel = ...;
+var factory = new ConnectionFactory()
+{
+    HostName = "localhost",
+    UserName = "guest",
+    Password = "guest"
+};
+
+using var connection = factory.CreateConnection();
+using var channel = connection.CreateModel();
 
 var properties = channel.CreateBasicProperties();
 properties.Headers = new Dictionary<string, object>();
 properties.Headers.Add("sentry-trace", SentrySdk.GetTraceHeader()?.ToString());
 properties.Headers.Add("baggage", SentrySdk.GetBaggage()?.ToString());
 
-channel.BasicPublish(exchange: ...,
-    routingKey: ...,
+channel.BasicPublish(
+    exchange: "..",
+    routingKey: "...",
     basicProperties: properties,
-    body: ...);
+    body: new ReadOnlyMemory<byte>());
 ```
 
 This way, tracing information is propagated to the project receiving the message. If this project uses the Sentry .NET SDK, it will extract and save the tracing information for later use.
