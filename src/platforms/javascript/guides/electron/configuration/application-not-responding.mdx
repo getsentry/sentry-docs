@@ -1,7 +1,7 @@
 ---
 title: Application Not Responding (ANR)
 sidebar_order: 70
-description: "Learn how to turn off or specify ANRs for Node.js"
+description: "Learn how to turn off or specify ANRs for Electron Main Thread"
 keywords:
   [
     "anr",
@@ -11,51 +11,53 @@ keywords:
   ]
 ---
 
-Application Not Responding (ANR) errors, or Event Loop Stall errors, are triggered when the Node.js main thread event loop of an application is blocked for more than five seconds. The Node SDK reports ANR errors as Sentry events and can optionally attach a stack trace of the blocking code to the ANR event.
+Application Not Responding (ANR) errors, or Event Loop Stall errors, are triggered when the Electron main process event loop is blocked for more than five seconds. The Electron SDK reports ANR errors as Sentry events and can optionally attach a stack trace of the blocking code to the ANR event.
 
 <Include name="feature-stage-beta.mdx" />
 
-<Note>
+_(Available in version 4.13.0 and above)_
 
-ANR detection is not supported for [Node.js clusters](https://nodejs.org/api/cluster.html).
-
-</Note>
-
-_(Available in version 7.72.0 and above)_
-
-To enable ANR detection, import and use the `enableANRDetection` function from the `@sentry/node` package before you run the rest of your application code. Any event loop blocking before calling `enableANRDetection` will not be detected by the SDK.
+To enable ANR detection, import and use the `enableANRDetection` function from the `@sentry/electron` package before you run the rest of your application code. Any event loop blocking before calling `enableANRDetection` will not be detected by the SDK.
 
 <Alert level="info">
 
-ANR detection requires Node 10 or higher.
+ANR detection requires Electron v4 or higher.
 
 </Alert>
 
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/node";
+```javascript {tabTitle: CJS}
+const Sentry = require("@sentry/electron");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
 });
 
-await Sentry.enableANRDetection({ captureStackTrace: true });
-// Function that runs your app
-runApp();
+Sentry.enableANRDetection({ mainProcess: { captureStackTrace: true } }).then(
+  () => {
+    // Function that runs your app
+    runApp();
+  }
+);
 ```
 
-```javascript {tabTitle: CJS}
-const Sentry = require("@sentry/node");
+```javascript {tabTitle: ESM}
+import * as Sentry from "@sentry/electron";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
 });
 
-Sentry.enableANRDetection({ captureStackTrace: true }).then(() => {
-  // Function that runs your app
-  runApp();
-});
+Sentry.enableAnrDetection({ mainProcess: { captureStackTrace: true } }).then(
+  () => {
+    runApp();
+  }
+);
+
+// Electron v28+ with ESM
+// await Sentry.enableANRDetection({ mainProcess: { captureStackTrace: true } });
+// runApp();
 ```
 
 ![Example of an ANR error event](anr-node-example.png)
@@ -64,7 +66,7 @@ Sentry.enableANRDetection({ captureStackTrace: true }).then(() => {
 
 You can pass in a configuration object to the `enableANRDetection` function to customize the ANR detection behavior.
 
-```ts
+```Typescript
 declare function enableAnrDetection(options: Partial<Options>): Promise<void>;
 
 interface Options {
@@ -103,7 +105,7 @@ interface Options {
 
 ## ANR Implementation and Overhead
 
-ANR detection with the Node SDK uses a forked child process. The child process runs the same entry point as the main app. To ensure that the main app code does not run in the child process, the SDK uses a promise that only resolves in the main process.
+ANR detection with the Electron SDK uses a forked child process. The child process runs the same entry point as the main app. To ensure that the main app code does not run in the child process, the SDK uses a promise that only resolves in the main process.
 
 The main app process sends a heartbeat message to the child process every 50ms. If the child process does not receive a heartbeat message for 5 seconds, it triggers an ANR event. If the `captureStackTrace` option is enabled, the child process uses WebSockets to capture stack traces via the [v8 inspector API](https://nodejs.org/api/inspector.html).
 
