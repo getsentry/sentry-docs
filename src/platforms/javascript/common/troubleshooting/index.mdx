@@ -105,36 +105,6 @@ Sentry.init({
 
 Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here's an example for your server component:
 
-```php
-<?php
-// Change $host appropriately if you run your own Sentry instance.
-$host = "sentry.io";
-// Set $known_project_ids to an array with your Sentry project IDs which you
-// want to accept through this proxy.
-$known_project_ids = array(  );
-
-$envelope = stream_get_contents(STDIN);
-$pieces = explode("\n", $envelope, 2);
-$header = json_decode($pieces[0], true);
-if (isset($header["dsn"])) {
-    $dsn = parse_url($header["dsn"]);
-    $project_id = intval(trim($dsn["path"], "/"));
-    if (in_array($project_id, $known_project_ids)) {
-      $options = array(
-        'http' => array(
-            'header'  => "Content-type: application/x-sentry-envelope\r\n",
-            'method'  => 'POST',
-            'content' => $envelope
-        )
-      );
-      echo file_get_contents(
-          "https://$host/api/$project_id/envelope/",
-          false,
-          stream_context_create($options));
-    }
-}
-```
-
 ```csharp
 // Requires .NET Core 3.1 and C# 9 or higher
 using System;

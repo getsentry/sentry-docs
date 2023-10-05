@@ -96,6 +96,35 @@ Fixes MYAPP-317
 
 When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved. The commit must be associated with a release. Otherwise, if the commit is squashed, Sentry won’t know when the commit has been released, and the issue may never be marked as a regression.
 
+### Stack Trace Linking
+
+<Note>
+
+This feature is currently only supported for Ruby, Python, Php, Node, JavaScript, Go and Elixir.
+
+</Note>
+
+Stack trace linking takes you from a file in your Sentry stack trace to that same file in your source code. If you have commit tracking set up in Sentry, we can take you to the exact version (using the commit associated with the event) of the source code when the error occurred. Otherwise we'll link you to the current state of the source code (using the default branch).
+
+1. Navigate to **Settings > Integrations > Azure DevOps > Configurations**.
+
+1. Click "Configure" (the gear icon) next to your Azure DevOps Instance.
+
+1. Click the "Code Mappings" tab.
+
+1. Set up a code mapping for each project you want to have stack trace linking. To create a new code mapping, click "Add Mapping".
+
+1. Fill out the form, then click "Save Changes". Each form field is described below:
+
+   - **Project** (required): This is the Sentry project.
+   - **Repo** (required): This is the Azure DevOps project associated with the Sentry project above. If you have more than one Azure DevOps project being used per Sentry project, you'll need multiple code mappings.
+   - **Branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
+   - **Stack Trace Root** and **Source Code Root** (optional):
+     - If the file path in your Sentry stack trace frame matches the path to your source code, you don't need to set these values.
+       - For example, if everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://MeredithAnya.visualstudio.com/testing/blob/main/code.py`, you don't need to set either `stack trace root` or `source code root`
+     - If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the `stack_root` part of the file path with your `source_root` to make the file path match the source code path.
+       - For example, to get `src/code.py` to match `code.py` when the source code path is `https://MeredithAnya.visualstudio.com/testing/blob/main/code.py`, change the `stack trace root` to be set as `src/`, and leave `source code root` empty.
+
 ## Troubleshooting
 
 ### No accounts during installation
