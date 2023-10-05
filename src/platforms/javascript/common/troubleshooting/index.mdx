@@ -114,7 +114,7 @@ Here's an example of how to set up an endpoint on your server that tunnels event
 const SENTRY_HOST = "oXXXXXX.ingest.sentry.io";
 const SENTRY_KNOWN_PROJECTS = ["123456"];
 
-app.post("/bugs", async (req, res) => {
+app.post("/bugs", (req, res) => {
   try {
     const envelope = req.body;
 
@@ -132,17 +132,20 @@ app.post("/bugs", async (req, res) => {
     }
 
     const url = `https://${SENTRY_HOST}/api/${projectId}/envelope/`;
-    await fetch(url, {
+    fetch(url, {
       method: "POST",
       body: envelope,
       headers: {
         "Content-Type": "application/x-sentry-envelope",
       },
+    }).then(() => {
+      res.sendStatus(204);
+    }, (error) => {
+      res.sendStatus(400).send({ message: error.message });
     });
   } catch (error) {
-    return res.sendStatus(400).send({ message: error.message });
+   res.sendStatus(400).send({ message: error.message });
   }
-  return res.sendStatus(204);
 });
 ```
 
