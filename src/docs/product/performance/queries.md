@@ -23,12 +23,6 @@ The gif below demonstrates how to use performance monitoring for queries.
 
 The queries widget and pages are only available for backend projects with performance monitoring enabled.
 
-<Note>
-
-The **Queries** page collects queries from your application's endpoints. Queries that run in async tasks are not shown. If a query runs in an endpoint _and_ a task, the metrics will reflect its performance within endpoints only.
-
-</Note>
-
 ### Recommended SDK Versions
 
 Query monitoring works best with up-to-date SDK versions. The following minimum versions are recommended:
