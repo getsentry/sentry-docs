@@ -69,6 +69,7 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         title={`Sentry for ${(guide || platform).title}`}
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[
+          `/${pathRoot}/error-monitoring/`,
           `/${pathRoot}/performance/`,
           `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
@@ -77,30 +78,37 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         ]}
       />
       <DynamicNav
+        root={`/${pathRoot}/error-monitoring`}
+        title="Error Monitoring"
+        prependLinks={[[`/${pathRoot}/error-monitoring/`, 'Getting Started']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
-        prependLinks={[[`/${pathRoot}/performance/`, 'Set Up Performance']]}
+        prependLinks={[[`/${pathRoot}/performance/`, 'Getting Started']]}
         suppressMissing
         tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/profiling`}
         title="Profiling"
-        prependLinks={[[`/${pathRoot}/profiling/`, 'Set Up Profiling']]}
+        prependLinks={[[`/${pathRoot}/profiling/`, 'Getting Started']]}
         suppressMissing
         tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/session-replay`}
         title="Session Replay"
-        prependLinks={[[`/${pathRoot}/session-replay/`, 'Set Up Session Replay']]}
+        prependLinks={[[`/${pathRoot}/session-replay/`, 'Getting Started']]}
         suppressMissing
         tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/crons`}
-        title="Crons"
-        prependLinks={[[`/${pathRoot}/crons/`, 'Set Up Crons']]}
+        title="Cron Monitoring"
+        prependLinks={[[`/${pathRoot}/crons/`, 'Getting Started']]}
         suppressMissing
         tree={tree}
       />
