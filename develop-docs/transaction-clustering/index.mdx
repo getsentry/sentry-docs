@@ -135,22 +135,9 @@ Nodes with large weights would then be encoded into the replacement rules as exc
 
 We decided against this because encoding exceptions into rules would bloat project configs on the wire and in Relay.
 
-### False Positives
+### Identifiers not scrubbed
 
-The discovery of replacement rules is a best-effort approach: no matter how many rules the clusterer discovers, a project can always
+The discovery of replacement rules is a best-effort approach: no matter how many rules the clusterer discovers, it might not detect all patterns. A project can always
 introduce a new feature that brings more high-cardinality transactions, and it takes time until the clusterer discovers a new rule for those.
-
-At the same time, the algorithm is blind to low-cardinality transactions that do not contain identifiers at all. For example, if a transaction
-like `/settings` has type `url`, neither the pattern-based nor the rule-based approach detect any identifiers.
-
-In order to prevent these false negatives, as of [this PR](https://github.com/getsentry/relay/pull/1960) we mark _every_ URL transaction as low-cardinality as long as there
-is _some_ scrubbing rule (even if it does not match), or we found an identifier pattern. In other words, we sacrifice [precision](https://en.wikipedia.org/wiki/Precision_and_recall) for the sake of [recall](https://en.wikipedia.org/wiki/Precision_and_recall).
-
-| category       | description                                                                          |
-| -------------- | ------------------------------------------------------------------------------------ |
-| true positive  | We scrubbed all identifiers (if any) and label the transaction as `sanitized`        |
-| false positive | We miss an identifier, but still label as `sanitized`                                |
-| true negative  | We keep the transaction labeled as `url` and it contains identifiers                 |
-| false negative | We keep the transaction labeled as `url` even though it does not contain identifiers |
 
 The consequence of this is again potentially high cardinality in our metrics ingestion and storage, up to the point where we might hit the [cardinality limiter](https://github.com/getsentry/sentry/blob/9af20330c84b971882be9837d4e43e148af5a126/src/sentry/ratelimits/cardinality.py#L93-L95).
