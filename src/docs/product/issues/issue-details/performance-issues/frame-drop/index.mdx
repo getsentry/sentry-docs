@@ -109,3 +109,85 @@ There are several things to keep in mind when introducing concurrency:
 - You may be unable to parallelize loops whose iterations are dependent or where order is significant.
 - Parallelization may be less efficient for small collections because [thread spawning has its own costs](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/AboutThreads/AboutThreads.html#//apple_ref/doc/uid/10000057i-CH6-SW20). So always measure first!
 - Both `enumerateObjects...` and `dispatch_apply` are synchronous and won't return until all iterations have completed. Dispatch their invocation asynchronously off the main queue to avoid waiting.
+
+
+### Android
+
+The following function executes a long-running `for` loop to sort a list:
+
+```kotlin
+// sort a list of numbers, with even numbers before the odd ones
+fun sortEvenOdd(numbers: List<Int>): List<Int> {
+    val newList = ArrayList<Int>()
+    for (n in numbers) {
+        if (n % 2 == 0) {
+            val i = newList.indexOfFirst { it % 2 == 1 }
+            newList.add(i.takeIf { it != -1 } ?: 0, n)
+        } else {
+            val i = newList.indexOfLast { it % 2 == 1 }
+            newList.add(i.takeIf { it != -1 } ?: newList.size, n)
+        }
+    }
+    return newList
+}
+```
+
+Performance could be improved by moving the long computation off of the main thread to a coroutine:
+
+```kotlin
+// sort a list of numbers, with even numbers before the odd ones, then call onSorted with the sorted list as parameter.
+fun sortEvenOdd(numbers: List<Int>, onSorted: (sorted: List<Int>) -> Unit): List<Int> {
+    lifecycleScope.launch(Dispatchers.Default) {
+    val newList = ArrayList<Int>()
+        for (n in numbers) {
+            if (n % 2 == 0) {
+                val i = newList.indexOfFirst { it % 2 == 1 }
+                newList.add(i.takeIf { it != -1 } ?: 0, n)
+            } else {
+                val i = newList.indexOfLast { it % 2 == 1 }
+                newList.add(i.takeIf { it != -1 } ?: newList.size, n)
+            }
+        }
+        withContext(Dispatchers.Main) {
+            // Continue computation on the main thread
+            onSorted(newList)
+        }
+    }
+}
+```
+
+There is no predefined way to fix performance of custom algorithms, due to their nature.
+
+In our example above, we were analyzing each number, then performed a search to find the right index to put the number, and finally inserting the item in the list, for every item on the list.
+
+Using two separated lists for even and odd numbers, we can completely avoid the search, as the right index will always be the end of the list.
+Also, due to the nature of the ArrayList, inserting an element in the middle of the list is slower than inserting it at the end.
+
+```kotlin
+// sort a list of numbers, with even numbers before the odd ones, then call onSorted with the sorted list as parameter.
+fun sortEvenOdd(numbers: List<Int>, onSorted: (sorted: List<Int>) -> Unit): List<Int> {
+    lifecycleScope.launch(Dispatchers.Default) {
+        val evenList = ArrayList<Int>(numbers.size)
+        val oddList = ArrayList<Int>(numbers.size)
+        for (n in numbers) {
+            if (n % 2 == 0) {
+                evenList.add(n)
+            } else {
+                oddList.add(n)
+            }
+        }
+        evenList.addAll(oddList)
+        withContext(Dispatchers.Main) {
+            // Continue computation on the main thread
+            onSorted(evenList)
+        }
+    }
+}
+```
+
+There are several considerations to keep in mind to improve performance of an algorithm:
+
+- You may be able to parallelize some work with the use of Threads (or Kotlin coroutines).
+- Explore and find the best data structures you can for your specific scope.
+- Some structures could be cached and reused throughout your function, reducing memory usage.
+- Evaluate different approaches to solve a problem.
