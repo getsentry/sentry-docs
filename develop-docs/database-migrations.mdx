@@ -123,13 +123,13 @@ generally prefer that, since it averages the load out over a longer period of ti
 We prefer to create indexes on large existing tables with `CREATE INDEX CONCURRENTLY`. Our migration framework will do this automatically when creating
 a new index. Note that when `CONCURRENTLY` is used we can't run the migration in a transaction, so it's important to use `atomic = False` to run these.
 
-### Deleting columns/tables
+When adding indexes to large tables you should use a `is_dangerous` migration as creating the index could take longer than the migration statement timeout of 5s.
+
+### Deleting columns
 
 This is complicated due to our deploy process. When we deploy, we run migrations, and then push out the application code, which takes a while. This means that if we just delete a column or model, then code in sentry will be looking for those columns/tables and erroring until the deploy completes. In some cases, this can mean Sentry is hard down until the deploy is finished.
 
 To avoid this, follow these steps:
-
-#### Columns
 
 - Mark the column as nullable if it isn't, and create a migration. (ex. `BoundedIntegerField(null=True)`)
 - Deploy.
@@ -141,43 +141,43 @@ Here's an example of removing columns that were already nullable. First we remov
 
 ```python
 operations = [
-        migrations.SeparateDatabaseAndState(
-            database_operations=[],
-            state_operations=[
-                migrations.RemoveField(model_name="alertrule", name="alert_threshold"),
-                migrations.RemoveField(model_name="alertrule", name="resolve_threshold"),
-                migrations.RemoveField(model_name="alertrule", name="threshold_type"),
-            ],
-        )
-    ]
+    migrations.SeparateDatabaseAndState(
+        database_operations=[],
+        state_operations=[
+            migrations.RemoveField(model_name="alertrule", name="alert_threshold"),
+            migrations.RemoveField(model_name="alertrule", name="resolve_threshold"),
+            migrations.RemoveField(model_name="alertrule", name="threshold_type"),
+        ],
+    )
+]
 ```
 
 Once this is deployed, we can then deploy the actual column deletion. This pr will have only a migration, since Django no longer knows about these fields. Note that the reverse SQL is only for dev, so it's fine to not assign a default or do any sort of backfill:
 
 ```python
 operations = [
-        migrations.SeparateDatabaseAndState(
-            database_operations=[
-                migrations.RunSQL(
-                    """
-                    ALTER TABLE "sentry_alertrule" DROP COLUMN "alert_threshold";
-                    ALTER TABLE "sentry_alertrule" DROP COLUMN "resolve_threshold";
-                    ALTER TABLE "sentry_alertrule" DROP COLUMN "threshold_type";
-                    """,
-                    reverse_sql="""
-                    ALTER TABLE "sentry_alertrule" ADD COLUMN "alert_threshold" smallint NULL;
-                    ALTER TABLE "sentry_alertrule" ADD COLUMN "resolve_threshold" int NULL;
-                    ALTER TABLE "sentry_alertrule" ADD COLUMN "threshold_type" int NULL;
-                    """,
-                    hints={"tables": ["sentry_alertrule"]},
-                )
-            ],
-            state_operations=[],
-        )
-    ]
+    migrations.SeparateDatabaseAndState(
+        database_operations=[
+            migrations.RunSQL(
+                """
+                ALTER TABLE "sentry_alertrule" DROP COLUMN "alert_threshold";
+                ALTER TABLE "sentry_alertrule" DROP COLUMN "resolve_threshold";
+                ALTER TABLE "sentry_alertrule" DROP COLUMN "threshold_type";
+                """,
+                reverse_sql="""
+                ALTER TABLE "sentry_alertrule" ADD COLUMN "alert_threshold" smallint NULL;
+                ALTER TABLE "sentry_alertrule" ADD COLUMN "resolve_threshold" int NULL;
+                ALTER TABLE "sentry_alertrule" ADD COLUMN "threshold_type" int NULL;
+                """,
+                hints={"tables": ["sentry_alertrule"]},
+            )
+        ],
+        state_operations=[],
+    )
+]
 ```
 
-#### Tables
+### Deleting Tables
 
 Extra care is needed here if the table is referenced as a foreign key in other tables. In that case, first remove the foreign key columns in the other tables, then come back to this step.
 
@@ -217,18 +217,18 @@ integration = FlexibleForeignKey("sentry.Integration", null=True, db_constraint=
 The operations in the migration look like
 
 ```python
-    operations = [
-        migrations.AlterField(
-            model_name='alertruletriggeraction',
-            name='alert_rule_trigger',
-            field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, to='sentry.AlertRuleTrigger'),
-        ),
-        migrations.AlterField(
-            model_name='alertruletriggeraction',
-            name='integration',
-            field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, null=True, on_delete=django.db.models.deletion.CASCADE, to='sentry.Integration'),
-        ),
-    ]
+operations = [
+    migrations.AlterField(
+        model_name='alertruletriggeraction',
+        name='alert_rule_trigger',
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, to='sentry.AlertRuleTrigger'),
+    ),
+    migrations.AlterField(
+        model_name='alertruletriggeraction',
+        name='integration',
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, null=True, on_delete=django.db.models.deletion.CASCADE, to='sentry.Integration'),
+    ),
+]
 ```
 
 And we can see the sql it generates just drops the FK constaints
@@ -246,11 +246,11 @@ The next stage involves removing all references to the model from the codebase. 
 
 ```python
 operations = [
-        migrations.SeparateDatabaseAndState(
-            state_operations=[migrations.DeleteModel(name="AlertRuleTriggerAction")],
-            database_operations=[],
-        )
-    ]
+    migrations.SeparateDatabaseAndState(
+        state_operations=[migrations.DeleteModel(name="AlertRuleTriggerAction")],
+        database_operations=[],
+    )
+]
 ```
 
 and the generated SQL shows no database changes occurring. So now we deploy this and move into the final step.
@@ -259,13 +259,13 @@ In this last step, we just want to manually write DDL to remove the table. So we
 
 ```python
 operations = [
-        migrations.RunSQL(
-            """
-            DROP TABLE "sentry_alertruletriggeraction";
-            """,
-            reverse_sql="CREATE TABLE sentry_alertruletriggeraction (fake_col int)", # We just create a fake table here so that the DROP will work if we roll back the migration.
-        )
-    ]
+    migrations.RunSQL(
+        """
+        DROP TABLE "sentry_alertruletriggeraction";
+        """,
+        reverse_sql="CREATE TABLE sentry_alertruletriggeraction (fake_col int)", # We just create a fake table here so that the DROP will work if we roll back the migration.
+    )
+]
 ```
 
 Then we deploy this and we're done.
@@ -294,6 +294,50 @@ When creating new columns they should either be:
 
 - Not null with a default. https://develop.sentry.dev/database-migrations/#adding-not-null-to-columns
 - Created as nullable. If no default value can be set on the column, then it's best just to make it nullable.
+
+### Adding Columns to Large Tables
+
+Because adding a column to a large table (more than 10M rows) can exceed the 5s
+statement timeout we have during deploys, you need to use two migrations to
+safely ship changes to large tables.
+
+First create the column in the database without telling Django about the presence of the column. This is an `is_dangerous` operation. It should look similar to:
+
+```python
+is_dangerous = True
+
+operations = [
+    migrations.SeparateDatabaseAndState(
+        database_operations=[
+            migrations.AddField(
+                model_name="group",
+                name="snooze_counter",
+                field=sentry.db.models.fields.bounded.BoundedBigIntegerField(),
+            )
+        ],
+        state_operations=[],
+    )
+]
+```
+
+Once this migration has been executed, you can deploy updates to Django's model
+state. Update your Django ORM model with the new field, and use another
+migration to update Django's schema state:
+
+```python
+operations = [
+    migrations.SeparateDatabaseAndState(
+        database_operations=[],
+        state_operations=[
+            migrations.AddField(
+                model_name="group",
+                name="snooze_counter",
+                field=sentry.db.models.fields.bounded.BoundedBigIntegerField(),
+            )
+        ],
+    )
+]
+```
 
 ### Adding Columns With a Default
 
@@ -333,8 +377,14 @@ To work around this, you can tell your migration to leave the default in place i
 It can be dangerous to add not null to columns, even if there is data in every row of the table for that column. This is because Postgres still needs to perform a not null check on all rows before it can add the constraint. On small tables this can be fine since
 the check will be quick, but on larger tables this can cause downtime. There are a few options here to make this safe:
 
-- `ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID; ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;`. First we create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
-- If the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
+```sql
+ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID; 
+ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;
+```
+
+One approach is to create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
+
+Alternatively, if the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
 
 ### Altering Column Types
 
