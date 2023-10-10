@@ -119,11 +119,33 @@ Stack trace linking takes you from a file in your Sentry stack trace to that sam
    - **Project** (required): This is the Sentry project.
    - **Repo** (required): This is the Azure DevOps project associated with the Sentry project above. If you have more than one Azure DevOps project being used per Sentry project, you'll need multiple code mappings.
    - **Branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
-   - **Stack Trace Root** and **Source Code Root** (optional):
-     - If the file path in your Sentry stack trace frame matches the path to your source code, you don't need to set these values.
-       - For example, if everything after the branch (`main`) matches the file path of `code.py` using a source code path of `https://MeredithAnya.visualstudio.com/testing/blob/main/code.py`, you don't need to set either `stack trace root` or `source code root`
-     - If the file path in your Sentry stack trace frame doesn't match the path to your source code, you will need to replace the `stack_root` part of the file path with your `source_root` to make the file path match the source code path.
-       - For example, to get `src/code.py` to match `code.py` when the source code path is `https://MeredithAnya.visualstudio.com/testing/blob/main/code.py`, change the `stack trace root` to be set as `src/`, and leave `source code root` empty.
+   - **Stack Trace Root** and **Source Code Root** (optional): See below for information on determining these values.
+
+#### Stack Trace Root and Source Code Root
+
+<Note>
+
+The following information is only valid for platforms which use traditional file paths. Platforms with package names (such as **Java**, **Cocoa**, and **Flutter**) require additional steps.
+
+</Note>
+
+First, navigate to a stack trace that you wish to map. Find an **In App** frame, which is denoted by a bubble on the right side of the frame. The filename will be shown as the first piece of text at the left hand side of the frame header. In this example, it is `src/main.py`.
+
+![Highlighting where in the UI to find the file name in the stack trace](../code-mappings-stacktrace.png)
+
+If you aren’t sure, you can look at the event JSON by clicking on the `{}` button in the event header. Find the text in the frame's `filename`.
+
+![Highlighting where in the UI to find the event JSON](../code-mappings-event-json.png)
+
+Next, locate the file seen in the stack trace with your source code provider (e.g. GitHub). In this example, the path is `flask/src/main.py` (`empower` is ignored since it is the name of the repo).
+
+![An example of a file in source control](../code-mappings-source-file.png)
+
+Compare the file path from the stack trace with the path found in your source repository. In this example, the `src/` folder in the stack trace matches the `flask/src` folder in the source code. Using that information, set the **Stack Trace Root** to `src/` and the **Source Code Root** to `flask/src/`. This tells Sentry to replace all file paths beginning in `src/` with `flask/src/` when searching for the source code.
+
+For best results, we recommend always providing a non-empty value for the **Stack Trace Root** when possible.
+
+![An example of a completed code mapping](../code-mappings-configure-modal.png)
 
 ## Troubleshooting
 
