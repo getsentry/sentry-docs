@@ -37,7 +37,7 @@ PublicDependencyModuleNames.AddRange(new string[] { ..., "Sentry" });
 Access the Sentry configuration window by going to editor's menu: **Project Settings > Plugins > Sentry** and enter the following DSN:
 
 ```
-___UNREAL_URL___
+___PUBLIC_DSN___
 ```
 
 ## Crash Reporter Client
