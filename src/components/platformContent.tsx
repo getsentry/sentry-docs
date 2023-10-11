@@ -84,11 +84,9 @@ export function PlatformContent({includePath, platform, children}: Props) {
     // snippet exists. in case children is null, it is unlikely that the page
     // is correctly written to deal with missing snippets and the correct
     // course of action is probably to hide the page for the affected platform
-    /*
     throw new Error(
       `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
     );
-    */
   }
 
   if (!contentMatch) {
