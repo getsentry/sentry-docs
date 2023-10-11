@@ -29,13 +29,14 @@ type Props = {
    */
   exclude?: string[];
   header?: string;
+  path?: string;
 };
 
-export function PageGrid({nextPages = false, header, exclude}: Props) {
+export function PageGrid({nextPages = false, header, exclude, path}: Props) {
   const data = useStaticQuery(query);
   const location = useLocation();
 
-  const currentPath = location.pathname;
+  const currentPath = path ? path : location.pathname;
   const currentPathLen = currentPath.length;
 
   let matches = sortPages(

@@ -92,13 +92,6 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         tree={tree}
       />
       <DynamicNav
-        root={`/${pathRoot}/profiling`}
-        title="Profiling"
-        prependLinks={[[`/${pathRoot}/profiling/`, 'Getting Started']]}
-        suppressMissing
-        tree={tree}
-      />
-      <DynamicNav
         root={`/${pathRoot}/session-replay`}
         title="Session Replay"
         prependLinks={[[`/${pathRoot}/session-replay/`, 'Getting Started']]}
