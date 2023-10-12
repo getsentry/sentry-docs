@@ -1,0 +1,54 @@
+---
+title: Rack Middleware
+redirect_from:
+  - /platforms/ruby/guides/rack/
+---
+
+
+<PlatformContent includePath="common/getting-started/primer" />
+
+## Install
+
+<PlatformContent includePath="common/getting-started/install" />
+
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+Add `use Sentry::Rack::CaptureExceptions` to your `config.ru` or other rackup file:
+
+<SignInNote />
+
+```ruby {filename:config.ru}
+require 'sentry-ruby'
+
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  config.breadcrumbs_logger = [:sentry_logger, :http_logger]
+
+  # To activate performance monitoring, set one of these options.
+  # We recommend adjusting the value in production:
+  config.traces_sample_rate = 1.0
+  # or
+  config.traces_sampler = lambda do |context|
+    true
+  end
+end
+
+use Sentry::Rack::CaptureExceptions
+```
+
+## Verify
+
+This following snippet triggers an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="common/getting-started/verify" />
+
+<Note>
+
+  Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
