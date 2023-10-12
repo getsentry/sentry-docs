@@ -40,7 +40,7 @@ export function PageGrid({nextPages = false, header, exclude, path}: Props) {
   let currentPath = location.pathname;
 
   if (currentPlatform && path) {
-    currentPath = currentPlatform.url + path;
+    currentPath = currentPlatform.url + path.slice(1);
   }
 
   const currentPathLen = currentPath.length;
