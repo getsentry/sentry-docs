@@ -2,6 +2,7 @@ import React from 'react';
 import {useLocation} from '@reach/router';
 import {graphql, useStaticQuery} from 'gatsby';
 
+import {usePlatform} from 'sentry-docs/components/hooks/usePlatform';
 import {sortPages} from 'sentry-docs/utils';
 
 import {SmartLink} from './smartLink';
@@ -34,9 +35,14 @@ type Props = {
 
 export function PageGrid({nextPages = false, header, exclude, path}: Props) {
   const data = useStaticQuery(query);
+  const [currentPlatform] = usePlatform(null);
   const location = useLocation();
+  let currentPath = location.pathname;
 
-  const currentPath = path ? path : location.pathname;
+  if (currentPlatform && path) {
+    currentPath = currentPlatform.url + path;
+  }
+
   const currentPathLen = currentPath.length;
 
   let matches = sortPages(

@@ -1,0 +1,53 @@
+<Note>
+
+Python profiling is available starting in SDK version `1.18.0`.
+
+</Note>
+
+## Configure
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+def profiles_sampler(sampling_context):
+  # ...
+  # return a number between 0 and 1 or a boolean
+
+sentry_sdk.init(
+  dsn="___PUBLIC_DSN___",
+  traces_sample_rate=1.0,
+
+  # To set a uniform sample rate
+  # Set profiles_sample_rate to 1.0 to profile 100%
+  # of sampled transactions.
+  # We recommend adjusting this value in production,
+  profiles_sample_rate=1.0,
+
+  # Alternatively, to control sampling dynamically
+  profiles_sampler=profiles_sampler
+)
+```
+
+<Note>
+
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+
+</Note>
+
+### Upgrading from older SDK versions
+
+The feature was experimental prior to version `1.17.0`. To update to the latest SDK, remove `profiles_sample_rate` from `_experiments` and set it in the top-level options.
+
+<SignInNote />
+
+```python
+sentry_sdk.init(
+  dsn="___PUBLIC_DSN___",
+  traces_sample_rate=1.0,
+  _experiments={
+    "profiles_sample_rate": 1.0,  # for versions before 1.17.0
+  },
+)
+```
