@@ -33,6 +33,7 @@ const HIGHLIGHTED_PLATFORMS = [
   'ruby.rails',
   'flutter',
   'unity',
+  'unreal',
 ];
 
 function IndexPage() {
