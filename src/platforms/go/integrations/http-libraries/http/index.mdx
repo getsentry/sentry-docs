@@ -6,16 +6,7 @@ redirect_from:
   - /platforms/go/http/
 ---
 
-This page shows how to add Sentry instrumentation to programs using the net/http
-package.
-
-For a quick reference, there is a [complete
-example](https://github.com/getsentry/sentry-go/tree/master/_examples/http) at the
-Go SDK source code repository.
-
-[GoDoc-style API
-documentation](https://godoc.org/github.com/getsentry/sentry-go/http) is also
-available.
+This page shows how to add Sentry instrumentation to programs using the net/http package. For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/http) available directly in the Go SDK repository. [GoDoc-style API documentation](https://godoc.org/github.com/getsentry/sentry-go/http) is also available.
 
 ## Install
 
@@ -23,7 +14,7 @@ available.
 go get github.com/getsentry/sentry-go/http
 ```
 
-<Break />
+## Configure
 
 <SignInNote />
 
@@ -36,10 +27,11 @@ import (
 	sentryhttp "github.com/getsentry/sentry-go/http"
 )
 
-// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
+// To initialize Sentry's handler, you need to initialize Sentry first
 if err := sentry.Init(sentry.ClientOptions{
 	Dsn: "___PUBLIC_DSN___",
 	EnableTracing: true,
+
 	// Set TracesSampleRate to 1.0 to capture 100%
 	// of transactions for performance monitoring.
 	// We recommend adjusting this value in production,
@@ -51,11 +43,14 @@ if err := sentry.Init(sentry.ClientOptions{
 // Create an instance of sentryhttp
 sentryHandler := sentryhttp.New(sentryhttp.Options{})
 
-// Once it's done, you can set up routes and attach the handler as one of your middleware
+// Once it's done, you can set up routes and attach the handler
+// as one of your middleware
 http.Handle("/", sentryHandler.Handle(&handler{}))
-http.HandleFunc("/foo", sentryHandler.HandleFunc(func(rw http.ResponseWriter, r *http.Request) {
-	panic("y tho")
-}))
+http.HandleFunc("/foo", sentryHandler.HandleFunc(
+  func(rw http.ResponseWriter, r *http.Request) {
+	  panic("y tho")
+  }
+))
 
 fmt.Println("Listening and serving HTTP on :3000")
 
@@ -65,19 +60,19 @@ if err := http.ListenAndServe(":3000", nil); err != nil {
 }
 ```
 
-## Configure
+### Integration Options
 
-`sentryhttp` accepts a struct of `Options` that allows you to configure how the handler will behave.
-
-Currently it respects 3 options:
+`sentryhttp` accepts a struct of `Options` that allows you to configure how the handler will behave. Currently it respects 3 options:
 
 ```go
-// Whether Sentry should repanic after recovery, in most cases it should be set to true,
-// and you should gracefully handle http responses.
+// Whether Sentry should repanic after recovery, in most cases it should
+// be set to true, and you should gracefully handle http responses.
 Repanic bool
-// Whether you want to block the request before moving forward with the response.
-// Useful, when you want to restart the process after it panics.
+
+// Whether you want to block the request before moving forward with the
+// response. Useful, when you want to restart the process after it panics.
 WaitForDelivery bool
+
 // Timeout for the event delivery requests.
 Timeout time.Duration
 ```
