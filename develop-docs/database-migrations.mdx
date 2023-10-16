@@ -290,54 +290,12 @@ Renaming tables is dangerous and will result in downtime. The reason this occurs
 
 ### Adding Columns
 
-When creating new columns they should either be:
+With postgres 14, columns can be added to tables of all sizes as deploy time
+migrations if you follow the guidelines on default values & allowing nulls. When
+creating new columns they should either be:
 
 - Not null with a default. https://develop.sentry.dev/database-migrations/#adding-not-null-to-columns
 - Created as nullable. If no default value can be set on the column, then it's best just to make it nullable.
-
-### Adding Columns to Large Tables
-
-Because adding a column to a large table (more than 10M rows) can exceed the 5s
-statement timeout we have during deploys, you need to use two migrations to
-safely ship changes to large tables.
-
-First create the column in the database without telling Django about the presence of the column. This is an `is_dangerous` operation. It should look similar to:
-
-```python
-is_dangerous = True
-
-operations = [
-    migrations.SeparateDatabaseAndState(
-        database_operations=[
-            migrations.AddField(
-                model_name="group",
-                name="snooze_counter",
-                field=sentry.db.models.fields.bounded.BoundedBigIntegerField(),
-            )
-        ],
-        state_operations=[],
-    )
-]
-```
-
-Once this migration has been executed, you can deploy updates to Django's model
-state. Update your Django ORM model with the new field, and use another
-migration to update Django's schema state:
-
-```python
-operations = [
-    migrations.SeparateDatabaseAndState(
-        database_operations=[],
-        state_operations=[
-            migrations.AddField(
-                model_name="group",
-                name="snooze_counter",
-                field=sentry.db.models.fields.bounded.BoundedBigIntegerField(),
-            )
-        ],
-    )
-]
-```
 
 ### Adding Columns With a Default
 
