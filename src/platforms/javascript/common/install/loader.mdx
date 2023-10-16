@@ -92,15 +92,17 @@ The loader script always includes a call to `Sentry.init` with a default configu
   crossorigin="anonymous"
 ></script>
 <script>
-  Sentry.onLoad(function() { ... });
+  // Check for existence of Sentry in case Ad-blockers block the Sentry Loader Script
+  window.Sentry && Sentry.onLoad(function() { ... });
 </script>
 ```
 
-`Sentry.onLoad` is a function that only the loader provides, and - as the name suggests - it sets a function to be run once the full SDK has been loaded. In that function, you can configure your SDK exactly the way you would were you using the CDN, with one difference: your `Sentry.init` call doesn't need to include your DSN, since it's already been set.
+`Sentry.onLoad` is a function that only the loader provides, and - as the name suggests - it sets a function to be run once the full SDK has been loaded. In that function, you can configure your SDK exactly the way you would were you using the CDN, with one difference: your `Sentry.init` call doesn't need to include your DSN, since it's already been set. Note that we check if `Sentry` exists before we call `Sentry.onLoad` to guard against the case that the loader script failed to load.
 
 ```html
 <script>
-  Sentry.onLoad(function() {
+  // Check for existence of Sentry in case Ad-blockers block the Sentry Loader Script
+  window.Sentry && Sentry.onLoad(function() {
     Sentry.init({
       release: " ... ",
       environment: " ... "
