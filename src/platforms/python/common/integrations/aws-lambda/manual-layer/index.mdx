@@ -4,7 +4,9 @@ description: "Learn how to manually set up Sentry with a Layer"
 sidebar_order: 1000
 ---
 
-You can also install Sentry using a [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
+You can add Sentry to your AWS Lambda function by adding the Sentry AWS Lambda Layer to your function.
+
+## Install the layer
 
 Navigate to your Lambda function:
 
@@ -22,6 +24,34 @@ Finally, set the region and copy the provided ARN value into the input.
 
 <LambdaLayerDetail canonical="aws-layer:python" />
 
-That's it.
+## Configure the Sentry SDK
 
-Now when there are unhandled errors in your Lambda function they will be captured and sent to Sentry.
+For Sentry to instrument your Lambda function you need to change the handler of your function and set the Sentry DSN using environment variables.
+
+
+### Set the Sentry Handler
+
+The Sentry layer will wrap your function handler to initialise the Sentry SDK in your function.
+
+In you Lambda function scroll to **Runtime settings** and click **Edit**:
+
+![](lambda-function-runtime-settings.png)
+
+Note your current **Handler** and change it to `sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler`:
+
+![](runtime-settings-handler.png)
+
+After saving open the "Configuration" tab of your Lambda function and set `SENTRY_INITIAL_HANDLER` to the handler you noted before:
+
+![](lambda-function-configuration.png)
+
+
+### Configuration Options
+
+Make sure that at least `SENTRY_DSN` and `SENTRY_INITIAL_HANDLER` (see "Set the Sentry Handler" above) is set in your environment.
+
+<PlatformContent includePath="aws-lambda-environment" />
+
+## Verify
+
+Deriberately add an error to you function and run it. The error is now captured and sent to Sentry.io
