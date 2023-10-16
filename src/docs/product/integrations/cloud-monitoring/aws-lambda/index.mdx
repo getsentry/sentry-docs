@@ -62,26 +62,6 @@ You need to create the CloudFormation stack only once per account, even when ins
 
 Wait a few minutes as the Lambda functions are enabled. If any functions failed to instrument, follow the suggestions in Troubleshooting.
 
-### Troubleshooting
-
-If you need help solving issues with your Sentry AWS Lamba integration integration, you can read the edge cases documented here. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.
-
-#### Error `SentryRole already exists`
-
-The stack already exists on your account; you can proceed to the next step of adding your AWS account information.
-
-#### Error `Invalid existing layer`
-
-Your Lambda function has a layer that no longer exists. Please remove the problematic layer, then enable Sentry on the Lambda in the configuration view for the integration.
-
-#### Error `Please validate the CloudFormation stack was created successfully`
-
-Sentry is unable to access your AWS account through your CloudFormation stack. This means either the stack has not been created or the external ID used doesn't match the one in your installation. You can go to the Parameters tab of the CloudFormation stack to copy the value of the external ID and paste it into the form field.
-
-#### Error `Invalid role associated with the lambda function`
-
-The role associated with your lambda function no longer exists. Please add a new role to your lambda function, then enable Sentry on the Lambda in the configuration view for the integration.
-
 ## Configure
 
 The integration configuration view in Sentry allows you to do the following with your Lambda functions:
@@ -98,29 +78,45 @@ In the table view, you will also see the version of the Lambda layer below the n
 
 Run your AWS Lambda function. Performance data will be sent to Sentry and will show up in the "Performance" section of Sentry. If your function raises an error it will show up in the "Issues" section of Sentry.
 
+## Troubleshooting
+
+If you need help solving issues with your Sentry AWS Lamba integration integration, you can read the edge cases documented here. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.
+
+* #### Error `SentryRole already exists`
+
+  The stack already exists on your account; you can proceed to the next step of adding your AWS account information.
+
+* #### Error `Invalid existing layer`
+
+  Your Lambda function has a layer that no longer exists. Please remove the problematic layer, then enable Sentry on the Lambda in the configuration view for the integration.
+
+* #### Error `Please validate the CloudFormation stack was created successfully`
+
+  Sentry is unable to access your AWS account through your CloudFormation stack. This means either the stack has not been created or the external ID used doesn't match the one in your installation. You can go to the Parameters tab of the CloudFormation stack to copy the value of the external ID and paste it into the form field.
+
+* #### Error `Invalid role associated with the lambda function`
+
+  The role associated with your lambda function no longer exists. Please add a new role to your lambda function, then enable Sentry on the Lambda in the configuration view for the integration.
 ## Remove Installation
 
 Note that when the integration is uninstalled, your Lambda functions will still be instrumented with Sentry and you will continue to receive errors. If you want to disable Sentry for all your Lambda functions, you should disable Sentry for each function before uninstalling. Note, you can also uninstall and then reinstall if you would like to change the Sentry project for your Lambdas.
 
 Learn more about [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/).
 
-## Notes on specific frameworks
-
+## Notes on Specific Frameworks
 ### Serverless Framework
 
 If you are using [Serverless Framekwork](https://www.serverless.com/) note that this integration will configure your existing lambda functions correctly to use the SDK layer and set the appropriate environment variables as per [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/). You can check the output `aws lambda get-function-configuration --function-name <yourFunctionName>` and this works.
 However when you perform a subsequent `sls deploy` the environment variables are not maintained but it appears the reference to the layer is retained. A workaround exists where you can set the layer definition and environment variables in `serverless.yml`. There are two problems with this, you have to manually add the reference to the SDK layer for every function you want "Sentrified" and you can't maintain the latest layer version automatically.
 
-**Serverless Framework using Node:**
+**Serverless Framework Using Node:**
 
-```
+```yaml {filename:serverless.yml}
 # other configuration
 
 provider:
-
   # more configuration
   region: <AWS_REGION>
-
   environment:
     SENTRY_TRACES_SAMPLE_RATE: '1.0'
     SENTRY_DSN: '<SENTRY_DSN>'
@@ -137,16 +133,14 @@ functions:
     layers: ${self:custom.layers}
 ```
 
-**Serverless Framework using Python:**
+**Serverless Framework Using Python:**
 
-```
+```yaml {filename:serverless.yml}
 # other configuration
 
 provider:
-
   # more configuration
   region: <AWS_REGION>
-
   environment:
     SENTRY_TRACES_SAMPLE_RATE: '1.0'
     SENTRY_DSN: '<SENTRY_DSN>'
