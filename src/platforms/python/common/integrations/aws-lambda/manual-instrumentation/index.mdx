@@ -6,20 +6,25 @@ sidebar_order: 2000
 
 <Note>
 
-Looking for instructions on how to add Sentry without modifying your code? [Check out these docs instead](/product/integrations/cloud-monitoring/aws-lambda/).
+We also support
+* [adding Sentry without modifying your code](/product/integrations/cloud-monitoring/aws-lambda/),
+* [installing Sentry in Lambda Layer](/platforms/python/integrations/aws-lambda/layer/),
+* and [installing Sentry as a Container Image](/platforms/python/integrations/aws-lambda/container-image/).
 
 </Note>
+
+## Install
 
 Create a deployment package on your local machine and install the required dependencies in the deployment package.
 For more information, see [AWS Lambda deployment package in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html).
 
-Install our Python SDK using `pip`:
+Install our Python SDK using `pip` into your package directory:
 
 ```bash
-pip install --upgrade sentry-sdk
+pip install --target ./package --upgrade sentry-sdk
 ```
 
-We also support [installing Sentry as a Container Image](/platforms/python/integrations/aws-lambda/container-image/) and [installing Sentry in Lambda Layer](/platforms/python/integrations/aws-lambda/layer/).
+## Configure
 
 You can use the AWS Lambda integration for the Python SDK like this:
 
@@ -41,7 +46,7 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
 )
 
-def my_function(event, context):
+def lambda_handler(event, context):
     # ...
 ```
 
@@ -53,31 +58,9 @@ If you are using another web framework inside of AWS Lambda, the framework might
 
 </Alert>
 
-## Timeout Warning
+## Verify
 
-The timeout warning reports an issue when the function execution time is near
-the [configured timeout](https://docs.aws.amazon.com/lambda/latest/dg/configuration-console.html).
-
-To enable the warning, update the SDK initialization to set `timeout_warning` to
-`true`:
-
-<SignInNote />
-
-```python
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    integrations=[
-        AwsLambdaIntegration(timeout_warning=True),
-    ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
-)
-```
-
-The timeout warning is sent only if the timeout in the Lambda Function configuration is set to a value greater than one second.
+Deriberately add an error to you function and run it. The error is now captured and sent to Sentry.io
 
 ## Behavior
 
@@ -98,3 +81,25 @@ With the AWS Lambda integration enabled, the Python SDK will:
 - Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+## Options
+
+You can set options for `AwsLambdaIntegration` to change its behavior:
+
+- `timeout_warning`:
+
+    The timeout warning reports an issue when the function execution time is near
+    the [configured timeout](https://docs.aws.amazon.com/lambda/latest/dg/configuration-console.html).
+
+    To enable the warning, update the SDK initialization to set `timeout_warning` to `True`:
+
+    ```python
+    sentry_sdk.init(
+        ...
+        integrations=[
+            AwsLambdaIntegration(timeout_warning=True),
+        ],
+    )
+    ```
+
+    The timeout warning is sent only if the timeout in the Lambda Function configuration is set to a value greater than one second.
