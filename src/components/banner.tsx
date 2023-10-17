@@ -5,7 +5,7 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   'Join us on May 25th at 10am PT to learn how to investigate errors and performance issues with Session Replay. Plus, get the latest on new features.';
 const BANNER_LINK_URL = 'https://bit.ly/session-replay-troubleshooting-7';
