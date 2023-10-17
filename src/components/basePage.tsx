@@ -67,6 +67,7 @@ export function BasePage({
         title={seoTitle ?? title ?? 'Sentry Docs'}
         description={pageDescription}
         noindex={pageContext.noindex}
+        slug={file.relativePath ?? ''}
       />
 
       <div className="row">

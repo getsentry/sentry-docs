@@ -16,6 +16,7 @@ const detailsQuery = graphql`
 `;
 
 type Props = {
+  slug: string;
   title: string;
   description?: string;
   keywords?: string[];
@@ -45,8 +46,11 @@ export function BaseSEO({
   keywords = [],
   title,
   noindex,
+  slug,
 }: ChildProps) {
   const metaDescription = description || data.site.siteMetadata.description;
+
+  console.log('SLUG: ' + slug);
 
   return (
     <Helmet
@@ -71,6 +75,10 @@ export function BaseSEO({
         {
           property: 'og:type',
           content: 'website',
+        },
+        {
+          property: `og:url`,
+          content: `https://${data.site.siteMetadata.sitePath}/${slug}`,
         },
         {
           property: 'og:image',
