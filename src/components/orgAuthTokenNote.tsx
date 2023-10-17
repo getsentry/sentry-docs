@@ -38,7 +38,7 @@ export function OrgAuthTokenNote() {
           <ExternalLink href={`https://sentry.io/auth/login/?next=${url}`}>
             sign in
           </ExternalLink>{' '}
-          to create a token directly from the docs.
+          to create a token directly from this page.
         </Note>
       </SignedInCheck>
 
@@ -48,7 +48,7 @@ export function OrgAuthTokenNote() {
           <ExternalLink href={orgAuthTokenUrl} target="_blank">
             manually create an Auth Token
           </ExternalLink>{' '}
-          or create a token directly from the docs. A created token will only be visible
+          or create a token directly from this page. A created token will only be visible
           once right after creation - make sure to copy it!
         </Alert>
       </SignedInCheck>
