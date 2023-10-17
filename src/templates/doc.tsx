@@ -13,8 +13,10 @@ export default function Doc(props: any) {
   } else if (props.path.startsWith('/contributing/')) {
     sidebar = <InternalDocsSidebar />;
   }
+
+  // todo shana fix leading slash
   return (
-    <BasePage sidebar={sidebar} {...props}>
+    <BasePage sidebar={sidebar} slug={props['*']} {...props}>
       <Content file={props.data.file} />
     </BasePage>
   );

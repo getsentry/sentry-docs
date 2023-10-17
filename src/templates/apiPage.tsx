@@ -176,7 +176,7 @@ export default function ApiPage(props) {
     Prism.highlightAll();
   }, []);
   return (
-    <BasePage sidebar={<ApiSidebar />} {...props}>
+    <BasePage sidebar={<ApiSidebar />} slug={props['*']} {...props}>
       <div className="row">
         <div className="col-12">
           <div className="api-block">

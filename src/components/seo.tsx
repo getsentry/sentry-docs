@@ -50,7 +50,11 @@ export function BaseSEO({
 }: ChildProps) {
   const metaDescription = description || data.site.siteMetadata.description;
 
-  console.log('SLUG: ' + slug);
+  const canonicalSlug = slug ?? '';
+
+  if (canonicalSlug.startsWith('platforms/')) {
+    console.log('SHANA LOOK A THIRD TIME:' + canonicalSlug);
+  }
 
   return (
     <Helmet
@@ -75,10 +79,6 @@ export function BaseSEO({
         {
           property: 'og:type',
           content: 'website',
-        },
-        {
-          property: `og:url`,
-          content: `https://${data.site.siteMetadata.sitePath}/${slug}`,
         },
         {
           property: 'og:image',
@@ -131,7 +131,12 @@ export function BaseSEO({
             : []
         )
         .concat(meta)}
-    />
+    >
+      <link
+        rel="canonical"
+        href={`https://${data.site.siteMetadata.sitePath}/${canonicalSlug}`}
+      />
+    </Helmet>
   );
 }
 

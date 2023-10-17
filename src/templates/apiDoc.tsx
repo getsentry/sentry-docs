@@ -10,8 +10,10 @@ export default function ApiDoc(props) {
   const {
     data: {allOpenApi, apiDescription},
   } = props;
+
+  // todo shana fix leading slash
   return (
-    <BasePage sidebar={<ApiSidebar />} {...props}>
+    <BasePage sidebar={<ApiSidebar />} slug={props['*']} {...props}>
       {apiDescription && <Content file={apiDescription} />}
       <ul data-noindex>
         {allOpenApi.edges.map(({node: {path}}) => (

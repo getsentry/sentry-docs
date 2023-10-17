@@ -36,9 +36,13 @@ export default function Platform(props: Props) {
       : `${props.pageContext.title} for ${
           (props.pageContext.guide || props.pageContext.platform).title
         }`;
+
+  const slug = props['*'];
+
   return (
     <BasePage
       {...props}
+      slug={slug}
       seoTitle={seoTitle}
       prependToc={<PlatformSdkDetail />}
       sidebar={

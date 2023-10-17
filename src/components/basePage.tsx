@@ -21,6 +21,7 @@ export type PageContext = {
 };
 
 type Props = {
+  slug: string;
   children?: React.ReactNode;
   data?: {
     file?: {
@@ -46,6 +47,7 @@ export function BasePage({
   sidebar,
   children,
   prependToc,
+  slug,
 }: Props) {
   const tx = getCurrentTransaction();
   if (tx) {
@@ -59,6 +61,10 @@ export function BasePage({
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
+  // if (slug.startsWith('platforms/')) {
+  //   console.log('SHANA LOOK AGAIN:' + slug);
+  // }
+
   return (
     // @ts-expect-error TODO(epurkhiser): Understand why these types are
     // totally different
@@ -67,7 +73,7 @@ export function BasePage({
         title={seoTitle ?? title ?? 'Sentry Docs'}
         description={pageDescription}
         noindex={pageContext.noindex}
-        slug={file.relativePath ?? ''}
+        slug={slug}
       />
 
       <div className="row">
