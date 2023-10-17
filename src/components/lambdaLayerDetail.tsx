@@ -76,7 +76,7 @@ export function LambdaLayerDetail({canonical}: {canonical: string}) {
       {arn && (
         <ArnWrapper>
           <ArnLabel>ARN</ArnLabel>
-          {arn}
+          <code>{arn}</code>
         </ArnWrapper>
       )}
     </Wrapper>
