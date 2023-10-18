@@ -192,23 +192,28 @@ Here's description of each argument in the decorator:
   - It can generally just be the DRF serializer of the endpoint itself.
     - The `help_text` argument of each serializer field populates the body
       parameter's description in the documentation.
+      - For nested serializers, use the class docstring instead to populate the parameter's description.
+      See [here](https://github.com/getsentry/sentry/blob/338916947b1a316bf908d048b9feb27dceced351/src/sentry/api/serializers/rest_framework/project_key.py#L9-L24)
+      for an example of this.
     - To exclude certain body parameters, you can pass `exclude_fields` to the
     [extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
     decorator. See [here](https://github.com/getsentry/sentry/blob/5573be76bcbbf8cc8f5d36c72bea57c6ca207122/src/sentry/api/endpoints/organization_teams.py#L51)
     for an example of this.
-    - Note that the ordering of the serializer fields determines the order of the body
+    - The ordering of the serializer fields determines the order of the body
       parameters. Required parameters will automatically be placed at the top of
       the section.
+      - Note that for Model serializers, the ordering is determined by the ordering
+      of `fields` array within the Meta class. See [here](https://github.com/getsentry/sentry/pull/57884)
+      for an example of this.
   - If you need more customization or the endpoint doesn't use a serializer, you can use an
   [inline_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.inline_serializer)
-  to create a one-off serializer.
-    - Note that our documentation has trouble displaying serializer fields defined by a nested
-    serializer. We recommend using the `inline_serializer` to avoid this issue.
+  to create a one-off serializer. See [here](https://github.com/getsentry/sentry/blob/6cc2769e13a09414175005bc967bd0e1db8c81bc/src/sentry/api/endpoints/project_key_details.py#L75-L98)
+  for an example of this.
   - For custom serializer fields, you must explicitly type them using the
   [extend_schema_field](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_field)
   decorator. See [here](https://github.com/getsentry/sentry/blob/236cc90daa1db5fcedade1db2b0bd7bb1ce9bdcd/src/sentry/api/serializers/rest_framework/project.py#L9-L10)
   for an example of this.
-  -  If there is no request body, you can either omit the `request` field or set it to `None`.
+  -  If there is no request body, you can omit the `request` field entirely.
 
 - **responses:** include all possible success and failure HTTP response cases. You can learn more about them in the next section.
 
