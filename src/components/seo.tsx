@@ -50,8 +50,6 @@ export function BaseSEO({
 }: ChildProps) {
   const metaDescription = description || data.site.siteMetadata.description;
 
-  const canonicalSlug = slug ?? '';
-
   return (
     <Helmet
       htmlAttributes={{
@@ -128,10 +126,12 @@ export function BaseSEO({
         )
         .concat(meta)}
     >
-      <link
-        rel="canonical"
-        href={`https://${data.site.siteMetadata.sitePath}/${canonicalSlug}`}
-      />
+      {slug && (
+        <link
+          rel="canonical"
+          href={`https://${data.site.siteMetadata.sitePath}/${slug}`}
+        />
+      )}
     </Helmet>
   );
 }
