@@ -126,12 +126,7 @@ export function BaseSEO({
         )
         .concat(meta)}
     >
-      {slug && (
-        <link
-          rel="canonical"
-          href={`https://${data.site.siteMetadata.sitePath}/${slug}`}
-        />
-      )}
+      <link rel="canonical" href={`https://${data.site.siteMetadata.sitePath}/${slug}`} />
     </Helmet>
   );
 }
