@@ -17,7 +17,6 @@ export default function Doc(props: any) {
   // remove leading '/'
   const slug = props.location.pathname.replace(/^\//, '');
 
-  // todo shana fix leading slash
   return (
     <BasePage sidebar={sidebar} slug={slug} {...props}>
       <Content file={props.data.file} />

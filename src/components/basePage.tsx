@@ -61,10 +61,6 @@ export function BasePage({
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
-  // if (slug.startsWith('platforms/')) {
-  //   console.log('SHANA LOOK AGAIN:' + slug);
-  // }
-
   return (
     // @ts-expect-error TODO(epurkhiser): Understand why these types are
     // totally different

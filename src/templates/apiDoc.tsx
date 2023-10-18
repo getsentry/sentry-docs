@@ -14,7 +14,6 @@ export default function ApiDoc(props) {
   // remove leading '/'
   const slug = props.location.pathname.replace(/^\//, '');
 
-  // todo shana fix leading slash
   return (
     <BasePage sidebar={<ApiSidebar />} slug={slug} {...props}>
       {apiDescription && <Content file={apiDescription} />}
