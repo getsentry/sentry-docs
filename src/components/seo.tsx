@@ -52,10 +52,6 @@ export function BaseSEO({
 
   const canonicalSlug = slug ?? '';
 
-  if (canonicalSlug.startsWith('platforms/')) {
-    console.log('SHANA LOOK A THIRD TIME:' + canonicalSlug);
-  }
-
   return (
     <Helmet
       htmlAttributes={{

@@ -10,6 +10,9 @@ type Props = {
   data: {
     file: any;
   };
+  location: {
+    pathname: string;
+  };
   pageContext: {
     platform: {
       name: string;
@@ -37,7 +40,8 @@ export default function Platform(props: Props) {
           (props.pageContext.guide || props.pageContext.platform).title
         }`;
 
-  const slug = props['*'];
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
 
   return (
     <BasePage

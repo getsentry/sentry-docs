@@ -11,9 +11,12 @@ export default function ApiDoc(props) {
     data: {allOpenApi, apiDescription},
   } = props;
 
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
+
   // todo shana fix leading slash
   return (
-    <BasePage sidebar={<ApiSidebar />} slug={props['*']} {...props}>
+    <BasePage sidebar={<ApiSidebar />} slug={slug} {...props}>
       {apiDescription && <Content file={apiDescription} />}
       <ul data-noindex>
         {allOpenApi.edges.map(({node: {path}}) => (

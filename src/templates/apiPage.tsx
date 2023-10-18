@@ -172,11 +172,14 @@ export default function ApiPage(props) {
     ? ['RESPONSE', 'SCHEMA']
     : ['RESPONSE'];
 
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
+
   useEffect(() => {
     Prism.highlightAll();
   }, []);
   return (
-    <BasePage sidebar={<ApiSidebar />} slug={props['*']} {...props}>
+    <BasePage sidebar={<ApiSidebar />} slug={slug} {...props}>
       <div className="row">
         <div className="col-12">
           <div className="api-block">

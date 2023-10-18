@@ -14,9 +14,12 @@ export default function Doc(props: any) {
     sidebar = <InternalDocsSidebar />;
   }
 
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
+
   // todo shana fix leading slash
   return (
-    <BasePage sidebar={sidebar} slug={props['*']} {...props}>
+    <BasePage sidebar={sidebar} slug={slug} {...props}>
       <Content file={props.data.file} />
     </BasePage>
   );
