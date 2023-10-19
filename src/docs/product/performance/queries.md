@@ -15,7 +15,6 @@ Starting with the [**Queries** page](#queries-page), you get a high-level overvi
 
 The gif below demonstrates how to use performance monitoring for queries.
 
-
 </br>
 
 ## Prerequisites and Limitations
@@ -64,7 +63,6 @@ To view more details, click on a query from the table to open its **Query Summar
 
 The gif below provides a detailed walkthrough of the **Queries** page.
 
-
 </br>
 
 ### Query Parameterization
@@ -90,7 +88,6 @@ If you want to investigate a specific endpoint, click on it to open a sidebar sh
 
 The gif below provides a detailed walkthrough of the **Query Summary** page.
 
-
 </br>
 
 ## Sample List
@@ -108,7 +105,6 @@ You can generate a new list of random sample events by clicking the "Try Differe
 From the sample list, you can drill down to specific good, average, or bad examples of a given query within a given endpoint. Click on an event ID to drill into the query's span details within the span waterfall of the **Event Details** page.
 
 The gif below explains how to navigate the sample list.
-
 
 </br>
 
