@@ -15,7 +15,6 @@ Starting with the [**Queries** page](#queries-page), you get a high-level overvi
 
 The gif below demonstrates how to use performance monitoring for queries.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/miaHF3SwPiABh9bZnMoq?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Walkthrough"></iframe></div>
 
 </br>
 
@@ -65,7 +64,6 @@ To view more details, click on a query from the table to open its **Query Summar
 
 The gif below provides a detailed walkthrough of the **Queries** page.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/v66mxydrZRsNxRgNMYUl?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Queries Page Walkthrough"></iframe></div>
 
 </br>
 
@@ -92,7 +90,6 @@ If you want to investigate a specific endpoint, click on it to open a sidebar sh
 
 The gif below provides a detailed walkthrough of the **Query Summary** page.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/MTzviZtIiN7ZCmNFVJg4?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Query Summary Page Walkthrough"></iframe></div>
 
 </br>
 
@@ -112,7 +109,6 @@ From the sample list, you can drill down to specific good, average, or bad examp
 
 The gif below explains how to navigate the sample list.
 
-<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/dr7yesA9RCqfpSyICbmP?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Sample List Walkthrough"></iframe></div>
 
 </br>
 
