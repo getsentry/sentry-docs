@@ -23,9 +23,17 @@ Sentry.addIntegration(new ReportingObserver());
 ></script>
 
 <script>
-  Sentry.onLoad(function () {
-    Sentry.init({
-      integrations: [],
+  // Check for existence of Sentry in case Ad-blockers block the Sentry Loader Script
+  window.Sentry &&
+    Sentry.onLoad(function () {
+      Sentry.init({
+        integrations: [],
+      });
+
+      const client = Sentry.getCurrentHub().getClient();
+      if (client) {
+        client.addIntegration(new Sentry.Integrations.ReportingObserver());
+      }
     });
 
     Sentry.addIntegration(new Sentry.Integrations.ReportingObserver());
