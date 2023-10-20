@@ -16,6 +16,7 @@ function NotFoundPage() {
       <SEO
         title="Page Not Found"
         description="We couldn’t find the page you were looking for."
+        slug="404/"
       />
       <h1>Page Not Found</h1>
       <p>We couldn&apos;t find the page you were looking for.</p>
