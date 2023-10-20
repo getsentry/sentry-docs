@@ -15,7 +15,7 @@ Application Not Responding (ANR) errors, or Event Loop Stall errors, are trigger
 
 <Include name="feature-stage-beta.mdx" />
 
-_(Available in version 4.13.0 and above)_
+_(Available in version 4.14.0 and above)_
 
 To enable ANR detection, import and use the `enableANRDetection` function from the `@sentry/electron` package before you run the rest of your application code. Any event loop blocking before calling `enableANRDetection` will not be detected by the SDK.
 
@@ -25,6 +25,8 @@ ANR detection requires Electron v4 or higher.
 
 </Alert>
 
+ANR tracking has to be individually enabled for the main and renderer processes. For the main process:
+
 ```javascript {tabTitle: CJS}
 const Sentry = require("@sentry/electron");
 
@@ -33,7 +35,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-Sentry.enableANRDetection({ mainProcess: { captureStackTrace: true } }).then(
+Sentry.enableMainProcessAnrDetection({ captureStackTrace: true }).then(
   () => {
     // Function that runs your app
     runApp();
@@ -49,15 +51,37 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-Sentry.enableAnrDetection({ mainProcess: { captureStackTrace: true } }).then(
+Sentry.enableMainProcessAnrDetection({ captureStackTrace: true }).then(
   () => {
     runApp();
   }
 );
 
 // Electron v28+ with ESM
-// await Sentry.enableANRDetection({ mainProcess: { captureStackTrace: true } });
+// await Sentry.enableMainProcessAnrDetection({ captureStackTrace: true });
 // runApp();
+```
+
+For the renderer processes:
+
+```javascript {tabTitle: CJS}
+const Sentry = require("@sentry/electron/renderer");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  anrDetection: { captureStackTrace: true },
+});
+```
+
+```javascript {tabTitle: ESM}
+import * as Sentry from "@sentry/electron/renderer";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  anrDetection: { captureStackTrace: true },
+});
 ```
 
 ## Configuration options
@@ -65,18 +89,13 @@ Sentry.enableAnrDetection({ mainProcess: { captureStackTrace: true } }).then(
 You can pass in a configuration object to the `enableANRDetection` function to customize the ANR detection behavior.
 
 ```Typescript
+// for main process
 declare function enableAnrDetection(options: Options): Promise<void>;
 
-interface Options {
-  /**
-   * Main process ANR options.
-   *
-   * Set to false to disable ANR detection in the main process.
-   */
-  mainProcess?: MainProcessOptions | false;
-}
+// for `anrDetection` option in renderer processes
+declare function init({ anrDetection: Options });
 
-interface MainProcessOptions {
+interface Options {
   /**
    * The app entry script. This is used to run the same script as the child process.
    *
