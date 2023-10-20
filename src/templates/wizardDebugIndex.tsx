@@ -10,7 +10,7 @@ export default function WizardDebug({
   },
 }) {
   return (
-    <BasePage pageContext={{title: 'Wizard Previews'}}>
+    <BasePage pageContext={{title: 'Wizard Previews'}} slug="wizard-debug/">
       <ul>
         {nodes
           .sort((a, b) =>

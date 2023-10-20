@@ -1,0 +1,86 @@
+---
+title: File I/O
+description: "Learn more about the Sentry file I/O integration for the Dart SDK."
+sidebar_order: 5
+redirect_from:
+  - /platforms/dart/configuration/integrations/file/
+---
+
+The `sentry_file` library provides [File](https://api.dart.dev/stable/2.18.5/dart-io/File-class.html) support for Sentry wrapping the `File` class with a `SentryFile` wrapper. The `SentryFile` is able to run performance monitoring for `File` operations.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/file/).
+
+On this page, we get you up and running with Sentry's file I/O integration, so that it will automatically start a span from an active transaction that's bound to the scope of each operation such as `copy`, `create`, `delete`, `open`, `rename`, `read`, and `write`.
+
+<Note>
+
+The File I/O integration is only available for the `dart:io:File` class, not for the `dart:html:File` class.
+
+</Note>
+
+## Install
+
+To use the `SentryFile` wrapper, add the `sentry_file` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '6.18.0') }}
+  sentry_file: ^{{@inject packages.version('sentry.dart.file', '6.18.0') }}
+```
+
+## Verify
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_file/sentry_file.dart';
+import 'dart:io';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = 'https://example@sentry.io/example';
+      // To set a uniform sample rate
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: runApp, // Init your App.
+  );
+}
+
+Future<void> runApp() async {
+  final file = File('my_file.txt');
+  // Call the Sentry extension method to wrap up the File
+  final sentryFile = file.sentryTrace();
+
+  // Start a transaction if there's no active transaction
+  final transaction = Sentry.startTransaction(
+    'MyFileExample',
+    'file',
+    bindToScope: true,
+  );
+
+  // create the File
+  await sentryFile.create();
+  // Write some content
+  await sentryFile.writeAsString('Hello World');
+  // Read the content
+  final text = await sentryFile.readAsString();
+
+  print(text);
+
+  // Delete the file
+  await sentryFile.delete();
+
+  // Finish the transaction
+  await transaction.finish(status: SpanStatus.ok());
+
+  await Sentry.close();
+}
+```
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project. Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `MyFileExample`.

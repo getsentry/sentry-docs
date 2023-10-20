@@ -53,7 +53,7 @@ function SentryLoaderConfig() {
       key="sentry-loader-config"
       dangerouslySetInnerHTML={{
         __html: `
-Sentry.onLoad(function() {
+  window.Sentry && Sentry.onLoad(function() {
   Sentry.init({
     integrations: [
       new Sentry.Replay({
