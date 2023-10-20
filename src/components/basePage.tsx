@@ -21,6 +21,7 @@ export type PageContext = {
 };
 
 type Props = {
+  slug: string;
   children?: React.ReactNode;
   data?: {
     file?: {
@@ -46,6 +47,7 @@ export function BasePage({
   sidebar,
   children,
   prependToc,
+  slug,
 }: Props) {
   const tx = getCurrentTransaction();
   if (tx) {
@@ -67,6 +69,7 @@ export function BasePage({
         title={seoTitle ?? title ?? 'Sentry Docs'}
         description={pageDescription}
         noindex={pageContext.noindex}
+        slug={slug}
       />
 
       <div className="row">
