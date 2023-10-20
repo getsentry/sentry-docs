@@ -10,6 +10,9 @@ type Props = {
   data: {
     file: any;
   };
+  location: {
+    pathname: string;
+  };
   pageContext: {
     platform: {
       name: string;
@@ -36,9 +39,14 @@ export default function Platform(props: Props) {
       : `${props.pageContext.title} for ${
           (props.pageContext.guide || props.pageContext.platform).title
         }`;
+
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
+
   return (
     <BasePage
       {...props}
+      slug={slug}
       seoTitle={seoTitle}
       prependToc={<PlatformSdkDetail />}
       sidebar={
