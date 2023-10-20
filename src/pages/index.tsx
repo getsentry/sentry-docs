@@ -60,7 +60,7 @@ function IndexPage() {
 
   return (
     <div className="index-wrapper">
-      <SEO title="Sentry Documentation" />
+      <SEO title="Sentry Documentation" slug="" />
       <div className="hero-section">
         <div className="index-container">
           <div className="index-navbar">
