@@ -5,7 +5,7 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   'Curious how distributed tracing can help you debug faster? Join us Oct 17 | 10 AM PST.';
 const BANNER_LINK_URL =
