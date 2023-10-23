@@ -13,8 +13,12 @@ export default function Doc(props: any) {
   } else if (props.path.startsWith('/contributing/')) {
     sidebar = <InternalDocsSidebar />;
   }
+
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
+
   return (
-    <BasePage sidebar={sidebar} {...props}>
+    <BasePage sidebar={sidebar} slug={slug} {...props}>
       <Content file={props.data.file} />
     </BasePage>
   );
