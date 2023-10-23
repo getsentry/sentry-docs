@@ -1,0 +1,85 @@
+## Configure Source Maps Upload
+
+Source maps upload should work if you followed the [Astro CLI installation guide](/platforms/javascript/guides/astro/#add-readable-stack-traces-to-errors). However, there are some options to configure source maps upload for your production builds for other configurations.
+
+### Enable Source Maps Upload
+
+To automatically upload source maps during production builds, add the `SENTRY_AUTH_TOKEN` environment variable to your environment, for example in a `.env` file or in your CI setup.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Next, add your project slug to the `sourceMapsUploadOptions` in your Astro config:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentryAstro({
+      // Other Sentry options
+      sourceMapsUploadOptions: {
+        project: "___PROJECT_SLUG___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    }),
+  ],
+});
+```
+
+### Working With Old Authentication Tokens
+
+Source maps work best with [organization-scoped auth tokens](/product/accounts/auth-tokens/#organization-auth-tokens). If you are using a different type of Sentry auth token, you'll need to additionally specify your `org` slug in your `sourceMapsUploadOptions`:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentryAstro({
+      // Other Sentry options
+      sourceMapsUploadOptions: {
+        project: "___PROJECT_SLUG___",
+        org: "___ORG_SLUG___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    }),
+  ],
+});
+```
+
+### Disable Source Maps Upload
+
+You can disable automatic source maps upload in your Astro config:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentryAstro({
+      // Other Sentry options
+      sourceMapsUploadOptions: {
+        enabled: false,
+      },
+    }),
+  ],
+});
+```
+
+### Disabeling Telemetry Data Collection
+
+The Astro SDK uses the Sentry Vite plugin to upload source maps.
+This plugin collects telemetry data to help us improve the source map uploading experience.
+Read more about this in our [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#telemetry).
+You can disable telemetry collection by setting `telemetry` to `false`:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentryAstro({
+      // Other Sentry options
+      sourceMapsUploadOptions: {
+        telemetry: false,
+      },
+    }),
+  ],
+});
+```
