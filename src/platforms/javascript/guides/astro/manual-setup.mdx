@@ -4,7 +4,7 @@ sidebar_order: 1
 description: "Learn how to manually customize the SDK setup."
 ---
 
-If you can't (or prefer not to) use the <PlatformLink to="/#install">Astro CLI</PlatformLink> to install the Astro SDK, follow the instructions below to configure the Sentry SvelteKit SDK in your application.
+If you can't (or prefer not to) use the <PlatformLink to="/#install">Astro CLI</PlatformLink> to install the Sentry Astro SDK, follow the instructions below to configure the SDK in your application manually.
 
 This guide also explains how to further customize your SDK setup.
 
@@ -47,18 +47,18 @@ export default defineConfig({
 });
 ```
 
-This integration is designed to get you started quickly and it enables the following features by default:
+This integration enables the following features by default:
 
 - Error Monitoring with 100% sample rate
 - Performance Monitoring with 100% sample rate
 - Session Replay with
-  - 10% sample rate for regular replaysSessions
+  - 10% sample rate for regular replay sessions
   - 100% sample rate for sessions where an error occurred
-- Automatic source maps upload for production builds, if you [set up a Sentry auth token and specified your project slug](../#add-readable-stack-traces-to-errors).
+- Automatic source maps upload for production builds to [Add Readable Stack Traces to Errors](/platforms/javascript/guides/astro/#add-readable-stack-traces-to-errors). This requires providing an auth token and project slug.
 
 ### Astro Integration Options
 
-Besides the required `dsn` option, you can specify a subset of Sentry SDK options in the integration directly.
+Besides the required `dsn` option, you can specify the following options in the integration directly. These are a subset of the full PlatformLink to="/configuration/options">Sentry SDK options</PlatformLink>. 
 
 - <PlatformLink to="/configuration/options/#release">release</PlatformLink>
 - <PlatformLink to="/configuration/options/#environment">
@@ -104,17 +104,16 @@ export default defineConfig({
 });
 ```
 
-If you want to fully customize the browser and client SDKs, e.g. (add a `beforeSend` callback) you can also [manually initialize the SDK](#manual-initialization).
 
 ## Manual SDK Initialization
 
-To fully customize the SDK initialization, you can manually initialize the SDK for the client or server side or both.
+To fully customize the SDK initialization, you can manually initialize the SDK for the client, server, or both.
 At build time, the integration looks for the following two files in the root directory of your config:
 
 - `sentry.client.config.js` containing a `Sentry.init` call for the client side
 - `sentry.server.config.js` containing a `Sentry.init` call for the sever side
 
-These file can also be a `.ts`, `.mjs`, `.mts`, etc. file.
+This file can also be a `.ts`, `.mjs`, `.mts`, etc. file.
 
 In these files, you can specify the full range of <PlatformLink to="/configuration/options">Sentry SDK options</PlatformLink>.
 
@@ -178,7 +177,7 @@ Sentry.init({
 
 ### Changing config files location
 
-If you want to change the location of your `sentry.(client|server).config.js` files, specify the path to the files in the Sentry Astro integration options in your `astro.config.mjs`:
+To change the location of your `sentry.(client|server).config.js` files, specify the path to the files in the Sentry Astro integration options in your `astro.config.mjs`:
 
 ```javascript {filename:astro.config.mjs}
 export default defineConfig({
@@ -194,13 +193,13 @@ export default defineConfig({
 
 ## Configure Source Maps Upload
 
-You can specify a few options to configure source maps upload for your production builds. Generally, this should work if you followed the [Astro CLI installation guide](../#add-readable-stack-traces-to-errors).
+Source maps upload should work if you followed the [Astro CLI installation guide](/platforms/javascript/guides/astro/#add-readable-stack-traces-to-errors). However, there are some options to configure source maps upload for your production builds for other configurations.
 
 Note that source maps upload only works if an auth token is specified.
 
-### Working with old authentication tokens
+### Working With Old Authentication Tokens
 
-If you're not using our new [organization-scoped auth tokens](/product/accounts/auth-tokens/#organization-auth-tokens) yet, you need to additionally specify your `org` slug in your `sourceMapsUploadOptions`:
+Source maps work best with [organization-scoped auth tokens](/product/accounts/auth-tokens/#organization-auth-tokens). If you are using a different type of Sentry auth token, you'll need to additionally specify your `org` slug in your `sourceMapsUploadOptions`:
 
 ```javascript {filename:astro.config.mjs}
 export default defineConfig({
@@ -219,13 +218,13 @@ export default defineConfig({
 
 ### Disable Source Maps Upload
 
-You can disable automatic source maps upload in your Vite config:
+You can disable automatic source maps upload in your Astro config:
 
 ```javascript {filename:astro.config.mjs}
 export default defineConfig({
   integrations: [
     sentryAstro({
-      // rest of your sentry options
+      // Other Sentry options
       sourceMapsUploadOptions: {
         enabled: false,
       },
