@@ -16,6 +16,7 @@ const detailsQuery = graphql`
 `;
 
 type Props = {
+  slug: string;
   title: string;
   description?: string;
   keywords?: string[];
@@ -45,8 +46,15 @@ export function BaseSEO({
   keywords = [],
   title,
   noindex,
+  slug,
 }: ChildProps) {
   const metaDescription = description || data.site.siteMetadata.description;
+
+  // slug === '' is the homepage and a valid value
+  const canonical =
+    data.site.siteMetadata.sitePath && (slug || slug === '')
+      ? `https://${data.site.siteMetadata.sitePath}/${slug}`
+      : false;
 
   return (
     <Helmet
@@ -123,7 +131,9 @@ export function BaseSEO({
             : []
         )
         .concat(meta)}
-    />
+    >
+      {canonical && <link rel="canonical" href={canonical} />}
+    </Helmet>
   );
 }
 
