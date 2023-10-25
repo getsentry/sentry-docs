@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
@@ -82,14 +82,14 @@ export function PlatformSdkDetail() {
         <dd>
           <SmartLink to={packageData.repoUrl} target="_blank" />
         </dd>
-        <dt>API Documentation:</dt>
-        <dd>
-          {packageData.apiDocsUrl ? (
-            <SmartLink to={packageData.apiDocsUrl} target="_blank" />
-          ) : (
-            '-'
-          )}
-        </dd>
+        {packageData.apiDocsUrl && (
+          <Fragment>
+            <dt>API Documentation:</dt>
+            <dd>
+              <SmartLink to={packageData.apiDocsUrl} target="_blank" />
+            </dd>
+          </Fragment>
+        )}
       </dl>
     </PackageDetail>
   );
