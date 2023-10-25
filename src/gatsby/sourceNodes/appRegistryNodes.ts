@@ -18,6 +18,7 @@ export const sourceAppRegistryNodes = async ({
       version: appData.version,
       url: appData.package_url,
       repoUrl: appData.repo_url,
+      apiDocsUrl: appData.api_docs_url,
       files: appData.files
         ? Object.entries(appData.files).map(([fileName, fileData]: [string, any]) =>
             fileData.checksums

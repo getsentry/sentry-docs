@@ -13,6 +13,7 @@ type VersionData = {
   name: string;
   repo_url: string;
   version: string;
+  api_docs_url?: string;
   files?: {
     [name: string]: FileData;
   };

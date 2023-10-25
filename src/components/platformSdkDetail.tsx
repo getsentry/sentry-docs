@@ -14,6 +14,7 @@ const query = graphql`
         url
         repoUrl
         version
+        apiDocsUrl
       }
     }
   }
@@ -79,7 +80,15 @@ export function PlatformSdkDetail() {
         <dd>{packageData.version}</dd>
         <dt>Repository:</dt>
         <dd>
-          <SmartLink to={packageData.repoUrl} />
+          <SmartLink to={packageData.repoUrl} target="_blank" />
+        </dd>
+        <dt>API Documentation:</dt>
+        <dd>
+          {packageData.apiDocsUrl ? (
+            <SmartLink to={packageData.apiDocsUrl} target="_blank" />
+          ) : (
+            '-'
+          )}
         </dd>
       </dl>
     </PackageDetail>
