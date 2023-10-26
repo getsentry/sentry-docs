@@ -14,7 +14,7 @@ export interface Platform extends PlatformConfig {
    */
   key: string;
   /**
-   * Same as key. Use `title` for a human readable platform name.
+   * Same as key. Use `title` for a human-readable platform name.
    *
    * @see Platform.key
    */
