@@ -1,0 +1,94 @@
+---
+title: Dart
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart
+categories:
+  - mobile
+  - browser
+  - server
+---
+
+<Note>
+
+Sentry's Dart SDK enables automatic reporting of errors, messages, and exceptions. The SDK is available on GitHub [`sentry-dart`](https://github.com/getsentry/sentry-dart/). For Flutter apps, refer to [our Flutter documentation](/platforms/flutter) instead.
+
+</Note>
+
+**Features:**
+
+- Breadcrumbs automatically captured:
+- by the [Dart SDK](/platforms/dart/enriching-events/breadcrumbs/#automatic-breadcrumbs)
+- by the [Logging Integration](/platforms/dart/integrations/logging)
+- by the [Dio Integration](/platforms/dart/integrations/dio/)
+- [Attachments](/platforms/dart/enriching-events/attachments/) enrich your event by storing additional files, such as config or log files.
+- [User Feedback](/platforms/dart/enriching-events/user-feedback/) provides the ability to collect user information when an event occurs.
+- [Performance Monitoring](/product/performance/) creates transactions for:
+- [HTTP requests](/platforms/dart/integrations/http-integration/#performance-monitoring-for-http-requests)
+- [Dio HTTP library](/platforms/dart/integrations/dio/#performance-monitoring-for-http-requests)
+- [File I/O Integration](/platforms/dart/integrations/file/)
+- [Logging Integration](/platforms/dart/integrations/logging)
+- [Dio Integration](/platforms/dart/integrations/dio/)
+
+On this page, we get you up and running with Sentry's SDK.
+
+Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart') }}
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+<SignInNote />
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init((options) {
+      options.dsn = '___PUBLIC_DSN___';
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 1.0;
+    });
+
+  // or define SENTRY_DSN via Dart environment variable (--dart-define)
+}
+```
+
+You can configure the `SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_DIST`, and `SENTRY_ENVIRONMENT` via the Dart environment variables passing the `--dart-define` flag to the compiler, as noted in the code sample.
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+try {
+  aMethodThatMightFail();
+} catch (exception, stackTrace) {
+  await Sentry.captureException(
+    exception,
+    stackTrace: stackTrace,
+  );
+}
+```
+
+<Note>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+<PageGrid header="Next Steps" nextSteps />
