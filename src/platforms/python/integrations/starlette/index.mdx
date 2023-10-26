@@ -27,10 +27,8 @@ from starlette.applications import Starlette
 import sentry_sdk
 
 sentry_sdk.init(
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
     dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
 )
 
 app = Starlette(routes=[...])
@@ -62,7 +60,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 - Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
-- If a `traces_sample_rate` is set, then performance information is also reported, which you can see on the **Performance** page of [sentry.io](https://sentry.io).
+- If `enable_tracing` or a `traces_sample_rate` is set, then performance information is also reported, which you can see on the **Performance** page of [sentry.io](https://sentry.io).
 
 ## Options
 
@@ -73,9 +71,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
+    enable_tracing=True,
     integrations=[
         StarletteIntegration(
             transaction_style="endpoint",
@@ -88,7 +84,7 @@ You can pass the following keyword arguments to `StarletteIntegration()`:
 
 - `transaction_style`:
 
-  ```
+  ```python
   async def product_detail(request):
       return JSONResponse({...})
 
