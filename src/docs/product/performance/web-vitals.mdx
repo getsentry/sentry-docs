@@ -8,6 +8,8 @@ description: "Learn more about Web Vitals in Sentry, and how they give you a bet
 
 The in-browser Sentry SDKs collects <SandboxLink scenario="oneWebVitals" projectSlug="react">Web Vitals</SandboxLink> information (where supported) and adds that information to frontend <SandboxLink scenario="oneTransaction" projectSlug="react">transactions</SandboxLink>. These vitals are then summarized in several graphs for a quick overview of how each frontend transaction is performing for your users.
 
+You can visit the [web-vitals]Web Vitals page to get an overview of how page loads on your application are performing.
+
 ![Visualization of Web Vitals](./diagram-transaction-vitals.png)
 
 ## Core Web Vitals
@@ -70,6 +72,49 @@ Google's "Good", "Needs Improvement", and "Poor" thresholds are used to classify
 Some Web Vitals such as FP, FCP, LCP, and TTFB are measured relative to the start of the transaction. Values may differ when compared to values generated with other tools such as [Lighthouse](https://github.com/GoogleChrome/lighthouse).
 
 </Note>
+
+## Web Vitals Page
+
+The **Web Vitals** page gives you an overview of your page load performance for the selected project(s). You can use this page as a starting point to investigate poor Web Vitals affecting your website and drill down to better understand which pages affect your website performance most.
+
+Open the **Web Vitals** page by clicking "Web Vitals" in the sidebar, under "Performance".
+
+
+At the top of the left of page, the [Performance Score](#performance-score) ring shows the overall performance rating of your application. The Performance Score ring is broken down by the individual component Web Vital scores, so that you can see which of your Web Vitals impact your score most. To the right, the trend your application's Performance Score is shown over time in an area chart. You can find out more about how Performance Score is calculated [here](#performance-score).
+
+At the center of the page, Web Vital meters show you the raw vital values for your application and the individual score for each Web Vital. These meters can be useful for prioritizing which Web Vitals need attention most. Click a meter to open a summary of the Web Vital and see which of your pages have the most [Opportunity](#opportunity) for improvement.
+
+At the bottom of the Web Vitals page, a sortable table shows a lists your application's pages, along with their associated P75 values for each Web Vital. Each page also possess its own individual Performance Score. The [Opportunity](#opportunity) column displays a page score's potential impact to your application's overall Performance Score if maximized to 100. The search bar above this table allows users to narrow down to specific pages by name.
+
+You can click through any of your application's pages from the Web Vitals page to get to the [Page Overview](#page-overview) display.
+
+## Page Overview
+
+The **Page Overview** page gives you an overview of a single page of your application. In the **Page Overview**, you can further drill down to a specific page load sample [Event](/product/sentry-basics/concepts/tracing/event-detail/), [Replay](/product/session-replay/), or [Profile](/product/profiling/). You can navigate to the **Page Overview** of any of your application's pages through the main table in the [Web Vitals](#web-vitals-page) page, or through the slideout panel when clicking on a Web Vital meter in the [Web Vitals](#web-vitals-page) page.
+
+The **Page Overview** page displays a series of "Throughput", "P75 Duration", "5XX Responses" charts in the right sidebar of the page. A mini **Aggregate Span Waterfall** is also displayed in the right sidebar, which shows you common span paths that your application's page may take. Click the "View Full Waterfall" button or the "Aggregate Spans" tab at the top of the page to see the full **Aggregate Span Waterfall**.
+
+At the center of the **Page Overview**, Web Vital meters and suspect tags are displayed. Clicking a Web Vital meter will open a slideout panel containing a variety of **Page Load** samples with good to poor scores. Each sample contains an **Event ID** that can be clicked to open the [Event Detail](/product/sentry-basics/concepts/tracing/event-detail/) page for further investigation. If there is a [Replay](/product/session-replay/) or [Profile](/product/profiling/) associated with the sample page load, links will be included in the associated table columns.
+
+## Performance Score
+
+**Performance Scores** are a number rating from 0 to 100 that summarizes the percieved performance of your website application. Sentry provides a single score for the overall performance of your application, individual scores for each of your pages, and a score for each sample page load of any of your applications pages.
+
+The **Performance Score** is comprised of 5 individual **Web Vital** components. Each **Web Vital** is given a rating between 0 to 100 through a [Log-Normal Distribution](https://www.desmos.com/calculator/o98tbeyt1t). Each **Web Vital** rating is given a weight, which is summed up to create the overall **Performance Score** with a maximum value of 100. The p90 and p50 distribution values of each **Web Vital** can be found in the table below:
+
+| Web Vital                                                       | P90      | P50      | Weight  |
+| --------------------------------------------------------------- | -------- | -------- | ------- |
+| [Largest Contentful Paint](#largest-contentful-paint-lcp) (LCP) | 1200ms   | 2400ms   | 30%     |
+| [First Input Delay](#first-input-delay-fid) (FID)               | 100ms    | 300ms    | 30%     |
+| [Cumulative Layout Shift](#cumulative-layout-shift-cls) (CLS)   |  0.1     | 0.25     | 15%     |
+| [First Contentful Paint](#first-contentful-paint-fcp) (FCP)     | 900ms    | 1600ms   | 15%     |
+| [Time To First Byte](#time-to-first-byte-ttfb) (TTFB)           | 200ms    | 400ms    | 10%     |
+
+## Opportunity
+
+**Opportunity** scores are number values you can find associated to each of your website application's pages. The **Opportunity** score is the maximum possible increase to your application's overall [Performance Score](#performance-score), if you were to raise a page's individual score to 100. If a page in your application already has a score of 100, the **Opportunity** score would be 0, since there is no further potential to increase your applications overall [Performance Score](#performance-score) by improving this page. You can use **Opportunity** scores to get a sense of which pages are most valuable to improve.
+
+**Opportunity** score calculation is also weighted based on the traffic that a page sees. Pages with high traffic tend to have higher **Opportunity** scores. For example, a page with a score of 70 that experiences 1000 page loads a day will have a higher **Opportunity** score than a page with a score of 50 that experiences only 10 page loads a day.
 
 ## Distribution Histogram
 
