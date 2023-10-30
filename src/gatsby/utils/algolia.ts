@@ -52,18 +52,15 @@ const flatten = async (pages: any[]) => {
           const html = (await fs.readFile(htmlFile)).toString();
 
           // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
-          let platforms: string[] = [];
-
+          let slug: string;
+          let guideSlug: string;
           if (context.platform) {
-            const slug = standardSDKSlug(context.platform.name)?.slug;
-
-            let fullSlug = slug;
+            slug = standardSDKSlug(context.platform.name)?.slug;
+            guideSlug = slug;
 
             if (context.guide) {
-              const guideSlug = standardSDKSlug(context.guide.name)?.slug;
-              fullSlug += `.${guideSlug}`;
+              guideSlug = standardSDKSlug(context.guide.name)?.slug;
             }
-            platforms = extrapolate(fullSlug ?? 'generic', '.');
           }
 
           const newRecords = htmlToAlgoliaRecord(
@@ -71,7 +68,8 @@ const flatten = async (pages: any[]) => {
             {
               title: context.title,
               url: path,
-              platforms,
+              sdk: slug,
+              framework: guideSlug,
               pathSegments: extrapolate(path, '/').map(x => `/${x}/`),
               keywords: context.keywords || [],
               legacy: context.legacy || false,

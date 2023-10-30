@@ -27,10 +27,6 @@ type Props = {
 };
 
 export function Layout({children, sidebar, pageContext = {}}: Props) {
-  const searchPlatforms = [pageContext.platform?.name, pageContext.guide?.name].filter(
-    (name): name is string => !!name
-  );
-
   return (
     <div className="document-wrapper">
       <div className="sidebar">
@@ -93,7 +89,10 @@ export function Layout({children, sidebar, pageContext = {}}: Props) {
       <main role="main" className="px-0">
         <div className="flex-grow-1">
           <div className="d-block navbar-right-half">
-            <Navbar {...(searchPlatforms.length > 0 && {platforms: searchPlatforms})} />
+            <Navbar
+              sdk={pageContext.platform?.name}
+              framework={pageContext.guide?.name}
+            />
           </div>
 
           <section className="pt-3 px-3 content-max prose">

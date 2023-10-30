@@ -8,16 +8,17 @@ import {Search} from './search';
 import {SmartLink} from './smartLink';
 
 type Props = {
-  platforms?: string[];
+  framework?: string;
+  sdk?: string;
 };
 
-export function Navbar({platforms}: Props) {
+export function Navbar({sdk, framework}: Props) {
   const location = useLocation();
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
       <div>
-        <Search path={location.pathname} platforms={platforms} />
+        <Search path={location.pathname} sdk={sdk} framework={framework} />
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>

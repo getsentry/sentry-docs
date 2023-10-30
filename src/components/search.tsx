@@ -44,6 +44,8 @@ const search = new SentryGlobalSearch([
   {
     site: 'docs',
     pathBias: true,
+    platformBias: true,
+    legacyBias: true,
   },
   'help-center',
   'develop',
@@ -56,11 +58,12 @@ function relativizeUrl(url: string) {
 
 type Props = {
   autoFocus?: boolean;
+  framework?: string;
   path?: string;
-  platforms?: string[];
+  sdk?: string;
 };
 
-export function Search({path, autoFocus, platforms = []}: Props) {
+export function Search({path, autoFocus, sdk, framework}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -99,13 +102,15 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         return;
       }
 
-      // Only search when we have more than two characters. Ideally we'd do three, but
-      // we want to make sure people can search for Go and RQ
+      const slug = standardSDKSlug(sdk)?.slug ?? '';
+      const guideSlug = standardSDKSlug(framework)?.slug ?? '';
+
       const queryResults = await search.query(
         inputQuery,
         {
           path,
-          platforms: platforms.map(platform => standardSDKSlug(platform)?.slug ?? ''),
+          sdk: slug,
+          framework: guideSlug ?? slug,
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
@@ -123,7 +128,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         setResults(queryResults);
       }
     },
-    [path, platforms, showOffsiteResults, loading]
+    [path, sdk, framework, showOffsiteResults, loading]
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
@@ -173,7 +178,6 @@ export function Search({path, autoFocus, platforms = []}: Props) {
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
           {loading && <Logo loading />}
-
           {!loading && totalHits > 0 && (
             <div className="sgs-search-results-scroll-container">
               {results
@@ -243,13 +247,11 @@ export function Search({path, autoFocus, platforms = []}: Props) {
                 ))}
             </div>
           )}
-
           {!loading && totalHits === 0 && (
             <div className="sgs-hit-empty-state">
               No results for <em>{query}</em>
             </div>
           )}
-
           {!loading && !showOffsiteResults && (
             <div className="sgs-expand-results">
               <button
