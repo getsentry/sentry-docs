@@ -1,14 +1,22 @@
-You need to register `SentrySpanProcessor` and `SentryPropagator` with your OpenTelemetry installation:
+There are a few steps necessary in order to ensure that your OpenTelemetry setup is fully synced with your Sentry SDK.
 
 <SignInNote />
 
 ```js
+// Sentry dependencies
 const Sentry = require("@sentry/node");
 const {
-  SentrySpanProcessor,
+  getCurrentHub,
+  setupGlobalHub,
   SentryPropagator,
-} = require("@sentry/opentelemetry-node");
+  SentrySampler,
+  SentrySpanProcessor,
+  setupEventContextTrace,
+  wrapContextManagerClass,
+  setOpenTelemetryContextAsyncContextStrategy,
+} = require("@sentry/opentelemetry");
 
+// OpenTelemetry dependencies
 const opentelemetry = require("@opentelemetry/sdk-node");
 const otelApi = require("@opentelemetry/api");
 const {
@@ -17,25 +25,50 @@ const {
 const {
   OTLPTraceExporter,
 } = require("@opentelemetry/exporter-trace-otlp-grpc");
+const { 
+  AsyncLocalStorageContextManager
+} = require('@opentelemetry/context-async-hooks');
 
-// Make sure to call `Sentry.init` BEFORE initializing the OpenTelemetry SDK
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  // set the instrumenter to use OpenTelemetry instead of Sentry
-  instrumenter: "otel",
-  // ...
-});
+function setupSentry() {
+  setupGlobalHub();
 
-const sdk = new opentelemetry.NodeSDK({
-  // Existing config
-  traceExporter: new OTLPTraceExporter(),
-  instrumentations: [getNodeAutoInstrumentations()],
+  // Make sure to call `Sentry.init` BEFORE initializing the OpenTelemetry SDK
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    // set the instrumenter to use OpenTelemetry instead of Sentry
+    instrumenter: "otel",
+    // ...
+  });
+  
+  const client = getCurrentHub().getClient();
+  setupEventContextTrace(client);
 
-  // Sentry config
-  spanProcessor: new SentrySpanProcessor(),
-  textMapPropagator: new SentryPropagator(),
-});
+  // You can wrap whatever local storage context manager you want to use
+  const SentryContextManager = wrapContextManagerClass(
+    AsyncLocalStorageContextManager
+  );
 
-sdk.start();
+  const sdk = new opentelemetry.NodeSDK({
+    // Existing config
+    traceExporter: new OTLPTraceExporter(),
+    instrumentations: [getNodeAutoInstrumentations()],
+
+    // Sentry config
+    spanProcessor: new SentrySpanProcessor(),
+    textMapPropagator: new SentryPropagator(),
+    contextManager:  new SentryContextManager(),
+    sampler: new SentrySampler(client)
+  });
+
+  // Ensure OpenTelemetry Context & Sentry Hub/Scope is synced
+  setOpenTelemetryContextAsyncContextStrategy();
+
+  sdk.start();
+}
+
+setupSentry();
 ```
+
+Note that with this setup, you can _only_ use OpenTelemetry tracing for performance. 
+Any Sentry performance APIs (e.g. `Sentry.startTransaction()`) will not work.
