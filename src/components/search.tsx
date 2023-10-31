@@ -173,6 +173,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
           {loading && <Logo loading />}
+
           {!loading && totalHits > 0 && (
             <div className="sgs-search-results-scroll-container">
               {results
@@ -242,11 +243,13 @@ export function Search({path, autoFocus, platforms = []}: Props) {
                 ))}
             </div>
           )}
+
           {!loading && totalHits === 0 && (
             <div className="sgs-hit-empty-state">
               No results for <em>{query}</em>
             </div>
           )}
+
           {!loading && !showOffsiteResults && (
             <div className="sgs-expand-results">
               <button

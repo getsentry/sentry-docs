@@ -30,6 +30,7 @@ export function Layout({children, sidebar, pageContext = {}}: Props) {
   const searchPlatforms = [pageContext.platform?.name, pageContext.guide?.name].filter(
     (name): name is string => !!name
   );
+
   return (
     <div className="document-wrapper">
       <div className="sidebar">
