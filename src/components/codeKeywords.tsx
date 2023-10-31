@@ -10,9 +10,9 @@ import {useOnClickOutside} from 'sentry-docs/utils';
 
 import {CodeContext, createOrgAuthToken} from './codeContext';
 
-const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
+export const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
-const ORG_AUTH_TOKEN_REGEX = /___ORG_AUTH_TOKEN___/g;
+export const ORG_AUTH_TOKEN_REGEX = /___ORG_AUTH_TOKEN___/g;
 
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
 
