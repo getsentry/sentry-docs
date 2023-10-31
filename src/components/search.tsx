@@ -58,12 +58,11 @@ function relativizeUrl(url: string) {
 
 type Props = {
   autoFocus?: boolean;
-  framework?: string;
   path?: string;
-  sdk?: string;
+  platforms?: string[];
 };
 
-export function Search({path, autoFocus, sdk, framework}: Props) {
+export function Search({path, autoFocus, platforms = []}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -102,15 +101,11 @@ export function Search({path, autoFocus, sdk, framework}: Props) {
         return;
       }
 
-      const slug = standardSDKSlug(sdk)?.slug ?? '';
-      const guideSlug = standardSDKSlug(framework)?.slug ?? '';
-
       const queryResults = await search.query(
         inputQuery,
         {
           path,
-          sdk: slug,
-          framework: guideSlug ?? slug,
+          platforms: platforms.map(platform => standardSDKSlug(platform)?.slug ?? ''),
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
@@ -128,7 +123,7 @@ export function Search({path, autoFocus, sdk, framework}: Props) {
         setResults(queryResults);
       }
     },
-    [path, sdk, framework, showOffsiteResults, loading]
+    [path, platforms, showOffsiteResults, loading]
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);

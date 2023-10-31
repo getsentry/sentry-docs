@@ -51,16 +51,24 @@ const flatten = async (pages: any[]) => {
           const htmlFile = join(pub, path, 'index.html');
           const html = (await fs.readFile(htmlFile)).toString();
 
+          // `platforms` deprecated in @sentry-global-search: 0.5.9
+          // we keep it in algolia records for backwards compatibility
+          let platforms: string[] = [];
+
           // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
           let slug: string;
           let guideSlug: string;
           if (context.platform) {
             slug = standardSDKSlug(context.platform.name)?.slug;
+            let fullSlug = slug;
             guideSlug = slug;
 
             if (context.guide) {
               guideSlug = standardSDKSlug(context.guide.name)?.slug;
+              fullSlug += `.${guideSlug}`;
             }
+
+            platforms = extrapolate(fullSlug ?? 'generic', '.');
           }
 
           const newRecords = htmlToAlgoliaRecord(
@@ -70,6 +78,7 @@ const flatten = async (pages: any[]) => {
               url: path,
               sdk: slug,
               framework: guideSlug,
+              platforms,
               pathSegments: extrapolate(path, '/').map(x => `/${x}/`),
               keywords: context.keywords || [],
               legacy: context.legacy || false,
