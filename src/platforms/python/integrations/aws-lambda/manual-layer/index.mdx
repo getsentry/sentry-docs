@@ -58,11 +58,17 @@ Add an error to you function and run it. If everything's working properly, it sh
 
 ## Troubleshooting
 
-- **Error:** `"Unable to import module 'sentry_sdk.integrations.init_serverless_sdk': urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'OpenSSL 1.0.2k-fips  26 Jan 2017'."`
+- **Error:** `"Unable to import module 'lambda_function': urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'OpenSSL 1.0.2k-fips  26 Jan 2017'. See: https://github.com/urllib3/urllib3/issues/2168"`
 
-  **Solution:** You need to update the runtime of your Lambda function be at least Python 3.9. Because older versions of the Lambda Python runtime have and OpenSSL version installed, that is not compatible with the Sentry SDK.
+  This error means that you have `urllib3>=2.0` in you dependencies. The Python runtime used in AWS Lambda is not compatible with urllib3 version 2, because it still uses OpenSSL 1.0.
+
+  **Solution:** There are two solutions for this error:
+
+  - Either use a newer Python runtime for your Lambda function. `urllib3` version 2+ is supported in AWS Lambda from the Python 3.9 Lambda runtime and newer.
+  - Or pin your dependency of urllib3 to `urllib3<1.27` to make it work with the Python runtime 3.7 and 3.8 used in AWS Lambda.
 
 ## Supported Versions
 
 - Lambda Layer up to Version 63: Python 3.6, 3.7, 3.8, 3.9
 - Lambda Layer Version 64+: Python 3.9, 3.10, 3.11
+- Lambda Layer Version 77+: Python 3.7, 3.8, 3.9, 3.10, 3.11
