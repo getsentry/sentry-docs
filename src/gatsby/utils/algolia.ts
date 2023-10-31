@@ -105,7 +105,7 @@ const config = [
   {
     query: pageQuery,
     transformer: ({data}) => flatten(data.pages.nodes),
-    indexName: `${indexPrefix}docs`,
+    indexName: `${indexPrefix}docs-v2`,
     settings: {
       ...sentryAlgoliaIndexSettings,
     },
