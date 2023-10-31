@@ -74,12 +74,22 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
           `/${pathRoot}/crons/`,
+          `/${pathRoot}/distributed-tracing/`,
         ]}
       />
       <DynamicNav
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
         prependLinks={[[`/${pathRoot}/performance/`, 'Set Up Performance']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/distributed-tracing`}
+        title="Distributed Tracing"
+        prependLinks={[
+          [`/${pathRoot}/distributed-tracing/`, 'Set Up Distributed Tracing'],
+        ]}
         suppressMissing
         tree={tree}
       />
