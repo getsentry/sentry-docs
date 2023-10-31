@@ -18,6 +18,7 @@ export const getPackageTypeDefs = () => {
         url: String
         repoUrl: String!
         version: String!
+        apiDocsUrl: String
         files: [PackageFile!]
       }
       `,

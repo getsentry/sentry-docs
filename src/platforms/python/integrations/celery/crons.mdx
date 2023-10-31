@@ -38,13 +38,17 @@ from celery import signals
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 
-
 #@signals.beat_init.connect
 @signals.celeryd_init.connect
 def init_sentry(**kwargs):
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
-        integrations=[CeleryIntegration(monitor_beat_tasks=True)],  # 👈
+        enable_tracing=True,
+        integrations=[
+            CeleryIntegration(
+                monitor_beat_tasks=True
+            )
+        ],
         environment="local.dev.grace",
         release="v1.0",
     )
@@ -67,18 +71,18 @@ You can exclude Celery Beat tasks from being auto-instrumented. To do this, add 
 <SignInNote />
 
 ```python
-    exclude_beat_tasks = [
-        "some-task-a",
-        "payment-check-.*",
-    ]
-
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
+        enable_tracing=True,
         integrations=[
             CeleryIntegration(
                 monitor_beat_tasks=True,
-                exclude_beat_tasks=exclude_beat_tasks),
-            ],
+                exclude_beat_tasks=[
+                    "some-task-a",
+                    "payment-check-.*",
+                ]
+            ),
+        ],
         environment="local.dev.grace",
         release="v1.0",
     )
@@ -107,15 +111,16 @@ from celery import Celery, signals
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 
-
 app = Celery('tasks', broker='...')
-
 
 @signals.celeryd_init.connect
 def init_sentry(**kwargs):
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
-        integrations=[CeleryIntegration()],
+        enable_tracing=True,
+        integrations=[
+            CeleryIntegration()
+        ],
         environment="local.dev.grace",
         release="v1.0",
     )

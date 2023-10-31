@@ -25,7 +25,9 @@ The Sentry SDK ships with code that is not strictly required for it to collect y
 
 ### List Of Flags
 
-To make optional code eligible for tree shaking, you can replace various flags in the Sentry SDK with `false`.
+To make optional code eligible for tree shaking, you can remove the code from your build output by replacing various flags in the Sentry SDK.
+
+The following flags are available:
 
 `__SENTRY_DEBUG__`
 
@@ -36,7 +38,53 @@ To make optional code eligible for tree shaking, you can replace various flags i
 : Replacing this flag with `false` will tree shake all code in the SDK that is related to performance monitoring.
 **Attention:** `__SENTRY_TRACING__` must not be replaced with `false` when you're using any performance monitoring-related SDK features (e.g. `Sentry.startTransaction()`). This flag is intended to be used in combination with packages like `@sentry/next` or `@sentry/sveltekit`, which automatically include performance monitoring functionality.
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
+<PlatformSection notSupported={["javascript.wasm", "javascript.cordova"]}>
+
+`__RRWEB_EXCLUDE_CANVAS__`
+
+: Replacing this flag with `true` will tree shake all code in the SDK that's related to capturing canvas elements with Session Replay. This is only relevant when using [Session Replay](../../session-replay/). Enable this flag if you don't have any canvas elements on your page you want to record.
+
+`__RRWEB_EXCLUDE_IFRAME__`
+
+: Replacing this flag with `true` will tree shake all code in the SDK that is related capturing iframe content with Session Replay. This is only relevant when using [Session Replay](../../session-replay/). You can enable this flag if you don't have any iframes on your page you care to record.
+
+`__RRWEB_EXCLUDE_SHADOW_DOM__`
+
+: Replacing this flag with `true` will tree shake all code in the SDK that's related to capturing shadow dom elements with Session Replay. This is only relevant when using [Session Replay](../../session-replay/). Enable this flag if you don't have any shadow dom elements on your page you want to record.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.sveltekit", "javascript.remix", "javascript.astro"]}>
+
+### Tree Shaking Optional Code With Sentry Bundler Plugins
+
+_This configuration is available starting with v2.9.0 of the bundler plugins._
+
+If you're using one of our bundler plugins, you can use the `bundleSizeOptimizations` configuration option to tree shake optional code:
+
+```javascript
+sentryPlugin({
+  // other config
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludePerformanceMonitoring: true,
+    excludeReplayCanvas: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+  },
+});
+```
+
+For more details, see the documentation for the specific bundler plugin you're using:
+
+- [Sentry Webpack Plugin](https://www.npmjs.com/package/@sentry/webpack-plugin)
+- [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin)
+- [Sentry Esbuild Plugin](https://www.npmjs.com/package/@sentry/esbuild-plugin)
+- [Sentry Rollup Plugin](https://www.npmjs.com/package/@sentry/rollup-plugin)
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.sveltekit", "javascript.remix", "javascript.astro"]}>
 
 ### Tree Shaking Optional Code With Webpack
 
@@ -51,6 +99,9 @@ module.exports = {
     new webpack.DefinePlugin({
       __SENTRY_DEBUG__: false,
       __SENTRY_TRACING__: false,
+      __RRWEB_EXCLUDE_CANVAS__: true,
+      __RRWEB_EXCLUDE_IFRAME__: true,
+      __RRWEB_EXCLUDE_SHADOW_DOM__: true,
     }),
     // ... other plugins
   ],
@@ -59,7 +110,7 @@ module.exports = {
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
+<PlatformSection notSupported={["javascript.nextjs", "javascript.sveltekit", "javascript.remix", "javascript.astro"]}>
 
 ### Tree Shaking Optional Code With Rollup
 
@@ -76,6 +127,9 @@ export default {
     replace({
       __SENTRY_DEBUG__: false,
       __SENTRY_TRACING__: false,
+      __RRWEB_EXCLUDE_CANVAS__: true,
+      __RRWEB_EXCLUDE_IFRAME__: true,
+      __RRWEB_EXCLUDE_SHADOW_DOM__: true,
     }),
     // ... other plugins (best placed after)
   ],
@@ -97,6 +151,9 @@ const nextConfig = {
       new webpack.DefinePlugin({
         __SENTRY_DEBUG__: false,
         __SENTRY_TRACING__: false,
+        __RRWEB_EXCLUDE_CANVAS__: true,
+        __RRWEB_EXCLUDE_IFRAME__: true,
+        __RRWEB_EXCLUDE_SHADOW_DOM__: true,
       })
     );
 
