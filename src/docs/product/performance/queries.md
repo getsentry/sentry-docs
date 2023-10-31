@@ -13,6 +13,10 @@ Sentry's query monitoring helps you investigate the performance of your queries 
 
 Starting with the [**Queries** page](#queries-page), you get a high-level overview of how your queries are doing. From there, you can drill into a specific query's [**Query Summary** page](#query-summary-page) and then investigate sample events from the [Sample List](#sample-list) to better understand the context of its performance in a specific endpoint.
 
+The gif below demonstrates how to use performance monitoring for queries.
+
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/miaHF3SwPiABh9bZnMoq?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Walkthrough"></iframe></div>
+
 </br>
 
 ## Prerequisites and Limitations
@@ -59,6 +63,10 @@ You can also use the dropdowns above to filter the table for specific SQL comman
 
 To view more details, click on a query from the table to open its **Query Summary** page.
 
+The gif below provides a detailed walkthrough of the **Queries** page.
+
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/v66mxydrZRsNxRgNMYUl?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Queries Page Walkthrough"></iframe></div>
+
 </br>
 
 ### Query Parameterization
@@ -82,6 +90,10 @@ At the bottom, you can find a list of endpoints the query is found in, sorted by
 
 If you want to investigate a specific endpoint, click on it to open a sidebar showing some sample events.
 
+The gif below provides a detailed walkthrough of the **Query Summary** page.
+
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/MTzviZtIiN7ZCmNFVJg4?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Query Summary Page Walkthrough"></iframe></div>
+
 </br>
 
 ## Sample List
@@ -97,6 +109,10 @@ These same events are also represented as triangles shown in the average duratio
 You can generate a new list of random sample events by clicking the "Try Different Samples" button at the bottom.
 
 From the sample list, you can drill down to specific good, average, or bad examples of a given query within a given endpoint. Click on an event ID to drill into the query's span details within the span waterfall of the **Event Details** page.
+
+The gif below explains how to navigate the sample list.
+
+<div style="position: relative; padding-bottom: calc(48.68055555555556% + 41px); height: 0; width: 100%"><iframe src="https://demo.arcade.software/dr7yesA9RCqfpSyICbmP?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;" title="Performance - Queries - Sample List Walkthrough"></iframe></div>
 
 </br>
 
