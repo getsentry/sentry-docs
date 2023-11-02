@@ -1,0 +1,17 @@
+Remember that in order to propagate trace information through your distributed system, all system components (apps and services) should have their own Sentry SDK configured, and all involved backends must allow Sentry's trace headers to be accepted.
+
+#### Step 1: Accept Sentry's Trace Headers In Your Backend(s)
+
+If your frontend and backend are hosted on different domains (for example, your frontend is on `https://example.com` and your backend is on `https://api.example.net`), and the frontend does XHR/fetch requests to your backend, you'll need to configure your backend [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) headers to ensure requests aren't blocked.
+
+Configure your backend to allow the `sentry-trace` and `baggage` headers. Your server's response header configuration might look like:
+
+```
+Access-Control-Allow-Headers: sentry-trace, baggage
+```
+
+Your configuration will be specific to your setup.
+
+#### Step 2: Add a Sentry SDK in Your Other Services
+
+To pick Sentry's trace headers up and further propagate them, you have to have the Sentry SDK configured in all your services. Take a look at the [respective SDK documentation](/platform-redirect/?next=/distributed-tracing/) to learn how distributed tracing can be enabled for each platform.
