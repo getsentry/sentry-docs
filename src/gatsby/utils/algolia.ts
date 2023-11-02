@@ -51,18 +51,23 @@ const flatten = async (pages: any[]) => {
           const htmlFile = join(pub, path, 'index.html');
           const html = (await fs.readFile(htmlFile)).toString();
 
-          // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
+          // `platforms` deprecated in @sentry-global-search: 0.5.9
+          // we keep it in algolia records for backwards compatibility
           let platforms: string[] = [];
 
+          // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
+          let slug: string;
+          let guideSlug: string;
           if (context.platform) {
-            const slug = standardSDKSlug(context.platform.name)?.slug;
-
+            slug = standardSDKSlug(context.platform.name)?.slug;
             let fullSlug = slug;
+            guideSlug = slug;
 
             if (context.guide) {
-              const guideSlug = standardSDKSlug(context.guide.name)?.slug;
+              guideSlug = standardSDKSlug(context.guide.name)?.slug;
               fullSlug += `.${guideSlug}`;
             }
+
             platforms = extrapolate(fullSlug ?? 'generic', '.');
           }
 
@@ -71,6 +76,8 @@ const flatten = async (pages: any[]) => {
             {
               title: context.title,
               url: path,
+              sdk: slug,
+              framework: guideSlug,
               platforms,
               pathSegments: extrapolate(path, '/').map(x => `/${x}/`),
               keywords: context.keywords || [],
@@ -98,7 +105,7 @@ const config = [
   {
     query: pageQuery,
     transformer: ({data}) => flatten(data.pages.nodes),
-    indexName: `${indexPrefix}docs`,
+    indexName: `${indexPrefix}docs-v2`,
     settings: {
       ...sentryAlgoliaIndexSettings,
     },
