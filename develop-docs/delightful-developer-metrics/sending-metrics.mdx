@@ -1,0 +1,106 @@
+---
+title: Sending Metrics
+sidebar_order: 1
+---
+
+## Using Python SDK
+
+In case you are looking to use the new metrics feature directly from the Python SDK you can do it as follows.
+
+First, you have to use the latest `master` branch of the `sentry-python` SDK and add that as your dependency. For example:
+
+```
+sentry-sdk @ https://github.com/getsentry/sentry-python/archive/1b445c61d1e263ccd04d823307b3a03a6945dc8a.zip
+```
+
+Once the SDK is installed you have to import it:
+
+```python
+import sentry_sdk
+```
+
+Then you can use the metrics method as follows:
+
+```python
+# Emit a counter
+sentry_sdk.metrics.incr(
+  key="my_counter",
+  value=2,
+  tags=tags,
+)
+
+# Emit a distribution
+sentry_sdk.metrics.distribution(
+  key="my_distribution",
+  value=15.0,
+  tags=tags,
+	# You can also specify a unit if you want
+	unit="second",
+)
+
+# Emit a set
+sentry_sdk.metrics.set(
+  key="my_set",
+  value="john",
+  tags=tags,
+)
+
+# Emit a gauge
+sentry_sdk.metrics.gauge(
+  key="my_gauge",
+  value=10,
+  tags=tags,
+)
+```
+
+<Alert title="Note" level="note">
+As of now, only the Python SDK is supporting the new metrics features but we are working on supporting metrics in the JavaScript and Rust SDKs next.
+</Alert>
+
+## Units Support
+
+The following units are supported out of the box (but the system also allows you to pass your own unit if you need):
+
+```bash
+"nanosecond",
+"microsecond",
+"millisecond",
+"second",
+"minute",
+"hour",
+"day",
+"week",
+"bit",
+"byte",
+"kilobyte",
+"kibibyte",
+"megabyte",
+"mebibyte",
+"gigabyte",
+"gibibyte",
+"terabyte",
+"tebibyte",
+"petabyte",
+"pebibyte",
+"exabyte",
+"exbibyte",
+"ratio",
+"percent",
+"none"
+```
+
+<Alert title="Note" level="note">
+
+Please note that if you change the unit of a metric, it will be extracted as a new metric.
+
+</Alert>
+
+## Automatic Tags Extraction
+
+Since DDM has the goal of being tightly integrated into Sentry, the `sentry-python` implementation already automatically adds the following tags to your metric:
+
+- `transaction`
+- `release`
+- `environment`
+
+*As we will see later on, these special tags are recognized by the DDM UI and will prompt you with helpful actions.*

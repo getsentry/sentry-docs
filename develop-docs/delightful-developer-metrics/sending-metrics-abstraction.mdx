@@ -1,0 +1,89 @@
+---
+title: Sending Metrics (Abstraction)
+sidebar_order: 2
+---
+
+<Alert title="Important" level="danger">
+
+Do not use the internal abstraction for sending metrics at this stage. We want to dogfood the SDK methods to feel the ergonomics and the experience our customers will get. [Use this instead.](/delightful-developer-metrics/sending-metrics/)
+
+</Alert>
+
+## Sentry Metrics Abstraction
+
+In order to make metrics collection uniform across the entire `sentry` codebase, we have an abstraction known as `MetricsBackend` which exposes metrics collection with three methods.
+
+- `incr` → emits a counter metric.
+- `timing` → emits a distribution metric (with the `second` unit on Sentry metrics).
+- `gauge` → emits a gauge metric (temporarily emits a counter, until the infra work is done).
+
+Each method has three main parameters:
+
+- `key` → the name that uniquely identifies the metric. You will use the name to specify the metric when you want to plot it.
+- `value` → the value of the value. You will plot the value of the metric.
+- `tags` → the tags of the metric. You will use the tags to attach metadata to the metric, which can be helpful for aggregations.
+
+To learn more about `MetricsBackend`, visit [Internal Metrics](/services/metrics/).
+
+## Using the `MetricsBackend`
+
+<Alert title="Warning" level="warning">
+
+In order to slowly roll out the new metrics extraction, we have designed an allow list mechanism that will forward metrics to DDM only if the metric name is put in the allow list. You can view and modify the allow list [here](https://github.com/getsentry/getsentry/blob/27dc1c77551276661ca17913abb96de4f7d14284/getsentry/conf/settings/prod.py#L341)
+
+</Alert>
+
+To use the metrics backend you will first have to import it:
+
+```python
+from sentry.utils import metrics
+```
+
+Once imported, you can start emitting metrics:
+
+```python
+# Emit a counter.
+metrics.incr(
+	"counter_name",
+	tags={"platform": platform}
+)
+
+# Emit a distribution.
+metrics.timing(
+	"distribution_name",
+	100,
+	tags={"user_segment": user_segment}
+)
+
+# Emit a gauge.
+metrics.gauge(
+	"gauge_name",
+	10,
+	tags={"nation": nation}
+)
+
+# Emit a gauge.
+metrics.distribution(
+	"gauge_name",
+	10,
+	tags={"nation": nation},
+	unit="second",
+)
+```
+
+If you want to measure how much time a specific piece of code takes, you can use:
+
+```python
+# Emit a distribution metric of the execution time of the function.
+with metrics.timer("my_func_speed"):
+	my_func()
+```
+
+
+
+## Details about the `MetricsBackend`
+
+The current implementation of the `MetricsBackend` is known as `CompositExperimentalMetricsBackend`. It's a backend that forwards your metrics to both **Datadog** and **Sentry**. For this reason, you will be able to see your metrics on both platforms, even though the end goal is to use our own metrics product when it is mature enough. More details [here](/services/metrics/#composit-experimental-backend).
+
+*Keep in mind that due to scale implications, we might sample the metrics sent to Sentry. This is only temporary but it means that for now if you need high-fidelity metrics, we still suggest you refer to Datadog.*
+
