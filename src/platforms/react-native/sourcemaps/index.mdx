@@ -6,7 +6,132 @@ redirect_from:
 description: "Learn more about how to upload your source maps to Sentry."
 ---
 
+<Note>
+
+This guide assumes you are using a Sentry React Native SDK on version `5.11.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
 To get unminified stack traces for JavaScript code, source maps must be generated and uploaded. The React Native SDK handles source maps _automatically_ for iOS with Xcode and Android with Gradle, if you do not use custom values.
+
+## Setup Automatic Upload
+
+The easiest way to configure automatic uploading source maps is by using the Sentry Wizard:
+
+```bash
+npx @sentry/wizard@latest -i reactNative
+```
+
+The wizard will guide you through the following steps:
+
+- Logging into Sentry and selecting a project
+- Installing the necessary Sentry packages
+- Configuring RN build tools to generate and upload source maps
+
+Supports JavaScript Core (including RAM Bundle) and Hermes. If you want to configure automatic source maps upload manually, follow the steps on [Manual Configuration](/platforms/react-native/manual-setup/manual-setup) page.
+
+## Manual Upload Hermes
+
+The manual upload of source maps consists of a few simple steps. First, you need to generate the source maps and bundle. Then, you need to upload them to Sentry.
+
+Start with adding Sentry React Native Metro Plugin to your `metro.config.js`:
+
+```js {filename="metro.config.js"}
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const {
+  createSentryMetroSerializer,
+} = require('@sentry/react-native/dist/js/tools/sentryMetroSerializer');
+
+const config = {
+  serializer: {
+    customSerializer: createSentryMetroSerializer(),
+  },
+};
+
+const m = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = m;
+```
+
+Generate the React Native Packager (Metro) bundle and source maps:
+
+```bash {tabTitle:Android}
+npx react-native bundle \
+  --dev false \
+  --minify false \
+  --platform android \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output index.android.bundle \
+  --sourcemap-output index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+npx react-native bundle \
+  --dev false \
+  --minify false \
+  --platform ios \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+Compile Hermes bytecode bundle and source map:
+
+```bash {tabTitle:Android}
+node_modules/hermes-engine/{OS-BIN}/hermesc \
+  -O -emit-binary \
+  -output-source-map \
+  -out=index.android.bundle.hbc \
+  index.android.bundle
+rm -f index.android.bundle
+mv index.android.bundle.hbc index.android.bundle
+```
+
+```bash {tabTitle:iOS}
+ios/Pods/hermes-engine/destroot/bin/hermesc
+  -O -emit-binary \
+  -output-source-map \
+  -out=main.jsbundle.hbc \
+  main.jsbundle
+rm -f main.jsbundle
+mv main.jsbundle.hbc main.jsbundle
+```
+
+```bash {tabTitle:Android on Linux}
+```
+
+```bash {tabTitle:Android on Windows}
+```
+
+```bash {tabTitle:RN 0.68 and older}
+```
+
+Compose Hermes bytecode and (React Native Packager) Metro source maps:
+
+```bash {tabTitle:Android}
+mv index.android.bundle.map index.android.bundle.packager.map
+node \
+  node_modules/react-native/scripts/compose-source-maps.js \
+  index.android.bundle.packager.map \
+  index.android.bundle.hbc.map \
+  -o index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+mv main.jsbundle.map main.jsbundle.packager.map
+node \
+  node_modules/react-native/scripts/compose-source-maps.js \
+  main.jsbundle.packager.map \
+  main.jsbundle.hbc.map \
+  -o main.jsbundle.map
+```
+
+## Manual Upload JavaScript Core
+
+
 
 ## Using custom Release and Distribution
 
