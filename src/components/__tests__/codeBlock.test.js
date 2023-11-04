@@ -1,7 +1,7 @@
 import React from 'react';
 import {create} from 'react-test-renderer';
 
-import { CodeBlock } from '../codeBlock';
+import {CodeBlock} from '../codeBlock';
 import {_setCachedCodeKeywords, CodeContextProvider, DEFAULTS} from '../codeContext';
 import {makeKeywordsClickable} from '../codeKeywords';
 
