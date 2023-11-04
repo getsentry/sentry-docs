@@ -9,6 +9,13 @@ function CodeWrapper({children, ...props}) {
   return <code {...props}>{children ? makeKeywordsClickable(children) : children}</code>;
 }
 
+// We mock SignInNote to test that CodeBlock renders it when required.
+jest.mock('../signInNote', () => ({
+  SignInNote: () => {
+    return <mock-signInNote />;
+  },
+}));
+
 // Tests that CodeBlock renders SignInNote when necessary.
 describe('CodeBlock', () => {
   beforeEach(() => {
@@ -26,7 +33,13 @@ describe('CodeBlock', () => {
   });
 
   it('renders without SignInNote if the code does not contain keyword settings', () => {
-    <CodeBlock filename="test" language="javascript" />;
+    const tree = create(
+      <CodeBlock filename="test" language="javascript">
+        process.env.MY_ENV = 'foo'
+      </CodeBlock>
+    );
+
+    expect(tree.toJSON()).toMatchSnapshot();
   });
 });
 
