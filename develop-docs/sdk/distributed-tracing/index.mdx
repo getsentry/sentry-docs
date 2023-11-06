@@ -1,0 +1,21 @@
+---
+title: "Distributed Tracing"
+---
+
+This document describes how a SDK should propagate information between different services to connect all telemetry (errors, profiles, replays, transaction) from those services into one trace.
+
+For an overview see [Distributed Tracing](https://docs.sentry.io/product/performance/distributed-tracing/) in the product docs.
+
+Sentry uses two containers to hold trace information [`sentry-trace`](/sdk/performance/#header-sentry-trace) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage).
+
+With these containers you can propagate a trace to a down-stream service. By either 
+- adding `sentry-trace` and `baggage` HTTP headers (when doing outgoing HTTP requests), 
+- adding `sentry-trace` and `baggage` as meta data (when putting tasks into a queue, details are specific to the queue you want to support), or 
+- setting environment variables (when calling another process). In this case the env variables should be called `SENTRY_TRACE` and `SENTRY_BAGGAGE`.
+
+The SDK running in the receiving service needs to make sure to pick up incoming trace information by
+- reading `sentry-trace` and `baggage` headers for each incoming HTTP request, 
+- reading `sentry-trace` and `baggage` meta data when retrieving an item from a queue, or
+- reading the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` on start up.
+
+This trace information should be stored in the "propagation context" of the current scope. This makes sure that all telemetry that is emmited from the receiving service to Sentry will include the correct trace information.
