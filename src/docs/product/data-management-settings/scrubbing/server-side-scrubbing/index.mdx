@@ -68,6 +68,36 @@ If you’ve accidentally sent sensitive data to the server, you likely don't to 
 - While you cannot delete a single event, you can delete the issue the event is in by clicking the trash icon on the **Issue Details** page.
 - If a large number of unique events - representing multiple issues - contain the data, you may need to delete and re-create the project to effectively cleanse the system.
 
+## Safe Fields
+
+Safe Fields are used to exclude fields and data from scrubbing. For example, take the following event payload:
+
+```json
+{
+  "user": {
+    "id": "4111111111111111"
+  },
+  "extra": {
+    "id": "sensitive",
+    "sys.argv": ["script.py", "password"],
+    "credentials": { "username": "jane", "password": "p4ssw0rd!" }
+  }
+}
+```
+
+When scrubbing is enabled and `id` added as a sensitive field, the `password` string in `extra.'sys.argv'`,
+both `id` fields (`user.id` and `extra.id`), as well as the entire `credentials` object will be scrubbed.
+
+To accomodate more fine-grained filtering, the Safe Fields support the same syntax as the
+[Advanced Datascrubbing Sources](/product/data-management-settings/scrubbing/advanced-datascrubbing/#sources).
+
+If you want to leave the `user.id` field intact, you can configure the `id` as a Safe Field, but this will also
+mark `extra.id` as a Safe Field. To specifically select the user id, use the full path instead of `user.id`.
+
+Marking elements of an array as safe requires a wildcard selector, for example `'sys.argv'.*`. A deep wildcard
+can be used to mark all elements contained within an object. The two selectors: `extra.credentials` and
+`extra.credentials.**` will mark the `credentials` object and all of its members as safe.
+
 ## Known Limitations
 
 It's not currently possible to avoid scrubbing data in [breadcrumbs](/product/issues/issue-details/breadcrumbs/) by adding the category name in "Safe Fields". Only the message and data in breadcrumbs are used for data scrubbing. Also, if custom JSON data is provided, the fields will be scrubbed according to the configured rules and the entries in "Safe Fields".
