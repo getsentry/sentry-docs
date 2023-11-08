@@ -4,6 +4,56 @@ If you are using [Quartz](http://www.quartz-scheduler.org/), please see <Platfor
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
+### Wrapper
+
+We offer a helper that takes care of wrapping your code and sending a check-in at the start as well as one at the end. It checks for exceptions and sets the status of the check-in accordingly.
+
+```java
+import io.sentry.util.CheckInUtils;
+
+String result = CheckInUtils.withCheckIn("<monitor-slug>", () -> {
+    // Execute your scheduled task here...
+    return "computed result";
+});
+```
+```kotlin
+import io.sentry.util.CheckInUtils
+
+CheckInUtils.withCheckIn("<monitor-slug>") {
+    // Execute your scheduled task here...
+}
+```
+
+You may also send a `MonitorConfig` with a `MontiorSchedule` so the monitor is created or updated (upsert) automatically.
+
+```java
+import io.sentry.MonitorConfig;
+import io.sentry.MonitorSchedule;
+import io.sentry.MonitorScheduleUnit;
+import io.sentry.util.CheckInUtils;
+
+MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE));
+
+String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> {
+    // Execute your scheduled task here...
+    return "computed result";
+});
+```
+```kotlin
+import io.sentry.MonitorConfig
+import io.sentry.MonitorSchedule
+import io.sentry.MonitorScheduleUnit
+import io.sentry.util.CheckInUtils
+
+CheckInUtils.withCheckIn("<monitor-slug>", MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE))) {
+    // Execute your scheduled task here...
+}
+```
+
+### Manually sending check-ins
+
+It is also possible to manually send check-ins.
+
 ```java
 import io.sentry.CheckIn;
 import io.sentry.CheckInStatus;
