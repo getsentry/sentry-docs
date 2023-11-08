@@ -25,18 +25,25 @@ pip install --upgrade aiocontextvars
 
 If you have the `sanic` package in your dependencies, the Sanic integration will be enabled automatically when you initialize the Sentry SDK.
 
+To ensure that errors occuring in background tasks get reported to Sentry, we always recommend enabling the [`AsyncioIntegration`](/platforms/python/integrations/asyncio/) when you are using the `SanicIntegration`. To enable the `AsyncioIntegration`, you must explicitly add the `AsyncioIntegration` to the `integrations` list and initialize the SDK within a `before_server_start` listener.
+
+The example below demonstrates the simplest recommended setup.
+
 <SignInNote />
 
 ```python
 from sanic import Sanic
 import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-)
+app = Sanic(__main__)
 
-app = Sanic(__name__)
+@app.listener("before_server_start")
+async def init_sentry(_):
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        integrations=[AsyncioIntegration()],
+    )
 ```
 
 ### Configuration options
@@ -48,20 +55,23 @@ By default, the Sanic integration generates transactions for all requests, excep
 ```python
 from sanic import Sanic
 import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.sanic import SanicIntegration
 
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-
-    # Configure the Sanic integration so that we generate
-    # transactions for all HTTP status codes, including 404
-    integrations=[
-        SanicIntegration(
-            unsampled_statuses=None
-        )
-    ]
-)
+@app.listener("before_server_start")
+async def init_sentry(_):
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        enable_tracing=True,
+        integrations=[
+            AsyncioIntegration(),
+            SanicIntegration(
+                # Configure the Sanic integration so that we generate
+                # transactions for all HTTP status codes, including 404
+                unsampled_statuses=None,
+            ),
+        ],
+    )
 ```
 
 To specify a different set of HTTP statuses for which no transactions should be generated, set `unsampled_statuses` to a set containing the HTTP statuses that don't generate transactions. For example, if you wish to have no transactions for requests resulting in a 200 or 404 HTTP status, use `SanicIntegration(unsampled_statuses={200, 400})`.
@@ -71,10 +81,14 @@ To specify a different set of HTTP statuses for which no transactions should be 
 ```python
 from sanic import Sanic
 from sanic.response import text
-
-sentry_sdk.init(...)  # same as above
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
 app = Sanic(__name__)
+
+@app.listener("before_server_start")
+async def init_sentry(_):
+    sentry_sdk.init(...)  # same as above
 
 @app.get("/")
 async def hello_world(request):
