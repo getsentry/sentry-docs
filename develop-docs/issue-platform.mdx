@@ -29,6 +29,8 @@ You may also set these optional attributes:
 - `noise_config`: A `NoiseConfig` that allows you to set policy on how many times a fingerprint must occur in a period of time before an issue is created. NoiseConfig has two attributes:
   - `ignore_limit`: How many occurrences need to occur before we create a new issue
   - `expiry_time`: The period of time the occurrences must occur in before we reset the count
+- `enable_auto_resolve`: Whether this issue type can be resolved automatically after a number of days with no events. The auto_resolve window is configurable in each project's settings. By default this attribute is set to true.
+- `enable_escalation_detection`: Whether this issue type can escalate using the <Link to="https://docs.sentry.io/product/issues/states-triage/escalating-issues/">Escalating Issues Algorithm</Link>. By default this attribute is set to true.
 
 Here's an example issue type:
 ```python
@@ -53,8 +55,13 @@ class ProfileFileIOGroupType(GroupType):
 ### Register a Category
 You might also want to register a new category related to your issue type as well. This allows you to group related issue types together. To do so, add your category to <Link to="https://github.com/getsentry/sentry/blob/97f4174c28041357aa190f27012dc33c1c7bafc7/src/sentry/issues/grouptype.py#L17-L22">this enum</Link>
 
-## Send Occurrences to the Issue Platform
-If operating within the Sentry codebase, you can call <Link to="https://github.com/getsentry/sentry/blob/master/src/sentry/issues/producer.py#L28-L30">sentry.issues.produce_occurrence_to_kafka</Link> and pass in the <Link to="https://github.com/getsentry/sentry/blob/d262bbd9d8d3a2747d5251bee35c016c13ca050a/src/sentry/issues/issue_occurrence.py#L58">IssueOccurrence</Link>, and optionally the `Event` data. The fields in these are described in the schemas below.
+## Send Occurrence or Status Change Payloads to the Issue Platform
+If operating within the Sentry codebase, you can call <Link to="https://github.com/getsentry/sentry/blob/master/src/sentry/issues/producer.py#L41-L46">sentry.issues.produce_occurrence_to_kafka</Link> with the following optional parameters:
+- `payload_type`: <Link to="#payload-type">PayloadType</Link>
+- `occurrence`: <Link to="https://github.com/getsentry/sentry/blob/d262bbd9d8d3a2747d5251bee35c016c13ca050a/src/sentry/issues/issue_occurrence.py#L58">IssueOccurrence</Link>
+- `status_change`: <Link to="#status-change-message">StatusChangeMessage</Link>
+- `event_data`: Dict[str, Any]
+
 
 If operating from an external service then pass a json payload that matches the <Link to="#issue-occurrence-schema">Issue Occurrence Schema</Link> to the `ingest-occurrences` topic on the <Link to="https://github.com/getsentry/getsentry/blob/97039335a29517a7e48149148cdd7a30a60971e7/getsentry/conf/settings/prod.py#L567-L571">issue occurrences Kafka cluster</Link>
 
@@ -117,6 +124,25 @@ There's a minimum set of fields which should be included:
 
 Caveats
 - Attachments will not work. If you have a need for this please contact the issues team.
+
+### Payload Type
+Determines the type of payload sent to the issue platform. By default, `payload_type` is set to `OCCURRENCE`.
+
+The <Link to="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/issues/producer.py#L23">PayloadType</Link> enum has two types:
+- `OCCURRENCE`: for sending an occurrence
+- `STATUS_CHANGE`: for sending a status update
+
+### Staus Change Message
+If `payload_type` is set to `STATUS_CHANGE` in `produce_occurrence_to_kafka`, `status_change` will update the status of an issue.
+
+The `StatusChangeMessage` schema is as follows:
+- `fingerprint`: unique identifier for the occurrence
+- `project_id`: int.
+- `new_status`: int. Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/models/group.py#L148">GroupStatus</Link> enum. We currently support the following:
+  - `UNRESOLVED`
+  - `RESOLVED`
+  - `IGNORED`
+- `new_substatus`: int | None. Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/types/group.py#L4">GroupSubStatus</Link> enum. We do not support the `NEW` substatus.
 
 ## Releasing your issue type
 The issue platform provides functionality to help release your new issue type in a controlled way. There are 3 feature flags that are used to release an issue type:
