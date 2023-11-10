@@ -1,4 +1,4 @@
-On this page you will learn how to manually propagate trace information into and out of your JavaScript application.
+On this page, you will learn how to manually propagate trace information into and out of your Node.js application.
 
 In the following cases, distributed tracing will be set up automatically for you:
 
@@ -28,7 +28,7 @@ Sentry.init({
 If you do not want to use the `Http` integration in conjuction with `tracing: true`, you can manually extract and inject tracing information into your application. For this, you must:
 
 - Extract and store incoming tracing information from incoming request headers or similar.
-- Inject tracing information to the outgoing request when sending outgoing requests.
+- Inject tracing information to any outgoing requests.
 
 To learn more, see our <PlatformLink to="/usage/distributed-tracing/">Distributed Tracing</PlatformLink> docs.
 
@@ -43,19 +43,25 @@ Incoming tracing information has to be extracted and stored in memory for later 
 Here's an example of how to extract and store incoming tracing information using `continueTrace()`:
 
 ```javascript
-const sentryTrace = getRequestHeader("sentry-trace");
-const baggage = getRequestHeader("baggage");
+const http = require('http');
 
-const requestTransaction = Sentry.continueTrace(
-  { sentryTrace, baggage },
-  (transactionContext) => {
+http.createServer((request, response) => {
+  const sentryTraceHeaders = request.headers['sentry-trace'];
+  const sentryTrace = Array.isArray(sentryTraceHeaders) ? sentryTraceHeaders.join(',') : sentryTraceHeaders;
+  const baggage = request.headers['baggage'];
+
+  const requestTransaction = Sentry.continueTrace({ sentryTrace, baggage }, (transactionContext) => {
     return Sentry.startTransaction({
       ...transactionContext,
-      name: "my request",
-      op: "http.server",
+      name: 'my request',
+      op: 'http.server',
     });
-  }
-);
+  });
+
+  // Your API code...
+
+  requestTransaction.finish();
+});
 ```
 
 In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` headers.

@@ -11,32 +11,37 @@ In the following cases, distributed tracing will be set up automatically for you
 
 If you are using a different package, and have not enabled performance monitoring, you can manually set up your application for distributed tracing to work.
 
-## Enabling Distributed Tracing without Performance
+## Enabling Distributed Tracing
 
-You can add the `BrowserTracing` integration in your `Sentry.init()` options, as described in the Performance <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> docs. If you combine this with `tracesSampleRate: 0`, you will have distributed tracing without performance monitoring:
+To enable Distributed Tracing for your frontend, add the `BrowserTracing` integration to your `Sentry.init()` options as described in the <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> docs.
+
+If you want to have Distributed Tracing functionality but at the same time want to disable performance monitoring, set the `tracesSampleRate` option to `0`.
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.BrowserTracing()],
-  tracesSampleRate: 0,
+  
+  // Optionally disable performance monitoring:
+  // tracesSampleRate: 0,
 });
-```
 
 ## Enabling Distributed Tracing without `BrowserTracing`
 
 If you do not want to use the `BrowserTracing` integration, you can manually extract and inject tracing information into your application. For this, you must:
 
-- Extract and store incoming tracing information from HTML `meta` tags when loading the page
-- Inject tracing information to the outgoing request when sending outgoing requests.
+- Extract and store incoming tracing information from HTML `<meta>` tags when loading the page.
+- Inject tracing information to any outgoing requests.
 
 To learn more, see our <PlatformLink to="/usage/distributed-tracing/">Distributed Tracing</PlatformLink> docs.
 
 ### Extract Tracing Information From HTML `meta` Tags
 
-Assuming the backend that renders the HTML has injected tracing information into the HTML as `meta` tags, you can extract that tracing information on `pageload` and use it to create new transactions connected to that incoming trace.
+If you have a server that renders your applications HTML (SSR) and is also running a Sentry SDK, you can connect your backend to your backend via tracing.
 
-Some of our backend SDKs provide a built-in way to inject tracing information into rendered HTML. For example:
+To achieve this, have your server render HTML `<meta>` tags with the Sentry trace information. In your frontend, you can then extract that tracing information when the page is loading and use it to create new transactions connected to that incoming backend trace.
+
+Some of our backend SDKs provide a built-in way to inject these `<meta>` tags into rendered HTML. For example:
 
 - [Python](/platforms/python/usage/distributed-tracing/custom-instrumentation/#inject-tracing-information-into-rendered-html)
 - [Ruby](/platforms/ruby/usage/distributed-tracing/custom-instrumentation/#inject-tracing-information-into-rendered-html)
@@ -46,22 +51,22 @@ Then, on `pageload` you can do the following:
 
 ```javascript
 // Read meta tag values
-const sentryTrace = getMetaContent("sentry-trace");
-const baggage = getMetaContent("baggage");
+const sentryTrace = document.querySelector('meta[name=sentry-trace]')?.content;
+const baggage = document.querySelector('meta[name=baggage]')?.content;
 
 const pageLoadTransaction = Sentry.continueTrace(
   { sentryTrace, baggage },
   (transactionContext) => {
     return Sentry.startTransaction({
       ...transactionContext,
-      name: "my pageload",
+      name: `Pageload: ${window.location.pathname}`,
       op: "pageload",
     });
   }
 );
 ```
 
-In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` HTML `meta` tags.
+In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` HTML `<meta>` tags.
 
 ### Inject Tracing Information to Outgoing Requests
 
