@@ -4,7 +4,7 @@ description: "Troubleshoot and resolve edge cases."
 keywords: ["adblocker", "blocked", "tunnel", "non-Error exception", "404"]
 excerpt: ""
 notSupported: ["javascript.capacitor"]
-sidebar_order: 1000
+sidebar_order: 9000
 ---
 
 If you need help solving issues with your Sentry JavaScript SDK integration, you can read the edge cases documented below. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.
@@ -105,38 +105,14 @@ Sentry.init({
 
 Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here's an example for your server component:
 
-```php
-<?php
-// Change $host appropriately if you run your own Sentry instance.
-$host = "sentry.io";
-// Set $known_project_ids to an array with your Sentry project IDs which you
-// want to accept through this proxy.
-$known_project_ids = array(  );
-
-$envelope = stream_get_contents(STDIN);
-$pieces = explode("\n", $envelope, 2);
-$header = json_decode($pieces[0], true);
-if (isset($header["dsn"])) {
-    $dsn = parse_url($header["dsn"]);
-    $project_id = intval(trim($dsn["path"], "/"));
-    if (in_array($project_id, $known_project_ids)) {
-      $options = array(
-        'http' => array(
-            'header'  => "Content-type: application/x-sentry-envelope\r\n",
-            'method'  => 'POST',
-            'content' => $envelope
-        )
-      );
-      echo file_get_contents(
-          "https://$host/api/$project_id/envelope/",
-          false,
-          stream_context_create($options));
-    }
-}
-```
-
 ```csharp
-// Requires .NET Core 3.1 and C# 9 or higher
+
+// This functionality is now built-in to the Sentry.AspNetCore package.
+// See https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/#tunnel
+// docs for more information.
+
+// This example shows how you could implement it yourself:
+
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -18,6 +18,7 @@ export const sourcePackageRegistryNodes = async ({
       version: sdkData.version,
       url: sdkData.package_url,
       repoUrl: sdkData.repo_url,
+      apiDocsUrl: sdkData.api_docs_url,
       files: sdkData.files
         ? Object.entries(sdkData.files).map(([fileName, fileData]: [string, any]) =>
             fileData.checksums
@@ -34,6 +35,7 @@ export const sourcePackageRegistryNodes = async ({
     };
 
     const content = JSON.stringify(data);
+
     const nodeMeta = {
       id: sdkName,
       parent: null,

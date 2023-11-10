@@ -111,9 +111,9 @@ shopCheckout() {
   });
   try {
     processAndValidateShoppingCart(result);
-    span.setStatus(SpanStatus.Ok);
+    span.setStatus('ok');
   } catch (err) {
-    span.setStatus(SpanStatus.UnknownError);
+    span.setStatus('unknown_error');
     throw err;
   } finally {
     span.finish();

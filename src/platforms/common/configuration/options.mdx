@@ -122,7 +122,7 @@ By default the SDK will read from `Application.productName` and `Application.ver
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["native", "javascript.electron", "unity", "dotnet", "python"]}>
+<PlatformSection notSupported={["native", "javascript.electron", "unity", "dotnet", "python", "php"]}>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
@@ -162,7 +162,7 @@ Additionally, if you are running with the ASP.NET Core integration, you will als
 
 </PlatformSection>
 
-<PlatformSection supported={["python"]}>
+<PlatformSection supported={["python", "php"]}>
 
 Sets the environment. This string is freeform and set to `production` by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `production` or similar).
 
@@ -172,10 +172,9 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 </ConfigKey>
 
-<ConfigKey name="tunnel" supported={["javascript", "node"]}>
+<ConfigKey name="tunnel" supported={["javascript", "node"]} notSupported={["react-native"]}>
 
-Sets the URL that will be used to transport captured events, instead of using the DSN. This can be used to work around ad-blockers or to have more granular
-control over events sent to Sentry. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
+Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
 
 </ConfigKey>
 
@@ -190,6 +189,14 @@ By default all types of errors are be reported (equivalent to `E_ALL`).
 <ConfigKey name="sample-rate">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+
+</ConfigKey>
+
+<ConfigKey name="error-sampler" supported={["python"]}>
+
+Dynamically configures the sample rate for error events on a per-event basis. This configuration option accepts a function, which takes two parameters (the `event` and the `hint`), and which returns a boolean (indicating whether the event should be sent to Sentry) or a floating-point number between 0.0 and 1.0, inclusive (where the number indicates the probability the event is sent to Sentry; the SDK will randomly decide whether to send the event with the given probability).
+
+If this configuration option is specified, the <PlatformIdentifier name="sample-rate" /> option is ignored.
 
 </ConfigKey>
 
@@ -211,12 +218,12 @@ When enabled, stack traces are automatically attached to all messages logged. St
 
 <PlatformSection supported={["android", "apple", "java"]}>
 
-This option is `on` by default.
+This option is turned on by default.
 
 </PlatformSection>
 <PlatformSection notSupported={["android", "apple", "java", "dotnet"]}>
 
-This option is `off` by default.
+This option is turned off by default.
 
 </PlatformSection>
 
@@ -234,7 +241,7 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 
 </Note>
 
-This option is `off` by default.
+This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
@@ -242,7 +249,7 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 <ConfigKey name="event-scrubber" supported={["python"]}>
 
-If <PlatformIdentifier name="send-default-pii" /> is `off`, scrubs the event payload for sensitive information from a `denylist`. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
+If <PlatformIdentifier name="send-default-pii" /> is turned off, scrubs the event payload for sensitive information from a `denylist`. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
 
 </ConfigKey>
 
@@ -282,25 +289,25 @@ For ASP.NET and ASP.NET Core applications, the value will default to the server'
 
 <ConfigKey name="ignore-errors" supported={["javascript", "node"]} notSupported={[]}>
 
-A list of strings or regex patterns that match error messages that shouldn't be sent to Sentry. Messages that match these strings or regular expressions will be filtered out before they're sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. By default, all errors are sent.
+<Include name="platforms/configuration/options/ignore-errors.mdx" />
 
 </ConfigKey>
 
 <ConfigKey name="ignore-transactions" supported={["javascript", "node"]} notSupported={[]}>
 
-A list of strings or regex patterns that match transaction names that shouldn't be sent to Sentry. Transactions that match these strings or regular expressions will be filtered out before they're sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. By default, all transactions are sent.
+<Include name="platforms/configuration/options/ignore-transactions.mdx" />
 
 </ConfigKey>
 
 <ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A list of strings or regex patterns that match error URLs that should not be sent to Sentry. Errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will not be sent. As a result, if you add `'foo.com'` to the list, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
+<Include name="platforms/configuration/options/deny-urls.mdx" />
 
 </ConfigKey>
 
 <ConfigKey name="allow-urls" supported={["javascript"]} notSupported={["node"]}>
 
-A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. If you use this option, only errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will be sent. As a result, if you add `'foo.com'` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors are sent.
+<Include name="platforms/configuration/options/allow-urls.mdx" />
 
 </ConfigKey>
 
@@ -379,7 +386,7 @@ A path to an alternative CA bundle file in PEM-format.
 
 <ConfigKey name="context-lines" supported={["php"]}>
 
-The number of context lines for each frame in the stacktrace when loading a file.
+The number of context lines for each frame in the stack trace when loading a file.
 
 </ConfigKey>
 
@@ -516,7 +523,7 @@ _(New in version 6.0.0)_
 
 <ConfigKey name="screenshot-quality" supported={["unity", "dotnet.xamarin", "flutter"]}>
 
-The quality of the attached screenshot.
+The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`.
 
 </ConfigKey>
 
@@ -575,7 +582,7 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 </PlatformSection>
 
-<ConfigKey name="enabled" supported={["javascript", "node"]}>
+<ConfigKey name="enabled" supported={["javascript", "node", "java"]}>
 
 Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
 
@@ -683,6 +690,8 @@ thread-safe APIs and only use Unity-specific APIs after you've checked that you'
 
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
+By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
 </ConfigKey>
 
 <ConfigKey name="before-send-transaction" supported={["javascript", "node", "php", "go", "python", "java"]}>
@@ -701,7 +710,7 @@ This function is called with a backend-specific event object, and can return a m
 
 </ConfigKey>
 
-<ConfigKey name="before-breadcrumb" notSupported={["native"]}>
+<ConfigKey name="before-breadcrumb" notSupported={["native", "unreal"]}>
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
@@ -889,6 +898,14 @@ To learn more, see the [Custom Instrumentation](/platforms/python/performance/in
 
 </ConfigKey>
 
+<ConfigKey name="enable-backpressure-handling" supported={["python"]}>
+
+When enabled, a new monitor thread will be spawned to perform health checks on the SDK. If the system is unhealthy, the SDK will keep halving the `traces_sample_rate` set by you in 10 second intervals until recovery. This downsampling helps ensure that the system stays stable and reduces SDK overhead under high load.
+
+This option is enabled by default.
+
+</ConfigKey>
+
 <ConfigKey name="trace-options-requests" supported={["java"]}>
 
 <PlatformSection supported={["java"]}>
@@ -1070,7 +1087,7 @@ Set this boolean to `false` to disable automatic User Interactions tracing.
 
 <ConfigKey name="proguardUuid" supported={["flutter"]}>
 
-Sets the Proguard uuid for Android platform
+Sets the Proguard UUID for Android platform
 
 </ConfigKey>
 

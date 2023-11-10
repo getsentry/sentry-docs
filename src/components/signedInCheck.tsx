@@ -19,14 +19,18 @@ export function SignedInCheck({
   children: React.ReactNode;
   isUserAuthenticated: boolean;
 }) {
-  const {codeKeywords, isLoading} = useContext(CodeContext);
+  const codeContext = useContext(CodeContext);
 
-  // Never render until loaded
-  if (isLoading) {
+  if (!codeContext) {
     return null;
   }
 
-  const user = codeKeywords.USER;
+  // Never render until loaded
+  if (codeContext.isLoading) {
+    return null;
+  }
+
+  const user = codeContext.codeKeywords.USER;
 
   const hasUser = !!user;
   if (hasUser !== isUserAuthenticated) {

@@ -6,6 +6,8 @@ description: "Learn how the React SDK exports an error boundary component that l
 
 The React SDK exports an error boundary component that leverages [React component APIs](https://reactjs.org/docs/error-boundaries.html) to automatically catch and send JavaScript errors from inside a React component tree to Sentry.
 
+## Configure
+
 ```javascript
 import React from "react";
 import * as Sentry from "@sentry/react";
@@ -26,7 +28,7 @@ Sentry.withErrorBoundary(Example, { fallback: <p>an error has occurred</p> });
 
 <Alert level="warning" title="Note">
 
-In development mode, React will rethrow errors caught within an error boundary. This will result in errors being reported twice to Sentry with the above setup, but this won’t occur in your production build.
+In development mode, React will rethrow errors caught within an error boundary. This will result in errors being reported twice to Sentry with the above setup, but this won't occur in your production build.
 
 </Alert>
 
@@ -64,6 +66,12 @@ export default App;
 By default React [logs all errors to the console](https://github.com/facebook/react/blob/493f72b0a7111b601c16b8ad8bc2649d82c184a0/packages/react-reconciler/src/ReactFiberErrorLogger.js#L85), even if you are using a React error boundary. If you are using the `CaptureConsole` integration this means that Sentry will capture the error through the `CaptureConsole` integration and not through the error boundary.
 
 </Alert>
+
+## Linked Errors
+
+In [React v17 and above](https://reactjs.org/blog/2020/08/10/react-v17-rc.html#native-component-stacks), the SDK will automatically parse the [error boundary `componentStack`](https://react.dev/reference/react/Component#componentdidcatch-parameters) and attach the full stacktrace to the event via `error.cause`. This requires the [`LinkedErrors`](../../configuration/integrations/linkederrors/) integration to be enabled (enabled by default). To get the full source context, we recommend setting up [source maps](../../sourcemaps) for your project.
+
+![React Error Boundary stacktrace](errorboundary-error.png)
 
 ## Options
 
@@ -159,8 +167,6 @@ export default App;
 ```
 
 #### Using multiple error boundaries
-
-_(Available in version 5.20.0 and above)_
 
 When using multiple error boundaries, we recommend using `beforeCapture` to set tags/context so that you can tell which error boundary the error occurred from. In the example below, we attach tags to errors based on what route they rendered in.
 

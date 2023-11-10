@@ -14,7 +14,7 @@ export function NavbarPlatformDropdown() {
         currentPlatform ? (
           <Fragment>
             <PlatformIcon
-              platform={currentPlatform.key}
+              platform={currentPlatform.icon ?? currentPlatform.key}
               size={16}
               style={{marginRight: '0.5rem'}}
               format="sm"
@@ -36,7 +36,7 @@ export function NavbarPlatformDropdown() {
           to={platform.url}
         >
           <PlatformIcon
-            platform={platform.key}
+            platform={platform.icon ?? platform.key}
             size={16}
             style={{marginRight: '0.5rem'}}
             format="sm"

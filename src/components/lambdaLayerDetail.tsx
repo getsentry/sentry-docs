@@ -76,7 +76,7 @@ export function LambdaLayerDetail({canonical}: {canonical: string}) {
       {arn && (
         <ArnWrapper>
           <ArnLabel>ARN</ArnLabel>
-          {arn}
+          <code>{arn}</code>
         </ArnWrapper>
       )}
     </Wrapper>
@@ -85,7 +85,7 @@ export function LambdaLayerDetail({canonical}: {canonical: string}) {
 
 // need a min-height so we don't get cropped at the bottom of the page
 const Wrapper = styled('div')`
-  min-height: 200px;
+  min-height: 50px;
 `;
 
 const ArnWrapper = styled('div')`

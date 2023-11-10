@@ -1,9 +1,9 @@
 ---
 title: Troubleshooting
-sidebar_order: 14
+description: "Troubleshoot and resolve edge cases regarding known limitations and bundling."
+sidebar_order: 9000
 redirect_from:
   - /platforms/flutter/usage/advanced-usage/
-description: "Troubleshoot and resolve edge cases regarding known limitations and bundling."
 ---
 
 If you need help solving issues with Sentry's Flutter SDK, you can read the edge cases documented here. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-dart/issues/new/choose). Customers on a paid plan may also contact support.
@@ -42,12 +42,18 @@ Source Context support requires compiling your app using the `split-debug-info` 
 
 If you are using the Sentry Dart Plugin to upload [Debug Symbols](/platforms/flutter/upload-debug/#automatically-upload-debug-symbols), refer to the points below to resolve potential issues.
 
-Sentry's `auth_token` requires the `project:releases` or `project:write` scope. See [Debug Information Files](/product/cli/dif/#permissions) docs for more information.
-
-For the `commits` feature, Sentry's `auth_token` also requires the `org:read` scope. See API [Permissions & Scopes](/api/permissions/#releases) docs for more information.
+A Sentry `auth_token` can be generated at the [Organization Auth Tokens ](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page.
 
 Dart's `--obfuscate` option is required to be paired with `--split-debug-info` to generate a symbol map. See [Dart docs](https://github.com/flutter/flutter/wiki/Obfuscating-Dart-Code) for more information.
 
 The `--split-debug-info` option requires setting an output directory. The directory must be an inner folder of the project's folder. See [Flutter docs](https://docs.flutter.dev/deployment/obfuscate#obfuscate-your-app) for more information.
 
 Flutter's `build web` command requires setting the `--source-maps` parameter to generate source maps. See [Flutter GitHub Issue](https://github.com/flutter/flutter/issues/72150#issuecomment-755541599) for more information.
+
+## Screenshot Integration Background Crash
+
+There is an [issue with the Sentry Flutter SDK](https://github.com/getsentry/sentry-dart/issues/1669) where apps can crash if taking screenshots in the background.
+
+This is an [issue](https://github.com/flutter/flutter/issues/135245) with Flutter itself and should be fixed in [Flutter 3.15](https://github.com/flutter/flutter/labels/found%20in%20release%3A%203.15).
+
+For prior versions, you can work around this by configuring the SDK only to take screenshots when the app is in the `resumed` state. To do this, set `SentryFlutterOptions.attachScreenshotOnlyWhenResumed` to `true`.

@@ -1,4 +1,4 @@
-import React, {Children} from 'react';
+import React, {Children, useEffect} from 'react';
 import styled from '@emotion/styled';
 import {useLocation} from '@reach/router';
 import {withPrefix} from 'gatsby';
@@ -24,13 +24,28 @@ interface SidebarLinkProps {
 export function SidebarLink({to, title, children, collapsed = null}: SidebarLinkProps) {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
-
+  const enableSubtree = isActive || collapsed === false;
   const hasSubtree = Children.count(children) > 0;
-  const showSubtree = isActive || collapsed === false;
+
+  const [showSubtree, setShowSubtree] = React.useState(enableSubtree);
+
+  useEffect(() => {
+    setShowSubtree(enableSubtree);
+  }, [enableSubtree]);
 
   return (
     <li className="toc-item" data-sidebar-branch>
-      <SidebarNavItem to={to} data-sidebar-link isActive={to === location?.pathname}>
+      <SidebarNavItem
+        to={to}
+        data-sidebar-link
+        isActive={to === location?.pathname}
+        onClick={() => {
+          // Allow toggling the sidebar subtree only if the item is selected
+          if (location.pathname === withPrefix(to)) {
+            setShowSubtree(v => enableSubtree && !v);
+          }
+        }}
+      >
         {title || children}
         {hasSubtree && <Chevron direction={showSubtree ? 'down' : 'right'} />}
       </SidebarNavItem>

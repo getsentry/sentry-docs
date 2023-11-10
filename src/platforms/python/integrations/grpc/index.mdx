@@ -1,0 +1,98 @@
+---
+title: gRPC
+description: "Learn about the gRPC integration and how it adds support for the grpcio grpc client and server."
+---
+
+The [gRPC](https://grpc.io/) integration instruments all incoming requests and outgoing unary-unary, unary-stream grpc
+requests using grpcio channels.
+
+Use this integration to start or continue transactions for incoming grpc requests, create spans for outgoing requests,
+and ensure traces are properly propagated to downstream services.
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `grpcio` extra.
+
+```bash
+pip install --upgrade 'sentry-sdk[grpcio]'
+```
+
+## Configure
+
+Add appropriate interceptor to your grpc stub/server:
+
+<SignInNote />
+
+### Server
+
+```python
+import grpc
+
+import sentry_sdk
+from sentry_sdk.integrations.grpc.server import ServerInterceptor
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+
+...
+
+server = grpc.server(
+    thread_pool=...,
+    interceptors=[ServerInterceptor()],
+)
+```
+
+### Client
+
+```python
+import grpc
+
+import sentry_sdk
+from sentry_sdk.integrations.grpc.client import ClientInterceptor
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+
+...
+
+with grpc.insecure_channel("example.com:12345") as channel:
+    channel = grpc.intercept_channel(channel, *[ClientInterceptor()])
+```
+
+## Verify
+
+### Server
+
+If you added the interceptor as described above, the server will create a transaction that will show up in [sentry.io](https://sentry.io).
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+### Client
+
+```python
+import grpc
+
+sentry_sdk.init(...)  # same as above
+
+...
+
+with sentry_sdk.start_transaction(op="function", name="grcp_client"):
+    with grpc.insecure_channel("example.com:12345") as channel:
+        channel = grpc.intercept_channel(channel, *[ClientInterceptor()])
+        stub = helloworld_pb2_grpc.GreeterStub(channel)
+        response = stub.SayHello(helloworld_pb2.HelloRequest(name="you"))
+
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create a span for the call to the `SayHello` method on the server.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+- grpcio: 1.21.1+
+- Python: 3.5+

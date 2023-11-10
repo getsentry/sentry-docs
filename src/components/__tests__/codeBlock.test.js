@@ -1,8 +1,12 @@
 import React from 'react';
 import {create} from 'react-test-renderer';
 
-import {CodeWrapper} from '../codeBlock';
 import {_setCachedCodeKeywords, CodeContextProvider, DEFAULTS} from '../codeContext';
+import {makeKeywordsClickable} from '../codeKeywords';
+
+function CodeWrapper({children, ...props}) {
+  return <code {...props}>{children ? makeKeywordsClickable(children) : children}</code>;
+}
 
 describe('CodeWrapper', () => {
   beforeEach(() => {

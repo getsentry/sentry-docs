@@ -1,0 +1,54 @@
+---
+title: GQL
+description: GQL GraphQL client integration
+---
+
+The [GQL](https://gql.readthedocs.io/en/stable/) integration allows you to monitor all GraphQL requests that your Python application makes using the `gql` library. Specifically, this integration reports every [`TransportQueryError`](https://gql.readthedocs.io/en/latest/modules/transport_exceptions.html#gql.transport.exceptions.TransportQueryError) to Sentry and provides additional context including:
+
+- The URL the request was made to
+- The GraphQL query which caused the error
+- The `errors` information that the GraphQL server returns
+
+## Install
+
+Make sure you have the latest version of the Sentry SDK installed:
+
+```bash
+pip install --upgrade sentry-sdk
+```
+
+## Configure
+
+To enable the integration, add `GQLIntegration()` to your `integrations` list, like so:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.gql import GQLIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        GQLIntegration(),
+    ],
+    # Uncomment the following line to send GraphQL
+    # queries and error information to Sentry:
+    #
+    # send_default_pii=True,
+)
+```
+
+## Data Privacy and the GQL Integration
+
+To ensure data privacy, the SDK avoids sending any information that may potentially contain personally identifiable information (PII) by default. See the docs for the [`send_default_pii` flag](/platforms/python/configuration/options/#send-default-pii) for more information.
+
+For the GQL integration, this policy means that the SDK **doesn't send** the GraphQL queries and the `errors` information that the GraphQL server returns, unless you override the default configuration via the `send_default_pii` flag.
+
+<Alert level="warning">
+
+Before enabling the `send_default_pii` flag, ensure you've configured Sentry's [sensitive data scrubbing](/platforms/python/data-management/sensitive-data/) tools to scrub all PII.
+
+</Alert>
+
+To have Sentry record the GraphQL queries and the `errors` information returned by the GraphQL server, uncomment the `send_default_pii=True` line in the code snippet above.

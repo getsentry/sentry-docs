@@ -23,8 +23,7 @@ If you're using a build tool plugin, these steps happen automatically.
 All of the following methods require `org`, `project` and an `authToken`.
 
 You can create an auth token by visiting the
-[User Auth Tokens](https://sentry.io/settings/account/api/auth-tokens/) settings page in Sentry.io.
-The auth token requires either a `project:releases` or `project:write` Scope.
+[Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page in Sentry.io.
 
 ## Known Limitations
 
@@ -42,6 +41,16 @@ The auth token requires either a `project:releases` or `project:write` Scope.
 
 ## Using the Gradle Build Tool Plugin
 
+We have a [Sentry Gradle Plugin](https://github.com/getsentry/sentry-android-gradle-plugin) available.
+
+Set the auth token as an environment variable to be used when running your release build.
+
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 Add the Sentry Gradle plugin to your project by adding the following lines:
 
 <PlatformSection supported={["android"]}>
@@ -49,12 +58,6 @@ Add the Sentry Gradle plugin to your project by adding the following lines:
 <SignInNote />
 
 ```groovy
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
 }
@@ -78,17 +81,11 @@ sentry {
 
     org = "___ORG_SLUG___"
     projectName = "___PROJECT_SLUG___"
-    authToken = "your-sentry-auth-token"
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
 }
 ```
 
 ```kotlin
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
 }
@@ -112,7 +109,7 @@ sentry {
 
     org.set("___ORG_SLUG___")
     projectName.set("___PROJECT_SLUG___")
-    authToken.set("your-sentry-auth-token")
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
 }
 ```
 
@@ -125,12 +122,6 @@ Make sure the `assemble` task is executed.
 <SignInNote />
 
 ```groovy
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
 }
@@ -154,17 +145,11 @@ sentry {
 
     org = "___ORG_SLUG___"
     projectName = "___PROJECT_SLUG___"
-    authToken = "your-sentry-auth-token"
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
 }
 ```
 
 ```kotlin
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id("io.sentry.jvm.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
 }
@@ -188,7 +173,7 @@ sentry {
 
     org.set("___ORG_SLUG___")
     projectName.set("___PROJECT_SLUG___")
-    authToken.set("your-sentry-auth-token")
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
 }
 ```
 
@@ -240,7 +225,17 @@ sentry {
 
 ## Using the Maven Build Tool Plugin
 
-Add the [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) to your project by adding the following lines to your `pom.xml` file:
+We have a [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) available.
+
+Set the auth token as an environment variable to be used when running your release build.
+
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Add the Sentry Maven Plugin to your project by adding the following lines to your `pom.xml` file:
 
 <SignInNote />
 
@@ -250,15 +245,18 @@ Add the [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) 
         <plugin>
             <groupId>io.sentry</groupId>
             <artifactId>sentry-maven-plugin</artifactId>
-            <version>{{@inject packages.version('sentry.java.mavenplugin', '0.0.2') }}</version>
+            <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+            <!-- Required to allow auto-install of Sentry SDK and Integrations -->
+            <extensions>true</extensions>
             <configuration>
                 <!-- for showing output of sentry-cli -->
                 <debugSentryCli>true</debugSentryCli>
 
-                <!-- download the latest sentry-cli and provide path to it here -->
+                <!-- optionally specify the path to sentry-cli -->
                 <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
-                <!-- minimum required version is 2.17.3 -->
-                <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath>
+                <!-- minimum required version is 2.21.2 -->
+                <!-- by default the sentry-cli bundled with the plugin will be used -->
+                <!-- <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath> -->
 
                 <org>___ORG_SLUG___</org>
 
@@ -268,13 +266,14 @@ Add the [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) 
                 <!--<url>http://localhost:8000/</url>-->
 
                 <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
-                <!-- you can find it in Sentry UI: Settings > Account > API > Auth Tokens -->
                 <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
             </configuration>
             <executions>
                 <execution>
-                    <phase>generate-resources</phase>
                     <goals>
+                        <!--  Generates a source bundle and uploads it to Sentry. -->
+                        <!--  This enables source context, allowing you to see your source -->
+                        <!--  code as part of your stack traces in Sentry. -->
                         <goal>uploadSourceBundle</goal>
                     </goals>
                 </execution>

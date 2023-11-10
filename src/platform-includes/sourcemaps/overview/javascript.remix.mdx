@@ -1,69 +1,60 @@
-## Upload Source Maps for a Remix Project
+## Uploading Source Maps in a Remix Project
 
-Sentry uses [releases](/product/releases/) to match the correct source maps to your events.
-This page is a guide on how to create releases and upload source maps to Sentry when bundling your Remix app.
+If you installed the Remix SDK with the <PlatformLink to="/#install">Sentry Wizard</PlatformLink>, source maps upload was **already configured for you**.
+Whenever you run the `build` script in your `package.json` source maps will be uploaded automatically.
 
-### 1. Generate Source Maps
+If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
 
-To generate source maps with your Remix project, you need to call `remix build` with the `--sourcemap` option.
-
-Please refer to the [Remix CLI docs](https://remix.run/docs/en/v1/other-api/dev#remix-cli) for more information.
-
-### 2. Create a Release and Upload Source Maps
+### Configure Source Maps Upload
 
 The Sentry Remix SDK provides a script to automatically create a release and upload source maps after you've built your project.
-Under the hood, it uses the Sentry CLI.
+Under the hood, it uses the [Sentry CLI](/product/cli/).
 
-This script requires some configuration, which can either be done through a `.sentryclirc` file in the root of your project or through environment variables:
+This script requires setting an auth token, which can either be done through a `.sentryclirc` file in the root of your project or through environment variables:
 
-<Note>
-
-Visit the [auth token user settings page](https://sentry.io/settings/account/api/auth-tokens/) to find your auth tokens.
-
-</Note>
-
-<SignInNote />
+<OrgAuthTokenNote />
 
 ```ini {filename:.sentryclirc}
+# Do not commit this file to your repository!
+# Sentry Auth tokens should be treated as a secret.
 [auth]
-token=your-auth-token
-
-[defaults]
-org=___ORG_SLUG___
-project=___PROJECT_SLUG___
+token=___ORG_AUTH_TOKEN___
 ```
 
 ```bash
-export SENTRY_AUTH_TOKEN=your-auth-token
-export SENTRY_ORG=___ORG_SLUG___
-export SENTRY_PROJECT=___PROJECT_SLUG___
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-Next, run the upload script with the following command:
+Next, adjust your `package.json`'s production build command to include the `sentry-upload-sourcemaps` script:
 
-```bash {tabTitle:Yarn}
-yarn sentry-upload-sourcemaps
+```json {filename:package.json}
+{
+  "scripts": {
+    "build": "remix build --sourcemap && sentry-upload-sourcemaps --org ___ORG_SLUG___ --project ___PROJECT_SLUG___"
+  }
+}
+```
+
+Alternatively, you can run the script directly with `npx`:
+
+```bash {tabTitle:Bash}
+npx sentry-upload-sourcemaps --org ___ORG_SLUG___ --project ___PROJECT_SLUG___
 
 # For usage details run
-yarn sentry-upload-sourcemaps --help
+npx sentry-upload-sourcemaps --help
 ```
 
-```bash {tabTitle:npm}
-node ./node_modules/@sentry/remix/scripts/sentry-upload-sourcemaps.js
+<Alert>
 
-# For usage details run
-node ./node_modules/@sentry/remix/scripts/sentry-upload-sourcemaps.js --help
-```
+To generate source maps with your Remix project, you need to call `remix build` with the `--sourcemap` option.
 
-<Note>
+Please refer to the [Remix CLI docs](https://remix.run/docs/en/main/other-api/dev#options) for more information.
 
-For more advanced configuration, [use `sentry-cli` directly to upload source maps.](https://github.com/getsentry/sentry-cli).
+</Alert>
 
-</Note>
+### Remove Remix Source Maps
 
-### 3. Remove Remix Source Maps
-
-Remix validly discourages the user from hosting source maps in production. After uploading the maps to Sentry, we suggest you delete the `.map` files. Here's a simple shell command example:
+Remix validly discourages hosting source maps in production. After uploading the maps to Sentry, we suggest you delete the `.map` files. Here's a simple shell command example:
 
 ```bash {tabTitle:Bash}
 find ./public/build -type f -name '*.map' -delete

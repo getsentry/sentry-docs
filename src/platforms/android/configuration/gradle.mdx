@@ -24,12 +24,6 @@ seamless integration with the Gradle build system. It supports the following fea
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
 ```groovy {filename:app/build.gradle}
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id "com.android.application"
     id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
@@ -37,12 +31,6 @@ plugins {
 ```
 
 ```kotlin {filename:app/build.gradle}
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
     id("com.android.application")
     id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
@@ -57,13 +45,42 @@ The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0
 
 ### Configure
 
+Set the auth token as an environment variable to be used when running your release build.
+
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 We expose the following configuration values directly in your `app/build.gradle`:
+
+<SignInNote />
 
 ```groovy
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
 
 sentry {
+    // Disables or enables debug log output, e.g. for for sentry-cli.
+    // Default is disabled.
+    debug = false
+
+    // The slug of the Sentry organization to use for uploading proguard mappings/source contexts.
+    org = "___ORG_SLUG___"
+
+    // The slug of the Sentry project to use for uploading proguard mappings/source contexts.
+    project = "___PROJECT_SLUG___"
+
+    // The authentication token to use for uploading proguard mappings/source contexts.
+    // WARNING: Do not expose this token in your build.gradle files, but rather set an environment
+    // variable and read it into this property.
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
+
+    // The url of your Sentry instance. If you're using SAAS (not self hosting) you do not have to
+    // set this. If you are self hosting you can set your URL here
+    url = null
+
     // Disables or enables the handling of Proguard mapping for Sentry.
     // If enabled the plugin will generate a UUID and will take care of
     // uploading the mapping to Sentry. If disabled, all the logic
@@ -105,6 +122,12 @@ sentry {
     // code as part of your stack traces in Sentry.
     includeSourceContext = false
 
+    // Configure additional directories to be included in the source bundle which is used for
+    // source context. The directories should be specified relative to the Gradle module/project's
+    // root. For example, if you have a custom source set alongside 'main', the parameter would be
+    // 'src/custom/java'.
+    additionalSourceDirsForSourceContext = []
+
     // Enable or disable the tracing instrumentation.
     // Does auto instrumentation for specified features through bytecode manipulation.
     // Default is enabled.
@@ -140,7 +163,7 @@ sentry {
       // NOTE: if you have a higher version of the sentry-android SDK or integrations on the classpath, this setting will have no effect
       // as Gradle will resolve it to the latest version.
       //
-      // Defaults to the latest published sentry version.
+      // Defaults to the latest published Sentry version.
       sentryVersion = '{{@inject packages.version('sentry.java.android', '5.0.0') }}'
     }
 
@@ -158,6 +181,25 @@ sentry {
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 
 sentry {
+    // Disables or enables debug log output, e.g. for for sentry-cli.
+    // Default is disabled.
+    debug.set(false)
+
+    // The slug of the Sentry organization to use for uploading proguard mappings/source contexts.
+    org.set("___ORG_SLUG___")
+
+    // The slug of the Sentry project to use for uploading proguard mappings/source contexts.
+    project.set("___PROJECT_SLUG___")
+
+    // The authentication token to use for uploading proguard mappings/source contexts.
+    // WARNING: Do not expose this token in your build.gradle files, but rather set an environment
+    // variable and read it into this property.
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
+
+    // The url of your Sentry instance. If you're using SAAS (not self hosting) you do not have to
+    // set this. If you are self hosting you can set your URL here
+    url = null
+
     // Disables or enables the handling of Proguard mapping for Sentry.
     // If enabled the plugin will generate a UUID and will take care of
     // uploading the mapping to Sentry. If disabled, all the logic
@@ -198,6 +240,12 @@ sentry {
     // code as part of your stack traces in Sentry.
     includeSourceContext.set(false)
 
+    // Configure additional directories to be included in the source bundle which is used for
+    // source context. The directories should be specified relative to the Gradle module/project's
+    // root. For example, if you have a custom source set alongside 'main', the parameter would be
+    // 'src/custom/java'.
+    additionalSourceDirsForSourceContext.set(emptySet())
+
     // Enable or disable the tracing instrumentation.
     // Does auto instrumentation for specified features through bytecode manipulation.
     // Default is enabled.
@@ -223,7 +271,7 @@ sentry {
       // NOTE: if you have a higher version of the sentry-android SDK or integrations on the classpath, this setting will have no effect
       // as Gradle will resolve it to the latest version.
       //
-      // Defaults to the latest published sentry version.
+      // Defaults to the latest published Sentry version.
       sentryVersion.set("{{@inject packages.version('sentry.java.android', '5.0.0') }}")
     }
 
@@ -272,23 +320,23 @@ sentry {
 
 ## ProGuard/R8 & DexGuard
 
-The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded through environment variables or from a `sentry.properties` file in your project root.
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease`. Release is the default, but the plugin works for others as long as you've enabled ProGuard/R8. The credentials for the upload step are defined in the Gradle extension above or loaded from a `sentry.properties` file in your project.
 
-If you are using the Guardsquare's ProGuard or DexGuard tooling, you have to enable the `experimentalGuardsquareSupport` flag.
+To use Guardsquare's ProGuard or DexGuard tooling, you'll have to enable the `experimentalGuardsquareSupport` flag. Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
 
-Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+Instead of providing your credentials via the Gradle extension, you can create a `sentry.properties` file with the following content under your `app` module:
 
-At the very minimum, you will need something similar to:
+<OrgAuthTokenNote />
 
 ```bash
-defaults.project=your-project
-defaults.org=your-org
-auth.token=YOUR_AUTH_TOKEN
+defaults.project=___PROJECT_SLUG___
+defaults.org=___ORG_SLUG___
+auth.token=___ORG_AUTH_TOKEN___
 ```
 
 <Note>
 
-You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, check out the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+You can find your authentication token [on the Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page. For more information about the available configuration options, check out the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
 
 </Note>
 
@@ -300,10 +348,12 @@ Learn more in the [full sentry-cli documentation](/product/cli/configuration/#co
 
 At the very minimum, you will need something similar to:
 
+<OrgAuthTokenNote />
+
 ```bash
-defaults.project=your-project
-defaults.org=your-org
-auth.token=YOUR_AUTH_TOKEN
+defaults.project=___PROJECT_SLUG___
+defaults.org=___ORG_SLUG___
+auth.token=___ORG_AUTH_TOKEN___
 ```
 
 <Note>
@@ -385,7 +435,7 @@ enum class InstrumentationFeature {
 }
 ```
 
-Check [Integrations](/platforms/android/configuration/integrations/) page for more detailed explanation of each instrumentation feature.
+Check [Integrations](/platforms/android/integrations/) page for more detailed explanation of each instrumentation feature.
 
 <Note>
 
@@ -395,7 +445,7 @@ To learn more about the internals of auto-instrumentation, check out this [blog 
 
 ## Auto-Installation
 
-The plugin offers the automated installation feature of the Sentry Android SDK and the [Fragment](/platforms/android/configuration/integrations/fragment/), [Timber](/platforms/android/configuration/integrations/timber/), [OkHttp](/platforms/android/configuration/integrations/okhttp/), and [Jetpack Compose](/platforms/android/configuration/integrations/jetpack-compose/) integrations. Starting with version 3.1.0, the feature is enabled by default, so you don't need to add any dependencies — you just use the Sentry Gradle plugin.
+The plugin offers the automated installation feature of the Sentry Android SDK and the [Fragment](/platforms/android/integrations/fragment/), [Timber](/platforms/android/integrations/timber/), [OkHttp](/platforms/android/integrations/okhttp/), and [Jetpack Compose](/platforms/android/integrations/jetpack-compose/) integrations. Starting with version 3.1.0, the feature is enabled by default, so you don't need to add any dependencies — you just use the Sentry Gradle plugin.
 
 The plugin algorithm does the following when defining dependency versions:
 

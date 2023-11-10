@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import {PlatformIcon} from 'platformicons';
 
 import {usePlatform} from './hooks/usePlatform';
@@ -12,24 +12,37 @@ type Props = {
 export function GuideGrid({platform, className}: Props) {
   const [currentPlatform] = usePlatform(platform);
 
+  if (currentPlatform === null) {
+    return null;
+  }
+
   if (currentPlatform.type === 'guide') {
     return null;
   }
 
+  if (currentPlatform.guides.length === 0) {
+    return null;
+  }
+
   return (
-    <ul className={className}>
-      {currentPlatform.guides.map(guide => (
-        <li key={guide.key}>
-          <SmartLink to={guide.url}>
-            <PlatformIcon
-              platform={guide.key}
-              style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
-              format="sm"
-            />
-            <h4 style={{display: 'inline-block'}}>{guide.title}</h4>
-          </SmartLink>
-        </li>
-      ))}
-    </ul>
+    <Fragment>
+      <div className="doc-toc-title">
+        <h6>Related Guides</h6>
+      </div>
+      <ul className={className}>
+        {currentPlatform.guides.map(guide => (
+          <li key={guide.key}>
+            <SmartLink to={guide.url}>
+              <PlatformIcon
+                platform={guide.icon ?? guide.key}
+                style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
+                format="sm"
+              />
+              <h4 style={{display: 'inline-block'}}>{guide.title}</h4>
+            </SmartLink>
+          </li>
+        ))}
+      </ul>
+    </Fragment>
   );
 }

@@ -33,6 +33,7 @@ const HIGHLIGHTED_PLATFORMS = [
   'ruby.rails',
   'flutter',
   'unity',
+  'unreal',
 ];
 
 function IndexPage() {
@@ -59,7 +60,7 @@ function IndexPage() {
 
   return (
     <div className="index-wrapper">
-      <SEO title="Sentry Documentation" />
+      <SEO title="Sentry Documentation" slug="" />
       <div className="hero-section">
         <div className="index-container">
           <div className="index-navbar">
@@ -113,17 +114,26 @@ function IndexPage() {
             </Nav>
           </div>
 
-          <h1>Sentry Documentation</h1>
+          <h1>Welcome to Sentry Docs</h1>
+          <center>
+            <p>
+              Sentry is a developer-first error tracking and performance monitoring
+              platform.
+            </p>
+          </center>
 
           <div className="index-search">
             <Search autoFocus />
           </div>
-
           <div className="integrations-logo-row">
             {visiblePlatforms.map(platform => (
               <SmartLink to={platform.url} className="hover-card-link" key={platform.key}>
                 <div className="image-frame">
-                  <PlatformIcon size={48} platform={platform.key} format="lg" />
+                  <PlatformIcon
+                    size={48}
+                    platform={platform.icon ?? platform.key}
+                    format="lg"
+                  />
                 </div>
                 {platform.title}
               </SmartLink>

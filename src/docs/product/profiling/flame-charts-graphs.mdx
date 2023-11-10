@@ -1,18 +1,18 @@
 ---
-title: Flame Charts and Flame Graphs
+title: Flame Graphs and Aggregated Flame Graphs
 sidebar_order: 100
-description: "Learn more interpreting flame charts and flame graphs"
+description: "Learn more interpreting flame graphs and aggregated flame graphs"
 ---
 
-Profiling data can be used to gain insight into what methods and lines of your code are slow. But getting this type of insight requires an understanding of how profiling data is represented and visualized. Sentry uses both flame charts and flame graphs to visualize profile data. We'll explain how to read them below.
+Profiling data can be used to gain insight into what methods and lines of your code are slow. But getting this type of insight requires an understanding of how profiling data is represented and visualized. Sentry uses both flame graphs and aggregated flame graphs to visualize profile data. We'll explain how to read them below.
 
-## What are Flame Charts?
+## What are Flame Graphs?
 
-Flame charts show stack samples in chronological order over the duration of a single profile. Each rectangle in the visualization represents a stack frame. The X-axis on a flame chart represents time, while the Y-axis shows the execution stack at that time. This makes it possible to see what your program was executing at any given point while the profile was being collected.
+Flame graphs show stack samples in chronological order over the duration of a single profile. Each rectangle in the visualization represents a stack frame. The X-axis on a flame graph represents time, while the Y-axis shows the execution stack at that time. This makes it possible to see what your program was executing at any given point while the profile was being collected.
 
-![Profiling details page with a flame chart](profile-flame-chart.png)
+![Profiling details page with a flame graph](profile-flame-chart.png)
 
-The most important things to look at when interpreting flame charts are the **color** and **width** of the rectangle representing each frame on the stack.
+The most important things to look at when interpreting flame graphs are the **color** and **width** of the rectangle representing each frame on the stack.
 
 ### Color
 
@@ -24,40 +24,38 @@ As an example, consider a function called `readFile` that reads a file from the 
 
 ### Width
 
-The width of each stack frame's rectangle represents the time spent in that function. By looking at a flame chart, we can see two key pieces of information: **function total time** and **function self-time**.
+The width of each stack frame's rectangle represents the time spent in that function. By looking at a flame graph, we can see two key pieces of information: **function total time** and **function self-time**.
 
 Function total time refers to how long it takes for a function _and all of its children to execute_. Function self-time refers to how much time the function itself takes to execute, excluding the time spent in child functions.
 
 Let's look at an example to understand the difference.
 
-![A flame chart from Sentry](flame-chart.png)
+![A flame graph from Sentry](flame-chart.png)
 
-This image shows a section of a flame chart, starting with the function `OffsetPaginator.get_result`, which takes 2.14s to execute. 2.14s is the function's **total time**. Looking further down the stack, you can see that nearly the full 2.14s is taken up by the child function, `CursorWrapper.execute`, which executes a slow database query.
+This image shows a section of a flame graph, starting with the function `OffsetPaginator.get_result`, which takes 2.14s to execute. 2.14s is the function's **total time**. Looking further down the stack, you can see that nearly the full 2.14s is taken up by the child function, `CursorWrapper.execute`, which executes a slow database query.
 
 In this example, the **self-time** of the parent function, `OffsetPaginator.get_result`, is close to 0ms while both the **self-time** _and_ the **total time** of `CursorWrapper.execute` are nearly 2.14.
 
-## What are Flame Graphs?
+## What are Aggregated Flame Graphs?
 
-The terms flame chart and flame graph are often used interchangeably, but while the two types of visualizations are similar, they're each optimized for seeing different things in your profile data.
+While flame graphs are used to represent stack samples of a single profile in chronological order, aggregated flame graphs represent stack _populations_ of your profiled program. They optimize for merging stacks to display aggregate function durations.
 
-While flame charts are used to represent stack samples of a single profile in chronological order, flame graphs represent stack _populations_ of your profiled program. They optimize for merging stacks to display aggregate function durations.
-
-As with flame charts, each rectangle represents a stack frame, but in flame graphs, the X-axis doesn't represent time, instead, it shows all the stack profiles, sorted alphabetically. The wider a frame is, the more _often_ it was present in a stack.
+As with flame graphs, each rectangle represents a stack frame, but in aggregated flame graphs, the X-axis doesn't represent time, instead, it shows all the stack profiles, sorted alphabetically. The wider a frame is, the more _often_ it was present in a stack.
 
 Aggregating stacks this way helps you find performance optimizations by visualizing the code that most frequently occupies your program's call stack.
 
-![A flame chart showing a program that generates the fibonacci sequence](fib-flame-chart.png)
+![A flame graph showing a program that generates the fibonacci sequence](fib-flame-chart.png)
 
-![A flame graph showing a program that generates the fibonacci sequence](fib-flame-graph.png)
+![An aggregated flame graph showing a program that generates the fibonacci sequence](fib-flame-graph.png)
 
-_The same profile data, visualized in a flame graph on top and a flame chart on the bottom._
+_The same profile data, visualized in a aggregated flame graph on top and a flame graph on the bottom._
 
 <Note>
 
-The first flame graph above is shown "flames down", and the second flame graph is shown "flames up". Whether you choose to look at a flame graph in a flames up or a flames down view is a matter of personal preference. The information is identical.
+The first aggregated flame graph above is shown "flames down", and the second aggregated flame graph is shown "flames up". Whether you choose to look at a aggregated flame graph in a flames up or a flames down view is a matter of personal preference. The information is identical.
 
 </Note>
 
-In sentry.io, aggregated flame graphs are displayed on your profile summary page. The flame graphs on this page are created using data from many different profiles so that you can see the most common performance bottlenecks in your program.
+In sentry.io, aggregated flame graphs are displayed on your profile summary page. The aggregated flame graphs on this page are created using data from many different profiles so that you can see the most common performance bottlenecks in your program.
 
 ![The aggregated flame graph view](aggregated-flame-graph-view.png)

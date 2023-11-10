@@ -1,0 +1,30 @@
+```cpp
+UCLASS()
+class USomeBeforeSendHandler : public USentryBeforeSendHandler
+{
+	GENERATED_BODY()
+
+public:
+	virtual USentryEvent* HandleBeforeSend_Implementation(USentryEvent* Event, USentryHint* Hint) override
+    {
+        UE_LOG(LogTemp, Log, TEXT("Hello from CPP beforeSend handler"));
+	    return Super::HandleBeforeSend_Implementation(Event, Hint);
+    }
+};
+
+...
+
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    Settings->BeforeSendHandler = USomeBeforeSendHandler::StaticCLass();
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = ...;
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
+```

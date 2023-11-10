@@ -32,10 +32,12 @@ In this CLI example:
 - A release tagged `VERSION` is created for the organization `my-org` for projects `project1` and `project2`
 - Because of the `--auto` flag, the repository name is determined automatically, and commits between the previous release’s head commit and the current head commit are associated with the release.
 
+<OrgAuthTokenNote />
+
 ```bash
 # Assumes you're in a git repository
-export SENTRY_AUTH_TOKEN=...
-export SENTRY_ORG=my-org
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+export SENTRY_ORG=___ORG_SLUG___
 VERSION=$(sentry-cli releases propose-version)
 
 # Create a release
@@ -55,11 +57,16 @@ sentry-cli releases set-commits --local $VERSION
 
 For more control over which commits to associate, or if you're unable to execute the command inside the repository, you can manually specify a repository and range.
 
-The following example associates commits (or refs) between `from` and `to` with the current release, where `from` is the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo using the form `owner-name/repo-name`. The `from` commit is optional; we’ll use the previous release’s commit as the baseline if it is excluded:
+The following example associates commits (or refs) between `from` and `to` with the current release, where `from` is the previous release’s commit. The `from` commit is optional; we’ll use the previous release’s commit as the baseline if it is excluded:
 
 ```bash
 sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION
 ```
+
+<Note>
+  The repository name `my-repo` should match the name you entered when linking
+  the repo, and should be in the form `owner-name/repo-name`.
+</Note>
 
 ### Using the API
 
@@ -216,7 +223,7 @@ Prevent empty queries on users
 Fixes SENTRY-317
 ```
 
-When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry, we’ll mark the issue as resolved in that release.
+When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry, we’ll mark the issue as resolved in that release. You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
 
 <Note>
 

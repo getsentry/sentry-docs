@@ -14,7 +14,7 @@ export interface Platform extends PlatformConfig {
    */
   key: string;
   /**
-   * Same as key. Use `title` for a human readable platform name.
+   * Same as key. Use `title` for a human-readable platform name.
    *
    * @see Platform.key
    */
@@ -96,6 +96,10 @@ export interface PlatformConfig {
    * inherit configuration values from the parent platform.
    */
   fallbackPlatform?: string;
+  /**
+   * The icon to use for this platform. This is the name of the icon as defined
+   */
+  icon?: string;
   /**
    * Keywords used for search etc.
    */

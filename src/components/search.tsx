@@ -44,6 +44,8 @@ const search = new SentryGlobalSearch([
   {
     site: 'docs',
     pathBias: true,
+    platformBias: true,
+    legacyBias: true,
   },
   'help-center',
   'develop',
@@ -99,13 +101,11 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         return;
       }
 
-      // Only search when we have more than two characters. Ideally we'd do three, but
-      // we want to make sure people can search for Go and RQ
       const queryResults = await search.query(
         inputQuery,
         {
           path,
-          platforms: platforms.map(platform => standardSDKSlug(platform).slug),
+          platforms: platforms.map(platform => standardSDKSlug(platform)?.slug ?? ''),
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
@@ -149,7 +149,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
       index: hit.index,
       objectIDs: [hit.id],
       // Positions in Algolia are 1 indexed
-      queryID: hit.queryID,
+      queryID: hit.queryID ?? '',
       positions: [position + 1],
     });
   }, []);

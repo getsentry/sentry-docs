@@ -9,7 +9,7 @@ function shopCheckout() {
   // If there's currently an unfinished transaction, it may be dropped
   Sentry.getCurrentHub().configureScope((scope) => scope.setSpan(transaction));
 
-  // Assume this function makes an xhr/fetch call
+  // Assume this function makes a fetch call
   const result = validateShoppingCartOnServer();
 
   const span = transaction.startChild({
@@ -21,9 +21,9 @@ function shopCheckout() {
   });
   try {
     processAndValidateShoppingCart(result);
-    span.setStatus(SpanStatus.Ok);
+    span.setStatus("ok");
   } catch (err) {
-    span.setStatus(SpanStatus.UnknownError);
+    span.setStatus("unknown_error");
     throw err;
   } finally {
     span.finish();

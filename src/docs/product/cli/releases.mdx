@@ -28,6 +28,11 @@ The value can be arbitrary, but for certain platforms, recommendations exist:
 - if you use a DVCS we recommend using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
 - if you tag releases we recommend using the release tag prefixed with a product or package name (for example, `my-project-name@2.3.12`).
 
+```bash
+#!/bin/sh
+sentry-cli releases new "$VERSION"
+```
+
 Releases can also be auto created by different systems. For instance upon uploading a source map a release is automatically created. Likewise releases are created by some clients when an event for a release comes in.
 
 ## Finalizing Releases
@@ -60,9 +65,9 @@ VERSION=`sentry-cli releases propose-version`
 
 ## Commit Integration {#sentry-cli-commit-integration}
 
-If you have [repositories configured](/product/releases/setup/release-automation/) within your Sentry organization you can associate commits with your release.
+If you have [repositories configured](/product/releases/setup/release-automation/) within your Sentry organization, you can associate commits with your release automatically or manually. If you don't have a source code integration installed, you can still send Sentry commit information. See [Alternatively: Without a Repository Integration](#alternatively-without-a-repository-integration) to associate commits using the git tree of your local repo.
 
-There are two modes in which you can use this. One is the fully automatic mode. If you are deploying from a git repository and sentry-cli can discover the git repository from the current working directory you can set the commits with the `--auto` flag:
+To integrate commits automatically, you need to deploy from a git repository that sentry-cli can discover from your current working directory and set commits with the `--auto` flag:
 
 ```bash
 sentry-cli releases set-commits "$VERSION" --auto
@@ -70,9 +75,18 @@ sentry-cli releases set-commits "$VERSION" --auto
 
 In case you are deploying without access to the git repository, you can manually specify the commits instead. To do this, pass the `--commit` parameter to the `set-commits` command in the format `REPO_NAME@REVISION`. You can repeat this for as many repositories as you have:
 
-```bash
+```bash {tabTitle:bash (one repo)}
 sentry-cli releases set-commits "$VERSION" --commit "my-repo@deadbeef"
 ```
+
+```bash {tabTitle:bash (many repos)}
+sentry-cli releases set-commits "$VERSION" --commit "my-repo@deadbeef" --commit "my-repo@deadbeef2" --commit "my-repo@deadbeef3"
+```
+
+<Note>
+  The repository name `my-repo` should match the name you entered when linking
+  the repo, and should be in the form `owner-name/repo-name`.
+</Note>
 
 To see which repos are available for the organization, you can run `sentry-cli repos list` which will return a list of configured repositories.
 

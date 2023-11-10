@@ -21,7 +21,10 @@ const query = graphql`
 export function ApiSidebar() {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
-  const endpoints = tree[0].children.filter(curr => curr.children.length > 1);
+  const endpoints = tree[0].children.filter(
+    curr => curr.children.length > 1 && !curr.name.includes('guides')
+  );
+  const guides = tree[0].children.filter(curr => curr.name.includes('guides'));
   const location = useLocation();
 
   const isActive = path => location && location.pathname.startsWith(path);
@@ -32,6 +35,14 @@ export function ApiSidebar() {
         root="api"
         title="API Reference"
         tree={tree}
+        exclude={endpoints
+          .map(elem => elem.node.path)
+          .concat(guides.map(elem => elem.node.path))}
+      />
+      <DynamicNav
+        root="api/guides"
+        title="Guides"
+        tree={guides}
         exclude={endpoints.map(elem => elem.node.path)}
       />
       <li className="mb-3" data-sidebar-branch>
