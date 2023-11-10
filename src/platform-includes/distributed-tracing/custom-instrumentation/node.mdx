@@ -43,20 +43,25 @@ Incoming tracing information has to be extracted and stored in memory for later 
 Here's an example of how to extract and store incoming tracing information using `continueTrace()`:
 
 ```javascript
-const http = require('http');
+const http = require("http");
 
 http.createServer((request, response) => {
-  const sentryTraceHeaders = request.headers['sentry-trace'];
-  const sentryTrace = Array.isArray(sentryTraceHeaders) ? sentryTraceHeaders.join(',') : sentryTraceHeaders;
-  const baggage = request.headers['baggage'];
+  const sentryTraceHeaders = request.headers["sentry-trace"];
+  const sentryTrace = Array.isArray(sentryTraceHeaders)
+    ? sentryTraceHeaders.join(",")
+    : sentryTraceHeaders;
+  const baggage = request.headers["baggage"];
 
-  const requestTransaction = Sentry.continueTrace({ sentryTrace, baggage }, (transactionContext) => {
-    return Sentry.startTransaction({
-      ...transactionContext,
-      name: 'my request',
-      op: 'http.server',
-    });
-  });
+  const requestTransaction = Sentry.continueTrace(
+    { sentryTrace, baggage },
+    (transactionContext) => {
+      return Sentry.startTransaction({
+        ...transactionContext,
+        name: "my request",
+        op: "http.server",
+      });
+    }
+  );
 
   // Your API code...
 
