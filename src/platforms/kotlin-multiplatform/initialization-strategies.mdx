@@ -21,20 +21,15 @@ To initialize the SDK, create a Kotlin file in your `commonMain` e.g. `AppSetup.
 <SignInNote />
 
 ```kotlin {filename:AppSetup.kt}
-import io.sentry.kotlin.multiplatform.Context
 import io.sentry.kotlin.multiplatform.Sentry
 
 // Application context is only needed for Android targets
-fun initializeSentry(context: Context?) {
+fun initializeSentry() {
   val configuration: (SentryOptions) -> Unit = {
     it.dsn = "___PUBLIC_DSN___"
     // Add common configuration here
   }
-  if (context != null) {
-      Sentry.init(context, configuration)
-  } else {
-      Sentry.init(configuration)
-  }
+  Sentry.init(configuration)
 }
 ```
 
@@ -48,8 +43,7 @@ import your.kmp.app.initializeSentry
 class YourApplication : Application() {
   override fun onCreate() {
     super.onCreate()
-      // Make sure to add the context!
-      initializeSentry(this)
+      initializeSentry()
    }
 }
 ```
@@ -63,7 +57,7 @@ func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
 ) -> Bool {
-    AppSetupKt.initializeSentry(context = nil)
+    AppSetupKt.initializeSentry()
     return true
 }
 ```
@@ -79,7 +73,7 @@ This approach gives you the flexibility to fine-tune the SDK's behavior to meet 
 ```kotlin {filename:commonMain/AppSetup.kt}
 import io.sentry.kotlin.multiplatform.Context
 
-expect fun initializeSentry(context: Context? = null)
+expect fun initializeSentry()
 ```
 
 ### androidMain
@@ -90,12 +84,10 @@ expect fun initializeSentry(context: Context? = null)
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.Context
 
-actual fun initializeSentry(context: Context?) {
-  if (context != null) {
-    Sentry.init(context) {
-      it.dsn = "___PUBLIC_DSN___"
-      // Add Android-specific configuration here
-    }
+actual fun initializeSentry() {
+  Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+    // Add Android-specific configuration here
   }
 }
 ```
@@ -108,7 +100,7 @@ actual fun initializeSentry(context: Context?) {
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.Context
 
-actual fun initializeSentry(context: Context?) {
+actual fun initializeSentry() {
   Sentry.init {
     it.dsn = "___PUBLIC_DSN___"
     // Add iOS-specific configuration here
@@ -126,8 +118,7 @@ import your.kmp.app.initializeSentry
 class YourApplication : Application() {
   override fun onCreate() {
     super.onCreate()
-      // Make sure to add the context!
-      initializeSentry(this)
+      initializeSentry()
    }
 }
 ```
@@ -141,7 +132,7 @@ func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
 ) -> Bool {
-    AppSetupKt.initializeSentry(context = nil)
+    AppSetupKt.initializeSentry()
     return true
 }
 ```
