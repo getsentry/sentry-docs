@@ -100,6 +100,52 @@ Sentry.init({
 
 You can include your DSN directly in these three files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
+## Report React Component Render Errors
+
+Next, you should create a [Custom Next.js Error Page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) and call `captureUnderscoreErrorException` in your Error Page's `getInitialProps` method to capture React rendering errors:
+
+```TypeScript {filename:_error.tsx}
+import * as Sentry from "@sentry/nextjs";
+import type { NextPage } from "next";
+import type { ErrorProps } from "next/error";
+import Error from "next/error";
+
+const CustomErrorComponent: NextPage<ErrorProps> = (props) => {
+  return <Error statusCode={props.statusCode} />;
+};
+
+CustomErrorComponent.getInitialProps = async (contextData) => {
+  // In case this is running in a serverless function, await this in order to give Sentry
+  // time to send the error before the lambda exits
+  await Sentry.captureUnderscoreErrorException(contextData);
+
+  // This will contain the status code of the response
+  return Error.getInitialProps(contextData);
+};
+
+export default CustomErrorComponent;
+```
+
+```JavaScript {filename:_error.jsx}
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+
+const CustomErrorComponent = (props) => {
+  return <Error statusCode={props.statusCode} />;
+};
+
+CustomErrorComponent.getInitialProps = async (contextData) => {
+  // In case this is running in a serverless function, await this in order to give Sentry
+  // time to send the error before the lambda exits
+  await Sentry.captureUnderscoreErrorException(contextData);
+
+  // This will contain the status code of the response
+  return Error.getInitialProps(contextData);
+};
+
+export default CustomErrorComponent;
+```
+
 ## Extend your Next.js Configuration
 
 Use `withSentryConfig` to extend the default Next.js usage of webpack. This will do two things:
