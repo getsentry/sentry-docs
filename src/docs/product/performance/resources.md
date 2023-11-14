@@ -6,15 +6,15 @@ description: "Learn more about browser resource performance monitoring, which al
 
 If you have performance monitoring enabled for your frontend, you can see how your browser resources are performing in Sentry.
 
-Starting with the [**Resources** page](#resources-page), you get a high-level overview of how your resources are doing. From there, you can drill into a specific query's [**Resource Summary** page](#resource-summary-page) and then investigate sample events from the [Sample List](#sample-list) to better understand the context of its performance in a specific page.
+Starting with the [**Resources** page](#resources-page), you get a high-level overview of how your resources are doing. From there, you can drill into a specific resource's [**Resource Summary** page](#resource-summary-page) and then investigate sample events from the [Sample List](#sample-list) to better understand the context of its performance in a specific page.
 
 <!-- TODO add gif -->
 
 ## Prerequisites and Limitations
 
-The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. You need to enable automatic instrumentation via the `BrowserTracing` integration for your frontend project to see resource performance data.
+The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. 
 
-Automatic Instrumentation for frontend JavaScript is supported for the following platforms:
+For the best experience, we recommend enabling automatic instrumentation via the `BrowserTracing` integration for your frontend project to see resource performance data. This is supported for the following JavaScript platforms:
 
 - [Vanilla JavaScript](/platforms/javascript/performance/)
 - [Angular](/platforms/javascript/guides/angular/performance/)
@@ -30,14 +30,16 @@ Automatic Instrumentation for frontend JavaScript is supported for the following
 
 ### Span Eligibility
 
-Sentry tries to extract metrics by looking at resource related spans.
+Sentry tries to extract metrics by looking at resource-related spans.
 
 The JavaScript SDK automatically generates `resource` spans on `pageload` and `navigation` transactions using the browser's [Resource Timing API](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API/Resource_timing).
 
-If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, resource monitoring should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
+If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, resource monitoring should work without any configuration.
+
+If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - The span `op` field is prefixed with `resource` (for example, `resource.script` or `resource.css`).
-- The span's description contains the URL of the loaded resource, this comes from the [PerformanceResourceTiming name field](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry/name).
+- The span's `description` contains the URL of the loaded resource, this comes from the [PerformanceResourceTiming name field](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry/name).
 - The `http.response_transfer_size` span data value is set to the [total transfer size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/transferSize) of the resource.
 - The `http.response_content_length` span data value is set to the [encoded body size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/encodedBodySize) of the resource.
 - The `http.decoded_response_content_length` span data value is set to the [decoded body size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/decodedBodySize) of the resource.
@@ -93,13 +95,13 @@ To view more details, click on a resource from the table to open its **Resource 
 
 To enable Sentry to group similar resources together, Sentry parameterizes resource URLs, removing potenially dynamic elements. This helps track the performance of a particular resource across different releases, even when they have dynamic segments (used for busting caches or CDNS).
 
-To see an example of resource URL from a group, hover over a URL in the **Resource Summary** page.
+To see an example of resource URL from a group, hover over a URL in the resource table.
 
 ## Resource Summary Page
 
 To open a query's **Resource Summary** page, click on the resource from the table in the **Resources** page.
 
-At the top of the page, average encoded size, average decoded size, average transfer size, average duration, and requests per minute are shown for the selected time range.
+At the top of the page, average encoded size, average decoded size, average transfer size, average duration, and requests per minute are shown for the selected time range. Right below this, you can see summary graphs for requests per minute, average duration, and average resource size over time.
 
 At the bottom, you can find a list of pages the resource is found in, sorted by the requests per minute for the resource on that page.
 
@@ -107,7 +109,7 @@ If you want to investigate a specific page, click on it to open a sidebar showin
 
 ## Sample List
 
-Click on a page to open its samples list. This side panel shows summary metrics (requests per minute, average duration, and time spent) for the resource in the specific endpoint.
+Click on a page to open its samples list. This side panel shows summary metrics (requests per minute, average duration, and time spent) for the resource in the specific page.
 
 The table shows a sample list of events, their span duration, and the difference in duration compared to average. This table is sorted by longest span duration.
 
@@ -117,4 +119,4 @@ These same events are also represented as triangles shown in the average duratio
 
 You can generate a new list of random sample events by clicking the "Try Different Samples" button at the bottom.
 
-From the sample list, you can drill down to specific good, average, or bad examples of a given resource within a given endpoint. Click on an event ID to drill into the resource's span details within the span waterfall of the **Event Details** page.
+From the sample list, you can drill down to specific good, average, or bad examples of a given resource within a given page. Click on an event ID to drill into the resource's span details within the span waterfall of the **Event Details** page.
