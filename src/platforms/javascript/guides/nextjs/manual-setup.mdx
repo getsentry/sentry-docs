@@ -210,6 +210,43 @@ module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
 // export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
 ```
 
+## Instrument Next.js Server Actions
+
+To instrument Next.js server actions, wrap their content in `withServerActionInstrumentation`, along with a name to describe your server action.
+
+You can optionally pass form data, headers to record them and configure the wrapper to record the Server Action responses:
+
+```tsx
+import * as Sentry from "@sentry/nextjs";
+import { headers } from "next/headers";
+
+export default function ServerComponent() {
+  async function myServerAction(formData: FormData) {
+    "use server";
+    return await Sentry.withServerActionInstrumentation(
+      "myServerAction", // The name you want to associate this Server Action with in Sentry
+      {
+        formData, // Optionally pass in the form data
+        headers: headers(), // Optionally pass in headers
+        recordResponse: true, // Optionally record the server action response
+      },
+      async () => {
+        // ... Your server action code
+
+        return { name: "John Doe" };
+      }
+    );
+  }
+
+  return (
+    <form action={myServerAction}>
+      <input type="text" name="some-input-value" />
+      <button type="submit">Run Action</button>
+    </form>
+  );
+}
+```
+
 ## Configure Source Maps
 
 By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
