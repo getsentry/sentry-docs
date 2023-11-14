@@ -84,42 +84,71 @@ You can configure the release by adding the following to your page:
 </script>
 ```
 
-The loader script always includes a call to `Sentry.init` with a default configuration, including your DSN. If you want to [configure your SDK](../../configuration/options/) beyond that, you'll need a second script tag, in which you'll call `Sentry.onLoad`. This script must come _after_ the main loader script.
-
-```html
-<script
-  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
-  crossorigin="anonymous"
-></script>
-<script>
-  // Check for existence of Sentry in case Ad-blockers block the Sentry Loader Script
-  window.Sentry && Sentry.onLoad(function() { ... });
-</script>
-```
-
-`Sentry.onLoad` is a function that only the loader provides, and - as the name suggests - it sets a function to be run once the full SDK has been loaded. In that function, you can configure your SDK exactly the way you would were you using the CDN, with one difference: your `Sentry.init` call doesn't need to include your DSN, since it's already been set. We recommend checking if `Sentry` exists before calling `Sentry.onLoad` in case the loader script failed to load.
-
-```html
-<script>
-  // Check for existence of Sentry in case Ad-blockers block the Sentry Loader Script
-  window.Sentry && Sentry.onLoad(function() {
-    Sentry.init({
-      release: " ... ",
-      environment: " ... "
-    });
-    Sentry.configureScope(scope => {
-      scope.setTag( ... );
-    });
-    // etc.
-  });
-</script>
-```
+### Default Configuration
 
 For Performance Monitoring, by default, the SDK will be initialized with `tracesSampleRate: 1`. This means that the SDK will capture all traces.
 
 For Session Replay, the defaults are set to `replaysSessionSampleRate: 0.1` and `replaysOnErrorSampleRate: 1`. This means Replays will be captured for 10% of all normal sessions and for all sessions with an error.
 
-## **Limitations of error-only capturing**
+### Custom Configuration
+
+The loader script always includes a call to `Sentry.init` with a default configuration, including your DSN. If you want to [configure your SDK](../../configuration/options/) beyond that, you can configure a custom init call by defining a `window.sentryOnLoad` function. Whatever is defined inside of this function will _always_ be called first, before any other SDK method is called. Be sure to define this function _before_ you add the loader script, to ensure it can be called at the right time:
+
+```html
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      // add custom config here
+    });
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+Inside of the `window.sentryOnLoad` function, you can configure a custom `Sentry.init()` call. You can configure your SDK exactly the way you would were you using the CDN, with one difference: your `Sentry.init()` call doesn't need to include your DSN, since it's already been set. Inside of this function, the full Sentry SDK is guaranteed to be loaded & available.
+
+```html
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        release: " ... ",
+        environment: " ... "
+      });
+      Sentry.setTag(...);
+      // etc.
+    };
+</script>
+```
+
+In addition to `window.sentryOnLoad`, you can also use `Sentry.onLoad()` to make sure the SDK is loaded before you call any other SDK methods. The loader will by default make sure that these functions can be called directly on `Sentry` at all times:
+
+- `Sentry.captureException()`
+- `Sentry.captureMessage()`
+- `Sentry.captureEvent()`
+- `Sentry.addBreadcrumb()`
+- `Sentry.configureScope()`
+- `Sentry.withScope()`
+- `Sentry.showReportDialog()`
+
+If you want to call any other method when using the Loader, you have to guard it with `Sentry.onLoad()`:
+
+```javascript
+// Guard against window.Sentry not being available, e.g. due to Ad-blockers
+window.Sentry &&
+  Sentry.onLoad(function () {
+    // Inside of this callback, we guarantee that `Sentry` is fully loaded and all APIs are available
+    const client = Sentry.getCurrentHub().getClient();
+    // do something custom here
+  });
+```
+
+## Limitations of error-only capturing
 
 When using the Loader Script with just errors, the script injects the SDK asynchronously. This means that only _unhandled errors_ and _unhandled promise rejections_ will be caught and buffered before the SDK is fully loaded. Specifically, capturing [breadcrumb data](../../enriching-events/breadcrumbs/) will not be available until the SDK is fully loaded and initialized. To reduce the amount of time these features are unavailable, set `data-lazy="no"` or call `forceLoad()` as described above.
 

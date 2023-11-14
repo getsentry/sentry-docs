@@ -12,6 +12,15 @@ Sentry.addIntegration(new ReportingObserver());
 ```
 
 ```html {tabTitle: Loader}
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      integrations: [],
+    });
+  };
+</script>
+
 <script
   src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
   crossorigin="anonymous"
@@ -23,21 +32,12 @@ Sentry.addIntegration(new ReportingObserver());
 ></script>
 
 <script>
-  // Check for existence of Sentry in case Ad-blockers block the Sentry Loader Script
+  // Later in your application
+   // By calling this inside of `Sentry.onLoad()`, we can be sure the SDK has been initialized at this point.
   window.Sentry &&
     Sentry.onLoad(function () {
-      Sentry.init({
-        integrations: [],
-      });
-
-      const client = Sentry.getCurrentHub().getClient();
-      if (client) {
-        client.addIntegration(new Sentry.Integrations.ReportingObserver());
-      }
+      Sentry.addIntegration(new Sentry.Integrations.ReportingObserver());
     });
-
-    Sentry.addIntegration(new Sentry.Integrations.ReportingObserver());
-  });
 </script>
 ```
 
