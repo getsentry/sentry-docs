@@ -89,8 +89,6 @@ By default, the resources table is sorted by most time spent, which serves as a 
 
 You can click on a column header to change how the table is sorted. Sort by requests per minute to see the most frequently loaded resources or by average duration to see the slowest-loading resources.
 
-
-
 To view more details, click on a resource from the table to open its **Resource Summary** page.
 
 ### Resource Parameterization
