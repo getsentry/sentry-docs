@@ -16,9 +16,9 @@ If you are on an older version and you want to upload source maps we recommend u
 
 To get unminified stack traces for JavaScript code, source maps must be generated and uploaded. The React Native SDK handles source maps _automatically_ for iOS with Xcode and Android with Gradle, if you do not use custom values.
 
-## Setup Automatic Upload
+## Set Up Automatic Upload
 
-The easiest way to configure automatic uploading source maps is by using the Sentry Wizard:
+The easiest way to configure automatic source maps upload is to use the Sentry Wizard:
 
 ```bash
 npx @sentry/wizard@latest -i reactNative
@@ -30,9 +30,9 @@ The wizard will guide you through the following steps:
 - Installing the necessary Sentry packages
 - Configuring RN build tools to generate and upload source maps
 
-It supports JavaScript Core (including RAM Bundle) and Hermes. If you want to configure automatic source maps upload manually, follow the steps on [Manual Configuration](/platforms/react-native/manual-setup/manual-setup) page.
+It supports JavaScript Core (including RAM Bundle) and Hermes. If you want to configure automatic source maps upload manually, follow the steps on the [Manual Configuration](/platforms/react-native/manual-setup/manual-setup) page.
 
-### Disable the Automatic Upload
+### Disable Automatic Upload
 
 If you want to disable the automatic upload of source maps, you can set the `SENTRY_DISABLE_AUTO_UPLOAD` environment variable:
 
@@ -40,7 +40,7 @@ If you want to disable the automatic upload of source maps, you can set the `SEN
 export SENTRY_DISABLE_AUTO_UPLOAD=true
 ```
 
-Add use `shouldSentryAutoUpload` function in `android/app/build.gradle`.
+Add the `shouldSentryAutoUpload` function in `android/app/build.gradle`:
 
 ```gradle
 apply from: "../../../sentry.gradle"
@@ -51,13 +51,13 @@ sentry {
 }
 ```
 
-## Manual Upload Hermes
+## Manual Upload With Hermes
 
-The manual upload of source maps consists of a few simple steps. First, you need to generate the source maps and bundle. Then combile the Hermes bytecode bundle. And finaly upload the source map to Sentry.
+To manually upload source maps, first, you need to generate the source maps and bundle. Then compile the Hermes bytecode bundle, and finally upload the source map to Sentry.
 
 Start with adding Sentry React Native Metro Plugin to your `metro.config.js`:
 
-```js {filename="metro.config.js"}
+```javascript {filename="metro.config.js"}
 const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
 const {
   createSentryMetroSerializer,
@@ -177,7 +177,7 @@ node \
   main.jsbundle.packager.map main.jsbundle.map
 ```
 
-Make sure `sentry-cli` is configured for your project. For that you can use environment variables:
+Make sure `sentry-cli` is configured for your project and set up your environment variables:
 
 <OrgAuthTokenNote />
 
@@ -203,19 +203,19 @@ node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
 
 <Note>
 
-When uploaded, the `bundle` file will be sized at 0 bytes. This is expected with Hermes bytecode and won't affect the source maps resolution.
+When uploaded, the `bundle` file will have a size of 0 bytes. This is expected with Hermes bytecode and won't affect the source maps resolution.
 
 </Note>
 
-For more Hermes guides, see [Hermes Throubleshooting section](/platforms/react-native/manual-setup/hermes/#throubleshooting).
+For more Hermes guides, see the [Hermes Throubleshooting](/platforms/react-native/manual-setup/hermes/#throubleshooting) docs section.
 
-## Manual Upload JavaScript Core
+## Manual Upload With JavaScript Core
 
-The manual upload of source maps consists of a few simple steps. First, you need to generate the source maps and bundle. Then, you need to upload them to Sentry.
+To manually upload source maps, first, you need to generate the source maps and bundle. Then compile the Hermes bytecode bundle, and finally upload the source map to Sentry.
 
-Start with adding Sentry React Native Metro Plugin to your `metro.config.js`:
+Start by adding Sentry React Native Metro Plugin to your `metro.config.js`:
 
-```js {filename="metro.config.js"}
+```javascript {filename="metro.config.js"}
 const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
 const {
   createSentryMetroSerializer,
@@ -255,7 +255,7 @@ npx react-native bundle \
   --sourcemap-output main.jsbundle.map
 ```
 
-Make sure `sentry-cli` is configured for your project. For that you can use environment variables:
+Make sure `sentry-cli` is configured for your project and set up your environment variables:
 
 <OrgAuthTokenNote />
 
@@ -281,9 +281,9 @@ node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
 
 ## Optional Release and Distribution
 
-For events sent from Sentry to correctly be attributed to a release **both the `release` and `dist` values will need to be set.** You can set these values in the call to `init`, as discussed in our [Releases & Health content](/platforms/react-native/configuration/releases/).
+To correctly attribute events sent to Sentry to a release, **both the `release` and `dist` values will need to be set.** You can set these values in the call to `init`, as discussed in our [Releases & Health](/platforms/react-native/configuration/releases/) documentation.
 
-```js
+```javascript
 Sentry.init({
   dsn: "___DSN___",
   release: "my-project-name@2.3.12",
@@ -291,14 +291,14 @@ Sentry.init({
 });
 ```
 
-If you use custom values for your release other than the version included with the build in Xcode or Android Studio, the automatic source maps upload script will no longer work because it does not detect custom values. Use environment variables `SENTRY_RELEASE` and `SENTRY_DIST`. The script that performs the automatic source maps upload will use those values instead the default ones, and they will match the given `release` and `dist`. This ensures that the given custom `release` and `dist` values are used.
+The automatic source maps upload script doesn't detect custom values for releases. This means that if you use a custom value for your release, other than the version included with the built-in Xcode or Android Studio, the automatic source maps upload script won't work. Instead, you can set the `SENTRY_RELEASE` and `SENTRY_DIST` environment variables, which the automatic source maps upload script will use. This will ensure that the given custom `release` and `dist` values are used.
 
 ```bash
 export SENTRY_RELEASE="my-project-name@2.3.12"
 export SENTRY_DIST="52"
 ```
 
-## Legacy Source Maps for Release Upload
+## Legacy Instructions for Preparing Source Maps for a Release
 
 You need to generate and upload the source maps at build time for **every release** of your app for the events sent to be correctly unminified. To do so, follow these steps:
 
