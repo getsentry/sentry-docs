@@ -85,9 +85,11 @@ The resource table below shows a list of grouped resources, along with their typ
 
 Currently only JavaScript and CSS resources are supported.
 
-<!-- TODO: Add information about time spent. Extract time spent docs into separate page? -->
-<!-- This paragraph also exists in queries table -->
-<!-- By default, this table is sorted by most [time spent](#what-is-time-spent). This means that queries at the top are usually really slow, very frequent, or both. You can change this to sort by queries per minute to see the most frequently run queries, or by average duration to see the slowest queries. -->
+By default, the resources table is sorted by most time spent, which serves as a proxy for the relative performance impact of a given resource. A resource's time spent is the sum of all its durations in a given time period or, put another way, the product of its average duration and requests per minute. This means that resources at the top are usually loading really slowly, very frequently, or both.
+
+You can click on a column header to change how the table is sorted. Sort by requests per minute to see the most frequently loaded resources or by average duration to see the slowest-loading resources.
+
+
 
 To view more details, click on a resource from the table to open its **Resource Summary** page.
 
