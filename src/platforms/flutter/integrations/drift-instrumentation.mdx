@@ -20,8 +20,8 @@ Add the `sentry_drift` dependency to install the Drift database instrumentation.
 
 ```yml {filename:pubspec.yaml}
 dependencies:
-sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.2.0') }}
-sentry_drift: ^{{@inject packages.version('sentry.dart.drift', '7.2.0') }}
+sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.13.0') }}
+sentry_drift: ^{{@inject packages.version('sentry.dart.drift', '7.13.0') }}
 ```
 
 ## Configure
@@ -51,24 +51,26 @@ import 'package:sentry_drift/sentry_drift.dart';
 
 import 'your_database.dart';
 
-final tr = Sentry.startTransaction('drift', 'op', bindToScope: true);
-final executor = SentryQueryExecutor(
-  () => NativeDatabase.memory(),
-  databaseName: 'your_db_name',
-);
-final db = AppDatabase(executor);
+void driftTest() async {
+  final tr = Sentry.startTransaction('drift', 'op', bindToScope: true);
+  final executor = SentryQueryExecutor(
+    () => NativeDatabase.memory(),
+    databaseName: 'your_db_name',
+  );
+  final db = AppDatabase(executor);
 
-await db.into(db.todoItems).insert(
-      TodoItemsCompanion.insert(
-        title: 'This is a test thing',
-        content: 'test',
-      ),
-    );
+  await db.into(db.todoItems).insert(
+        TodoItemsCompanion.insert(
+          title: 'This is a test title',
+          content: 'test',
+        ),
+      );
 
-final items = await db.select(db.todoItems).get();
-print(items);
+  final items = await db.select(db.todoItems).get();
+  print(items);
 
-await db.close();
+  await db.close();
 
-await tr.finish(status: const SpanStatus.ok());
+  await tr.finish(status: const SpanStatus.ok());
+}
 ```
