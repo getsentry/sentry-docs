@@ -77,7 +77,7 @@ resources.forEach((entry) => {
 
 The **Resources** page gives you a quick overview of your application's resource performance for the selected project(s). You can use this page as a starting point to investigate potential problem resources and drill down to better understand how various resources are affecting your app's performance.
 
-Open the **Resources** page by clicking "Resources" in the sidebar, under "Performance". Alternatively, the **Performance** page also surfaces the highest impact queries in the [TBD] widget. From there, you can click "View All" to open the **Resources** page.
+Open the **Resources** page by clicking "Resources" in the sidebar, under "Performance". Alternatively, the **Performance** page also surfaces the highest impact resources in the "Most Time-Consuming Resources" widget. From there, you can click "View All" to open the **Resources** page.
 
 At the top of the page, summary graphs for requests per minute (throughput) and average duration provide high-level insight into the performance of your resources. If you see an anomaly or want to investigate a time range further, you can click and drag to select a range directly in a graph to filter data for that time range.
 
