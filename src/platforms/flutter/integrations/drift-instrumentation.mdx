@@ -1,0 +1,42 @@
+---
+title: Drift Database Instrumentation
+description: "Learn more about the Sentry Drift Database Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.drift
+categories:
+- mobile
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 7.13.0)_
+
+The [sentry_drift](https://pub.dev/packages/sentry_drift) package provides `Drift` support for database instrumentation. The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/drift). Note, that to capture transactions, you have to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>.
+
+## Install
+
+Add the `sentry_drift` dependency to install the Drift database instrumentation.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.2.0') }}
+sentry_drift: ^{{@inject packages.version('sentry.dart.drift', '7.2.0') }}
+```
+
+## Configure
+
+The `SentryQueryExecutor` needs to be injected into a Drift database instance:
+
+```dart
+import 'package:drift/native.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+final executor = SentryQueryExecutor(
+  () => NativeDatabase.memory(), // You can also provide your own DatabaseOpener
+  databaseName: 'my_db_name',
+);
+final database = AppDatabase(executor); // AppDatabase is an example of the auto-generated database class by Drift.
+```
+
+After configuring via one of the above methods, every `CRUD` operation, including database transactions and batches, will be automatically instrumented and sent to Sentry.
