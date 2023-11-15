@@ -12,7 +12,7 @@ Starting with the [**Resources** page](#resources-page), you get a high-level ov
 
 ## Prerequisites and Limitations
 
-The resource pages are only available for frontend JavaScript projects with performance monitoring enabled.
+The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. Currently only JavaScript and CSS resources are supported.
 
 For the best experience, we recommend enabling automatic instrumentation via the `BrowserTracing` integration for your frontend project to see resource performance data. This is supported for the following JavaScript platforms:
 
@@ -82,8 +82,6 @@ Open the **Resources** page by clicking "Resources" in the sidebar, under "Perfo
 At the top of the page, summary graphs for requests per minute (throughput) and average duration provide high-level insight into the performance of your resources. If you see an anomaly or want to investigate a time range further, you can click and drag to select a range directly in a graph to filter data for that time range.
 
 The resource table below shows a list of grouped resources, along with their type, their volume (requests per min), average duration, the total time your app spent loading that resource (time spent), and [average encoded size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/encodedBodySize) of the resource.
-
-Currently only JavaScript and CSS resources are supported.
 
 By default, the resources table is sorted by most time spent, which serves as a proxy for the relative performance impact of a given resource. A resource's time spent is the sum of all its durations in a given time period or, put another way, the product of its average duration and requests per minute. This means that resources at the top are usually loading really slowly, very frequently, or both.
 
