@@ -221,6 +221,29 @@ sentry {
 
 </PlatformSection>
 
+### Include Generated Code in Source Context
+
+In case you have a code generation step in your build(e.g. Quarkus) you will face an error similiar to this:
+```
+Task ':xxx:sentryCollectSourcesJava' uses this output of task ':xxx:quarkusGenerateCode' without declaring an explicit or implicit dependency. This can lead to incorrect results being produced, depending on what order the tasks are executed.
+```
+
+To resolve this you need to declare a dependency for `sentryCollectSourcesJava` on code generation tasks that exist in your build. This can be done by defining the depdency in your build file:
+
+```groovy
+tasks.named("sentryCollectSourcesJava") {
+    // Replace CodeGenTask with name of the task that generates code during build
+    mustRunAfter("CodeGenTask")
+}
+```
+
+```kotlin
+tasks.named("sentryCollectSourcesJava") {
+    // Replace CodeGenTask with name of the task that generates code during build
+    mustRunAfter("CodeGenTask")
+}
+```
+
 <PlatformSection notSupported={["android"]}>
 
 ## Using the Maven Build Tool Plugin
