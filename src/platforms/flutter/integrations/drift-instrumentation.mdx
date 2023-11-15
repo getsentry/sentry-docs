@@ -39,4 +39,36 @@ final executor = SentryQueryExecutor(
 final database = AppDatabase(executor); // AppDatabase is an example of the auto-generated database class by Drift.
 ```
 
-After configuring via one of the above methods, every `CRUD` operation, including database transactions and batches, will be automatically instrumented and sent to Sentry.
+After configuring, every `CRUD` operation, including database transactions and batches, will be automatically instrumented and sent to Sentry.
+
+## Example
+
+```dart
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+import 'your_database.dart';
+
+final tr = Sentry.startTransaction('drift', 'op', bindToScope: true);
+final executor = SentryQueryExecutor(
+  () => NativeDatabase.memory(),
+  databaseName: 'your_db_name',
+);
+final db = AppDatabase(executor);
+
+await db.into(db.todoItems).insert(
+      TodoItemsCompanion.insert(
+        title: 'This is a test thing',
+        content: 'test',
+      ),
+    );
+
+final items = await db.select(db.todoItems).get();
+print(items);
+
+await db.close();
+
+await tr.finish(status: const SpanStatus.ok());
+```
