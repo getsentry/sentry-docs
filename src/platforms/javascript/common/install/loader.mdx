@@ -74,6 +74,16 @@ If Performance Monitoring and/or Session Replay is enabled, the SDK will immedia
 
 ## SDK Configuration
 
+While the Loader Script will work out of the box without any configuration in your application, you can still configure the SDK according to your needs.
+
+### Default Configuration
+
+For Performance Monitoring, the SDK will be initialized with `tracesSampleRate: 1` by default. This means that the SDK will capture all traces.
+
+For Session Replay, the defaults are `replaysSessionSampleRate: 0.1` and `replaysOnErrorSampleRate: 1`. This means Replays will be captured for 10% of all normal sessions and for all sessions with an error.
+
+### Release Configuration
+
 You can configure the release by adding the following to your page:
 
 ```html
@@ -83,12 +93,6 @@ You can configure the release by adding the following to your page:
   };
 </script>
 ```
-
-### Default Configuration
-
-For Performance Monitoring the SDK will be initialized with `tracesSampleRate: 1` by default. This means that the SDK will capture all traces.
-
-For Session Replay, the defaults are `replaysSessionSampleRate: 0.1` and `replaysOnErrorSampleRate: 1`. This means Replays will be captured for 10% of all normal sessions and for all sessions with an error.
 
 ### Custom Configuration
 
@@ -115,18 +119,20 @@ Inside of the `window.sentryOnLoad` function, you can configure a custom `Sentry
 ```html
 <script>
   // Configure sentryOnLoad before adding the Loader Script
-    window.sentryOnLoad = function () {
-      Sentry.init({
-        release: " ... ",
-        environment: " ... "
-      });
-      Sentry.setTag(...);
-      // etc.
-    };
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      release: " ... ",
+      environment: " ... "
+    });
+    Sentry.setTag(...);
+    // etc.
+  };
 </script>
 ```
 
-In addition to `window.sentryOnLoad`, you can also use `Sentry.onLoad()` to make sure the SDK is loaded before you call any other SDK methods. The loader will by default make sure that these functions can be called directly on `Sentry` at all times:
+### Guarding SDK Function Calls
+
+The loader will by default make sure that these functions can be called directly on `Sentry` at all times, even if the SDK is not yet loaded:
 
 - `Sentry.captureException()`
 - `Sentry.captureMessage()`
@@ -136,13 +142,14 @@ In addition to `window.sentryOnLoad`, you can also use `Sentry.onLoad()` to make
 - `Sentry.withScope()`
 - `Sentry.showReportDialog()`
 
-If you want to call any other method when using the Loader, you have to guard it with `Sentry.onLoad()`:
+If you want to call any other method when using the Loader, you have to guard it with `Sentry.onLoad()`. Any callback given to `onLoad()` will be called either immediately (if the SDK is already loaded), or later once the SDK has been loaded:
 
 ```javascript
 // Guard against window.Sentry not being available, e.g. due to Ad-blockers
 window.Sentry &&
   Sentry.onLoad(function () {
-    // Inside of this callback, we guarantee that `Sentry` is fully loaded and all APIs are available
+    // Inside of this callback,
+    // we guarantee that `Sentry` is fully loaded and all APIs are available
     const client = Sentry.getCurrentHub().getClient();
     // do something custom here
   });
