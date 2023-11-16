@@ -8,7 +8,7 @@ If you have performance monitoring enabled for your frontend, you can see how yo
 
 Starting with the [**Resources** page](#resources-page), you get a high-level overview of how your resources are doing. From there, you can drill into a specific resource's [**Resource Summary** page](#resource-summary-page) and then investigate sample events from the [Sample List](#sample-list) to better understand the context of its performance in a specific page.
 
-<!-- TODO add gif -->
+<div style="position: relative; padding-bottom: calc(50.86013462976814% + 41px); height: 0;"><iframe src="https://demo.arcade.software/BxySgGk7hpJ72xquLdKe?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>```
 
 ## Prerequisites and Limitations
 
@@ -91,6 +91,8 @@ To view more details, click on a resource from the table to open its **Resource 
 
 <div style="position: relative; padding-bottom: calc(50.86013462976814% + 41px); height: 0;"><iframe src="https://demo.arcade.software/dVvM0eWdGjN7bVhxSwJr?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
 
+<div style="position: relative; padding-bottom: calc(50.86013462976814% + 41px); height: 0;"><iframe src="https://demo.arcade.software/dVvM0eWdGjN7bVhxSwJr?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
+
 ### Resource Parameterization
 
 To enable Sentry to group similar resources together, Sentry parameterizes resource URLs, removing potenially dynamic elements. This helps track the performance of a particular resource across different releases, even when they have dynamic segments (used for busting caches or CDNS).
@@ -107,6 +109,8 @@ At the bottom, you can find a list of pages the resource is found in, sorted by 
 
 If you want to investigate a specific page, click on it to open a sidebar showing some sample events.
 
+<div style="position: relative; padding-bottom: calc(50.829268292682926% + 41px); height: 0;"><iframe src="https://demo.arcade.software/D96Pu2LMLHddyVCn3BOd?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
+
 ## Sample List
 
 Click on a page to open its samples list. This side panel shows summary metrics (requests per minute, average duration, and time spent) for the resource in the specific page.
@@ -120,3 +124,6 @@ These same events are also represented as triangles shown in the average duratio
 You can generate a new list of random sample events by clicking the "Try Different Samples" button at the bottom.
 
 From the sample list, you can drill down to specific good, average, or bad examples of a given resource within a given page. Click on an event ID to drill into the resource's span details within the span waterfall of the **Event Details** page.
+
+<div style="position: relative; padding-bottom: calc(50.829268292682926% + 41px); height: 0;"><iframe src="https://demo.arcade.software/h2B547DqgJGIrlsMeVWx?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
+
