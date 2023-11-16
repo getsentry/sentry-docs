@@ -126,4 +126,3 @@ You can generate a new list of random sample events by clicking the "Try Differe
 From the sample list, you can drill down to specific good, average, or bad examples of a given resource within a given page. Click on an event ID to drill into the resource's span details within the span waterfall of the **Event Details** page.
 
 <div style="position: relative; padding-bottom: calc(50.829268292682926% + 41px); height: 0;"><iframe src="https://demo.arcade.software/h2B547DqgJGIrlsMeVWx?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
-
