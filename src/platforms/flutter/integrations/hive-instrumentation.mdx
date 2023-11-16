@@ -1,0 +1,70 @@
+---
+title: Hive Database Instrumentation
+description: "Learn more about the Sentry Hive Database Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.hive
+categories:
+- mobile
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 7.13.1)_
+
+The [sentry_hive](https://pub.dev/packages/sentry_hive) package provides `Hive` support for database instrumentation. The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/hive). Note, that to capture transactions, you have to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>.
+
+## Install
+
+Add the `sentry_hive` dependency to install the Hive database instrumentation.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.13.1') }}
+sentry_hive: ^{{@inject packages.version('sentry.dart.hive', '7.13.1') }}
+```
+
+## Configure
+
+Use `SentryHive` to initialize the instance:
+
+```dart
+import 'package:hive/native.dart';
+import 'package:sentry_hive/sentry_hive.dart';
+
+final appDir = await getApplicationDocumentsDirectory();
+SentryHive.init(appDir.path);
+```
+
+After configuring, you can use `SentryHive` for every operation which will be automatically instrumented and sent to Sentry.
+
+## Example
+
+```dart
+import 'package:sentry_hive/sentry_hive.dart';
+
+Future<void> hiveTest() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    final tr = Sentry.startTransaction(
+      'hiveTest',
+      'db',
+      bindToScope: true,
+    );
+
+    final appDir = await getApplicationDocumentsDirectory();
+    SentryHive.init(appDir.path);
+
+    final catsBox = await SentryHive.openBox<Map>('cats');
+    await catsBox.put('fluffy', {'name': 'Fluffy', 'age': 4});
+    await catsBox.put('loki', {'name': 'Loki', 'age': 2});
+    await catsBox.clear();
+    await catsBox.close();
+
+    SentryHive.close();
+
+    await tr.finish(status: const SpanStatus.ok());
+}
+```
