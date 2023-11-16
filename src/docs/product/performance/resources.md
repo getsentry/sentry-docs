@@ -39,7 +39,7 @@ If you are using <PlatformLink to="/performance/instrumentation/automatic-instru
 If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - The span `op` field is prefixed with `resource` (for example, `resource.script` or `resource.css`).
-- The span's `description` contains the URL of the loaded resource, this comes from the [PerformanceResourceTiming name field](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry/name).
+- The span's `description` contains the URL of the loaded resource, which should correspond to the [PerformanceResourceTiming name field](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry/name).
 - The `http.response_transfer_size` span data value is set to the [total transfer size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/transferSize) of the resource.
 - The `http.response_content_length` span data value is set to the [encoded body size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/encodedBodySize) of the resource.
 - The `http.decoded_response_content_length` span data value is set to the [decoded body size](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/decodedBodySize) of the resource.
