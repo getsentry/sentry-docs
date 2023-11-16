@@ -89,6 +89,8 @@ You can click on a column header to change how the table is sorted. Sort by requ
 
 To view more details, click on a resource from the table to open its **Resource Summary** page.
 
+<div style="position: relative; padding-bottom: calc(50.86013462976814% + 41px); height: 0;"><iframe src="https://demo.arcade.software/dVvM0eWdGjN7bVhxSwJr?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
+
 ### Resource Parameterization
 
 To enable Sentry to group similar resources together, Sentry parameterizes resource URLs, removing potenially dynamic elements. This helps track the performance of a particular resource across different releases, even when they have dynamic segments (used for busting caches or CDNS).
