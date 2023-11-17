@@ -5,7 +5,7 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   'Discover all our latest product releases during Sentry Launch Week, coming Nov 13-17.';
 const BANNER_LINK_URL = 'https://sentry.io/events/launch-week/';
