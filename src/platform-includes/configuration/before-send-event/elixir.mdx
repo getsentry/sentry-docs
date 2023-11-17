@@ -1,0 +1,16 @@
+You'll need to configure the `:before_send_event` callback:
+
+```elixir {filename:config/config.exs}
+config :sentry,
+  before_send_event: {SentryScrubber, :scrub_sensitive_data}
+```
+
+Then, you can write your custom logic:
+
+```elixir
+defmodule SentryScrubber do
+  def scrub_sensitive_data(event) do
+    put_in(event.user.email, "[redacted]")
+  end
+end
+```
