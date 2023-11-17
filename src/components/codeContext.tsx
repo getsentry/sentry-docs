@@ -56,6 +56,11 @@ type UserApiResult = {
   name: string;
 };
 
+type Region = {
+  name: string;
+  url: string;
+};
+
 // only fetch them once
 let cachedCodeKeywords: CodeKeywords | null = null;
 
@@ -123,38 +128,68 @@ const formatApiUrl = ({scheme, host}: Dsn) => {
   return `${scheme}${apiHost}/api`;
 };
 
+function getHost(): string {
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://dev.getsentry.net:8000';
+  }
+  return 'https://sentry.io';
+}
+
+function makeDefaults() {
+  // eslint-disable-next-line no-console
+  console.warn('Unable to fetch codeContext - using defaults.');
+  return DEFAULTS;
+}
+
 /**
  * Fetch project details from sentry
  */
 export async function fetchCodeKeywords(): Promise<CodeKeywords> {
-  let json: {projects: ProjectApiResult[]; user: UserApiResult} | null = null;
-
-  const url =
-    process.env.NODE_ENV === 'development'
-      ? 'http://dev.getsentry.net:8000/docs/api/user/'
-      : 'https://sentry.io/docs/api/user/';
-
-  const makeDefaults = () => {
-    // eslint-disable-next-line no-console
-    console.warn('Unable to fetch codeContext - using defaults.');
-    return DEFAULTS;
+  let json: {projects: ProjectApiResult[]; user: UserApiResult} = {
+    projects: [],
+    user: null,
   };
 
+  // First fetch which regions the user has a presence
+  const url = `${getHost()}/api/0/users/me/regions/`;
+  let regions: Region[] = [];
   try {
     const resp = await fetch(url, {credentials: 'include'});
-
     if (!resp.ok) {
       return makeDefaults();
     }
-
-    json = await resp.json();
-  } catch {
+    const data = await resp.json();
+    if (data.regions) {
+      regions = data.regions;
+    }
+  } catch (e) {
     return makeDefaults();
   }
 
-  if (json === null) {
-    return makeDefaults();
-  }
+  // Then fetch the project configuration for each region, and merge it together.
+  const results = await Promise.all(
+    regions.map(async region => {
+      const regionUrl = `${region.url}/docs/api/user/`;
+      try {
+        const resp = await fetch(regionUrl, {credentials: 'include'});
+        if (!resp.ok) {
+          return makeDefaults();
+        }
+        return resp.json();
+      } catch (e) {
+        return makeDefaults();
+      }
+    })
+  );
+  json = results.reduce((acc, item) => {
+    if (item.projects) {
+      acc.projects = acc.projects.concat(item.projects);
+    }
+    if (item.user) {
+      acc.user = item.user;
+    }
+    return acc;
+  }, json);
 
   const {projects, user} = json;
 
@@ -209,12 +244,7 @@ export async function createOrgAuthToken({
   name: string;
   orgSlug: string;
 }): Promise<string | null> {
-  const baseUrl =
-    process.env.NODE_ENV === 'development'
-      ? 'http://dev.getsentry.net:8000/'
-      : 'https://sentry.io';
-
-  const url = `${baseUrl}/api/0/organizations/${orgSlug}/org-auth-tokens/`;
+  const url = `${getHost()}/api/0/organizations/${orgSlug}/org-auth-tokens/`;
 
   const body = {name};
 
