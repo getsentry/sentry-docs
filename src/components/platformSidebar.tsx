@@ -74,6 +74,7 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
           `/${pathRoot}/crons/`,
+          `/${pathRoot}/user-feedback/`,
         ]}
       />
       <DynamicNav
@@ -101,6 +102,13 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         root={`/${pathRoot}/crons`}
         title="Crons"
         prependLinks={[[`/${pathRoot}/crons/`, 'Set Up Crons']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/user-feedback`}
+        title="User Feedback"
+        prependLinks={[[`/${pathRoot}/user-feedback/`, 'Set Up User Feedback']]}
         suppressMissing
         tree={tree}
       />
