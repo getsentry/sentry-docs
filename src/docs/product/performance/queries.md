@@ -45,7 +45,7 @@ If you are using <PlatformLink to="/performance/instrumentation/automatic-instru
 
 - The span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database).
 - The span's description contains the full SQL query.
-- The `db.system` span data value is set to the [correct identifier](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md#notes-and-well-known-identifiers-for-dbsystem) (e.g., `"postgresql"` or `"mysql"`).
+- The `db.system` span data value is set to the [correct identifier](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/attributes-registry/db.md#generic-database-attributes) (e.g., `"postgresql"` or `"mysql"`).
 
 ## Queries Page
 
