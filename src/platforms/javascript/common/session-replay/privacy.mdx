@@ -9,7 +9,7 @@ description: "Configuring Session Replay to maintain user and data privacy."
 
 <Include name="feature-stage-beta-session-replay.mdx" />
 
-There are several ways to deal with personally identifiable information (PII). By default, the integration will mask all text content with `*` and block all media elements (`img`, `svg`, `video`, `object`, `picture`, `embed`, `map`, `audio`). This can be disabled by setting `maskAllText` to `false`. It's also possible to add the following CSS classes to specific DOM elements to prevent recording their contents: `sentry-block`, `sentry-ignore`, and `sentry-mask`. The following sections will show examples of how content is handled by the differing methods.
+There are several ways to deal with personally identifiable information (PII). By default, the Session Replay SDK will mask all text content with `*` and block all media elements (`img`, `svg`, `video`, `object`, `picture`, `embed`, `map`, `audio`) on the client, before it is sent to the server. This can be disabled by setting `maskAllText` to `false`. It's also possible to add the following CSS classes to specific DOM elements to prevent recording their contents: `sentry-block`, `sentry-ignore`, and `sentry-mask`. The following sections will show examples of how content is handled by the differing methods.
 
 ## Masking
 
@@ -17,16 +17,43 @@ Masking replaces the text content with something else. The default masking behav
 
 ![Replay PII Scrubbing example](masking.png)
 
+You can configure what to mask or unmask via the following [configuration](#privacy-configuration):
+
+```javascript
+new Replay({
+  mask: [".mask-me"],
+  unmask: [".unmask-me"],
+});
+```
+
 ## Blocking
 
 Blocking replaces the element with a placeholder that has the same dimensions. The recording will show an empty space in place of the content. Elements with class name `sentry-block` or the attribute `data-sentry-block` will be blocked. In this example, the relevant HTML code is: `<table data-sentry-block>...</table>`:
+
 ![Blocking example](./blocking.png)
+
+You can configure what to block or unblock via the following [configuration](#privacy-configuration):
+
+```javascript
+new Replay({
+  block: [".block-me"],
+  unblock: [".unblock-me"],
+});
+```
 
 ## Ignoring
 
 Ignoring only applies to form inputs. Events will be ignored on the input element so that the replay doesn't show what occurs inside of the input. Any event on an input element with class name `sentry-ignore` or the attribute `data-sentry-ignore` will be ignored. Notice how the results in the table below show input changes, but no visible text:
 
 ![Ignoring Example](./ignoring.gif)
+
+You can configure what to ignore via the following [configuration](#privacy-configuration):
+
+```javascript
+new Replay({
+  ignore: [".ignore-me"],
+});
+```
 
 ## Privacy Configuration
 
