@@ -44,7 +44,7 @@ Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like 
 If you are using <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, query monitoring should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - The span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database).
-- The span's description contains the full, parametized SQL query (e.g. `"SELECT * FROM users WHERE id = ?"`). 
+- The span's description contains the full, parametized SQL query (e.g. `"SELECT * FROM users WHERE id = ?"`).
 - The `db.system` span data value is set to the [correct identifier](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/attributes-registry/db.md#generic-database-attributes) (e.g., `"postgresql"` or `"mysql"`).
 
 ## Queries Page
