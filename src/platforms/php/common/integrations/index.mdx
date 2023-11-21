@@ -23,7 +23,16 @@ To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a call
 
 This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
 
-To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an error listener. By default, the `ErrorHandler` reserves 10 kilobytes of memory to handle fatal errors.
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an error listener. By default, the `ErrorHandler` reserves 16 KiB of memory to handle fatal errors. When handling out of memory errors, the `ErrorHandler` additionally increases the [`memory_limit`](https://www.php.net/manual/en/ini.core.php#ini.memory-limit) by an additional 5 MiB to have enough room to send the out of memory event to Sentry. This change is only done once and only affects the handling of the out of memory error.
+
+To change the amount of memory reserved for fatal error handling or the amount the `memory_limit` is increased when handling an out of memory error, you can register the fatal error handler yourself before calling `\Sentry\init(...)`:
+
+```php
+// The amount of reserved memory every request (in bytes), this has to be a positive integer amount of bytes. Defaults to 16 KiB
+$errorHandler = \Sentry\ErrorHandler::registerOnceFatalErrorHandler(16 * 1024);
+// The amount of memory in bytes to increase the `memory_limit` to when handling a out of memory error, can also be set to `null` to disable increasing the `memory_limit`. Defaults to 5 MiB
+$errorHandler->setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(5 * 1024 * 1024);
+```
 
 For some frameworks or projects, specific integrations are provided both officially and by third-party users that automatically register the error handlers. Please refer to their documentation.
 
