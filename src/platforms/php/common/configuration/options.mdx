@@ -1,0 +1,402 @@
+---
+title: Basic Options
+sidebar_order: 1
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an array."
+---
+
+Options are passed to the `init()` function as an array:
+
+```php
+\Sentry\init([
+    'traces_sample_rate' => 1.0,
+]);
+```
+
+## Common Options
+
+<ConfigKey name="dsn">
+
+<SignInNote />
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+]);
+```
+
+Defaults to `null`.
+
+If not set, the SDK reads the `SENTRY_DSN` environment variable.
+Leave the `dsn` option empty to disable the SDK and to not send any events to Sentry.
+
+Learn more about the [DSN](/product/sentry-basics/dsn-explainer/).
+
+</ConfigKey>
+
+
+<ConfigKey name="release">
+
+```php
+\Sentry\init([
+    'release' => '1.0.0',
+]);
+```
+
+Defaults to `null`.
+
+If not set, the SDK reads the `SENTRY_RELEASE` environment variable.
+
+</ConfigKey>
+
+<ConfigKey name="environment">
+
+```php
+\Sentry\init([
+    'environment' => 'staging',
+]);
+```
+
+Defaults to `'production'`.
+
+If not set, the SDK reads the `SENTRY_ENVIRONMENT` environment variable.
+
+</ConfigKey>
+
+<ConfigKey name="error-types">
+
+```php
+\Sentry\init([
+    'error_types' => 'E_ALL ^ E_USER_DEPRECATED',
+]);
+```
+
+Defaults to `E_ALL`.
+
+See https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting.
+
+</ConfigKey>
+
+<ConfigKey name="sample-rate">
+
+```php
+\Sentry\init([
+    'sample_rate' => 1.0,
+]);
+```
+
+Defaults to `1.0`.
+
+Controls the sample rate for error and message events sent to Sentry, in the range of `0.0` to `1.0`.
+
+</ConfigKey>
+
+<ConfigKey name="max-breadcrumbs">
+
+```php
+\Sentry\init([
+    'max_breadcrumbs' => 50,
+]);
+```
+
+Defaults to `50`.
+
+Controls the total amount of breadcrumbs that should be captured.
+Refer to [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits), as any events exceeding that payload size will be dropped.
+
+</ConfigKey>
+
+
+<ConfigKey name="attach-stacktrace">
+
+```php
+\Sentry\init([
+    'attach_stacktrace' => true,
+]);
+```
+
+Defaults to `false`.
+
+When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. 
+
+Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+</ConfigKey>
+
+<ConfigKey name="send-default-pii">
+
+```php
+\Sentry\init([
+    'send_default_pii' => true,
+]);
+```
+
+Defaults to `false`.
+
+If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</ConfigKey>
+
+<ConfigKey name="server-name">
+
+```php
+\Sentry\init([
+    'server_name' => true,
+]);
+```
+
+Defaults to [`gethostname()`](https://www.php.net/manual/en/function.gethostname.php).
+
+</ConfigKey>
+
+<ConfigKey name="ignore-exceptions">
+
+```php
+\Sentry\init([
+    'ignore_exceptions' => [
+        UnauthenticatedException::class,
+    ],
+]);
+```
+
+Defaults to `[]`.
+
+A list of class names that matches exceptions that shouldn't be sent to Sentry.
+Checks whether the provided class name is of a given type or subtype.
+
+</ConfigKey>
+
+<ConfigKey name="ignore-transactions">
+
+```php
+\Sentry\init([
+    'ignore_transactions' => [
+        'GET /health',
+    ],
+]);
+```
+
+Defaults to `[]`.
+
+A list of strings that match transaction names that shouldn't be sent to Sentry.
+
+</ConfigKey>
+
+<ConfigKey name="in-app-include">
+
+```php
+\Sentry\init([
+    'in_app_include' => [
+        '/var/www/html/vendor/my-package',
+    ],
+]);
+```
+
+Defaults to `[]`.
+
+A list of string prefixes of module names that belong to the app. This option takes precedence over <PlatformIdentifier name="in-app-exclude" />.
+
+Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+
+</ConfigKey>
+
+<ConfigKey name="in-app-exclude">
+
+```php
+\Sentry\init([
+    'in_app_exclude' => [
+        '/var/www/html/vendor',
+    ],
+]);
+```
+
+Defaults to `[]`.
+
+A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
+
+This option can be overridden using <PlatformIdentifier name="in-app-include" />.
+
+</ConfigKey>
+
+<ConfigKey name="max-request-body-size">
+
+```php
+\Sentry\init([
+    'max_request_body_size' => 'allways',
+]);
+```
+
+Defaults to `'medium'`.
+
+This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
+
+- `never`: Request bodies are never sent.
+- `small`: Only requests with a size of 1KB will be captured.
+- `medium`: Medium and small requests with a size of 10KB will be captured.
+- `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
+
+</ConfigKey>
+
+<ConfigKey name="max-value-length">
+
+```php
+\Sentry\init([
+    'max_value_length' => 2048,
+]);
+```
+
+Defaults to `1024`.
+
+The number of characters after which the values containing text in the event payload will be truncated.
+
+</ConfigKey>
+
+<ConfigKey name="context-lines">
+
+```php
+\Sentry\init([
+    'context_lines' => 10,
+]);
+```
+
+Defaults to `5`.
+
+The number of source context lines for each frame in the stack trace.
+
+</ConfigKey>
+
+
+## Integration Configuration
+
+<ConfigKey name="integrations" />
+
+In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
+
+<ConfigKey name="default-integrations" />
+
+This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
+
+## Hooks
+
+These options can be used to hook the SDK in various ways to customize the reporting of events.
+
+<ConfigKey name="before-send">
+
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+</ConfigKey>
+
+<ConfigKey name="before-send-transaction">
+
+This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+
+</ConfigKey>
+
+<ConfigKey name="before-breadcrumb">
+
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</ConfigKey>
+
+## Transport Options
+
+Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
+
+<ConfigKey name="transport">
+
+Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+
+</ConfigKey>
+
+<ConfigKey name="http-proxy">
+
+When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+
+</ConfigKey>
+
+
+<ConfigKey name="http-connect-timeout">
+
+The maximum number of seconds to wait while trying to connect to a server. The default is `2`.
+
+</ConfigKey>
+
+<ConfigKey name="http-timeout">
+
+The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option. The default is `5`.
+
+</ConfigKey>
+
+## Tracing Options
+
+<ConfigKey name="enable-tracing">
+
+A boolean value, if true, transactions and trace data will be generated and captured. This will set the `traces-sample-rate` to the recommended default of 1.0 if `traces-sample-rate` is not defined. Note that `traces-sample-rate` and `traces-sampler` take precedence over this option.
+
+</ConfigKey>
+
+<ConfigKey name="traces-sample-rate">
+
+A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
+
+</ConfigKey>
+
+<ConfigKey name="traces-sampler">
+
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
+
+</ConfigKey>
+
+<ConfigKey name="trace-propagation-targets">
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</ConfigKey>
+
+<ConfigKey name="profiles_sample_rate">
+
+</ConfigKey>
+
+<ConfigKey name="prefixes">
+
+</ConfigKey>
+
+<ConfigKey name="logger">
+
+</ConfigKey>
+
+<ConfigKey name="tags">
+
+</ConfigKey>
+
+<ConfigKey name="http_client">
+
+</ConfigKey>
+
+<ConfigKey name="http_proxy_authentication">
+
+</ConfigKey>
+
+<ConfigKey name="http_ssl_verify_peer">
+
+</ConfigKey>
+
+<ConfigKey name="http_compression">
+
+</ConfigKey>
+
+<ConfigKey name="capture_silenced_errors">
+
+</ConfigKey>
+
+<ConfigKey name="class_serializers">
+
+</ConfigKey>
