@@ -3,10 +3,11 @@ title: Event Payloads
 ---
 
 Events are the fundamental data that clients, often through the use of an SDK, send
-to the Sentry server. Event payload size limit is 200KB compressed and 1 MB decompressed.
+to the Sentry server.
 
-The API endpoint on the Sentry server where event payloads are sent is
-`/api/{PROJECT_ID}/store/`.
+Events are packed into [envelopes](/sdk/envelopes/) and are sent to the `/api/{PROJECT_ID}/envelope/` API endpoint.
+
+Sending event payloads to the `/api/{PROJECT_ID}/store/` API endpoint is deprecated.
 
 <Alert title="Note on backwards compatibility" level="info"><markdown>
 
@@ -278,6 +279,16 @@ Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 
 [eventerror]: https://github.com/getsentry/sentry/blob/master/src/sentry/models/eventerror.py
 [opening an issue]: https://github.com/getsentry/sentry/issues/new/choose
+
+## Size Limits
+
+Event ingestion imposes limits on the size of events.
+These limits are subject to future change and defined currently as:
+
+- *1MB* decompressed (and `200KB` compressed) for events of type `error`
+- *1MB* decompressed (and `200KB` compressed) for events of type `transaction`
+
+Sessions, client reports, replays, check-ins, and profiles are not events and have different size limits. See [Envelope Size Limits](/sdk/envelopes/#size-limits).
 
 ## Core Interfaces
 
