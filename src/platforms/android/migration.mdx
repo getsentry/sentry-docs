@@ -6,6 +6,48 @@ redirect_from:
 description: "Migrating between versions of Sentry's SDK for Android."
 ---
 
+## Migrating from `io.sentry:sentry-android 6.x` to `io.sentry:sentry-android 7.0.0`
+
+### Breaking Changes
+
+- Minimal supported API level is updated to 19 (`minSdk`)
+- `sentry-android-okhttp` classes were deprecated in favour of `sentry-okhttp`, which is a pure Java module and can be used in non-Android projects
+  - `SentryOkHttpUtils` class was removed from public API. If you were using it, consider filing a [feature request](https://github.com/getsentry/sentry-java/issues)
+- If you're using `sentry-kotlin-extensions`, it requires `kotlinx-coroutines-core` version `1.6.1` or higher now
+- Move `enableNdk` and `enableScopeSync` from `SentryOptions` to `SentryAndroidOptions`
+- `SentryApolloInterceptor.BeforeSpanCallback` changed return type from `ISpan` to `ISpan?`
+
+### Behavioural Changes
+
+- `Sentry.getSpan()` returns the root span/transaction instead of the latest span
+  - This will make the span hierarchy leaner and better readable
+- Capture [failed HTTP requests](/platforms/android/integrations/okhttp/#http-client-errors) by default
+- Add deadline timeout for automatic transactions
+    - This affects all automatically generated transactions on Android (UI, clicks), the default timeout is 30s, meaning the automatic transaction will be force-finished with status `deadline_exceeded` when reaching the deadline
+- Set ip_address to {{auto}} by default, even if sendDefaultPII is disabled
+    - Instead use the "Prevent Storing of IP Addresses" option in the "Security & Privacy" project settings on sentry.io
+- The `maxSpans` setting (defaults to 1000) is enforced for nested child spans which means a single transaction can have `maxSpans` number of children (nested or not) at most
+
+### Sentry Integrations Version Compatibility
+
+Make sure to align _all_ Sentry dependencies to the same version when bumping the SDK to 7.+, otherwise it will crash at runtime due to binary incompatibility. (E.g. if you're using `-timber`, `-okhttp` or other packages)
+
+For example, if you're using the [Sentry Android Gradle plugin](https://github.com/getsentry/sentry-android-gradle-plugin) with the `autoInstallation` [feature](/platforms/android/configuration/gradle/#auto-installation) (enabled by default), make sure to use version 4.+ of the gradle plugin together with version 7.+ of the SDK. If you can't do that for some reason, you can specify sentry version via the plugin config block:
+
+```kotlin
+sentry {
+  autoInstallation {
+    sentryVersion.set("7.0.0")
+  }
+}
+```
+
+Similarly, if you have a Sentry SDK (e.g. `sentry-android-core`) dependency on one of your Gradle modules and you're updating it to 7.+, make sure the Gradle plugin is at 4.+ or specify the SDK version as shown in the snippet above.
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `7.0.0` of `sentry`, [Sentry's version >= v22.12.0](https://github.com/getsentry/self-hosted/releases) is required to properly ingest transactions with unfinished spans. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
 ## Migrating from `io.sentry:sentry-android 6.14.x` to `io.sentry:sentry-android 6.15.0`
 
 The `sentry-compose-android` and `sentry-compose` integrations now declare their upstream dependencies as `compileOnly`. Make sure to have the `androidx.navigation:navigation-compose`, `androidx.compose.runtime:runtime`, and `androidx.compose.ui:ui` dependencies on the classpath if you're using those integrations. Otherwise, the application will crash with a `NoClassDefFoundError` exception.
