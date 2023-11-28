@@ -97,7 +97,9 @@ To enable Sentry to group similar resources together, Sentry parameterizes resou
 
 <Note>
 
-We are actively working on improving our parametrization strategies. When grouping improvements are released, you will temporarily see instances of new and old span groups.
+Resource parametrization is still a work-in-progress. As these improvements are made, you will will temporarily see instances of the new and old groupings in your Resource Module.
+
+Let us know of any feedback through Github Issues.
 
 </Note>
 
