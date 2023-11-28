@@ -8,7 +8,7 @@ description: "Learn how integrations enable suspect commits."
 
 <Include name="only-error-issues-note.mdx" />
 
-Suspect commits show you the most recent commit to the code in the first frame of your stack trace. In the suspect commit information, we include the author of the commit and the pull request in which the commit was made.
+Suspect commits show you the most recent commit to the code in your stack trace. In the suspect commit information, we include the author of the commit and the pull request in which the commit was made.
 
 When you've enabled suspect commits, we can tie together issues with the commits made in your code repository, including the following information:
 
@@ -33,7 +33,7 @@ Suspect commits and suggested assignees are then displayed on the **Issue Detail
 
 ## Enable Suspect Commits
 
-In order to see suspect commits, you have to first upload source maps, (or your platform-specific files for mapping transformed source code to the original source). Check out the docs for your [specific platform](/platforms/)) to learn more. Note, that Sentry may not display suspect commits that were committed prior to your integration being set up.
+In order to see suspect commits, you have to first upload source maps, (or your platform-specific files for mapping transformed source code to the original source). Check out the docs for your [specific platform](/platforms/)) to learn more. Note, that Sentry will not display suspect commits for issues that are were created prior to your integration being set up.
 
 ### 1. Connect a Repository Using Integrations
 
@@ -115,6 +115,10 @@ Follow along with the animated gif below to see how to integrate your GitHub acc
   ></iframe>
 </div>
 
+## How It Works
+
+When you have a GitHub/GitLab integariton and valid code mappings, Sentry will look at the stack trace of an issue and and collect all in-app frames. For each in-app frame, Sentry checks the blame info for the exact file and line number. If the most recent commit is less than 1 year old, we consider it a suspect commit.
+
 ## Suspect Commits Without Integrations
 
 You can send us your commit data [manually](/product/releases/associate-commits/) if:
@@ -123,7 +127,7 @@ You can send us your commit data [manually](/product/releases/associate-commits/
 - Your organization doesn't have a GitHub or Gitlab integration.
 - Your integration has gotten disconnected.
 
-Sentry will attempt to find suspect commits via your GitHub or Gitlab integration by default. If this fails and you've set up the manual process, Sentry will fall back to using the release commit data to find suspect commits.
+Sentry will attempt to find suspect commits via your GitHub or GitLab integration by default. If this fails and you've set up the manual process, Sentry will fall back to using the release commit data to find suspect commits.
 
 ## Missing Suspect Commits
 
@@ -131,7 +135,9 @@ There are a few reasons why an issue might not have suspect commits:
 
 - The issue doesn't have a stack trace or doesn't have any in-app frames.
 - The stack trace doesn't have any in-app frames that match the code mappings.
+- The stack trace doesn't have any in-app frames with recent commits (less than 1 year old).
 - The code mappings for the project are incorrect.
+- The issue was created prior to the integration being set up.
 
 ## Limitations
 
