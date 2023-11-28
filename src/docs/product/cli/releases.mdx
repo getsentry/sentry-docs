@@ -148,10 +148,10 @@ sentry-cli releases files "$VERSION" upload /path/to/file '~/file.js'
 For source map upload, a separate command is provided which assists you in uploading and verifying source maps:
 
 ```bash
-sentry-cli releases files "$VERSION" upload-sourcemaps /path/to/sourcemaps
+sentry-cli sourcemaps upload /path/to/sourcemaps
 ```
 
-This command provides a bunch of options and attempts as much auto detection as possible. By default, it will scan the provided path for files and upload them named by their path with a `~/` prefix. It will also attempt to figure out references between minified files and source maps based on the filename. So if you have a file named `foo.min.js` which is a minified JavaScript file and a source map named `foo.min.map` for example, it will send a long a `Sourcemap` header to associate them. This works for files the system can detect a relationship of.
+This command provides several options and attempts as much auto detection as possible. By default, it will scan the provided path for files and upload them named by their path with a `~/` prefix. It will also attempt to figure out references between minified files and source maps based on the filename. So if you have a file named `foo.min.js` which is a minified JavaScript file and a source map named `foo.min.map` for example, it will send a long a `Sourcemap` header to associate them. This works for files the system can detect a relationship of.
 
 By default, `sentry-cli` rewrites source maps before upload:
 
@@ -176,7 +176,7 @@ The following options exist to change the behavior of the upload command:
 `--strip-prefix` / `--strip-common-prefix`
 
 : Unless `--no-rewrite` is specified, this will chop-off a prefix from all sources references inside uploaded source maps. For instance, you can use this to remove a path that is build machine specific. The common prefix version will attempt to automatically guess what the common prefix is and chop that one off automatically.
-This will not modify the uploaded sources paths. To do that, point the `upload` or `upload-sourcemaps` command to a more precise directory instead.
+This will not modify the uploaded sources paths. To do that, point the `sourcemaps upload` command to a more precise directory instead.
 
 `--validate`
 
@@ -202,19 +202,16 @@ Some example usages:
 
 ```bash
 # Rewrite and upload all sourcemaps in /path/to/sourcemaps
-sentry-cli releases files "$VERSION" upload-sourcemaps /path/to/sourcemaps
+sentry-cli sourcemaps upload /path/to/sourcemaps
 
 # Prefix all paths with ~/static/js to match where the sources are hosted online
-sentry-cli releases files "$VERSION" upload-sourcemaps /path/to/sourcemaps \
-    --url-prefix '~/static/js'
+sentry-cli sourcemaps upload /path/to/sourcemaps --url-prefix '~/static/js'
 
 # Remove a common prefix if all source maps are located in a subdirectory
-sentry-cli releases files "$VERSION" upload-sourcemaps /path/to/sourcemaps \
-    --url-prefix '~/static/js' --strip-common-prefix
+sentry-cli sourcemaps upload /path/to/sourcemaps --url-prefix '~/static/js' --strip-common-prefix
 
 # Omit all files specified in .sentryignore
-sentry-cli releases files "$VERSION" upload-sourcemaps /path/to/sourcemaps \
-    --ignore-file .sentryignore
+sentry-cli sourcemaps upload /path/to/sourcemaps --ignore-file .sentryignore
 ```
 
 ### List Files
