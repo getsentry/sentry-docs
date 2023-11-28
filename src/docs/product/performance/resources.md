@@ -95,6 +95,12 @@ To view more details, click on a resource from the table to open its **Resource 
 
 To enable Sentry to group similar resources together, Sentry parameterizes resource URLs, removing potenially dynamic elements. This helps track the performance of a particular resource across different releases, even when they have dynamic segments (used for busting caches or CDNS).
 
+<Note>
+
+We are actively working on improving our parametrization strategies. When grouping improvements are released, you will temporarily see instances of new and old span groups.
+
+</Note>
+
 To see an example of resource URL from a group, hover over a URL in the resource table.
 
 ## Resource Summary Page
