@@ -100,6 +100,7 @@ To enable Sentry to group similar resources together, Sentry parameterizes resou
 Resource parametrization is still a work-in-progress. As these improvements are made, you will will temporarily see instances of the new and old groupings in your Resource Module.
 
 Let us know of any feedback through Github Issues.
+
 </Note>
 
 To see an example of resource URL from a group, hover over a URL in the resource table.
