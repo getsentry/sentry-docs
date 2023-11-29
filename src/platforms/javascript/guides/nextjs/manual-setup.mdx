@@ -102,7 +102,61 @@ You can include your DSN directly in these three files, or provide it in either 
 
 ## Report React Component Render Errors
 
-Next, you should create a [Custom Next.js Error Page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) and call `captureUnderscoreErrorException` in your Error Page's `getInitialProps` method to capture React rendering errors:
+To capture React render errors you need to add Error components for the App Router and the Pages Router respectively.
+
+### React Render Errors in App Router
+
+Create a [Custom Next.js Global Error component](https://nextjs.org/docs/app/building-your-application/routing/error-handling) for the App router:
+
+```tsx {filename:global-error.tsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }: { error: Error }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        {/* This is the default Next.js error component but it doesn't allow omitting the statusCode property yet. */}
+        <Error statusCode={undefined as any} />
+      </body>
+    </html>
+  );
+}
+```
+
+```jsx {filename:global-error.jsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        {/* This is the default Next.js error component. */}
+        <Error />
+      </body>
+    </html>
+  );
+}
+```
+
+### React Render Errors in Pages Router
+
+Create a [Custom Next.js Error Page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) and call `captureUnderscoreErrorException` in your Error Page's `getInitialProps` method:
 
 ```TypeScript {filename:_error.tsx}
 import * as Sentry from "@sentry/nextjs";
