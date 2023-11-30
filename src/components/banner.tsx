@@ -7,7 +7,7 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Join our live workshop: Improve Web Browser Performance - Identify and Fix Javascript Slowdowns on Dec. 14th. .';
+  'Join our live workshop: Improve Web Browser Performance - Identify and Fix Javascript Slowdowns on Dec. 14th.';
 const BANNER_LINK_URL =
   'https://sentry.io/resources/improve-web-browser-performance-find-the-javascript-code-causing-slowdowns/?promo_name=from-docs';
 const BANNER_LINK_TEXT = 'Sign up.';
