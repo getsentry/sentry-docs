@@ -24,7 +24,7 @@ const query = graphql`
   }
 `;
 
-export function JsCdnTag({tracing = false, name = ''}: Props): JSX.Element {
+export function JsCdnTag({tracing = false, name = ''}: Props) {
   const {package: packageData} = useStaticQuery(query);
 
   const bundleName = tracing ? 'bundle.tracing.min.js' : name || 'bundle.min.js';

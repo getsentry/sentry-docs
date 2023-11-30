@@ -9,7 +9,7 @@ Use the guide on this page if you're using one of the following:
 - JavaScript SDK version `7.46.0` or lower
 - `@sentry/webpack-plugin` package version `1.x` or lower
 - `sentry-cli` version `2.16.1` or lower
-- Sentry self-hosted or single-tenant on version `23.4.0` or lower
+- Sentry self-hosted or single-tenant on version `23.6.1` or lower
 
 If all of your Sentry dependencies are on more up-to-date versions than in the list above, we recommend using the regular <PlatformLink to="/sourcemaps">Source Maps</PlatformLink> guide.
 
@@ -18,7 +18,7 @@ If you're using one or more of these older versions of the tools, you can still 
 To use this guide, scroll down to the section that corresponds to the tooling you're using, and follow the steps in that section:
 
 - `sentry-cli`
-- Sentry Webpack Plugin Version 1.x
+- Sentry webpack plugin Version 1.x
 - Sentry Bundler Plugins on Version 2.x
 
 The final "[Verify Artifacts Were Uploaded](#verify-artifacts-were-uploaded)" section applies to each type of tooling.
@@ -55,9 +55,11 @@ sentry-cli sourcemaps upload --release=<release_name> /path/to/directory
 
 ## Uploading using Sentry Webpack Plugin Version 1.x
 
-Assuming you have the `@sentry/webpack` package installed on version `1.x`, you can learn more on how to configure the plugin in the [Sentry Webpack Plugin v1 documentation](https://github.com/getsentry/sentry-webpack-plugin#readme).
+Assuming you have the `@sentry/webpack` package installed on version `1.x`, you can learn more on how to configure the plugin in the [Sentry webpack plugin v1 documentation](https://github.com/getsentry/sentry-webpack-plugin#readme).
 
 Example:
+
+<SignInNote />
 
 ```javascript {filename:webpack.config.js}
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
@@ -74,8 +76,8 @@ module.exports = {
       // Specify the directory containing build artifacts
       include: "./dist",
 
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-      // and needs the `project:releases` and `org:read` scopes
+      // Auth tokens can be obtained from
+      // https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/
       authToken: process.env.SENTRY_AUTH_TOKEN,
 
       // Optionally uncomment the line below to override automatic release name detection
@@ -85,7 +87,9 @@ module.exports = {
 };
 ```
 
-The Sentry Webpack plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
+The Sentry webpack plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
+
+<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -100,7 +104,7 @@ Sentry.init({
 
 ## Uploading using Sentry Bundler Plugins on Version `2.x`
 
-If you are using a Sentry self-hosted or single-tenant on version `23.4.0` or lower, or you are using the Sentry JavaScript SDK on version `7.46.0` you will need to configure the bundler plugins with the `release.uploadLegacySourcemaps` option.
+If you are using a Sentry self-hosted or single-tenant on version `23.6.1` or lower, or you are using the Sentry JavaScript SDK on version `7.46.0` you will need to configure the bundler plugins with the `release.uploadLegacySourcemaps` option.
 
 This applies when using the following packages on version `2.x` and above:
 
@@ -110,6 +114,8 @@ This applies when using the following packages on version `2.x` and above:
 - `@sentry/rollup-plugin`
 
 Example of using the `release.uploadLegacySourcemaps` option:
+
+<SignInNote />
 
 ```javascript {filename:webpack.config.js} {tabTitle:Webpack}
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
@@ -123,7 +129,7 @@ module.exports = {
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // Auth tokens can be obtained from your User Settings
       // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
 
@@ -153,8 +159,8 @@ export default defineConfig({
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
 
-        // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-        // and need `project:releases` and `org:read` scopes
+      // Auth tokens can be obtained from your User Settings
+      // and need `project:releases` and `org:read` scopes
         authToken: process.env.SENTRY_AUTH_TOKEN,
 
         release: {
@@ -180,7 +186,7 @@ require("esbuild").build({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // Auth tokens can be obtained from your User Settings
       // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
 
@@ -205,7 +211,7 @@ export default {
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
 
-      // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+      // Auth tokens can be obtained from your User Settings
       // and need `project:releases` and `org:read` scopes
       authToken: process.env.SENTRY_AUTH_TOKEN,
 
@@ -224,6 +230,8 @@ export default {
 ```
 
 The Sentry bundler plugins will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release.name` option exactly:
+
+<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -298,7 +306,7 @@ To verify that the distribution has been set correctly in the SDK, open an issue
 
 If you've uploaded source maps and they aren't applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we're attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
-If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={["node"]}><PlatformLink to="/configuration/integrations/plugin/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={["node"]}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
+If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={["node"]}><PlatformLink to="/configuration/integrations/rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={["node"]}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
 
 #### Using sentry-cli
 
@@ -473,7 +481,7 @@ The Sentry API currently only works with source maps and source files that are u
 
 If you are using `sentry-cli` to upload your artifacts, starting with version `2.4.0` you can add the `--decompress` flag to your `sourcemaps upload` or `files upload` commands.
 
-Sometimes build scripts and plugins produce pre-compressed minified files (for example, Webpack's [compression plugin](https://github.com/webpack/compression-webpack-plugin)). In these cases, you'll need to disable such plugins and perform the compression **after** the generated source maps/source files have been uploaded to Sentry.
+Sometimes build scripts and plugins produce pre-compressed minified files (for example, webpack's [compression plugin](https://github.com/webpack/compression-webpack-plugin)). In these cases, you'll need to disable such plugins and perform the compression **after** the generated source maps/source files have been uploaded to Sentry.
 
 ### Verify workers are sharing the same volume as web (if running self-hosted Sentry via Docker)
 

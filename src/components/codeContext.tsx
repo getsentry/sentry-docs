@@ -1,4 +1,5 @@
-import {createContext, useEffect, useState} from 'react';
+import React, {createContext, useEffect, useState} from 'react';
+import Cookies from 'js-cookie';
 
 type ProjectCodeKeywords = {
   API_URL: string;
@@ -16,8 +17,14 @@ type ProjectCodeKeywords = {
   title: string;
 };
 
+type UserCodeKeywords = {
+  ID: number;
+  NAME: string;
+};
+
 type CodeKeywords = {
   PROJECT: ProjectCodeKeywords[];
+  USER: UserCodeKeywords | undefined;
 };
 
 type Dsn = {
@@ -31,17 +38,33 @@ type Dsn = {
 type ProjectApiResult = {
   dsn: string;
   dsnPublic: string;
-  id: string;
-  organizationId: string;
+  id: number;
+  name: string;
+  organizationId: number;
+  organizationName: string;
   organizationSlug: string;
+  projectName: string;
   projectSlug: string;
-  slug: string;
+  publicKey: string;
+  secretKey: string;
+};
+
+type UserApiResult = {
+  avatarUrl: string;
+  id: number;
+  isAuthenticated: boolean;
+  name: string;
+};
+
+type Region = {
+  name: string;
+  url: string;
 };
 
 // only fetch them once
-let cachedCodeKeywords = null;
+let cachedCodeKeywords: CodeKeywords | null = null;
 
-const DEFAULTS: CodeKeywords = {
+export const DEFAULTS: CodeKeywords = {
   PROJECT: [
     {
       DSN: 'https://examplePublicKey@o0.ingest.sentry.io/0',
@@ -60,18 +83,27 @@ const DEFAULTS: CodeKeywords = {
       title: `example-org / example-project`,
     },
   ],
+  USER: undefined,
 };
 
 type CodeContextType = {
   codeKeywords: CodeKeywords;
-  sharedCodeSelection: any;
-  sharedKeywordSelection: any;
+  isLoading: boolean;
+  sharedCodeSelection: [string | null, React.Dispatch<string | null>];
+  sharedKeywordSelection: [
+    Record<string, number>,
+    React.Dispatch<Record<string, number>>
+  ];
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
 
-const parseDsn = function (dsn: string): Dsn {
+function parseDsn(dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
+
+  if (match === null) {
+    throw new Error('Failed to parse DSN');
+  }
 
   return {
     scheme: match[1],
@@ -80,7 +112,7 @@ const parseDsn = function (dsn: string): Dsn {
     host: escape(match[4]),
     pathname: escape(match[5]),
   };
-};
+}
 
 const formatMinidumpURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/minidump/?sentry_key=${publicKey}`;
@@ -96,36 +128,70 @@ const formatApiUrl = ({scheme, host}: Dsn) => {
   return `${scheme}${apiHost}/api`;
 };
 
+function getHost(): string {
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://dev.getsentry.net:8000';
+  }
+  return 'https://sentry.io';
+}
+
+function makeDefaults() {
+  // eslint-disable-next-line no-console
+  console.warn('Unable to fetch codeContext - using defaults.');
+  return DEFAULTS;
+}
+
 /**
  * Fetch project details from sentry
  */
-export async function fetchCodeKeywords() {
-  let json: {projects: ProjectApiResult[]} | null = null;
-
-  const url =
-    process.env.NODE_ENV === 'development'
-      ? 'http://dev.getsentry.net:8000/docs/api/user/'
-      : 'https://sentry.io/docs/api/user/';
-
-  const makeDefaults = () => {
-    // eslint-disable-next-line no-console
-    console.warn('Unable to fetch codeContext - using defaults.');
-    return DEFAULTS;
+export async function fetchCodeKeywords(): Promise<CodeKeywords> {
+  let json: {projects: ProjectApiResult[]; user: UserApiResult} = {
+    projects: [],
+    user: null,
   };
 
+  // First fetch which regions the user has a presence
+  const url = `${getHost()}/api/0/users/me/regions/`;
+  let regions: Region[] = [];
   try {
     const resp = await fetch(url, {credentials: 'include'});
-
     if (!resp.ok) {
       return makeDefaults();
     }
-
-    json = await resp.json();
-  } catch {
+    const data = await resp.json();
+    if (data.regions) {
+      regions = data.regions;
+    }
+  } catch (e) {
     return makeDefaults();
   }
 
-  const {projects} = json;
+  // Then fetch the project configuration for each region, and merge it together.
+  const results = await Promise.all(
+    regions.map(async region => {
+      const regionUrl = `${region.url}/docs/api/user/`;
+      try {
+        const resp = await fetch(regionUrl, {credentials: 'include'});
+        if (!resp.ok) {
+          return makeDefaults();
+        }
+        return resp.json();
+      } catch (e) {
+        return makeDefaults();
+      }
+    })
+  );
+  json = results.reduce((acc, item) => {
+    if (item.projects) {
+      acc.projects = acc.projects.concat(item.projects);
+    }
+    if (item.user) {
+      acc.user = item.user;
+    }
+    return acc;
+  }, json);
+
+  const {projects, user} = json;
 
   if (projects?.length === 0) {
     return makeDefaults();
@@ -138,7 +204,7 @@ export async function fetchCodeKeywords() {
         DSN: project.dsn,
         PUBLIC_DSN: project.dsnPublic,
         PUBLIC_KEY: parsedDsn.publicKey,
-        SECRET_KEY: parsedDsn.secretKey,
+        SECRET_KEY: parsedDsn.secretKey ?? 'exampleSecretKey',
         API_URL: formatApiUrl(parsedDsn),
         PROJECT_ID: project.id,
         PROJECT_SLUG: project.projectSlug,
@@ -150,24 +216,99 @@ export async function fetchCodeKeywords() {
         title: `${project.organizationSlug} / ${project.projectSlug}`,
       };
     }),
+    USER: user.isAuthenticated
+      ? {
+          ID: user.id,
+          NAME: user.name,
+        }
+      : undefined,
   };
 }
 
-export function useCodeContextState(fetcher = fetchCodeKeywords) {
+function getCsrfToken(): string {
+  // is sentry-sc in production, but may also be sc in other envs
+  // So we just try both variants
+  const cookieNames = ['sentry-sc', 'sc'];
+
+  const value = cookieNames
+    .map(cookieName => Cookies.get(cookieName))
+    .find(token => token !== null);
+
+  return value ?? '';
+}
+
+export async function createOrgAuthToken({
+  orgSlug,
+  name,
+}: {
+  name: string;
+  orgSlug: string;
+}): Promise<string | null> {
+  const url = `${getHost()}/api/0/organizations/${orgSlug}/org-auth-tokens/`;
+
+  const body = {name};
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json; charset=utf-8',
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+    });
+
+    if (!resp.ok) {
+      return null;
+    }
+
+    const json = await resp.json();
+
+    return json.token;
+  } catch {
+    return null;
+  }
+}
+
+export function CodeContextProvider({children}: {children: React.ReactNode}) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
+
+  const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
-      fetcher().then((config: CodeKeywords) => {
+      setIsLoading(true);
+      fetchCodeKeywords().then((config: CodeKeywords) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
+        setIsLoading(false);
       });
     }
-  });
+  }, [setIsLoading, setCodeKeywords]);
 
-  return {
+  // sharedKeywordSelection maintains a global mapping for each "keyword"
+  // namespace to the index of the selected item.
+  //
+  // NOTE: This ONLY does anything for the `PROJECT` keyword namespace, since
+  // that is the only namespace that actually has a list
+  const sharedKeywordSelection = useState<Record<string, number>>({});
+
+  // Maintains the global selection for which code block tab is selected
+  const sharedCodeSelection = useState<string | null>(null);
+
+  const result: CodeContextType = {
     codeKeywords,
-    sharedCodeSelection: useState(null),
-    sharedKeywordSelection: useState({}),
+    sharedCodeSelection,
+    sharedKeywordSelection,
+    isLoading,
   };
+
+  return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;
+}
+
+/** For tests only. */
+export function _setCachedCodeKeywords(codeKeywords: CodeKeywords) {
+  cachedCodeKeywords = codeKeywords;
 }

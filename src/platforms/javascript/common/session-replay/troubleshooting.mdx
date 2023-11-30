@@ -29,6 +29,8 @@ There's currently no support for `canvas`. It's being tracked in this [GitHub is
 
 The replay 'video' is actually a video-like reproduction of the HTML on your website. This means that all the external resources your site uses (CSS/Images/Fonts), will be rendered by the corresponding &lt;style&gt;, &lt;img&gt; and &lt;video&gt; tags on your site. Add `sentry.io` to your CORS policy so the iframe hosted on sentry.io can fetch and display these resources.
 
+Note that only static, publicly hosted videos (for example, `src="./my-video.mp4"`) can be captured by Replay. Streamed videos and similar are not supported.
+
 <Alert>
 
 Due to [browser limitations](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use), SVGs containing `<use>` tags with links to your domain cannot be accessed from other origins, even if you add `sentry.io` to your CORS policy. This is a known issue and we are working on a solution.
@@ -54,7 +56,13 @@ To mitigate these problems, SDK version 7.54.0 will [truncate console messages](
 
 If you're having any problems with the latest SDK version, we want to hear about it. Please open a [GitHub issue](https://github.com/getsentry/sentry-javascript/issues/new?assignees=&labels=Type%3A+Bug&projects=&template=bug.yml) and describe your situation.
 
-## I see the message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."
+## Using Session Replay Increases the Bundle Size of My Application.
+
+Because of the complexity of the browser environment, there's a significant amount of code necessary in order for Session Replay to work. And while enabling Session Replay will add about 50 kb (gzipped) to your application bundle, we believe the benefits will outweigh the cost.
+
+We're always working on ways to reduce the bundle size. Additionally, there are steps you can take in order to reduce the size of Session Replay based on your specific use case. See [Tree Shaking](../../configuration/tree-shaking/) for more information.
+
+## I See the Message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."
 
 The Sentry SDK attempts to minimize potential [performance overhead](/product/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
 

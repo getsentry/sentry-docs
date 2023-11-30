@@ -1,9 +1,9 @@
-import React, {forwardRef, Fragment, useRef} from 'react';
+import React, {Fragment, useState} from 'react';
 
 import {getCurrentTransaction} from '../utils';
 
 import {Banner} from './banner';
-import {CodeContext, useCodeContextState} from './codeContext';
+import {CodeContextProvider} from './codeContext';
 import {GitHubCTA} from './githubCta';
 import {Layout} from './layout';
 import {SEO} from './seo';
@@ -20,18 +20,9 @@ export type PageContext = {
   title?: string;
 };
 
-type WrappedTOCProps = {
-  pageContext: PageContext;
-};
-
-const WrappedTOC = forwardRef(
-  (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
-    return <TableOfContents {...props} contentRef={ref} />;
-  }
-);
-
 type Props = {
-  children?: JSX.Element;
+  slug: string;
+  children?: React.ReactNode;
   data?: {
     file?: {
       [key: string]: any;
@@ -44,9 +35,9 @@ type Props = {
     notoc?: boolean;
     title?: string;
   };
-  prependToc?: JSX.Element;
+  prependToc?: React.ReactNode;
   seoTitle?: string;
-  sidebar?: JSX.Element;
+  sidebar?: React.ReactNode;
 };
 
 export function BasePage({
@@ -56,7 +47,8 @@ export function BasePage({
   sidebar,
   children,
   prependToc,
-}: Props): JSX.Element {
+  slug,
+}: Props) {
   const tx = getCurrentTransaction();
   if (tx) {
     tx.setStatus('ok');
@@ -65,7 +57,7 @@ export function BasePage({
   const {title, excerpt, description} = pageContext;
   const hasToc = !pageContext.notoc;
 
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentElement, setContentElement] = useState<HTMLElement | null>(null);
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : '');
 
@@ -74,9 +66,10 @@ export function BasePage({
     // totally different
     <Layout {...{sidebar, pageContext}}>
       <SEO
-        title={seoTitle || title}
+        title={seoTitle ?? title ?? 'Sentry Docs'}
         description={pageDescription}
         noindex={pageContext.noindex}
+        slug={slug}
       />
 
       <div className="row">
@@ -86,10 +79,8 @@ export function BasePage({
           }
         >
           <h1 className="mb-3">{title}</h1>
-          <div id="main" ref={contentRef}>
-            <CodeContext.Provider value={useCodeContextState()}>
-              {children}
-            </CodeContext.Provider>
+          <div id="main" ref={setContentElement}>
+            <CodeContextProvider>{children}</CodeContextProvider>
 
             {file && (
               <GitHubCTA
@@ -105,7 +96,9 @@ export function BasePage({
               <Banner isModule />
               <Fragment>
                 {prependToc}
-                {hasToc && <WrappedTOC ref={contentRef} pageContext={pageContext} />}
+                {hasToc && contentElement && (
+                  <TableOfContents content={contentElement} pageContext={pageContext} />
+                )}
               </Fragment>
             </div>
           </div>

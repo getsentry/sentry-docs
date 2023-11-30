@@ -1,17 +1,18 @@
-import PlatformRegistry from '../../shared/platformRegistry';
+import {SourceNodesArgs} from 'gatsby';
+
+import {buildPlatformRegistry} from '../../shared/platformRegistry';
 
 export const sourcePlatformNodes = async ({
   actions,
   reporter,
   createNodeId,
   createContentDigest,
-}) => {
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
-  const platformRegistry = new PlatformRegistry();
-  await platformRegistry.init();
+  const {platforms} = await buildPlatformRegistry();
 
-  platformRegistry.platforms.forEach(platform => {
+  platforms.forEach(platform => {
     reporter.info(`Registering platform ${platform.name}`);
     const content = JSON.stringify(platform);
     const nodeMeta = {

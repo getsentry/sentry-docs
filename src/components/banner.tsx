@@ -7,10 +7,9 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = false;
 const BANNER_TEXT =
-  'Join us on May 30th at 10am PT for a 20-minute session on frontend error monitoring with Sentry.';
-const BANNER_LINK_URL =
-  'https://sentry.io/resources/livestream-ama-frontend-error-monitoring-101/?utm_medium=banner&utm_source=sentry-app&utm_campaign=frontend-error-webinar-may&utm_content=docs-banner';
-const BANNER_LINK_TEXT = 'Register now.';
+  'Discover all our latest product releases during Sentry Launch Week, coming Nov 13-17.';
+const BANNER_LINK_URL = 'https://sentry.io/events/launch-week/';
+const BANNER_LINK_TEXT = 'Tune In Daily';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //

@@ -1,0 +1,182 @@
+---
+title: Custom Instrumentation
+sidebar_order: 20
+description: "Learn how to capture performance data on any action in your app."
+---
+
+The Sentry SDK for Python does a very good job of auto instrumenting your application. If you use one of the popular frameworks, we've got you covered because everything is instrumented out of the box. The Sentry SDK will check your installed Python packages and auto enable the matching SDK integrations.
+
+## Add a Transaction
+
+Adding transactions will allow you to instrument and capture certain regions of your code.
+
+<Note>
+
+If you're using one of Sentry's SDK integrations, transactions will be created for you automatically.
+
+</Note>
+
+The following example creates a transaction for an expensive operation (in this case,`eat_pizza`), and then sends the result to Sentry:
+
+```python
+import sentry_sdk
+
+def eat_slice(slice):
+    ...
+
+def eat_pizza(pizza):
+    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
+        while pizza.slices > 0:
+            eat_slice(pizza.slices.pop())
+```
+
+## Add Spans to a Transaction
+
+If you want to have more fine-grained performance monitoring, you can add child spans to your transaction, which can be done by either:
+
+- Using a context manager or
+- Using a decorator, (this works on sync and `async` functions)
+
+Calling a `sentry_sdk.start_span()` will find the current active transaction and attach the span to it.
+
+### Using a Context Manager
+
+```python
+import sentry_sdk
+
+def eat_slice(slice):
+    ...
+
+def eat_pizza(pizza):
+    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
+        while pizza.slices > 0:
+            with sentry_sdk.start_span(description="Eat Slice"):
+                eat_slice(pizza.slices.pop())
+
+```
+
+### Using a Decorator
+
+```python
+import sentry_sdk
+
+@sentry_sdk.trace
+def eat_slice(slice):
+    ...
+
+def eat_pizza(pizza):
+    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
+        while pizza.slices > 0:
+            eat_slice(pizza.slices.pop())
+
+```
+
+## Nested Spans
+
+Spans can be nested to form a span tree. If you'd like to learn more, read our [distributed tracing](/product/sentry-basics/tracing/distributed-tracing/) documentation.
+
+### Using a Context Manager
+
+```python
+import sentry_sdk
+
+def chew():
+    ...
+
+def swallow():
+    ...
+
+def eat_slice(slice):
+    with sentry_sdk.start_span(description="Eat Slice"):
+        with sentry_sdk.start_span(description="Chew"):
+            chew()
+        with sentry_sdk.start_span(description="Swallow"):
+            swallow()
+
+```
+
+### Using a Decorator
+
+```python
+import sentry_sdk
+
+@sentry_sdk.trace
+def chew():
+    ...
+
+@sentry_sdk.trace
+def swallow():
+    ...
+
+@sentry_sdk.trace
+def eat_slice(slice):
+    chew()
+    swallow()
+```
+
+## Define Span Creation in a Central Place
+
+To avoid having custom performance instrumentation code scattered all over your code base, pass a parameter <PlatformIdentifier name="functions-to-trace" /> to your `sentry_sdk.init()` call.
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+functions_to_trace = [
+    {"qualified_name": "myrootmodule.eat_slice"},
+    {"qualified_name": "myrootmodule.swallow"},
+    {"qualified_name": "myrootmodule.chew"},
+    {"qualified_name": "myrootmodule.someothermodule.another.some_function"},
+    {"qualified_name": "myrootmodule.SomePizzaClass.some_method"},
+]
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    functions_to_trace=functions_to_trace,
+)
+```
+
+Now, whenever a function specified in `functions_to_trace` will be executed, a span will be created and attached as a child to the currently running span.
+
+<Alert level="warning" title="Important">
+
+To enable performance monitoring for the functions specified in `functions_to_trace`, the SDK needs to load the function modules. Be aware, there may be code being executed in modules during module loading. To avoid this, use the method described above to trace your functions.
+
+</Alert>
+
+## Accessing the Current Transaction
+
+To change data in an already ongoing transaction, use `Hub.current.scope.transaction`. This property will return a transaction if there's one running, otherwise it will return `None`.
+
+```python
+import sentry_sdk
+
+def eat_pizza(pizza):
+    transaction = sentry_sdk.Hub.current.scope.transaction
+
+    if transaction is not None:
+        transaction.set_tag("num_of_slices", len(pizza.slices))
+
+    while pizza.slices > 0:
+        eat_slice(pizza.slices.pop())
+```
+
+## Accessing the Current Span
+
+To change data in the current span, use `sentry_sdk.Hub.current.scope.span`. This property will return a span if there's one running, otherwise it will return `None`.
+
+In this example, we'll set a tag in the span created by the `@sentry_sdk.trace` decorator.
+
+```python
+import sentry_sdk
+
+@sentry_sdk.trace
+def eat_slice(slice):
+    span = sentry_sdk.Hub.current.scope.span
+
+    if span is not None:
+        span.set_tag("slice_id", slice.id)
+
+    ...
+```

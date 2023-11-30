@@ -1,8 +1,34 @@
 ---
-title: Manual Initialization
+title: Manual Configuration
 sidebar_order: 20
+redirect_from:
+  - /platforms/android/manual-configuration/
 description: "Learn how to initialize the SDK manually when you need to provide additional configuration."
 ---
+
+## Manual Installation
+
+If you don't want the Sentry Gradle plugin to install the Sentry SDK automatically, you can define the dependency directly in the `build.gradle` file of your app module.
+
+```groovy {filename:app/build.gradle}
+dependencies {
+    implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}'
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+dependencies {
+    implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}")
+}
+```
+
+<Note>
+
+The [NDK integration](/platforms/android/using-ndk/) comes packaged with the SDK and requires API level 16, though other levels are supported. If you're using multiple Sentry dependencies, you can add a [bill of materials](/platforms/android/configuration/bill-of-materials) to avoid specifying the version of each dependency.
+
+</Note>
+
+## Manual Initialization
 
 Initialize the SDK manually when you need to provide additional configuration to the SDK that cannot be specified in the manifest.
 
@@ -35,6 +61,8 @@ The next step is to initialize the SDK directly in your code.
 The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance your Application class right after the application is created. If you don't have a custom Application class yet, [checkout the official docs on how to create one](https://developer.android.com/reference/android/app/Application).
 
 Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
+
+<SignInNote />
 
 ```java
 import io.sentry.SentryLevel;

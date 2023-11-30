@@ -11,7 +11,7 @@ const store = createStore(
 
 <Alert level="info" title="Note">
 
-Because Sentry uses a redux **enhancer**, you should pass it as indicated above rather than passing it to`applyMiddleware`. Don't call the method when you pass it to `createStore`.
+Because Sentry uses a redux **enhancer**, you should pass it as indicated above rather than passing it to `applyMiddleware`. Don't call the method when you pass it to `createStore`.
 
 </Alert>
 
@@ -19,9 +19,11 @@ Because Sentry uses a redux **enhancer**, you should pass it as indicated above 
 
 By default, Sentry SDKs normalize any context to a depth of 3. You may want to increase this for sending Redux states by passing `normalizeDepth` to the `Sentry.init` call:
 
+<SignInNote />
+
 ```javascript
 Sentry.init({
-  dsn: "___DSN___",
+  dsn: "___PUBLIC_DSN___",
   normalizeDepth: 10, // Or however deep you want your state context to be.
 });
 ```
@@ -103,5 +105,17 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
       scope.setTag("user.usesImperialUnits", true);
     }
   },
+});
+```
+
+`attachReduxState` (Boolean)
+
+_(Available in version 7.69.0 and above)_
+
+This is `true` by default. It attaches a file `redux_state.json` with Redux state to all error events sent to Sentry. It is beneficial where Redux states are too big. If the `stateTransformer` function is provided, it will attach the transformed state. If you don't want to attach the state to error events, set this to `false`.
+
+```javascript
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  attachReduxState: false,
 });
 ```

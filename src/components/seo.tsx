@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import {graphql, StaticQuery} from 'gatsby';
+import {graphql, useStaticQuery} from 'gatsby';
 
 const detailsQuery = graphql`
   query DefaultSEOQuery {
@@ -16,6 +16,7 @@ const detailsQuery = graphql`
 `;
 
 type Props = {
+  slug: string;
   title: string;
   description?: string;
   keywords?: string[];
@@ -45,8 +46,15 @@ export function BaseSEO({
   keywords = [],
   title,
   noindex,
-}: ChildProps): JSX.Element {
+  slug,
+}: ChildProps) {
   const metaDescription = description || data.site.siteMetadata.description;
+
+  // slug === '' is the homepage and a valid value
+  const canonical =
+    data.site.siteMetadata.sitePath && (slug || slug === '')
+      ? `https://${data.site.siteMetadata.sitePath}/${slug}`
+      : false;
 
   return (
     <Helmet
@@ -123,15 +131,14 @@ export function BaseSEO({
             : []
         )
         .concat(meta)}
-    />
+    >
+      {canonical && <link rel="canonical" href={canonical} />}
+    </Helmet>
   );
 }
 
-export function SEO(props: Props): JSX.Element {
-  return (
-    <StaticQuery
-      query={detailsQuery}
-      render={data => <BaseSEO data={data} {...props} />}
-    />
-  );
+export function SEO(props: Props) {
+  const data = useStaticQuery(detailsQuery);
+
+  return <BaseSEO data={data} {...props} />;
 }

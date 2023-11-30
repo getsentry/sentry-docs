@@ -62,7 +62,7 @@ function Metric({metric}) {
   );
 }
 
-export function RelayMetrics(): JSX.Element {
+export function RelayMetrics() {
   const data = useStaticQuery(query);
   const metrics = data.allRelayMetric.nodes;
 

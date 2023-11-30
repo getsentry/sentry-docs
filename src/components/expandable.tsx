@@ -22,7 +22,7 @@ const ExpandableBody = styled.div<ExpandedProps>`
   display: ${props => (props.isExpanded ? 'block' : 'none')};
 `;
 
-export function Expandable({title, children}: Props): JSX.Element {
+export function Expandable({title, children}: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   return (
     <div className="note">

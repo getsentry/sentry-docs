@@ -18,7 +18,7 @@ When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sam
 
 If `replaysOnErrorSampleRate > 0`, we'll start recording in buffering mode and keep checking `replaysOnErrorSampleRate` whenever an error occurs. Once we see that it's sampled, we'll upload the Replay to Sentry and continue recording normally.
 
-If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-recording">record manually</PlatformLink>.
+If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">record manually</PlatformLink>.
 
 ## Session Mode
 
@@ -53,15 +53,16 @@ async function init(sessionSampleRate, errorSampleRate) {
 You can manually start a Replay session with:
 
 ```javascript
-// This initializes Replay without starting any session
-const replay = new Sentry.Replay();
-
 Sentry.init({
   dsn: "...",
+  // This initializes Replay without starting any session
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
-  integrations: [replay],
+  integrations: [new Sentry.Replay()],
 });
+
+// You can access the active replay instance from anywhere in your code like this:
+const replay = Sentry.getCurrentHub().getIntegration(Sentry.Replay);
 
 // This starts in `session` mode, regardless of sample rates
 replay.start();
@@ -93,3 +94,96 @@ await replay.flush();
 ```
 
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
+
+Note that it's safe to call `flush()` at any time, even if Session Replay is stopped, in which case, it will do nothing.
+
+## Examples of Custom Sampling
+
+There are ways to enable custom sampling if you're interested in tracking a particular action or group, for example, a specific segment of users or a problematic URL.
+
+### Replays for Specific Users
+
+You can set up replays to be recorded automatically for a particular user group. Here's an example where we want to record session-based replays for all users who are employees. The `user` object has an `isEmployee` field to signal employee status.
+
+```javascript
+const replay = new Sentry.Replay();
+
+/**
+ * Initialize the Sentry SDK as normal.
+ *
+ * `replaysSessionSampleRate` is set to its default value of "0.1" so that only ~10% of users are sampled
+ * `replaysOnErrorSampleRate` is set to its default value of "1.0" to always record a replay when an error occurs
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [replay],
+});
+
+// ...
+// After a user has been authenticated, check if they're an employee
+// If they are, we'll call `replay.flush()` to either flush the replay as normal if it's a session-based replay, or if it's buffering due to error sampling, the flush will send the first segment of the replay.
+
+// Since `replaysOnErrorSampleRate` is > 0, we know that a replay has been buffered and `flush()` will flush the contents of that buffer. If only `replaysSessionSampleRate` is > 1, then there is a chance that a replay has not been recording/buffering.
+// In this case, you can check that `replay.getReplayId()` returns a value, if it does, it means replay is active and you can call `replay.flush()`, other call `replay.start()` to start recording a new replay.
+// ...
+
+// Check if user is an employee, if so, always record a replay
+if (loggedInUser.isEmployee) {
+  // You can get a reference to the Sentry Replay integration like so:
+  const replay = Sentry.getCurrentHub().getIntegration(Sentry.Replay);
+  // or alternatively
+  // const replay = Sentry.getCurrentHub().getClient().getIntegrationById('Replay');
+
+  replay.flush();
+}
+```
+
+### Replays on Specific URLs
+
+You can also choose to record a replay every time a user lands on a specified URL. This can help developers debug problematic pages. To do this, use the [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API), which can listen to navigation events for a specific URL and start the replay recording.
+
+```javascript
+const replay = new Sentry.Replay();
+
+/**
+ * Initialize the Sentry SDK as normal.
+ *
+ * `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are both set to
+ * "0" so that we have manual control over session-based replays
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
+  integrations: [replay],
+});
+
+// Listen to navigation events for when users land on our buggy URL, appropriately named: "/buggy-page/"
+// and then start recording a replay.
+navigation.addEventListener("navigate", (event) => {
+  const url = new URL(event.destination.url);
+
+  if (url.pathname.startsWith("/buggy-page/")) {
+    // User navigates to the buggy page, let's start recording
+    replay.start();
+  }
+});
+```
+
+### Ignore certain Errors for Error Sampling
+
+When using `replaysOnErrorSampleRate`, we "roll the dice" on any Error that is captured & sent to Sentry.
+If you want to skip capturing a Replay for certain errors, you can use the `beforeErrorSampling` callback:
+
+```js
+new Replay({
+  beforeErrorSampling: (error) => {
+    return error.message?.includes("drop me");
+  },
+});
+```
+
+If you return `false` from this method for a given error, we will not check the error sample rate for this error.
+If you return `true`, we will continue to check the error sample rate as normal.

@@ -4,11 +4,11 @@ import {usePlatform} from './hooks/usePlatform';
 import {SmartLink} from './smartLink';
 
 type Props = {
-  children: JSX.Element;
+  children: React.ReactNode;
   to?: string;
 };
 
-export function PlatformLink({children, to}: Props): JSX.Element {
+export function PlatformLink({children, to}: Props) {
   const [currentPlatform] = usePlatform(null);
   let path = currentPlatform ? currentPlatform.url : `/platform-redirect/`;
   if (to) {

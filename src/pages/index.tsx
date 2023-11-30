@@ -10,6 +10,7 @@ import {Search} from 'sentry-docs/components/search';
 import {SEO} from 'sentry-docs/components/seo';
 import {SmartLink} from 'sentry-docs/components/smartLink';
 import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import 'sentry-docs/css/screen.scss';
 
@@ -32,19 +33,21 @@ const HIGHLIGHTED_PLATFORMS = [
   'ruby.rails',
   'flutter',
   'unity',
+  'unreal',
 ];
 
 function IndexPage() {
   const platformList = usePlatformList();
 
   let totalPlatformCount = 0;
-  const visiblePlatforms = [];
+  const visiblePlatforms: Array<Platform | PlatformGuide> = [];
+
   platformList.forEach(platform => {
     totalPlatformCount += 1;
     if (HIGHLIGHTED_PLATFORMS.indexOf(platform.key) !== -1) {
       visiblePlatforms.push(platform);
     }
-    platform.guides.forEach(guide => {
+    platform.guides?.forEach(guide => {
       totalPlatformCount += 1;
       if (HIGHLIGHTED_PLATFORMS.indexOf(guide.key) !== -1) {
         visiblePlatforms.push(guide);
@@ -57,7 +60,7 @@ function IndexPage() {
 
   return (
     <div className="index-wrapper">
-      <SEO title="Sentry Documentation" />
+      <SEO title="Sentry Documentation" slug="" />
       <div className="hero-section">
         <div className="index-container">
           <div className="index-navbar">
@@ -75,6 +78,9 @@ function IndexPage() {
                 <SmartLink className="nav-link" to="/api/">
                   API
                 </SmartLink>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
               </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
@@ -108,17 +114,26 @@ function IndexPage() {
             </Nav>
           </div>
 
-          <h1>Sentry Documentation</h1>
+          <h1>Welcome to Sentry Docs</h1>
+          <center>
+            <p>
+              Sentry is a developer-first error tracking and performance monitoring
+              platform.
+            </p>
+          </center>
 
           <div className="index-search">
             <Search autoFocus />
           </div>
-
           <div className="integrations-logo-row">
             {visiblePlatforms.map(platform => (
               <SmartLink to={platform.url} className="hover-card-link" key={platform.key}>
                 <div className="image-frame">
-                  <PlatformIcon size={48} platform={platform.key} format="lg" />
+                  <PlatformIcon
+                    size={48}
+                    platform={platform.icon ?? platform.key}
+                    format="lg"
+                  />
                 </div>
                 {platform.title}
               </SmartLink>

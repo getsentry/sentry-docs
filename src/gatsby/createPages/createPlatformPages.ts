@@ -3,11 +3,14 @@
 
 import nodePath from 'path';
 
-import {Node} from 'gatsby';
+import {GatsbyNode, Node} from 'gatsby';
 import {createFilePath} from 'gatsby-source-filesystem';
 
-import PlatformRegistry, {Guide, Platform} from '../../shared/platformRegistry';
+import {buildPlatformRegistry} from '../../shared/platformRegistry';
+import {Platform, PlatformGuide} from '../../types';
 import {getChild, getDataOrPanic} from '../helpers';
+
+type CreatePageArgs = Parameters<GatsbyNode['createPages']>[0];
 
 type FileNode = Node & {
   relativePath: string;
@@ -157,7 +160,12 @@ const canInclude = (
   return true;
 };
 
-async function main({actions, graphql, reporter, getNode}) {
+export const createPlatformPages = async ({
+  actions,
+  graphql,
+  reporter,
+  getNode,
+}: CreatePageArgs) => {
   const {
     allFile: {nodes},
   }: {
@@ -214,9 +222,6 @@ async function main({actions, graphql, reporter, getNode}) {
     reporter
   );
 
-  const platformRegistry = new PlatformRegistry();
-  await platformRegistry.init();
-
   // filter out nodes with no markdown content
   const {common, platforms} = buildPlatformPages(
     nodes.filter((n: FileNode) => getChild(n))
@@ -249,7 +254,7 @@ async function main({actions, graphql, reporter, getNode}) {
     });
   };
 
-  const createPlatformPages = (
+  const makePlatformPage = (
     platform: Platform,
     platformData,
     sharedCommon: FileNode[]
@@ -355,7 +360,7 @@ async function main({actions, graphql, reporter, getNode}) {
   const createPlatformGuidePages = (
     platform: Platform,
     platformData,
-    guide: Guide,
+    guide: PlatformGuide,
     guideData,
     sharedCommon: FileNode[],
     sharedContext: {[key: string]: any}
@@ -447,8 +452,10 @@ async function main({actions, graphql, reporter, getNode}) {
     });
   };
 
-  platformRegistry.platforms.forEach(platform => {
-    createPlatformPages(platform, platforms[platform.name], common);
+  const registry = await buildPlatformRegistry();
+
+  registry.platforms.forEach(platform => {
+    makePlatformPage(platform, platforms[platform.name], common);
   });
 
   const indexPage = nodes.find(n => n.relativePath === 'index.mdx');
@@ -463,6 +470,4 @@ async function main({actions, graphql, reporter, getNode}) {
       },
     });
   }
-}
-
-export default main;
+};

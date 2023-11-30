@@ -19,6 +19,9 @@ redirect_from:
   - /platforms/javascript/guides/svelte/configuration/integrations/rrweb/
   - /platforms/javascript/guides/vue/configuration/integrations/rrweb/
   - /platforms/javascript/guides/wasm/configuration/integrations/rrweb/
+  - /platforms/javascript/guides/remix/session-replay/custom-instrumentation/
+  - /platforms/javascript/guides/remix/session-replay/custom-instrumentation/privacy-configuration/
+  - /platforms/javascript/guides/gatsby/session-replay/custom-instrumentation/
 ---
 
 <Include name="feature-stage-beta-session-replay.mdx" />
@@ -43,22 +46,15 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
   </Alert>
 </PlatformSection>
 
-<PlatformSection supported={["javascript.capacitor"]}>
-  <Alert level="warning" title="Warning">
-    Session Replay is generally available for all Browser SDKs. Capacitor
-    support is still in Beta. Feel free to reach{" "}
-    <a href="https://github.com/getsentry/sentry-capacitor/issues/319">
-      out on GitHub
-    </a>{" "}
-    if you experience issues.
-  </Alert>
-</PlatformSection>
-
 ## Install
 
 <PlatformContent includePath="session-replay/install" />
 
 ## Set Up
+
+To set up the integration, add the following to your Sentry initialization. There are several options you can pass to the integration constructor. See the [configuration documentation](/platforms/javascript/session-replay/configuration/) for more details.
+
+<SignInNote />
 
 <PlatformContent includePath="session-replay/setup" />
 
@@ -76,9 +72,12 @@ worker-src 'self' blob:
 child-src 'self' blob:
 ```
 
+If you're unable to update your CSP policy to allow inline web workers, you can also [use a custom compression worker](./configuration#using-a-custom-compression-worker) instead.
+
 ## User Session
 
-A user session starts when the Session Replay SDK is first loaded and initialized. The session will continue until 5 minutes passes without any user interactions with the application **or** until a maximum of 60 minutes have elapsed. Closing the browser tab will end the session immediately, according to the rules for [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+A user session starts when the Session Replay SDK is first loaded and initialized.
+The session will capture any pageloads, refreshes, or navigations as long as the SDK is re-initialized on the same domain, and in the same browser tab, each time. Sessions continue capturing data until 5 minutes pass without any user interactions **or** until a maximum of 60 minutes have elapsed. Closing the browser tab will end the session immediately, according to the rules for [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 
 <Note>
 
@@ -107,7 +106,7 @@ Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-s
 
 Errors that happen on the page while a replay is running will be linked to the replay, making it possible to jump between related issues and replays. However, it's **possible** that in some cases the error count reported on the **Replays Details** page won't match the actual errors that have been captured. That's because errors can be lost, and while this is uncommon, there are a few reasons why it could happen:
 
-- The replay was rate-imited and couldn't be accepted.
+- The replay was rate-limited and couldn't be accepted.
 - The replay was deleted by a member of your org.
 - There were network errors and the replay wasn't saved.
 

@@ -1,18 +1,24 @@
+import {SourceNodesArgs} from 'gatsby';
+
 import getPackageRegistry from '../utils/packageRegistry';
 
-export const sourcePackageRegistryNodes = async ({actions, createContentDigest}) => {
+export const sourcePackageRegistryNodes = async ({
+  actions,
+  createContentDigest,
+}: SourceNodesArgs) => {
   const {createNode} = actions;
 
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
 
-  Object.entries(allSdks).forEach(([sdkName, sdkData]) => {
+  Object.entries(allSdks ?? {}).forEach(([sdkName, sdkData]) => {
     const data = {
       canonical: sdkData.canonical,
       name: sdkData.name,
       version: sdkData.version,
       url: sdkData.package_url,
       repoUrl: sdkData.repo_url,
+      apiDocsUrl: sdkData.api_docs_url,
       files: sdkData.files
         ? Object.entries(sdkData.files).map(([fileName, fileData]: [string, any]) =>
             fileData.checksums
@@ -29,6 +35,7 @@ export const sourcePackageRegistryNodes = async ({actions, createContentDigest})
     };
 
     const content = JSON.stringify(data);
+
     const nodeMeta = {
       id: sdkName,
       parent: null,

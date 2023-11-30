@@ -84,11 +84,7 @@ type ChildrenProps = {
   showDepth?: number;
 };
 
-export function Children({
-  tree,
-  exclude = [],
-  showDepth = 0,
-}: ChildrenProps): JSX.Element {
+export function Children({tree, exclude = [], showDepth = 0}: ChildrenProps) {
   return <React.Fragment>{renderChildren(tree, exclude, showDepth)}</React.Fragment>;
 }
 
@@ -114,7 +110,7 @@ export function DynamicNav({
   prependLinks = [],
   suppressMissing = false,
   noHeadingLink = false,
-}: Props): JSX.Element | null {
+}: Props) {
   const location = useLocation();
 
   if (root.startsWith('/')) {

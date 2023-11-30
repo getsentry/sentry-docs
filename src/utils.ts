@@ -5,14 +5,14 @@ import qs from 'query-string';
 type ClickOutsideCallback = (event: MouseEvent) => void;
 
 interface UseClickOutsideOpts<E extends HTMLElement> {
-  enabled: boolean;
   handler: ClickOutsideCallback;
   ref: React.RefObject<E>;
+  enabled?: boolean;
 }
 
 export function useOnClickOutside<E extends HTMLElement>({
   ref,
-  enabled,
+  enabled = true,
   handler,
 }: UseClickOutsideOpts<E>) {
   useEffect(() => {
@@ -23,7 +23,7 @@ export function useOnClickOutside<E extends HTMLElement>({
       if (!(event.target instanceof Element)) {
         return;
       }
-      if (!ref.current.contains(event.target)) {
+      if (!ref.current?.contains(event.target)) {
         handler(event);
       }
     };
@@ -32,7 +32,7 @@ export function useOnClickOutside<E extends HTMLElement>({
   }, [enabled, handler, ref]);
 }
 
-export const sortBy = (arr: any[], comp: (any) => any): any[] => {
+export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   return arr.sort((a, b) => {
     const aComp = comp(a);
     const bComp = comp(b);
@@ -44,7 +44,7 @@ export const sortBy = (arr: any[], comp: (any) => any): any[] => {
     }
     return 0;
   });
-};
+}
 
 type Page = {
   context: {
@@ -58,8 +58,12 @@ export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] =>
   return arr.sort((a, b) => {
     a = extractor(a);
     b = extractor(b);
-    const aso = a.context.sidebar_order >= 0 ? a.context.sidebar_order : 10;
-    const bso = b.context.sidebar_order >= 0 ? b.context.sidebar_order : 10;
+
+    const aBase = a.context.sidebar_order ?? 10;
+    const bBase = b.context.sidebar_order ?? 10;
+    const aso = aBase >= 0 ? aBase : 10;
+    const bso = bBase >= 0 ? bBase : 10;
+
     if (aso > bso) {
       return 1;
     }

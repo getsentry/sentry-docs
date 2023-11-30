@@ -17,6 +17,9 @@ const TERMS = {
     'In search, a key-value pair or raw search term. Also, a value used for authorization.',
   tracing:
     'The process of logging the events that took place during a request, often across multiple services.',
+  project:
+    'Represents your service in Sentry and allows you to scope events to a distinct application.',
+  DSN: 'The Data Source Name (DSN) key tells the Sentry SDK where to send events, ensuring they go to the right project.',
 };
 
 function escapeRegExp(str) {

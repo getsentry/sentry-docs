@@ -22,7 +22,7 @@ const ChecksumValue = styled.code`
   white-space: nowrap;
 `;
 
-export function CliChecksumTable(): JSX.Element {
+export function CliChecksumTable() {
   const {
     app: {files, version},
   } = useStaticQuery(query);

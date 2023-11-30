@@ -31,6 +31,7 @@ export const getPlatformTypeDefs = () => {
       categories: [PlatformCategory!]
       url: String!
       fallbackPlatform: String!
+      icon: String
     }
 
     type Platform implements Node {
@@ -44,6 +45,7 @@ export const getPlatformTypeDefs = () => {
       categories: [PlatformCategory!]
       url: String!
       fallbackPlatform: String
+      icon: String
     }
     `,
   ];

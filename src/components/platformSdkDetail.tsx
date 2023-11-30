@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import styled from '@emotion/styled';
 import {graphql, useStaticQuery} from 'gatsby';
 
@@ -14,6 +14,7 @@ const query = graphql`
         url
         repoUrl
         version
+        apiDocsUrl
       }
     }
   }
@@ -45,7 +46,7 @@ const PackageDetail = styled.div`
   }
 `;
 
-export function PlatformSdkDetail(): JSX.Element {
+export function PlatformSdkDetail() {
   const [platform] = usePlatform();
 
   const {
@@ -79,8 +80,16 @@ export function PlatformSdkDetail(): JSX.Element {
         <dd>{packageData.version}</dd>
         <dt>Repository:</dt>
         <dd>
-          <SmartLink to={packageData.repoUrl} />
+          <SmartLink to={packageData.repoUrl} target="_blank" />
         </dd>
+        {packageData.apiDocsUrl && (
+          <Fragment>
+            <dt>API Documentation:</dt>
+            <dd>
+              <SmartLink to={packageData.apiDocsUrl} target="_blank" />
+            </dd>
+          </Fragment>
+        )}
       </dl>
     </PackageDetail>
   );

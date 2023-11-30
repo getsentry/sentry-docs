@@ -18,7 +18,7 @@ const query = graphql`
   }
 `;
 
-export function InternalDocsSidebar(): JSX.Element {
+export function InternalDocsSidebar() {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   return (

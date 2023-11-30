@@ -1,7 +1,7 @@
 /* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
 
-import fs from 'fs';
+import {promises as fs} from 'fs';
 import {join, resolve} from 'path';
 
 import {
@@ -49,20 +49,26 @@ const flatten = async (pages: any[]) => {
 
           const {context, path} = page;
           const htmlFile = join(pub, path, 'index.html');
-          const html = (await fs.promises.readFile(htmlFile)).toString();
+          const html = (await fs.readFile(htmlFile)).toString();
+
+          // `platforms` deprecated in @sentry-global-search: 0.5.9
+          // we keep it in algolia records for backwards compatibility
+          let platforms: string[] = [];
 
           // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
-          let platforms = [];
+          let slug: string;
+          let guideSlug: string;
           if (context.platform) {
-            const {slug} = standardSDKSlug(context.platform.name);
-
+            slug = standardSDKSlug(context.platform.name)?.slug;
             let fullSlug = slug;
+            guideSlug = slug;
 
             if (context.guide) {
-              const {slug: guideSlug} = standardSDKSlug(context.guide.name);
+              guideSlug = standardSDKSlug(context.guide.name)?.slug;
               fullSlug += `.${guideSlug}`;
             }
-            platforms = extrapolate(fullSlug, '.');
+
+            platforms = extrapolate(fullSlug ?? 'generic', '.');
           }
 
           const newRecords = htmlToAlgoliaRecord(
@@ -70,6 +76,8 @@ const flatten = async (pages: any[]) => {
             {
               title: context.title,
               url: path,
+              sdk: slug,
+              framework: guideSlug,
               platforms,
               pathSegments: extrapolate(path, '/').map(x => `/${x}/`),
               keywords: context.keywords || [],
@@ -97,7 +105,7 @@ const config = [
   {
     query: pageQuery,
     transformer: ({data}) => flatten(data.pages.nodes),
-    indexName: `${indexPrefix}docs`,
+    indexName: `${indexPrefix}docs-v2`,
     settings: {
       ...sentryAlgoliaIndexSettings,
     },

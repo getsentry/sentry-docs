@@ -20,7 +20,7 @@ function RawHtml({html}) {
   return <div dangerouslySetInnerHTML={{__html: html}} />;
 }
 
-export function Content({file}: Props): JSX.Element | null {
+export function Content({file}: Props) {
   if (!file) {
     return null;
   }

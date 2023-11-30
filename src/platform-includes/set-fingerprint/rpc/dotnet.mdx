@@ -9,7 +9,7 @@ public class MyRpcException : Exception
 }
 
 // Add this to the SDK initialization callback
-options.BeforeSend = @event =>
+options.SetBeforeSend(@event =>
 {
     if (@event.Exception is MyRpcException ex)
     {
@@ -24,7 +24,7 @@ options.BeforeSend = @event =>
     }
 
     return @event;
-};
+});
 ```
 
 ```fsharp
@@ -36,7 +36,7 @@ type MyRpcException() =
     member val Code: HttpStatusCode = HttpStatusCode.OK with get, set
 
 // Add this to the SDK initialization callback
-options.BeforeSend <- (fun event ->
+options.SetBeforeSend(fun event ->
     match event.Exception with
     | :? MyRpcException as ex -> event.SetFingerprint([
                 "{{ default }}"

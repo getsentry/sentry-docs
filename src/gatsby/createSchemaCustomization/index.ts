@@ -1,10 +1,15 @@
+import {GatsbyNode} from 'gatsby';
+
 import {getApiTypeDefs} from './apiSchema';
 import {getAppTypeDefs} from './appSchema';
 import {getPackageTypeDefs} from './packageSchema';
 import {getPlatformTypeDefs} from './platformSchema';
 
 // TODO(dcramer): move frontmatter out of ApiEndpoint and into Frontmatter
-function main({actions, schema}) {
+const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] = ({
+  actions,
+  schema,
+}) => {
   const {createTypes} = actions;
   const typeDefs = [
     `
@@ -124,6 +129,6 @@ function main({actions, schema}) {
     ...getPackageTypeDefs(),
     ...getAppTypeDefs(),
   ]);
-}
+};
 
-export default main;
+export default createSchemaCustomization;

@@ -28,6 +28,8 @@ Create three files in the root directory of your project, `sentry.client.config.
 
 Please note that there are slight differences between these files since they run in different places (browser, server, edge), so copy them carefully!
 
+<SignInNote />
+
 ```javascript {tabTitle:Client} {filename:sentry.client.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -54,6 +56,8 @@ Sentry.init({
 });
 ```
 
+<SignInNote />
+
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -72,6 +76,8 @@ Sentry.init({
   // that it will also get attached to your source maps
 });
 ```
+
+<SignInNote />
 
 ```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -94,14 +100,116 @@ Sentry.init({
 
 You can include your DSN directly in these three files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
+## Report React Component Render Errors
+
+To capture React render errors you need to add Error components for the App Router and the Pages Router respectively.
+
+### React Render Errors in App Router
+
+Create a [Custom Next.js Global Error component](https://nextjs.org/docs/app/building-your-application/routing/error-handling) for the App router:
+
+```tsx {filename:global-error.tsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }: { error: Error }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        {/* This is the default Next.js error component but it doesn't allow omitting the statusCode property yet. */}
+        <Error statusCode={undefined as any} />
+      </body>
+    </html>
+  );
+}
+```
+
+```jsx {filename:global-error.jsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        {/* This is the default Next.js error component. */}
+        <Error />
+      </body>
+    </html>
+  );
+}
+```
+
+### React Render Errors in Pages Router
+
+Create a [Custom Next.js Error Page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) and call `captureUnderscoreErrorException` in your Error Page's `getInitialProps` method:
+
+```TypeScript {filename:_error.tsx}
+import * as Sentry from "@sentry/nextjs";
+import type { NextPage } from "next";
+import type { ErrorProps } from "next/error";
+import Error from "next/error";
+
+const CustomErrorComponent: NextPage<ErrorProps> = (props) => {
+  return <Error statusCode={props.statusCode} />;
+};
+
+CustomErrorComponent.getInitialProps = async (contextData) => {
+  // In case this is running in a serverless function, await this in order to give Sentry
+  // time to send the error before the lambda exits
+  await Sentry.captureUnderscoreErrorException(contextData);
+
+  // This will contain the status code of the response
+  return Error.getInitialProps(contextData);
+};
+
+export default CustomErrorComponent;
+```
+
+```JavaScript {filename:_error.jsx}
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+
+const CustomErrorComponent = (props) => {
+  return <Error statusCode={props.statusCode} />;
+};
+
+CustomErrorComponent.getInitialProps = async (contextData) => {
+  // In case this is running in a serverless function, await this in order to give Sentry
+  // time to send the error before the lambda exits
+  await Sentry.captureUnderscoreErrorException(contextData);
+
+  // This will contain the status code of the response
+  return Error.getInitialProps(contextData);
+};
+
+export default CustomErrorComponent;
+```
+
 ## Extend your Next.js Configuration
 
-Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will do two things:
+Use `withSentryConfig` to extend the default Next.js usage of webpack. This will do two things:
 
 - Automatically call SDK initialization code, at server start up and client page load.
-- Generate and upload source maps to Sentry, so that your stacktraces contain readable code.
+- Generate and upload source maps to Sentry, so that your stack traces contain readable code.
 
 Include the following in your `next.config.js` or `next.config.mjs`:
+
+<SignInNote />
 
 ```JavaScript {filename:next.config.(js|mjs)}
 // This file sets a custom webpack configuration to use your Next.js app
@@ -132,14 +240,16 @@ const nextConfig = {
 };
 
 const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry Webpack plugin. Keep in mind that
+  // Additional config options for the Sentry webpack plugin. Keep in mind that
   // the following options are set automatically, and overriding them is not
   // recommended:
-  //   release, url, authToken, configFile, stripPrefix,
-  //   urlPrefix, include, ignore
+  //   release, url, configFile, stripPrefix, urlPrefix, include, ignore
 
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
+
+  // An auth token is required for uploading source maps.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   silent: true, // Suppresses all logs
 
@@ -154,9 +264,48 @@ module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
 // export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
 ```
 
+## Instrument Next.js Server Actions
+
+_Requires `@sentry/nextjs` SDK version `7.81.0` or newer._
+
+To instrument Next.js Server Actions, wrap their content in `withServerActionInstrumentation`, along with a name to describe your server action.
+
+You can optionally pass form data and headers to record them, and configure the wrapper to record the Server Action responses:
+
+```tsx
+import * as Sentry from "@sentry/nextjs";
+import { headers } from "next/headers";
+
+export default function ServerComponent() {
+  async function myServerAction(formData: FormData) {
+    "use server";
+    return await Sentry.withServerActionInstrumentation(
+      "myServerAction", // The name you want to associate this Server Action with in Sentry
+      {
+        formData, // Optionally pass in the form data
+        headers: headers(), // Optionally pass in headers
+        recordResponse: true, // Optionally record the server action response
+      },
+      async () => {
+        // ... Your Server Action code
+
+        return { name: "John Doe" };
+      }
+    );
+  }
+
+  return (
+    <form action={myServerAction}>
+      <input type="text" name="some-input-value" />
+      <button type="submit">Run Action</button>
+    </form>
+  );
+}
+```
+
 ## Configure Source Maps
 
-By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stacktraces in your Sentry issues.
+By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
 
 To configure the plugin, pass a `sentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
 
@@ -187,7 +336,7 @@ In that case you can also skip the `sentry-cli` configuration step below.
 
 _(New in version 6.17.1, will default to `true` in 8.0.0 and beyond.)_
 
-Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [Webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
+Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
 
 ```javascript {filename:next.config.(js|mjs)}
 const nextConfig = {
@@ -225,9 +374,11 @@ The URL, organization, and project properties identify your organization and pro
 
 You can commit all the properties to your VCS, except the auth token. You can accomplish this by using the `.sentryclirc` file and including your auth token:
 
+<OrgAuthTokenNote />
+
 ```ini {filename:.sentryclirc}
 [auth]
-token=YOUR_AUTH_TOKEN
+token=___ORG_AUTH_TOKEN___
 ```
 
 Don't forget to ignore `.sentryclirc` in your version control system to prevent it from being leaked!
@@ -277,6 +428,8 @@ const nextConfig = {
 };
 ```
 
+Setting this option will add an API endpoint to your application that is used to forward Sentry events to the Sentry servers.
+
 Please note that this option will tunnel Sentry events through your Next.js application so you might experience increased server usage.
 
 The `tunnelRoute` option does currently not work with self-hosted Sentry instances.
@@ -301,7 +454,7 @@ const nextConfig = {
 };
 ```
 
-With this option, under the hood, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
+With this option, under the hood, the SDK is using a webpack loader to wrap all your API route handlers and data fetching methods.
 
 ### Opt In to Auto-instrumentation on Specific Routes
 

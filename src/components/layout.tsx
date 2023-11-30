@@ -3,7 +3,7 @@ import {Nav} from 'react-bootstrap';
 
 import 'sentry-docs/css/screen.scss';
 
-import {breadcrumb as Breadcrumbs} from './breadcrumbs';
+import {Breadcrumbs} from './breadcrumbs';
 import {Header} from './header';
 import {Navbar} from './navbar';
 import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
@@ -12,7 +12,7 @@ import {Sidebar} from './sidebar';
 import {SmartLink} from './smartLink';
 
 type Props = {
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
   pageContext?: {
     guide?: {
       [key: string]: any;
@@ -23,12 +23,12 @@ type Props = {
       name?: string;
     };
   };
-  sidebar?: JSX.Element;
+  sidebar?: React.ReactNode;
 };
 
-export function Layout({children, sidebar, pageContext = {}}: Props): JSX.Element {
+export function Layout({children, sidebar, pageContext = {}}: Props) {
   const searchPlatforms = [pageContext.platform?.name, pageContext.guide?.name].filter(
-    Boolean
+    (name): name is string => !!name
   );
 
   return (
@@ -93,11 +93,7 @@ export function Layout({children, sidebar, pageContext = {}}: Props): JSX.Elemen
       <main role="main" className="px-0">
         <div className="flex-grow-1">
           <div className="d-block navbar-right-half">
-            <Navbar
-              {...(searchPlatforms.length > 0 && {
-                platforms: searchPlatforms,
-              })}
-            />
+            <Navbar {...(searchPlatforms.length > 0 && {platforms: searchPlatforms})} />
           </div>
 
           <section className="pt-3 px-3 content-max prose">

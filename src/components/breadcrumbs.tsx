@@ -1,6 +1,6 @@
 import React from 'react';
 import {useLocation} from '@reach/router';
-import {graphql, StaticQuery} from 'gatsby';
+import {graphql, useStaticQuery} from 'gatsby';
 
 import {SmartLink} from './smartLink';
 
@@ -79,13 +79,8 @@ export function BaseBreadcrumbs({
   );
 }
 
-export function breadcrumb() {
-  return (
-    <StaticQuery
-      query={query}
-      render={data => {
-        return <BaseBreadcrumbs data={data} />;
-      }}
-    />
-  );
+export function Breadcrumbs() {
+  const data = useStaticQuery(query);
+
+  return <BaseBreadcrumbs data={data} />;
 }

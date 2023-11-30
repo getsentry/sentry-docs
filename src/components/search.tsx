@@ -1,4 +1,5 @@
 import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import styled from '@emotion/styled';
 import {
   Hit,
   Result,
@@ -8,6 +9,9 @@ import {
 import DOMPurify from 'dompurify';
 import {Link, navigate} from 'gatsby';
 import algoliaInsights from 'search-insights';
+
+import {DocsBotButton} from 'sentry-docs/components/docsBotButton';
+import {useOnClickOutside} from 'sentry-docs/utils';
 
 import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
 import {Logo} from './logo';
@@ -40,37 +44,13 @@ const search = new SentryGlobalSearch([
   {
     site: 'docs',
     pathBias: true,
+    platformBias: true,
+    legacyBias: true,
   },
   'help-center',
   'develop',
   'blog',
 ]);
-
-const useClickOutside = (
-  ref: React.RefObject<HTMLElement>,
-  handler: () => void,
-  events?: string[]
-) => {
-  if (!events) {
-    events = [`mousedown`, `touchstart`];
-  }
-
-  const detectClickOutside = (event: MouseEvent) => {
-    return !ref.current.contains(event.target as HTMLElement) && handler();
-  };
-
-  useEffect(() => {
-    for (const event of events) {
-      document.addEventListener(event, detectClickOutside);
-    }
-
-    return () => {
-      for (const event of events) {
-        document.removeEventListener(event, detectClickOutside);
-      }
-    };
-  });
-};
 
 function relativizeUrl(url: string) {
   return url.replace(/^.*:\/\/docs\.sentry\.io/, '');
@@ -82,17 +62,20 @@ type Props = {
   platforms?: string[];
 };
 
-export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
+export function Search({path, autoFocus, platforms = []}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  useClickOutside(ref, () => {
+
+  const handleClickOutside = useCallback(() => {
     setInputFocus(false);
     setShowOffsiteResults(false);
-  });
+  }, []);
+
+  useOnClickOutside({ref, handler: handleClickOutside});
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -118,13 +101,11 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
         return;
       }
 
-      // Only search when we have more than two characters. Ideally we'd do three, but
-      // we want to make sure people can search for Go and RQ
       const queryResults = await search.query(
         inputQuery,
         {
           path,
-          platforms: platforms.map(platform => standardSDKSlug(platform).slug),
+          platforms: platforms.map(platform => standardSDKSlug(platform)?.slug ?? ''),
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
@@ -168,24 +149,27 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
       index: hit.index,
       objectIDs: [hit.id],
       // Positions in Algolia are 1 indexed
-      queryID: hit.queryID,
+      queryID: hit.queryID ?? '',
       positions: [position + 1],
     });
   }, []);
 
   return (
     <div ref={ref}>
-      <input
-        type="search"
-        placeholder="Search"
-        aria-label="Search"
-        className="form-control"
-        value={query}
-        onChange={({target: {value}}) => searchFor(value)}
-        onFocus={() => setInputFocus(true)}
-        ref={inputRef}
-      />
-
+      <SearchBar>
+        <input
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+          className="form-control search-input"
+          value={query}
+          onChange={({target: {value}}) => searchFor(value)}
+          onFocus={() => setInputFocus(true)}
+          ref={inputRef}
+        />
+        <Separator>Feeling bold?</Separator>
+        <DocsBotButton />
+      </SearchBar>
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
           {loading && <Logo loading />}
@@ -282,3 +266,14 @@ export function Search({path, autoFocus, platforms = []}: Props): JSX.Element {
     </div>
   );
 }
+
+const SearchBar = styled('div')`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const Separator = styled('div')`
+  white-space: nowrap;
+`;

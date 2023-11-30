@@ -216,6 +216,7 @@ const config = {
     homeUrl: 'https://docs.sentry.io',
     siteUrl: 'https://docs.sentry.io',
     sitePath: 'docs.sentry.io',
+    lang: 'en',
     description: 'Product documentation for Sentry.io and its SDKs',
     author: '@getsentry',
   },

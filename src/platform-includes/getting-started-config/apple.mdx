@@ -1,4 +1,6 @@
-You should also initialize the SDK as soon as possible, such as in your AppDelegate `application:didFinishLaunchingWithOptions` method:
+We recommend initializing the SDK on the main thread as soon as possible, such as in your AppDelegate `application:didFinishLaunchingWithOptions` method:
+
+<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry // Make sure you import Sentry
@@ -25,6 +27,11 @@ func application(_ application: UIApplication,
     [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
         options.dsn = @"___PUBLIC_DSN___";
         options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Enable tracing to capture 100% of transactions for performance monitoring.
+        // Use 'options.tracesSampleRate' to set the sampling rate.
+        // We recommend setting a sample rate in production.
+        options.enableTracing = YES;
     }];
 
     return YES;
@@ -32,6 +39,8 @@ func application(_ application: UIApplication,
 ```
 
 When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
+
+<SignInNote />
 
 ```swift
 import Sentry
@@ -42,6 +51,11 @@ struct SwiftUIApp: App {
         SentrySDK.start { options in
             options.dsn = "___PUBLIC_DSN___"
             options.debug = true // Enabled debug when first installing is always helpful
+
+            // Enable tracing to capture 100% of transactions for performance monitoring.
+            // Use 'options.tracesSampleRate' to set the sampling rate.
+            // We recommend setting a sample rate in production.
+            options.enableTracing = true
         }
     }
 }
@@ -49,71 +63,4 @@ struct SwiftUIApp: App {
 
 <!-- You can't write SwiftUI in Objective-C. Therefore no code sample. -->
 
-## Experimental features
-
-> Want to play with some new features? Try out our experimental features for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation), [Screenshots](/platforms/apple/guides/ios/enriching-events/screenshots/). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
->
-> Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
-
-```swift {tabTitle:Swift}
-import Sentry
-
-SentrySDK.start { options in
-    // ...
-
-    // Enable all experimental features
-    options.enablePreWarmedAppStartTracing = true
-    options.attachScreenshot = true
-    options.attachViewHierarchy = true
-    options.enableMetricKit = true
-    options.swiftAsyncStacktraces = true
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    // ...
-
-    // Enable all experimental features
-    options.enablePreWarmedAppStartTracing = YES;
-    options.attachScreenshot = YES;
-    options.attachViewHierarchy = YES;
-    options.enableMetricKit = YES;
-}];
-```
-
-## Stitch Together Swift Concurrency Stack Traces
-
-<Note>This feature is experimental and may have bugs.</Note>
-
-If you use Swift concurrency, this feature will stitch your stack traces together. That means you will be able to see the full stack trace of your async code.
-For this to happen you need to enable the `swiftAsyncStacktraces` option.
-You can also enable this in your Objective-C project, however, only async code written in Swift will be stitched together.
-
-```swift {tabTitle:Swift}
-import Sentry
-
-SentrySDK.start { options in
-    // ...
-    options.swiftAsyncStacktraces = true
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    // ...
-    options.swiftAsyncStacktraces = YES;
-}];
-```
-
-## Use Sentry with SwiftUI
-
-If you want to find out the performance of your Views in a SwiftUI project, [try the SentrySwiftUI library](/platforms/apple/performance/instrumentation/swiftui-instrumentation).
-
-## Provide Debug Information {#debug-symbols}
-
-To capture crashes, you need to provide debug information to Sentry. You can also use our source context feature to display code snippets next to the event stack traces by enabling the `include-sources` option when uploading your debug information files. Debug information is provided by <PlatformLink to="/dsym">uploading dSYM files</PlatformLink>.
+<PlatformContent includePath="getting-started-config/basic-config" />

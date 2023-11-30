@@ -13,7 +13,7 @@ type LayerData = {
 
 const query = graphql`
   query LambdaLayer {
-    allLayer {
+    allAwsLambdaLayer {
       nodes {
         id
         canonical
@@ -35,10 +35,10 @@ const toOption = ({region}: RegionData) => {
   };
 };
 
-export function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element {
+export function LambdaLayerDetail({canonical}: {canonical: string}) {
   const {
-    allLayer: {nodes: layerList},
-  }: {allLayer: {nodes: LayerData[]}} = useStaticQuery(query);
+    allAwsLambdaLayer: {nodes: layerList},
+  }: {allAwsLambdaLayer: {nodes: LayerData[]}} = useStaticQuery(query);
 
   const layer = layerList.find(l => l.canonical === canonical);
   // if we don't find a matching layer, let the page blow up
@@ -64,7 +64,10 @@ export function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element
 
   return (
     <Wrapper>
-      <StyledSelect
+      <Select
+        styles={{
+          control: base => ({...base, width: 300}),
+        }}
         placeholder="Select Region"
         options={layer.regions.map(toOption)}
         value={regionOption}
@@ -73,7 +76,7 @@ export function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element
       {arn && (
         <ArnWrapper>
           <ArnLabel>ARN</ArnLabel>
-          {arn}
+          <code>{arn}</code>
         </ArnWrapper>
       )}
     </Wrapper>
@@ -82,11 +85,7 @@ export function LambdaLayerDetail({canonical}: {canonical: string}): JSX.Element
 
 // need a min-height so we don't get cropped at the bottom of the page
 const Wrapper = styled('div')`
-  min-height: 200px;
-`;
-
-const StyledSelect = styled(Select)`
-  width: 300px;
+  min-height: 50px;
 `;
 
 const ArnWrapper = styled('div')`

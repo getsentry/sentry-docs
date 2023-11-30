@@ -1,5 +1,5 @@
 import React from 'react';
-import {graphql, StaticQuery} from 'gatsby';
+import {graphql, useStaticQuery} from 'gatsby';
 
 import {DynamicNav, toTree} from './dynamicNav';
 
@@ -54,7 +54,7 @@ type ChildProps = Props & {
   };
 };
 
-export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element {
+export function SidebarContent({platform, guide, data}: ChildProps) {
   const platformName = platform.name;
   const guideName = guide ? guide.name : null;
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
@@ -69,8 +69,6 @@ export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element
         title={`Sentry for ${(guide || platform).title}`}
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[
-          `/${pathRoot}/enriching-events/`,
-          `/${pathRoot}/data-management/`,
           `/${pathRoot}/performance/`,
           `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
@@ -106,37 +104,12 @@ export function SidebarContent({platform, guide, data}: ChildProps): JSX.Element
         suppressMissing
         tree={tree}
       />
-      <DynamicNav
-        root={`/${pathRoot}/enriching-events`}
-        title="Enriching Events"
-        tree={tree}
-      />
-      <DynamicNav
-        root={`/${pathRoot}/data-management`}
-        title="Data Management"
-        tree={tree}
-      />
-      <DynamicNav
-        root="product"
-        title="Product guides"
-        tree={tree}
-        exclude={[`/product/`]}
-      />
-      <DynamicNav
-        root="platforms"
-        title="Other Platforms"
-        tree={tree}
-        exclude={[`/platforms/${platformName}/`]}
-      />
     </ul>
   );
 }
 
-export function PlatformSidebar(props: Props): JSX.Element {
-  return (
-    <StaticQuery
-      query={navQuery}
-      render={data => <SidebarContent data={data} {...props} />}
-    />
-  );
+export function PlatformSidebar(props: Props) {
+  const data = useStaticQuery(navQuery);
+
+  return <SidebarContent data={data} {...props} />;
 }

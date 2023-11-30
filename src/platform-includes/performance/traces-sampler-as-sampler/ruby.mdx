@@ -7,6 +7,10 @@ Sentry.init do |config|
       next sampling_context[:parent_sampled]
     end
 
+    # the sampling context also has the full rack environment if you want to check the path directly
+    rack_env = sampling_context[:env]
+    return 0.0 if rack_env['PATH_INFO'] =~ /health_check/
+
     # transaction_context is the transaction object in hash form
     # keep in mind that sampling happens right after the transaction is initialized
     # for example, at the beginning of the request

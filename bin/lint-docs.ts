@@ -1,6 +1,11 @@
 #!/usr/bin/env ts-node
-import fs from "fs";
-import PlatformRegistry from "../src/shared/platformRegistry";
+
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
+
+import fs from 'fs';
+
+import {buildPlatformRegistry} from '../src/shared/platformRegistry';
 
 enum Level {
   error,
@@ -8,12 +13,12 @@ enum Level {
 }
 
 type Violation = {
-  level?: Level;
   message: string;
-  context: string;
+  context?: string;
+  level?: Level;
 };
 
-const hasWizardContent = (platformName: string, guideName = null) => {
+const hasWizardContent = (platformName: string, guideName: string | null = null) => {
   const path = guideName
     ? `src/wizard/${platformName}/${guideName}.md`
     : `src/wizard/${platformName}/index.md`;
@@ -26,29 +31,27 @@ const hasWizardContent = (platformName: string, guideName = null) => {
 };
 
 const testConfig = config => {
-  const violations = [];
+  const violations: Violation[] = [];
   if (!config.title) {
-    violations.push({ level: Level.error, message: `Missing title` });
+    violations.push({level: Level.error, message: `Missing title`});
   }
   if (!config.caseStyle) {
-    violations.push({ level: Level.warn, message: `Missing caseStyle` });
+    violations.push({level: Level.warn, message: `Missing caseStyle`});
   }
   if (!config.supportLevel) {
-    violations.push({ level: Level.warn, message: `Missing supportLevel` });
+    violations.push({level: Level.warn, message: `Missing supportLevel`});
   }
   return violations;
 };
 
 const main = async () => {
-  const platformRegistry = new PlatformRegistry();
-  await platformRegistry.init();
-  
+  const {platforms} = await buildPlatformRegistry();
 
   const violations: Violation[] = [];
-  platformRegistry.platforms.forEach(platform => {
+  platforms.forEach(platform => {
     // test for wizard
     testConfig(platform).forEach(violation => {
-      violations.push({ ...violation, context: platform.key });
+      violations.push({...violation, context: platform.key});
     });
     if (!hasWizardContent(platform.name)) {
       violations.push({
@@ -59,7 +62,7 @@ const main = async () => {
     }
     platform.guides.forEach(guide => {
       testConfig(platform).forEach(violation => {
-        violations.push({ ...violation, context: guide.key });
+        violations.push({...violation, context: guide.key});
       });
       if (!hasWizardContent(platform.name, guide.name)) {
         violations.push({
@@ -72,18 +75,21 @@ const main = async () => {
   });
 
   let numErrors = 0;
-  violations.forEach(({ level, message, context }) => {
+  violations.forEach(({level, message, context}) => {
     if (level === Level.error) {
       numErrors += 1;
     }
     switch (level) {
       case Level.error:
+        // eslint-disable-next-line no-console
         console.error(`ERROR: ${message} in ${context}`);
         break;
       case Level.warn:
+        // eslint-disable-next-line no-console
         console.warn(`WARN: ${message} in ${context}`);
         break;
       default:
+        // eslint-disable-next-line no-console
         console.info(`INFO: ${message} in ${context}`);
         break;
     }
@@ -93,6 +99,7 @@ const main = async () => {
 
 main()
   .catch(err => {
+    // eslint-disable-next-line no-console
     console.error(err);
     process.exit(1);
   })

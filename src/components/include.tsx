@@ -22,7 +22,7 @@ type Props = {
   name: string;
 };
 
-export function Include({name}: Props): JSX.Element {
+export function Include({name}: Props) {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);

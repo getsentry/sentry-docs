@@ -31,7 +31,7 @@ type Props = {
   header?: string;
 };
 
-export function PageGrid({nextPages = false, header, exclude}: Props): JSX.Element {
+export function PageGrid({nextPages = false, header, exclude}: Props) {
   const data = useStaticQuery(query);
   const location = useLocation();
 

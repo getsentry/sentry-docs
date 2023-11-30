@@ -5,17 +5,18 @@ import {marketingUrlParams} from 'sentry-docs/utils';
 
 import {ExternalLink} from './externalLink';
 
-type Props = {
+interface Props {
   activeClassName?: string;
   children?: React.ReactNode;
   className?: string;
   href?: string;
   isActive?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
   remote?: boolean;
   target?: string;
   title?: string;
   to?: string;
-};
+}
 
 export function SmartLink({
   to,
@@ -26,7 +27,7 @@ export function SmartLink({
   className = '',
   isActive,
   ...props
-}: Props): JSX.Element {
+}: Props) {
   const realTo = to || href || '';
 
   const [forcedUrl, setForcedUrl] = useState(realTo);

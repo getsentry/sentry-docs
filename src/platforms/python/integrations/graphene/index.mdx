@@ -1,0 +1,101 @@
+---
+title: Graphene
+description: "Learn about importing the Graphene GraphQL integration and how it captures GraphQL errors."
+---
+
+The Graphene integration captures errors from the
+[Graphene GraphQL library](https://graphene-python.org/), which can then be viewed
+in [Sentry](https://sentry.io).
+
+## Install
+
+To get started, install `sentry-sdk` from PyPI.
+
+```bash
+pip install --upgrade sentry-sdk
+```
+
+## Configure
+
+Add `GrapheneIntegration()` to your `integrations` list:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.graphene import GrapheneIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        GrapheneIntegration(),
+    ],
+)
+```
+
+## Verify
+
+To verify:
+
+```python
+import graphene
+
+sentry_sdk.init(...)  # same as above
+
+class Query(graphene.ObjectType):
+    hello = graphene.String()
+
+    def resolve_hello(self, info):
+        1 / 0
+        return "World"
+
+schema = graphene.Schema(query=Query)
+
+schema.execute("""
+  query {
+    hello
+  }
+""")
+```
+
+We've snuck a `ZeroDivisionError` into our `resolve_hello` resolver to ensure things are working as intended. When this
+code snippet is run, a new error event should appear in the Issues section of
+[sentry.io](https://sentry.io). It will take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Options
+
+When used together with one of our web framework integrations like
+[FastAPI](/platforms/python/integrations/fastapi) or
+[Flask](/platforms/python/integrations/flask), the Graphene
+integration can capture the request body for each GraphQL error that happens.
+Since the requests may contain sensitive data, no request bodies will be attached
+by default.
+
+To capture request bodies:
+
+- Initialize the SDK with the
+  [send_default_pii](/platforms/python/configuration/options/#send-default-pii)
+  option set to `True`.
+- Make sure the integration for the web framework you're using is enabled.
+
+```python
+sentry_sdk.init(
+    # same options as above
+    send_default_pii=True,
+)
+```
+
+<Alert level="warning" title="Note">
+
+Since `send_default_pii` is a global SDK option, setting it to `True` affects all
+integrations, not just Graphene. Please make sure to take care of
+[scrubbing sensitive data](/platforms/python/data-management/sensitive-data/)
+from events before enabling this option.
+
+</Alert>
+
+## Supported Versions
+
+- graphene: 3.3+
+- Python: 3.8+

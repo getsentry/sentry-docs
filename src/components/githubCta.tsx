@@ -7,10 +7,7 @@ type GitHubCTAProps = {
   sourceInstanceName: string;
 };
 
-export function GitHubCTA({
-  sourceInstanceName,
-  relativePath,
-}: GitHubCTAProps): JSX.Element {
+export function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps) {
   return (
     <div className="github-cta">
       <small>Help improve this content</small>

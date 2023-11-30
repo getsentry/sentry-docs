@@ -1,0 +1,86 @@
+Distributed tracing works out of the box for supported frameworks and when <PlatformLink to="/performance/">performance monitoring</PlatformLink> is enabled. If you're using an unsupported framework or don't want to turn on performance monitoring, you can set up custom instrumentation for distributed tracing.
+
+This page describes how to manually propagate trace information into and out of your Ruby application. All you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+
+## 1. Extract Incoming Tracing Information
+
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continue_trace` function to help you with this. Incoming tracing information can come from different places:
+
+- In a web environment, it's sent with HTTP headers, for example, by another Sentry SDK used in your frontend project.
+- In a job queue, like Sidekiq / DelayedJob, it can be retrieved from meta or header variables.
+- You also can pick up tracing information from environment variables.
+
+Here's an example of how to extract and store incoming tracing information using `continue_trace` in a Rack application where `env` is a typical hash of incoming HTTP headers:
+
+```ruby
+# rack application
+def call(env)
+  transaction = Sentry.continue_trace(env, name: 'transaction', op: 'op')
+  Sentry.start_transaction(transaction: transaction)
+end
+```
+
+Sentry's `continue_trace` function will extract the given headers, try to find the `sentry-trace` and `baggage` headers, and store them in memory for later use.
+
+## 2. Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must be added to outgoing requests. If you pregenerate HTML on the server-side, you might want to take a look at [Inject Tracing Information into Rendered HTML](#inject-tracing-information-into-rendered-html), which describes how to pass on tracing information through HTML meta tags.
+
+### Inject Tracing Information Into HTTP Requests
+
+The Ruby SDK intercepts all requests using `net/http` and adds this tracing information automatically to outgoing requests.
+
+If the gem you're using for making requests doesn't use `net/http` internally, you can generate this tracing information with the Sentry SDK's `get_traceparent`, `get_baggage` and `get_trace_propagation_headers` functions. Here's an example:
+
+```ruby
+# using custom HTTPRequest implementation
+HTTPRequest.get('https://example.com', headers: Sentry.get_trace_propagation_headers)
+```
+
+In this example, tracing information is propagated to the project running at `https://example.com`. If this project also uses a supported Sentry SDK, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+### Inject Tracing Information Into Rendered HTML
+
+To propagate tracing information into JavaScript running in rendered HTML, you have to inject HTML `meta` tags in your rendered HTML. For example, in a rails layout, you can inject the meta tags as follows:
+
+```erb {filename: app/views/layouts/application.html.erb}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="sentry-trace" content=<%= Sentry.get_traceparent %>>
+    <meta name="baggage" content=<%= Sentry.get_baggage %>>
+  </head>
+  <body>
+    <p>This is a website.</p>
+  </body>
+</html>
+```
+
+The rendered template will then look something like this:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="sentry-trace"
+      content="98e5de1c09e444469475855d313e22c3-b995922394e8433d"
+    />
+    <meta
+      name="baggage"
+      content="sentry-trace_id=98e5de1c09e444469475855d313e22c3,sentry-environment=prod,sentry-public_key=..."
+    />
+  </head>
+  <body>
+    <p>This is a website.</p>
+  </body>
+</html>
+```
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing should work.
