@@ -8,20 +8,57 @@ description: "Migrating between versions of Sentry's SDK for Android."
 
 ## Migrating from `io.sentry:sentry-android 6.x` to `io.sentry:sentry-android 7.0.0`
 
-- `io.sentry:sentry-android 7.0.0` requires API level 19.
+### Breaking Changes
 
-  Older versions with the NDK integration support API level 16. To support devices on an API level lower than 16, update your `AndroidManifest.xml`:
+- The minimum supported API level was updated to 19 (`minSdk`).
+- The `sentry-android-okhttp` classes were deprecated in favor of `sentry-okhttp`, which is a pure Java module and can be used in non-Android projects.
+  - The `SentryOkHttpUtils` class was removed from the public API. If you were using it, consider filing a [feature request](https://github.com/getsentry/sentry-java/issues).
+- If you're using `sentry-kotlin-extensions`, it now requires `kotlinx-coroutines-core` version `1.6.1` or higher.
+- Moved `enableNdk` and `enableScopeSync` from `SentryOptions` to `SentryAndroidOptions`.
+- Changed the return type of `SentryApolloInterceptor.BeforeSpanCallback` from `ISpan` to `ISpan?`.
+- `Scope` now implements the `IScope` interface, therefore some methods like `ScopeCallback.run` accept `IScope` now.
+- Some `Sentry.startTransaction` overloads do not exist anymore, and instead, you can set old options by passing a `TransactionOptions` object in.
 
-  ```xml {filename:AndroidManifest.xml}
-  <manifest>
-      <!-- Merging strategy for the imported manifests -->
-      <uses-sdk tools:overrideLibrary="io.sentry.android" />
-  </manifest>
-  ```
+For example:
 
-  With these changes the SDK will be enabled on all devices with API level ≥ 14 and the SDK with NDK will be enabled on all devices with API level ≥ 16.
+```kotlin
+// old
+val transaction = Sentry.startTransaction("name", "op", bindToScope = true)
+// new
+val transaction = Sentry.startTransaction("name", "op", TransactionOptions().apply { isBindToScope = true })
+```
 
-- Older versions without the NDK integration support API level 14.
+### Behavioral Changes
+
+- `Sentry.getSpan()` now returns the root span/transaction instead of the latest span.
+  - This will make the span hierarchy leaner and more readable.
+- The SDK now captures failed HTTP and GraphQL (Apollo) requests by default.
+  - This can increase your event consumption and may affect your quota, because we will report failed network requests as Sentry events if you're using the `sentry-android-okhttp` or `sentry-apollo-3` integrations by default. You can customize what errors you want/don't want to have reported for [OkHttp](/platforms/android/integrations/okhttp/#http-client-errors) and [Apollo3](/platforms/android/integrations/apollo3/#graphql-client-errors) respectively.
+- Added a deadline timeout for automatic transactions.
+  - This affects all automatically generated transactions on Android (UI, clicks). The default timeout is 30s, meaning the automatic transaction will be force-finished with the status `deadline_exceeded` when it reaches the deadline.
+- The SDK now sets `ip_address` to {{auto}} by default, even if sendDefaultPII is disabled.
+  - We recommend you instead use the "Prevent Storing of IP Addresses" option in the "Security & Privacy" project settings on [sentry.io](https://sentry.io/).
+- The `maxSpans` setting (defaults to 1000) is now enforced for nested child spans. This means a single transaction can have `maxSpans` number of children (nested or not) at most.
+
+### Sentry Integrations Version Compatibility
+
+Make sure to align _all_ Sentry dependencies (like `-timber`, `-okhttp` or other packages) to the same version when bumping the SDK to 7.+, otherwise, it will crash at runtime due to binary incompatibility.
+
+For example, if you're using the [Sentry Android Gradle plugin](https://github.com/getsentry/sentry-android-gradle-plugin) with the `autoInstallation` [feature](/platforms/android/configuration/gradle/#auto-installation) (enabled by default), make sure to use version 4.+ of the Gradle plugin together with version 7.+ of the SDK. If you can't do that for some reason, you can specify the Sentry version via the plugin config block:
+
+```kotlin
+sentry {
+  autoInstallation {
+    sentryVersion.set("7.0.0")
+  }
+}
+```
+
+Similarly, if you have a Sentry SDK (e.g. `sentry-android-core`) dependency on one of your Gradle modules and you're updating it to 7.+, make sure the Gradle plugin is at 4.+ or specify the SDK version as shown in the snippet above.
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `7.0.0` of `sentry`, [Sentry's version >= v22.12.0](https://github.com/getsentry/self-hosted/releases) is required to properly ingest transactions with unfinished spans. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
 
 ## Migrating from `io.sentry:sentry-android 6.14.x` to `io.sentry:sentry-android 6.15.0`
 
