@@ -7,9 +7,9 @@ redirect_from:
 
 Sentry's .NET SDK works with Windows UI Library applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
 
-## Configuration (for Just-In-Time compilation)
+## Configuration (Without Trimming)
 
-If you are using Just-In-Time (JIT) compilation then all you need to do is [initialize the SDK with `SentrySdk.Init`](/platforms/dotnet/) in the constructor of your application class (usually `App.xaml.cs`). Sentry's integration for WinUI will automatically capture any unhandled exceptions in your application and send these to Sentry.
+If you don't have [Trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0) enabled when publishing your application then all you need to do is [initialize the SDK with `SentrySdk.Init`](/platforms/dotnet/) in the constructor of your application class (usually `App.xaml.cs`). Sentry's integration for WinUI will automatically capture any unhandled exceptions in your application and send these to Sentry.
 
 <Note>
 
@@ -55,9 +55,9 @@ sealed partial class App : Application
 }
 ```
 
-## Configuration (Ahead-of-Time compilation)
+## Configuration (With Trimming)
 
-If you are publishing your application using Ahead-of-Time (AOT) compilation or trimming, in addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must also configure an `Application.UnhandledException` handler in the constructor of your application class (usually `App.xaml.cs`).
+If you have [Trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0) enabled when publishing your application then, in addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must also configure an UnhandledException handler in the constructor of your application class (usually `App.xaml.cs`).
 
 <Note>
 
@@ -99,7 +99,7 @@ sealed partial class App : Application
             // TODO:Any other Sentry options you need go here.
         });
 
-        // Hook the UWP UnhandledException event before initializing the app component.
+        // Hook up the WinUI UnhandledException event before initializing the app component.
         this.UnhandledException += OnUnhandledException;
 
         // Initialize the app component, and hook the Suspending event.
