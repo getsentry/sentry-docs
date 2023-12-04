@@ -57,7 +57,7 @@ We expose the following configuration values directly in your `app/build.gradle`
 
 <SignInNote />
 
-```groovy
+````groovy
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
 
@@ -97,7 +97,7 @@ sentry {
     // Experimental flag to turn on support for GuardSquare's tools integration (Dexguard and External Proguard).
     // If enabled, the plugin will try to consume and upload the mapping file produced by Dexguard and External Proguard.
     // Default is disabled.
-    experimentalGuardsquareSupport = false
+    dexguardEnabled = false
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
@@ -147,6 +147,21 @@ sentry {
         // Defaults to LogcatLevel.WARNING.
         minLevel = LogcatLevel.WARNING
       }
+
+      // The set of glob patterns to exclude from instrumentation. Classes matching any of these
+      // patterns in the project's sources and dependencies JARs won't be instrumented by the Sentry
+      // Gradle plugin.
+      //
+      // Don't include the file extension. Filtering is done on compiled classes and
+      // the .class suffix isn't included in the pattern matching.
+      //
+      // Example usage:
+      // ```
+      // excludes = ['com/example/donotinstrument/**', '**/*Test']
+      // ```
+      //
+      // Only supported when using Android Gradle plugin (AGP) version 7.4.0 and above.
+      excludes = []
     }
 
     // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
@@ -174,10 +189,16 @@ sentry {
     //
     // Default is enabled.
     includeDependenciesReport = true
-}
-```
 
-```kotlin
+    // Whether the plugin should send telemetry data to Sentry.
+    // If disabled the plugin won't send telemetry data.
+    // This is auto disabled if running against a self hosted instance of Sentry.
+    // Default is enabled.
+    telemetry = true
+}
+````
+
+````kotlin
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 
 sentry {
@@ -216,7 +237,7 @@ sentry {
     // Experimental flag to turn on support for GuardSquare's tools integration (Dexguard and External Proguard).
     // If enabled, the plugin will try to consume and upload the mapping file produced by Dexguard and External Proguard.
     // Default is disabled.
-    experimentalGuardsquareSupport.set(false)
+    dexguardEnabled.set(false)
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
@@ -255,6 +276,31 @@ sentry {
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
       // Defaults to all available values of InstrumentationFeature enum class.
       features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP, InstrumentationFeature.COMPOSE))
+
+      // Enable or disable logcat instrumentation through bytecode manipulation.
+      // Default is enabled.
+      logcat {
+        enabled.set(true)
+
+        // Specifies a minimum log level for the logcat breadcrumb logging.
+        // Defaults to LogcatLevel.WARNING.
+        minLevel.set(LogcatLevel.WARNING)
+      }
+
+      // The set of glob patterns to exclude from instrumentation. Classes matching any of these
+      // patterns in the project's sources and dependencies JARs won't be instrumented by the Sentry
+      // Gradle plugin.
+      //
+      // Don't include the file extension. Filtering is done on compiled classes and
+      // the .class suffix isn't included in the pattern matching.
+      //
+      // Example usage:
+      // ```
+      // excludes.set(setOf("com/example/donotinstrument/**", "**/*Test"))
+      // ```
+      //
+      // Only supported when using Android Gradle plugin (AGP) version 7.4.0 and above.
+      excludes.set(emptySet())
     }
 
     // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber, fragment and compose integrations).
@@ -283,8 +329,14 @@ sentry {
     // Default is enabled.
     //
     includeDependenciesReport.set(true)
+
+    // Whether the plugin should send telemetry data to Sentry.
+    // If disabled the plugin won't send telemetry data.
+    // This is auto disabled if running against a self hosted instance of Sentry.
+    // Default is enabled.
+    telemetry.set(true)
 }
-```
+````
 
 Now when you build your app, the plugin will upload the ProGuard/R8 mappings, source bundle, and native symbols as you configured them to Sentry.
 
@@ -322,7 +374,7 @@ sentry {
 
 The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease`. Release is the default, but the plugin works for others as long as you've enabled ProGuard/R8. The credentials for the upload step are defined in the Gradle extension above or loaded from a `sentry.properties` file in your project.
 
-To use Guardsquare's ProGuard or DexGuard tooling, you'll have to enable the `experimentalGuardsquareSupport` flag. Learn more in the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+To use Guardsquare's ProGuard or DexGuard tooling, you'll have to enable the `dexguardEnabled` flag. Learn more in the [full `sentry-cli` documentation](/product/cli/configuration/#configuration-values).
 
 Instead of providing your credentials via the Gradle extension, you can create a `sentry.properties` file with the following content under your `app` module:
 

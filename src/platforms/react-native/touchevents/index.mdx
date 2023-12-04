@@ -52,7 +52,7 @@ Each touch event is automatically logged as a breadcrumb and displays on the das
 
 ## Tracking Specific Components
 
-You can let Sentry know which components to track specifically by passing the `sentry-label` prop to them. If Sentry detects a component with a `sentry-label` within a touch's component tree, it will be logged on the dashboard as having occurred in that component. If we cannot find a component with the label, we will fall back to the `accessibilityLabel` prop.
+You can let Sentry know which components to track specifically by passing the `sentry-label` prop to them. If Sentry detects a component with a `sentry-label` within a touch's component tree, it will be logged on the dashboard as having occurred in that component. If Sentry cannot find a component with the label, Sentry will fall back to the `labelName` prop if specified, or else use `displayName`.
 
 ```javascript
 const YourCoolComponent = (props) => {
@@ -77,13 +77,23 @@ You can pass specific options to configure the boundary either as props to the `
 ```javascript{tabTitle:Default}
 <Sentry.TouchEventBoundary
   ignoreNames={["BadComponent", /^Connect\(/, /^LibraryComponent$/]}
+  labelName="testLabel"
 >
   <RestOfTheApp />
 </Sentry.TouchEventBoundary>
 ```
 
 ```javascript{tabTitle:HOC}
-Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15 });
+Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15, labelName: "testLabel" });
+```
+
+```javascript{tabTitle:Sentry.wrap()}
+Sentry.wrap(App, {
+  touchEventBoundaryProps: {
+    ignoreNames: ["BadComponent", /^Connect\(/, /^LibraryComponent$/]
+    labelName: 'accessibilityLabel',
+  },
+}
 ```
 
 `breadcrumbCategory`
@@ -101,6 +111,10 @@ Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15 });
 `ignoreNames`
 
 : _Array<string | RegExp>, Accepts strings and regular expressions_. Component names to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in.
+
+`labelName`
+
+: _String_. The name of the prop to look for when determining the label of a component. If the prop is not found, Sentry will fall back to the `displayName` of the component.
 
 ## Minified Names in Production
 

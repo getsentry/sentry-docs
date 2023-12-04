@@ -1,6 +1,20 @@
 ## Job Monitoring
 
-Standard job frameworks such as `ActiveJob` and `Sidekiq` with a `perform` method can use the `Sentry::Cron::MonitorCheckIns` mixin module to automatically capture check-ins.
+If you're using `sidekiq-cron` or `sidekiq-scheduler`, Sentry can automatically
+capture check-ins for all jobs that are scheduled to run periodically. To
+achieve this, you need to enable the corresponding Sentry plugin:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:sidekiq_cron]
+  # or, for sidekiq-scheduler:
+  config.enabled_patches += [:sidekiq_scheduler]
+end
+```
+
+More generally, popular job frameworks such as `ActiveJob` and `Sidekiq` with
+a `perform` method can use the `Sentry::Cron::MonitorCheckIns` mixin module
+to automatically capture check-ins.
 
 ```rb {tabTitle: ActiveJob}
 class ExampleJob < ApplicationJob
@@ -34,6 +48,7 @@ You can pass in optional attributes to `sentry_monitor_check_ins` as follows.
 sentry_monitor_check_ins slug: 'custom_slug'
 
 # define the monitor config with an interval
+# the units supported are :year, :month, :week, :day, :hour, :minute
 sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_interval(1, :minute)
 
 # define the monitor config with a crontab
@@ -41,6 +56,9 @@ sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_cronta
 ```
 
 ## Manual Setup
+
+If you're using `Clockwork` or `Whenever`, you'll need to instrument your jobs
+manually.
 
 ### Check-Ins (Recommended)
 

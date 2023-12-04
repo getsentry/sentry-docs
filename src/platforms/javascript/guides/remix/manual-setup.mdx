@@ -81,7 +81,7 @@ Sentry.init({
 
 Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) functions. You can also initialize Sentry's database integrations, such as <Link to="/platforms/node/performance/database/opt-in/#prisma-orm-integration">Prisma</Link>, to get spans for your database calls.
 
-To catch React component errors (in Remix v1) and routing transactions, wrap your Remix root with `withSentry`.
+To catch React component errors (in Remix v1) and routing transactions (in all Remix versions), wrap your Remix root with `withSentry`.
 
 <Note>
 
@@ -120,6 +120,12 @@ function App() {
 
 export default withSentry(App);
 ```
+
+<Note>
+
+If you use Remix v2, `wrapWithErrorBoundary` is disabled by default. You still need to wrap your root component with `withSentry` to capture routing transactions.
+
+</Note>
 
 You can disable or configure `ErrorBoundary` using a second parameter to `withSentry`.
 
@@ -208,6 +214,17 @@ import { createRequestHandler } from "@remix-run/express";
 const createSentryRequestHandler =
   wrapExpressCreateRequestHandler(createRequestHandler);
 
-// Use createSentryRequestHandler like you would with createRequestHandler
 app.all("*", createSentryRequestHandler(/* ... */));
+```
+
+The function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using Vite, you need to await the build loader before passing it to the wrapped handler.
+
+```diff {filename: server/index.ts}
+    wrapExpressCreateRequestHandler(createRequestHandler)({
+      build: vite
+-       ? () => unstable_loadViteServerBuild(vite)
++       ? await unstable_loadViteServerBuild(vite)
+      : await import(BUILD_DIR + "/index.js"),
+      ...
+    })
 ```
