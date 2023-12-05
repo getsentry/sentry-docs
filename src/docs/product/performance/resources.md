@@ -94,12 +94,12 @@ To view more details, click on a resource from the table to open its **Resource 
 <div style="position: relative; padding-bottom: calc(50.86013462976814% + 41px); height: 0;"><iframe src="https://demo.arcade.software/dVvM0eWdGjN7bVhxSwJr?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
 
 ### What does a render blocking mean?
-A render blocking resource is one which will stop the browser from rendering anything on the screen, until the resource is fully download and processed by the browser. 
+
+A render blocking resource is one which will stop the browser from rendering anything on the screen, until the resource is fully download and processed by the browser.
 
 An example of this is a `<script/>` within the `<head>` of an HTML document. When loaded, the browser will want to load this script entirely before rendering content as it assumes it may need something from that script to render. If this is not the case, you can add the `defer` or `async` attribute to the script in order to reduce or eliminate render blocking.
 
 Sentry captures a resources render blocking status using the `resource.render_blocking_status` property in the [PerformanceResourceTiming Api](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/renderBlockingStatus).
-
 
 ### Resource Parameterization
 
