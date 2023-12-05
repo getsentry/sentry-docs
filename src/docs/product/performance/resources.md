@@ -97,7 +97,8 @@ To enable Sentry to group similar resources together, Sentry parameterizes resou
 
 If you would like to further improve your groupings, consider the following rules we use when parameterizing urls. These rules can help you understand how you can name urls to improve grouping.
 
-The following tokens will be replaced with * within a resource url
+The following tokens will be replaced with \* within a resource url
+
 1. A version string (`myfile.v3.0.js` is replace with `myfile.*.js`)
 2. Hexadecimal strings with more than 5 digits (`myfile.7A9B3E.js` is replaced with `myfile.*.js`)
 3. UUID's
