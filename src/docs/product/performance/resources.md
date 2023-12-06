@@ -103,7 +103,18 @@ Sentry captures a resources render blocking status using the `resource.render_bl
 
 ### Resource Parameterization
 
-To enable Sentry to group similar resources together, Sentry parameterizes resource URLs, removing potenially dynamic elements. This helps track the performance of a particular resource across different releases, even when they have dynamic segments (used for busting caches or CDNS).
+To enable Sentry to group similar resources together, Sentry parameterizes resource URLs, removing potentially dynamic elements. This helps track the performance of a particular resource across different releases, even when they have dynamic segments (used for busting caches or CDNS).
+
+If you would like to further improve your groupings, consider the following rules we use when parameterizing urls. These rules can help you understand how you can name urls to improve grouping.
+
+The following tokens will be replaced with \* within a resource url
+
+1. A version string (`myfile.v3.0.js` is replace with `myfile.*.js`)
+2. Hexadecimal strings with more than 5 digits (`myfile.7A9B3E.js` is replaced with `myfile.*.js`)
+3. UUID's
+4. Integer IDs with more than one digit (`1234.7A9B3E.js` is replace with `*.*.js`)
+5. Strings longer then 25 characters
+6. The entire path except for common path segments such as static, chunks, media, etc
 
 <Note>
 
