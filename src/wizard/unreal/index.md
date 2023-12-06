@@ -115,11 +115,8 @@ Once everything is configured you can call the plugin API from both C++ and blue
 
 void Verify()
 {
-    // Obtain reference to GameInstance
-    UGameInstance* GameInstance = GEngine->GetEngineSubsystem<USentrySubsystem>();
-
     // Capture message
-    USentrySubsystem* SentrySubsystem = GameInstance->GetSubsystem<USentrySubsystem>();
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
     SentrySubsystem->CaptureMessage(TEXT("Capture message"));
 }
 ```
