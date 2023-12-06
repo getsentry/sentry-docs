@@ -695,6 +695,10 @@ In some SDKs, the integrations are configured through this parameter on library 
 
 This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
 
+<ConfigKey name="auto-enabling-integrations" supported={["python"]} />
+
+This can be used to disable integrations that are enabled by default if the SDK detects that the corresponding framework or library is installed. When set to `false`, none of these integrations will be enabled by default, even if the corresponding framework/library is detected.
+
 </PlatformSection>
 
 ## Hooks
@@ -933,6 +937,13 @@ A boolean value, if true, transactions and trace data will be generated and capt
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
+<PlatformSection supported={["python"]}>
+If <PlatformIdentifier name="traces-sample-rate" /> is 0, this means that no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service that include trace information, those traces will be continued and thus transactions will be sent to Sentry.
+
+If you want to disable all tracing you need to set <PlatformIdentifier name="traces-sample-rate" />`=None` or set <PlatformIdentifier name="enable-tracing" />`=False`. In this case, no new traces will be started and no incoming traces will be continued.
+
+</PlatformSection>
+
 </ConfigKey>
 
 <ConfigKey name="traces-sampler" supported={["apple", "node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
@@ -975,6 +986,24 @@ To learn more, see the [Custom Instrumentation](/platforms/python/performance/in
 When enabled, a new monitor thread will be spawned to perform health checks on the SDK. If the system is unhealthy, the SDK will keep halving the `traces_sample_rate` set by you in 10 second intervals until recovery. This downsampling helps ensure that the system stays stable and reduces SDK overhead under high load.
 
 This option is enabled by default.
+
+</ConfigKey>
+
+<ConfigKey name="enable-db-query-source" supported={["python"]}>
+
+When enabled, the source location will be added to database queries.
+
+This option is disabled by default.
+
+</ConfigKey>
+
+<ConfigKey name="db-query-source-threshold-ms" supported={["python"]}>
+
+The threshold in milliseconds for adding the source location to database queries. The query location will be added to the query for queries slower than the specified threshold.
+
+You need to set `enable_db_query_source` to `True` for this to work.
+
+Default is `100` ms.
 
 </ConfigKey>
 

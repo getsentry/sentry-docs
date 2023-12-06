@@ -102,7 +102,108 @@ You can include your DSN directly in these three files, or provide it in either 
 
 ## Report React Component Render Errors
 
-Next, you should create a [Custom Next.js Error Page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) and call `captureUnderscoreErrorException` in your Error Page's `getInitialProps` method to capture React rendering errors:
+To capture React render errors you need to add Error components for the App Router and the Pages Router respectively.
+
+### React Render Errors in App Router
+
+Create a [Custom Next.js Global Error component](https://nextjs.org/docs/app/building-your-application/routing/error-handling) for the App router:
+
+```tsx {filename:global-error.tsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }: { error: Error }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        {/* This is the default Next.js error component but it doesn't allow omitting the statusCode property yet. */}
+        <Error statusCode={undefined as any} />
+      </body>
+    </html>
+  );
+}
+```
+
+```jsx {filename:global-error.jsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        {/* This is the default Next.js error component. */}
+        <Error />
+      </body>
+    </html>
+  );
+}
+```
+
+Note that if you create [Next.js `error.js` files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
+This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
+
+```tsx {filename:error.tsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function Error({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
+  useEffect(() => {
+    // Log the error to Sentry
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+    </div>
+  );
+}
+```
+
+```jsx {filename:error.jsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function Error({ error }) {
+  useEffect(() => {
+    // Log the error to Sentry
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+    </div>
+  );
+}
+```
+
+### React Render Errors in Pages Router
+
+Create a [Custom Next.js Error Page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) and call `captureUnderscoreErrorException` in your Error Page's `getInitialProps` method:
 
 ```TypeScript {filename:_error.tsx}
 import * as Sentry from "@sentry/nextjs";
@@ -475,17 +576,16 @@ const nextConfig = {
 };
 ```
 
-### Opt Out of Auto-instrumentation of Vercel Cron Jobs
+### Instrumentation of Vercel Cron Jobs
 
 _(New in version 7.52.0)_
 
-The Next.js SDK will automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs).
-To opt out of this functionality set the `automaticVercelMonitors` option to `false`.
+You can set the `automaticVercelMonitors` option to automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs).
 
 ```javascript {filename:next.config.(js|mjs)}
 const nextConfig = {
   sentry: {
-    automaticVercelMonitors: false,
+    automaticVercelMonitors: true,
   },
 };
 ```
