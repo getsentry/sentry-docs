@@ -87,9 +87,19 @@ By default, the resources table is sorted by most time spent, which serves as a 
 
 You can click on a column header to change how the table is sorted. Sort by requests per minute to see the most frequently loaded resources or by average duration to see the slowest-loading resources.
 
+You can also filter resources by domain, type, page it's found on, and whether it has render blocked.
+
 To view more details, click on a resource from the table to open its **Resource Summary** page.
 
 <div style="position: relative; padding-bottom: calc(50.86013462976814% + 41px); height: 0;"><iframe src="https://demo.arcade.software/dVvM0eWdGjN7bVhxSwJr?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
+
+### What does a render blocking mean?
+
+A render blocking resource is one which will stop the browser from rendering anything on the screen, until the resource is fully download and processed by the browser.
+
+An example of this is a `<script/>` within the `<head>` of an HTML document. When loaded, the browser will want to load this script entirely before rendering content as it assumes it may need something from that script to render. If this is not the case, you can add the `defer` or `async` attribute to the script in order to reduce or eliminate render blocking.
+
+Sentry captures a resources render blocking status using the `resource.render_blocking_status` property in the [PerformanceResourceTiming Api](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/renderBlockingStatus).
 
 ### Resource Parameterization
 
@@ -107,7 +117,7 @@ To see an example of resource URL from a group, hover over a URL in the resource
 
 ## Resource Summary Page
 
-To open a query's **Resource Summary** page, click on the resource from the table in the **Resources** page.
+To open a resource's **Resource Summary** page, click on the resource from the table in the **Resources** page.
 
 At the top of the page, average encoded size, average decoded size, average transfer size, average duration, and requests per minute are shown for the selected time range. Right below this, you can see summary graphs for requests per minute, average duration, and average resource size over time.
 
