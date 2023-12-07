@@ -10,21 +10,27 @@ import { Note } from "sentry-docs/components/note";
 import { PlatformContent } from "sentry-docs/components/platformContent";
 import { Alert } from "sentry-docs/components/alert";
 import { GitHubCTA } from "sentry-docs/components/githubCta";
+import { MDXComponents } from "mdx/types";
 
 export async function generateStaticParams() {
     const docs = await getAllFilesFrontMatter();
     return docs.map((doc) => ({ path: doc.slug.split('/').slice(1) }));
 }
 
-const MDXComponents = {
+const MDXComponents: MDXComponents = {
   Alert,
   Note,
   PageGrid,
   PlatformContent,
-  a: Link,
-  wrapper: ({ components, ...rest }) => {
-    return <Layout {...rest} />;
-  }
+  // a: Link, // TODO: fails type check
+  wrapper: ({ children, frontMatter, docs, toc }) => (
+    <Layout
+      children={children}
+      frontMatter={frontMatter}
+      docs={docs}
+      toc={toc}
+      />
+  )
 }
 
 const Layout = ({children, frontMatter, docs, toc}) => {
