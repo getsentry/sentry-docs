@@ -9,6 +9,7 @@ import { Sidebar } from 'sentry-docs/components/sidebar';
 import { Note } from "sentry-docs/components/note";
 import { PlatformContent } from "sentry-docs/components/platformContent";
 import { Alert } from "sentry-docs/components/alert";
+import { GitHubCTA } from "sentry-docs/components/githubCta";
 
 export async function generateStaticParams() {
     const docs = await getAllFilesFrontMatter();
@@ -56,6 +57,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
               <div className="col-sm-8 col-md-12 col-lg-8 col-xl-9">
                 <h1>{frontMatter.title}</h1>
                 {children}
+                <GitHubCTA />
               </div>
               <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                 <div className="page-nav">
