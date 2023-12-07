@@ -7,6 +7,10 @@ const nextConfig = {
     return {
       fallback: [
         {
+          source: '/',
+          destination: 'https://docs.sentry.io/',
+        },
+        {
           source: '/:path*/',
           destination: 'https://docs.sentry.io/:path*/',
         },
