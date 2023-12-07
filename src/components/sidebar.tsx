@@ -16,7 +16,7 @@ export function Sidebar({ docs }) {
     return a.title.localeCompare(b.title);
   });
   
-  const roots = [];
+  const roots: any[] = [];
   const slugMap = {};
   sortedDocs.forEach((doc) => {
     const slugParts = doc.slug.split('/');
@@ -47,7 +47,7 @@ export function Sidebar({ docs }) {
           data-sidebar-link
           >
           {node.doc.title}
-          {node.children.length > 0 && <Chevron />}
+          {node.children.length > 0 && <Chevron direction="down" />}
         </SidebarNavItem>
         {renderChildren(node.children)}
       </li>

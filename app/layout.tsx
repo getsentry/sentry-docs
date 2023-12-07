@@ -1,7 +1,4 @@
 import type { Metadata } from 'next';
-import { Header } from 'sentry-docs/components/header';
-import { Navbar } from 'sentry-docs/components/navbar';
-import { Sidebar } from 'sentry-docs/components/sidebar';
 
 import 'sentry-docs/styles/screen.scss';
 import 'prism-sentry/index.css';
