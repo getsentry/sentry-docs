@@ -20,7 +20,11 @@ const nextConfig = {
   
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   
-  trailingSlash: true
+  trailingSlash: true,
+  
+  experimental: {
+    serverComponentsExternalPackages: ['rehype-preset-minify']
+  }
 };
 
 const withMDX = createMDX({
