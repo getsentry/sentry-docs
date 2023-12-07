@@ -1,29 +1,17 @@
 ---
 title: Expo
-description: "Learn how to set up Expo managed project with Sentry React Native SDK."
+description: "Learn how to set up an Expo-managed project with the Sentry React Native SDK."
 ---
 
 <Alert level="info" title="Experimental Support">
 
-The Expo support is currently experimental and available since version `5.16.0-alpha.1` and Expo SDK 50.
+Expo support is currently experimental and available since Sentry React Native SDK version `5.16.0-alpha.1` and Expo SDK version 50.
 
 Experimental support means it may have bugs. We recognize the irony.
 
 </Alert>
 
-Sentry React Native SDK can be setup in Expo managed project using just one command of `@sentry-wizard`. If you prefer or can't the Wizard you can follow the manual steps on this page.
-
-## Automatic Setup
-
-Run `@sentry/wizard`:
-
-```bash {tabTitle:npm}
-npx @sentry/wizard@latest -i reactNative
-```
-
-## Manual Setup
-
-If you can’t (or prefer not to) run the [automatic setup](/platforms/react-native), use the instructions below to configure your application.
+To set up the Sentry React Native SDK in your Expo-managed project, follow the steps on this page.
 
 ### Install SDK Package
 
@@ -71,7 +59,7 @@ export default Sentry.wrap(App);
 
 ### Add Sentry Expo plugin
 
-To ensure bundle and source map are automatically uploaded during the native application build, add `withSentry` to the Expo application configuration:
+To ensure the bundles and source maps are automatically uploaded during the native applications builds, add `withSentry` to the Expo application configuration:
 
 ```javascript {tabTitle:app.json/app.config.json}
 {
@@ -129,12 +117,15 @@ export default withSentry(config, {
 
 ### Add Sentry Metro Plugin
 
-To ensure unique Debug ID gets assigned to the generated bundle and source maps, add Sentry Serializer to the Metro configuration:
+To ensure unique Debug IDs get assigned to the generated bundles and source maps, add Sentry Serializer to the Metro configuration:
 
 ```javascript {tabTitle:metro.config.js}
-const { getDefaultConfig } = require()'expo/metro-config');
-const { mergeConfig } = require("metro");
+const { mergeConfig } = require('metro');
+const { getDefaultConfig } = require('expo/metro-config');
 const { createSentryMetroSerializer } = require("@sentry/react-native/metro");
+const { withExpoSerializers } = require('@expo/metro-config/build/serializer/withExpoSerializers');
+
+const config = getDefaultConfig(__dirname);
 
 const sentryConfig = {
   serializer: {
@@ -142,14 +133,13 @@ const sentryConfig = {
   },
 };
 
-const config = getDefaultConfig(__dirname);
-
-module.exports = mergeConfig(config, sentryConfig);
+const finalConfig = mergeConfig(config, sentryConfig);
+module.exports = withExpoSerializers(finalConfig);
 ```
 
 ## Verify Setup
 
-To verify that everything is working as expected, build `Release` version of your application and send a test event to Sentry by adding:
+To verify that everything is working as expected, build the `Release` version of your application and send a test event to Sentry by adding:
 
 ```javascript
 <Button
