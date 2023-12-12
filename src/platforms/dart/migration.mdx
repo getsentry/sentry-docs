@@ -1,8 +1,46 @@
 ---
 title: Migration Guide
-sidebar_order: 1000
+sidebar_order: 8000
 description: "Migrate between versions of Sentry's SDK for Dart."
 ---
+
+## Migrating From `sentry` `6.18.x` to `sentry` `7.0.0`
+
+API changes:
+
+- Sentry's Dart SDK version 7.0.0 and above requires Dart `2.17.0`.
+- Sentry's `sentry_file` package version 7.0.0 and above requires Dart `2.19.0`.
+- Methods that used to take a `dynamic hint` optional parameter now take `Hint? hint` instead.
+- The following deprecated fields have been removed from the `SentryDevice` class and replaced:
+  - `screenResolution` replaced with `screenHeightPixels` and `screenWidthPixels`.
+  - `timezone` replaced with `SentryCulture#timezone`.
+  - `language` replaced with `SentryCulture#locale`.
+  - `theme` replaced with `SentryOperatingSystem#theme`.
+- The following deprecated field has been removed from the `Contexts#dart_context` databag and replaced:
+  - `isolate` replaced with `SentryThread#name`.
+- The following fields have been removed from the `Scope` class and replaced:
+  - `user(SentryUser? user)` replaced with `setUser(SentryUser? user)`.
+  - `attachements` replaced with `attachments`.
+- Classes or methods that used to take the below optional parameters, have been moved to the `SentryOptions` class and replaced:
+  - `captureFailedRequests` replaced with `SentryOptions#captureFailedRequests`.
+  - `sendDefaultPii` replaced with `SentryOptions#sendDefaultPii`.
+  - `maxRequestBodySize` replaced with `SentryOptions#maxRequestBodySize`.
+  - `networkTracing` replaced with `SentryOptions#tracesSampleRate` or `SentryOptions#tracesSampler`.
+  - `recordBreadcrumbs` replaced with `SentryOptions#recordHttpBreadcrumbs`.
+- The following `SentryMeasurementUnits` are now strongly typed:
+  - `DurationSentryMeasurementUnit`
+  - `InformationSentryMeasurementUnit`
+  - `FractionSentryMeasurementUnit`
+  - `CustomSentryMeasurementUnit`
+  - `NoneSentryMeasurementUnit`
+
+Behavior changes:
+
+- Sentry's Dart SDK version 7.0.0 and above supports Dart `3.0.0`.
+- When an unhandled error happens and there's a running transaction, the transaction status will be set to `internal_error`.
+- The `captureFailedRequests` feature is now enabled by default.
+- The `enableStructuredDataTracing` feature is now enabled by default.
+- The `enableUserInteractionTracing` feature is now enabled by default.
 
 ## Migrating From `sentry` `6.5.x` to `sentry` `6.6.x`
 

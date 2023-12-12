@@ -5,15 +5,35 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 Add `@sentry/serverless` as a dependency to `package.json`:
 
-```bash
-  "@sentry/serverless": "^5.26.0"
+```javascript
+dependencies: {
+  //...
+  "@sentry/serverless": "^7"
+}
 ```
 
 To set up Sentry for a Google Cloud Function:
 
-```javascript {tabTitle:http functions}
+### Http Functions
+
+```javascript
 const Sentry = require("@sentry/serverless");
 
 Sentry.GCPFunction.init({
@@ -30,7 +50,9 @@ exports.helloHttp = Sentry.GCPFunction.wrapHttpFunction((req, res) => {
 });
 ```
 
-```javascript {tabTitle:background functions}
+### Background Functions
+
+```javascript
 const Sentry = require("@sentry/serverless");
 
 Sentry.GCPFunction.init({
@@ -49,7 +71,9 @@ exports.helloEvents = Sentry.GCPFunction.wrapEventFunction(
 );
 ```
 
-```javascript {tabTitle:cloudEvents}
+### CloudEvent Functions
+
+```javascript
 const Sentry = require("@sentry/serverless");
 
 Sentry.GCPFunction.init({

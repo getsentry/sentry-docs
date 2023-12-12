@@ -10,6 +10,8 @@ transport depends on the target platform:
 - **Linux**: Curl
 - **macOS**: Curl
 
+## Custom Transports
+
 To specify a custom transport, use the `sentry_options_set_transport` function
 and supply a transport that implements the `sentry_transport_t` interface.
 
@@ -45,3 +47,15 @@ int main(void) {
 The transport is invoked in the same thread as the call to
 `sentry_capture_event`. Consider to offload network communication to a
 background thread or thread pool to avoid blocking execution.
+
+## Using an HTTP Proxy
+
+The Native SDK allows the configuration of an HTTP proxy through which requests can be tunneled to our backend. This proxy must allow `CONNECT` requests to establish a proxy connection. It can be configured via the following option interface:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_http_proxy(options, "http://my.proxy:10010");
+sentry_init(options);
+
+/* ... */
+```

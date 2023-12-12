@@ -1,5 +1,5 @@
-import React from "react";
+import React from 'react';
 
-export default ({ children }: React.Props<{}>): JSX.Element => {
+export function DefinitionList({children}: {children: React.ReactNode}) {
   return <div className="large-definition-list">{children}</div>;
-};
+}

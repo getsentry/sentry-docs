@@ -1,21 +1,24 @@
-import React from "react";
-import { graphql } from "gatsby";
+import React from 'react';
+import {graphql} from 'gatsby';
 
-import BasePage from "../components/basePage";
-import Content from "../components/content";
-import PlatformSdkDetail from "../components/platformSdkDetail";
-import PlatformSidebar from "../components/platformSidebar";
+import {BasePage} from 'sentry-docs/components/basePage';
+import {Content} from 'sentry-docs/components/content';
+import {PlatformSdkDetail} from 'sentry-docs/components/platformSdkDetail';
+import {PlatformSidebar} from 'sentry-docs/components/platformSidebar';
 
 type Props = {
   data: {
     file: any;
   };
+  location: {
+    pathname: string;
+  };
   pageContext: {
-    title: string;
     platform: {
       name: string;
       title: string;
     };
+    title: string;
     guide?: {
       name: string;
       title: string;
@@ -23,8 +26,8 @@ type Props = {
   };
 };
 
-export default (props: Props) => {
-  const { pageContext } = props;
+export default function Platform(props: Props) {
+  const {pageContext} = props;
   // Ruby
   // Rails
   // X for Ruby
@@ -36,26 +39,28 @@ export default (props: Props) => {
       : `${props.pageContext.title} for ${
           (props.pageContext.guide || props.pageContext.platform).title
         }`;
+
+  // remove leading '/'
+  const slug = props.location.pathname.replace(/^\//, '');
+
   return (
     <BasePage
       {...props}
+      slug={slug}
       seoTitle={seoTitle}
       prependToc={<PlatformSdkDetail />}
       sidebar={
-        <PlatformSidebar
-          platform={pageContext.platform}
-          guide={pageContext.guide}
-        />
+        <PlatformSidebar platform={pageContext.platform} guide={pageContext.guide} />
       }
     >
       <Content file={props.data.file} />
     </BasePage>
   );
-};
+}
 
 export const pageQuery = graphql`
   query PlatformPageQuery($id: String) {
-    file(id: { eq: $id }) {
+    file(id: {eq: $id}) {
       id
       relativePath
       sourceInstanceName

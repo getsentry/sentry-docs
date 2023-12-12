@@ -1,5 +1,71 @@
 [
   {
+    "type": "Histogram",
+    "name": "buffer.dequeue_attempts",
+    "description": "Number of attempts needed to dequeue spooled envelopes from disk.\n\nAs long as there are enough permits in the [`crate::utils::BufferGuard`], this number should\nalways be one.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.disk_size",
+    "description": "The file size of the buffer db on disk, in bytes.\n\nThis metric is computed by multiplying `page_count * page_size`.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.envelopes_disk_count",
+    "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelopes_mem",
+    "description": "The estimated number of envelope bytes buffered in memory.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.envelopes_mem_count",
+    "description": "The number of envelopes waiting for project states in memory.\n\nThis number is always <= `EnvelopeQueueSize`.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_read",
+    "description": "Number of _envelopes_ the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_written",
+    "description": "Number of _envelopes_ the envelope buffer spools to disk.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.projects_mem_count",
+    "description": "The current count of the keys in the \"in-memory\" buffer.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.reads",
+    "description": "Number times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.writes",
+    "description": "Number times the envelope buffer spools to disk.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "envelope.on_disk_buffer_time",
+    "description": "Total time in milliseconds an envelope spends in the Relay's on-disk buffer.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
@@ -51,14 +117,8 @@
   },
   {
     "type": "Histogram",
-    "name": "event.size_bytes.raw",
-    "description": "The size of the HTTP request body as seen by Relay after it is extracted from a request in\nbytes.\n\n- For envelope requests, this is the full size of the envelope.\n- For JSON store requests, this is the size of the JSON body.\n- For multipart uploads of crash reports and attachments, this is the size of the multipart\nbody including boundaries.\n\nIf this request contains a base64 zlib compressed payload without a proper\n`content-encoding` header, then this is the size before decompression.\n\nThe maximum request body size can be configured with `limits.max_envelope_size`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "event.size_bytes.uncompressed",
-    "description": "The size of the request body as seen by Relay after decompression and decoding in bytes.\n\nJSON store requests may contain a base64 zlib compressed payload without proper\n`content-encoding` header. In this case, this metric contains the size after decoding.\nOtherwise, it is always equal to `event.size_bytes.raw`.",
+    "name": "event.spans",
+    "description": "The number of spans per processed transaction event.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
     "features": []
   },
   {
@@ -69,8 +129,14 @@
   },
   {
     "type": "Counter",
-    "name": "event.transaction_source",
-    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.",
+    "name": "event.transaction",
+    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `contains_slashes`: Whether the transaction name contains `/`. We use this as a heuristic\nto represent URL transactions.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.transaction_name_changes",
+    "description": "The number of transaction events processed grouped by transaction name modifications.\nThis metric is tagged with:\n- `source_in`: The source of the transaction name before normalization.\nSee the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `change`: The mechanism that changed the transaction name.\nEither `\"none\"`, `\"pattern\"`, `\"rule\"`, or `\"both\"`.\n- `source_out`: The source of the transaction name after normalization.",
     "features": []
   },
   {
@@ -126,6 +192,18 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "global_config.fetch",
+    "description": "Number of global config fetches from upstream. Only 2XX responses are\nconsidered and ignores send errors (e.g. auth or network errors).\n\nThis metric is tagged with:\n- `success`: whether deserializing the global config succeeded.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "global_config.requests.duration",
+    "description": "Total time spent to send a request and receive the response from upstream.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "http_queue.size",
     "description": "The number of upstream requests queued up for sending.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity. If all connections are busy, they are\nqueued, which is reflected in this metric.\n\nThis metric is tagged with:\n- `priority`: The queueing priority of the request, either `\"high\"` or `\"low\"`. The\npriority determines precedence in executing requests.\n\nThe number of concurrent connections can be configured with:\n- `limits.max_concurrent_requests` for the overall number of connections\n- `limits.max_concurrent_queries` for the number of concurrent high-priority requests",
@@ -140,25 +218,25 @@
   {
     "type": "Gauge",
     "name": "metrics.buckets",
-    "description": "The total number of metric buckets in Relay's metrics aggregator.",
+    "description": "The total number of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "metrics.buckets.batches_per_partition",
-    "description": "The number of batches emitted per partition by [`crate::aggregation::Aggregator`].",
+    "description": "The number of batches emitted per partition.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "metrics.buckets.cost",
-    "description": "The total storage cost of metric buckets in Relay's metrics aggregator.",
+    "description": "The total storage cost of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
     "type": "Set",
     "name": "metrics.buckets.created.unique",
-    "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.",
+    "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric for which the bucket was created.",
     "features": []
   },
   {
@@ -170,19 +248,19 @@
   {
     "type": "Counter",
     "name": "metrics.buckets.dropped",
-    "description": "Incremented every time a bucket is dropped.\n\nThis should only happen when a project state is invalid during graceful shutdown.",
+    "description": "Incremented every time a bucket is dropped.\n\nThis should only happen when a project state is invalid during graceful shutdown.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "metrics.buckets.flushed",
-    "description": "The total number of metric buckets flushed in a cycle across all projects.",
+    "description": "The total number of metric buckets flushed in a cycle across all projects.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "metrics.buckets.flushed_per_project",
-    "description": "The number of metric buckets flushed in a cycle for each project.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This histogram\nis logged for each project that is being flushed. The count of the histogram values is\nequivalent to the number of projects being flushed.",
+    "description": "The number of metric buckets flushed in a cycle for each project.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This histogram\nis logged for each project that is being flushed. The count of the histogram values is\nequivalent to the number of projects being flushed.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
@@ -194,13 +272,13 @@
   {
     "type": "Counter",
     "name": "metrics.buckets.merge.hit",
-    "description": "Incremented every time two buckets or two metrics are merged.\n\nTagged by metric type and name.",
+    "description": "Incremented every time two buckets or two metrics are merged.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "metrics.buckets.merge.miss",
-    "description": "Incremented every time a bucket is created.\n\nTagged by metric type and name.",
+    "description": "Incremented every time a bucket is created.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
     "features": []
   },
   {
@@ -218,26 +296,46 @@
   {
     "type": "Histogram",
     "name": "metrics.buckets.per_batch",
-    "description": "The number of buckets in a batch emitted by [`crate::aggregation::Aggregator`].\n\nThis corresponds to the number of buckets that will end up in an envelope.",
+    "description": "The number of buckets in a batch emitted.\n\nThis corresponds to the number of buckets that will end up in an envelope.",
     "features": []
   },
   {
     "type": "Timer",
     "name": "metrics.buckets.scan_duration",
-    "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.",
+    "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
-    "type": "Timer",
-    "name": "metrics.extraction.transactions",
-    "description": "Time in milliseconds spent on converting a transaction event into a metric.",
+    "type": "Gauge",
+    "name": "metrics.buckets.size",
+    "description": "The average number of elements in a bucket when flushed.\n\nThis metric is tagged with:\n- `metric_type`: \"c\", \"d\", \"g\" or \"s\".\n- `namespace`: The namespace of the metric.",
     "features": []
   },
   {
     "type": "Counter",
-    "name": "metrics.insert",
-    "description": "Incremented for every metric that is inserted.\n\nTagged by metric type and name.",
+    "name": "metrics.meta.agg.items",
+    "description": "Incremnted for every metric meta item added to the metric meta aggregator.",
     "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.agg.update",
+    "description": "Incremented every time the meta aggregator emitted an update that needs to be stored or\nsent upstream.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.parsing_failed",
+    "description": "Number of times that parsing a metric meta item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.redis.update",
+    "description": "Incremented every time a redis key is updated to store or update metadata.",
+    "features": [
+      "redis"
+    ]
   },
   {
     "type": "Counter",
@@ -317,6 +415,12 @@
   },
   {
     "type": "Counter",
+    "name": "project_state.flush_all_metric_meta",
+    "description": "Number of full metric data flushes.\n\nA full flush takes all contained items of the aggregator and flushes them upstream,\nat best this happens once per freshly loaded project.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "project_state.get",
     "description": "Number of times a project state is looked up from the cache.\n\nThis includes lookups for both cached and new projects. As part of this, updates for\noutdated or expired project caches are triggered.\n\nRelated metrics:\n- `project_cache.hit`: For successful cache lookups, even for outdated projects.\n- `project_cache.miss`: For failed lookups resulting in an update.",
     "features": []
@@ -369,6 +473,18 @@
     "type": "Counter",
     "name": "project_upstream.completed",
     "description": "Number of times an upstream request for a project config is completed.\n\nCompletion can be because a result was returned or because the config request was\ndropped after there still was no response after a timeout.  This metrics has tags\nfor `result` and `attempts` indicating whether it was succesful or a timeout and how\nmany attempts were made respectively.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_upstream.failed",
+    "description": "Number of times an upstream request for a project config failed.\n\nFailure can happen, for example, when there's a network error. Refer to\n[`UpstreamRequestError`](crate::actors::upstream::UpstreamRequestError) for all cases.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "replay.recording.process",
+    "description": "Time in milliseconds spent on parsing, normalizing and scrubbing replay recordings.",
     "features": []
   },
   {

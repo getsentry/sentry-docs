@@ -5,53 +5,80 @@ support_level: production
 type: language
 ---
 
-To manually instrument certain regions of your code, you can create a transaction to capture them.
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
-The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
+The Sentry SDK for Python does a very good job of auto instrumenting your application. Here a short introduction on how to do custom performance instrumentation. If you'd like to learn more, read our [custom instrumentation](https://docs.sentry.io/platforms/python/performance/instrumentation/custom-instrumentation/) documentation.
+
+**Adding a Transaction**
+
+Adding transactions will allow you to instrument and capture certain regions of your code.
+
+<Note>
+
+If you're using one of Sentry's SDK integrations, transactions will be created for you automatically.
+
+</Note>
+
+The following example creates a transaction for an expensive operation (in this case,`eat_pizza`), and then sends the result to Sentry:
 
 ```python
-from sentry_sdk import start_transaction
+import sentry_sdk
 
-while True:
-  item = get_from_queue()
+def eat_slice(slice):
+    ...
 
-  with start_transaction(op="task", name=item.get_transaction_name()):
-      # process_item may create more spans internally (see next examples)
-      process_item(item)
+def eat_pizza(pizza):
+    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
+        while pizza.slices > 0:
+            eat_slice(pizza.slices.pop())
 ```
 
 **Adding More Spans to the Transaction**
 
-The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction. When using spans and transactions as context managers, they are automatically finished at the end of the `with` block.
+If you want to have more fine-grained performance monitoring, you can add child spans to your transaction, which can be done by either:
 
-In cases where you want to attach Spans to an already ongoing Transaction you can use `Hub.current.scope.transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
+- Using a context manager or
+- Using a decorator, (this works on sync and `async` functions)
 
-Alternatively, instead of adding to the top-level transaction, you can make a child span of the current span, if there is one. Use `Hub.current.scope.span` in that case.
+Calling a `sentry_sdk.start_span()` will find the current active transaction and attach the span to it.
 
-You can choose the values of `op` and `description`.
+```python {tabTitle:Context Manager}
+import sentry_sdk
 
-```python
-from sentry_sdk import Hub
+def eat_slice(slice):
+    ...
 
-def process_item(item):
-    transaction = Hub.current.scope.transaction
-    # omitted code...
-    with transaction.start_child(op="http", description="GET /") as span:
-        response = my_custom_http_library.request("GET", "/")
-        span.set_tag("http.status_code", response.status_code)
-        span.set_data("http.foobarsessionid", get_foobar_sessionid())
+def eat_pizza(pizza):
+    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
+        while pizza.slices > 0:
+            with sentry_sdk.start_span(description="Eat Slice"):
+                eat_slice(pizza.slices.pop())
+
 ```
 
-The alternative to make a tree of spans:
+```python {tabTitle:Decorator}
+import sentry_sdk
 
-```python
-from sentry_sdk import Hub
+@sentry_sdk.trace
+def eat_slice(slice):
+    ...
 
-def process_item(item):
-    parent_span = Hub.current.scope.span
-    # omitted code...
-    with parent_span.start_child(op="http", description="GET /") as span:
-        response = my_custom_http_library.request("GET", "/")
-        span.set_tag("http.status_code", response.status_code)
-        span.set_data("http.foobarsessionid", get_foobar_sessionid())
+def eat_pizza(pizza):
+    with sentry_sdk.start_transaction(op="task", name="Eat Pizza"):
+        while pizza.slices > 0:
+            eat_slice(pizza.slices.pop())
+
 ```

@@ -1,16 +1,11 @@
-The .NET SDK automatically shuts down and waits `ShutdownTimeout` seconds before that happens
-when the `Init`'s return value is disposed:
+The .NET SDK gracefully handles shutdown, waiting up to `ShutdownTimeout` seconds to flush captured events.
 
-```csharp
-using (SentrySdk.Init(...))
-{
-    // App code
-}
-```
+This happens in a variety of different situations:
 
-```fsharp
-use __ = SentrySdk.Init((* ... *))
-// App code
-```
+- Automatically, in the case of a normal application exit.
+- Automatically, in the case of an unhandled exception.
+- Automatically, for integrations that use dependency injection (`UseSentry`, `AddSentry`, etc.).
+- Manually, if you dispose of the result of `SentrySdk.Init` (which is optional).
+- Manually, if you call `SentrySdk.Flush` or `SentrySdk.FlushAsync`.
 
-In case of an unhandled exception that will crash the app, the SDK automatically disposes itself.
+In most cases, you can rely on the automatic approaches and don't need to worry about this.

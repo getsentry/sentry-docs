@@ -1,19 +1,15 @@
-```elixir
-# sentry.ex
+```elixir {filename:lib/my_app/sentry.ex}
 defmodule MyApp.Sentry do
   def before_send(%{user: user} = event) do
     # Don't send user's email address
-    user = Map.delete(user, :email)
+    user = user && Map.delete(user, :email)
     %{event | user: user}
   end
-
-  def before_send(event) do
-    event
-  end
 end
+```
 
-# config.exs
+```elixir {filename:config/config.exs}
 config :sentry,
-  before_send_event: {MyApp.Sentry, :before_send},
+  before_send: {MyApp.Sentry, :before_send},
   # ...
 ```

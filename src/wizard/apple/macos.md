@@ -5,18 +5,63 @@ support_level: production
 type: language
 ---
 
-We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+We support installing the SDK with [CocoaPods](/platforms/apple/install/cocoapods/), [Swift Package Manager](/platforms/apple/install/swift-package-manager/), and [Carthage](/platforms/apple/install/carthage/).
+
+### CocoaPods
+
+To integrate Sentry into your Xcode project, specify it in your `Podfile`:
 
 ```ruby
-platform :ios, '9.0'
+platform :ios, '11.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{ packages.version('sentry.cocoa') }}'
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{@inject packages.version('sentry.cocoa') }}'
 end
 ```
 
-Afterwards run `pod install`.
+Afterwards run `pod install`. For more information visit the [docs](/platforms/apple/install/cocoapods/).
+
+### Swift Package Manager
+
+To integrate Sentry into your Xcode project using Swift Package Manager (SPM), open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the Git repo url in the top right search field:
+
+```text
+https://github.com/getsentry/sentry-cocoa.git
+```
+
+Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
+
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+```
+
+For more information visit the [docs](/platforms/apple/install/swift-package-manager/).
+
+### Carthage
+
+To integrate Sentry into your Xcode project using Carthage, specify it in your `Cartfile`:
+
+```ruby
+github "getsentry/sentry-cocoa" "{{@inject packages.version('sentry.cocoa') }}"
+```
+
+Run `carthage update` to download the framework and drag the built `Sentry.framework` into your Xcode project. For more information visit the [docs](/platforms/apple/install/carthage/).
 
 ## Configuration
 
@@ -43,7 +88,7 @@ func application(_ application: UIApplication,
 }
 ```
 
-When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry
@@ -65,10 +110,7 @@ struct SwiftUIApp: App {
 
 ## Debug Symbols
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
-
-- [With Bitcode](/platforms/apple/dsym/#dsym-with-bitcode)
-- [Without Bitcode](/platforms/apple/dsym/#dsym-without-bitcode)
+To capture crashes, you need to provide debug information to Sentry. You can also use our source context feature to display code snippets next to the event stack traces by enabling the `include-sources` option when uploading your debug information files. Debug information is provided by [uploading dSYM files](/platforms/apple/dsym/).
 
 ## Performance Monitoring
 

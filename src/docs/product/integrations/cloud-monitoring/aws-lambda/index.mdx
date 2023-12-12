@@ -2,13 +2,13 @@
 title: AWS Lambda
 sidebar_order: 1
 redirect_from:
- - /product/integrations/aws-lambda/
+  - /product/integrations/aws-lambda/
 description: "Learn more about Sentry's AWS Lambda integration and how you can automatically instrument your Node or Python Lambda functions with Sentry without changing your code."
 ---
 
 <Note>
 
-Looking for instructions to set up the serverless SDK manually? Check out these docs for [Node](/platforms/node/guides/aws-lambda/) or [Python](/platforms/python/guides/aws-lambda/) instead.
+Looking for instructions to set up the serverless SDK manually? Check out these docs for [Node](/platforms/node/guides/aws-lambda/) or [Python](/platforms/python/integrations/aws-lambda/) instead.
 
 </Note>
 
@@ -40,15 +40,15 @@ Sentry owner, manager, or admin permissions are required to install this integra
 
 1. Scroll to the bottom of the Create Stack page, check the box, then press **Create Stack** to create a CloudFormation stack in your current region. This stack allows Sentry to automatically instrument your Lambda functions.
 
-   ![](cloudformation.png)
+   ![](cloudformation-create-stack.png)
 
-1. Wait for the stack to be created, which is confirmed by seeing the status change to **Create Complete**, then click **I've created the stack**.
+1. Wait for the stack to be created. Once it's confirmed and the status changes to **Create Complete**, click **I've created the stack** in the Sentry popup.
+
+   ![](cloudformation-stack-create-complete.png)
+
+1. Now copy your AWS Account ID, select the region you want to use, and press **Next**.
 
    ![](aws_account_2.png)
-
-1. Now copy your AWS account number, select the region you want to use, and press **Next**.
-
-   ![](stack_created.png)
 
 <Note>
 
@@ -64,27 +64,27 @@ Wait a few minutes as the Lambda functions are enabled. If any functions failed 
 
 ### Troubleshooting
 
-If you need help solving issues with your Sentry AWS Lamba integration integration, you can read the edge cases documented here. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.
+If you need help solving issues with your Sentry AWS Lamba integration, you can read the edge cases documented here. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.
 
-#### Error `SentryRole already exists`
+- #### Error `SentryRole already exists`
 
-The stack already exists on your account; you can proceed to the next step of adding your AWS account information.
+  The stack already exists in your account; you can proceed to the next step and add your AWS account information.
 
-#### Error `Invalid existing layer`
+- #### Error `Invalid existing layer`
 
-Your Lambda function has a layer that no longer exists. Please remove the problematic layer, then enable Sentry on the Lambda in the configuration view for the integration.
+  Your Lambda function has a layer that no longer exists. Please remove the problematic layer, then enable Sentry on the Lambda in the configuration view for the integration.
 
-#### Error `Please validate the CloudFormation stack was created successfully`
+- #### Error `Please validate the CloudFormation stack was created successfully`
 
-Sentry is unable to access your AWS account through your CloudFormation stack. This means either the stack has not been created or the external ID used doesn't match the one in your installation. You can go to the Parameters tab of the CloudFormation stack to copy the value of the external ID and paste it into the form field.
+  Sentry is unable to access your AWS account through your CloudFormation stack. This means either the stack has not been created or the external ID used doesn't match the one in your installation. You can go to the Parameters tab of the CloudFormation stack to copy the value of the external ID and paste it into the form field.
 
-#### Error `Invalid role associated with the lambda function`
+- #### Error `Invalid role associated with the lambda function`
 
-The role associated with your lambda function no longer exists. Please add a new role to your lambda function, then enable Sentry on the Lambda in the configuration view for the integration.
+  The role associated with your Lambda function no longer exists. Please add a new role to your Lambda function, then enable Sentry on the Lambda in the configuration view for the integration.
 
 ## Configure
 
-The integration configuration view allows you to do the following with your Lambda functions:
+The integration configuration view in Sentry allows you to do the following with your Lambda functions:
 
 - Enable Sentry
 - Disable Sentry
@@ -92,7 +92,11 @@ The integration configuration view allows you to do the following with your Lamb
 
 In the table view, you will also see the version of the Lambda layer below the name.
 
-![](configure.png)
+![](sentry-manage-functions.png)
+
+## Verify
+
+Run your AWS Lambda function. Performance data will be sent to Sentry and will show up on the **Performance** page in Sentry. If your function raises an error it will show up on the **Issues** page in Sentry.
 
 ## Remove Installation
 
@@ -100,24 +104,28 @@ Note that when the integration is uninstalled, your Lambda functions will still 
 
 Learn more about [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/).
 
-## Serverless Framework
+## Notes on Specific Frameworks
 
-Note that this integration will configure your existing lambda functions correctly to use the SDK layer and set the appropriate environment variables as per [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/).  You can check the output `aws lambda get-function-configuration --function-name <yourFunctionName>` and this works.
-However when you perform a subsequent `sls deploy` the environment variables are not maintained but it appears the reference to the layer is retained.  A workaround exists where you can set the layer definition and environment variables in `serverless.yml`.  There are two problems with this, you have to manually add the reference to the SDK layer for every function you want "Sentrified" and you can't maintain the latest layer version automatically.
+### Serverless Framework
 
-### Node
-```
+If you're using [Serverless framework](https://www.serverless.com/), note that this integration will configure your existing Lambda functions correctly to use the SDK layer and set the appropriate environment variables. Learn more about it [here](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/).
+
+You can confirm that the output works by inputting `aws lambda get-function-configuration --function-name <yourFunctionName>`. However, when you perform a subsequent `sls deploy` the environment variables aren't maintained even though it looks like the reference to the layer is retained.
+
+You can set the layer definition and environment variables in `serverless.yml` as a workaround, but you'll have to do two things manually: maintain the latest layer version and add the reference to the SDK layer for every function you want "Sentrified".
+
+**Serverless Framework Using Node:**
+
+```yaml {filename:serverless.yml}
 # other configuration
 
 provider:
-
   # more configuration
   region: <AWS_REGION>
-
   environment:
-    SENTRY_TRACES_SAMPLE_RATE: '1.0'
-    SENTRY_DSN: '<SENTRY_DSN>'
-    NODE_OPTIONS: '-r @sentry/serverless/dist/awslambda-auto'
+    SENTRY_TRACES_SAMPLE_RATE: "1.0"
+    SENTRY_DSN: "<SENTRY_DSN>"
+    NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
 
 custom:
   layers:
@@ -130,18 +138,17 @@ functions:
     layers: ${self:custom.layers}
 ```
 
-### Python
-```
+**Serverless Framework Using Python:**
+
+```yaml {filename:serverless.yml}
 # other configuration
 
 provider:
-
   # more configuration
   region: <AWS_REGION>
-
   environment:
-    SENTRY_TRACES_SAMPLE_RATE: '1.0'
-    SENTRY_DSN: '<SENTRY_DSN>'
+    SENTRY_TRACES_SAMPLE_RATE: "1.0"
+    SENTRY_DSN: "<SENTRY_DSN>"
 
 custom:
   layers:
@@ -152,18 +159,17 @@ functions:
   <yourFunctionName>:
     handler: sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler
     environment:
-      SENTRY_INITIAL_HANDLER: '<yourLambdaHandlerFunctionPath>'
+      SENTRY_INITIAL_HANDLER: "<yourLambdaHandlerFunctionPath>"
     layers: ${self:custom.layers}
 ```
 
-Currently there is no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the  lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK has not been given the necessary permissions.
-It is a relatively new integration but there is definitely a case to write a serverless plugin to make this super-smooth. There is an [older version](https://www.serverless.com/plugins/serverless-sentry-plugin) but it requires code changes to the handler and doesn't use `NODE_OPTIONS`. A new plugin could also add the Sentry layer to every function automatically.
+Currently, there's no way of using the [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) since the `lambda:ListLayerVersions on resource: arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK` hasn't been given the necessary permissions.
 
-## SST
+### SST
 
-To use [this integration](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/) with Node functions in [SST](https://serverless-stack.com), you'll need to:
+If you use Node functions in [SST](https://serverless-stack.com) and you want to use this integration, you'll need to:
 
 1. Import the [Lambda layer](/platforms/node/guides/aws-lambda/layer/) using the [`LayerVersion`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.LayerVersion.html) construct and set it by calling [`addDefaultFunctionLayers`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionlayers).
 2. Then set the `NODE_OPTIONS`, `SENTRY_DSN`, and `SENTRY_TRACES_SAMPLE_RATE` environment variables with the [`addDefaultFunctionEnv`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionenv) method.
 
-You can [read more about this over on the SST docs](https://docs.serverless-stack.com/monitoring-your-app-in-prod#sentry).
+Read [how this integration works](/product/integrations/cloud-monitoring/aws-lambda/how-it-works/) and [the SST docs](https://docs.serverless-stack.com/monitoring-your-app-in-prod#sentry) for more information.

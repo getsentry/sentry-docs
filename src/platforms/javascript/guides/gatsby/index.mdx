@@ -3,12 +3,15 @@ title: Gatsby
 sdk: "sentry.javascript.gatsby"
 redirect_from:
   - /platforms/javascript/gatsby/
+  - /platforms/javascript/guides/gatsby/errors/breadcrumbs/
 description: "Learn how to use Sentry with Gatsby."
 ---
 
+## Install
+
 To use Sentry with your Gatsby application, you will need to use `@sentry/gatsby` (Sentry’s Gatsby SDK):
 
-```bash {tabTitle:NPM}
+```bash {tabTitle:npm}
 npm install --save @sentry/gatsby
 ```
 
@@ -22,19 +25,7 @@ yarn add @sentry/gatsby
 
 </Note>
 
-## Connecting the SDK to Sentry
-
-You can configure the SDK in one of two ways discussed below: by creating a configuration file, or defining the options along with the Gatsby configuration. If you define options in both places, the SDK will prioritize the `init` in the configuration file and ignore the options in the Gatsby configuration.
-
-### Sentry Configuration File
-
-<Note>
-
-The minimum version supporting the Sentry configuration file is `6.14.0`.
-
-</Note>
-
-Using a Sentry configuration file is the approach we recommend since it supports defining non-serializable options in the `init`. Note that you still need to include the plugin, even if you don't set any options.
+Register the `@sentry/gatsby` plugin in your Gatsby configuration file (typically `gatsby-config.js`).
 
 ```javascript {filename:gatsby-config.js}
 module.exports = {
@@ -46,73 +37,27 @@ module.exports = {
 };
 ```
 
-Configure your `Sentry.init`:
+## Configure
 
-```javascript {filename:sentry.config.js}
+Then, configure your `Sentry.init`:
+
+<SignInNote />
+
+```javascript {filename:sentry.config.(js|ts)}
 import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0, // Adjust this value in production
-  beforeSend(event) {
-    // Modify the event here
-    if (event.user) {
-      // Don't send user's email address
-      delete event.user.email;
-    }
-    return event;
-  },
-  // ...
+  integrations: [new Sentry.Replay()],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
 });
 ```
-
-```typescript {filename:sentry.config.ts}
-import * as Sentry from "@sentry/gatsby";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0, // Adjust this value in production
-  beforeSend(event) {
-    // Modify the event here
-    if (event.user) {
-      // Don't send user's email address
-      delete event.user.email;
-    }
-    return event;
-  },
-  // ...
-});
-```
-
-### Gatsby Plugin Configuration
-
-Another alternative is to use Gatsby's [plugin configuration options](https://www.gatsbyjs.com/docs/how-to/plugins-and-themes/using-a-plugin-in-your-site/#using-plugin-configuration-options). While this keeps the SDK options with the plugin definition, it doesn't support non-serializable options like `integrations`, `transport`, `stackParser`,`beforeSend`, `beforeSendTransaction`, and `tracesSampler`.
-
-```javascript {filename:gatsby-config.js}
-module.exports = {
-  plugins: [
-    {
-      resolve: "@sentry/gatsby",
-      options: {
-        dsn: "___PUBLIC_DSN___",
-        tracesSampleRate: 1.0, // Adjust this value in production
-        // Cannot set any non-serializable options
-      },
-    },
-  ],
-};
-```
-
-With this approach, the SDK sets some options automatically based on environmental variables, but these can be overridden by setting custom options.
-
-`environment` (string)
-
-: Defaults to `process.env.NODE_ENV` or `development`
-
-`release` (string)
-
-: Defaults to certain environment variables based on the platform
-
-- GitHub Actions: `process.env.GITHUB_SHA`
-- Netlify: `process.env.COMMIT_REF`
-- Vercel: `process.env.VERCEL_GIT_COMMIT_SHA`

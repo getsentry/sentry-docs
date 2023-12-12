@@ -1,0 +1,16 @@
+The `BeforeSendTransaction` hook is a function that can be passed to `sentry.Init` via the corresponding configuration option. In this function you can either update the transaction event before it's sent to Sentry, or drop it by returning `nil`, for example:
+
+```go
+sentry.Init(sentry.ClientOptions{
+	// ...
+	BeforeSendTransaction: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if event.Message == "test-transaction" {
+			// Don't send the transaction to Sentry
+			return nil
+		}
+		// Update the message for every sent transaction
+		event.Message += " [example]"
+		return event
+	},
+})
+```

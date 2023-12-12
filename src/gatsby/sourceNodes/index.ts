@@ -1,15 +1,19 @@
-import { sourcePlatformNodes } from "./platformNodes";
-import { sourcePackageRegistryNodes } from "./packageRegistryNodes";
-import { sourceAppRegistryNodes } from "./appRegistryNodes";
-import { sourceAwsLambdaLayerRegistryNodes } from "./awsLambdLayerRegistryNodes";
-import { relayMetricsNodes } from "./relayMetricsNodes";
+import {GatsbyNode} from 'gatsby';
 
-export default async params => {
-  await Promise.all([
-    relayMetricsNodes(params),
-    sourcePlatformNodes(params),
-    sourcePackageRegistryNodes(params),
-    sourceAppRegistryNodes(params),
-    sourceAwsLambdaLayerRegistryNodes(params),
-  ]);
+import {sourceAppRegistryNodes} from './appRegistryNodes';
+import {sourceAwsLambdaLayerRegistryNodes} from './awsLambdLayerRegistryNodes';
+import {sourcePackageRegistryNodes} from './packageRegistryNodes';
+import {sourcePlatformNodes} from './platformNodes';
+import {relayMetricsNodes} from './relayMetricsNodes';
+import {piiFieldsNodes} from './relayPiiNodes';
+
+const sourceNodes: GatsbyNode['sourceNodes'] = async params => {
+  relayMetricsNodes(params);
+  piiFieldsNodes(params);
+  await sourcePlatformNodes(params);
+  await sourcePackageRegistryNodes(params);
+  await sourceAppRegistryNodes(params);
+  await sourceAwsLambdaLayerRegistryNodes(params);
 };
+
+export default sourceNodes;

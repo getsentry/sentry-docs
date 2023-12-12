@@ -13,7 +13,7 @@ export const getApiTypeDefs = () => {
         fields: Fields
 
         api_path: String!
-        authentication:  String
+        authentication: String
         description: String
         example_request: String
         example_response: String
@@ -23,7 +23,7 @@ export const getApiTypeDefs = () => {
         query_parameters: [ApiParam]
         warning: String
       }
-      
+
       type ApiParamItems {
         enum: [String]
         type: String
@@ -36,7 +36,7 @@ export const getApiTypeDefs = () => {
         items: ApiParamItems
       }
 
-      type openApiPathDescription implements Node @childOf(types: ["openAPI"], ) {
+      type openApiPathDescription implements Node @childOf(types: ["openAPI"]) {
         id: ID!
       }
 
@@ -58,9 +58,19 @@ export const getApiTypeDefs = () => {
         required: Boolean
       }
 
-      type Mdx implements Node @childOf(types: ["openApiPathDescription", "openApiPathParameter", "openApiBodyParameter"], mimeTypes: ["text/markdown"]) {
+      type Mdx implements Node
+        @childOf(
+          types: [
+            "File",
+            "APIDescription"
+            "openApiPathDescription"
+            "openApiPathParameter"
+            "openApiBodyParameter"
+          ]
+          mimeTypes: ["text/markdown", "text/x-markdown"]
+        ) {
         body: String
       }
-      `,
+    `,
   ];
 };

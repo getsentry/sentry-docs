@@ -1,10 +1,11 @@
 /* eslint-disable no-unused-vars */
 
-const React = require("react");
+const React = require('react');
 
 module.exports = {
-  ...jest.requireActual("gatsby"),
+  ...jest.requireActual('gatsby'),
   graphql: jest.fn(),
+  navigate: jest.fn(),
   Link: jest.fn().mockImplementation(
     // these props are invalid for an `a` tag
     ({
@@ -18,7 +19,7 @@ module.exports = {
       to,
       ...rest
     }) =>
-      React.createElement("a", {
+      React.createElement('a', {
         ...rest,
         href: to,
       })

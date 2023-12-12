@@ -1,36 +1,48 @@
-import React from "react";
-import { PlatformIcon } from "platformicons";
+import React, {Fragment} from 'react';
+import {PlatformIcon} from 'platformicons';
 
-import SmartLink from "./smartLink";
-import usePlatform, { Platform } from "./hooks/usePlatform";
+import {usePlatform} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
 type Props = {
-  platform?: string;
   className?: string;
+  platform?: string;
 };
 
-export default ({ platform, className }: Props): JSX.Element => {
+export function GuideGrid({platform, className}: Props) {
   const [currentPlatform] = usePlatform(platform);
-  // platform might actually not be a platform, so lets handle that case gracefully
-  if (!(currentPlatform as Platform).guides) {
+
+  if (currentPlatform === null) {
+    return null;
+  }
+
+  if (currentPlatform.type === 'guide') {
+    return null;
+  }
+
+  if (currentPlatform.guides.length === 0) {
     return null;
   }
 
   return (
-    <ul className={className}>
-      {(currentPlatform as Platform).guides.map(guide => (
-        <li key={guide.key}>
-          <SmartLink to={guide.url}>
-            <PlatformIcon
-              size={16}
-              platform={guide.key}
-              style={{ marginRight: "0.5rem", border: 0, boxShadow: "none" }}
-              format="lg"
-            />
-            <h4 style={{ display: "inline-block" }}>{guide.title}</h4>
-          </SmartLink>
-        </li>
-      ))}
-    </ul>
+    <Fragment>
+      <div className="doc-toc-title">
+        <h6>Related Guides</h6>
+      </div>
+      <ul className={className}>
+        {currentPlatform.guides.map(guide => (
+          <li key={guide.key}>
+            <SmartLink to={guide.url}>
+              <PlatformIcon
+                platform={guide.icon ?? guide.key}
+                style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
+                format="sm"
+              />
+              <h4 style={{display: 'inline-block'}}>{guide.title}</h4>
+            </SmartLink>
+          </li>
+        ))}
+      </ul>
+    </Fragment>
   );
-};
+}

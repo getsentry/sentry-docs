@@ -17,7 +17,7 @@ _Import name: `Sentry.Integrations.InboundFilters`_
 
 This integration allows you to ignore specific errors based on the error message or the URL from which the exception originated.
 
-To configure it, use the `ignoreErrors`, `denyUrls`, and `allowUrls` SDK options directly.
+To configure it, use the `ignoreErrors`, `ignoreTransactions`, `denyUrls`, and `allowUrls` SDK options directly.
 Keep in mind that `denyUrls` and `allowUrls` only work for captured exceptions, not raw message events.
 
 ### FunctionToString
@@ -31,7 +31,9 @@ are wrapped by our error or breadcrumb handlers.
 
 _Import name: `Sentry.Integrations.LinkedErrors`_
 
-This integration allows you to configure linked errors. They'll be recursively read up to a specified limit, and lookup will be performed by a specific key. By default, the limit is set to `5` and the key used is `"cause"`.
+This integration allows you to configure linked errors. They'll be recursively read up to a specified limit, and a lookup will be performed by a specific key on the captured Error object. By default, the integration records up to five errors and the key used for recursion is `"cause"`.
+
+This integration also enhances captured error events with data from an [AggregateError](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError) where applicable, by recursively iterating over the `errors` property on Error objects.
 
 Available options:
 
@@ -66,6 +68,7 @@ Available options:
 ```
 
 Where `TracingOptions` is:
+
 ```javascript
 {
   /**
@@ -139,6 +142,57 @@ Available options:
 }
 ```
 
+### LocalVariables
+
+_Import name: `Sentry.Integrations.LocalVariables`_
+
+_(Available in version 7.46.0 and above)_
+
+This integration adds stack local variables to stack frames for uncaught exceptions. Only works with Node 18+.
+
+To enable this integration, set the <PlatformLink to="/configuration/options/#include-local-variables">includeLocalVariables</PlatformLink>
+`init` option to `true`.
+
+Available options:
+
+```ts
+{
+  // Capture local variables for both handled and unhandled exceptions.
+  // Default: false - Only captures local variables for uncaught exceptions.
+  captureAllExceptions?: boolean;
+}
+```
+
+<Alert level="warning">
+
+Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we
+are currently unable to capture local variables for unhandled errors when using
+JavaScript modules (ESM).
+
+You can work around this issue by wrapping your code in try/catch and
+enabling the `captureAllExceptions` option:
+
+<SignInNote />
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.Integrations.LocalVariables({
+      captureAllExceptions: true,
+    }),
+  ],
+});
+
+try {
+  mainCode();
+} catch (e) {
+  Sentry.captureException(e);
+}
+```
+
+</Alert>
+
 ### Modules
 
 _(New in version 7.13.0.)_
@@ -186,9 +240,11 @@ To disable system integrations, set `defaultIntegrations: false` when calling `i
 
 To override an integration's settings, provide a new instance to the `integrations` option when calling `init()`. For example, to change the fatal error handler:
 
+<SignInNote />
+
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.Integrations.OnUncaughtException({
       onFatalError: () => {
@@ -207,9 +263,9 @@ This example removes the default-enabled `Console` integration:
 Sentry.init({
   // ...
 
-  integrations: function(integrations) {
+  integrations: function (integrations) {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.name !== 'Console');
+    return integrations.filter((integration) => integration.name !== "Console");
   },
 });
 ```

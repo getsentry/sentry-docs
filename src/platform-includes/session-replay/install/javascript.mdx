@@ -1,30 +1,51 @@
 The Replay integration is **already included** in your browser or framework SDK NPM packages. If you're using CDN bundles instead of NPM packages, you need to load the Replay integration CDN bundle in addition to your browser bundle:
 
-```bash {tabTitle: NPM}
-# Make sure to have @sentry/browser or a Framework SDK (e.g. @sentry/react) installed
+```bash {tabTitle: npm}
 npm install --save @sentry/browser
 ```
 
 ```bash {tabTitle: Yarn}
-# Make sure to have @sentry/browser or a Framework SDK (e.g. @sentry/react) installed
 yarn add @sentry/browser
 ```
 
-```html {tabTitle: CDN}
+```html {tabTitle: Loader}
 <!--
-Note that the Replay bundle only contains the Replay integration and not the
-entire Sentry SDK. You have to add it in addition to the Sentry Browser SDK bundle:
--->
+Enable Replay under:
+Settings -> Projects -> Client Keys (DSN)
+And then press the Configure button.
 
+This will initialize Replay with the default config:
+* replaysSessionSampleRate: 0.1,
+* replaysOnErrorSampleRate: 1
+You can change it with:
+-->
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      replaysSessionSampleRate: 0.5,
+      integrations: [
+        new Sentry.Replay({
+          maskAllText: true,
+        }),
+      ],
+    });
+  };
+</script>
+```
+
+```html {tabTitle: CDN}
+<!-- Recommended: Use this bundle for replay, error, and performance monitoring -->
 <script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.replay.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.replay.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 
+<!-- Alternatively, you can use this bundle for replay and error monitoring only -->
 <script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/replay.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'replay.min.js', 'sha384-base64') }}"
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.replay.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.replay.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 ```

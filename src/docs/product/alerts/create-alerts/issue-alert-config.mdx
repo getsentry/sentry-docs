@@ -26,7 +26,7 @@ Specify which project will use this particular alert rule. The created alert rul
 
 - New issue is created
 - Changes state from `resolved` to `unresolved`
-- Changes state from `ignored` to `unresolved`
+- Changes state from `archived` to `escalating`
 - The number of events in an issue is more than a certain number or has a higher [percent change](#change-alerts) in an interval
 - The number of unique users is more than a certain number or has a higher [percent change](#change-alerts) in an interval
 - An issue affects more than [{X} percent of sessions in {time}](#percent-based-alerts)
@@ -37,11 +37,7 @@ Learn more about issue states in [Issue States & Triage](/product/issues/states-
 
 ### Change Alerts
 
-<Note>
-
-This feature is available only if your organization is on either a Business or Trial plan.
-
-</Note>
+<Include name="feature-available-for-plan-trial-business.mdx" />
 
 When you select the number of events or users affected by an issue as a trigger, you have the option to set that trigger based on percent change. Percent change triggers are useful for alerting you when the number of errors in an issue or the number of unique users affected is significantly different from normal.
 
@@ -75,9 +71,10 @@ Learn more about and <PlatformLink to="/enriching-events/tags/">tags</PlatformLi
 
 "Then conditions", or actions, specify what should happen when trigger and filter conditions are met:
 
-- Send a notification to either [Issue Owners](/product/error-monitoring/issue-owners/), a team, or a member.
+- Send a notification to either [Suggested Assignees](#suggested_assignees), a team, or a member.
 - Send a notification to an integration, which can include these options, depending on which integrations you have installed:
   - Send a [Slack](/product/integrations/notification-incidents/slack/) notification
+  - Send a [Discord](/product/integrations/notification-incidents/discord/) notification
   - Send a [PagerDuty](/product/integrations/notification-incidents/pagerduty/) notification
   - Send a [Microsoft Teams](/product/integrations/notification-incidents/msteams/) notification
   - Send a notification to all legacy integrations.
@@ -88,13 +85,19 @@ Learn more about and <PlatformLink to="/enriching-events/tags/">tags</PlatformLi
 
 Learn more about [routing alerts with integrations](/product/alerts/create-alerts/routing-alerts/).
 
-### Issue Owners
+### Suggested Assignees
 
-[Issue owners](/product/issues/issue-owners/) can receive notifications by email or Slack depending on the [notification settings](/product/alerts/notifications/notification-settings/) of the issue owner when an alert is triggered.
+Suggested Assignees include people or teams currently assigned the issue, issue owners defined in [ownership rules](/product/issues/ownership-rules/), and anyone who has been identified as author of a [suspect commit](/product/issues/suspect-commits/). When an alert is triggered, they can choose to be notified via email or Slack (depending on their [notification settings](/product/alerts/notifications/notification-settings/)).
 
-If an issue owner is not configured or not found, either the notification won’t be sent or it’ll be sent to all project members, depending on the following setting in **[Project] > Settings > Issue Owners**.
+If no suggested assignees are found, the notification will be sent to the teams or members specified in the fallback notification setting, as shown below:
 
-![A toggle indicating if all users are issue owners or not.](issue_owners2.png)
+![Suggested Assignees with notify all project members selected.](suggested_assignee_all_members.png)
+
+The following members will be notified based on the option selected and their notification settings:
+
+- **All Project Members:** Every team member who has access to the project will be notified. This could potentially notify a large number of people. If two teams have access to the project, every member of both teams will be notified.
+- **Recently Active Members:** The 20 most recently logged-in members, who have access to the project.
+- **Nobody:** No one will be notified.
 
 ### Team Slack Notifications
 
@@ -119,6 +122,7 @@ The available intervals are:
 The preview displays a list of issues that would have triggered the alert and the last time they would have triggered it.
 
 Rules with any of following can't be previewed:
+
 - The issue is assigned to {no one/a team/a member}.
 - The event is from the latest release.
 - An issue affects more than [{X} percent of sessions in {time}](#percent-based-alerts)

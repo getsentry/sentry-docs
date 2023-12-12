@@ -1,19 +1,19 @@
-import React, { useState } from "react";
-import Select from "react-select";
-import { graphql, useStaticQuery } from "gatsby";
-import styled from "@emotion/styled";
+import React, {useState} from 'react';
+import Select from 'react-select';
+import styled from '@emotion/styled';
+import {graphql, useStaticQuery} from 'gatsby';
 
-type RegionData = { region: string; version: string };
+type RegionData = {region: string; version: string};
 type LayerData = {
-  regions: RegionData[];
   accountNumber: string;
-  layerName: string;
   canonical: string;
+  layerName: string;
+  regions: RegionData[];
 };
 
 const query = graphql`
   query LambdaLayer {
-    allLayer {
+    allAwsLambdaLayer {
       nodes {
         id
         canonical
@@ -28,45 +28,46 @@ const query = graphql`
   }
 `;
 
-const toOption = ({ region }: RegionData) => {
+const toOption = ({region}: RegionData) => {
   return {
     label: region,
     value: region,
   };
 };
 
-export default ({ canonical }: { canonical: string }): JSX.Element => {
+export function LambdaLayerDetail({canonical}: {canonical: string}) {
   const {
-    allLayer: { nodes: layerList },
-  }: { allLayer: { nodes: LayerData[] } } = useStaticQuery(query);
+    allAwsLambdaLayer: {nodes: layerList},
+  }: {allAwsLambdaLayer: {nodes: LayerData[]}} = useStaticQuery(query);
 
-  const layer = layerList.find(layer => layer.canonical === canonical);
-  //if we don't find a matching layer, let the page blow up
-  //cause the page is useless without it
+  const layer = layerList.find(l => l.canonical === canonical);
+  // if we don't find a matching layer, let the page blow up
+  // cause the page is useless without it
   if (!layer) {
     throw new Error(`Could not find layer for: ${canonical}`);
   }
 
-  const { regions, layerName, accountNumber } = layer;
+  const {regions, layerName, accountNumber} = layer;
 
   const [regionOption, setRegion] = useState<{
-    value: string;
     label: string;
+    value: string;
   }>();
 
   // generate the ARN using the selected region
-  let arn: string = "";
+  let arn: string = '';
   if (regionOption) {
-    const regionData = regions.find(
-      regionData => regionData.region == regionOption.value
-    );
-    const { version, region } = regionData;
+    const regionData = regions.find(data => data.region === regionOption.value);
+    const {version, region} = regionData;
     arn = `arn:aws:lambda:${region}:${accountNumber}:layer:${layerName}:${version}`;
   }
 
   return (
     <Wrapper>
-      <StyledSelect
+      <Select
+        styles={{
+          control: base => ({...base, width: 300}),
+        }}
         placeholder="Select Region"
         options={layer.regions.map(toOption)}
         value={regionOption}
@@ -75,26 +76,22 @@ export default ({ canonical }: { canonical: string }): JSX.Element => {
       {arn && (
         <ArnWrapper>
           <ArnLabel>ARN</ArnLabel>
-          {arn}
+          <code>{arn}</code>
         </ArnWrapper>
       )}
     </Wrapper>
   );
-};
+}
 
-//need a min-height so we don't get cropped at the bottom of the page
-const Wrapper = styled("div")`
-  min-height: 200px;
+// need a min-height so we don't get cropped at the bottom of the page
+const Wrapper = styled('div')`
+  min-height: 50px;
 `;
 
-const StyledSelect = styled(Select)`
-  width: 300px;
-`;
-
-const ArnWrapper = styled("div")`
+const ArnWrapper = styled('div')`
   margin-top: 10px;
 `;
 
-const ArnLabel = styled("div")`
+const ArnLabel = styled('div')`
   font-weight: bold;
 `;

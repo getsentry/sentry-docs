@@ -1,19 +1,27 @@
-import { getApiTypeDefs } from "./apiSchema";
-import { getPlatformTypeDefs } from "./platformSchema";
-import { getPackageTypeDefs } from "./packageSchema";
-import { getAppTypeDefs } from "./appSchema";
+import {GatsbyNode} from 'gatsby';
+
+import {getApiTypeDefs} from './apiSchema';
+import {getAppTypeDefs} from './appSchema';
+import {getPackageTypeDefs} from './packageSchema';
+import {getPlatformTypeDefs} from './platformSchema';
 
 // TODO(dcramer): move frontmatter out of ApiEndpoint and into Frontmatter
-export default ({ actions, schema }) => {
-  const { createTypes } = actions;
+const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] = ({
+  actions,
+  schema,
+}) => {
+  const {createTypes} = actions;
   const typeDefs = [
     `
     type PageContext {
       title: String
-      sidebar_order: Int
-      sidebar_title: String
+      description: String
+      keywords: [String!]
       draft: Boolean
       redirect_from: [String!]
+      noindex: Boolean
+      sidebar_title: String
+      sidebar_order: Int
 
       platform: PlatformContext
       guide: GuideContext
@@ -38,7 +46,8 @@ export default ({ actions, schema }) => {
       fields: Fields
     }
 
-    type Mdx implements Node {
+    type Mdx implements Node
+      @childOf(types: ["File"], mimeTypes: ["text/markdown", "text/x-markdown"]) {
       frontmatter: Frontmatter
       fields: Fields
     }
@@ -47,60 +56,68 @@ export default ({ actions, schema }) => {
       slug: String!
       legacy: Boolean
     }
-  `,
+
+    type PiiFieldPath implements Node {
+      path: String
+      additional_properties: Boolean
+    }
+
+
+    `,
     schema.buildObjectType({
-      name: "Frontmatter",
+      name: 'Frontmatter',
       fields: {
         title: {
-          type: "String!",
+          type: 'String!',
+        },
+        description: {
+          type: 'String',
         },
         keywords: {
-          type: "[String!]",
+          type: '[String!]',
         },
         draft: {
-          type: "Boolean",
+          type: 'Boolean',
         },
         redirect_from: {
-          type: "[String!]",
+          type: '[String!]',
         },
         noindex: {
-          type: "Boolean",
+          type: 'Boolean',
         },
         sidebar_title: {
-          type: "String",
+          type: 'String',
         },
         sidebar_order: {
-          type: "Int",
+          type: 'Int',
           resolve(source, _args, _context, info) {
             // For a more generic solution, you could pick the field value from
             // `source[info.fieldName]`
-            return source[info.fieldName] !== null
-              ? source[info.fieldName]
-              : 10;
+            return source[info.fieldName] !== null ? source[info.fieldName] : 10;
           },
         },
 
         // platform pages
         supported: {
-          type: "[String!]",
+          type: '[String!]',
         },
         notSupported: {
-          type: "[String!]",
+          type: '[String!]',
         },
 
         // wizard fields
         // TODO(dcramer): move to a diff schema/type
         support_level: {
-          type: "String",
+          type: 'String',
         },
         type: {
-          type: "String",
+          type: 'String',
         },
         doc_link: {
-          type: "String",
+          type: 'String',
         },
         name: {
-          type: "String",
+          type: 'String',
         },
       },
     }),
@@ -113,3 +130,5 @@ export default ({ actions, schema }) => {
     ...getAppTypeDefs(),
   ]);
 };
+
+export default createSchemaCustomization;

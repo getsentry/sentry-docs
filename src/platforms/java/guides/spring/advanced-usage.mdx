@@ -12,7 +12,9 @@ To record the user's IP address and `Principal#name` as the username so you can 
 
 1. Set the personal information flag on `@EnableSentry` to `true`.
 
-```Java {tabTitle:Java}
+<SignInNote />
+
+```Java {tabTitle:Java (Spring 5)}
 import org.springframework.context.annotation.Configuration;
 import io.sentry.spring.EnableSentry;
 
@@ -22,7 +24,17 @@ class SentryConfiguration {
 }
 ```
 
-```kotlin {tabTitle:Kotlin}
+```Java {tabTitle:Java (Spring 6)}
+import org.springframework.context.annotation.Configuration;
+import io.sentry.spring.jakarta.EnableSentry;
+
+@EnableSentry(dsn = "___PUBLIC_DSN___", sendDefaultPii = true)
+@Configuration
+class SentryConfiguration {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.context.annotation.Configuration
 import io.sentry.spring.EnableSentry
 
@@ -31,9 +43,18 @@ import io.sentry.spring.EnableSentry
 class SentryConfiguration
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import org.springframework.context.annotation.Configuration
+import io.sentry.spring.jakarta.EnableSentry
+
+@EnableSentry(dsn = "...", sendDefaultPii = true)
+@Configuration
+class SentryConfiguration
+```
+
 2. Register the servlet filter bean `SentryUserFilter`:
 
-```java
+```java {tabTitle:Java (Spring 5)}
 import io.sentry.IHub;
 import io.sentry.spring.SentryUserFilter;
 import io.sentry.spring.SentryUserProvider;
@@ -52,7 +73,26 @@ public class SentryFilterConfig {
 }
 ```
 
-```kotlin
+```java {tabTitle:Java (Spring 6)}
+import io.sentry.IHub;
+import io.sentry.spring.jakarta.SentryUserFilter;
+import io.sentry.spring.jakarta.SentryUserProvider;
+import java.util.List;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SentryFilterConfig {
+
+  @Bean
+  public SentryUserFilter sentryUserFilter(
+      final IHub hub, final List<SentryUserProvider> sentryUserProviders) {
+    return new SentryUserFilter(hub, sentryUserProviders);
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
 import io.sentry.IHub
 import io.sentry.spring.SentryUserProvider
 import io.sentry.spring.SentryUserFilter
@@ -66,9 +106,23 @@ class SentryFilterConfig {
 }
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import io.sentry.IHub
+import io.sentry.spring.jakarta.SentryUserProvider
+import io.sentry.spring.jakarta.SentryUserFilter
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class SentryFilterConfig {
+    @Bean
+    fun sentryUserFilter(hub: IHub, sentryUserProviders: List<SentryUserProvider>) = SentryUserFilter(hub, sentryUserProviders)
+}
+```
+
 3. Configure `SentryUserFilter` in `web.xml` or `WebApplicationInitializer` using `DelegatingFilterProxy`:
 
-```java
+```java {tabTitle:Java (Spring 5)}
 import javax.servlet.Filter;
 import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.filter.RequestContextFilter;
@@ -99,7 +153,38 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
 }
 ```
 
-```kotlin
+```java {tabTitle:Java (Spring 6)}
+import jakarta.servlet.Filter;
+import org.springframework.web.filter.DelegatingFilterProxy;
+import org.springframework.web.filter.RequestContextFilter;
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+  // ...
+
+  @Override
+  protected Filter[] getServletFilters() {
+    // filter required by Spring Security
+    DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy();
+    springSecurityFilterChain.setTargetBeanName("springSecurityFilterChain");
+
+    // sets request on RequestContextHolder
+    // alternatively configure RequestContextListener
+    RequestContextFilter requestContextFilter = new RequestContextFilter();
+
+    // sets Sentry user on the scope
+    DelegatingFilterProxy sentryUserFilterProxy = new DelegatingFilterProxy();
+    sentryUserFilterProxy.setTargetBeanName("sentryUserFilter");
+
+    return new Filter[] {
+      springSecurityFilterChain, requestContextFilter, sentryUserFilterProxy
+    };
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.web.filter.DelegatingFilterProxy
 import org.springframework.web.filter.RequestContextFilter
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer
@@ -128,9 +213,38 @@ class AppInitializer : AbstractAnnotationConfigDispatcherServletInitializer() {
 }
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import org.springframework.web.filter.DelegatingFilterProxy
+import org.springframework.web.filter.RequestContextFilter
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer
+import jakarta.servlet.Filter
+
+class AppInitializer : AbstractAnnotationConfigDispatcherServletInitializer() {
+
+    // ...
+
+    override fun getServletFilters(): Array<Filter> {
+        // filter required by Spring Security
+        val springSecurityFilterChain = DelegatingFilterProxy()
+        springSecurityFilterChain.setTargetBeanName("springSecurityFilterChain")
+
+        // sets request on RequestContextHolder
+        // alternatively configure RequestContextListener
+        val requestContextFilter = RequestContextFilter()
+
+        // sets Sentry user on the scope
+        val sentryUserFilterProxy = DelegatingFilterProxy()
+        sentryUserFilterProxy.setTargetBeanName("sentryUserFilter")
+        return arrayOf(
+            springSecurityFilterChain, requestContextFilter, sentryUserFilterProxy
+        )
+    }
+}
+```
+
 By default, the username is retrieved from `HttpServletRequest#userPrincipal`. To retrieve the username from Spring Security context, register the `SpringSecuritySentryUserProvider` bean:
 
-```java
+```java {tabTitle:Java (Spring 5)}
 import io.sentry.SentryOptions;
 import io.sentry.spring.SpringSecuritySentryUserProvider;
 import org.springframework.context.annotation.Bean;
@@ -146,9 +260,38 @@ class SecuritySentryConfig {
 }
 ```
 
-```kotlin
+```java {tabTitle:Java (Spring 6)}
+import io.sentry.SentryOptions;
+import io.sentry.spring.jakarta.SpringSecuritySentryUserProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+class SecuritySentryConfig {
+  @Bean
+  public SpringSecuritySentryUserProvider springSecuritySentryUserProvider(
+      SentryOptions sentryOptions) {
+    return new SpringSecuritySentryUserProvider(sentryOptions);
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
 import io.sentry.SentryOptions
 import io.sentry.spring.SpringSecuritySentryUserProvider
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class SecuritySentryConfig {
+  @Bean
+  fun springSecuritySentryUserProvider(sentryOptions: SentryOptions) = SpringSecuritySentryUserProvider(sentryOptions)
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import io.sentry.SentryOptions
+import io.sentry.spring.jakarta.SpringSecuritySentryUserProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -163,7 +306,7 @@ class SecuritySentryConfig {
 
 To record custom user information, you can register a bean that implements `SentryUserProvider` interface.
 
-```java {tabTitle:Java}
+```java {tabTitle:Java (Spring 5)}
 import org.springframework.stereotype.Component;
 import io.sentry.protocol.User;
 import io.sentry.spring.SentryUserProvider;
@@ -178,10 +321,40 @@ class CustomSentryUserProvider implements SentryUserProvider {
 }
 ```
 
-```kotlin {tabTitle:Kotlin}
+```java {tabTitle:Java (Spring 6)}
+import org.springframework.stereotype.Component;
+import io.sentry.protocol.User;
+import io.sentry.spring.jakarta.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+  public User provideUser() {
+    User user = User();
+    // ... set user information
+    return user
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.stereotype.Component
 import io.sentry.protocol.User
 import io.sentry.spring.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+  override fun provideUser(): User? {
+    val user = User()
+    // ... set user information
+    return user
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import org.springframework.stereotype.Component
+import io.sentry.protocol.User
+import io.sentry.spring.jakarta.SentryUserProvider
 
 @Component
 class CustomSentryUserProvider : SentryUserProvider {

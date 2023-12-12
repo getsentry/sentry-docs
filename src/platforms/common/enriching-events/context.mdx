@@ -21,7 +21,15 @@ If you need to be able to search on custom data, [use tags](../tags) instead.
 
 ## Structured Context
 
-The best practice to attach custom data is via structured contexts. A context must always be a dictionary or map, and its values can be arbitrary.
+<PlatformSection supported={["javascript", "node"]}>
+  The best way to attach custom data is with a structured context. A context
+  must always be an object and its values can be arbitrary.
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript", "node"]}>
+  The best way to attach custom data is with a structured context. A context
+  must always be an object and its values can be arbitrary.
+</PlatformSection>
 
 <PlatformSection supported={["javascript", "node"]}>
 
@@ -55,7 +63,23 @@ The class must be serializable and only properties are included; fields are not.
 
 </PlatformSection>
 
+<PlatformSection supported={["unreal"]}>
+
+<Note>
+
+Sentry's SDK automatically attaches certain context values such as `Engine version`, `Configuration`, and `Target Type`, to name a few, to all events.
+
+</Note>
+
+</PlatformSection>
+
 There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
+
+<PlatformSection supported={["javascript", "node"]}>
+
+By default, Sentry SDKs normalize nested structured context data up to three levels deep. Any data beyond this depth will be trimmed and marked using its type instead. To adjust this default, use the <PlatformLink to="/configuration/options#normalize-depth">`normalizeDepth`</PlatformLink> SDK option.
+
+</PlatformSection>
 
 Learn more about conventions for common contexts in the [contexts interface developer documentation](https://develop.sentry.dev/sdk/event-payloads/contexts/).
 
@@ -69,7 +93,7 @@ The Sentry SDK will try its best to accommodate the data you send and trim large
 
 ## Passing Context Directly
 
-Starting in version 5.16.0 of our JavaScript SDKs, some of the contextual data can be provided directly to `captureException` and `captureMessage` calls. Provided data will be merged with the one that is already stored inside the current scope, unless explicitly cleared using a callback method.
+Some contextual data can be provided directly to `captureException` and `captureMessage` calls. Provided data will be merged with the one that is already stored inside the current scope, unless explicitly cleared using a callback method.
 
 This functionality works in three different variations:
 
@@ -92,7 +116,7 @@ Sentry.captureException(new Error("something went wrong"), {
 Explicitly clear what has been already stored on the scope:
 
 ```javascript
-Sentry.captureException(new Error("clean as never"), scope => {
+Sentry.captureException(new Error("clean as never"), (scope) => {
   scope.clear();
   scope.setTag("clean", "slate");
   return scope;
@@ -141,13 +165,13 @@ Sentry.setUser(someUser);
 If you want to remove data from the current scope, you can call:
 
 ```javascript
-Sentry.configureScope(scope => scope.clear());
+Sentry.configureScope((scope) => scope.clear());
 ```
 
 The following will only configure the `user` context for the error captured inside the `withScope` callback. The context will be automatically restored to the previous state afterwards:
 
 ```javascript
-Sentry.withScope(function(scope) {
+Sentry.withScope(function (scope) {
   scope.setUser(someUser);
   Sentry.captureException(error);
 });
@@ -159,4 +183,6 @@ To learn more about setting the Scope, see our documentation on [Scopes and Hubs
 
 ## Additional Data
 
-In addition to structured contexts, Sentry supports adding unstructured "Additional Data" via <PlatformIdentifier name="set-extra" />. **Additional Data is deprecated** in favor of structured contexts and should be avoided when possible.
+**Additional Data is deprecated** in favor of structured contexts.
+
+Sentry used to support adding unstructured "Additional Data" via <PlatformIdentifier name="set-extra" />.

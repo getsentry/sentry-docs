@@ -1,7 +1,23 @@
 ---
 title: Migration Guide
-sidebar_order: 1000
+sidebar_order: 8000
 ---
+
+## Migrating From `sentry_flutter` `6.18.x` to `sentry` `7.0.0`
+
+In addition to the changes introduced in [sentry](/platforms/dart/migration/):
+
+API changes:
+
+- Sentry's Flutter SDK version 7.0.0 and above requires Flutter `3.0.0`.
+- [`sentry_dio`](https://pub.dev/packages/sentry_dio), version 7.0.0 requires [`dio 5.0.0`](https://pub.dev/packages/dio)
+- The Sentry Cocoa SDK was upgraded to `8.0.0` which introduces breaking changes, see the [migration guide](/platforms/apple/migration/#migrating-from-7x-to-8x).
+- The following fields have been removed from the `SentryFlutterOptions` class and replaced:
+  - `enableAutoPerformanceTracking` replaced with `enableAutoPerformanceTracing`.
+  - `enableOutOfMemoryTracking` replaced with `enableWatchdogTerminationTracking`.
+  - `anrTimeoutIntervalMillis` replaced with `anrTimeoutInterval`.
+  - `autoSessionTrackingIntervalMillis` replaced with `autoSessionTrackingInterval`.
+- The `enableNdkScopeSync` feature is now enabled by default.
 
 ## Migrating From `sentry_flutter` `6.12.x` to `sentry` `6.13.x`
 
@@ -24,10 +40,12 @@ There are no Flutter specific breaking changes. However there are some in [sentr
 
 # Android specific changes
 
-You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/configuration/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
 
 A random generated installationId replaces [Settings.Secure.ANDROID_ID](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID), which has been removed. This may affect the number of unique users displayed on the the Issues page and Alerts. If you always set a custom user using Sentry.setUser(customUser), the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet.
 It makes use of the [device_info_plus](https://pub.dev/packages/device_info_plus) plugin:
+
+<SignInNote />
 
 ```dart
 import 'package:flutter/foundation.dart';
@@ -50,7 +68,7 @@ Future<void> main() async {
 
 FutureOr<SentryEvent?> addAndroidId(
   SentryEvent event, {
-  dynamic hint,
+  Hint? hint,
 }) async {
   var info = await DeviceInfoPlugin().androidInfo;
   var user = (event.user ?? SentryUser()).copyWith(id: info.androidId);
@@ -65,6 +83,6 @@ FutureOr<SentryEvent?> addAndroidId(
 
 In addition to the changes introduced in [sentry](/platforms/dart/migration/):
 
-* `SentryFlutterOptions.enableLifecycleBreadcrumbs` was replaced with `SentryFlutterOptions.enableAppLifecycleBreadcrumbs`.
-* The Web Plugin Registrant import changed from `import 'package:sentry_flutter/src/sentry_flutter_web.dart';` to `import 'package:sentry_flutter/sentry_flutter_web.dart';`
-  * This change may lead to breaking changes. In most cases, however, this change won't lead to breaking changes since the referencing file is auto-generated.
+- `SentryFlutterOptions.enableLifecycleBreadcrumbs` was replaced with `SentryFlutterOptions.enableAppLifecycleBreadcrumbs`.
+- The Web Plugin Registrant import changed from `import 'package:sentry_flutter/src/sentry_flutter_web.dart';` to `import 'package:sentry_flutter/sentry_flutter_web.dart';`
+  - This change may lead to breaking changes. In most cases, however, this change won't lead to breaking changes since the referencing file is auto-generated.

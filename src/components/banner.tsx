@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, {useEffect, useState} from 'react';
 
 //
 // BANNER CONFIGURATION
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Join us for our upcoming integration workshop with Cloudflare on 12/8 at 10am PT.";
+  'Join our live workshop: Improve Web Browser Performance - Identify and Fix Javascript Slowdowns on Dec. 14th.';
 const BANNER_LINK_URL =
-  "https://sentry.io/resources/cloudflare-built-sentry-client-for-serverless-computing/?promo_name=docs-banner";
-const BANNER_LINK_TEXT = "Register here.";
+  'https://sentry.io/resources/improve-web-browser-performance-find-the-javascript-code-causing-slowdowns/?promo_name=from-docs';
+const BANNER_LINK_TEXT = 'Sign up.';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
@@ -18,11 +18,13 @@ const OPTIONAL_BANNER_IMAGE = null;
 // Don't edit unless you need to change how the banner works.
 //
 
-const LOCALSTORAGE_NAMESPACE = "banner-manifest";
+const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
 
-const fastHash = input => {
+const fastHash = (input: string) => {
   let hash = 0;
-  if (input.length == 0) return hash;
+  if (input.length === 0) {
+    return hash;
+  }
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i);
     hash = (hash << 5) - hash + char;
@@ -33,23 +35,25 @@ const fastHash = input => {
 
 const readOrResetLocalStorage = () => {
   const stored = localStorage.getItem(LOCALSTORAGE_NAMESPACE);
-  if (!stored) return;
+  if (!stored) {
+    return null;
+  }
 
   try {
     return JSON.parse(stored);
   } catch (e) {
     localStorage.removeItem(LOCALSTORAGE_NAMESPACE);
-    return;
+    return null;
   }
 };
 
-const Banner = ({ isModule = false }) => {
+export function Banner({isModule = false}) {
   const [isVisible, setIsVisible] = useState(false);
   const hash = fastHash(`${BANNER_TEXT}:${BANNER_LINK_URL}`).toString();
 
   const enablebanner = () => {
     setIsVisible(true);
-    document.body.classList.add("banner-active");
+    document.body.classList.add('banner-active');
   };
 
   useEffect(() => {
@@ -59,18 +63,20 @@ const Banner = ({ isModule = false }) => {
       return;
     }
 
-    if (manifest.indexOf(hash) === -1) enablebanner();
+    if (manifest.indexOf(hash) === -1) {
+      enablebanner();
+    }
   });
 
   return SHOW_BANNER
     ? isVisible && (
         <div
-          className={["promo-banner", isModule && "banner-module"]
+          className={['promo-banner', isModule && 'banner-module']
             .filter(Boolean)
-            .join(" ")}
+            .join(' ')}
         >
           <div className="promo-banner-message">
-            {OPTIONAL_BANNER_IMAGE ? <img src={OPTIONAL_BANNER_IMAGE} /> : ""}
+            {OPTIONAL_BANNER_IMAGE ? <img src={OPTIONAL_BANNER_IMAGE} /> : ''}
             <span>
               {BANNER_TEXT}
               <a href={BANNER_LINK_URL}>{BANNER_LINK_TEXT}</a>
@@ -84,7 +90,7 @@ const Banner = ({ isModule = false }) => {
               const payload = JSON.stringify([...manifest, hash]);
               localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
               setIsVisible(false);
-              document.body.classList.remove("banner-active");
+              document.body.classList.remove('banner-active');
             }}
           >
             ×
@@ -92,6 +98,4 @@ const Banner = ({ isModule = false }) => {
         </div>
       )
     : null;
-};
-
-export default Banner;
+}

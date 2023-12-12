@@ -5,12 +5,13 @@ sidebar_order: 0
 redirect_from:
   - /clients/php/integrations/laravel/
   - /platforms/php/laravel/
+  - /platforms/php/guides/laravel/lumen/
 description: "Learn about using Sentry with Laravel."
 ---
 
 Laravel is supported using a native package: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-This guide is for Laravel 8+. We also provide instructions for [other versions](/platforms/php/guides/laravel/other-versions/) as well as [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
+This guide is for Laravel 8.x, 9.x and 10.x. We also provide instructions for [other versions](/platforms/php/guides/laravel/other-versions/) as well as [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
 
 ## Install
 
@@ -25,7 +26,7 @@ Enable capturing unhandled exception to report to Sentry by making the following
 ```php {filename:App/Exceptions/Handler.php}
 use Sentry\Laravel\Integration;
 
-public function register()
+public function register(): void
 {
     $this->reportable(function (Throwable $e) {
         Integration::captureUnhandledException($e);
@@ -43,11 +44,15 @@ Alternatively, you can configure Sentry in your [Laravel Log Channel](usage/#log
 
 Configure the Sentry DSN with this command:
 
+<SignInNote />
+
 ```shell
 php artisan sentry:publish --dsn=___PUBLIC_DSN___
 ```
 
 It creates the config file (`config/sentry.php`) and adds the `DSN` to your `.env` file.
+
+<SignInNote />
 
 ```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
@@ -77,7 +82,7 @@ Visiting this route will trigger an exception that will be captured by Sentry.
 
 ## Performance Monitoring
 
-Set `traces_sample_rate` in `config/sentry.php` or `SENTRY_TRACES_SAMPLE_RATE` in your `.env` to a value greater than `0.0`. Setting a value greater than `0.0` will enable Performance Monitoring, `0` (the default) will disable Performance Monitoring.
+Set `traces_sample_rate` in `config/sentry.php` or `SENTRY_TRACES_SAMPLE_RATE` in your `.env` to a value greater than `0.0`. Setting a value greater than `0.0` will enable Performance Monitoring, `null` (the default) will disable Performance Monitoring.
 
 ```shell {filename:.env}
 # Be sure to lower this value in production otherwise you could burn through your quota quickly.
@@ -99,6 +104,5 @@ You most likely don't want errors to be sent to Sentry when you are developing o
 You can also do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or by defining it as `SENTRY_LARAVEL_DSN=null`.
 
 If you do leave Sentry enabled when developing or running tests, it's possible for it to have a negative effect on the performance of your application or test suite.
-
 
 <PageGrid nextPages header="Next Steps" />

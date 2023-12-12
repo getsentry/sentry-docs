@@ -5,14 +5,29 @@ support_level: production
 type: language
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-yarn add @sentry/node @sentry/tracing
+yarn add @sentry/node
 
 # Using npm
-npm install --save @sentry/node @sentry/tracing
+npm install --save @sentry/node
 ```
 
 You need to inform the Sentry Node SDK about your DSN:
@@ -21,10 +36,6 @@ You need to inform the Sentry Node SDK about your DSN:
 const Sentry = require("@sentry/node");
 // or use es6 import statements
 // import * as Sentry from '@sentry/node';
-
-const Tracing = require("@sentry/tracing");
-// or use es6 import statements
-// import * as Tracing from '@sentry/tracing';
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",

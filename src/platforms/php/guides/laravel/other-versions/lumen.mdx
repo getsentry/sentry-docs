@@ -10,13 +10,12 @@ Laravel is supported using a native package: [sentry-laravel](https://github.com
 
 This guide is for Laravel Lumen 5+. We also provide instructions for [the latest Laravel](/platforms/php/guides/laravel/) as well as [other versions](/platforms/php/guides/laravel/other-versions/).
 
-
 ## Install
 
 Install the `sentry/sentry-laravel` package:
 
 ```bash
-composer require "sentry/sentry-laravel:^2.14"
+composer require sentry/sentry-laravel
 ```
 
 Register Sentry in `bootstrap/app.php`:
@@ -34,7 +33,7 @@ require __DIR__ . '/../app/Http/routes.php';
 Add Sentry reporting to `app/Exceptions/Handler.php`:
 
 ```php {filename:app/Exceptions/Handler.php}
-public function report(Exception $exception)
+public function report(Throwable $exception)
 {
     if (app()->bound('sentry') && $this->shouldReport($exception)) {
         app('sentry')->captureException($exception);
@@ -43,7 +42,6 @@ public function report(Exception $exception)
     parent::report($exception);
 }
 ```
-
 
 ## Configure
 
@@ -55,10 +53,11 @@ cp vendor/sentry/sentry-laravel/config/sentry.php config/sentry.php
 
 Afterwards, add your DSN to `.env`:
 
+<SignInNote />
+
 ```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
-
 
 ## Verify
 
@@ -81,7 +80,6 @@ Route::get('/debug-sentry', function () {
 ```
 
 Visiting this route will trigger an exception that will be captured by Sentry.
-
 
 ## Local Development and Testing
 

@@ -1,52 +1,53 @@
-import React from "react";
-import { PlatformIcon } from "platformicons";
-import { Nav } from "react-bootstrap";
+import React from 'react';
+import {Nav} from 'react-bootstrap';
+import {PlatformIcon} from 'platformicons';
 
-import "../css/screen.scss";
+import {Banner} from 'sentry-docs/components/banner';
+import {usePlatformList} from 'sentry-docs/components/hooks/usePlatform';
+import {NavbarPlatformDropdown} from 'sentry-docs/components/navbarPlatformDropdown';
+import {getSandboxURL, SandboxOnly} from 'sentry-docs/components/sandboxLink';
+import {Search} from 'sentry-docs/components/search';
+import {SEO} from 'sentry-docs/components/seo';
+import {SmartLink} from 'sentry-docs/components/smartLink';
+import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
-import SEO from "../components/seo";
-import Search from "../components/search";
-import SmartLink from "../components/smartLink";
-import { usePlatformList } from "../components/hooks/usePlatform";
-import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
-
-import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
-
-import Banner from "../components/banner";
-import { getSandboxURL, SandboxOnly } from "~src/components/sandboxLink";
+import 'sentry-docs/css/screen.scss';
 
 const HIGHLIGHTED_PLATFORMS = [
-  "javascript",
-  "node",
-  "python",
-  "php",
-  "ruby",
-  "java",
-  "javascript.react",
-  "react-native",
-  "python.django",
-  "dotnet",
-  "go",
-  "php.laravel",
-  "android",
-  "apple",
-  "javascript.nextjs",
-  "ruby.rails",
-  "flutter",
-  "unity"
+  'javascript',
+  'node',
+  'python',
+  'php',
+  'ruby',
+  'java',
+  'javascript.react',
+  'react-native',
+  'python.django',
+  'dotnet',
+  'go',
+  'php.laravel',
+  'android',
+  'apple',
+  'javascript.nextjs',
+  'ruby.rails',
+  'flutter',
+  'unity',
+  'unreal',
 ];
 
-const IndexPage = () => {
+function IndexPage() {
   const platformList = usePlatformList();
 
   let totalPlatformCount = 0;
-  const visiblePlatforms = [];
+  const visiblePlatforms: Array<Platform | PlatformGuide> = [];
+
   platformList.forEach(platform => {
     totalPlatformCount += 1;
     if (HIGHLIGHTED_PLATFORMS.indexOf(platform.key) !== -1) {
       visiblePlatforms.push(platform);
     }
-    platform.guides.forEach(guide => {
+    platform.guides?.forEach(guide => {
       totalPlatformCount += 1;
       if (HIGHLIGHTED_PLATFORMS.indexOf(guide.key) !== -1) {
         visiblePlatforms.push(guide);
@@ -54,21 +55,19 @@ const IndexPage = () => {
     });
   });
   visiblePlatforms.sort(
-    (a, b) =>
-      HIGHLIGHTED_PLATFORMS.indexOf(a.key) -
-      HIGHLIGHTED_PLATFORMS.indexOf(b.key)
+    (a, b) => HIGHLIGHTED_PLATFORMS.indexOf(a.key) - HIGHLIGHTED_PLATFORMS.indexOf(b.key)
   );
 
   return (
     <div className="index-wrapper">
-      <SEO title="Sentry Documentation" />
+      <SEO title="Sentry Documentation" slug="" />
       <div className="hero-section">
         <div className="index-container">
           <div className="index-navbar">
             <a href="/" title="Sentry error monitoring" className="index-logo">
               <img src={SentryWordmarkSVG} />
             </a>
-            <Nav className="justify-content-end" style={{ flex: 1 }}>
+            <Nav className="justify-content-end" style={{flex: 1}}>
               <NavbarPlatformDropdown />
               <Nav.Item>
                 <SmartLink className="nav-link" to="/product/">
@@ -80,6 +79,9 @@ const IndexPage = () => {
                   API
                 </SmartLink>
               </Nav.Item>
+              <Nav.Item>
+                <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
+              </Nav.Item>
               <SandboxOnly>
                 <Nav.Item>
                   <Nav.Link
@@ -87,7 +89,7 @@ const IndexPage = () => {
                     href={getSandboxURL().toString()}
                     target="_blank"
                   >
-                    Demo
+                    Sandbox
                   </Nav.Link>
                 </Nav.Item>
               </SandboxOnly>
@@ -112,21 +114,26 @@ const IndexPage = () => {
             </Nav>
           </div>
 
-          <h1>Sentry Documentation</h1>
+          <h1>Welcome to Sentry Docs</h1>
+          <center>
+            <p>
+              Sentry is a developer-first error tracking and performance monitoring
+              platform.
+            </p>
+          </center>
 
           <div className="index-search">
-            <Search />
+            <Search autoFocus />
           </div>
-
           <div className="integrations-logo-row">
             {visiblePlatforms.map(platform => (
-              <SmartLink
-                to={platform.url}
-                className="hover-card-link"
-                key={platform.key}
-              >
+              <SmartLink to={platform.url} className="hover-card-link" key={platform.key}>
                 <div className="image-frame">
-                  <PlatformIcon size={48} platform={platform.key} format="lg" />
+                  <PlatformIcon
+                    size={48}
+                    platform={platform.icon ?? platform.key}
+                    format="lg"
+                  />
                 </div>
                 {platform.title}
               </SmartLink>
@@ -143,9 +150,7 @@ const IndexPage = () => {
       <Banner />
       <div className="index-container pad-top">
         <div className="flex-row card-row footer-btns">
-          <a href="https://develop.sentry.dev/self-hosted/">
-            Self-Hosted Sentry
-          </a>
+          <a href="https://develop.sentry.dev/self-hosted/">Self-Hosted Sentry</a>
           <a href="https://help.sentry.io/">Support</a>
         </div>
 
@@ -203,9 +208,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/sentry-basics/migration/">
-                  Moving to Hosted Sentry
-                </a>
+                <a href="/product/sentry-basics/migration/">Moving to Hosted Sentry</a>
               </li>
               <li>
                 <a href="/product/accounts/membership/">
@@ -213,9 +216,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/alerts-notifications/">
-                  Alerts & Notifications
-                </a>
+                <a href="/product/alerts-notifications/">Alerts & Notifications</a>
               </li>
             </ul>
           </div>
@@ -223,10 +224,10 @@ const IndexPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export const frontmatter = {
-  title: "Sentry Documentation",
+  title: 'Sentry Documentation',
 };
 
 export default IndexPage;

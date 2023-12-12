@@ -3,6 +3,8 @@ title: Automatic Instrumentation
 sidebar_order: 10
 supported:
   - javascript
+notSupported:
+  - javascript.cordova
 description: "Learn what transactions are captured after tracing is enabled."
 redirect_from:
   - /performance/included-instrumentation
@@ -30,19 +32,23 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 Though the `BrowserTracing` integration is automatically enabled in `@sentry/nextjs`, in order to customize its options you must include it in your `Sentry.init` in `sentry.client.config.js`:
 
+<SignInNote />
+
 ```javascript
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  integrations: [
-    new Sentry.BrowserTracing({
-      // custom options
-    }),
-  ],
+  integrations: [new Sentry.BrowserTracing()],
 
   tracesSampleRate: 1.0,
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: [
+    "localhost",
+    /^\//,
+    /^https:\/\/yourserver\.io\/api/,
+  ],
 });
 ```
 
@@ -73,6 +79,17 @@ You will need to configure your web server [CORS](https://developer.mozilla.org/
 `beforeNavigate` is called at the start of every `pageload` or `navigation` transaction, and is passed an object containing the data with the transaction will be started. Using `beforeNavigate` gives you the option to modify that data, or drop the transaction entirely by returning `undefined`.
 
 <PlatformContent includePath="performance/beforeNavigate-example" />
+
+<Note>
+  If you're using React, read our docs about how to set up your{" "}
+  <a
+    class
+    href="/platforms/javascript/guides/react/configuration/integrations/react-router/"
+  >
+    React Router integration
+  </a>
+  .
+</Note>
 
 ### shouldCreateSpanForRequest
 
@@ -118,20 +135,8 @@ This option flags transactions when tabs are moved to the background with "cance
 
 The default is `true`.
 
-### \_experiments
+### enableLongTask
 
-This is an object containing experimental flags for features that haven't yet landed in a new major version and might include breaking changes.
-
-The default is
-
-```
-{
-  enableLongTasks: true
-}
-```
-
-#### \_experiments.enableLongTasks
-
-This experimental option determines whether spans for long tasks automatically get created.
+This option determines whether spans for long tasks automatically get created.
 
 The default is `true`.

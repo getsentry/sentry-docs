@@ -1,0 +1,50 @@
+---
+title: Cocoapods
+description: "Learn about installing the Sentry Kotlin Multiplatform SDK with Cocoapods."
+---
+
+To install the Kotlin Multiplatform SDK and setup your Apple targets with Cocoapods, you need to add the following to your `build.gradle.kts` file in your shared module:
+
+<Note>
+  Kotlin Multiplatform requires using version **8.4.0** of the Sentry Cocoa SDK,
+  specifically. Other versions, including newer ones, aren't guaranteed to work.
+</Note>
+
+```kotlin {filename:shared/build.gradle.kts}
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+      }
+    }
+
+    // Other targets...
+
+    // Apple targets:
+    val iosMain by getting {
+      dependsOn(commonMain)
+    }
+
+    cocoapods {
+      summary = "Some description for the Shared Module"
+      homepage = "Link to the Shared Module homepage"
+      ios.deploymentTarget = "14.1"
+      podfile = project.file("../iosApp/Podfile")
+      pod("Sentry", "~> 8.4.0")
+
+      framework {
+        baseName = "shared"
+      }
+    }
+  }
+}
+```

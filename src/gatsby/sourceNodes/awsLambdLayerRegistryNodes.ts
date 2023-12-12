@@ -1,17 +1,16 @@
-import AwsLambdaLayerRegistry from "../utils/awsLambdaLayerRegistry";
+import {SourceNodesArgs} from 'gatsby';
+
+import awsLambdaRegistry from '../utils/awsLambdaLayerRegistry';
 
 export const sourceAwsLambdaLayerRegistryNodes = async ({
   actions,
   createContentDigest,
-}) => {
-  const { createNode } = actions;
+}: SourceNodesArgs) => {
+  const {createNode} = actions;
 
-  const registry = new AwsLambdaLayerRegistry();
-  const layerMap = await registry.getLayerMap();
+  const layerMap = await awsLambdaRegistry.getLayerMap();
 
-  Object.keys(layerMap).forEach(cannonicalName => {
-    const layerData = layerMap[cannonicalName];
-
+  Object.entries(layerMap ?? {}).forEach(([cannonicalName, layerData]) => {
     const data = {
       canonical: layerData.canonical,
       regions: layerData.regions,
@@ -26,15 +25,12 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
       parent: null,
       children: [],
       internal: {
-        type: `Layer`,
+        type: `AwsLambdaLayer`,
         content,
         contentDigest: createContentDigest(data),
       },
     };
 
-    createNode({
-      ...data,
-      ...nodeMeta,
-    });
+    createNode({...data, ...nodeMeta});
   });
 };

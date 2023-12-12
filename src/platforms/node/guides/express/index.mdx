@@ -3,6 +3,7 @@ title: Express
 redirect_from:
   - /clients/node/integrations/express/
   - /platforms/node/express/
+  - /platforms/node/guides/express/integrations/default-integrations/
 description: "Learn about using Sentry with Express."
 ---
 
@@ -17,6 +18,8 @@ yarn add @sentry/node
 ```
 
 Sentry should be initialized as early in your app as possible:
+
+<SignInNote />
 
 ```javascript
 import express from "express";
@@ -141,19 +144,12 @@ app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 
 ## Monitor Performance
 
-```bash {tabTitle:npm}
-npm install --save @sentry/node @sentry/tracing
-```
-
-```bash {tabTitle:Yarn}
-yarn add @sentry/node @sentry/tracing
-```
-
 It’s possible to add tracing to all popular frameworks; however, we only provide pre-written handlers for Express.
+
+<SignInNote />
 
 ```javascript
 const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
 const express = require("express");
 const app = express();
 
@@ -163,7 +159,7 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
-    new Tracing.Integrations.Express({
+    new Sentry.Integrations.Express({
       // to trace all requests to the default router
       app,
       // alternatively, you can specify the routes you want to trace:
@@ -176,8 +172,8 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// RequestHandler creates a separate execution context using domains, so that every
-// transaction/span/breadcrumb is attached to its own Hub instance
+// RequestHandler creates a separate execution context, so that all
+// transactions/spans/breadcrumbs are isolated across requests
 app.use(Sentry.Handlers.requestHandler());
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler());

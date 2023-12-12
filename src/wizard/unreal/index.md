@@ -5,11 +5,28 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 ## Installation
 
-Download the latest plugin sources from the [Releases page](https://github.com/getsentry/sentry-unreal/releases) and place it in the project's "Plugins" directory. On the next project launch, UE will prompt to build Sentry module.
+Download the latest plugin sources from the [Releases page](https://github.com/getsentry/sentry-unreal/releases) and place it in the project's "Plugins" directory or install the plugin from the [UE Marketplace](https://www.unrealengine.com/marketplace/en-US/product/sentry-01) page via the Epic Games Launcher.
 
-After the successful build, in the editor navigate to the **Project Settings > Plugins > Code Plugins** menu and check whether the Sentry plugin is enabled.
+> The [Releases page](https://github.com/getsentry/sentry-unreal/releases) provides two plugin packages: `github` and `marketplace`. We recommend using the `github` version which uses `Crashpad`, an out-of-proc handler that sends the crash report right away. The `marketplace` version relies on `Breakpad`, an in-proc handler which requires the UE application or game to be relaunched in order to send the crash reports to Sentry.
+
+In the editor navigate to the **Project Settings > Plugins > Code Plugins** menu and check whether the Sentry plugin is enabled.
 
 To access the plugin API from within C++, add Sentry support to the build script (MyProject.build.cs):
 
@@ -27,9 +44,9 @@ ___PUBLIC_DSN___
 
 ## Crash Reporter Client
 
-For Windows and Mac, [Crash Reporter Client](/platforms/unreal/setup-crashreporter/) provided along with Unreal Engine has to be configured in order to capture errors automatically.
+In Unreal Engine versions prior to UE 5.2 to automatically capture errors on desktop platforms [Crash Reporter Client](/platforms/unreal/configuration/setup-crashreporter/) has to be configured.
 
-### Include the UE4 Crash Reporter
+### Include the Unreal Engine Crash Reporter
 
 You can add the crash reporter client to your game in **Project Settings**.
 
@@ -98,11 +115,8 @@ Once everything is configured you can call the plugin API from both C++ and blue
 
 void Verify()
 {
-    // Obtain reference to GameInstance
-    UGameInstance* GameInstance = ...;
-
     // Capture message
-    USentrySubsystem* SentrySubsystem = GameInstance->GetSubsystem<USentrySubsystem>();
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
     SentrySubsystem->CaptureMessage(TEXT("Capture message"));
 }
 ```

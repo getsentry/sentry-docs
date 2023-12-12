@@ -2,7 +2,7 @@
 
 When manually initializing OpenTelemetry you have to add `SentrySpanProcessor` and `SentryPropagator` to your configuration.
 
-```Java
+```java {tabTitle: Java}
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -22,12 +22,33 @@ OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
     .buildAndRegisterGlobal();
 ```
 
+```kotlin {tabTitle: Kotlin}
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
+
+import io.sentry.opentelemetry.SentryPropagator
+import io.sentry.opentelemetry.SentrySpanProcessor
+
+val sdkTracerProvider = SdkTracerProvider.builder()
+    .addSpanProcessor(SentrySpanProcessor())
+    .build()
+
+val openTelemetry = OpenTelemetrySdk.builder()
+    .setTracerProvider(sdkTracerProvider)
+    .setPropagators(ContextPropagators.create(SentryPropagator()))
+    .buildAndRegisterGlobal()
+```
+
 #### Initializing Sentry
 
 You have to set the `instrumenter` option to `otel`. This disables all Sentry instrumentation and uses the chosen OpenTelemetry tracers for creating spans instead.
 
+<SignInNote />
+
 ```properties {filename:application.properties}
-sentry.dsn=___DSN___
+sentry.dsn=___PUBLIC_DSN___
 sentry.traces-sample-rate=1.0
 # enable this to see more logs
 sentry.debug=false
@@ -52,5 +73,21 @@ public class SentryDemoApplication {
   OpenTelemetryLinkErrorEventProcessor otelLinkEventProcessor() {
     return new OpenTelemetryLinkErrorEventProcessor();
   }
+}
+```
+
+```kotlin {filename:SentryDemoApplication.kt}
+import io.sentry.opentelemetry.OpenTelemetryLinkErrorEventProcessor
+
+@SpringBootApplication
+public class SentryDemoApplication {
+    fun main(args: Array<String>) {
+        SpringApplication.run(SentryDemoApplication.class, args);
+    }
+
+    @Bean
+    fun otelLinkEventProcessor(): OpenTelemetryLinkErrorEventProcessor {
+        return OpenTelemetryLinkErrorEventProcessor()
+    }
 }
 ```

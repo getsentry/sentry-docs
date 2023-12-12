@@ -81,9 +81,28 @@ For some metric alerts, you can set the event type that you want to be alerted a
 - `event.type:error`
 - `event.type:transaction`
 
-### Tags & Attributes
+### Tags & Properties
 
-Add filters in the field provided to narrow down what you'll be alerted about, such as URL, tags, or other event properties.
+Add filters in the provided input to narrow down what you'll be alerted about, such as transaction tags or other event properties. Available properties depend on your alert's event type:
+
+- For **error** events, all error properties are available. See [Searchable Properties](/product/sentry-basics/search/searchable-properties/events/#searchable-properties) for a full list.
+- For **transaction** events, the following basic properties are generally available: `release`, `transaction`, `transaction.status`, `transaction.op`, `http.method`, `http.status_code`, `os.name`, `browser.name`, and `geo.country_code`.
+
+#### Advanced filters for Transactions
+
+<Note>
+
+This feature is only available to organizations with a Business or Enterprise plan.
+
+</Note>
+
+A wider variety of fields or tags are available in addition to the basic properties mentioned above, so you can create more advanced filtering conditions. However, Sentry only starts collecting these metrics after the alert is saved. If such a filter is used, Sentry provides an estimate of the metric for the previous period during the alert's creation.
+
+![Advanced filters for transactions](alerts-advanced-filters.png)
+
+#### Invalid Filters
+
+While Sentry won’t allow you to create new alerts with invalid or unavailable properties, any existing alerts with unavailable fields won’t be affected. But if you need to edit or duplicate them, you'll need to remove the unavailable properties.
 
 ## Thresholds
 
@@ -96,11 +115,7 @@ By default, metric alerts use a fixed threshold.
 
 ### Change Alerts (Percent Change)
 
-<Note>
-
-This feature is available only if your organization is on either a Business or Trial plan.
-
-</Note>
+<Include name="feature-available-for-plan-trial-business.mdx" />
 
 Change alerts, or alerts that use a percent change threshold, are useful when you want to know if a metric is significantly different from normal. To do this, you’ll need to pick a metric interval (when you're selecting your metric type) and a time against which to compare. One example would be comparing the number of errors in the last hour to the same time period one week ago. If errors are 25% higher in the last hour than they were in the same period a week ago, then an alert will trigger.
 
@@ -126,6 +141,7 @@ Actions define how you and your team will be alerted:
 
 - Send an email to a member or team. If sent to a member, the member's personal project alert opt-out settings are overridden.
 - Send a [Slack](/product/integrations/notification-incidents/slack/) notification.
+- Send a [Discord](/product/integrations/notification-incidents/discord/) notification.
 - Trigger a [PagerDuty](/product/integrations/notification-incidents/pagerduty/) incident.
 - Send a [Microsoft Teams](/product/integrations/notification-incidents/msteams/) notification.
 - Send a request using [Sentry integrations](/product/integrations/integration-platform/).

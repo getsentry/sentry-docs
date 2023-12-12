@@ -1,9 +1,9 @@
-import React from "react";
-import { graphql, useStaticQuery } from "gatsby";
-import styled from "@emotion/styled";
+import React, {Fragment} from 'react';
+import styled from '@emotion/styled';
+import {graphql, useStaticQuery} from 'gatsby';
 
-import usePlatform from "./hooks/usePlatform";
-import SmartLink from "./smartLink";
+import {usePlatform} from './hooks/usePlatform';
+import {SmartLink} from './smartLink';
 
 const query = graphql`
   query PlatformSdkDetail {
@@ -14,6 +14,7 @@ const query = graphql`
         url
         repoUrl
         version
+        apiDocsUrl
       }
     }
   }
@@ -45,17 +46,24 @@ const PackageDetail = styled.div`
   }
 `;
 
-export default (): JSX.Element => {
+export function PlatformSdkDetail() {
   const [platform] = usePlatform();
-  if (!platform) return null;
-  if (!platform.sdk) return null;
 
   const {
-    allPackage: { nodes: packageList },
+    allPackage: {nodes: packageList},
   } = useStaticQuery(query);
 
+  if (!platform) {
+    return null;
+  }
+  if (!platform.sdk) {
+    return null;
+  }
+
   const packageData = packageList.find(p => p.id === platform.sdk);
-  if (!packageData) return null;
+  if (!packageData) {
+    return null;
+  }
 
   return (
     <PackageDetail>
@@ -72,9 +80,17 @@ export default (): JSX.Element => {
         <dd>{packageData.version}</dd>
         <dt>Repository:</dt>
         <dd>
-          <SmartLink to={packageData.repoUrl} />
+          <SmartLink to={packageData.repoUrl} target="_blank" />
         </dd>
+        {packageData.apiDocsUrl && (
+          <Fragment>
+            <dt>API Documentation:</dt>
+            <dd>
+              <SmartLink to={packageData.apiDocsUrl} target="_blank" />
+            </dd>
+          </Fragment>
+        )}
       </dl>
     </PackageDetail>
   );
-};
+}

@@ -4,7 +4,23 @@ sidebar_order: 20
 description: "Learn about adding extra data using the MDC system provided by SLF4j."
 ---
 
-When any SLF4J implementation supporting MDC is on the classpath (for example Logback, Log4j2), it’s possible to add extra data to events thanks to [the MDC system](https://logback.qos.ch/manual/mdc.html).
+You can add extra data to events using [the MDC system](https://www.slf4j.org/api/org/slf4j/helpers/BasicMDCAdapter.html) for any SLF4J implementation supporting MDC that's on a classpath, (for example Logback, Log4j2, JUL).
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-jdk14</artifactId>
+    <version>1.7.30</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'org.slf4j:slf4j-jdk14:1.7.30'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "org.slf4j" % "slf4j-jdk14" % "1.7.30"
+```
 
 #### Mapped Tags
 
@@ -139,3 +155,16 @@ class MyClass {
   }
 }
 ```
+
+## Context Tags
+
+Starting with Sentry version 6.0.0 and up, you can define a list of `MDC tags` that will be viewable as `Tags` in the Sentry UI. `MDC Tags` not in this list will be viewable as `Context Data`. To define tags, add a `context-tags` entry with the tags as comma-separated items to the `sentry.properties` file.
+
+<SignInNote />
+
+```properties {tabTitle:Properties}
+dsn=___PUBLIC_DSN___
+context-tags=userId,requestId
+```
+
+When you call `MDC.put("userId", "myUserId")` with the above configuration in place, the `userId` will show up as a `tag` on the event in the Sentry UI.

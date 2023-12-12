@@ -1,0 +1,19 @@
+```ruby
+Sentry.init do |config|
+  # ...
+  config.before_send_transaction = lambda do |event, _hint|
+    # skip unimportant transactions
+    if event.transaction == "/unimportant/healthcheck/route"
+      # don't send the event to Sentry
+      nil
+    else
+      # filter out SQL queries from spans with sensitive data
+      event.spans.each do |span|
+        span[:description] = '<FILTERED>' if span[:op].start_with?('db')
+      end
+
+      event
+    end
+  end
+end
+```

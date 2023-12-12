@@ -1,28 +1,32 @@
-import axios from "axios";
-import { promises as fs } from "fs";
+/* eslint-env node */
+/* eslint import/no-nodejs-modules:0 */
+/* eslint-disable no-console */
+
+import {promises as fs} from 'fs';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = "8059f6d628dfea2797ba2da284e232434450dc7f"
+const SENTRY_API_SCHEMA_SHA = '8f9e958f7e3cd991a6071fd99cc3c14bcc04902a';
 
-const activeEnv =
-  process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
+const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
-export default async () => {
-  if (activeEnv === "development" && process.env.OPENAPI_LOCAL_PATH) {
+async function main() {
+  if (activeEnv === 'development' && process.env.OPENAPI_LOCAL_PATH) {
     try {
       console.log(`Fetching from ${process.env.OPENAPI_LOCAL_PATH}`);
-      const data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, "utf8");
+      const data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, 'utf8');
       return data;
     } catch (error) {
       console.log(
-        `Failed to connect to  ${process.env.OPENAPI_LOCAL_PATH}. Continuing to fetch versioned schema from Github.
+        `Failed to connect to  ${process.env.OPENAPI_LOCAL_PATH}. Continuing to fetch versioned schema from GitHub.
         ${error}`
       );
     }
   }
-  const response = await axios.get(
+  const response = await fetch(
     `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
   );
-  return response.data;
-};
+  return await response.json();
+}
+
+export default main;

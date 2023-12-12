@@ -1,24 +1,22 @@
-To enable tracing, include the `BrowserTracing` integration in your SDK configuration options. (Note that when using ESM modules, the main `@sentry/*` import must come before the `@sentry/tracing` import.)
+To enable tracing, include the `BrowserTracing` integration in your SDK configuration options.
 
 After configuration, you will see both `pageload` and `navigation` transactions in the Sentry UI.
+
+<SignInNote />
 
 ```javascript
 // BrowserTracing should only be configured in Electron renderer processes
 import * as Sentry from "@sentry/electron/renderer";
-import { BrowserTracing } from "@sentry/tracing"; // Must import second
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  integrations: [
-    new BrowserTracing({
-      tracePropagationTargets: ["localhost", "my-site-url.com", /^\//],
-      // ... other options
-    }),
-  ],
+  integrations: [new Sentry.BrowserTracing()],
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
   tracesSampleRate: 1.0,
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 });
 ```

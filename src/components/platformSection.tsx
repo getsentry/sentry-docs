@@ -1,16 +1,13 @@
-import React from "react";
+import React, {Fragment} from 'react';
 
-import usePlatform, {
-  Platform,
-  getPlatformsWithFallback,
-} from "./hooks/usePlatform";
+import {getPlatformsWithFallback, usePlatform} from './hooks/usePlatform';
 
 type Props = {
-  supported?: string[];
+  children?: React.ReactNode;
+  noGuides?: boolean;
   notSupported?: string[];
   platform?: string;
-  noGuides?: boolean;
-  children?: React.ReactNode;
+  supported?: string[];
 };
 
 const isSupported = (
@@ -20,34 +17,49 @@ const isSupported = (
 ): boolean | null => {
   if (supported.length && supported.find(p => p === platformKey)) {
     return true;
-  } else if (notSupported.length && notSupported.find(p => p === platformKey)) {
+  }
+  if (notSupported.length && notSupported.find(p => p === platformKey)) {
     return false;
   }
   return null;
 };
 
-export default ({
+export function PlatformSection({
   supported = [],
   notSupported = [],
   platform,
   noGuides,
   children,
-}: Props): JSX.Element => {
+}: Props) {
   const [currentPlatform] = usePlatform(platform);
-  if (noGuides && !(currentPlatform as Platform).guides) {
+
+  if (!currentPlatform) {
+    return null;
+  }
+
+  if (noGuides && currentPlatform.type !== 'platform') {
     return null;
   }
 
   const platformsToSearch = getPlatformsWithFallback(currentPlatform);
 
   let result: boolean | null = null;
-  for (let platformKey, i = 0; (platformKey = platformsToSearch[i]); i++) {
-    if (!platformKey) continue;
+  // eslint-disable-next-line no-cond-assign
+  for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
+    if (!platformKey) {
+      continue;
+    }
     result = isSupported(platformKey, supported, notSupported);
-    if (result === false) return null;
-    else if (result === true) break;
+    if (result === false) {
+      return null;
+    }
+    if (result === true) {
+      break;
+    }
   }
-  if (result === null && supported.length) return null;
+  if (result === null && supported.length) {
+    return null;
+  }
 
-  return <React.Fragment>{children}</React.Fragment>;
-};
+  return <Fragment>{children}</Fragment>;
+}

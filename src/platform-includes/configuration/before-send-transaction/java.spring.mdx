@@ -1,0 +1,42 @@
+`beforeSendTransaction` callback can be registered by creating a Spring bean implementing the `BeforeSendTransactionCallback`.
+
+```java
+import io.sentry.SentryTransaction;
+import io.sentry.SentryOptions;
+import io.sentry.Hint
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendTransactionCallback implements SentryOptions.BeforeSendTransactionCallback {
+  @Override
+  public SentryTransaction execute(SentryTransaction transaction, Hint hint) {
+    // Modify or drop the transaction here:
+    if ("/unimportant/route".equals(transaction.getTransaction())) {
+      // Don't send the transaction to Sentry
+      return null;
+    } else {
+      return transaction;
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.SentryTransaction
+import io.sentry.SentryOptions
+import io.sentry.Hint
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendTransactionCallback : SentryOptions.BeforeSendTransactionCallback {
+  override fun execute(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
+    // Modify or drop the transaction here:
+    return if ("/unimportant/route" == transaction.transaction) {
+      // Don't send the transaction to Sentry
+      null
+    } else {
+      transaction
+    }
+  }
+}
+```

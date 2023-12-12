@@ -1,32 +1,36 @@
-import metrics from "../../data/relay_metrics.json";
+import {Node, SourceNodesArgs} from 'gatsby';
 
-export const relayMetricsNodes = async ({
+import metrics from '../../data/relay_metrics.json';
+
+export const relayMetricsNodes = ({
   actions,
   createNodeId,
   createContentDigest,
-}) => {
-  const { createNode, createParentChildLink } = actions;
+}: SourceNodesArgs) => {
+  const {createNode, createParentChildLink} = actions;
 
   metrics.forEach(metric => {
-    const metricNode = {
+    const metricNode: Node = {
       ...metric,
       id: createNodeId(metric.name),
+      // @ts-expect-error TODO(epurkhiser): Understand what additional properties we need to add
       internal: {
-        type: "RelayMetric",
+        type: 'RelayMetric',
         contentDigest: createContentDigest(metric),
       },
     };
 
     createNode(metricNode);
 
-    const descriptionNode = {
-      id: createNodeId(metric.name + "_description"),
+    const descriptionNode: Node = {
+      id: createNodeId(metric.name + '_description'),
       parent: metricNode.id,
+      // @ts-expect-error TODO(epurkhiser): Understand what additional properties we need to add
       internal: {
         content: metric.description,
         contentDigest: createContentDigest(metric.description),
-        mediaType: "text/markdown",
-        type: "RelayMetricDescription",
+        mediaType: 'text/markdown',
+        type: 'RelayMetricDescription',
       },
     };
 

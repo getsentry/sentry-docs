@@ -5,14 +5,29 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 Install the **NuGet** package:
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry.Maui --prerelease
+dotnet add package Sentry.Maui -v {{@inject packages.version('sentry.dotnet.maui') }}
 ```
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry.Maui -AllowPrereleaseVersions
+Install-Package Sentry.Maui -Version {{@inject packages.version('sentry.dotnet.maui') }}
 ```
 
 Then add Sentry to `MauiProgram.cs` through the `MauiAppBuilder`:
@@ -59,7 +74,7 @@ SentrySdk.CaptureMessage("Hello Sentry");
 
 ### Performance monitoring
 
-We do not yet have automatic performance instrumentation for .NET MAUI.  We will be adding that in a future release.
+We do not yet have automatic performance instrumentation for .NET MAUI. We will be adding that in a future release.
 However, if desired you can still manually instrument parts of your application.
 
 For some parts of your code, [automatic instrumentation](https://docs.sentry.io/platforms/dotnet/guides/maui/performance/instrumentation/automatic-instrumentation/) is available across all of our .NET SDKs, and can be used with MAUI as well:

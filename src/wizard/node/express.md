@@ -5,14 +5,29 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-yarn add @sentry/node @sentry/tracing
+yarn add @sentry/node
 
 # Using npm
-npm install --save @sentry/node @sentry/tracing
+npm install --save @sentry/node
 ```
 
 Sentry should be initialized as early in your app as possible.
@@ -20,12 +35,10 @@ Sentry should be initialized as early in your app as possible.
 ```javascript
 import express from "express";
 import * as Sentry from "@sentry/node";
-import * as Tracing from "@sentry/tracing";
 
 // or using CommonJS
 // const express = require('express');
 // const Sentry = require('@sentry/node');
-// const Tracing = require("@sentry/tracing");
 
 const app = express();
 
@@ -35,7 +48,9 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // enable Express.js middleware tracing
-    new Tracing.Integrations.Express({ app }),
+    new Sentry.Integrations.Express({ app }),
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -44,8 +59,8 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// RequestHandler creates a separate execution context using domains, so that every
-// transaction/span/breadcrumb is attached to its own Hub instance
+// RequestHandler creates a separate execution context, so that all
+// transactions/spans/breadcrumbs are isolated across requests
 app.use(Sentry.Handlers.requestHandler());
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler());

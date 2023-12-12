@@ -5,9 +5,26 @@ support_level: production
 type: framework
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+Symfony is supported via the [`sentry-symfony`](https://github.com/getsentry/sentry-symfony) package as a native bundle.
+
 ## Install
 
-Install the `sentry/sentry-symfony` package:
+Install the `sentry/sentry-symfony` bundle:
 
 ```bash
 composer require sentry/sentry-symfony
@@ -17,6 +34,7 @@ composer require sentry/sentry-symfony
 
 Due to a bug in all versions below `6.0` of the [`SensioFrameworkExtraBundle`](https://github.com/sensiolabs/SensioFrameworkExtraBundle) bundle, you will likely receive an error during the execution of the command above related to the missing `Nyholm\Psr7\Factory\Psr17Factory` class. To workaround the issue, if you are not using the PSR-7 bridge, please change the configuration of that bundle as follows:
 
+<!-- prettier-ignore -->
 ```yaml
 sensio_framework_extra:
    psr_message:
@@ -31,6 +49,7 @@ For more details about the issue see [https://github.com/sensiolabs/SensioFramew
 
 Add your DSN to `config/packages/sentry.yaml`:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     dsn: "%env(SENTRY_DSN)%"
@@ -38,11 +57,19 @@ sentry:
 
 And in your `.env` file:
 
-```env {filename:.env}
+```plain {filename:.env}
 ###> sentry/sentry-symfony ###
 SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
 ```
+
+<Alert level= "warning" title="Performance">
+
+Performance monitoring integrations to support tracing are enabled by default. To use them, update to the latest version of the SDK.
+
+These integrations hook into critical paths of the framework and of the vendors. As a result, there may be a performance penalty. To disable tracing, please see the [Integrations documentation](/platforms/php/guides/symfony/performance/pm-integrations/).
+
+</Alert>
 
 If you **are not** using Symfony Flex, you'll also need to enable the bundle in `config/bundles.php`:
 
@@ -59,9 +86,11 @@ return [
 
 If you are using [Monolog](https://github.com/Seldaek/monolog) to report events instead of the typical error listener approach, you need this additional configuration to log the errors correctly:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
+    register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
 
 monolog:
     handlers:
@@ -74,6 +103,7 @@ monolog:
 If you are using a version of [MonologBundle](https://github.com/symfony/monolog-bundle) prior to `3.7`, you need to
 configure the handler as a service instead:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 monolog:
     handlers:
@@ -90,6 +120,7 @@ services:
 
 Additionally, you can register the `PsrLogMessageProcessor` to resolve PSR-3 placeholders in reported messages:
 
+<!-- prettier-ignore -->
 ```yaml {filename:config/packages/sentry.yaml}
 services:
     Monolog\Processor\PsrLogMessageProcessor:
@@ -106,9 +137,10 @@ To test that both logger error and exception are correctly sent to sentry.io, yo
 namespace App\Controller;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
-class SentryTestController
+class SentryTestController extends AbstractController
 {
     /**
      * @var LoggerInterface

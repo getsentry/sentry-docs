@@ -5,6 +5,21 @@ support_level: production
 type: language
 ---
 
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
 <Alert level="info">
     Sentry for Java is a collection of modules provided by Sentry; it supports Java 1.8 and above. At its core, Sentry for Java provides a raw client for sending events to Sentry. If you use <strong>Spring Boot</strong>, <strong>Spring</strong>,<strong> Logback</strong>, or <strong>Log4j2</strong>, we recommend visiting our <a href="https://docs.sentry.io/platforms/java/">Sentry Java</a> documentation for installation instructions.
 </Alert>
@@ -12,6 +27,8 @@ type: language
 ## Install
 
 Install the SDK via Gradle, Maven, or SBT:
+
+### Gradle
 
 For **Gradle**, add to your `build.gradle` file:
 
@@ -23,9 +40,36 @@ repositories {
 
 // Add Sentry's SDK as a dependency.
 dependencies {
-    implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '4.0.0') }}'
+    implementation 'io.sentry:sentry:{{@inject packages.version('sentry.java', '4.0.0') }}'
 }
 ```
+
+To upload your source code to Sentry so it can be shown in stack traces, use our Gradle plugin.
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+
+sentry {
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    includeSourceContext = true
+
+    org = "___ORG_SLUG___"
+    projectName = "___PROJECT_SLUG___"
+    authToken = "your-sentry-auth-token"
+}
+```
+
+### Maven
 
 For **Maven**, add to your `pom.xml` file:
 
@@ -33,15 +77,63 @@ For **Maven**, add to your `pom.xml` file:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
+    <version>{{@inject packages.version('sentry.java', '4.0.0') }}</version>
 </dependency>
 ```
+
+To upload your source code to Sentry so it can be shown in stack traces, use our Maven plugin.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-maven-plugin</artifactId>
+            <version>{{@inject packages.version('sentry.java.mavenplugin', '0.0.2') }}</version>
+            <configuration>
+                <!-- for showing output of sentry-cli -->
+                <debugSentryCli>true</debugSentryCli>
+
+                <!-- download the latest sentry-cli and provide path to it here -->
+                <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
+                <!-- minimum required version is 2.17.3 -->
+                <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath>
+
+                <org>___ORG_SLUG___</org>
+
+                <project>___PROJECT_SLUG___</project>
+
+                <!-- in case you're self hosting, provide the URL here -->
+                <!--<url>http://localhost:8000/</url>-->
+
+                <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
+                <!-- you can find it in Sentry UI: Settings > Account > API > Auth Tokens -->
+                <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>generate-resources</phase>
+                    <goals>
+                        <goal>uploadSourceBundle</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    ...
+</build>
+```
+
+### SBT
 
 For **SBT**:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '4.0.0') }}"
+libraryDependencies += "io.sentry" % "sentry" % "{{@inject packages.version('sentry.java', '4.0.0') }}"
 ```
+
+To upload your source code to Sentry so it can be shown in stack traces, please refer to [Manually Uploading Source Context](https://docs.sentry.io/platforms/java/source-context).
+
 ## Configure
 
 Configure Sentry as soon as possible in your application's lifecycle:

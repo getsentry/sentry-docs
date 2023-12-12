@@ -5,20 +5,36 @@ support_level: production
 type: language
 ---
 
-We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project, specify it in your _Podfile_:
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
-```ruby
-platform :ios, '9.0'
-use_frameworks! # This is important
+## Install
 
-target 'YourApp' do
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{ packages.version('sentry.cocoa') }}'
-end
+We recommend installing the SDK with Swift Package Manager (SPM), but we also support [alternate installation methods](/platforms/apple/install/). To integrate Sentry into your Xcode project using SPM, open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the Git repo url in the top right search field:
+
+```text
+https://github.com/getsentry/sentry-cocoa.git
 ```
 
-Afterwards run `pod install`.
+Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
 
-## Configuration
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+```
+
+## Configure
 
 Make sure you initialize the SDK as soon as possible in your application lifecycle e.g. in your AppDelegate `application:didFinishLaunchingWithOptions` method:
 
@@ -37,19 +53,13 @@ func application(_ application: UIApplication,
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0
-
-        // Features turned off by default, but worth checking out
-        options.enableAppHangTracking = true
-        options.enableFileIOTracking = true
-        options.enableCoreDataTracking = true
-        options.enableCaptureFailedRequests = true
     }
 
     return true
 }
 ```
 
-When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()):
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry
@@ -64,49 +74,30 @@ struct SwiftUIApp: App {
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
-
-            // Features turned off by default, but worth checking out
-            options.enableAppHangTracking = true
-            options.enableFileIOTracking = true
-            options.enableCoreDataTracking = true
-            options.enableCaptureFailedRequests = true
         }
     }
 }
 ```
 
-## Debug Symbols
+## Verify
 
-Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
+This snippet contains an intentional error you can use to test that errors are uploaded to Sentry correctly. You can add it to your main `ViewController`.
 
-- [With Bitcode](/platforms/apple/dsym/#dsym-with-bitcode)
-- [Without Bitcode](/platforms/apple/dsym/#dsym-without-bitcode)
+```swift
+let button = UIButton(type: .roundedRect)
+button.frame = CGRect(x: 20, y: 50, width: 100, height: 30)
+button.setTitle("Break the world", for: [])
+button.addTarget(self, action: #selector(self.breakTheWorld(_:)), for: .touchUpInside)
+view.addSubview(button)
 
-## Performance Monitoring
-
-After [setting up performance monitoring](/platforms/apple/guides/ios/performance), the Cocoa SDK [automatically instruments](/platforms/apple/performance/instrumentation/automatic-instrumentation/) UIViewControllers, HTTP requests, app start, and slow and frozen frames.
-
-You can manually measure the performance of your code by capturing transactions and spans.
-
-```swift {tabTitle:Swift}
-import Sentry // Make sure you import Sentry
-
-// Transaction can be started by providing, at minimum, the name and the operation
-let transaction = SentrySDK.startTransaction(name: "Update Repos", operation: "db")
-// Transactions can have child spans (and those spans can have child spans as well)
-let span = transaction.startChild(operation: "db", description: "Update first repo")
-
-// ...
-// (Perform the operation represented by the span/transaction)
-// ...
-
-span.finish() // Mark the span as finished
-transaction.finish() // Mark the transaction as finished and send it to Sentry
+@IBAction func breakTheWorld(_ sender: AnyObject) {
+    fatalError("Break the world")
+}
 ```
 
-Check out [the documentation](https://docs.sentry.io/platforms/apple/performance/instrumentation/) to learn more about the API and automatic instrumentations.
+### Experimental Features
 
-> Want to play with some new features? Try out our experimental features for [file I/O](/platforms/apple/performance/instrumentation/automatic-instrumentation/#file-io-instrumentation), [Core Data](/platforms/apple/performance/instrumentation/automatic-instrumentation/#core-data-instrumentation), [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation), [Screenshots](https://docs.sentry.io/platforms/apple/guides/ios/enriching-events/screenshots/). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+> Want to play with some new features? Try out our experimental features for [View Hierarchy](/platforms/apple/guides/ios/enriching-events/viewhierarchy/), [Time to Full Display (TTFD)](/platforms/apple/guides/ios/performance/instrumentation/automatic-instrumentation/#time-to-full-display), [MetricKit](/platforms/apple/guides/watchos/configuration/metric-kit/), [Prewarmed App Start Tracing](https://docs.sentry.io/platforms/apple/performance/instrumentation/automatic-instrumentation/#prewarmed-app-start-tracing), and [Swift Async Stacktraces](/platforms/apple/guides/ios/#stitch-together-swift-concurrency-stack-traces). Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
 >
 > Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
 
@@ -117,9 +108,19 @@ SentrySDK.start { options in
     // ...
 
     // Enable all experimental features
-    options.enableUserInteractionTracing = true
-    options.enablePreWarmedAppStartTracking = true
-    options.attachScreenshot = true
     options.attachViewHierarchy = true
+    options.enablePreWarmedAppStartTracing = true
+    options.enableMetricKit = true
+    options.enableTimeToFullDisplayTracing = true
+    options.swiftAsyncStacktraces = true
 }
 ```
+
+---
+
+## Next Steps
+
+- [CocoaPods/Carthage](/platforms/apple/install/): Learn about integrating Sentry into your project using CocoaPods or Carthage.
+- [Debug Symbols](/platforms/apple/dsym/): Symbolicate and get readable stacktraces in your Sentry errors.
+- [SwiftUI](/platforms/apple/performance/instrumentation/swiftui-instrumentation/): Learn about our first class integration with SwiftUI.
+- [Profiling](/platforms/apple/profiling/): Collect and analyze performance profiles from real user devices in production.

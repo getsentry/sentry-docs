@@ -1,43 +1,26 @@
-```javascript {tabTitle: ESM}
+<SignInNote />
+
+```javascript
 import Vue from "vue";
 import * as Sentry from "@sentry/vue";
-
-// If taking advantage of automatic instrumentation (highly recommended)
-import { BrowserTracing } from "@sentry/tracing";
-// Or, if only manually tracing
-// import * as _ from "@sentry/tracing"
-// Note: You MUST import the package in some way for tracing to work
 
 Sentry.init({
   // Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
   Vue: Vue,
   dsn: "___PUBLIC_DSN___",
 
-  // This enables automatic instrumentation (highly recommended), but is not
-  // necessary for purely manual usage
-  integrations: [new BrowserTracing()],
-
-  // To set a uniform sample rate
-  tracesSampleRate: 0.2
-
-  // Alternatively, to control sampling dynamically
-  tracesSampler: samplingContext => { ... }
-});
-```
-
-```javascript {tabTitle: CDN}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // This enables automatic instrumentation (highly recommended), but is not
-  // necessary for purely manual usage
+  // This enables automatic instrumentation (highly recommended),
+  // but is not necessary for purely manual usage
+  // If you only want to use custom instrumentation:
+  // * Remove the `BrowserTracing` integration
+  // * add `Sentry.addTracingExtensions()` above your Sentry.init() call
   integrations: [new Sentry.BrowserTracing()],
 
-  // To set a uniform sample rate
-  tracesSampleRate: 0.2
-
-  // Alternatively, to control sampling dynamically
-  tracesSampler: samplingContext => { ... }
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 });
 ```
 

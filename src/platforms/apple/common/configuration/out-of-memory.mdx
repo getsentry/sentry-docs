@@ -1,28 +1,14 @@
 ---
 title: Out Of Memory
 sidebar_order: 10
-description: "Learn how to turn off Out Of Memory"
+description: "Learn how to turn off Out Of Memory tracking"
 ---
 
-This integration tracks out-of-memory (OOM) crashes based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst, works only if the application was in the foreground, and doesn't track OOMs for unit tests.
-
-When a typical unhandled error occurs, the Apple SDK writes a report to disk with the current state of your application, with details like the stack trace, tags, breadcrumbs, and so on, before the app terminates. With OOM crashes, the operating system can kill your app without further notice, which means the SDK can't write a report to disk.
-As a result, in the Apple SDK, we track OOM crashes during the app start based on heuristics, but getting the state of the app when an OOM occurs is challenging. To provide the same state as we do for a typical crash, we would periodically need to store the app state to disk. This would cause a lot of I/O, which in turn could negatively affect the application's performance. To avoid this, OOM events have less context than typical unhandled errors.
-
-When a user launches the app, the SDK checks the following statements and reports an OOM if all of them are true:
-
-* The app didn't crash on the previous run.
-* The app was in the foreground/active.
-* The user launched the app at least once. When your app produces an OOM during the first launch, the SDK can't detect it.
-* There was no debugger attached to the process of the app. If there was, our logic would falsely report OOMs whenever you restarted the app in development.
-* The app is not running on a simulator.
-* The OS did not update your app.
-* The user didn't update the OS of their device.
-* The user didn't terminate the app manually, and neither did the OS.
-
-If you're interested in the implementation details, you can check out [the code](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryOutOfMemoryLogic.m) to find out more.
+We renamed this integration to <PlatformLink to="/configuration/watchdog-terminations/">watchdog terminations</PlatformLink> in the 8.0.0 release. The out of memory integration and the watchdog terminations integration are the same thing. The only difference is the name.
 
 If you'd like to opt out of this feature, you can do so using options:
+
+<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -40,5 +26,4 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.enableOutOfMemoryTracking = NO;
 }];
-
 ```

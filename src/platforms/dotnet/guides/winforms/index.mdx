@@ -3,21 +3,24 @@ title: Windows Forms
 description: "Learn how Sentry's .NET SDK works with WinForms applications."
 redirect_from:
   - /platforms/dotnet/winforms/
+  - /platforms/dotnet/guides/winforms/ignoring-exceptions/
 ---
 
 Sentry's .NET SDK works with WinForms applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry). It works with WinForms apps running on .NET Framework 4.6.1, .NET Core 3.0, or higher.
 
 ## Configuration
 
-After adding the NuGet package, the SDK should be initialized in the program's main entry point, before launching any forms or performing signifanct work.  The options for initialization vary by language.
+After adding the NuGet package, the SDK should be initialized in the program's main entry point, before launching any forms or performing signifanct work. The options for initialization vary by language.
 
 ### C# Initialization
 
-A C# Windows Forms application will have a `Program.cs` file.  You should initialize Sentry in this file.
+A C# Windows Forms application will have a `Program.cs` file. You should initialize Sentry in this file.
 
 You should also set `Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException)` so Sentry can capture unhandled exceptions.
 
 A complete example of the recommended startup is as follows:
+
+<SignInNote />
 
 ```csharp
 using System;
@@ -46,17 +49,17 @@ namespace WindowsFormsApp1
             var sentryOptions = new SentryOptions
             {
                 // Tells which project in Sentry to send events to:
-                o.Dsn = "___PUBLIC_DSN___",
+                Dsn = "___PUBLIC_DSN___",
 
                 // When configuring for the first time, to see what the SDK is doing:
-                o.Debug = true,
+                Debug = true,
 
                 // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
                 // We recommend adjusting this value in production.
-                o.TracesSampleRate = 1.0,
+                TracesSampleRate = 1.0,
 
                 // Enable Global Mode since this is a client app
-                o.IsGlobalModeEnabled = true,
+                IsGlobalModeEnabled = true,
 
                 //TODO: any other options you need go here
             };
@@ -73,19 +76,22 @@ namespace WindowsFormsApp1
 
 ### Visual Basic Initialization
 
-Windows Forms applications written in VB have two different initialization options.  Pick one of them (not both).
+Windows Forms applications written in VB have two different initialization options. Pick one of them (not both).
 
 #### Option 1
 
 You can initialize Sentry in a similar approach as shown above for C#.
 
 First, modify the settings on the project properties page as follows:
+
 - Clear the "Enable application framework" checkbox.
 - Set the "Startup object" to "Sub Main".
 
 ![VB Project Properties](vbsettings1.png)
 
 Then, add the following file as `Program.vb`:
+
+<SignInNote />
 
 ```vb
 Imports Sentry
@@ -130,15 +136,17 @@ End Module
 If you prefer to keep the WinForms "Application Framework" feature enabled, then you can initialize Sentry in the "Application Events".
 
 First, ensure the settings on the project properties page are as follows:
+
 - The "Enable application framework" checkbox should be checked.
 - The "Startup object" should be set to the name of your main form.
 
 ![VB Project Properties](vbsettings2.png)
 
 Next, you will need to modify the `ApplicationEvents.vb` file.
+
 - If you are using .NET Framework, clicking the "View Application Events" button will create and open the `ApplicationEvents.vb` file.
 - If you are using .NET Core, you will need to add the file manually.
-- If you are using .NET 5 or higher, the file should already be present.  If not, you can add it manually.
+- If you are using .NET 5 or higher, the file should already be present. If not, you can add it manually.
 
 Once you have the file created:
 
@@ -147,6 +155,8 @@ Once you have the file created:
 - Use the `UnhandledException` event to send unhandled exceptions to sentry.
 
 See the following complete example:
+
+<SignInNote />
 
 ```vb
 Imports Microsoft.VisualBasic.ApplicationServices

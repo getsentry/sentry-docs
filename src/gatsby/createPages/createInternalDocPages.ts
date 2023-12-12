@@ -1,6 +1,14 @@
-import { getChild, getDataOrPanic } from "../helpers";
+import {GatsbyNode} from 'gatsby';
 
-export default async ({ actions, graphql, reporter }) => {
+import {getChild, getDataOrPanic} from '../helpers';
+
+type CreatePageArgs = Parameters<NonNullable<GatsbyNode['createPages']>>[0];
+
+export const createInternalDocPages = async ({
+  actions,
+  graphql,
+  reporter,
+}: CreatePageArgs) => {
   const data = await getDataOrPanic(
     `
       query {
@@ -50,7 +58,7 @@ export default async ({ actions, graphql, reporter }) => {
   );
 
   const component = require.resolve(`../../templates/internal-doc.tsx`);
-  data.allFile.nodes.map((node: any) => {
+  data.allFile.nodes.forEach((node: any) => {
     const child = getChild(node);
     if (child && child.fields) {
       actions.createPage({

@@ -292,7 +292,13 @@ If you don't [wrap your root component with Sentry](#wrap-your-root-component), 
 
 </Note>
 
-The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts or resumes. The measurements are available under `measurements.app_start_warm` and `measurements.app_start_cold`.
+
+<Note>
+
+For SDKs from version `4.4.0` to `5.0.0` the app start measurements are available under `measurements.app.start.warm` and `measurements.app.start.cold` as custom measurements.
+
+</Note>
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
 
@@ -315,7 +321,7 @@ Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#
 We check for availability at runtime, so if you're not using `androidx.core`, you can remove it from Sentry's transitive dependencies.
 
 ```Groovy
-api ('io.sentry:sentry-android:{{ packages.version('sentry.java.android', '4.2.0') }}') {
+api ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
     exclude group: 'androidx.core', module: 'core'
 }
 ```
@@ -340,18 +346,15 @@ The tracing integration creates a child span for every `XMLHttpRequest` or `fetc
 
 To configure the automatic performance instrumentation, you will need to add the `ReactNativeTracing` integration yourself. We provide many options by default, so for the majority of apps you won't need to configure the integration yourself.
 
+<SignInNote />
+
 ```javascript
 import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  integrations: [
-    new Sentry.ReactNativeTracing({
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
-      // ... other options
-    }),
-  ],
+  integrations: [new Sentry.ReactNativeTracing()],
 });
 ```
 
@@ -361,13 +364,15 @@ For all possible options, see [ReactNativeTracingOptions](https://github.com/get
 
 You can use `beforeNavigate` to modify the transaction from routing instrumentation before the transaction is created. If you prefer not to send the transaction, set `sampled = false`.
 
+<SignInNote />
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new Sentry.ReactNativeTracing({
       routingInstrumentation,
-      beforeNavigate: context => {
+      beforeNavigate: (context) => {
         // Decide to not send a transaction by setting sampled = false
         if (context.data.route.name === "Do Not Send") {
           context.sampled = false;
@@ -415,9 +420,9 @@ type ReactNavigationTransactionContext = {
 
 If you use **Typescript**, you can type your `beforeNavigate` function with `Sentry.ReactNavigationTransactionContext`.
 
-### tracingOrigins
+### tracePropagationTargets
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+The default value of `tracePropagationTargets` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracePropagationTargets` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
 
 <PlatformContent includePath="performance/tracePropagationTargets-example" />
 
@@ -425,7 +430,7 @@ You will need to configure your web server CORS to allow the `sentry-trace` head
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default, `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracePropagationTargets`.
 
 <PlatformContent includePath="performance/filter-span-example" />
 
@@ -486,6 +491,8 @@ When bundling for production, React Native will minify class and function names 
 
 If you want to use tracing without our automatic instrumentation, you can disable it by setting `enableAutoPerformanceTracking` in your Sentry options and removing the `ReactNativeTracing` integration, if you added it:
 
+<SignInNote />
+
 ```javascript
 import * as Sentry from "@sentry/react-native";
 
@@ -495,3 +502,7 @@ Sentry.init({
   enableAutoPerformanceTracking: false,
 });
 ```
+
+## User Interaction Instrumentation
+
+The UI instrumentation captures transactions and adds breadcrumbs for touch interactions. Gesture support using React Native Gesture Handler is also available with the `sentryTraceGesture` wrapper. Learn more about [User Interaction Instrumentation](/platforms/react-native/performance/instrumentation/user-interaction-instrumentation).

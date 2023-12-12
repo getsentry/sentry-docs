@@ -2,17 +2,32 @@
 name: Xamarin
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/xamarin/
 support_level: production
-type: library
+type: framework
 ---
+
+<!-- * * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * *
+*                          UPDATES WILL NO LONGER BE REFLECTED IN SENTRY                            *
+*                                                                                                   *
+* We've successfully migrated all "getting started/wizard" documents to the main Sentry repository, *
+* where you can find them in the folder named "gettingStartedDocs" ->                               *
+* https://github.com/getsentry/sentry/tree/master/static/app/gettingStartedDocs.                    *
+*                                                                                                   *
+* Find more details about the project in the concluded Epic ->                                      *
+* https://github.com/getsentry/sentry/issues/48144                                                  *
+*                                                                                                   *
+* This document is planned to be removed in the future. However, it has not been removed yet,       *
+* primarily because self-hosted users depend on it to access instructions for setting up their      *
+* platform. We need to come up with a solution before removing these docs.                          *
+* * * * * * * * * * * *  * * * * * * * ATTENTION * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
 ## Install the NuGet package
 
 ```shell
 # For Xamarin.Forms
-Install-Package Sentry.Xamarin.Forms -Version {{ packages.version('sentry.dotnet.xamarin') }}
+Install-Package Sentry.Xamarin.Forms -Version {{@inject packages.version('sentry.dotnet.xamarin') }}
 
 # If you are not using Xamarin.Forms, but only Xamarin:
-Install-Package Sentry.Xamarin -Version {{ packages.version('sentry.dotnet.xamarin-forms') }}
+Install-Package Sentry.Xamarin -Version {{@inject packages.version('sentry.dotnet.xamarin-forms') }}
 
 ```
 
@@ -20,8 +35,8 @@ Install-Package Sentry.Xamarin -Version {{ packages.version('sentry.dotnet.xamar
 
 Initialize the SDK as early as possible, like in the constructor of the `App`, and Add `SentryXamarinFormsIntegration` as a new Integration to `SentryXamarinOptions` if you are going to run your app with Xamarin Forms:
 
-
 ### Android
+
 Initialize the SDK on your `MainActivity`.
 
 ```csharp
@@ -44,6 +59,7 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
 ```
 
 ### iOS
+
 Initialize the SDK on your `AppDelegate.cs`
 
 ```csharp
@@ -64,6 +80,7 @@ public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsAppli
 ```
 
 ### UWP
+
 Initialize the SDK on `App.xaml.cs`.
 
 NOTE: It's recommended to not setup the CacheDirectory for UWP.
