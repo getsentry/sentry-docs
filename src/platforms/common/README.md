@@ -1,1 +1,0 @@
-Please don't put any contents in `src/platforms/common`, we're moving away from content inheritance. Instead, please create include files in `src/platform-includes/` and use them in `src/platforms/<platform>` whenever necessary.
