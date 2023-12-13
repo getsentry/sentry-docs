@@ -1,0 +1,153 @@
+---
+title: Expo
+description: "Learn how to set up an Expo-managed project with the Sentry React Native SDK."
+---
+
+<Alert level="info" title="Experimental Support">
+
+Expo support is currently experimental and available since Sentry React Native SDK version `5.16.0-alpha.1` and Expo SDK version 50.
+
+Experimental support means it may have bugs. We recognize the irony.
+
+</Alert>
+
+To set up the Sentry React Native SDK in your Expo-managed project, follow the steps on this page.
+
+### Install the Sentry SDK
+
+Install the `@sentry/react-native` package:
+
+```bash {tabTitle:Expo}
+npx expo install @sentry/react-native
+```
+
+```bash {tabTitle:npm}
+npm install --save @sentry/react-native
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/react-native
+```
+
+### Intialize the SDK
+
+Import the `@sentry/react-native` package and call `init` with your DSN:
+
+```javascript {tabTitle:App.js/App.tsx}
+import { Text, View } from "react-native";
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+function App() {
+  return (
+    <View>
+      <Text>Expo Example!</Text>
+    </View>
+  );
+}
+
+export default Sentry.wrap(App);
+```
+
+### Add the Sentry Expo Plugin
+
+To ensure the bundles and source maps are automatically uploaded during the native applications builds, add `withSentry` to the Expo application configuration:
+
+```javascript {tabTitle:app.json/app.config.json}
+{
+  "expo": {
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "warning": "DO NOT COMMIT YOUR AUTH TOKEN",
+          "authToken": "___ORG_AUTH_TOKEN___",
+          "project": "___PROJECT_SLUG___",
+          "organization": "___ORG_SLUG___"
+        }
+      ]
+    ]
+  }
+}
+```
+
+```javascript {tabTitle:app.config.js}
+const { withSentry } = require("@sentry/react-native/expo");
+
+const config = {
+  name: "Expo Example",
+  slug: "expo-example",
+};
+
+module.exports = withSentry(config, {
+  url: "https://sentry.io/",
+  // DO NOT COMMIT YOUR AUTH TOKEN
+  authToken: "___ORG_AUTH_TOKEN___",
+  project: "___PROJECT_SLUG___s",
+  organization: "___ORG_SLUG___",
+});
+```
+
+```typescript {tabTitle:app.config.ts}
+import { ExpoConfig } from "expo/config";
+import { withSentry } from "@sentry/react-native/expo";
+
+const config: ExpoConfig = {
+  name: "Expo Example",
+  slug: "expo-example",
+};
+
+export default withSentry(config, {
+  url: "https://sentry.io/",
+  // DO NOT COMMIT YOUR AUTH TOKEN
+  authToken: "___ORG_AUTH_TOKEN___",
+  project: "___PROJECT_SLUG___s",
+  organization: "___ORG_SLUG___",
+});
+```
+
+### Add Sentry Metro Plugin
+
+To ensure unique Debug IDs get assigned to the generated bundles and source maps, add Sentry Serializer to the Metro configuration:
+
+```javascript {tabTitle:metro.config.js}
+const { mergeConfig } = require("metro");
+const { getDefaultConfig } = require("expo/metro-config");
+const { createSentryMetroSerializer } = require("@sentry/react-native/metro");
+const {
+  withExpoSerializers,
+} = require("@expo/metro-config/build/serializer/withExpoSerializers");
+
+const config = getDefaultConfig(__dirname);
+
+const sentryConfig = {
+  serializer: {
+    customSerializer: createSentryMetroSerializer(),
+  },
+};
+
+const finalConfig = mergeConfig(config, sentryConfig);
+module.exports = withExpoSerializers(finalConfig);
+```
+
+## Verify Setup
+
+To verify that everything is working as expected, build the `Release` version of your application and send a test event to Sentry by adding:
+
+```javascript
+<Button
+  title="Try!"
+  onPress={() => {
+    Sentry.captureException(new Error("First error"));
+  }}
+/>
+```

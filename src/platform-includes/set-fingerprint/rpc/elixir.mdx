@@ -1,0 +1,21 @@
+```elixir
+# A custom exception that represents an error in a RPC.
+defmodule RPCError do
+  defexception [:code, :function_name]
+end
+
+defmodule SentryHook do
+  def before_send(event) do
+    case event.original_exception do
+      %RPCError{code: code, function_name: function_name} ->
+        put_in(event.fingerprint, ["{{ default }}", code, function_name])
+
+      _other ->
+        event
+    end
+  end
+end
+
+config :sentry,
+  before_send: {SentryHook, :before_send}
+```
