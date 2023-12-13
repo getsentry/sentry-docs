@@ -38,7 +38,7 @@ return MaterialApp(
 
 ### 2. Define Route Names
 
-By default the application's main route name is "/".
+By default the application's main route name is `"/"`.
 In order for transactions to be created automatically when navigation changes, you need to provide route names through your routes settings.
 
 ```dart
@@ -50,6 +50,72 @@ MaterialPageRoute(
   settings: RouteSettings(name: 'Settings'),
 )
 ```
+
+## Instrumentation Behaviour
+
+1. The SDK sets the span operation to `navigation` and the `name` to the one provided in `RouteSettings`.
+2. Routing transactions attach to the current scope unless another transaction is already there.
+3. If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded.
+
+## Verify
+
+Set up a new widget that executes an expensive operation.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:sentry/sentry.dart';
+
+/// Widget that executes an expensive operation
+class MyWidget extends StatefulWidget {
+  const MyWidget({super.key});
+
+  @override
+  MyWidgetState createState() => MyWidgetState();
+}
+
+class MyWidgetState extends State<MyWidget> {
+  static const delayInSeconds = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _doComplexOperation();
+  }
+
+  /// Attach child spans to the routing transaction
+  /// or the transaction will not be sent to Sentry.
+  Future<void> _doComplexOperation() async {
+    final activeTransaction = Sentry.getSpan();
+    final childSpan = activeTransaction?.startChild('complex operation',
+    description: 'running a $delayInSeconds seconds operation');
+    await Future.delayed(const Duration(seconds: delayInSeconds));
+    childSpan?.finish();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ...
+  }
+}
+```
+
+Use the navigator to push a new route:
+
+```dart
+import 'package:flutter/material.dart';
+import 'my_widget.dart';
+
+/// Push to a new screen
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: 'MyWidget'),
+    builder: (context) => MyWidget(),
+  ),
+);
+```
+
+Afterwards you are going to see a transaction called `MyWidget` in your performance page.
 
 ## Auto Finish Time
 
@@ -84,15 +150,3 @@ SentryNavigatorObserver(
   setRouteNameAsTransaction: true
 )
 ```
-
-<Note>
-  
-The SDK sets the span operation to `navigation` and the `name` to the one provided in `RouteSettings`.
-
-Transactions will be bound to the scope if no other transaction is currently bound to it.
-
-If the transaction has no spans, the transaction will be dropped and not sent to Sentry, the reason is that there's no callback to identify when the screen has been loaded, so we rely on the child spans.
-
-</Note>
-
-## Verify
