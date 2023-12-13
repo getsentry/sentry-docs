@@ -1,0 +1,99 @@
+---
+title: Routing Instrumentation
+description: "Learn more about the Sentry Routing Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.flutter
+categories:
+- mobile
+---
+
+Sentry's Routing Instrumentation in Flutter automatically tracks and reports page navigation events in your app.
+
+<Note>
+
+The Routing Instrumentation is shipped with Sentry's Flutter SDK automatically.
+
+</Note>
+
+## Configure
+
+### 1. Add `SentryNavigationObserver`
+
+Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
+Transactions are started automatically when routing to new pages in your application.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+return MaterialApp(
+  title: 'Home',
+  home: HomeScreen(),
+  navigatorObservers: [
+    SentryNavigatorObserver()
+  ],
+);
+```
+
+### 2. Define Route Names
+
+By default the application's main route name is "/".
+In order for transactions to be created automatically when navigation changes, you need to provide route names through your routes settings.
+
+```dart
+import 'package:flutter/material.dart';
+
+/// Setting the route name is required
+MaterialPageRoute(
+  builder: (BuildContext context) => Settings(),
+  settings: RouteSettings(name: 'Settings'),
+)
+```
+
+## Auto Finish Time
+
+The started transactions will idle for a fixed amount of time.
+By default the time is **3 seconds**.
+Optionally you can change this by configuring `autoFinishAfter` in the navigators constructor.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Change how long navigation transactions idle before being finished
+SentryNavigatorObserver(
+  autoFinishAfter: Duration(seconds: 5)
+)
+```
+
+Started child spans will be attached to the navigation transaction.
+If child spans run longer than the `autoFinishAfter` time, the transaction extends and finishes when all children finished.
+If child spans are finished before the `autoFinishAfter` time, the transaction's end time will be set to the last child end time.
+
+## Track Navigation Breadcrumbs Only
+
+You can opt out of tracking navigation transactions by setting `enableAutoTransactions` to `false` in the navigators constructor.
+You might do this if you only want to track navigation breadcrumbs by setting `setRouteNameAsTransaction` to `true` in the navigators constructor.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Only track navigation breadcrums
+SentryNavigatorObserver(
+  enableAutoTransactions: false,
+  setRouteNameAsTransaction: true
+)
+```
+
+<Note>
+  
+The SDK sets the span operation to `navigation` and the `name` to the one provided in `RouteSettings`.
+
+Transactions will be bound to the scope if no other transaction is currently bound to it.
+
+If the transaction has no spans, the transaction will be dropped and not sent to Sentry, the reason is that there's no callback to identify when the screen has been loaded, so we rely on the child spans.
+
+</Note>
+
+## Verify
+
