@@ -9,6 +9,7 @@ categories:
 ---
 
 Sentry's Routing Instrumentation in Flutter automatically tracks and reports page navigation events in your app.
+It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navigation) and the [GoRouter](https://pub.dev/packages/go_router) package.
 
 <Note>
 
@@ -16,14 +17,27 @@ The Routing Instrumentation is shipped with Sentry's Flutter SDK automatically.
 
 </Note>
 
+## Instrumentation Behaviour
+
+Before diving into the configuration, it's important to understand how the Routing Instrumentation behaves:
+
+- Routing transactions attach to the current scope unless another transaction is already there.
+- If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded.
+
+## Prerequisite
+
+Before starting, ensure:
+
+1. Sentry Flutter SDK must be initialized. Learn more [here](/platforms/flutter/#configure)
+2. Performance Monitoring must be set up. Learn more [here](/platforms/flutter/performance/).
+
 ## Configure
 
 ### 1. Add `SentryNavigationObserver`
 
 Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
-Transactions are started automatically when routing to new pages in your application.
 
-```dart
+```dart {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -36,10 +50,21 @@ return MaterialApp(
 );
 ```
 
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final router = GoRouter(
+  routes: ...,
+  observers: [SentryNavigatorObserver()],
+);
+```
+
 ### 2. Define Route Names
 
 By default the application's main route name is `"/"`.
 In order for transactions to be created automatically when navigation changes, you need to provide route names through your routes settings.
+The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -51,14 +76,9 @@ MaterialPageRoute(
 )
 ```
 
-## Instrumentation Behaviour
-
-1. The SDK sets the span operation to `navigation` and the `name` to the one provided in `RouteSettings`.
-2. Routing transactions attach to the current scope unless another transaction is already there.
-3. If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded.
-
 ## Verify
 
+### 1. Implement a Test Widget:
 Set up a new widget that executes an expensive operation.
 
 ```dart
@@ -99,7 +119,8 @@ class MyWidgetState extends State<MyWidget> {
 }
 ```
 
-Use the navigator to push a new route:
+### 2. Navigate to the Widget:
+Use the navigator to transition to your widget. This should create and send a transaction named after the widget's route.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -115,13 +136,13 @@ Navigator.push(
 );
 ```
 
-Afterwards you are going to see a transaction called `MyWidget` in your performance page.
+Check Sentry's performance page to see the transaction `MyWidget`.
 
-## Auto Finish Time
+## Additional Configuration
 
-The started transactions will idle for a fixed amount of time.
-By default the time is **3 seconds**.
-Optionally you can change this by configuring `autoFinishAfter` in the navigators constructor.
+### Auto Finish Time
+
+Adjust the duration before a routing transaction automatically finishes. The default is 3 seconds.
 
 ```dart
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -131,22 +152,37 @@ SentryNavigatorObserver(
   autoFinishAfter: Duration(seconds: 5)
 )
 ```
+When configuring the `autoFinishAfter` parameter, consider the following behaviours:
 
-- Started child spans will be attached to the navigation transaction.
-- If child spans run longer than the `autoFinishAfter` time, the transaction extends and finishes when all children finished.
-- If child spans are finished before the `autoFinishAfter` time, the transaction's end time will be set to the last child end time.
+- Started child spans will be attached to the navigation transaction - for example the `MyWidget` transaction.
+- If child spans finish after the `autoFinishAfter` time, the transaction extends and finishes when all child spans finished.
+- If child spans finish before the `autoFinishAfter` time, the transaction's end time will be set to the last child end time.
 
-## Track Navigation Breadcrumbs Only
+### Breadcrumb Tracking Only
 
-You can opt out of tracking navigation transactions by setting `enableAutoTransactions` to `false` in the navigators constructor.
-You might do this if you only want to track navigation breadcrumbs by setting `setRouteNameAsTransaction` to `true` in the navigators constructor.
+Set `enableAutoTransactions` to `false` if you only want to track navigation breadcrumbs.
+Enabled by default.
 
 ```dart
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-/// Only track navigation breadcrums
+/// Only track navigation breadcrumbs
 SentryNavigatorObserver(
   enableAutoTransactions: false,
-  setRouteNameAsTransaction: true
+)
+```
+
+### Override Transaction Name
+
+Set `setRouteNameAsTransaction` to `true` to override the transaction name with the route name.
+An existing transaction in the scope 'CustomTransaction' will be renamed to 'MyWidget' for example.
+Disabled by default.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Override transaction name with route name
+SentryNavigatorObserver(
+  setRouteNameAsTransaction: true,
 )
 ```
