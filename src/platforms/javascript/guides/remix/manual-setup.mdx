@@ -167,11 +167,10 @@ export const ErrorBoundary: V2_ErrorBoundaryComponent = () => {
 
 ## v2 Server-side Errors
 
-Sentry won't be able to capture your unexpected server-side errors automatically on Remix v2.
+Sentry won't be able to capture your unexpected server-side errors automatically on Remix v2. To work around this, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point.
 
-To work around this, [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point should be instrumented.
 
-If you are using Sentry Remix SDK version `7.87.0` or higher, you can use `wrapRemixHandleError` to export as your `handleError` function.
+If you're using Sentry Remix SDK version `7.87.0` or higher, you can use `wrapRemixHandleError` to export as your `handleError` function.
 
 ```typescript {filename: entry.server.tsx (@sentry/remix >= 7.87.0)}
 import { wrapRemixHandleError } from "@sentry/remix";
@@ -228,7 +227,7 @@ const createSentryRequestHandler =
 app.all("*", createSentryRequestHandler(/* ... */));
 ```
 
-The function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using [Vite](https://remix.run/docs/en/main/future/vite), you need to await the build loader before passing it to the wrapped handler.
+The function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using [Vite](https://remix.run/docs/en/main/future/vite), you'll need to wait for the build loader before passing it to the wrapped handler.
 
 ```diff {filename: server/index.ts}
     wrapExpressCreateRequestHandler(createRequestHandler)({
