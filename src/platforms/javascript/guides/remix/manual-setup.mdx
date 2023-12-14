@@ -167,14 +167,23 @@ export const ErrorBoundary: V2_ErrorBoundaryComponent = () => {
 
 ## v2 Server-side Errors
 
-Sentry won't be able to capture your server-side errors automatically if you're using the`v2_errorBoundary` future flag. To work around this, define a [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point. Then use `Sentry.captureRemixServerException` to capture errors in your server-side code.
+Sentry won't be able to capture your unexpected server-side errors automatically on Remix v2. To work around this, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point.
 
-```typescript {filename: entry.server.tsx}
+If you're using Sentry Remix SDK version `7.87.0` or higher, you can use `wrapRemixHandleError` to export as your `handleError` function.
+
+```typescript {filename: entry.server.tsx (@sentry/remix >= 7.87.0)}
+import { wrapRemixHandleError } from "@sentry/remix";
+
+export const handleError = wrapRemixHandleError;
+```
+
+For SDK versions older than `7.87.0`, you can use `Sentry.captureRemixServerException` to capture errors inside `handleError`.
+
+```typescript {filename: entry.server.tsx (@sentry/remix < 7.87.0)}
 export function handleError(
   error: unknown,
   { request }: DataFunctionArgs
 ): void {
-  if (error instanceof Error) {
     Sentry.captureRemixServerException(error, "remix.server", request);
   } else {
     // Optionally capture non-Error objects
@@ -187,7 +196,7 @@ After you've completed this setup, the SDK will automatically capture unhandled 
 
 <Note>
 
-You can refer to [Remix Docs](https://remix.run/docs/en/v1/guides/envvars#browser-environment-variables) to learn how to use your Sentry DSN with environment variables.
+You can refer to [Remix Docs](https://remix.run/docs/en/main/guides/envvars#browser-environment-variables) to learn how to use your Sentry DSN with environment variables.
 
 </Note>
 
@@ -197,7 +206,7 @@ To enable readable stack traces, <PlatformLink to="/sourcemaps">configure source
 
 ## Custom Express Server
 
-If you use a custom Express server in your Remix application, you should wrap your [`createRequestHandler` function](https://remix.run/docs/en/v1/other-api/adapter#createrequesthandler) manually with `wrapExpressCreateRequestHandler`. This isn't necessary if you're using the built-in Remix App Server.
+If you use a custom Express server in your Remix application, you should wrap your [`createRequestHandler` function](https://remix.run/docs/en/main/other-api/adapter#createrequesthandler) manually with `wrapExpressCreateRequestHandler`. This isn't necessary if you're using the built-in Remix App Server.
 
 <Note>
 
@@ -217,7 +226,7 @@ const createSentryRequestHandler =
 app.all("*", createSentryRequestHandler(/* ... */));
 ```
 
-The function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using Vite, you need to await the build loader before passing it to the wrapped handler.
+The function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using [Vite](https://remix.run/docs/en/main/future/vite), you'll need to wait for the build loader before passing it to the wrapped handler.
 
 ```diff {filename: server/index.ts}
     wrapExpressCreateRequestHandler(createRequestHandler)({
