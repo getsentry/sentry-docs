@@ -64,34 +64,14 @@ export function Sidebar({ docs }) {
             href={"/" + node.doc.slug}
             className="sidebar-title d-flex align-items-center"
             data-sidebar-link
+            key={node.doc.slug}
             >
             <h6>{node.doc.title}</h6>
           </SidebarNavItem>
           {renderChildren(node.children)}
           </>
         ))}
-        {/* <ul className="list-unstyled" data-sidebar-tree>
-          {sortedDocs.map((doc) => (
-            <li className="toc-item" key={doc.slug} data-sidebar-branch>
-              <Link
-                href={"/" + doc.slug}
-                data-sidebar-link
-                >
-                {doc.title} - {doc.sidebar_order}
-              </Link>
-            </li>
-          ))}
-        </ul> */}
       </li>
-      {/* <li className="mb-3" data-sidebar-branch>
-        <Link
-          href="/contributing"
-          className="sidebar-title d-flex align-items-center"
-          data-sidebar-link
-        >
-          <h6>Contributing to Docs</h6>
-        </Link>
-      </li> */}
     </ul>
   );
 }

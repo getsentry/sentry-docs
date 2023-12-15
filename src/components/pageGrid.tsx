@@ -1,3 +1,5 @@
+import { serverContext } from "sentry-docs/serverContext";
+
 type Props = {
     nextPages: boolean;
     /**
@@ -9,5 +11,5 @@ type Props = {
   };
 
 export function PageGrid({nextPages = false, header, exclude}: Props) {
-    return null;
+    return <p>{serverContext().path}</p>;
 }

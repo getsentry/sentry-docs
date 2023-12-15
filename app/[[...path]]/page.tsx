@@ -8,9 +8,12 @@ import { Navbar } from 'sentry-docs/components/navbar';
 import { Sidebar } from 'sentry-docs/components/sidebar';
 import { Note } from "sentry-docs/components/note";
 import { PlatformContent } from "sentry-docs/components/platformContent";
+import { PlatformGrid } from "sentry-docs/components/platformGrid";
 import { Alert } from "sentry-docs/components/alert";
 import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { MDXComponents } from "mdx/types";
+import { notFound } from "next/navigation";
+import { setServerContext } from "sentry-docs/serverContext";
 
 export async function generateStaticParams() {
     const docs = await getAllFilesFrontMatter();
@@ -22,6 +25,7 @@ const MDXComponents: MDXComponents = {
   Note,
   PageGrid,
   PlatformContent,
+  PlatformGrid,
   // a: Link, // TODO: fails type check
   wrapper: ({ children, frontMatter, docs, toc }) => (
     <Layout
@@ -68,9 +72,9 @@ const Layout = ({children, frontMatter, docs, toc}) => {
               <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                 <div className="page-nav">
                   <div className="doc-toc">
-                    <div className="doc-toc-title">
+                    {toc.length > 0 && <div className="doc-toc-title">
                       <h6>On this page</h6>
-                    </div>
+                    </div>}
                     <ul className="section-nav">
                       {toc.map((entry) => (
                         <li className="toc-entry" key={entry.url}>
@@ -100,10 +104,26 @@ export default async function Page({ params }) {
   
   // get the MDX for the current doc and render it
   const slug = params.path
-    ? ['contributing', ...params.path].join('/')
-    : 'contributing';
-  const doc = await getFileBySlug(slug);
+    ? params.path.join('/')
+    : 'index';
+  let doc: any = null;
+  try {
+    doc = await getFileBySlug(slug);
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return notFound();
+    } else {
+      throw(e);
+    }
+  }
   const { mdxSource, toc, frontMatter } = doc;
+  
+  setServerContext({
+    docTree: docs,
+    path: slug,
+    toc: toc,
+    frontmatter: frontMatter,
+  })
   
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
   return (
