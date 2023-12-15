@@ -44,7 +44,39 @@ The most useful operation when working with scopes is the <PlatformIdentifier na
 
 You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
 
-<PlatformContent includePath="enriching-events/scopes/configure-scope" />
+```cpp
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    USentryUser* SentryUser = NewObject<USentryUser>();
+    SentryUser->SetEmail("john.doe@example.com");
+    SentryUser->SetId(42);
+
+    Scope->SetUser(SentryUser);
+    Scope->SetTagValue("my-tag", "my value");
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->ConfigureScope(ScopeDelegate);
+```
+
+Alternatively, all data can be configured on the global scope using dedicated methods of `SentrySubsystem` class.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+USentryUser* SentryUser = NewObject<USentryUser>();
+SentryUser->SetEmail("john.doe@example.com");
+SentryUser->SetId(42);
+
+SentrySubsystem->SetUser(ScopeDelegate);
+SentrySubsystem->SetTag("my-tag", "my value");
+```
 
 You can also apply this configuration when unsetting a user at logout:
 
@@ -63,7 +95,26 @@ you only want to send data for one specific event.
 
 In the following example we use the scope callback parameter that is available for all `capture` methods to attach a `level` and a `tag` to only one specific error:
 
-<PlatformContent includePath="enriching-events/scopes/scope-callback-param" />
+```cpp
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    Scope->SetTagValue("my-tag", "my value");
+    Scope->SetLevel(ESentryLevel::Error);
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// will be tagged with my-tag="my value"
+SentrySubsystem->CaptureMessageWithScope("Error message", ScopeDelegate);
+
+// will not be tagged with my-tag
+SentrySubsystem->CaptureMessage("Error message");
+```
 
 Before the callback is invoked the SDK creates a clone of the current scope, and the changes
 made will stay isolated within the callback function. This allows you to
