@@ -76,6 +76,18 @@ Note that there are some limitations to this. On the one hand, there may be _fal
 
 On the other hand, there may be _false positives_. For example, if a user clicks a link that leads to a file download, there is no reliable way to detect that a download was initiated, so a Slow Click may be generated even if the button is not actually "dead". For these cases, you can configure the SDK via `slowClickIgnoreSelectors` - see <PlatformLink to='/session-replay/configuration'>Configuration</PlatformLink> for more details.
 
+For example, ignoring detection of Dead and Rage clicks on selectors:
+
+```javascript
+new Sentry.Replay({
+	slowClickIgnoreSelectors: [
+		'.download',
+	  // Any link with a label including "download" (case-insensitive)
+		'a[label*="download" i]', 
+	],
+});
+```
+
 ## I See the Message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."
 
 The Sentry SDK attempts to minimize potential [performance overhead](/product/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
