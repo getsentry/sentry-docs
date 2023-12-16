@@ -7,9 +7,10 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Discover all our latest product releases during Sentry Launch Week, coming Nov 13-17.';
-const BANNER_LINK_URL = 'https://sentry.io/events/launch-week/';
-const BANNER_LINK_TEXT = 'Tune In Daily';
+  'Debug Web App Issues Faster: Sign Up for Session Replay Basics Workshop on Jan. 11th.';
+const BANNER_LINK_URL =
+  'https://sentry.io/resources/session-replay-basics-debug-web-app-issues-faster/?promo_name=from-docs';
+const BANNER_LINK_TEXT = 'Sign up.';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //

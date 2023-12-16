@@ -38,15 +38,19 @@ The following flags are available:
 : Replacing this flag with `false` will tree shake all code in the SDK that is related to performance monitoring.
 **Attention:** `__SENTRY_TRACING__` must not be replaced with `false` when you're using any performance monitoring-related SDK features (e.g. `Sentry.startTransaction()`). This flag is intended to be used in combination with packages like `@sentry/next` or `@sentry/sveltekit`, which automatically include performance monitoring functionality.
 
-<PlatformSection notSupported={["javascript.wasm", "javascript.cordova"]}>
+<PlatformSection notSupported={["javascript.wasm", "javascript.cordova", "javascript.bun", "javascript.deno"]}>
 
 `__RRWEB_EXCLUDE_IFRAME__`
 
-: Replacing this flag with `true` will tree shake all code in the SDK that is related capturing iframe content with Session Replay. This is only relevant when using [Session Replay](../../session-replay/). You can enable this flag if you don't have any iframes on your page you care to record.
+: Replacing this flag with `true` will tree shake all code in the SDK that is related capturing iframe content with Session Replay. This is only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. You can enable this flag if you don't have any iframes on your page you care to record.
 
 `__RRWEB_EXCLUDE_SHADOW_DOM__`
 
-: Replacing this flag with `true` will tree shake all code in the SDK that's related to capturing shadow dom elements with Session Replay. This is only relevant when using [Session Replay](../../session-replay/). Enable this flag if you don't have any shadow dom elements on your page you want to record.
+: Replacing this flag with `true` will tree shake all code in the SDK that's related to capturing shadow dom elements with Session Replay. This is only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you don't have any shadow dom elements on your page you want to record.
+
+`__SENTRY_EXCLUDE_REPLAY_WORKER__`
+
+: Replacing this flag with `true` will tree shake all code in the SDK that's related to the included compression web worker for Session Replay. This is only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you want to host a compression worker yourself - see <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">Using a Custom Compression Worker</PlatformLink> for details. **We do not recommend enabling this flag unless you provide a custom worker URL.**
 
 </PlatformSection>
 
@@ -59,6 +63,7 @@ _This configuration is available starting with v2.9.0 of the bundler plugins._
 If you're using one of our bundler plugins, you can use the `bundleSizeOptimizations` configuration option to tree shake optional code:
 
 ```javascript
+// For example, the @sentry/webpack-plugin passed to the webpack config
 sentryPlugin({
   // other config
   bundleSizeOptimizations: {
@@ -66,6 +71,7 @@ sentryPlugin({
     excludePerformanceMonitoring: true,
     excludeReplayIframe: true,
     excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
   },
 });
 ```
@@ -96,6 +102,7 @@ module.exports = {
       __SENTRY_TRACING__: false,
       __RRWEB_EXCLUDE_IFRAME__: true,
       __RRWEB_EXCLUDE_SHADOW_DOM__: true,
+      __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
     }),
     // ... other plugins
   ],
@@ -123,6 +130,7 @@ export default {
       __SENTRY_TRACING__: false,
       __RRWEB_EXCLUDE_IFRAME__: true,
       __RRWEB_EXCLUDE_SHADOW_DOM__: true,
+      __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
     }),
     // ... other plugins (best placed after)
   ],
@@ -146,6 +154,7 @@ const nextConfig = {
         __SENTRY_TRACING__: false,
         __RRWEB_EXCLUDE_IFRAME__: true,
         __RRWEB_EXCLUDE_SHADOW_DOM__: true,
+        __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
       })
     );
 

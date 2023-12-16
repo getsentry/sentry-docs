@@ -3,8 +3,7 @@ title: gRPC
 description: "Learn about the gRPC integration and how it adds support for the grpcio grpc client and server."
 ---
 
-The [gRPC](https://grpc.io/) integration instruments all incoming requests and outgoing unary-unary, unary-stream grpc
-requests using grpcio channels.
+The [gRPC](https://grpc.io/) integration instruments incoming unary-unary grpc requests and outgoing unary-unary, unary-stream grpc requests using grpcio channels.
 
 Use this integration to start or continue transactions for incoming grpc requests, create spans for outgoing requests,
 and ensure traces are properly propagated to downstream services.
@@ -19,7 +18,9 @@ pip install --upgrade 'sentry-sdk[grpcio]'
 
 ## Configure
 
-Add appropriate interceptor to your grpc stub/server:
+Add `GRPCIntegration()` to your `integrations` list, and enable tracing.
+
+This will add appropriate intercepters to your server/client to capture errors and performance data.
 
 <SignInNote />
 
@@ -29,19 +30,24 @@ Add appropriate interceptor to your grpc stub/server:
 import grpc
 
 import sentry_sdk
-from sentry_sdk.integrations.grpc.server import ServerInterceptor
+from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     enable_tracing=True,
+    integrations=[
+        GRPCIntegration(),
+    ],
 )
 
 ...
 
-server = grpc.server(
-    thread_pool=...,
-    interceptors=[ServerInterceptor()],
-)
+# this works with synchronous servers:
+server = grpc.server(thread_pool=...)
+
+# ... and asynchronous servers:
+server = grpc.aio.server()
+
 ```
 
 ### Client
@@ -50,24 +56,40 @@ server = grpc.server(
 import grpc
 
 import sentry_sdk
-from sentry_sdk.integrations.grpc.client import ClientInterceptor
+from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     enable_tracing=True,
+    integrations=[
+        GRPCIntegration(),
+    ],
 )
 
 ...
 
+# this works with synchronous clients:
 with grpc.insecure_channel("example.com:12345") as channel:
-    channel = grpc.intercept_channel(channel, *[ClientInterceptor()])
+    ...
+
+# ... and asynchronous clients:
+async with grpc.aio.insecure_channel("example.com:12345") as channel:
+    ...
 ```
+
+<Note>
+
+**Note:**
+
+In older versions of this integration you had to add the interceptors by hand. Since Python SDK version 1.35.0 you do not need to add any interceptors by hand but only add the GRPCIntegration as described above.
+
+</Note>
 
 ## Verify
 
 ### Server
 
-If you added the interceptor as described above, the server will create a transaction that will show up in [sentry.io](https://sentry.io).
+If you added the `GRPCIntegration` as described above, the server will create a transaction for each call to a function and send it to [sentry.io](https://sentry.io).
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
@@ -76,19 +98,28 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 ```python
 import grpc
 
-sentry_sdk.init(...)  # same as above
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        GRPCIntegration(),
+    ],
+)
 
 ...
 
-with sentry_sdk.start_transaction(op="function", name="grcp_client"):
+with sentry_sdk.start_transaction(op="function", name="testing_sentry"):
     with grpc.insecure_channel("example.com:12345") as channel:
-        channel = grpc.intercept_channel(channel, *[ClientInterceptor()])
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         response = stub.SayHello(helloworld_pb2.HelloRequest(name="you"))
 
 ```
 
 This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create a span for the call to the `SayHello` method on the server.
+
+The transaction created in the client will also be connected to the transaction on the server, giving you a full trace of your request.
+
+If you use a framework (like Django, Flask, FastAPI, etc.) the transaction will be created for you automatically.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

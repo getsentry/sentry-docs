@@ -47,7 +47,7 @@ function SentryLoaderConfig() {
       key="sentry-loader-config"
       dangerouslySetInnerHTML={{
         __html: `
-  window.Sentry && Sentry.onLoad(function() {
+window.sentryOnLoad = function() {
   Sentry.init({
     integrations: [
       new Sentry.Replay({
@@ -66,7 +66,7 @@ function SentryLoaderConfig() {
       'X-Sentry-Rate-Limit-Reset',
     ],
   });
-});`,
+};`,
       }}
     />
   );
@@ -75,7 +75,7 @@ function SentryLoaderConfig() {
 export const onRenderBody: GatsbySSR['onRenderBody'] = ({setHeadComponents}) => {
   // Sentry SDK setup
   if (sentryLoaderUrl) {
-    setHeadComponents([SentryLoaderScript(), SentryLoaderConfig()]);
+    setHeadComponents([SentryLoaderConfig(), SentryLoaderScript()]);
   }
 
   setHeadComponents([

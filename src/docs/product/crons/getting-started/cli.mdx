@@ -18,7 +18,7 @@ Sentry Crons allows you to monitor the uptime and performance of any scheduled, 
 To begin monitoring your recurring, scheduled job:
 
 - [Install](/product/cli/installation) the Sentry CLI (min v2.16.1).
-- [Create and configure](https://sentry.io/crons/create/) your first Monitor.
+- Create and configure your first Monitor in [Sentry](https://sentry.io/crons/create/) or [via the CLI](#creating-or-updating-a-monitor-through-a-check-in-optional).
 
 ## Configuration
 
@@ -57,6 +57,32 @@ sentry-cli monitors run my-monitor-slug -- python path/to/file.py
 
 ```bash {tabTitle: Node.JS}
 sentry-cli monitors run my-monitor-slug -- node path/to/file.js
+```
+
+### Creating or Updating a Monitor Through a Check-In (Optional)
+
+You can also use the Sentry CLI to create or update your cron monitor when you run your job. This way, you can avoid having to first set up the monitor through the Sentry web interface.
+
+Configure the cron monitor by providing the cron schdule in crontab format using the `--schedule` or the equivalent `-s` argument when executing the `sentry cli monitors run` command. Please make sure to enclose the schedule in quotes, so that your shell parses the argument correctly, like so:
+
+```bash
+sentry-cli monitors run --schedule "<expected schedule>" <monitor-slug> -- <command> <args>
+```
+
+When providing the `--schedule` argument, we also support the following optional arguments to provide additional configuration:
+
+- `--check-in-margin`: The allowed margin of minutes after the expected check-in time that the monitor will not be considered missed for.
+- `--max-runtime`: The allowed duration in minutes that the monitor may be in progress for before being considered failed due to timeout.
+- `--timezone`: A valid [tz database identifier string](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) (e.g. "Europe/Vienna") representing the monitor's execution schedule's timezone.
+
+Below are some usage examples:
+
+```bash {tabTitle: Every Minute}
+sentry-cli monitors run -s "* * * * *" -- my-command
+```
+
+```bash {tabTitle: Every Hour (+ Optional Arguments)}
+sentry-cli monitors run -s "0 * * * *" --check-in-margin 10 --max-runtime 5 --timezone "Europe/Vienna" -- my-command
 ```
 
 ### Specifying Monitor Environments (Optional)
