@@ -1,0 +1,22 @@
+## PDB Age Mismatches
+
+Microsoft PDBs compose their identifiers from two parts: A unique signature and
+an age field. The signature is generated when the PDB is written initially and
+usually changes with every build. The age is a counter that is incremented every
+time the PDB is modified.
+
+PE files, such as executables and dynamic libraries, specify the full identifier
+of the corresponding PDB in their header. This includes the age. If the PDB is
+modified after the PE has been generated, however, its age might diverge. This
+can lead to different identifiers:
+
+```
+PE:  3003763b-afcb-4a97-aae3-28de8f188d7c-2
+PDB: 3003763b-afcb-4a97-aae3-28de8f188d7c-4
+```
+
+`sentry-cli` can detect these differences during the upload process and
+associates the same identifier to both files. However, this requires that both
+files are uploaded in the same invocation of the upload command. Otherwise, the
+identifiers diverge and Sentry might not be able to resolve the correct file
+for symbolication.
