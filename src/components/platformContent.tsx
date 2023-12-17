@@ -45,8 +45,8 @@ type Props = {
   includePath: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
-  platform?: string;
   noGuides?: boolean;
+  platform?: string;
 };
 
 const getFileForPlatform = (
