@@ -1,6 +1,11 @@
 ---
 title: Troubleshooting
 sidebar_order: 6000
+notSupported:
+  - javascript.cordova
+  - javascript.wasm
+  - javascript.bun
+  - javascript.deno
 excerpt: ""
 description: "Troubleshooting Session Replay-specific Issues"
 redirect_from:
@@ -61,6 +66,32 @@ If you're having any problems with the latest SDK version, we want to hear about
 Because of the complexity of the browser environment, there's a significant amount of code necessary in order for Session Replay to work. And while enabling Session Replay will add about 50 kb (gzipped) to your application bundle, we believe the benefits will outweigh the cost.
 
 We're always working on ways to reduce the bundle size. Additionally, there are steps you can take in order to reduce the size of Session Replay based on your specific use case. See [Tree Shaking](../../configuration/tree-shaking/) for more information.
+
+## How does Rage Click detection work?
+
+The Replay SDK tries to detect cases where a user clicked on something, but nothing happened. This is called a "Dead Click" -- a click that seems to be "dead" and does nothing, from the user's perspective. This can happen if a bug prevents the UI from being correctly updated after a button is clicked.
+
+The way that the Replay SDK detects this is by checking if a click on a `<button>` or `<a>` element doesn't lead to either updates to the DOM or a page scroll. If within 7 seconds no updates are detected, the SDK will generate a "Slow Click" in the Replay UI. (We call it a "Slow Click" because it may be possible that something will happen after the 7s, but we chose this as a cutoff time.)
+
+Another concept related to this is "Rage Clicks". A "Rage Click" is when a user clicks on an element many times, which indicates frustration that something isn't working.
+
+When a Slow Click and a Rage Click come together, we have a very good indicator that something is actually wrong, and the Replay SDK will generate a "Rage Click" for this.
+
+Note that there are some limitations to this. On the one hand, there may be _false negatives_ -- we cannot detect all cases; for example, imagine a user clicks a "dead" button, but then clicks a different button afterwards that leads to a DOM update. In this case, since we cannot attribute the DOM update to a specific button, we'll _not_ capture this slow click.
+
+On the other hand, there may be _false positives_. For example, if a user clicks a link that leads to a file download, there is no reliable way to detect that a download was initiated, so a Slow Click may be generated even if the button is not actually "dead". For these cases, you can configure the SDK via `slowClickIgnoreSelectors` - see <PlatformLink to='/session-replay/configuration'>Configuration</PlatformLink> for more details.
+
+For example, you could ignore detection of dad and rage clicks for download links in your application like this:
+
+```javascript
+new Sentry.Replay({
+  slowClickIgnoreSelectors: [
+    ".download",
+    // Any link with a label including "download" (case-insensitive)
+    'a[label*="download" i]',
+  ],
+});
+```
 
 ## I See the Message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."
 
