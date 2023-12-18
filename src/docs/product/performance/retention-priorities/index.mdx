@@ -83,6 +83,42 @@ Some projects within your organization are very high volume compared to others. 
 Transactions can be logically grouped by their name within a project. This means that transactions with the same name most likely indicate the same operation or code path, while transactions with different names usually indicate different operations.
 We prioritize low-volume transactions for the same reason we prioritize low-volume projects – so they don't get drowned out by high-volume transactions. We want to make sure that transactions representing low-volume code paths are sampled in enough quantities to generate a complete view of your application.
 
+### Investigation Mode
+
+<Include name="feature-available-for-user-group-early-adopter.mdx" />
+
+Our automated retention priorities work well generically in order to collect a baseline of samples, because they prioritize retaining data that is valuable for any customer at any given time. But there are certain scenarios, such as investigating a particular issue, when very specific data becomes more important temporarily. In such cases, sometimes the automated sampling priorities do not ensure sufficient or even any samples to use during this investigation.
+
+Investigation rules are sampling rules that can be created by users through the Sentry UI, to temporarily boost the amount of transactions collected for a particular scenario (for example transactions with specific tag values, etc.), when there are no or too few samples already available.
+
+#### Creating a new Investigation Rule
+When you perform a query on transactions either in [Discover](/product/discover-queries/) or in [Transaction Summary](/product/performance/transaction-summary/) and receive fewer than 5 samples, you are given the possibility to request retaining samples of transactions for the respective query. You can do so by clicking on the button labeled Get Samples which appears in the control panel.
+
+![Investigation Mode in Discover](/product/performance/retention-priorities/investigation-bias-discover.png)
+
+<Note>
+
+Please note that because this feature only applies to transactions, in Discover it’s necessary to specify `event.type:transaction` in the query in order to access the feature, whereas in Performance the event type is implicit.
+
+</Note>
+
+Clicking this button triggers the creation of an investigation rule for the respective query. After the successful creation of the rule, a notification will appear and the button for creating the investigation rule will be replaced by a message specifying that the investigation is in progress and the amount of time since it has been active.
+
+![Rule successfully created](/product/performance/retention-priorities/investigation-bias-rule-created.png)
+
+If a user performs the same search later, and the investigation is still active the notification will indicate that there is an active rule collecting data for the query.
+
+Creating a rule is also possible from the Transaction Summary page in Performance.
+
+![Investigation Mode in Transaction Summary](/product/performance/retention-priorities/investigation-bias-tx-summary.png)
+
+#### Notes and current limitations
+
+Once created, a rule remains active for up to 48h or until 100 samples are collected (this may change in the future). You will be notified via email once the collection is completed. 
+
+Investigation sampling rules apply to transactions and do not guarantee sampling of full traces. A maximum of 50 sampling rules can exist simultaneously.
+
+
 ### Deprioritized Transactions
 
 Sentry automatically deprioritizes the following transactions:
