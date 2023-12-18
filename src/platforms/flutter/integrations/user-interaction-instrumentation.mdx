@@ -18,8 +18,6 @@ The UI instrumentation, once enabled, captures transactions and adds breadcrumbs
 
 - The instrumentation sets the transaction name specified in the `key` of the `Widget` from the `key` of the `Widget`, for example `login_button`.
 - The transaction operation is set to `ui.action.click`.
-- If the view doesn't have the `key` assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified.
-- The `key` value should be unique across the whole application because the transactions are grouped by its name.
 - If the User Interaction transaction has reached the [idleTimeout](/platforms/flutter/configuration/options/#idle-timeout), but didn't have any child spans added, it will be dropped.
 
 ## Prerequisite
@@ -31,9 +29,39 @@ Before starting, ensure:
 
 ## Configure
 
-The User Interaction instrumentation is enabled by default and requires no further configuration.
+### 1. Wrap root widget
+
+Wrap your root widget with `SentryUserInteractionWidget`:
+
+```dart
+Future<void> main2() async {
+  await SentryFlutter.init(
+    // Configure your options
+    (options) => options.dsn = '___DSN___',
+    appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
+  );
+}
+```
+
+### 2. Set a unique key for your widgets
+
+If the view doesn't have the key assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified.
+The key value should be unique across the whole application because the transactions are grouped by its name.
+
+```dart
+ElevatedButton(
+  key: const Key('my_unique_key'),
+  onPressed: () {
+    final activeSpan = Sentry.getSpan();
+    final childSpan = activeSpan?.startChild('some operation', description: 'some description');
+    childSpan?.finish();
+  }, child: const Text('User Interaction Example'),
+),
+```
 
 ## Verify
+
+Tap on the button specified in step 2 of the configure section, wait for `idleTimeout` seconds (default is 3s) then check the performance page for a new transaction.
 
 ## Handling Successive User Interaction Events
 
@@ -62,8 +90,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
-  (options) => options.enableUserInteractionTracing = false,
-  appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
+    (options) => options.enableUserInteractionTracing = false,
+    appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
   );
 }
 ```
@@ -79,8 +107,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
-  (options) => options.enableUserInteractionBreadcrumbs = false,
-  appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
+    (options) => options.enableUserInteractionBreadcrumbs = false,
+    appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
   );
 }
 ```
@@ -96,7 +124,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
-  (options) => options.sendDefaultPii = true,
+    (options) => options.sendDefaultPii = true,
   appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
   );
 }
@@ -116,6 +144,7 @@ To finish the transaction manually, use `Sentry.getSpan()` to retrieve the activ
 ```dart
 import 'package:sentry/sentry.dart';
 
+// Finish the transaction manually
 final activeTransaction = Sentry.getSpan()
 await activeTransaction?.finish();
 ```
