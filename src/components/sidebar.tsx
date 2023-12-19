@@ -5,7 +5,6 @@ import Link from "next/link";
 
 export function Sidebar({ node, path }) {
   const activeClassName = (node, baseClassName = '') => {
-    console.log(node.path, path)
     const className = node.path === path.join('/') ? 'active' : '';
     return `${baseClassName} ${className}`;
   }

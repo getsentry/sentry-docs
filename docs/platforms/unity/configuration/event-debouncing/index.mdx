@@ -1,0 +1,43 @@
+---
+title: Event Debouncing
+description: "Learn how the SDK handles high frequencies of events."
+sidebar_order: 20
+---
+
+Because gameplay updates at a very high frequency of 60 times a second or even higher, an optional debouncing mechanism is in place. Every type of log has its own time slot. If `EnableLogDebounce` is enabled and the game triggers too many events of the same type in quick succession, Sentry will only capture the first of its kind, then ignore (debounce) the other events of the same type.
+
+Event debouncing is `disabled` by default.
+
+The time that needs to pass after an event has been triggered to be captured again:
+
+- `LogType.Log` - one second
+- `LogType.Warning` - one second
+- `LogType.Error`, `LogType.Exception`, `LogType.Assert` and actual exceptions - one second
+
+<SignInNote />
+
+```csharp
+using UnityEngine;
+
+public class DebouncerTestMonoBehaviour : MonoBehaviour
+{
+    void Start()
+    {
+        SentryUnity.Init(o =>
+        {
+            o.Dsn = "___PUBLIC_DSN___";
+            o.EnableLogDebouncing = true;
+        });
+
+        // The time between debug calls of the same type is less than 1s
+        // Every following call of the same type gets ignored until 1s has passed
+
+        Debug.Log("Log");              // recorded
+        Debug.Log("Log 2");            // not recorded
+        Debug.LogWarning("Warning");   // recorded
+        Debug.LogWarning("Warning 2"); // not recorded
+        Debug.LogError("Error");       // recorded
+        Debug.LogError("Error 2");     // not recorded
+    }
+}
+```

@@ -30,7 +30,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     if (orderDiff !== 0) {
       return orderDiff;
     }
-    return a.title.localeCompare(b.title);
+    return (a.title || '').localeCompare(b.title || '');
   });
   
   const rootNode: DocNode = {

@@ -1,0 +1,36 @@
+---
+title: MetricKit
+sidebar_order: 20
+description: "This feature, once enabled, subscribes to MXDiagnosticPayload data of MetricKit and it to Sentry."
+---
+
+The [MetricKit](https://developer.apple.com/documentation/metrickit) integration subscribes to [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic), [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic)
+and [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic), which it converts to Sentry events.
+
+This feature is available on Cocoa 8.14.0 and up. The SDK supports this feature from iOS 15 and up and macOS 12 and up because in these versions, MetricKit delivers diagnostic reports immediately, which allows the Sentry SDK to apply current data from the scope.
+
+Note that the Cocoa SDK has no control over the stack traces provided by MetricKit. Some only offer a couple of frames. If these aren't useful to you, you can drop them in <PlatformLink to="/configuration/filtering/#filtering-error-events/">`beforeSend`</PlatformLink>.
+
+You can identify MetricKit events by looking at the `mx_hang_diagnostic`, `mx_cpu_exception`, and `mx_disk_write_exception` `mechanism.type`.
+
+Enable this feature by setting the `enableMetricKit` option to `true`:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetricKit = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+}];
+```

@@ -9,6 +9,7 @@ import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
 import { Note } from "sentry-docs/components/note";
 import { PlatformContent } from "sentry-docs/components/platformContent";
 import { PlatformGrid } from "sentry-docs/components/platformGrid";
+import { PlatformLink } from "sentry-docs/components/platformLink";
 import { Alert } from "sentry-docs/components/alert";
 import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { MDXComponents } from "mdx/types";
@@ -27,6 +28,7 @@ const MDXComponents: MDXComponents = {
   PageGrid,
   PlatformContent,
   PlatformGrid,
+  PlatformLink,
   // a: Link, // TODO: fails type check
   wrapper: ({ children, frontMatter, docs, toc }) => (
     <Layout

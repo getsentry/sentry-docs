@@ -1,0 +1,78 @@
+---
+title: Drift Database Instrumentation
+description: "Learn more about the Sentry Drift Database Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.drift
+categories:
+  - mobile
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 7.13.1)_
+
+The [sentry_drift](https://pub.dev/packages/sentry_drift) package provides `Drift` support for database instrumentation.
+The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/drift).
+You must <PlatformLink to="/performance/">Set Up Performance </PlatformLink> monitoring to capture transactions for this integration to work.
+
+## Install
+
+Add the `sentry_drift` dependency to install the Drift database instrumentation.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.13.1') }}
+sentry_drift: ^{{@inject packages.version('sentry.dart.drift', '7.13.1') }}
+```
+
+## Configure
+
+You need to inject `SentryQueryExecutor` into a Drift database instance:
+
+```dart
+import 'package:drift/native.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+final executor = SentryQueryExecutor(
+  () => NativeDatabase.memory(), // You can also provide your own database opener
+  databaseName: 'my_db_name',
+);
+final database = AppDatabase(executor); // AppDatabase is an example of the auto-generated database class by Drift.
+```
+
+After configuring, every `CRUD` operation, including database transactions and batches, will be automatically instrumented and sent to Sentry.
+
+## Example
+
+```dart
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+import 'your_database.dart';
+
+Future<void> driftTest() async {
+  final tr = Sentry.startTransaction('drift', 'op', bindToScope: true);
+  final executor = SentryQueryExecutor(
+    () => NativeDatabase.memory(),
+    databaseName: 'your_db_name',
+  );
+  final db = AppDatabase(executor);
+
+  await db.into(db.todoItems).insert(
+        TodoItemsCompanion.insert(
+          title: 'This is a test title',
+          content: 'test',
+        ),
+      );
+
+  final items = await db.select(db.todoItems).get();
+  print(items);
+
+  await db.close();
+
+  await tr.finish(status: const SpanStatus.ok());
+}
+```
