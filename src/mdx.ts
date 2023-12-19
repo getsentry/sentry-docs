@@ -23,7 +23,7 @@ function formatSlug(slug) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 
-type FrontMatter = {[key: string]: any};
+export type FrontMatter = {[key: string]: any};
 
 export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const docsPath = path.join(root, 'docs'); 

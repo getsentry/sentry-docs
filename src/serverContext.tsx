@@ -1,16 +1,16 @@
 import 'server-only';
 import { cache } from 'react';
+import { DocNode } from 'sentry-docs/docTree';
 
 interface ServerContext {
-    docTree: {};
+    rootNode?: DocNode;
     frontmatter: {};
-    path: String;
+    path: string;
     toc: any[];
 }
 
 export const serverContext = cache(() => {
     const context: ServerContext = {
-        docTree: {},
         frontmatter: {},
         path: '',
         toc: []
@@ -19,7 +19,7 @@ export const serverContext = cache(() => {
 });
 
 export const setServerContext = (data: ServerContext) => {
-    serverContext().docTree = data.docTree;
+    serverContext().rootNode = data.rootNode;
     serverContext().frontmatter = data.frontmatter;
     serverContext().path = data.path;
     serverContext().toc = data.toc;

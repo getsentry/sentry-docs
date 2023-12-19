@@ -14,6 +14,7 @@ import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
 import { setServerContext } from "sentry-docs/serverContext";
+import { frontmatterToTree } from "sentry-docs/docTree";
 
 export async function generateStaticParams() {
     const docs = await getAllFilesFrontMatter();
@@ -118,8 +119,10 @@ export default async function Page({ params }) {
   }
   const { mdxSource, toc, frontMatter } = doc;
   
+  const rootNode = frontmatterToTree(docs);
+  
   setServerContext({
-    docTree: docs,
+    rootNode: rootNode,
     path: slug,
     toc: toc,
     frontmatter: frontMatter,
