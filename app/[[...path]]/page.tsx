@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PageGrid } from "sentry-docs/components/pageGrid";
 import { Header } from 'sentry-docs/components/header';
 import { Navbar } from 'sentry-docs/components/navbar';
-import { Sidebar } from 'sentry-docs/components/sidebar';
+import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
 import { Note } from "sentry-docs/components/note";
 import { PlatformContent } from "sentry-docs/components/platformContent";
 import { PlatformGrid } from "sentry-docs/components/platformGrid";
@@ -14,7 +14,7 @@ import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
 import { setServerContext } from "sentry-docs/serverContext";
-import { frontmatterToTree } from "sentry-docs/docTree";
+import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
 
 export async function generateStaticParams() {
     const docs = await getAllFilesFrontMatter();
@@ -50,7 +50,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
         >
           <div className="toc">
             <div className="text-white p-3">
-              <Sidebar docs={docs} />
+              <ServerSidebar />
             </div>
           </div>
         </div>
@@ -102,15 +102,23 @@ const MDXLayoutRenderer = ({ mdxSource, ...rest }) => {
 export default async function Page({ params }) {
   // get frontmatter of all docs in tree
   const docs = await getAllFilesFrontMatter();
+  const rootNode = frontmatterToTree(docs);
+  if (!rootNode) {
+    return notFound();
+  }
+
+  const pageNode = nodeForPath(rootNode, params.path);
+  if (!pageNode) {
+    console.log('failed to find ', params.path);
+    return notFound();
+  }
   
   // get the MDX for the current doc and render it
-  const slug = params.path
-    ? params.path.join('/')
-    : 'index';
   let doc: any = null;
   try {
-    doc = await getFileBySlug(slug);
+    doc = await getFileBySlug(pageNode.path);
   } catch (e) {
+    console.log('failed to get node for ', pageNode.path);
     if (e.code === 'ENOENT') {
       return notFound();
     } else {
@@ -119,11 +127,10 @@ export default async function Page({ params }) {
   }
   const { mdxSource, toc, frontMatter } = doc;
   
-  const rootNode = frontmatterToTree(docs);
   
   setServerContext({
     rootNode: rootNode,
-    path: slug,
+    path: params.path,
     toc: toc,
     frontmatter: frontMatter,
   })

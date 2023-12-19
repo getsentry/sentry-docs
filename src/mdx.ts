@@ -46,10 +46,16 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
 
 export async function getFileBySlug(slug) {
   const mdxPath = path.join(root, 'docs', `${slug}.mdx`)
+  const mdxIndexPath = path.join(root, 'docs', slug, 'index.mdx')
   const mdPath = path.join(root, 'docs', `${slug}.md`)
+  const mdIndexPath = path.join(root, 'docs', slug, 'index.md')
   const source = fs.existsSync(mdxPath)
     ? fs.readFileSync(mdxPath, 'utf8')
-    : fs.readFileSync(mdPath, 'utf8');
+    : fs.existsSync(mdxIndexPath)
+    ? fs.readFileSync(mdxIndexPath, 'utf8')
+    : fs.existsSync(mdPath)
+    ? fs.readFileSync(mdPath, 'utf8')
+    : fs.readFileSync(mdIndexPath, 'utf8');
   
     process.env.ESBUILD_BINARY_PATH = path.join(root, 'node_modules', 'esbuild', 'bin', 'esbuild');
     

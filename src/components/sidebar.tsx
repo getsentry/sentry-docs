@@ -3,50 +3,23 @@
 import styled from "@emotion/styled";
 import Link from "next/link";
 
-export function Sidebar({ docs }) {
-  const sortedDocs = docs.sort((a, b) => {
-    const partDiff = a.slug.split('/').length - b.slug.split('/').length;
-    if (partDiff !== 0) {
-      return partDiff;
-    }
-    const orderDiff = (a.sidebar_order || 99999) - (b.sidebar_order || 99999);
-    if (orderDiff !== 0) {
-      return orderDiff;
-    }
-    return a.title.localeCompare(b.title);
-  });
-  
-  const roots: any[] = [];
-  const slugMap = {};
-  sortedDocs.forEach((doc) => {
-    const slugParts = doc.slug.split('/');
-    if (slugParts.length === 1) {
-      const node = {
-        doc: doc,
-        children: []
-      };
-      roots.push(node);
-      slugMap[doc.slug] = node;
-    } else {
-      const parentSlug = slugParts.slice(0, slugParts.length - 1).join('/');
-      const node = {
-        doc: doc,
-        children: []
-      };
-      slugMap[parentSlug].children.push(node);
-      slugMap[doc.slug] = node;
-    }
-  });
-  
+export function Sidebar({ node, path }) {
+  const activeClassName = (node, baseClassName = '') => {
+    console.log(node.path, path)
+    const className = node.path === path.join('/') ? 'active' : '';
+    return `${baseClassName} ${className}`;
+  }
+
   const renderChildren = (children) => (
     children && <ul className="list-unstyled" data-sidebar-tree>
       {children.map((node) => (
-      <li className="toc-item" key={node.doc.slug} data-sidebar-branch>
+      <li className="toc-item" key={node.path} data-sidebar-branch>
         <SidebarNavItem
-          href={"/" + node.doc.slug}
+          href={"/" + node.path}
           data-sidebar-link
+          className={activeClassName(node)}
           >
-          {node.doc.title}
+          {node.frontmatter.title}
           {node.children.length > 0 && <Chevron direction="down" />}
         </SidebarNavItem>
         {renderChildren(node.children)}
@@ -58,19 +31,17 @@ export function Sidebar({ docs }) {
   return (
     <ul className="list-unstyled" data-sidebar-tree>
       <li className="mb-3" data-sidebar-branch>
-        {roots.map((node) => (
-          <>
-          <SidebarNavItem
-            href={"/" + node.doc.slug}
-            className="sidebar-title d-flex align-items-center"
-            data-sidebar-link
-            key={node.doc.slug}
-            >
-            <h6>{node.doc.title}</h6>
-          </SidebarNavItem>
-          {renderChildren(node.children)}
-          </>
-        ))}
+        <>
+        <SidebarNavItem
+          href={"/" + node.path}
+          className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
+          data-sidebar-link
+          key={node.path}
+          >
+          <h6>{node.frontmatter.title}</h6>
+        </SidebarNavItem>
+        {renderChildren(node.children)}
+        </>
       </li>
     </ul>
   );

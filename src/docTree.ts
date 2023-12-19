@@ -8,13 +8,21 @@ export interface DocNode {
   children: DocNode[];
 };
 
+function slugWithoutIndex(slug: string): string[] {
+  const parts = slug.split('/');
+  if (parts[parts.length - 1] === 'index') {
+    parts.pop();
+  }
+  return parts;
+}
+
 export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
   if (frontmatter.length === 0) {
     return;
   }
 
   const sortedDocs = frontmatter.sort((a, b) => {
-    const partDiff = a.slug.split('/').length - b.slug.split('/').length;
+    const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
     if (partDiff !== 0) {
       return partDiff;
     }
@@ -34,17 +42,14 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
 
   const slugMap = {};
   sortedDocs.forEach((doc) => {
-    const slugParts = doc.slug.split('/');
-    if (slugParts[slugParts.length - 1] === 'index') {
-      slugParts.pop();
-    }
+    const slugParts = slugWithoutIndex(doc.slug);
     const slug = slugParts.join('/');
     
     if (slugParts.length === 0) {
       rootNode.frontmatter = doc;
     } else if (slugParts.length === 1) {
       const node = {
-        path: slug + '/',
+        path: slug,
         slug: slug,
         frontmatter: doc,
         parent: rootNode,
@@ -55,8 +60,11 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     } else {
       const parentSlug = slugParts.slice(0, slugParts.length - 1).join('/');
       const parent = slugMap[parentSlug];
+      if (!parent) {
+        throw new Error('missing parent: ' + parentSlug);
+      }
       const node = {
-        path: slug + '/',
+        path: slug,
         slug: slugParts[slugParts.length - 1],
         frontmatter: doc,
         parent: parent,
@@ -70,13 +78,10 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
   return rootNode;
 }
 
-export function nodeForPath(node: DocNode, path: string): DocNode | undefined {
-  const parts = path.split('/');
-  console.log(parts);
+export function nodeForPath(node: DocNode, path: string | string[]): DocNode | undefined {
+  const stringPath = (typeof path === 'string') ? path : path.join('/');
+  const parts = slugWithoutIndex(stringPath);
   for (let i = 0; i < parts.length; i++) {
-    console.log(parts[i]);
-    console.log(node.slug);
-    console.log(node.children.map((c) => c.slug));
     const maybeChild = node.children.find((child) => child.slug === parts[i])
     if (maybeChild) {
       node = maybeChild
