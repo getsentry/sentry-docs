@@ -99,9 +99,9 @@ export const marketingUrlParams = (): URLQueryObject => {
 
 export function getCurrentTransaction(): Transaction | undefined {
   try {
-    // getCurrentHub() can actually return undefined, as we are using the Loader Script
+    // getCurrentScope() may not be defined yet, as we are using the Loader Script
     // so we guard defensively against all of these existing.
-    return window.Sentry.getCurrentHub().getScope().getTransaction();
+    return window.Sentry.getCurrentScope().getTransaction();
   } catch {
     return undefined;
   }

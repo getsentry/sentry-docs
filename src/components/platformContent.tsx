@@ -45,6 +45,7 @@ type Props = {
   includePath: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
+  noGuides?: boolean;
   platform?: string;
 };
 
@@ -62,7 +63,7 @@ const getFileForPlatform = (
   return contentMatch || null;
 };
 
-export function PlatformContent({includePath, platform, children}: Props) {
+export function PlatformContent({includePath, platform, children, noGuides}: Props) {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
@@ -74,6 +75,10 @@ export function PlatformContent({includePath, platform, children}: Props) {
   const matches = files.filter(node => node.relativePath.indexOf(includePath) === 0);
 
   if (currentPlatform === null) {
+    return null;
+  }
+
+  if (noGuides && currentPlatform.type !== 'platform') {
     return null;
   }
 

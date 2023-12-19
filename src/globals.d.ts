@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/browser';
+import type * as Sentry from '@sentry/browser';
 
 declare global {
   interface Window {
