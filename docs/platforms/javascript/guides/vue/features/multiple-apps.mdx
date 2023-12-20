@@ -1,0 +1,33 @@
+---
+title: Multiple Vue Apps
+description: "Learn how to use the SDK to instrument multiple Vue 3 apps."
+sidebar_order: 20
+---
+
+Vue 3 allows you to use multiple apps with the same Sentry SDK instance, as well as add more apps dynamically after the SDK has been already initialized.
+
+### Multiple Apps
+
+Pass all your initially created apps to the `app` option in `Sentry.init`:
+
+```javascript {filename:main.js}
+const appOne = Vue.createApp(App);
+const appTwo = Vue.createApp(App);
+const appThree = Vue.createApp(App);
+
+Sentry.init({
+  app: [appOne, appTwo, appThree],
+});
+```
+
+### Dynamic Initialization
+
+If some of your apps are initialized at a later point, you can add Sentry to them like so:
+
+```javascript {filename:main.js}
+// ...
+const myLazyApp = createApp(MiscApp);
+
+myLazyApp.mixin(Sentry.createTracingMixins({ trackComponents: true }));
+Sentry.attachErrorHandler(myLazyApp);
+```

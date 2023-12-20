@@ -21,6 +21,7 @@ import { SmartLink } from "./smartLink";
 import { GuideGrid } from "./guideGrid";
 import { LambdaLayerDetail } from "./lambdaLayerDetail";
 import { Break } from "./break";
+import { JsBundleList } from "./jsBundleList";
 
 type Props = {
   includePath: string;
@@ -74,6 +75,7 @@ const MDXComponents: MDXComponents = {
   Expandable,
   GuideGrid,
   Include,
+  JsBundleList,
   LambdaLayerDetail,
   Link: SmartLink,
   Note,

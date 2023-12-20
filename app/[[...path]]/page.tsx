@@ -29,6 +29,7 @@ import { SmartLink } from "sentry-docs/components/smartLink";
 import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { LambdaLayerDetail } from "sentry-docs/components/lambdaLayerDetail";
 import { Break } from "sentry-docs/components/break";
+import { JsBundleList } from "sentry-docs/components/jsBundleList";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -42,6 +43,7 @@ const MDXComponents: MDXComponents = {
   DefinitionList,
   Include,
   GuideGrid,
+  JsBundleList,
   LambdaLayerDetail,
   Link: SmartLink,
   Note,
