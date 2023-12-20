@@ -143,6 +143,13 @@ export function getPlatform(rootNode: DocNode, name: string): Platform | undefin
   return nodeToPlatform(platformNode);
 }
 
+export function getCurrentPlatform(rootNode: DocNode, path: string[]): Platform | undefined {
+  if (path.length < 2 || path[0] !== 'platforms') {
+    return;
+  }
+  return getPlatform(rootNode, path[1]);
+}
+
 export function getCurrentPlatformOrGuide(rootNode: DocNode, path: string[]): Platform | PlatformGuide | undefined {
   if (path.length < 2 || path[0] !== 'platforms') {
     return;

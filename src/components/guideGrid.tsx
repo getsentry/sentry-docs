@@ -3,7 +3,7 @@ import {PlatformIcon} from 'platformicons';
 
 import {SmartLink} from './smartLink';
 import { serverContext } from 'sentry-docs/serverContext';
-import { getCurrentPlatformOrGuide, getPlatform } from 'sentry-docs/docTree';
+import { getCurrentPlatform, getPlatform } from 'sentry-docs/docTree';
 
 type Props = {
   className?: string;
@@ -16,12 +16,8 @@ export function GuideGrid({platform, className}: Props) {
     return null;
   }
 
-  const currentPlatform = platform ? getPlatform(rootNode, platform) : getCurrentPlatformOrGuide(rootNode, path);
+  const currentPlatform = platform ? getPlatform(rootNode, platform) : getCurrentPlatform(rootNode, path);
   if (!currentPlatform) {
-    return null;
-  }
-
-  if (currentPlatform.type === 'guide') {
     return null;
   }
 

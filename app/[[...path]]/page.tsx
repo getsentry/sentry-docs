@@ -7,29 +7,29 @@ import { Navbar } from 'sentry-docs/components/navbar';
 import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
 import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { notFound } from "next/navigation";
-import { setServerContext } from "sentry-docs/serverContext";
+import { serverContext, setServerContext } from "sentry-docs/serverContext";
 import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
 import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
 import { mdxComponents } from "sentry-docs/mdxComponents";
 import { Include } from "sentry-docs/components/include";
 import { Home } from "sentry-docs/components/home";
 import { PlatformContent } from "sentry-docs/components/platformContent";
+import { GuideGrid } from "sentry-docs/components/guideGrid";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
   return docs.map((doc) => ({ path: doc.slug.split('/') }));
 }
 
-const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent}, ({ children, frontMatter, docs, toc }) => (
+const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent}, ({ children, frontMatter, toc }) => (
   <Layout
     children={children}
     frontMatter={frontMatter}
-    docs={docs}
     toc={toc}
     />
 ))
 
-const Layout = ({children, frontMatter, docs, toc}) => {
+const Layout = ({children, frontMatter, toc}) => {
   const hasToc = !frontMatter.notoc;
 
   return (
@@ -81,6 +81,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
                           </li>
                         ))}
                       </ul>
+                      <GuideGrid className="section-nav" />
                     </div>
                   </div>
                 </div>
