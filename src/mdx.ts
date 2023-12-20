@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import getAllFilesRecursively from './files';
 import matter from 'gray-matter';
+import yaml from 'js-yaml';
 
 import { s } from 'hastscript'
 // Remark packages
@@ -34,21 +35,101 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
       return;
     }
-    const source = fs.readFileSync(file, 'utf8');
-    const { data: frontmatter } = matter(source);
-    allFrontMatter.push({
-      ...frontmatter,
-      slug: formatSlug(fileName)
+    
+    if (fileName.indexOf('/common/') !== -1) {
+      return;
+    }
+    
+      const source = fs.readFileSync(file, 'utf8');
+      const { data: frontmatter } = matter(source);
+      allFrontMatter.push({
+        ...frontmatter,
+        slug: formatSlug(fileName)
+      })
+    // }
+  });
+  
+  // Add all `common` files in the right place.
+  const platformsPath = path.join(docsPath, 'platforms');
+  const platformNames = fs.readdirSync(platformsPath).filter((p) => !fs.statSync(path.join(platformsPath, p)).isFile());
+  platformNames.forEach((platformName) => {
+    const commonPath = path.join(platformsPath, platformName, 'common');
+    if (!fs.existsSync(commonPath)) {
+      return;
+    }
+
+    const commonFileNames = getAllFilesRecursively(commonPath).filter((p) => path.extname(p) === '.mdx');
+    const commonFiles = commonFileNames.map((commonFileName) => {
+      const source = fs.readFileSync(commonFileName, 'utf8');
+      const { data: frontmatter } = matter(source);
+      return {commonFileName, frontmatter};
+    })
+    
+    commonFiles.forEach((f) => {
+      const slug = f.commonFileName.slice(docsPath.length + 1).replace(/\/common\//, '/');
+      if (!fs.existsSync(path.join(docsPath, slug))) {
+        allFrontMatter.push({
+          ...f.frontmatter,
+          slug: formatSlug(slug),
+        })
+      }
+    })
+
+    const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
+    let guideNames: string[] = []
+    if (!fs.existsSync(guidesPath)) {
+      return;
+    }
+    guideNames = fs.readdirSync(guidesPath).filter((g) => !fs.statSync(path.join(guidesPath, g)).isFile())
+    guideNames.forEach((guideName) => {
+      commonFiles.forEach((f) => {
+        const subpath = f.commonFileName.slice(commonPath.length + 1)
+        const slug = path.join('platforms', platformName, 'guides', guideName, subpath)
+        if (!fs.existsSync(path.join(docsPath, slug))) {
+          allFrontMatter.push({
+            ...f.frontmatter,
+            slug: formatSlug(slug),
+          })
+        }
+      })
     })
   });
+
   return allFrontMatter;
 }
 
 export async function getFileBySlug(slug) {
-  const mdxPath = path.join(root, `${slug}.mdx`)
-  const mdxIndexPath = path.join(root, slug, 'index.mdx')
-  const mdPath = path.join(root, `${slug}.md`)
-  const mdIndexPath = path.join(root, slug, 'index.md')
+  const configPath = path.join(root, slug, 'config.yml')
+  let configFrontmatter: { [key: string]: any } | undefined;
+  if (fs.existsSync(configPath)) {
+    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+  }
+
+  let mdxPath = path.join(root, `${slug}.mdx`)
+  let mdxIndexPath = path.join(root, slug, 'index.mdx')
+  let mdPath = path.join(root, `${slug}.md`)
+  let mdIndexPath = path.join(root, slug, 'index.md')
+  
+  if (slug.indexOf('docs/platforms/') === 0 &&
+      [mdxPath, mdxIndexPath, mdPath, mdIndexPath].filter((p) => fs.existsSync(p)).length === 0
+  ) {
+    // Try the common folder.
+    const slugParts = slug.split('/')
+    const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common')
+    let commonFilePath: string | undefined;
+    if (slugParts.length >= 5 && slugParts[1] === 'platforms' && slugParts[3] === 'guides') {
+      commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'))
+    } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
+      commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'))
+    } 
+    if (commonFilePath && fs.existsSync(commonPath)) {
+      mdxPath = path.join(root, `${commonFilePath}.mdx`)
+      mdxIndexPath = path.join(root, commonFilePath, 'index.mdx')
+      mdPath = path.join(root, `${commonFilePath}.md`)
+      mdIndexPath = path.join(root, commonFilePath, 'index.md')
+    }
+  }
+
   const source = fs.existsSync(mdxPath)
     ? fs.readFileSync(mdxPath, 'utf8')
     : fs.existsSync(mdxIndexPath)
@@ -120,11 +201,16 @@ export async function getFileBySlug(slug) {
       },
     });
     
+    let mergedFrontmatter = frontmatter;
+    if (configFrontmatter) {
+      mergedFrontmatter = {...frontmatter, ...configFrontmatter};
+    }
+    
     return {
       mdxSource: code,
       toc,
       frontMatter: {
-        ...frontmatter,
+        ...mergedFrontmatter,
         slug: slug,
       }
     }

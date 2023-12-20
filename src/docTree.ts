@@ -7,6 +7,7 @@ export interface DocNode {
   frontmatter: FrontMatter;
   parent?: DocNode;
   children: DocNode[];
+  missing: boolean;
 };
 
 function slugWithoutIndex(slug: string): string[] {
@@ -40,7 +41,8 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     frontmatter: {
       title: 'Home',
     },
-    children: []
+    children: [],
+    missing: false,
   }
 
   const slugMap = {};
@@ -56,28 +58,44 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
         slug: slug,
         frontmatter: doc,
         parent: rootNode,
-        children: []
+        children: [],
+        missing: false,
       };
       rootNode.children.push(node);
       slugMap[slug] = node;
     } else {
       const parentSlug = slugParts.slice(0, slugParts.length - 1).join('/');
-      const parent = slugMap[parentSlug];
+      let parent = slugMap[parentSlug];
       if (!parent) {
-        throw new Error('missing parent: ' + parentSlug);
+        const grandparentSlug = slugParts.slice(0, slugParts.length - 2).join('/');
+        const grandparent = slugMap[grandparentSlug];
+        if (!grandparent) {
+          throw new Error('missing parent and grandparent: ' + parentSlug);
+        }
+        parent = {
+          path: parentSlug,
+          slug: slugParts[slugParts.length - 2],
+          frontmatter: {},
+          parent: grandparent,
+          children: [],
+          missing: true,
+        }
+        grandparent.children.push(parent);
+        slugMap[parentSlug] = parent;
       }
       const node = {
         path: slug,
         slug: slugParts[slugParts.length - 1],
         frontmatter: doc,
         parent: parent,
-        children: []
+        children: [],
+        missing: false,
       };
       parent.children.push(node);
       slugMap[slug] = node;
     }
   }); 
-
+  
   return rootNode;
 }
 
@@ -89,6 +107,7 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
     if (maybeChild) {
       node = maybeChild
     } else {
+      console.warn('no child found for', parts[i]);
       return;
     }
   }

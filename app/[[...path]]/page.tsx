@@ -129,11 +129,13 @@ export default async function Page({ params }) {
   const docs = await getAllFilesFrontMatter();
   const rootNode = frontmatterToTree(docs);
   if (!rootNode) {
+    console.warn('no root node');
     return notFound();
   }
 
   const pageNode = nodeForPath(rootNode, params.path);
   if (!pageNode) {
+    console.warn('no page node', params.path)
     return notFound();
   }
   
@@ -143,6 +145,7 @@ export default async function Page({ params }) {
     doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
+      console.error('ENOENT', pageNode.path)
       return notFound();
     } else {
       throw(e);

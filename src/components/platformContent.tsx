@@ -44,7 +44,16 @@ export async function PlatformContent({includePath, platform, children, noGuides
     doc = await getFileBySlug(`platform-includes/${includePath}/${platform}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
-      return null;
+      try {
+        doc = await getFileBySlug(`platform-includes/${includePath}/_default`);
+      } catch (e2) {
+        if (e2.code === 'ENOENT') {
+          console.error('failed to get platform include', includePath, 'for', platform);
+          return null;
+        } else {
+          throw(e);
+        }
+      }
     } else {
       throw(e);
     }

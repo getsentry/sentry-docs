@@ -62,17 +62,6 @@ export function ServerSidebar() {
       }
       addChildren(node.children);
       
-    //   type Node = {
-    //     context: {
-    //       platform: {
-    //         name: string;
-    //       };
-    //       title: string;
-    //       sidebar_order?: number;
-    //       sidebar_title?: string;
-    //     };
-    //     path: string;
-    //   };
       return (
         <PlatformSidebar
           platform={{
@@ -86,12 +75,6 @@ export function ServerSidebar() {
           }}
         />
       );
-    //   const maybeNode = nodeForPath(rootNode, `platforms/${platform}`);
-    //   if (maybeNode) {
-    //     node = maybeNode;
-    //   } else {
-    //     return null;
-    //   }
     }
   }
   

@@ -12,7 +12,7 @@ export function Breadcrumbs() {
   const pageNode = nodeForPath(rootNode, path);
   const nodes: DocNode[] = [];
   for (let node: DocNode | undefined = pageNode; node; node = node.parent) {
-    if (node) {
+    if (node && !node.missing) {
       nodes.unshift(node);
     }
   }
