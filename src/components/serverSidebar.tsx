@@ -115,7 +115,7 @@ export function ServerSidebar() {
           title: platform?.title || '',
         }}
         guide={guide && {
-          name: guide.key,
+          name: guide.name,
           title: guide.title || '',
         }}
         data={{

@@ -126,7 +126,7 @@ function nodeToPlatform(n: DocNode): Platform {
 
 function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
   return {
-    key: n.slug,
+    key: `${platform}.${n.slug}`,
     name: n.slug,
     type: 'guide',
     url: '/' + n.path + '/',
@@ -141,6 +141,18 @@ export function getPlatform(rootNode: DocNode, name: string): Platform | undefin
     return;
   }
   return nodeToPlatform(platformNode);
+}
+
+export function getCurrentPlatformOrGuide(rootNode: DocNode, path: string[]): Platform | PlatformGuide | undefined {
+  if (path.length < 2 || path[0] !== 'platforms') {
+    return;
+  }
+  
+  if (path.length >= 4 && path[2] === 'guides') {
+    return getGuide(rootNode, path[1], path[3]);
+  }
+
+  return getPlatform(rootNode, path[1]);
 }
 
 export function getGuide(rootNode: DocNode, platform: string, guide: string): PlatformGuide | undefined {

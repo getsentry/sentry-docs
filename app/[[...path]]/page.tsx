@@ -11,13 +11,16 @@ import { setServerContext } from "sentry-docs/serverContext";
 import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
 import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
 import { mdxComponents } from "sentry-docs/mdxComponents";
+import { Include } from "sentry-docs/components/include";
+import { Home } from "sentry-docs/components/home";
+import { PlatformContent } from "sentry-docs/components/platformContent";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
   return docs.map((doc) => ({ path: doc.slug.split('/') }));
 }
 
-const mdxComponentsWithWrapper = mdxComponents(({ children, frontMatter, docs, toc }) => (
+const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent}, ({ children, frontMatter, docs, toc }) => (
   <Layout
     children={children}
     frontMatter={frontMatter}
@@ -30,7 +33,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
   const hasToc = !frontMatter.notoc;
 
   return (
-    <>
+    <div className="document-wrapper">
       <div className="sidebar">
         <Header />
 
@@ -86,7 +89,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
           </section>
         </div>
       </main>
-    </>
+    </div>
   );
 };
 
@@ -96,6 +99,10 @@ const MDXLayoutRenderer = ({ mdxSource, ...rest }) => {
 }
 
 export default async function Page({ params }) {
+  if (!params.path) {
+    return <Home />;
+  }
+
   // get frontmatter of all docs in tree
   const docs = await getAllFilesFrontMatter();
   const rootNode = frontmatterToTree(docs);

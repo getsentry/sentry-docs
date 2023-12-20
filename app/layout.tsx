@@ -16,9 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div>
-          <div className="document-wrapper">
           {children}
-          </div>
         </div>
       </body>
     </html>

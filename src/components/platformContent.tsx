@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { getFileBySlug } from "sentry-docs/mdx";
 import { serverContext } from "sentry-docs/serverContext";
 import { mdxComponents } from "sentry-docs/mdxComponents";
+import { Include } from "./include";
 
 type Props = {
   includePath: string;
@@ -48,4 +49,4 @@ export async function PlatformContent({includePath, platform, children, noGuides
   return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }
 
-const mdxComponentsWithWrapper = mdxComponents();
+const mdxComponentsWithWrapper = mdxComponents({ Include, PlatformContent });

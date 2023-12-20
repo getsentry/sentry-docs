@@ -6,7 +6,6 @@ import { ConfigKey } from "./components/configKey";
 import { DefinitionList } from "./components/definitionList";
 import { Expandable } from "./components/expandable";
 import { GuideGrid } from "./components/guideGrid";
-import { Include } from "./components/include";
 import { JsBundleList } from "./components/jsBundleList";
 import { LambdaLayerDetail } from "./components/lambdaLayerDetail";
 import { Note } from "./components/note";
@@ -14,7 +13,6 @@ import { OrgAuthTokenNote } from "./components/orgAuthTokenNote";
 import { PageGrid } from "./components/pageGrid";
 import { ParamTable } from "./components/paramTable";
 import { PiiFields } from "./components/piiFields";
-import { PlatformContent } from "./components/platformContent";
 import { PlatformGrid } from "./components/platformGrid";
 import { PlatformIdentifier } from "./components/platformIdentifier";
 import { PlatformLink } from "./components/platformLink";
@@ -26,7 +24,7 @@ import { SignInNote } from "./components/signInNote";
 import { SmartLink } from "./components/smartLink";
 import { VimeoEmbed } from "./components/video";
 
-export function mdxComponents(wrapper: any = ({children}) => children): MDXComponents {
+export function mdxComponents(dynamicComponents: any = {}, wrapper: any = ({children}) => children): MDXComponents {
   return {
     Alert,
     Break,
@@ -35,7 +33,6 @@ export function mdxComponents(wrapper: any = ({children}) => children): MDXCompo
     DefinitionList,
     Expandable,
     GuideGrid,
-    Include,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
@@ -44,7 +41,6 @@ export function mdxComponents(wrapper: any = ({children}) => children): MDXCompo
     PageGrid,
     ParamTable,
     PiiFields,
-    PlatformContent,
     PlatformGrid,
     PlatformIdentifier,
     PlatformLink,
@@ -54,6 +50,7 @@ export function mdxComponents(wrapper: any = ({children}) => children): MDXCompo
     SandboxLink,
     SignInNote,
     VimeoEmbed,
+    ...dynamicComponents,
     // a: Link, // TODO: fails type check
     wrapper: wrapper,
   }
