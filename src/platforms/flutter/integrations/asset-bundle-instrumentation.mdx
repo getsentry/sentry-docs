@@ -1,0 +1,61 @@
+---
+title: Asset Bundle Instrumentation
+description: "Learn more about the Sentry App Start Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.flutter
+categories:
+- mobile
+---
+
+The [AssetBundle](https://api.flutter.dev/flutter/services/AssetBundle-class.html) instrumentation provides insight into how long your app takes to load its assets, such as files.
+
+## Instrumentation Behaviour
+
+- The instrumentation starts a span from an active transaction that's bound to the scope of each `load` and `loadString` call. The SDK sets the span `operation` to `file.read`.
+- The instrumentation starts a span from an active transaction that's bound to the scope of each `loadStructuredData` call. The SDK sets the span `operation` to `serialize`.
+
+## Prerequisite
+
+Before starting, ensure:
+
+1. Sentry Flutter SDK must be initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring must be set up. Learn more [here](/platforms/flutter/performance/).
+
+## Configure
+
+Wrap the `runApp` method with a `DefaultAssetBundle` and `SentryAssetBundle`.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.dsn = '___PUBLIC_DSN___',
+      appRunner: () => runApp(
+        DefaultAssetBundle(
+          bundle: SentryAssetBundle(),
+          child: MyApp(),
+        ),
+    ),
+  );
+}
+```
+
+## Verify
+
+// TODO
+
+## Additional Configuration
+
+### Disabling the `loadStructuredData` feature
+
+The `loadStructuredData` is an opt-out feature. The following example shows how to disable it:
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryAssetBundle(enableStructuredDataTracing: false)
+```
+

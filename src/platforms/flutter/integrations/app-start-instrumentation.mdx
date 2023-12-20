@@ -37,8 +37,45 @@ The instrumentation is automatically enabled. There is no need for further confi
 
 ## Verify
 
-Execute a transaction directly
+### 1. Execute the Transaction:
+
+Initiate a transaction immediately after the app launches.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction("test test", "my operation");
+await Future.delayed(const Duration(milliseconds: 1000));
+transaction.finish();
+```
+
+### 2. Locate Your Transaction:
+
+Open the Sentry performance dashboard, find and select the transaction you executed.
+
+### 3. View App Start Metrics:
+
+Select the event within your transaction, Sentry displays the app start metrics on the right side of the screen.
 
 ## Additional Configuration
 
-- If you don't initialize the SDK early in the app's lifecycle, you can also customize the ending of the app start by disabling the `autoAppStart` flag and calling the `SentryFlutter.setAppStartEnd` function.
+### Change App Start Tracking End
+
+1. Set `autoAppStart` to `false` in the Sentry options.
+2. Call `SentryFlutter.setAppStartEnd`.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+// Run my App and do my things first
+
+// Initialize the Flutter SDK
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.autoAppStart = false,
+  );
+}
+
+// End the App Start metric
+SentryFlutter.setAppStartEnd(DateTime.now().toUtc());
+```
