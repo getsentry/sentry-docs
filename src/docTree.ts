@@ -107,7 +107,6 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
     if (maybeChild) {
       node = maybeChild
     } else {
-      console.warn('no child found for', parts[i]);
       return;
     }
   }
@@ -120,9 +119,20 @@ function nodeToPlatform(n: DocNode): Platform {
     key: n.slug,
     name: n.slug,
     type: 'platform',
-    url: '/' + n.path,
+    url: '/' + n.path + '/',
     title: n.frontmatter.title,
   };
+}
+
+function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
+  return {
+    key: n.slug,
+    name: n.slug,
+    type: 'guide',
+    url: '/' + n.path + '/',
+    title: n.frontmatter.title,
+    platform: platform,
+  }
 }
 
 export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
@@ -143,6 +153,9 @@ export function extractPlatforms(rootNode: DocNode): Platform[] {
 }
 
 function extractGuides(platformNode: DocNode): PlatformGuide[] {
-  // TODO
-  return [];
+  const guidesNode = nodeForPath(platformNode, 'guides');
+  if (!guidesNode) {
+    return [];
+  }
+  return guidesNode.children.map((n) => nodeToGuide(platformNode.slug, n));
 }

@@ -4,10 +4,12 @@ import styled from "@emotion/styled";
 import Link from 'next/link';
 import { DocNode } from "sentry-docs/docTree";
 import { PlatformIcon } from 'platformicons';
+import { Platform } from "sentry-docs/types";
+import { SmartLink } from "./smartLink";
 
 type Props = {
   noGuides: boolean;
-  platformNodes: DocNode[];
+  platforms: Platform[];
 };
 
 const PlatformCell = styled.div`
@@ -43,61 +45,61 @@ const PlatformCellContent = styled.div`
   }
 `;
 
-// const GuideList = styled.div`
-//   font-size: 0.8em;
-//   width: 100%;
-//   text-overflow: ellipsis;
+const GuideList = styled.div`
+  font-size: 0.8em;
+  width: 100%;
+  text-overflow: ellipsis;
 
-//   a {
-//     display: inline-block;
+  a {
+    display: inline-block;
 
-//     &:after {
-//       content: ', ';
-//       padding: 0 5px 0 0;
-//     }
-//     &:last-child:after {
-//       content: '';
-//       margin: 0;
-//     }
-//   }
-// `;
+    &:after {
+      content: ', ';
+      padding: 0 5px 0 0;
+    }
+    &:last-child:after {
+      content: '';
+      margin: 0;
+    }
+  }
+`;
 
-export function PlatformGridClient({noGuides = false, platformNodes}: Props) {
+export function PlatformGridClient({noGuides = false, platforms}: Props) {
   return (
     <div className="row">
-      {platformNodes
-        .sort((a, b) => a.frontmatter.title.localeCompare(b.frontmatter.title))
-        .filter(platform => !platform.slug.match('perl'))
+      {platforms
+        .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+        .filter(platform => !platform.key.match('perl'))
         .map(platform => {
           return (
-            <div className="col-lg-6 col-md-12 platform-link mb-3" key={platform.slug}>
+            <div className="col-lg-6 col-md-12 platform-link mb-3" key={platform.key}>
               <PlatformCell>
                 <PlatformCellIcon>
-                  <Link href={"/" + platform.path}>
+                  <SmartLink to={platform.url}>
                     <PlatformIcon
                       size={82}
-                      platform={platform.frontmatter.icon ?? platform.slug}
+                      platform={platform.icon ?? platform.key}
                       format="lg"
                       style={{maxWidth: 'none', border: 0, boxShadow: 'none'}}
                     />
-                  </Link>
+                  </SmartLink>
                 </PlatformCellIcon>
                 <PlatformCellContent>
-                  <Link href={"/" + platform.path}>
-                    <h4>{platform.frontmatter.title}</h4>
-                  </Link>
+                  <SmartLink to={platform.url}>
+                    <h4>{platform.title}</h4>
+                  </SmartLink>
 
-                  {/* {!noGuides && (
+                  {!noGuides && (
                     <GuideList>
                       {platform.guides.map(guide => {
                         return (
-                          <Link href={guide.url} key={guide.key}>
+                          <SmartLink to={guide.url} key={guide.key}>
                             {guide.title}
-                          </Link>
+                          </SmartLink>
                         );
                       })}
                     </GuideList>
-                  )} */}
+                  )}
                 </PlatformCellContent>
               </PlatformCell>
             </div>
