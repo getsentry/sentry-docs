@@ -165,7 +165,7 @@ export async function getFileBySlug(slug) {
     const { code, frontmatter } = await bundleMDX({
       source,
       // mdx imports can be automatically source from the components directory
-      cwd: path.join(root, 'components'),
+      cwd: root,
       mdxOptions(options, frontmatter) {
         // this is the recommended way to add custom remark/rehype plugins:
         // The syntax might look weird, but it protects you in case we add/remove

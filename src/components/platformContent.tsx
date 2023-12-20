@@ -22,6 +22,12 @@ import { GuideGrid } from "./guideGrid";
 import { LambdaLayerDetail } from "./lambdaLayerDetail";
 import { Break } from "./break";
 import { JsBundleList } from "./jsBundleList";
+import { CliChecksumTable } from "./cliChecksumTable";
+import { PiiFields } from "./piiFields";
+import { ParamTable } from "./paramTable";
+import { PlatformLinkWithLogo } from "./platformLinkWithLogo";
+import { VimeoEmbed } from "./video";
+import { RelayMetrics } from "./relayMetrics";
 
 type Props = {
   includePath: string;
@@ -70,6 +76,7 @@ export async function PlatformContent({includePath, platform, children, noGuides
 const MDXComponents: MDXComponents = {
   Alert,
   Break,
+  CliChecksumTable,
   ConfigKey,
   DefinitionList,
   Expandable,
@@ -81,13 +88,18 @@ const MDXComponents: MDXComponents = {
   Note,
   OrgAuthTokenNote,
   PageGrid,
+  ParamTable,
+  PiiFields,
   PlatformContent,
   PlatformGrid,
   PlatformIdentifier,
   PlatformLink,
+  PlatformLinkWithLogo,
   PlatformSection,
+  RelayMetrics,
   SandboxLink,
   SignInNote,
+  VimeoEmbed,
   // a: Link, // TODO: fails type check
   wrapper: ({ children }) => children
 }

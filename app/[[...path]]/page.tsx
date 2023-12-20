@@ -30,6 +30,12 @@ import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { LambdaLayerDetail } from "sentry-docs/components/lambdaLayerDetail";
 import { Break } from "sentry-docs/components/break";
 import { JsBundleList } from "sentry-docs/components/jsBundleList";
+import { CliChecksumTable } from "sentry-docs/components/cliChecksumTable";
+import { PiiFields } from "sentry-docs/components/piiFields";
+import { ParamTable } from "sentry-docs/components/paramTable";
+import { PlatformLinkWithLogo } from "sentry-docs/components/platformLinkWithLogo";
+import { VimeoEmbed } from "sentry-docs/components/video";
+import { RelayMetrics } from "sentry-docs/components/relayMetrics";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -39,6 +45,7 @@ export async function generateStaticParams() {
 const MDXComponents: MDXComponents = {
   Alert,
   Break,
+  CliChecksumTable,
   ConfigKey,
   DefinitionList,
   Include,
@@ -49,13 +56,18 @@ const MDXComponents: MDXComponents = {
   Note,
   OrgAuthTokenNote,
   PageGrid,
+  ParamTable,
+  PiiFields,
   PlatformContent,
   PlatformGrid,
   PlatformIdentifier,
   PlatformLink,
+  PlatformLinkWithLogo,
   PlatformSection,
+  RelayMetrics,
   SandboxLink,
   SignInNote,
+  VimeoEmbed,
   // a: Link, // TODO: fails type check
   wrapper: ({ children, frontMatter, docs, toc }) => (
     <Layout
