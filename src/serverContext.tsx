@@ -5,14 +5,14 @@ import { DocNode } from 'sentry-docs/docTree';
 interface ServerContext {
     rootNode?: DocNode;
     frontmatter: {};
-    path: string;
+    path: string[];
     toc: any[];
 }
 
 export const serverContext = cache(() => {
     const context: ServerContext = {
         frontmatter: {},
-        path: '',
+        path: [],
         toc: []
     }
     return context;

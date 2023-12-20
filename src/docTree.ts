@@ -1,4 +1,5 @@
 import type { FrontMatter} from 'sentry-docs/mdx';
+import { Platform, PlatformGuide } from './types';
 
 export interface DocNode {
   path: string;
@@ -92,4 +93,37 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
     }
   }
   return node;
+}
+
+function nodeToPlatform(n: DocNode): Platform {
+  return {
+    guides: extractGuides(n),
+    key: n.slug,
+    name: n.slug,
+    type: 'platform',
+    url: '/' + n.path,
+    title: n.frontmatter.title,
+  };
+}
+
+export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
+  const platformNode = nodeForPath(rootNode, ['platforms', name]);
+  if (!platformNode) {
+    return;
+  }
+  return nodeToPlatform(platformNode);
+}
+
+export function extractPlatforms(rootNode: DocNode): Platform[] {
+  const platformsNode = nodeForPath(rootNode, 'platforms');
+  if (!platformsNode) {
+    return [];
+  }
+  
+  return platformsNode.children.map(nodeToPlatform);
+}
+
+function extractGuides(platformNode: DocNode): PlatformGuide[] {
+  // TODO
+  return [];
 }

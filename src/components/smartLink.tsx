@@ -26,7 +26,7 @@ export function SmartLink({
   return (
     <Link
       href={to || href || ''}
-      className={className}
+      className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >
       {children || to || href}
