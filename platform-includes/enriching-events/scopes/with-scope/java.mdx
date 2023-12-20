@@ -1,0 +1,41 @@
+<PlatformSection notSupported={["android"]}>
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
+
+Sentry.withScope(scope -> {
+  scope.setTag("my-tag", "my value");
+  scope.setLevel(SentryLevel.WARNING);
+
+  // will be tagged with my-tag="my value"
+  Sentry.captureException(new Exception("my error"));
+});
+
+// will not be tagged with my-tag
+Sentry.captureException(new Exception("my error"));
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryLevel
+
+Sentry.withScope { scope ->
+  scope.setTag("my-tag", "my value")
+  scope.level = SentryLevel.WARNING
+
+  // will be tagged with my-tag="my value"
+  Sentry.captureException(Exception("my error"))
+}
+
+// will not be tagged with my-tag
+Sentry.captureException(Exception("my error"))
+```
+
+<Alert level="info" title="Important">
+
+In the Java SDK `with-scope` does **not** work reliably in `globalHubMode` as the `scope` gets pushed on the stack global to the hub. In `globalHubMode` use the callback parameter of the capture methods detailed below.
+
+</Alert>
+
+</PlatformSection>

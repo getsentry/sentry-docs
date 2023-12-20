@@ -1,0 +1,68 @@
+To benefit from the health data, you must use at least version 2.1.0 of the Android SDK, and enable the collection of release health metrics in the initialization options for the SDK. Release health is captured, by default, in our Android version 3.0 and higher, unless you specifically disabled collecting it in the initialization options for the SDK.
+
+By default, the session is terminated once the application is in the background for more than 30 seconds. You can change the time out with the option named `sessionTrackingIntervalMillis`. It takes the amount in milliseconds. For example, to configure it to be 60 seconds:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="60000" />
+</application>
+```
+
+Or, if you are manually instrumenting Sentry:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setSessionTrackingIntervalMillis(60000);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.sessionTrackingIntervalMillis = 60000
+}
+```
+
+If you'd like to opt-out of this feature, you can do it via options.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
+</application>
+```
+
+Or, if you are manually instrumenting Sentry:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setEnableSessionTracking(true);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.isEnableSessionTracking = true
+}
+```
+
+### AndroidX Support
+
+Sentry uses the `androidx.lifecycle` libraries for detecting when the application is either in the background or in the foreground. This is necessary for producing accurate results across all the Android OS versions.
+
+We check at runtime for availability, so if you're not using `androidx.lifecycle` libraries, you can remove them from Sentry's transitive dependencies.
+
+```Groovy
+implementation ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-process'
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-common-java8'
+}
+```
+
+Be aware that by removing those transitive dependencies, the automatic session tracking won't work, but you can still do it manually by calling the public APIs `Sentry.startSession()` and `Sentry.endSession()`.

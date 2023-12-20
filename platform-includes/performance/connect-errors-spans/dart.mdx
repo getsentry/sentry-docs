@@ -1,0 +1,40 @@
+## Connect Errors with Spans
+
+Sentry errors can be linked with transactions and spans.
+
+Errors reported to Sentry while transaction or span **bound to the scope** is running are linked automatically:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction(
+  'processOrderBatch()',
+  'task',
+  bindToScope: true,
+);
+
+try {
+  processOrderBatch();
+} catch (exception) {
+  Sentry.captureException(exception);
+} finally {
+  await transaction.finish();
+}
+```
+
+Exceptions may be thrown within spans that can finish before exception gets reported to Sentry. To attach span information to this exception, you must link it by calling the `throwable` setter method:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
+
+try {
+  processOrderBatch();
+} catch (exception) {
+  transaction.throwable = exception;
+  rethrow;
+} finally {
+  await transaction.finish();
+}
+```

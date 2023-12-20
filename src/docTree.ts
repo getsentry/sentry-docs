@@ -36,7 +36,9 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
   const rootNode: DocNode = {
     path: '/',
     slug: '',
-    frontmatter: {},
+    frontmatter: {
+      title: 'Home',
+    },
     children: []
   }
 

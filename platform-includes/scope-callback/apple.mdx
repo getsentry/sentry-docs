@@ -1,0 +1,28 @@
+```swift {tabTitle:Swift}
+import Sentry
+
+let userInfo = [NSLocalizedDescriptionKey : "Object does not exist"]
+let error = NSError(domain: "YourErrorDomain", code: 0, userInfo: userInfo)
+SentrySDK.capture(error: error) { (scope) in
+    // Changes in here will only be captured for this event
+    // The scope in this callback is a clone of the current scope
+    // It contains all data but mutations only influence the event being sent
+    scope.setTag(value: "value", key: "myTag")
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+NSDictionary *userInfo = @ { NSLocalizedDescriptionKey : @"Object does not exist" };
+NSError *error = [NSError errorWithDomain:@"YourErrorDomain"
+                                   code:0
+                               userInfo: userInfo];
+
+[SentrySDK captureError:error withScopeBlock:^(SentryScope * _Nonnull scope) {
+    // Changes in here will only be captured for this event
+    // The scope in this callback is a clone of the current scope
+    // It contains all data but mutations only influence the event being sent
+    [scope setTagValue:@"value" forKey:@"myTag"];
+}];
+```

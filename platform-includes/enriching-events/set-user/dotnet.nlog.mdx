@@ -1,0 +1,50 @@
+<Alert level="" title="NLog Configuration">
+
+- If setting it via `NLog.config`, the camelCase key `ipAddress` should be used instead of `ip_address`.
+- For more information on how to dynamically set event data via `NLog.config`, see NLog's [layout renderer documentation](https://nlog-project.org/config/?tab=layout-renderers).
+
+</Alert>
+
+<SignInNote />
+
+```xml {tabTitle:NLog.config}
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+  <extensions>
+    <add assembly="Sentry.NLog" />
+  </extensions>
+  <targets>
+    <target xsi:type="Sentry" name="sentry" dsn="___PUBLIC_DSN___">
+      <user email="john.doe@example.com" />
+    </target>
+  </targets>
+
+  <rules>
+    <logger name="*" writeTo="sentry" />
+  </rules>
+</nlog>
+```
+
+```csharp
+using Sentry;
+
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.User = new User
+    {
+        Email = "john.doe@example.com"
+    };
+});
+```
+
+```fsharp
+open Sentry
+
+SentrySdk.ConfigureScope(
+  fun scope ->
+    scope.User <- User(Email = "john.doe@example.com")
+    ()
+  )
+```

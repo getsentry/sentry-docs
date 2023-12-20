@@ -18,7 +18,7 @@ export function Sidebar({ node, path }) {
           data-sidebar-link
           className={activeClassName(node)}
           >
-          {node.frontmatter.title}
+          {node.frontmatter.sidebar_title || node.frontmatter.title}
           {node.children.length > 0 && <Chevron direction="down" />}
         </SidebarNavItem>
         {renderChildren(node.children)}
@@ -37,7 +37,7 @@ export function Sidebar({ node, path }) {
           data-sidebar-link
           key={node.path}
           >
-          <h6>{node.frontmatter.title}</h6>
+          <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
         </SidebarNavItem>
         {renderChildren(node.children)}
         </>

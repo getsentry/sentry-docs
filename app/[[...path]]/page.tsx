@@ -16,19 +16,42 @@ import { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
 import { setServerContext } from "sentry-docs/serverContext";
 import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
+import { SignInNote } from "sentry-docs/components/signInNote";
+import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
+import { DefinitionList } from "sentry-docs/components/definitionList";
+import { PlatformIdentifier } from "sentry-docs/components/platformIdentifier";
+import { PlatformSection } from "sentry-docs/components/platformSection";
+import { ConfigKey } from "sentry-docs/components/configKey";
+import { SandboxLink } from "sentry-docs/components/sandboxLink";
+import { Include } from "sentry-docs/components/include";
+import { OrgAuthTokenNote } from "sentry-docs/components/orgAuthTokenNote";
+import { SmartLink } from "sentry-docs/components/smartLink";
+import { GuideGrid } from "sentry-docs/components/guideGrid";
+import { LambdaLayerDetail } from "sentry-docs/components/lambdaLayerDetail";
 
 export async function generateStaticParams() {
-    const docs = await getAllFilesFrontMatter();
-    return docs.map((doc) => ({ path: doc.slug.split('/').slice(1) }));
+  const docs = await getAllFilesFrontMatter();
+  return docs.map((doc) => ({ path: doc.slug.split('/') }));
 }
 
 const MDXComponents: MDXComponents = {
   Alert,
+  ConfigKey,
+  DefinitionList,
+  Include,
+  GuideGrid,
+  LambdaLayerDetail,
+  Link: SmartLink,
   Note,
+  OrgAuthTokenNote,
   PageGrid,
   PlatformContent,
   PlatformGrid,
+  PlatformIdentifier,
   PlatformLink,
+  PlatformSection,
+  SandboxLink,
+  SignInNote,
   // a: Link, // TODO: fails type check
   wrapper: ({ children, frontMatter, docs, toc }) => (
     <Layout
@@ -65,7 +88,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
           </div>
 
           <section className="pt-3 px-3 content-max prose">
-            <div className="pb-3">{/* <Breadcrumbs /> */}</div>
+            <div className="pb-3"><Breadcrumbs /></div>
             <div className="row">
               <div className="col-sm-8 col-md-12 col-lg-8 col-xl-9">
                 <h1>{frontMatter.title}</h1>
@@ -118,9 +141,8 @@ export default async function Page({ params }) {
   // get the MDX for the current doc and render it
   let doc: any = null;
   try {
-    doc = await getFileBySlug(pageNode.path);
+    doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
-    console.log('failed to get node for ', pageNode.path);
     if (e.code === 'ENOENT') {
       return notFound();
     } else {

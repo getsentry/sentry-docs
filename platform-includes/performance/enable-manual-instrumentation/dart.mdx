@@ -1,0 +1,18 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+The following example creates a transaction that contains an expensive operation (for example, `processOrderBatch`), and sends the result to Sentry:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
+
+try {
+  processOrderBatch();
+} catch (exception) {
+  transaction.throwable = exception;
+  transaction.status = SpanStatus.internalError();
+} finally {
+  await transaction.finish();
+}
+```

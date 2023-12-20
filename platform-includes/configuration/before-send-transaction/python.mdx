@@ -1,0 +1,35 @@
+In Python, a function can be used to modify the transaction event or return a new instance. If you return `None`, the event will be discarded.
+
+```python
+import sentry_sdk
+
+def strip_sensitive_data(event, hint):
+    # modify event here
+    return event
+
+sentry_sdk.init(
+    # ...
+
+    before_send_transaction=strip_sensitive_data,
+)
+```
+
+Addtionally, you may filter out transaction events based on the request URL, like `/healthcheck`.
+
+```python
+from urllib.parse import urlparse
+
+def filter_transactions(event, hint):
+    url_string = event["request"]["url"]
+    parsed_url = urlparse(url_string)
+
+    if parsed_url.path == "/healthcheck":
+        return None
+
+    return event
+
+sentry_sdk.init(
+    # ...
+    before_send_transaction=filter_transactions,
+)
+```

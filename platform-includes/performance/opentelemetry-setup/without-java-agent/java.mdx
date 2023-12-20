@@ -1,0 +1,76 @@
+#### Initializing OpenTelemetry
+
+When manually initializing OpenTelemetry you have to add `SentrySpanProcessor` and `SentryPropagator` to your configuration.
+
+```java {tabTitle: Java}
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+
+import io.sentry.opentelemetry.SentryPropagator;
+import io.sentry.opentelemetry.SentrySpanProcessor;
+
+
+SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
+    .addSpanProcessor(new SentrySpanProcessor())
+    .build();
+
+OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
+    .setTracerProvider(sdkTracerProvider)
+    .setPropagators(ContextPropagators.create(new SentryPropagator()))
+    .buildAndRegisterGlobal();
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
+
+import io.sentry.opentelemetry.SentryPropagator
+import io.sentry.opentelemetry.SentrySpanProcessor
+
+val sdkTracerProvider = SdkTracerProvider.builder()
+    .addSpanProcessor(SentrySpanProcessor())
+    .build()
+
+val openTelemetry = OpenTelemetrySdk.builder()
+    .setTracerProvider(sdkTracerProvider)
+    .setPropagators(ContextPropagators.create(SentryPropagator()))
+    .buildAndRegisterGlobal()
+```
+
+#### Initializing Sentry
+
+You have to set the `instrumenter` option to `otel`. This disables all Sentry instrumentation and uses the chosen OpenTelemetry tracers for creating spans.
+
+To ensure errors are properly linked to transactions that were created by the OpenTelemetry integration, add the `OpenTelemetryLinkErrorEventProcessor`:
+
+<SignInNote />
+
+```java {tabTitle: Java}
+import io.sentry.Instrumenter;
+import io.sentry.Sentry;
+import io.sentry.opentelemetry.OpenTelemetryLinkErrorEventProcessor;
+
+Sentry.init(options -> {
+  options.setDsn("___PUBLIC_DSN___");
+  options.setTracesSampleRate(1.0);
+  options.setInstrumenter(Instrumenter.OTEL);
+  options.addEventProcessor(new OpenTelemetryLinkErrorEventProcessor());
+});
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Instrumenter
+import io.sentry.Sentry
+import io.sentry.opentelemetry.OpenTelemetryLinkErrorEventProcessor
+
+Sentry.init { options ->
+  options.dsn = "___PUBLIC_DSN___"
+  options.tracesSampleRate = 1.0
+  options.instrumenter = Instrumenter.OTEL
+  options.addEventProcessor(OpenTelemetryLinkErrorEventProcessor())
+}
+```

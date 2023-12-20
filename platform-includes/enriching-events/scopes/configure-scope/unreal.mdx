@@ -1,0 +1,33 @@
+```cpp
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    USentryUser* SentryUser = NewObject<USentryUser>();
+    SentryUser->SetEmail("john.doe@example.com");
+    SentryUser->SetId(42);
+
+    Scope->SetUser(SentryUser);
+    Scope->SetTagValue("my-tag", "my value");
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->ConfigureScope(ScopeDelegate);
+```
+
+Alternatively, all data can be configured on the global scope using dedicated methods of `SentrySubsystem` class.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+USentryUser* SentryUser = NewObject<USentryUser>();
+SentryUser->SetEmail("john.doe@example.com");
+SentryUser->SetId(42);
+
+SentrySubsystem->SetUser(ScopeDelegate);
+SentrySubsystem->SetTag("my-tag", "my value");
+```

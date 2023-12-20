@@ -1,0 +1,38 @@
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.beforeSend = { event in
+        if let error = event.error as NSError?, error.domain == NSURLErrorDomain {
+            if let failingUrl = error.userInfo[NSURLErrorFailingURLErrorKey] as? String {
+                event.fingerprint = [
+                    "{{ default }}",
+                    failingUrl,
+                    String(error.code),
+                ]
+            }
+        }
+        return event
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
+        if ([event.error.domain isEqualToString:NSURLErrorDomain]) {
+            NSString *failingUrl = event.error.userInfo[NSURLErrorFailingURLErrorKey];
+            if (failingUrl != nil) {
+                event.fingerprint = @[
+                    @"{{ default }}",
+                    failingUrl,
+                    @(event.error.code).stringValue
+                ];
+            }
+        }
+        return event;
+    };
+}];
+```

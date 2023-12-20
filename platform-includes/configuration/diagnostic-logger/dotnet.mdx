@@ -1,0 +1,79 @@
+Sentry's SDK includes its own internal logger to report diagnostics that may be useful when troubleshooting your Sentry configuration. To enable logging, set the `Debug` option to `true`:
+
+<SignInNote />
+
+```csharp
+options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+
+    // Enable debug mode to write diagnostic messages
+    options.Debug = true;
+
+    // By default it's already the most verbose level: Debug
+    // You can use this make this less noisy by changing it to
+    // a less verbose level such as `Information` or `Warning`.
+    options.DiagnosticLevel = SentryLevel.Debug;
+});
+```
+
+Logging details will be written to one of the logger implementations described below and won't be sent to Sentry automatically.
+
+## Customize Implementation
+
+By default, Sentry will write diagnostic messages to console. This may not be optimal in some circumstances; for example, when running applications that don't have a visible console window attached.
+
+To change the diagnostic logger, pass it to the `DiagnosticLogger` option during initialization.
+
+```csharp
+options.Debug = true;
+options.DiagnosticLogger = new ExampleDiagnosticLogger(SentryLevel.Debug);
+```
+
+Sentry comes with several implementations out of the box:
+
+<ConfigKey name="ConsoleDiagnosticLogger">
+
+Writes diagnostic messages to standard output, using `Console.WriteLine`. This is the default logger used if no other logger is specified.
+
+</ConfigKey>
+
+<ConfigKey name="TraceDiagnosticLogger">
+
+Writes diagnostic messages to all registered trace listeners, using `Trace.WriteLine`. This is useful for technologies that don't have a Console to see the log messages, such as Windows Forms, WPF, UWP, and ASP.NET.
+
+```csharp
+options.DiagnosticLogger = new TraceDiagnosticLogger(SentryLevel.Debug);
+```
+
+Visual Studio and other IDEs will register a trace listener automatically. When running your application in Visual Studio, you can view the SDK's diagnostic logs inside the `Debug` output window.
+
+See the [`Trace`](https://learn.microsoft.com/dotnet/api/system.diagnostics.trace) documentation for more information about registering custom trace listeners.
+
+</ConfigKey>
+
+<ConfigKey name="FileDiagnosticLogger">
+
+_New as of Sentry .NET 3.30.0_
+
+Writes diagnostic messages to a file at the path you specify. This is useful when you need to gather SDK diagnostic logs without mixing them with other console or trace messages. It's also useful for technologies that don't have a console, such as Windows Forms, WPF, UWP, and ASP.NET, for seeing the log messages when you're not running in Visual Studio.
+
+If you need to attach diagnostic logs to a GitHub issue or customer support request, this is the easiest way to generate them:
+
+```csharp
+options.DiagnosticLogger = new FileDiagnosticLogger("/path/to/log.txt");
+```
+
+<Alert level="warning" title="Warning">
+
+The `FileDiagnosticLogger` implementation will overwrite any existing file, and will grow indefinitely. You should avoid using it long-term in a production environment.
+
+</Alert>
+
+</ConfigKey>
+
+<Note>
+
+You can also create your own diagnostic logger class, either by implementing the `IDiagnosticLogger` interface, or inherting from the `DiagnosticLogger` abstract class and overriding the `LogMessage` method.
+
+</Note>

@@ -1,9 +1,9 @@
-import { DocNode, nodeForPath } from "sentry-docs/docTree";
+import { nodeForPath } from "sentry-docs/docTree";
 import { PlatformGridClient } from "./platformGridClient";
 import { serverContext } from "sentry-docs/serverContext";
 
 export function PlatformGrid({ noGuides = false }) {
-  const { path, rootNode } = serverContext();
+  const { rootNode } = serverContext();
   if (!rootNode) {
     return null;
   }

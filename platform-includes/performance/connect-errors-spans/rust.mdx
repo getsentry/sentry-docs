@@ -1,0 +1,22 @@
+## Connect Errors With Spans
+
+Sentry errors can be linked with transactions and spans.
+
+Errors reported to Sentry while a transaction or span is **bound to the scope** are linked automatically:
+
+```rust
+let tx_ctx = sentry::TransactionContext::new(
+    "checkout",
+    "perform-checkout",
+);
+let transaction = sentry::start_transaction(tx_ctx);
+
+// Bind the transaction / span to the scope:
+sentry::configure_scope(|scope| scope.set_span(Some(transaction.into())));
+
+// The error is linked to the transaction / span:
+let err = "NaN".parse::<usize>().unwrap_err();
+sentry::capture_error(&err);
+
+transaction.finish();
+```

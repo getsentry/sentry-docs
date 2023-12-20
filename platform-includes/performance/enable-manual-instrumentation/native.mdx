@@ -1,0 +1,30 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+```c
+// Enable performance monitoring by setting a sample rate above 0
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_traces_sample_rate(options, 0.2);
+...
+sentry_init(options);
+
+// Transactions can be started by providing the name and the operation
+sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
+    "transaction name",
+    "transaction operation",
+);
+sentry_transaction_t *tx = sentry_transaction_start(tx_ctx, sentry_value_new_null());
+
+// Transactions can have child spans (and those spans can have child spans as well)
+sentry_span_t *span = sentry_transaction_start_child(
+    tx,
+    "child operation",
+    "child description",
+);
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+sentry_span_finish(span); // Mark the span as finished
+sentry_transaction_finish(tx); // Mark the transaction as finished and send it to Sentry
+```

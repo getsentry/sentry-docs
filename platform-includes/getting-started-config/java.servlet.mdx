@@ -1,0 +1,63 @@
+The following example configures a `SentryInitializer` servlet container initializer that initializes Sentry on application startup.
+
+<SignInNote />
+
+```java
+package sentry.sample;
+
+import io.sentry.Sentry;
+import javax.servlet.ServletContainerInitializer;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+
+public final class SentryInitializer implements ServletContainerInitializer {
+
+  @Override
+  public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
+    Sentry.init(options -> {
+      options.setDsn("___PUBLIC_DSN___");
+    });
+  }
+}
+```
+
+```kotlin
+package sentry.sample;
+
+import javax.servlet.ServletContainerInitializer
+import javax.servlet.ServletContext
+import javax.servlet.ServletException
+
+class SentryInitializer : ServletContainerInitializer {
+  @Throws(ServletException::class)
+  override fun onStartup(c: Set<Class<*>?>?, ctx: ServletContext) {
+    Sentry.init { options ->
+      options.dsn = "___PUBLIC_DSN___"
+    }
+  }
+}
+```
+
+Create a file in `src/main/resources/META-INF/services` named `javax.servlet.ServletContainerInitializer`, with a full name of your custom `SentryInitializer` class as a content:
+
+<SignInNote />
+
+```properties
+sentry.sample.SentryInitializer
+```
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+  options.setDsn("___PUBLIC_DSN___");
+});
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.init { options ->
+  options.dsn = "___PUBLIC_DSN___"
+}
+```

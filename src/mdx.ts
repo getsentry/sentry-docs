@@ -45,10 +45,10 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
 }
 
 export async function getFileBySlug(slug) {
-  const mdxPath = path.join(root, 'docs', `${slug}.mdx`)
-  const mdxIndexPath = path.join(root, 'docs', slug, 'index.mdx')
-  const mdPath = path.join(root, 'docs', `${slug}.md`)
-  const mdIndexPath = path.join(root, 'docs', slug, 'index.md')
+  const mdxPath = path.join(root, `${slug}.mdx`)
+  const mdxIndexPath = path.join(root, slug, 'index.mdx')
+  const mdPath = path.join(root, `${slug}.md`)
+  const mdIndexPath = path.join(root, slug, 'index.md')
   const source = fs.existsSync(mdxPath)
     ? fs.readFileSync(mdxPath, 'utf8')
     : fs.existsSync(mdxIndexPath)

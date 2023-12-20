@@ -1,0 +1,39 @@
+Sentry's Spring Boot integration auto-configures `sentry.in-app-packages` property with the package where `@SpringBootApplication` or `@SpringBootConfiguration` annotated class is located.
+
+Provide a `sentry.dsn` property using either `application.properties` or `application.yml`:
+
+<SignInNote />
+
+```properties {filename:application.properties}
+sentry.dsn=___PUBLIC_DSN___
+
+# Set traces_sample_rate to 1.0 to capture 100%
+# of transactions for performance monitoring.
+# We recommend adjusting this value in production.
+sentry.traces-sample-rate=1.0
+```
+
+```yaml {filename:application.yml}
+sentry:
+  dsn: ___PUBLIC_DSN___
+
+  # Set traces_sample_rate to 1.0 to capture 100%
+  # of transactions for performance monitoring.
+  # We recommend adjusting this value in production.
+  tracesSampleRate: 1.0
+```
+
+By default, only unhandled exceptions are sent to Sentry. This behavior can be tuned through configuring the `sentry.exception-resolver-order` property. For example, setting it to `-2147483647` (the value of `org.springframework.core.Ordered#HIGHEST_PRECEDENCE`) ensures exceptions that have been handled by exception resolvers with higher order are sent to Sentry - including ones handled by `@ExceptionHandler` annotated methods.
+
+```properties {filename:application.properties}
+sentry.exception-resolver-order=-2147483647
+```
+
+```yaml {filename:application.yml}
+sentry:
+  exception-resolver-order: -2147483647
+```
+
+We recommend using Sentry's Spring Boot integration with one of the [logging framework integrations](logging-frameworks/) as they work together seamlessly. To use Sentry **without** Spring Boot, we recommend using the [Sentry Spring integration](/platforms/java/guides/spring/).
+
+Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), to record breadcrumbs, set the current user, or manually send events, for example.

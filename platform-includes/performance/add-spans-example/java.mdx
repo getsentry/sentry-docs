@@ -1,0 +1,78 @@
+## Add More Spans to the Transaction
+
+By default, transactions are not bound to the scope. Transaction has to be passed manually as a method parameter to enable attaching nested spans. When creating nested span, you can choose the value of `operation` and `description`.
+
+```java {tabTitle:Java}
+import java.io.FileNotFoundException;
+
+import io.sentry.ISpan;
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+// A good name for the transaction is key, to help identify what this is about
+ITransaction transaction = Sentry.startTransaction("processOrderBatch()", "task");
+try {
+  processOrderBatch(transaction);
+} catch (Exception e) {
+  transaction.setThrowable(e);
+  transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+  throw e;
+} finally {
+  transaction.finish();
+}
+
+void processOrderBatch(ISpan span) {
+  if (span == null) {
+    span = Sentry.startTransaction("processOrderBatch()", "task");
+  }
+  // span operation: task, span description: operation
+  ISpan innerSpan = span.startChild("task", "operation");
+  try {
+    // omitted code
+  } catch (FileNotFoundException e) {
+    innerSpan.setThrowable(e);
+    innerSpan.setStatus(SpanStatus.NOT_FOUND);
+    throw e;
+  } finally {
+    innerSpan.finish();
+  }
+}
+```
+
+```kotlin
+import java.io.FileNotFoundException
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+val transaction = Sentry.startTransaction("processOrderBatch()", "task")
+try {
+  processOrderBatch(transaction)
+} catch (e: Exception) {
+  transaction.throwable = e
+  transaction.status = SpanStatus.INTERNAL_ERROR
+  throw e
+} finally {
+  transaction.finish()
+}
+
+fun processOrderBatch(span: ISpan) {
+  // span operation: task, span description: operation
+  val innerSpan = it.startChild("task", "operation")
+
+  try {
+    // omitted code
+  } catch (e: FileNotFoundException) {
+    innerSpan.throwable = e
+    innerSpan.status = SpanStatus.NOT_FOUND
+    throw e
+  } finally {
+    innerSpan.finish()
+  }
+}
+```
+
+Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
+
+Spans are sent together with their parent transaction when the transaction is finished. Make sure to call `finish()` on transaction once all the child spans have finished.

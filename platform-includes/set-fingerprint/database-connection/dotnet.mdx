@@ -1,0 +1,22 @@
+```csharp
+// Add this to the SDK initialization callback
+options.SetBeforeSend(@event =>
+{
+    if (@event.Exception is SqlConnectionException ex)
+    {
+        @event.SetFingerprint(new [] { "database-connection-error" });
+    }
+
+    return @event;
+});
+```
+
+```fsharp
+options.SetBeforeSend(fun event ->
+    match event.Exception with
+    | :? SqlConnectionException -> event.SetFingerprint(["database-connection-error"])
+    | _ -> ()
+
+    event
+    )
+```

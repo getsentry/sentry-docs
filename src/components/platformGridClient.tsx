@@ -43,24 +43,24 @@ const PlatformCellContent = styled.div`
   }
 `;
 
-const GuideList = styled.div`
-  font-size: 0.8em;
-  width: 100%;
-  text-overflow: ellipsis;
+// const GuideList = styled.div`
+//   font-size: 0.8em;
+//   width: 100%;
+//   text-overflow: ellipsis;
 
-  a {
-    display: inline-block;
+//   a {
+//     display: inline-block;
 
-    &:after {
-      content: ', ';
-      padding: 0 5px 0 0;
-    }
-    &:last-child:after {
-      content: '';
-      margin: 0;
-    }
-  }
-`;
+//     &:after {
+//       content: ', ';
+//       padding: 0 5px 0 0;
+//     }
+//     &:last-child:after {
+//       content: '';
+//       margin: 0;
+//     }
+//   }
+// `;
 
 export function PlatformGridClient({noGuides = false, platformNodes}: Props) {
   return (

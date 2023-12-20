@@ -1,0 +1,53 @@
+## Build Issues
+
+### Package Conflict - `Conflict with Sentry.DiagnosticsSource`
+
+```
+The call is ambiguous between the following methods or properties:
+Sentry.SentryOptionsExtensions.DisableDiagnosticSourceIntegration(Sentry.SentryOptions)
+and Sentry.SentryOptionsDiagnosticExtensions.DisableDiagnosticSourceIntegration(Sentry.SentryOptions)
+```
+
+The above error means that the version of the Sentry package you are using already contains the `DiagnosticSource` integration within itself, but you additionally installed `Sentry.DiagnosticSource`, which is only relevant for older framework versions.
+
+To resolve this problem, remove the package reference to `Sentry.DiagnosticSource`.
+
+### Missing Definition
+
+`SentryOptions does not contain a definition for AddDiagnosticSourceIntegration.`
+
+The above error could have two meanings:
+
+- You're using an outdated SDK (3.8.3 or older).
+
+- Your project already includes the integration automatically. You can validate it by observing the debug information from Sentry SDK. <PlatformLink to="/configuration/options/#debug">Enable it through the options.</PlatformLink>
+
+Your debug window will have following messages:
+
+<SignInNote />
+
+```
+Debug: Logging enabled with ConsoleDiagnosticLogger and min level: Debug
+Debug: Initializing Hub for Dsn: '___PUBLIC_DSN___'.
+Debug: Using 'GzipBufferedRequestBodyHandler' body compression strategy with level Optimal.
+Debug: New scope pushed.
+Debug: Registering integration: 'AutoSessionTrackingIntegration'.
+Debug: Registering integration: 'AppDomainUnhandledExceptionIntegration'.
+Debug: Registering integration: 'AppDomainProcessExitIntegration'.
+Debug: Registering integration: 'TaskUnobservedTaskExceptionIntegration'.
+Debug: Registering integration: 'SentryDiagnosticListenerIntegration'.
+```
+
+If the debug file contains information about `SentryDiagnosticListenerIntegration`, then your project already includes the integration automatically.
+
+### Implicit Usings
+
+From version 3.14.0, Sentry will respect [Implicit Usings](https://docs.microsoft.com/en-us/dotnet/core/project-sdk/overview#implicit-using-directives). This means is Implicit Usings is enabled (`<ImplicitUsings>enable</ImplicitUsings>` or `<ImplicitUsings>true</ImplicitUsings>`) then `Sentry` will be added to the current global using directives. This means that `using Sentry;` can be omitted from any `.cs` files.
+
+In some scenarios Implicit Usings can result in type name conflicts. For example `Session` may exist in multiple namespaces. This can be resolved by fully qualifying the type inline (`Sentry.Session`), or with a [using alias](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/using-directive#using-alias):
+
+```
+using SentrySession = Sentry.Session;
+```
+
+Then `SentrySession` can be used instead of `Sentry.Session`.

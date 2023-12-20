@@ -1,0 +1,65 @@
+If you are using [Quartz](http://www.quartz-scheduler.org/), please see <PlatformLink to="/integrations/quartz/">our Quartz integration</PlatformLink>. You may also [send check-ins manually](/platforms/java/crons/).
+
+## Check-Ins (Recommended)
+
+Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed). To start sending check-ins simply add the `@SentryCheckIn("<monitor-slug>")` annotation to the method you want to send check-ins for.
+
+```java {tabTitle:Java (Spring Boot 3)}
+import io.sentry.spring.jakarta.checkin.SentryCheckIn;
+
+@Component
+public class CustomJob {
+
+  @Scheduled(fixedRate = 3 * 60 * 1000L)
+  @SentryCheckIn("<monitor-slug>") // 👈
+  void execute() throws InterruptedException {
+    // your task code
+  }
+}
+```
+
+```java {tabTitle:Java (Spring Boot 2)}
+import io.sentry.spring.checkin.SentryCheckIn;
+
+@Component
+public class CustomJob {
+
+  @Scheduled(fixedRate = 3 * 60 * 1000L)
+  @SentryCheckIn("<monitor-slug>") // 👈
+  void execute() throws InterruptedException {
+    // your task code
+  }
+}
+```
+
+## Heartbeat
+
+Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead. To start sending heartbeats simply add the `@SentryCheckIn(monitorSlug = "<monitor-slug>", heartbeat = true)` annotation to the method you want to send heartbeats for.
+
+```java {tabTitle:Java (Spring Boot 3)}
+import io.sentry.spring.jakarta.checkin.SentryCheckIn;
+
+@Component
+public class CustomJob {
+
+  @Scheduled(fixedRate = 3 * 60 * 1000L)
+  @SentryCheckIn(monitorSlug = "<monitor-slug>", heartbeat = true) // 👈
+  void execute() throws InterruptedException {
+    // your task code
+  }
+}
+```
+
+```java {tabTitle:Java (Spring Boot 2)}
+import io.sentry.spring.checkin.SentryCheckIn;
+
+@Component
+public class CustomJob {
+
+  @Scheduled(fixedRate = 3 * 60 * 1000L)
+  @SentryCheckIn(monitorSlug = "<monitor-slug>", heartbeat = true) // 👈
+  void execute() throws InterruptedException {
+    // your task code
+  }
+}
+```

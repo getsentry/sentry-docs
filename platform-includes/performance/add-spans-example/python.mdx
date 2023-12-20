@@ -1,0 +1,16 @@
+## Add More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction. When using spans and transactions as context managers, they are automatically finished at the end of the `with` block.
+
+You can choose the values of `op` and `description`.
+
+```python
+import sentry_sdk
+
+def process_item(item):
+    # omitted code...
+    with sentry_sdk.start_span(op="http", description="GET /") as span:
+        response = my_custom_http_library.request("GET", "/")
+        span.set_tag("http.status_code", response.status_code)
+        span.set_data("http.foobarsessionid", get_foobar_sessionid())
+```

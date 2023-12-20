@@ -1,0 +1,14 @@
+<SignInNote />
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
+        if ($hint !== null && $hint->exception !== null && str_contains($hint->exception->getMessage(), 'database unavailable')) {
+            $event->setFingerprint(['database-unavailable']);
+        }
+
+        return $event;
+    },
+]);
+```

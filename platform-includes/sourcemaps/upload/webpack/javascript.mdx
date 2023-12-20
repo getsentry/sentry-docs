@@ -1,0 +1,105 @@
+<Note>
+
+This guide assumes you are using a Sentry SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
+You can use the Sentry webpack plugin to automatically create releases and upload source maps to Sentry when bundling your app.
+
+## Automatic Setup
+
+The easiest way to configure uploading source maps with webpack is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source maps upload with webpack manually, follow the steps below.
+
+## Manual Setup
+
+Install the Sentry webpack plugin:
+
+```bash {tabTitle:npm}
+npm install @sentry/webpack-plugin --save-dev
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/webpack-plugin --dev
+```
+
+### Configuration
+
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file in the working directory when building your project.
+We recommend you add the auth token to your CI/CD environment as an environment variable.
+
+Learn more about configuring the plugin in our [Sentry webpack plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<PlatformSection notSupported={["javascript.gatsby"]}>
+
+<SignInNote />
+
+And the following webpack config:
+
+```javascript {filename:webpack.config.js}
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // ... other config above ...
+
+  devtool: "source-map", // Source map generation must be turned on
+  plugins: [
+    sentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+};
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.gatsby"]}>
+
+Add the following to your `gatsby-node.js` file:
+
+<SignInNote />
+
+```javascript {filename:gatsby-node.js}
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+exports.onCreateWebpackConfig = ({ actions }) => {
+  actions.setWebpackConfig({
+    plugins: [
+      sentryWebpackPlugin({
+        org: "___ORG_SLUG___",
+        project: "___PROJECT_SLUG___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
+    ],
+  });
+};
+```
+
+</PlatformSection>
+
+<Note>
+
+The Sentry webpack plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your configuration.
+
+</Note>
+
+<Note>
+
+If you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, turn off `noSources` so Sentry can display proper source code context in event stack traces.
+
+</Note>

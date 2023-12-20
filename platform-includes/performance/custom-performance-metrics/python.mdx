@@ -1,0 +1,45 @@
+Adding custom metrics is supported in Sentry's Python SDK version `1.16.0` and above.
+
+<SignInNote />
+
+```python
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+)
+```
+
+To capture in the SDK:
+
+```python
+from sentry_sdk import set_measurement
+
+# Record amount of memory used
+set_measurement('memory_used', 123, 'byte')
+
+# Record time when job was started
+set_measurement('job_start_time', 1.3, 'second')
+
+# Record amount of times cache was read
+set_measurement('cache_read_count', 4)
+```
+
+The feature was marked experimental between versions `1.5.12` and `1.16.0`.
+To enable the capturing of custom metrics before `1.16.0`, you'll need to enable the `custom_measurements` experiment option
+and fetch the transaction manually.
+
+<SignInNote />
+
+```python
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        "custom_measurements": True,  # for versions before 1.16.0
+    },
+)
+
+
+transaction = Hub.current.scope.transaction
+
+if transaction:
+    transaction.set_measurement('memory_used', 123, 'byte')
+```

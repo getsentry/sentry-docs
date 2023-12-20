@@ -1,0 +1,59 @@
+Before configuring your Sentry Options, make sure that you're initializing `Google Cloud Functions`.
+
+For example:
+
+```csharp {tabTitle:Function.cs}
+using System.Threading.Tasks;
+using Google.Cloud.Functions.Framework;
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Http;
+
+[assembly: FunctionsStartup(typeof(SentryStartup))]
+
+public class Function : IHttpFunction
+{
+}
+```
+
+With that in mind, you'll be able to configure your options using two options: using `appsettings.json`or by making new a class inheriting from `FunctionsStartup`.
+
+See both methods below:
+
+<SignInNote />
+
+```json {tabTitle:appsettings.json}
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "MaxRequestBodySize": "Always",
+    "SendDefaultPii": true,
+    "Debug": true
+  }
+```
+
+```csharp
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Sentry.AspNetCore;
+using Sentry.Extensibility;
+
+[assembly: FunctionsStartup(typeof(CustomOptions))]
+
+public class CustomOptions : FunctionsStartup
+{
+    public override void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        base.ConfigureServices(context, services);
+        services.Configure<SentryAspNetCoreOptions>(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.MaxBreadcrumbs = 50;
+            options.Debug = true;
+            options.SendDefaultPii = true;
+            options.MaxRequestBodySize = RequestSize.Always;
+        });
+    }
+}
+```
+
+If you need to, you can use both ways of setting up the SDK. However, keep in mind that the inherited class will be the last method to be set, overriding the values from your `appsettings.json`.

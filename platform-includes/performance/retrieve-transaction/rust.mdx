@@ -1,0 +1,21 @@
+## Retrieve a Transaction or Span
+
+In cases where you want to attach spans to an already ongoing transaction, you can use `Scope::get_span`. This method will return a `TransactionOrSpan` in case there is a running transaction or span; otherwise it returns `None`.
+
+Transactions or spans need to be manually attached to the scope using `Scope::set_span`.
+
+```rust
+// Retrieve the currently running span
+let parent_span = sentry::configure_scope(|scope| scope.get_span());
+
+let span: sentry::TransactionOrSpan = match &parent_span {
+    Some(parent) => parent.start_child("subtask", "description").into(),
+    None => {
+        let ctx = sentry::TransactionContext::new("task", "op");
+        sentry::start_transaction(ctx).into()
+    }
+};
+
+// Set the currently running span
+sentry::configure_scope(|scope| scope.set_span(Some(span)));
+```

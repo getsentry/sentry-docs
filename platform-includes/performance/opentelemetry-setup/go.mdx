@@ -1,0 +1,50 @@
+You need to register the Sentry-provided SpanProcessor and Propagator as shown below:
+
+<SignInNote />
+
+```go
+import (
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go/otel"
+	// ...
+)
+
+sentry.Init(sentry.ClientOptions{
+	Dsn:              "___PUBLIC_DSN___",
+	EnableTracing:    true,
+	TracesSampleRate: 1.0,
+	Debug:            true,
+})
+
+tp := sdktrace.NewTracerProvider(
+	sdktrace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()),
+)
+otel.SetTracerProvider(tp)
+otel.SetTextMapPropagator(sentryotel.NewSentryPropagator())
+```
+
+Now, all spans produced by OpenTelemetry will also be captured and sent to Sentry.
+
+### Linking Errors to Transactions
+
+If you want the errors and messages the SDK produces (for example, via `CaptureException` or
+`CaptureMessage`) to be linked to transactions in the UI, a couple of extra steps are required. Most importantly, the current OpenTelemetry-enhanced context has to be passed as part
+of `EventHint` to `client.Capture*` methods:
+
+```go
+hub := sentry.CurrentHub()
+//// or:
+// hub := sentry.GetHubFromContext(ctx)
+client, scope := hub.Client(), hub.Scope()
+client.CaptureException(
+	errors.New("new error"),
+	&sentry.EventHint{Context: ctx},
+	scope,
+)
+```
+
+Events captured with the high-level `sentry.CaptureException` or `sentry.CaptureMessage` functions are
+NOT linked to transactions or spans at the moment. This will be improved in future releases.

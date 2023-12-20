@@ -1,0 +1,154 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+## Capturing Bean Method Execution
+
+Every Spring bean method execution can be turned into a transaction or a span.
+
+### Capturing a Transaction
+
+Every Spring bean method execution can be turned into a transaction or a span. To enable this feature, you must include `spring-boot-starter-aop` in your application:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+Methods executed outside of Spring MVC request processing can be turned into transactions by annotating them with `@SentryTransaction` annotation:
+
+```java {tabTitle:Java (Spring Boot 2)}
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+import io.sentry.spring.tracing.SentryTransaction;
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  void execute() {
+    ...
+  }
+}
+```
+
+```java {tabTitle:Java (Spring Boot 3)}
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+import io.sentry.spring.jakarta.tracing.SentryTransaction;
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  void execute() {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 2)}
+import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Scheduled
+import io.sentry.spring.tracing.SentryTransaction
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  fun execute() {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 3)}
+import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Scheduled
+import io.sentry.spring.jakarta.tracing.SentryTransaction
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  fun execute() {
+    ...
+  }
+}
+```
+
+`@SentryTransaction` can be configured with custom `name`. If not defined, `name` will be resolved from the class, and the method name.
+
+`@SentryTransaction` can be also placed on a class or an interface - it turns every method execution from the annotated type into a transaction.
+
+Advanced Spring AOP users can redefine transaction pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentryTransactionPointcut`.
+
+### Capturing a Span
+
+To create a span around a method execution, annotate method with `@SentrySpan` annotation:
+
+```java {tabTitle:Java (Spring Boot 2)}
+import org.springframework.stereotype.Component;
+import io.sentry.spring.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
+```java {tabTitle:Java (Spring Boot 3)}
+import org.springframework.stereotype.Component;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 2)}
+import org.springframework.stereotype.Component
+import io.sentry.spring.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 3)}
+import org.springframework.stereotype.Component
+import io.sentry.spring.jakarta.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+```
+
+`@SentrySpan` can be configured with custom `description` property. If not defined, `operation` will be resolved from the class, and the method name.
+
+`@SentrySpan` can be also placed on a class or an interface - it turns every method execution from the annotated type into a span.
+
+Advanced Spring AOP users can redefine span pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentrySpanPointcut`.

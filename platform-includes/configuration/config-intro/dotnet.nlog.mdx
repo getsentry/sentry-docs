@@ -1,0 +1,88 @@
+<Alert level="" title="NLog Layouts">
+
+For more information on how to dynamically set event data via `NLog.config`, see NLog's [layout renderer documentation](https://nlog-project.org/config/?tab=layout-renderers).
+
+</Alert>
+
+You can configure the Sentry NLog target via `NLog.config` or by code as follows:
+
+<SignInNote />
+
+```xml {tabTitle:NLog.config}
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+  <extensions>
+    <add assembly="Sentry.NLog" />
+  </extensions>
+
+  <targets>
+    <target
+        xsi:type="Sentry"
+        name="sentry"
+        dsn="___PUBLIC_DSN___"
+        layout="${message}"
+        breadcrumbLayout="${logger}: ${message}"
+        minimumBreadcrumbLevel="Debug"
+        minimumEventLevel="Error">
+      <!-- All Sentry Options are accessible here. -->
+      <!-- For example, you can send the logger name as a tag on each event. -->
+      <tag name="logger" layout="${logger}" />
+
+    </target>
+  </targets>
+
+  <rules>
+    <logger name="*" writeTo="sentry" />
+  </rules>
+</nlog>
+```
+
+```csharp
+using NLog;
+using Sentry.NLog;
+
+LogManager.Configuration.AddSentry(o =>
+{
+    // Optionally specify a separate format for message
+    o.Layout = "${message}";
+    // Optionally specify a separate format for breadcrumbs
+    o.BreadcrumbLayout = "${logger}: ${message}";
+
+    // Debug and higher are stored as breadcrumbs (default is Info)
+    o.MinimumBreadcrumbLevel = LogLevel.Debug;
+
+    // Error and higher is sent as event (default is Error)
+    o.MinimumEventLevel = LogLevel.Error;
+
+    // Send the logger name as a tag
+    o.AddTag("logger", "${logger}");
+
+    // All Sentry Options are accessible here.
+});
+```
+
+```fsharp
+open NLog
+open Sentry.NLog
+
+LogManager.Configuration.AddSentry(
+  fun o ->
+      // Optionally specify a separate format for message
+      o.Layout <- "${message}"
+      // Optionally specify a separate format for breadcrumbs
+      o.BreadcrumbLayout <- "${logger}: ${message}"
+
+      // Debug and higher are stored as breadcrumbs (default is Info)
+      o.MinimumBreadcrumbLevel <- LogLevel.Debug
+
+      // Error and higher is sent as event (default is Error)
+      o.MinimumEventLevel <- LogLevel.Error
+
+      // Send the logger name as a tag
+      o.AddTag("logger", "${logger}")
+
+      // All Sentry Options are accessible here.
+)
+```
