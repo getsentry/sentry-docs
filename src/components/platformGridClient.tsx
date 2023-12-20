@@ -1,8 +1,6 @@
 'use client';
 
 import styled from "@emotion/styled";
-import Link from 'next/link';
-import { DocNode } from "sentry-docs/docTree";
 import { PlatformIcon } from 'platformicons';
 import { Platform } from "sentry-docs/types";
 import { SmartLink } from "./smartLink";
