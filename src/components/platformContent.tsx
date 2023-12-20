@@ -20,6 +20,7 @@ import { OrgAuthTokenNote } from "./orgAuthTokenNote";
 import { SmartLink } from "./smartLink";
 import { GuideGrid } from "./guideGrid";
 import { LambdaLayerDetail } from "./lambdaLayerDetail";
+import { Break } from "./break";
 
 type Props = {
   includePath: string;
@@ -67,6 +68,7 @@ export async function PlatformContent({includePath, platform, children, noGuides
 
 const MDXComponents: MDXComponents = {
   Alert,
+  Break,
   ConfigKey,
   DefinitionList,
   Expandable,

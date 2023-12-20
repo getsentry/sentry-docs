@@ -1,0 +1,29 @@
+---
+title: Built-in sampling context
+description: "Learn about the built-in custom sampling data that Sentry provides for ASP.NET Core apps."
+---
+
+You can sample transactions by providing a delegate that makes a decision based on the provided context. Sentry's ASP.NET Core integration automatically exposes useful data as part of that context.
+
+For example, here's how to sample a transaction based on the requested path:
+
+```csharp
+// Add this to the SDK initialization callback
+options.TracesSampler = context =>
+{
+    var requestPath = context.TryGetHttpPath();
+
+    // We're interested in the checkout page more than others
+    if (string.Equals(requestPath, "/checkout", StringComparison.OrdinalIgnoreCase))
+    {
+        return 0.8; // Sample 80% of checkout transactions
+    }
+
+    // Sample only 5% of the everything else
+    return 0.05;
+};
+```
+
+Besides `context.TryGetHttpPath()`, you can also use `context.TryGetHttpRoute()` to get the route name (if available) and `context.TryGetHttpMethod()` to get the HTTP method used to execute the request.
+
+Note that all these methods may return `null`. This can happen either if the corresponding property is not available, or if tracing has not been enabled.

@@ -1,0 +1,156 @@
+---
+title: Advanced Configuration Example
+sidebar_order: 20
+description: "Review an advanced example of configuration for NLog."
+---
+
+<Alert level="" title="NLog Layouts">
+
+For more information on how to dynamically set event data via `NLog.config`, see NLog's [layout renderer documentation](https://nlog-project.org/config/?tab=layout-renderers).
+
+</Alert>
+
+The SDK can be configured via `NLog.config` XML file:
+
+<SignInNote />
+
+```xml {tabTitle:NLog.config}
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+  <extensions>
+    <add assembly="Sentry.NLog" />
+  </extensions>
+
+  <targets>
+    <target
+        xsi:type="Sentry"
+        name="sentry"
+        dsn="___PUBLIC_DSN___"
+        environment="Development"
+        release="my-project-name@2.3.12"
+        includeEventProperties="True"
+        layout="${message}"
+        breadcrumbLayout="${message}"
+        minimumBreadcrumbLevel="Debug"
+        ignoreEventsWithNoException="False"
+        includeEventDataOnBreadcrumbs="False"
+        includeEventPropertiesAsTags="True"
+        minimumEventLevel="Error">
+
+      <!-- Advanced options can be configured here-->
+      <options
+          sendDefaultPii="true"
+          attachStacktrace="false"
+          shutdownTimeoutSeconds="5"
+          debug="false"
+        >
+        <!--Advanced options can be specified as attributes or elements-->
+        <includeEventDataOnBreadcrumbs>true</includeEventDataOnBreadcrumbs>
+      </options>
+
+      <!-- Optionally specify user properties via NLog
+          (here using MappedDiagnosticsLogicalContext as an example) -->
+      <user id="${mdlc:item=id}"
+            username="${mdlc:item=username}"
+            email="${mdlc:item=email}"
+            ipAddress="${mdlc:item=ipAddress}"
+            />
+
+      <!--Optionally add any desired additional Tags that will be sent with every message -->
+      <tag
+        name="exception"
+        layout="${exception:format=shorttype}"
+        includeEmptyValue="false" />
+
+      <!--Optionally add any desired additional Data that will be sent with every message -->
+      <contextproperty
+        name="threadid"
+        layout="${threadid}"
+        includeEmptyValue="true" />
+    </target>
+  </targets>
+
+  <rules>
+    <logger name="*" writeTo="sentry" />
+  </rules>
+</nlog>
+```
+
+Or the SDK can be configured via code:
+
+```csharp
+// Other overloads exist, for example, configure the SDK with only the DSN or no parameters at all.
+LogManager.Configuration.AddSentry(o =>
+{
+    o.Layout = "${message}";
+    o.BreadcrumbLayout = "${logger}: ${message}"; // Optionally specify a separate format for breadcrumbs
+
+    o.MinimumBreadcrumbLevel = LogLevel.Debug; // Debug and higher are stored as breadcrumbs (default is Info)
+    o.MinimumEventLevel = LogLevel.Error; // Error and higher is sent as event (default is Error)
+
+    // If DSN is not set, the SDK will look for an environment variable called SENTRY_DSN. If
+    // nothing is found, SDK is disabled.
+    o.Dsn = DsnSample;
+
+    o.AttachStacktrace = true;
+    o.SendDefaultPii = true; // Send Personal Identifiable information like the username of the user logged in to the device
+
+    o.IncludeEventDataOnBreadcrumbs = true; // Optionally include event properties with breadcrumbs
+    o.ShutdownTimeoutSeconds = 5;
+
+    //Optionally specify user properties via NLog (here using MappedDiagnosticsLogicalContext as an example)
+    o.User = new SentryNLogUser
+    {
+        Id = "${mdlc:item=id}",
+        Username = "${mdlc:item=username}",
+        Email = "${mdlc:item=email}",
+        IpAddress = "${mdlc:item=ipAddress}",
+        Other =
+        {
+            new TargetPropertyWithContext("mood", "joyous")
+        },
+    };
+
+    o.AddTag("logger", "${logger}");  // Send the logger name as a tag
+
+    // Other configuration
+});
+```
+
+```fsharp
+// Other overloads exist, for example, configure the SDK with only the DSN or no parameters at all.
+LogManager.Configuration.AddSentry(
+  fun o ->
+    o.Layout <- "${message}"
+    o.BreadcrumbLayout <- "${logger}: ${message}" // Optionally specify a separate format for breadcrumbs
+
+    o.MinimumBreadcrumbLevel <- LogLevel.Debug // Debug and higher are stored as breadcrumbs (default is Info)
+    o.MinimumEventLevel <- LogLevel.Error // Error and higher is sent as event (default is Error)
+
+    // If DSN is not set, the SDK will look for an environment variable called SENTRY_DSN. If
+    // nothing is found, SDK is disabled.
+    o.Dsn <- DsnSample
+
+    o.AttachStacktrace <- true
+    o.SendDefaultPii <- true // Send Personal Identifiable information like the username of the user logged in to the device
+
+    o.IncludeEventDataOnBreadcrumbs <- true // Optionally include event properties with breadcrumbs
+    o.ShutdownTimeoutSeconds <- 5
+
+    //Optionally specify user properties via NLog (here using MappedDiagnosticsLogicalContext as an example)
+    o.User <-
+      SentryNLogUser(
+        Id = "${mdlc:item=id}",
+        Username = "${mdlc:item=username}",
+        Email = "${mdlc:item=email}",
+        IpAddress = "${mdlc:item=ipAddress}",
+        Other = [ TargetPropertyWithContext("mood", "joyous") ]
+      )
+
+    o.AddTag("logger", "${logger}")  // Send the logger name as a tag
+
+    // Other configuration
+)
+```

@@ -143,6 +143,14 @@ export function getPlatform(rootNode: DocNode, name: string): Platform | undefin
   return nodeToPlatform(platformNode);
 }
 
+export function getGuide(rootNode: DocNode, platform: string, guide: string): PlatformGuide | undefined {
+  const guideNode = nodeForPath(rootNode, ['platforms', platform, 'guides', guide]);
+  if (!guideNode) {
+    return;
+  }
+  return nodeToGuide(platform, guideNode);
+}
+
 export function extractPlatforms(rootNode: DocNode): Platform[] {
   const platformsNode = nodeForPath(rootNode, 'platforms');
   if (!platformsNode) {

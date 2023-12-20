@@ -28,6 +28,7 @@ import { OrgAuthTokenNote } from "sentry-docs/components/orgAuthTokenNote";
 import { SmartLink } from "sentry-docs/components/smartLink";
 import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { LambdaLayerDetail } from "sentry-docs/components/lambdaLayerDetail";
+import { Break } from "sentry-docs/components/break";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -36,6 +37,7 @@ export async function generateStaticParams() {
 
 const MDXComponents: MDXComponents = {
   Alert,
+  Break,
   ConfigKey,
   DefinitionList,
   Include,
@@ -64,6 +66,8 @@ const MDXComponents: MDXComponents = {
 }
 
 const Layout = ({children, frontMatter, docs, toc}) => {
+  const hasToc = !frontMatter.notoc;
+
   return (
     <>
       <div className="sidebar">
@@ -90,27 +94,33 @@ const Layout = ({children, frontMatter, docs, toc}) => {
           <section className="pt-3 px-3 content-max prose">
             <div className="pb-3"><Breadcrumbs /></div>
             <div className="row">
-              <div className="col-sm-8 col-md-12 col-lg-8 col-xl-9">
+              <div
+                className={
+                  hasToc ? "col-sm-8 col-md-12 col-lg-8 col-xl-9" : 'col-12'
+                }
+              >
                 <h1>{frontMatter.title}</h1>
                 {children}
                 <GitHubCTA />
               </div>
-              <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
-                <div className="page-nav">
-                  <div className="doc-toc">
-                    {toc.length > 0 && <div className="doc-toc-title">
-                      <h6>On this page</h6>
-                    </div>}
-                    <ul className="section-nav">
-                      {toc.map((entry) => (
-                        <li className="toc-entry" key={entry.url}>
-                          <Link href={entry.url}>{entry.value}</Link>
-                        </li>
-                      ))}
-                    </ul>
+              {hasToc && (
+                <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
+                  <div className="page-nav">
+                    <div className="doc-toc">
+                      {toc.length > 0 && <div className="doc-toc-title">
+                        <h6>On this page</h6>
+                      </div>}
+                      <ul className="section-nav">
+                        {toc.map((entry) => (
+                          <li className="toc-entry" key={entry.url}>
+                            <Link href={entry.url}>{entry.value}</Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
         </div>
@@ -152,7 +162,6 @@ export default async function Page({ params }) {
     }
   }
   const { mdxSource, toc, frontMatter } = doc;
-  
   
   setServerContext({
     rootNode: rootNode,

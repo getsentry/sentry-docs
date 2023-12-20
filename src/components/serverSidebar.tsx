@@ -1,7 +1,8 @@
 import { serverContext } from "sentry-docs/serverContext";
 import { Sidebar } from "./sidebar";
-import { DocNode, getPlatform, nodeForPath } from "sentry-docs/docTree";
+import { DocNode, getGuide, getPlatform, nodeForPath } from "sentry-docs/docTree";
 import { PlatformSidebar, Node as SidebarNode } from "./platformSidebar";
+import { PlatformGuide } from "sentry-docs/types";
 
 export function ServerSidebar() {
   const { path, rootNode } = serverContext();
@@ -33,6 +34,11 @@ export function ServerSidebar() {
       }
 
       const platform = getPlatform(rootNode, name);
+      let guide: PlatformGuide | undefined;
+      if (path.length >= 4 && path[2] === 'guides') {
+        guide = getGuide(rootNode, name, path[3]);
+      }
+
       const nodes: SidebarNode[] = [{
         context: {
           platform: {
@@ -67,6 +73,10 @@ export function ServerSidebar() {
           platform={{
             name,
             title: platform?.title || '',
+          }}
+          guide={guide && {
+            name: guide.key,
+            title: guide.title || '',
           }}
           data={{
             allSitePage: {

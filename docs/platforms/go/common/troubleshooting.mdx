@@ -1,0 +1,29 @@
+---
+title: Troubleshooting
+description: "Troubleshooting common Go Issues"
+keywords: ["go", "troubleshooting"]
+sidebar_order: 9000
+supported:
+  - go
+  - go.echo
+  - go.fasthttp
+  - go.gin
+  - go.http
+  - go.iris
+  - go.martini
+  - go.negroni
+---
+
+## Missing Stack Trace
+
+Since the Go SDK tries to read the source files from your local disk, it's possible that you’re compiling your binary and deploying it in a manner that makes the source code inaccessible.
+
+This is common in Go because you can compile the binary, and then have no more need for the source code. Without access to the source code, however, we can’t map anything back, and we don’t support uploading Go source code with a release to stitch this data on.
+
+You can see [in the Serverless section](/platforms/go/serverless/#source-context) how to bundle the source code with the binary, which applies to other forms of deployment as well.
+
+## Avoiding Temporary File Leaks In File Upload Handlers
+
+Sentry's Go SDK middleware has to modify the request context in order to function correctly. This results in a shallow copy of the request being passed to upstream handlers. This means that temporary files created from calling `ParseMultipartForm` on this request won't automatically be cleaned up. It's important to clean these files up by calling `request.Multipart.RemoveAll()` after.
+
+See the [multipart documentation](https://pkg.go.dev/mime/multipart#Form.RemoveAll) for more information.
