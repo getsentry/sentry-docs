@@ -26,7 +26,7 @@ import { SignInNote } from "./components/signInNote";
 import { SmartLink } from "./components/smartLink";
 import { VimeoEmbed } from "./components/video";
 
-export function mdxComponents(wrapper: any = (children) => children): MDXComponents {
+export function mdxComponents(wrapper: any = ({children}) => children): MDXComponents {
   return {
     Alert,
     Break,

@@ -8,7 +8,6 @@ type Props = {
 };
 
 export async function Include({name}: Props) {
-  return null;
   let doc: any = null;
   try {
     doc = await getFileBySlug(`includes/${name}`);
