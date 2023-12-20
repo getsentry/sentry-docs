@@ -134,7 +134,6 @@ export default async function Page({ params }) {
 
   const pageNode = nodeForPath(rootNode, params.path);
   if (!pageNode) {
-    console.log('failed to find ', params.path);
     return notFound();
   }
   

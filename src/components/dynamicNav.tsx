@@ -48,6 +48,7 @@ export const toTree = (nodeList: Node[]): EntityTree[] => {
       }, level);
     });
 
+  result.length; // result[0] is undefined without this. wat
   return result[0].children;
 };
 
