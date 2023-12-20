@@ -2,82 +2,29 @@ import { useMemo } from "react";
 import { getAllFilesFrontMatter, getFileBySlug } from "sentry-docs/mdx";
 import { getMDXComponent } from 'mdx-bundler/client';
 import Link from "next/link";
-import { PageGrid } from "sentry-docs/components/pageGrid";
 import { Header } from 'sentry-docs/components/header';
 import { Navbar } from 'sentry-docs/components/navbar';
 import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
-import { Note } from "sentry-docs/components/note";
-import { PlatformContent } from "sentry-docs/components/platformContent";
-import { PlatformGrid } from "sentry-docs/components/platformGrid";
-import { PlatformLink } from "sentry-docs/components/platformLink";
-import { Alert } from "sentry-docs/components/alert";
 import { GitHubCTA } from "sentry-docs/components/githubCta";
-import { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
 import { setServerContext } from "sentry-docs/serverContext";
 import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
-import { SignInNote } from "sentry-docs/components/signInNote";
 import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
-import { DefinitionList } from "sentry-docs/components/definitionList";
-import { PlatformIdentifier } from "sentry-docs/components/platformIdentifier";
-import { PlatformSection } from "sentry-docs/components/platformSection";
-import { ConfigKey } from "sentry-docs/components/configKey";
-import { SandboxLink } from "sentry-docs/components/sandboxLink";
-import { Include } from "sentry-docs/components/include";
-import { OrgAuthTokenNote } from "sentry-docs/components/orgAuthTokenNote";
-import { SmartLink } from "sentry-docs/components/smartLink";
-import { GuideGrid } from "sentry-docs/components/guideGrid";
-import { LambdaLayerDetail } from "sentry-docs/components/lambdaLayerDetail";
-import { Break } from "sentry-docs/components/break";
-import { JsBundleList } from "sentry-docs/components/jsBundleList";
-import { CliChecksumTable } from "sentry-docs/components/cliChecksumTable";
-import { PiiFields } from "sentry-docs/components/piiFields";
-import { ParamTable } from "sentry-docs/components/paramTable";
-import { PlatformLinkWithLogo } from "sentry-docs/components/platformLinkWithLogo";
-import { VimeoEmbed } from "sentry-docs/components/video";
-import { RelayMetrics } from "sentry-docs/components/relayMetrics";
+import { mdxComponents } from "sentry-docs/mdxComponents";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
   return docs.map((doc) => ({ path: doc.slug.split('/') }));
 }
 
-const MDXComponents: MDXComponents = {
-  Alert,
-  Break,
-  CliChecksumTable,
-  ConfigKey,
-  DefinitionList,
-  Include,
-  GuideGrid,
-  JsBundleList,
-  LambdaLayerDetail,
-  Link: SmartLink,
-  Note,
-  OrgAuthTokenNote,
-  PageGrid,
-  ParamTable,
-  PiiFields,
-  PlatformContent,
-  PlatformGrid,
-  PlatformIdentifier,
-  PlatformLink,
-  PlatformLinkWithLogo,
-  PlatformSection,
-  RelayMetrics,
-  SandboxLink,
-  SignInNote,
-  VimeoEmbed,
-  // a: Link, // TODO: fails type check
-  wrapper: ({ children, frontMatter, docs, toc }) => (
-    <Layout
-      children={children}
-      frontMatter={frontMatter}
-      docs={docs}
-      toc={toc}
-      />
-  )
-}
+const mdxComponentsWithWrapper = mdxComponents(({ children, frontMatter, docs, toc }) => (
+  <Layout
+    children={children}
+    frontMatter={frontMatter}
+    docs={docs}
+    toc={toc}
+    />
+))
 
 const Layout = ({children, frontMatter, docs, toc}) => {
   const hasToc = !frontMatter.notoc;
@@ -145,7 +92,7 @@ const Layout = ({children, frontMatter, docs, toc}) => {
 
 const MDXLayoutRenderer = ({ mdxSource, ...rest }) => {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource])
-  return <MDXLayout components={MDXComponents} {...rest} />;
+  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
 export default async function Page({ params }) {
