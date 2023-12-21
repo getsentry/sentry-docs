@@ -23,24 +23,37 @@ export async function PlatformContent({includePath, platform, children, noGuides
     platform = path[1]
   }
 
+  let guide: string | undefined;
+  if (!noGuides && path.length >= 4 && path[2] === 'guides') {
+    guide = `${platform}.${path[3]}`;
+  }
+
   let doc: any = null;
-  try {
-    doc = await getFileBySlug(`platform-includes/${includePath}/${platform}`);
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      try {
-        doc = await getFileBySlug(`platform-includes/${includePath}/_default`);
-      } catch (e2) {
-        if (e2.code === 'ENOENT') {
-          return null;
-        } else {
-          throw(e);
-        }
-      }
-    } else {
-      throw(e);
+  if (guide) {
+    try {
+      doc = await getFileBySlug(`platform-includes/${includePath}/${guide}`)
+    } catch (e) {
+      // It's fine - keep looking.
     }
   }
+
+  if (!doc) {
+    try {
+      doc = await getFileBySlug(`platform-includes/${includePath}/${platform}`);
+    } catch (e) {
+      // It's fine - keep looking.
+    }
+  }
+
+  if (!doc) {
+    try {
+      doc = await getFileBySlug(`platform-includes/${includePath}/_default`);
+    } catch (e) {
+      // Couldn't find anything - fall back to children.
+      return children;
+    }
+  }
+
   const { mdxSource } = doc;
   const MDXLayoutRenderer = ({ mdxSource, ...rest }) => {
     const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource])

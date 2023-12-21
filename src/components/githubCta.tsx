@@ -18,7 +18,7 @@ export function GitHubCTA() {
             Suggest an edit to this page
           </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
-          <Link href="https://docs.sentry.io/contributing/">
+          <Link href="/contributing/">
             Contribute to Docs
           </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
