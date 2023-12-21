@@ -7,7 +7,7 @@ import { Navbar } from 'sentry-docs/components/navbar';
 import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
 import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { notFound } from "next/navigation";
-import { serverContext, setServerContext } from "sentry-docs/serverContext";
+import { setServerContext } from "sentry-docs/serverContext";
 import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
 import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
 import { mdxComponents } from "sentry-docs/mdxComponents";
