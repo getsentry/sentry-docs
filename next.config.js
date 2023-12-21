@@ -3,25 +3,6 @@ const remarkPrism = require('remark-prism');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async rewrites() {
-    return {
-      fallback: [
-        {
-          source: '/',
-          destination: 'https://docs.sentry.io/',
-        },
-        {
-          source: '/:path*/',
-          destination: 'https://docs.sentry.io/:path*/',
-        },
-        {
-          source: '/:path*',
-          destination: 'https://docs.sentry.io/:path*',
-        },
-      ],
-    };
-  },
-  
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   
   trailingSlash: true,
