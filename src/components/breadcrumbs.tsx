@@ -20,9 +20,10 @@ export function Breadcrumbs() {
   return (
     <ul className="breadcrumb" style={{margin: 0}}>
       {nodes.map(n => {
+        const to = (n.path === '/') ? n.path : `/${n.path}/`;
         return (
           <li className="breadcrumb-item" key={n.path}>
-            <SmartLink to={"/" + n.path}>{n.frontmatter.title}</SmartLink>
+            <SmartLink to={to}>{n.frontmatter.title}</SmartLink>
           </li>
         );
       })}
