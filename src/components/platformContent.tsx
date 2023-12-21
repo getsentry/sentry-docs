@@ -49,8 +49,8 @@ export async function PlatformContent({includePath, platform, children, noGuides
     try {
       doc = await getFileBySlug(`platform-includes/${includePath}/_default`);
     } catch (e) {
-      // Couldn't find anything - fall back to children.
-      return children;
+      // Couldn't find anything.
+      return null;
     }
   }
 
