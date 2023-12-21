@@ -165,7 +165,7 @@ export async function generateMetadata(
 
   const docs = await getAllFilesFrontMatter();
   const rootNode = frontmatterToTree(docs);
-  if (rootNode) {
+  if (rootNode && params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {
       title = pageNode.frontmatter.title;
