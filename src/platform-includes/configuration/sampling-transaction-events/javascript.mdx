@@ -1,0 +1,47 @@
+## Sampling Transaction Events
+
+We recommend sampling your transactions for two reasons:
+
+1. Capturing a single trace involves minimal overhead, but capturing traces for _every_ page load or _every_ API request may add an undesirable load to your system.
+2. Enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs.
+
+Choose a sampling rate with the goal of finding a balance between performance and volume concerns with data accuracy. You don't want to collect _too_ much data, but you want to collect sufficient data from which to draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume.
+
+## Configuring the Transaction Sample Rate
+
+The Sentry SDKs have two configuration options to control the volume of transactions sent to Sentry, allowing you to take a representative sample:
+
+1. Uniform sample rate (<PlatformIdentifier name="traces-sample-rate" />):
+
+- Provides an even cross-section of transactions, no matter where in your app or under what circumstances they occur.
+- Uses default [inheritance](#inheritance) and [precedence](#precedence) behavior
+
+2. Sampling function (<PlatformIdentifier name="traces-sampler" />) which:
+- Samples different transactions at different rates
+- <PlatformLink to="/configuration/filtering/">Filters</PlatformLink> out some
+     transactions entirely
+- Modifies default [precedence](#precedence) and [inheritance](#inheritance) behavior
+
+By default, none of these options are set, meaning no transactions will be sent to Sentry. You must set either one of the options to start sending transactions.
+
+### Setting a Uniform Sample Rate
+
+<PlatformContent includePath="performance/uniform-sample-rate" />
+
+### Setting a Sampling Function
+
+<PlatformContent includePath="performance/sampling-function-intro" />
+
+## Sampling Context Data
+
+### Default Sampling Context Data
+
+The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by platform and integration.
+
+<PlatformContent includePath="performance/default-sampling-context" />
+
+### Custom Sampling Context Data
+
+When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by passing it as an optional second argument to <PlatformIdentifier name="start-transaction" />. This is useful if there's data to which you want the sampler to have access but which you don't want to attach to the transaction as `tags` or `data`, such as information that's sensitive or that’s too large to send with the transaction. For example:
+
+<PlatformContent includePath="performance/custom-sampling-context" />
