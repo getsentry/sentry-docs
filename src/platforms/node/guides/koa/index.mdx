@@ -70,15 +70,13 @@ Sentry.init({
 
 const requestHandler = (ctx, next) => {
   Sentry.runWithAsyncContext(() => {
-    const hub = Sentry.getCurrentHub();
-    hub.configureScope((scope) =>
-      scope.addEventProcessor((event) =>
-        Sentry.addRequestDataToEvent(event, ctx.request, {
-          include: {
-            user: false,
-          },
-        })
-      )
+    const scope = Sentry.getCurrentScope();
+    scope.addEventProcessor((event) =>
+      Sentry.addRequestDataToEvent(event, ctx.request, {
+        include: {
+          user: false,
+        },
+      })
     );
 
     next();
@@ -107,9 +105,7 @@ const tracingMiddleWare = (ctx, next) => {
   ctx.__sentry_transaction = transaction;
 
   // We put the transaction on the scope so users can attach children to it
-  Sentry.getCurrentHub().configureScope((scope) => {
-    scope.setSpan(transaction);
-  });
+  Sentry.getCurrentScope().setSpan(transaction);
 
   ctx.res.on("finish", () => {
     // Push `transaction.finish` to the next event loop so open spans have a chance to finish before the transaction closes
