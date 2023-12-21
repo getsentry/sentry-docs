@@ -15,6 +15,7 @@ import { Include } from "sentry-docs/components/include";
 import { Home } from "sentry-docs/components/home";
 import { PlatformContent } from "sentry-docs/components/platformContent";
 import { GuideGrid } from "sentry-docs/components/guideGrid";
+import { Metadata, ResolvingMetadata } from "next";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -148,4 +149,30 @@ export default async function Page({ params }) {
       frontMatter={frontMatter}
       />
   );
+}
+
+type MetadataProps = {
+  params: {
+    path: string[]
+  }
+}
+
+export async function generateMetadata(
+  { params }: MetadataProps,
+  parent: ResolvingMetadata
+): Promise<Metadata> { 
+  let title = 'Home';
+
+  const docs = await getAllFilesFrontMatter();
+  const rootNode = frontmatterToTree(docs);
+  if (rootNode) {
+    const pageNode = nodeForPath(rootNode, params.path);
+    if (pageNode) {
+      title = pageNode.frontmatter.title;
+    }
+  }
+  // get the MDX for the current doc and render it
+  return {
+    title
+  }
 }
