@@ -338,3 +338,27 @@ Sentry.init({
   ],
 });
 ```
+
+## Routing Transaction Data Contains Sensitive Information
+
+If you use automatic routing instrumentation for React Navigation, sensitive data you put in routing parameters can get sent to Sentry. You can prevent this by either updating the SDK to [5.15.2](https://github.com/getsentry/sentry-react-native/releases/tag/5.15.2) or higher, or dropping the data manually with `beforeSendTransaction`:
+
+```javascript
+Sentry.init({
+  dsn: "...",
+  beforeSendTransaction: (event) => {
+    // delete params as they may contain PII
+    delete event.contexts?.trace?.data?.route?.params;
+    delete event.contexts?.trace?.data?.previousRoute?.params;
+
+    return event;
+  },
+});
+```
+
+You can also use [Advanced Data Scrubbing](/product/data-management-settings/scrubbing/advanced-datascrubbing/) to filter out sensitive data before it is stored on the server side:
+
+```
+[Replace] [Anything] from [contexts.trace.data.route.params]
+[Replace] [Anything] from [contexts.trace.data.previousRoute.params]
+```
