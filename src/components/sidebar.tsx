@@ -3,7 +3,18 @@
 import styled from "@emotion/styled";
 import Link from "next/link";
 
-export function Sidebar({ node, path }) {
+export type SidebarNode = {
+  path: string;
+  frontmatter: { [key: string] : any };
+  children: SidebarNode[];
+}
+
+type Props = {
+  node: SidebarNode;
+  path: string[];
+}
+
+export function Sidebar({ node, path }: Props) {
   const activeClassName = (node, baseClassName = '') => {
     const className = node.path === path.join('/') ? 'active' : '';
     return `${baseClassName} ${className}`;

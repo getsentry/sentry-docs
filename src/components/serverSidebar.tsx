@@ -1,8 +1,8 @@
 import { serverContext } from "sentry-docs/serverContext";
-import { Sidebar } from "./sidebar";
+import { Sidebar, SidebarNode } from "./sidebar";
 import { DocNode, getGuide, getPlatform, nodeForPath } from "sentry-docs/docTree";
 import { NavNode, ProductSidebar } from "./productSidebar";
-import { PlatformSidebar, Node as SidebarNode } from "./platformSidebar";
+import { PlatformSidebar, Node as PlatformSidebarNode } from "./platformSidebar";
 import { PlatformGuide } from "sentry-docs/types";
 
 function productSidebar(rootNode: DocNode) {
@@ -79,7 +79,7 @@ export function ServerSidebar() {
       guide = getGuide(rootNode, name, path[3]);
     }
 
-    const nodes: SidebarNode[] = [{
+    const nodes: PlatformSidebarNode[] = [{
       context: {
         platform: {
           name
@@ -127,5 +127,14 @@ export function ServerSidebar() {
     );
   }
   
-  return <Sidebar node={node} path={path} />;
+  // Must not send full DocNodes to a client component, or the entire doc tree
+  // will be serialized.
+  const nodeToSidebarNode = (node: DocNode): SidebarNode => {
+    return {
+      path: node.path,
+      frontmatter: node.frontmatter as {[key: string]: any},
+      children: node.children.map(nodeToSidebarNode)
+    };
+  };
+  return <Sidebar node={nodeToSidebarNode(node)} path={path} />;
 }
