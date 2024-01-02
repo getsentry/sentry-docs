@@ -59,7 +59,11 @@ Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
 ## Bundler Configuration
 
-The SDK attempts to ensure JavaScript bundlers pick up the correct entry point for the Electron process type, but this is not foolproof. If the incorrect entry point is selected, your bundler may throw an error or an error will be thrown at runtime. If this occurs you can use relative imports to ensure that the correct code is bundled for the process.
+The SDK attempts to ensure JavaScript bundlers pick up the correct entry point
+for the Electron process type, but this is not foolproof. If the incorrect entry
+point is selected, your bundler may throw an error or an error will be thrown at
+runtime. If this occurs there are process specific exports to ensure that the correct code
+is bundled for the process.
 
 In the main process:
 
@@ -122,7 +126,7 @@ Sentry.init({
 
 ## Inter-Process Communication
 
-To give detailed information for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
+To give the most detailed context for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
 
 By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
 
@@ -146,7 +150,7 @@ The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`
 
 ```javascript
 import { session } from "electron";
-import * as Sentry from "@sentry/electron";
+import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -177,7 +181,9 @@ To get symbolicated stack traces for native crashes, you should enable fetching
 debug symbols from the Electron symbol server. Go to **Project Settings > Debug
 Files** and add Electron to the list of built-in repositories.
 
-If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_](/platforms/electron/).
+If your app uses a custom Electron fork, contains modules with native extensions
+or spawns subprocesses, you should upload those symbols manually using the
+Sentry CLI. For more information, see [_Native Usage_](/platforms/electron/).
 
 <Alert level="warning" title="Known Issue">
 
@@ -191,7 +197,7 @@ The Electron SDK supports [Source Maps](https://www.html5rocks.com/en/tutorials/
 
 ## Native
 
-Sentry can process Minidumps created when the Electron process or one of its renderers crashes. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
+Sentry can process Minidumps created when any of the Electron processes crash. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
 
 Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
 
