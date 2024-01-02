@@ -22,6 +22,10 @@ export async function generateStaticParams() {
   return docs.map((doc) => ({ path: doc.slug.split('/') }));
 }
 
+// Only render paths returned by generateStaticParams
+export const dynamicParams = false;
+export const dynamic = 'force-static';
+
 const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent}, ({ children, frontMatter, toc }) => (
   <Layout
     children={children}
