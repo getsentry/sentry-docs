@@ -74,6 +74,25 @@ extension MyCustomError: CustomNSError {
 }
 ```
 
+If you have an existing Swift `Error` and want to change the domain, code, or description, you can cast the Swift `Error` to an `NSError` and create a new `NSError` object with your desired information.
+
+```swift {tabTitle:Swift}
+
+import Sentry
+
+do {
+    try aMethodThatMightFail()
+} catch {
+    let nsError = error as NSError
+    let myError = NSError(
+        domain: "your domain",
+        code: nsError.code, // Keep the error code
+        userInfo: [NSDebugDescriptionErrorKey : "my custom description"]
+    )
+    SentrySDK.capture(error: myError)
+}
+```
+
 <PlatformSection supported={["apple.macos"]}>
 
 ## Capturing Uncaught Exceptions in macOS
