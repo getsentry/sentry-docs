@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import {NavDropdown} from 'react-bootstrap';
-import {PlatformIcon} from 'platformicons';
 
+import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 import { Platform, PlatformGuide } from 'sentry-docs/types';
 

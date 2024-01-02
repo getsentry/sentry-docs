@@ -5,7 +5,7 @@ import Image from 'next/image';
 import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 import Link from 'next/link';
 import {Banner} from 'sentry-docs/components/banner';
-import {PlatformIcon} from 'platformicons';
+import {PlatformIcon} from './platformIcon';
 import { Platform, PlatformGuide } from 'sentry-docs/types';
 import { SmartLink } from './smartLink';
 import { Search } from './search';

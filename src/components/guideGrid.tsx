@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
-import {PlatformIcon} from 'platformicons';
 
+import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 import { serverContext } from 'sentry-docs/serverContext';
 import { getCurrentPlatform, getPlatform } from 'sentry-docs/docTree';
