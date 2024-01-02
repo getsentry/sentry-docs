@@ -187,36 +187,6 @@ brew upgrade --cask chromedriver
 
 ---
 
-**Problem:**
-
-```shell
---- snip ---
-00:51:27 server  | ImportError: cannot import name _remove_dead_weakref
-00:51:27 server  | unable to load app 0 (mountpoint='') (callable not found or import error)
-```
-
-This is caused by uwsgi running the wrong version of Python. When starting up, you'll see something like
-
-```shell
-uwsgi socket 0 bound to TCP address 127.0.0.1:8889 fd 3
-Python version: 2.7.10 (default, Feb 22 2019, 21:17:52)  [GCC 4.2.1 Compatible Apple LLVM 10.0.1 (clang-1001.0.37.14)]
-Set PythonHome to /Users/dfuller/code/sentry/.venv
-```
-
-The Python version here should be 2.7.16, but will be a lower version, likely your system Python. This is because uwsgi was
-compiled against a stale Python and the resultant wheel has been cached by pip.
-
-**Solution:**
-
-In your sentry virtualenv:
-
-```shell
-pip uninstall uwsgi
-pip install --no-cache-dir uwsgi
-```
-
----
-
 **Problem:** You see `DoesNotExist: Subscription matching query does not exist`
 
 **Solution:** In getsentry, run the following to mock a subscription:
