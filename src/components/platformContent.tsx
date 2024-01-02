@@ -46,7 +46,23 @@ type Props = {
   children?: React.ReactNode;
   fallbackPlatform?: string;
   noGuides?: boolean;
+  notSupported?: string[];
   platform?: string;
+  supported?: string[];
+};
+
+const isSupported = (
+  platformKey: string,
+  supported: string[],
+  notSupported: string[]
+): boolean | null => {
+  if (supported.length && supported.find(p => p === platformKey)) {
+    return true;
+  }
+  if (notSupported.length && notSupported.find(p => p === platformKey)) {
+    return false;
+  }
+  return null;
 };
 
 const getFileForPlatform = (
@@ -63,7 +79,14 @@ const getFileForPlatform = (
   return contentMatch || null;
 };
 
-export function PlatformContent({includePath, platform, children, noGuides}: Props) {
+export function PlatformContent({
+  includePath,
+  platform,
+  children,
+  noGuides,
+  supported = [],
+  notSupported = [],
+}: Props) {
   const {
     allFile: {nodes: files},
   } = useStaticQuery(includeQuery);
@@ -79,6 +102,26 @@ export function PlatformContent({includePath, platform, children, noGuides}: Pro
   }
 
   if (noGuides && currentPlatform.type !== 'platform') {
+    return null;
+  }
+
+  const platformsToSearch = getPlatformsWithFallback(currentPlatform);
+
+  let result: boolean | null = null;
+  // eslint-disable-next-line no-cond-assign
+  for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
+    if (!platformKey) {
+      continue;
+    }
+    result = isSupported(platformKey, supported, notSupported);
+    if (result === false) {
+      return null;
+    }
+    if (result === true) {
+      break;
+    }
+  }
+  if (result === null && supported.length) {
     return null;
   }
 
