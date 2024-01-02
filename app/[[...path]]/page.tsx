@@ -19,7 +19,9 @@ import { Metadata, ResolvingMetadata } from "next";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
-  return docs.map((doc) => ({ path: doc.slug.split('/') }));
+  const paths = docs.map((doc) => ({ path: doc.slug.split('/') }));
+  paths.push({ path: undefined }); // the home page
+  return paths;
 }
 
 // Only render paths returned by generateStaticParams
