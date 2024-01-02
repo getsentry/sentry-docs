@@ -50,7 +50,7 @@ You may want to provide a custom description to make identifying the error in th
 
 Sentry will group errors based on the error domain and code, and by enum value for Swift enum types, so customizing error descriptions won’t impact grouping.
 
-To customize the description for Swift `Error` types, you should conform to the `CustomNSError` protocol and return a user info dictionary:
+To customize the description for Swift `Error` types, you can conform to the [`CustomNSError`](https://developer.apple.com/documentation/foundation/customnserror) protocol and return a user info dictionary:
 
 ```swift {tabTitle:Swift}
 enum MyCustomError: Error {
@@ -71,6 +71,25 @@ extension MyCustomError: CustomNSError {
             return "enumeratingWhileMutating"
         }
     }
+}
+```
+
+If you have an existing Swift `Error` and want to change the domain, code, or description, you can cast the Swift `Error` to an `NSError` and create a new `NSError` object with your desired information.
+
+```swift {tabTitle:Swift}
+
+import Sentry
+
+do {
+    try aMethodThatMightFail()
+} catch {
+    let nsError = error as NSError
+    let myError = NSError(
+        domain: "your domain",
+        code: nsError.code, // Keep the error code
+        userInfo: [NSDebugDescriptionErrorKey : "my custom description"]
+    )
+    SentrySDK.capture(error: myError)
 }
 ```
 
