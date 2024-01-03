@@ -8,8 +8,6 @@ redirect_from:
 
 The `sentry_dio` library provides [Dio](https://pub.dev/packages/dio) support for Sentry using the [HttpClientAdapter](https://pub.dev/documentation/dio/latest/dio/HttpClientAdapter-class.html). It is able to collect breadcrumbs, run performance monitoring for HTTP requests, and capture events for failed requests.
 
-The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/dio/).
-
 ## Install
 
 To add the Dio integration, add the `sentry_dio` dependency.
@@ -80,10 +78,11 @@ Future<void> main() async {
 
 ## Performance Monitoring for HTTP Requests
 
-The Dio instrumentation, once enabled, adds spans to the current active transaction on the scope for each request.
+The Dio integration also provides insight into performance monitoring for your HTTP requests done with Dio.
 
 ### Instrumentation Behaviour
 
+- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the Hive span will not be sent to Sentry.
 - The SDK sets the span operation to `http.client` and the description to request `$METHOD $url`. For example, `GET https://sentry.io`.
 - The span finishes once the request has been executed.
 - The span status depends on either the HTTP response code or `SpanStatus.internalError()` if the code does not match any of Sentry's SpanStatus options.
