@@ -11,7 +11,6 @@ import remarkGfm from 'remark-gfm'
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkCodeTitles from './remark-code-title';
 import remarkTocHeadings from './remark-toc-headings';
-import remarkImgToJsx from './remark-img-to-jsx';
 // Rehype packages
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
@@ -176,7 +175,6 @@ export async function getFileBySlug(slug) {
           [remarkTocHeadings, { exportRef: toc }],
           remarkGfm,
           remarkCodeTitles,
-          remarkImgToJsx,
         ]
         options.rehypePlugins = [
           ...(options.rehypePlugins ?? []),
