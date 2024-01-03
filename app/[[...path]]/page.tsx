@@ -19,7 +19,13 @@ import { Metadata, ResolvingMetadata } from "next";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
-  const paths = docs.map((doc) => ({ path: doc.slug.split('/') }));
+  const paths = docs.map((doc) => {
+    let path = doc.slug.split('/');
+    if (path[path.length - 1] === 'index') {
+      path = path.slice(0, path.length - 1);
+    }
+    return { path };
+  });
   paths.push({ path: undefined }); // the home page
   return paths;
 }
