@@ -12,8 +12,9 @@ The [AssetBundle](https://api.flutter.dev/flutter/services/AssetBundle-class.htm
 
 ## Instrumentation Behaviour
 
-- The instrumentation starts a span from an active transaction that's bound to the scope of each `load` and `loadString` call. The SDK sets the span `operation` to `file.read`.
-- The instrumentation starts a span from an active transaction that's bound to the scope of each `loadStructuredData` call. The SDK sets the span `operation` to `serialize`.
+- The instrumentation starts a span from an active transaction that's bound to the scope of the following calls:
+    - `load` and `loadString` - The SDK sets the span `operation` to `file.read`.
+    - `loadStructuredData` - The SDK sets the span `operation` to `serialize`.
 
 ## Prerequisite
 
@@ -45,7 +46,24 @@ Future<void> main() async {
 
 ## Verify
 
-// TODO
+### 1. Execute the code
+
+```dart
+final transaction = Sentry.startTransaction(
+  'asset-bundle-transaction',
+  'load',
+  bindToScope: true,
+);
+
+final text = await DefaultAssetBundle.of(context).loadString('assets/lorem-ipsum.txt');
+
+await transaction.finish(status: const SpanStatus.ok());
+```
+
+### 2. View the transaction on Sentry
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `asset-bundle-transaction`.
 
 ## Additional Configuration
 
