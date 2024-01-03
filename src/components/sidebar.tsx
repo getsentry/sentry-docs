@@ -28,7 +28,6 @@ export function Sidebar({ node, path }: Props) {
           href={"/" + node.path}
           data-sidebar-link
           className={activeClassName(node)}
-          prefetch={false}
           >
           {node.frontmatter.sidebar_title || node.frontmatter.title}
           {node.children.length > 0 && <Chevron direction="down" />}
@@ -48,7 +47,6 @@ export function Sidebar({ node, path }: Props) {
           className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
           data-sidebar-link
           key={node.path}
-          prefetch={false}
           >
           <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
         </SidebarNavItem>
