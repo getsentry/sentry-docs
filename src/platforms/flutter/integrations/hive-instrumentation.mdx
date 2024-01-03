@@ -12,9 +12,19 @@ categories:
 
 _(New in version 7.13.1)_
 
-The [sentry_hive](https://pub.dev/packages/sentry_hive) package provides `Hive` support for database instrumentation.
-The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/hive).
-You must <PlatformLink to="/performance/">Set Up Performance </PlatformLink> monitoring to capture transactions for this integration to work.
+Hive is a lightweight and fast key-value database for Flutter and Dart applications.
+The [sentry_hive](https://pub.dev/packages/sentry_hive) package provides `Hive` support for database instrumentation and allows you to track the performance of your queries.
+
+## Instrumentation Behaviour
+
+- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the Hive span will not be sent to Sentry.
+
+## Prerequisite
+
+Before starting, ensure:
+
+1. Sentry Flutter SDK must be initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring must be set up. Learn more [here](/platforms/flutter/performance/).
 
 ## Install
 
@@ -39,31 +49,36 @@ final appDir = await getApplicationDocumentsDirectory();
 SentryHive.init(appDir.path);
 ```
 
-After configuring, you can use `SentryHive` for every `CRUD` operation which will be automatically instrumented and sent to Sentry.
+## Verify
 
-## Example
+### 1. Execute the code
 
 ```dart
 import 'package:sentry_hive/sentry_hive.dart';
 
 Future<void> hiveTest() async {
-    final tr = Sentry.startTransaction(
-      'hiveTest',
-      'db',
-      bindToScope: true,
-    );
+  final tr = Sentry.startTransaction(
+    'hiveTest',
+    'db',
+    bindToScope: true,
+  );
 
-    final appDir = await getApplicationDocumentsDirectory();
-    SentryHive.init(appDir.path);
+  final appDir = await getApplicationDocumentsDirectory();
+  SentryHive.init(appDir.path);
 
-    final catsBox = await SentryHive.openBox<Map>('cats');
-    await catsBox.put('fluffy', {'name': 'Fluffy', 'age': 4});
-    await catsBox.put('loki', {'name': 'Loki', 'age': 2});
-    await catsBox.clear();
-    await catsBox.close();
+  final catsBox = await SentryHive.openBox<Map>('cats');
+  await catsBox.put('fluffy', {'name': 'Fluffy', 'age': 4});
+  await catsBox.put('loki', {'name': 'Loki', 'age': 2});
+  await catsBox.clear();
+  await catsBox.close();
 
-    SentryHive.close();
+  SentryHive.close();
 
-    await tr.finish(status: const SpanStatus.ok());
+  await tr.finish(status: const SpanStatus.ok());
 }
 ```
+
+### 2. View the transaction on Sentry
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `hiveTest`.

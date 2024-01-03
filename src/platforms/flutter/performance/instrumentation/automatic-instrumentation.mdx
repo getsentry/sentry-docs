@@ -52,57 +52,27 @@ Learn more how to set it up in our [Slow and Frozen Frames Instrumentation](/pla
 
 ### AssetBundle Instrumentation
 
-The [AssetBundle](https://api.flutter.dev/flutter/services/AssetBundle-class.html) instrumentation provides insight into how long your app takes to load its assets, such as files. It can be enabled by wrapping the `runApp` method with a `DefaultAssetBundle` and `SentryAssetBundle`.
+The [AssetBundle](https://api.flutter.dev/flutter/services/AssetBundle-class.html) instrumentation provides insight into how long your app takes to load its assets, such as files.
 
-<SignInNote />
-
-```dart
-import 'package:flutter/widgets.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-Future<void> main() async {
-  await SentryFlutter.init(
-    (options) => options.dsn = '___PUBLIC_DSN___',
-    appRunner: () => runApp(
-      DefaultAssetBundle(
-        bundle: SentryAssetBundle(),
-        child: MyApp(),
-      ),
-    ),
-  );
-}
-```
-
-The `SentryAssetBundle` instrumentation starts a span from an active transaction that's bound to the scope of each `load` and `loadString` call. The SDK sets the span `operation` to `file.read`.
-
-The `SentryAssetBundle` instrumentation starts a span from an active transaction that's bound to the scope of each `loadStructuredData` call. The SDK sets the span `operation` to `serialize`.
-
-The `loadStructuredData` is an opt-out feature. The following example shows how to disable it:
-
-```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-SentryAssetBundle(enableStructuredDataTracing: false)
-```
+Learn more in our [AssetBundle Instrumentation](/platforms/flutter/integrations/asset-bundle-instrumentation/).
 
 ### File I/O Instrumentation
 
-The Sentry-specific file I/O instrumentation starts a span from an active transaction that's bound to the scope of each file I/O operation. The SDK sets the span `operation` to `file.copy`, `file.write`, `file.delete`, `file.open`, `file.read` or `file.rename`, and `description` to `filename` (for example, `file.txt`).
+The Sentry-specific file I/O instrumentation starts a span from an active transaction that's bound to the scope of each file I/O operation.
+
+The SDK sets the span `operation` to `file.copy`, `file.write`, `file.delete`, `file.open`, `file.read` or `file.rename`, and `description` to `filename` (for example, `file.txt`).
 
 In addition, the span contains other useful information such as `file.size` (raw number of bytes), `file.path` (an absolute path to the file) and `file.async` (`true` if the called method returns a `Future`, or `false` if it's a `Sync` call) as part of the `data` payload.
 
 The span finishes once the operation has been executed. The span `status` is then set to `SpanStatus.ok` if successful, or `SpanStatus.internalError` if there was an error.
 
-When the operation throws an `Exception`, Sentry's SDK associates it with the running span. If you haven't set the SDK to swallow and capture the exception, the span and `SentryEvent` will be shown as linked on the **Issue Details** page in [sentry.io](https://sentry.io).
+When the operation throws an `Exception`, Sentry's SDK associates it with the running span.
+If you haven't set the SDK to swallow and capture the exception, the span and `SentryEvent` will be shown as linked on the **Issue Details** page in [sentry.io](https://sentry.io).
 
 Learn more about our [file I/O integration](/platforms/dart/integrations/file/).
 
 ### sqflite Database Instrumentation
 
-The sqflite database instrumentation starts a span from an active transaction that's bound to the scope of each `CRUD` operation.
-
-The span finishes once the operation has been executed. The span `status` is then set to `SpanStatus.ok` if successful, or `SpanStatus.internalError` if there was an error.
-
-When the operation throws an `Exception`, Sentry's SDK associates it with the running span. If you haven't set the SDK to swallow and capture the exception, the span and `SentryEvent` will be shown as linked on the **Issue Details** page in [sentry.io](https://sentry.io).
+The sqflite database instrumentation provides the ability to track the performance of any sqflite query.
 
 Learn more about our [sqflite Database Instrumentation](/platforms/flutter/integrations/sqflite-instrumentation/).
