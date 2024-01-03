@@ -109,7 +109,7 @@ dio.addSentry();
 
 ### Verify
 
-It is required to have an active transaction running as the span is attached to it.
+#### 1. Execute the code
 
 ```dart
 import 'package:sentry_dio/sentry_dio.dart';
@@ -119,16 +119,15 @@ Future<void> makeWebRequestWithDio() async {
   dio.addSentry();
 
   // If there is no active transaction, start one
-  final transaction = Sentry.getSpan() ??
-    Sentry.startTransaction(
-      'dio-web-request',
-      'request',
-      bindToScope: true,
-    );
-    final span = transaction.startChild(
-      'dio',
-      description: 'desc',
-    );
+  final transaction = Sentry.startTransaction(
+    'dio-web-request',
+    'request',
+    bindToScope: true,
+  );
+  final span = transaction.startChild(
+    'dio',
+    description: 'desc',
+  );
   Response<String>? response;
   try {
     response = await dio.get<String>(exampleUrl);
@@ -143,4 +142,7 @@ Future<void> makeWebRequestWithDio() async {
 }
 ```
 
-After executing `makeWebRequestWithDio()` check Sentry's performance page to see the transaction.
+#### 2. View the transaction on Sentry
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `dio-web-request`.
