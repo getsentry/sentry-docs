@@ -74,13 +74,22 @@ The SDK differentiates between a cold and a warm start, but doesn't track hot st
 - **Cold start**: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
 - **Warm start**: App launched at least once, is partially in memory, and no process exists.
 
-The SDK uses the process start time as the beginning of the app start and the [`UIWindowDidBecomeVisibleNotification`][uiwindow] as the end. The SDK creates the following spans:
+Since [sentry-cocoa 8.18.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.18.0) the SDK creates the following app start spans:
 
-- **Pre Main**: From the process start time to the runtime init.
-- **UIKit and Application Init**: From the runtime init to the [`didFinishLaunchingNotification`][didfinishlaunching].
-- **Initial Frame Render**: From the [`didFinishLaunchingNotification`][didfinishlaunching] to [`UIWindowDidBecomeVisibleNotification`][uiwindow].
+- **Pre Runtime Init**: from the process start time to the runtime init.
+- **Runtime Init to Pre Main Initializers**: from runtime init to pre main initializers.
+- **UIKit Init**: from pre main initializers to the when starting the Sentry Cocoa SDK.
+- **Application Init**: this reflects the duration of your AppDelegate `application:didFinishLaunchingWithOptions` method or [App conformer's initializer](https://developer.apple.com/documentation/swiftui/app/main()) when using SwiftUI, which is from when starting the Cocoa SDK to the [`didFinishLaunchingNotification`][didfinishlaunching].
+- **Initial Frame Render**: from the [`didFinishLaunchingNotification`][didfinishlaunching] to [`UIWindowDidBecomeVisibleNotification`][uiwindow]. When enabling the option `enablePerformanceV2` this is from the [`didFinishLaunchingNotification`][didfinishlaunching] until the app renders its first frame.
 
 ![App Start Transaction](app-start-transaction.png)
+
+Before [sentry-cocoa 8.18.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.18.0) the SDK creates the following app start spans:
+
+- **Pre Runtime Init**: from the process start time to the runtime init.
+- **Runtime Init to Pre Main Initializers**: from runtime init to pre main initializers.
+- **UIKit and Application Init**: from pre main initializers to [`didFinishLaunchingNotification`][didfinishlaunching].
+- **Initial Frame Render**: from the [`didFinishLaunchingNotification`][didfinishlaunching] to [`UIWindowDidBecomeVisibleNotification`][uiwindow].
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/performance/mobile-vitals).
 
