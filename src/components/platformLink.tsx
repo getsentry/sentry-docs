@@ -1,4 +1,6 @@
-import Link from 'next/link';
+import { getCurrentPlatformOrGuide } from 'sentry-docs/docTree';
+import { serverContext } from 'sentry-docs/serverContext';
+import { SmartLink } from './smartLink';
 
 type Props = {
   children: React.ReactNode;
@@ -9,5 +11,14 @@ export function PlatformLink({children, to}: Props) {
   if (!to) {
     return children;
   }
-  return <Link href={to}>{children}</Link>;
+
+  const { rootNode, path } = serverContext();
+  const currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path)
+  let href: string;
+  if (currentPlatformOrGuide) {
+    href = currentPlatformOrGuide.url + to.slice(1);
+  } else {
+    href = `/platform-redirect/?next=${encodeURIComponent(to)}`
+  }
+  return <SmartLink href={href}>{children}</SmartLink>;
 }
