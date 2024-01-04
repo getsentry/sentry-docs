@@ -1,0 +1,42 @@
+If you're using the [`cron`](https://www.npmjs.com/package/cron) or [`node-cron`](https://www.npmjs.com/package/node-cron) libraries to run your periodic tasks, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs.
+
+### Cron
+
+Requires SDK version `7.92.0` or higher.
+
+```JavaScript
+import { CronJob } from "cron";
+
+const CronJobWithCheckIn = Sentry.cron.instrumentCron(CronJob, "my-cron-job");
+
+// use the constructor
+const job = new CronJobWithCheckIn("* * * * *", () => {
+  console.log("You will see this message every minute");
+});
+
+// or from method
+const job = CronJobWithCheckIn.from({
+  cronTime: "* * * * *",
+  onTick: () => {
+    console.log("You will see this message every minute");
+  },
+});
+```
+
+### Node Cron
+
+Requires SDK version `7.92.0` or higher.
+
+```JavaScript
+import cron from "node-cron";
+
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+
+cronWithCheckIn.schedule(
+  "* * * * *",
+  () => {
+    console.log("running a task every minute");
+  },
+  { name: "my-cron-job" }
+);
+```
