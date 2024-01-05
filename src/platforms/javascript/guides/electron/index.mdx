@@ -59,7 +59,11 @@ Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
 ## Bundler Configuration
 
-The SDK attempts to ensure JavaScript bundlers pick up the correct entry point for the Electron process type, but this is not foolproof. If the incorrect entry point is selected, your bundler may throw an error or an error will be thrown at runtime. If this occurs you can use relative imports to ensure that the correct code is bundled for the process.
+The SDK attempts to ensure JavaScript bundlers pick up the correct entry point
+for the Electron process type, but this is not foolproof. If the incorrect entry
+point is selected, your bundler may throw an error or an error will be thrown at
+runtime. If this occurs there are process specific exports to ensure that the correct code
+is bundled for the process.
 
 In the main process:
 
@@ -122,7 +126,7 @@ Sentry.init({
 
 ## Inter-Process Communication
 
-To give detailed information for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
+To give the most detailed context for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
 
 By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
 
@@ -146,7 +150,7 @@ The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`
 
 ```javascript
 import { session } from "electron";
-import * as Sentry from "@sentry/electron";
+import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -177,7 +181,9 @@ To get symbolicated stack traces for native crashes, you should enable fetching
 debug symbols from the Electron symbol server. Go to **Project Settings > Debug
 Files** and add Electron to the list of built-in repositories.
 
-If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_](/platforms/electron/).
+If your app uses a custom Electron fork, contains modules with native extensions
+or spawns subprocesses, you should upload those symbols manually using the
+Sentry CLI. For more information, see [_Native Usage_](/platforms/javascript/guides/electron/#native).
 
 <Alert level="warning" title="Known Issue">
 
@@ -187,11 +193,11 @@ It is currently not possible to send events from native code (such as a C++ exte
 
 ## Dealing with Minified Source Code
 
-The Electron SDK supports [Source Maps](https://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_](/platforms/electron/).
+The Electron SDK supports [Source Maps](https://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_](/platforms/javascript/guides/electron/#source-maps).
 
 ## Native
 
-Sentry can process Minidumps created when the Electron process or one of its renderers crashes. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
+Sentry can process Minidumps created when any of the Electron processes crash. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
 
 Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
 
@@ -214,13 +220,13 @@ are deploying to, depending on your needs.
 
 If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
-during your build or release process. See [_Debug Information Files_](/workflow/debug-files/) for a detailed description of how to
+during your build or release process. See [_Debug Information Files_](/platforms/javascript/guides/electron/data-management/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
 Information_](/product/cli/dif/) for the upload process.
 
 ### Child Processes
 
-The SDK relies on the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) to generate the crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](#electron-native-manual)).
+The SDK relies on the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) to generate the crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#electron-native-manual)).
 
 An exception to this is _macOS_, where the crash reporter only needs to be started in the `main` process and watches all its child processes. The SDK already takes care of this difference, so there is no need to manually disable `enableNative`.
 
@@ -232,7 +238,7 @@ ___MINIDUMP_URL___
 
 It currently not possible create breadcrumbs or other event meta data from native code. This has to happen in JavaScript. Support for this is planned in future releases.
 
-### Manual Crash Reporting {#electron-native-manual}
+### Manual Crash Reporting
 
 You can also capture native crashes by starting the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) manually. Sentry is able to provide symbolicated stack traces and show system information, but no Electron-specific metadata, breadcrumbs or context information will be present. This is useful in cases where you cannot use the full Electron SDK:
 

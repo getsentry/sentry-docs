@@ -24,11 +24,21 @@ In order to get started with browser profiling, you'll need to:
 
 - Install the @sentry/browser SDK
 - Configure the document response header to include `Document-Policy: js-profiling`
-- Configure the SDK to use the BrowserProfilingIntegration and set profilesSampleRate
+- Configure the SDK to use the `BrowserProfilingIntegration` and set `profilesSampleRate`
 
 ## Install
 
+<PlatformSection notSupported={["javascript.electron"]}>
+
 Install our JavaScript browser SDK using either `yarn` or `npm`, the minimum version that supports profiling is **7.60.0**.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+Install our Electron SDK using either `yarn` or `npm`, the minimum version that supports profiling is **4.16.0**.
+
+</PlatformSection>
 
 <PlatformContent includePath="profiling/automatic-instrumentation-intro" />
 
@@ -36,25 +46,7 @@ Install our JavaScript browser SDK using either `yarn` or `npm`, the minimum ver
 
 In order for the profiler to start, the document response header has to include a `Document-Policy` header key with the `js-profiling` value.
 
-How you do this will depend on your server. If you're using a server like express, you'll be able to use the [response.set](https://expressjs.com/en/4x/api.html#res.set) function.
-
-```js
-app.get("/", (request, response) => {
-  response.set("Document-Policy", "js-profiling");
-  response.sendFile("index.html");
-});
-```
-
-```csharp
-// ASP.NET Core
-app.Use(async (context, next) => {
-    context.Response.OnStarting(() => {
-        context.Response.Headers.Append("Document-Policy", "js-profiling");
-        return Task.CompletedTask;
-    });
-    await next();
-});
-```
+<PlatformContent includePath="profiling/automatic-instrumentation-headers" />
 
 ## Configure
 

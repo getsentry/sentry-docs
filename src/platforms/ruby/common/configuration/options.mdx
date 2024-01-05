@@ -56,7 +56,7 @@ end
 
 : Provide a lambda or proc. This will be `called` before sending an error event to Sentry. Receives an `event` and `hint` as parameter. `hint` is a dict `{:exception => ex | nil, :message => message | nil}`. It is possible to mutate the event, also if this function returns `nil` the event will be dropped and not sent.
 
-<PlatformContent includePath="configuration/before-send" />
+<PlatformContent includePath="configuration/before-send/" />
 
 `before_send_transaction`
 
@@ -90,7 +90,7 @@ config.breadcrumbs_logger = [:active_support_logger, :http_logger]
 
 `debug`
 
-: Activation of debugging mode. When enabled, SDK errors will be logged with backtrace. Default is `false`.
+: Activation of debugging mode. When enabled, SDK errors will be logged with backtrace. Default is `false`. Please use `config.logger.level` for more output; this is merely for attaching backtraces to the messages.
 
 `enabled_environments`
 
@@ -130,13 +130,12 @@ config.inspect_exception_causes_for_exclusion = true
 
 `logger`
 
-: The logger used by Sentry. Default is `Rails.logger` in Rails, otherwise an instance of `Sentry::Logger`.
+: The logger used by Sentry. Default is `Rails.logger` in Rails, otherwise an instance of `Sentry::Logger`. Make sure to change the logger level if you need debug output.
 
 ```ruby
 config.logger = Sentry::Logger.new(STDOUT)
+config.logger.level = ::Logger::DEBUG # defaults to INFO
 ```
-
-Sentry respects logger levels.
 
 `max_breadcrumbs`
 
@@ -146,9 +145,19 @@ Sentry respects logger levels.
 config.max_breadcrumbs = 30
 ```
 
+`trace_propagation_targets`
+
+: An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain an array of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace headers will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+By default, trace headers are attached to every outgoing request from the instrumented client.
+
 `propagate_traces`
 
-: By default, Sentry injects `sentry-trace` header to outgoing requests made with `Net::HTTP` to connect traces between services. You can disable this behavior with
+: By default, Sentry injects `sentry-trace` and `baggage` headers to outgoing requests made with `Net::HTTP` to connect traces between services. You can disable this behavior with
 
 ```ruby
 config.propagate_traces = false
