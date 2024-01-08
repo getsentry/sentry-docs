@@ -23,3 +23,13 @@ end
 
 OpenTelemetry.propagation = Sentry::OpenTelemetry::Propagator.new
 ```
+
+Note that if you need extra Sentry features such as tags / user, you will need to re-order the middleware as below to
+make sure Sentry's scope management works properly.
+
+```ruby {filename:config/initializers/otel.rb}
+Rails.application.config.middleware.move_after(
+  Sentry::Rails::CaptureExceptions,
+  OpenTelemetry::Instrumentation::Rack::Middlewares::TracerMiddleware
+)
+```
