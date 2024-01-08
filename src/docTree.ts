@@ -1,5 +1,6 @@
 import type { FrontMatter} from 'sentry-docs/mdx';
 import { Platform, PlatformGuide } from './types';
+import { platformsData } from './platformsData';
 
 export interface DocNode {
   path: string;
@@ -114,6 +115,7 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
 }
 
 function nodeToPlatform(n: DocNode): Platform {
+  const platformData = platformsData()[n.slug];
   return {
     guides: extractGuides(n),
     key: n.slug,
@@ -121,6 +123,7 @@ function nodeToPlatform(n: DocNode): Platform {
     type: 'platform',
     url: '/' + n.path + '/',
     title: n.frontmatter.title,
+    caseStyle: platformData?.case_style,
   };
 }
 
