@@ -1,0 +1,78 @@
+---
+title: Expo
+description: "Upload source maps native Expo releases and EAS Updates."
+---
+
+TODO:
+
+### Add the Sentry Expo Plugin
+
+To ensure the bundles and source maps are automatically uploaded during the native applications builds, add `withSentry` to the Expo application configuration:
+
+```javascript {tabTitle:app.json/app.config.json}
+{
+  "expo": {
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "warning": "DO NOT COMMIT YOUR AUTH TOKEN",
+          "authToken": "___ORG_AUTH_TOKEN___",
+          "project": "___PROJECT_SLUG___",
+          "organization": "___ORG_SLUG___"
+        }
+      ]
+    ]
+  }
+}
+```
+
+```javascript {tabTitle:app.config.js}
+const { withSentry } = require("@sentry/react-native/expo");
+
+const config = {
+  name: "Expo Example",
+  slug: "expo-example",
+};
+
+module.exports = withSentry(config, {
+  url: "https://sentry.io/",
+  // DO NOT COMMIT YOUR AUTH TOKEN
+  authToken: "___ORG_AUTH_TOKEN___",
+  project: "___PROJECT_SLUG___s",
+  organization: "___ORG_SLUG___",
+});
+```
+
+```typescript {tabTitle:app.config.ts}
+import { ExpoConfig } from "expo/config";
+import { withSentry } from "@sentry/react-native/expo";
+
+const config: ExpoConfig = {
+  name: "Expo Example",
+  slug: "expo-example",
+};
+
+export default withSentry(config, {
+  url: "https://sentry.io/",
+  // DO NOT COMMIT YOUR AUTH TOKEN
+  authToken: "___ORG_AUTH_TOKEN___",
+  project: "___PROJECT_SLUG___s",
+  organization: "___ORG_SLUG___",
+});
+```
+
+### Add Sentry Metro Plugin
+
+To ensure unique Debug IDs get assigned to the generated bundles and source maps, add Sentry Serializer to the Metro configuration:
+
+```javascript {tabTitle:metro.config.js}
+// const { getDefaultConfig } = require("expo/metro-config");
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+
+// const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
+
+module.exports = config;
+```

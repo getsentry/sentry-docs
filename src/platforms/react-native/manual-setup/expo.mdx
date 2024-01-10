@@ -5,13 +5,13 @@ description: "Learn how to set up an Expo-managed project with the Sentry React 
 
 <Alert level="info" title="Experimental Support">
 
-Expo support is currently experimental and available since Sentry React Native SDK version `5.16.0-alpha.1` and Expo SDK version 50.
+Expo support is currently experimental and available since Sentry React Native SDK version `5.16.0-alpha.4` and Expo SDK version 50.
 
 Experimental support means it may have bugs. We recognize the irony.
 
 </Alert>
 
-To set up the Sentry React Native SDK in your Expo-managed project, follow the steps on this page.
+To set up the Sentry React Native SDK in your Expo project, follow the steps on this page.
 
 ### Install the Sentry SDK
 
@@ -33,7 +33,7 @@ yarn add @sentry/react-native
 
 Import the `@sentry/react-native` package and call `init` with your DSN:
 
-```javascript {tabTitle:App.js/App.tsx}
+```javascript {tabTitle:App.js or app/_layout.js}
 import { Text, View } from "react-native";
 import * as Sentry from "@sentry/react-native";
 
@@ -54,6 +54,14 @@ function App() {
   );
 }
 
+export default Sentry.wrap(App);
+```
+
+### Wrap Your App
+
+Wrap the root component of your application with `Sentry.wrap`:
+
+```javascript {tabTitle:App.js or app/_layout.js}
 export default Sentry.wrap(App);
 ```
 
@@ -120,23 +128,13 @@ export default withSentry(config, {
 To ensure unique Debug IDs get assigned to the generated bundles and source maps, add Sentry Serializer to the Metro configuration:
 
 ```javascript {tabTitle:metro.config.js}
-const { mergeConfig } = require("metro");
-const { getDefaultConfig } = require("expo/metro-config");
-const { createSentryMetroSerializer } = require("@sentry/react-native/metro");
-const {
-  withExpoSerializers,
-} = require("@expo/metro-config/build/serializer/withExpoSerializers");
+// const { getDefaultConfig } = require("expo/metro-config");
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 
-const config = getDefaultConfig(__dirname);
+// const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 
-const sentryConfig = {
-  serializer: {
-    customSerializer: createSentryMetroSerializer(),
-  },
-};
-
-const finalConfig = mergeConfig(config, sentryConfig);
-module.exports = withExpoSerializers(finalConfig);
+module.exports = config;
 ```
 
 ## Verify Setup
@@ -151,3 +149,13 @@ To verify that everything is working as expected, build the `Release` version of
   }}
 />
 ```
+
+## Next Steps
+
+- [Lear how to upload Source Maps for native builds and Expo Updates](/platforms/react-native/sourcemaps)
+
+## Notes
+
+- To avoid commiting your auth token, you can use `SENTRY_AUTH_TOKEN` environment variable.
+- Source maps for the `Release` version of your application are uploaded automatically during the native application build.
+- During development the source code is resolved using the Metro Server and source maps are not used. This currently does't work on Web.
