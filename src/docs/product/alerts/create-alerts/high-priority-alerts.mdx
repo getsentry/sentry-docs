@@ -1,24 +1,26 @@
 # Priority-based Alerts in Sentry
 
-Sentry is rolling out a set of updates to make alerts more actionable. Rather than defaulting to sending alerts on every new issue, we’ll only notify on issues that pass a priority threshold based on historical actions on similar issues.
+Sentry is rolling out a set of updates to make alerts more actionable. Instead of sending alerts on every new issue by default, we’ll only notify on issues that pass a priority threshold, which will be based on the types of actions that have been taken on similar issues in the past. This change will not affect existing alerts that have been custom configured by you or your team. 
 
-To start, we’ll modify the default alerts with Sentry projects with a new condition that filters alerts to only high-priority issues. Each new issue will have a score calculated for the importance of the first event. If that first event is deemed to be high severity or has a fatal log level, we'll alert you. If the first event is low severity, we'll only alert you if the issue is forecasted to worsen over time.
+The current default alerts within Sentry projects will be modified with a new condition that will filter alerts to only notify on high-priority issues. We'll calculate an importance score for the first event of each new issue. If that first event is deemed to be high-severity or has a fatal log level, we'll alert you. If the first event is low-severity, we'll only alert you if the issue is forecasted to get worse over time.
 
-In summary, the high priority alert condition will notify you if an issue is:
+The high-priority alert condition will notify you if an issue is:
 
-- Similar to issues that have been viewed & responded to quickly in the past, or likely to be actionable (read on for more details)
-- Escalating in volume: for new issues, we’ll compare the hourly event rate to the 95th percentile hourly event rate for new issues in the project
+- Similar to issues that have been viewed and responded to quickly in the past, or are likely to be actionable. (Read on for more details.)
+- Escalating in volume. For new issues, we’ll compare the hourly event rate to the 95th percentile hourly event rate of other new issues in the project.
 
-**How are first event priority scores calculated?**
+## How First Event Priority Scores Are Calculated
 
-We initially classify issues based on their log level. Low priority is assigned to issues with log levels 'debug' or 'info', while a 'fatal' log level is classified as high priority. Next, our algorithm employs a fine-tuned 'gte-small' text embeddings model to convert error messages into a vector of text embeddings. These embeddings, along with additional features like error handling status and the presence of a stacktrace, are then fed into a classification model. This model generates a final score that reflects the first-event severity and nature of the issue.
+We initially classify issues based on their log level. Low priority is assigned to issues with log levels `debug` or `info`, while a `fatal` log level is classified as high-priority. Next, our algorithm employs a fine-tuned `gte-small` text embeddings model to convert error messages into a vector of text embeddings. These embeddings, along with additional features like error handling status and the presence of a stacktrace, are then fed into a classification model. This model generates a final score that reflects the first-event severity and nature of the issue.
 
 **Algorithm workflow in detail**
 
-1. Automatically classify issues with a log level of **debug** or **info** as low priority, and issues with a log level of **fatal** as high priority
-2. Use a fine-tuned version of the [gte-small](https://huggingface.co/thenlper/gte-small) text embeddings model to generate a vector of text embeddings from the error message
-3. Generate our full set of features and pass them to our classification model
-   1. Text embeddings
-   2. Whether or not the error was handled
-   3. Whether or not a stacktrace is present
-4. Return the score, which is then used to classify an issue as high or low priority
+Here's a deeper dive into how the algorithm works:
+
+1. Automatically classify issues with a log level of **debug** or **info** as low priority, and issues with a log level of **fatal** as high priority.
+2. Use a fine-tuned version of the [gte-small](https://huggingface.co/thenlper/gte-small) text embeddings model to generate a vector of text embeddings from the error message.
+3. Generate our full set of features and pass them to our classification model:
+   - Text embeddings
+   - Whether or not the error was handled
+   - Whether or not a stacktrace is present
+4. Return the score, which is then used to classify an issue as high or low priority.
