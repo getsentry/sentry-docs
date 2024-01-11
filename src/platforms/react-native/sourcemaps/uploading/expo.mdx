@@ -1,13 +1,24 @@
 ---
 title: Expo
-description: "Upload source maps native Expo releases and EAS Updates."
+description: "Upload source maps for native Expo releases and EAS Updates."
 ---
 
-TODO:
+Sentry's React Native SDK package supports Expo applications. To see readable stack traces in the product correct source maps need to be uploaded to Sentry. This guide explains how to upload source maps for Expo applications.
+
+## Prerequisities
+
+- [Sign up for an account](https://sentry.io/signup/)
+- [Set up Sentry React Native SDK](/platforms/react-native/manual-setup/expo/) version 5.16.0-alpha.4 or newer
+
+<OrgAuthTokenNote />
+
+## Common Setup
+
+To upload any kind of source maps to Sentry you need to add the Sentry Expo Plugin and Sentry Metro Plugin to your Expo application.
 
 ### Add the Sentry Expo Plugin
 
-To ensure the bundles and source maps are automatically uploaded during the native applications builds, add `withSentry` to the Expo application configuration:
+To ensure the bundles and source maps are automatically uploaded during the local and EAS native applications builds, add `withSentry` to the Expo application configuration:
 
 ```javascript {tabTitle:app.json/app.config.json}
 {
@@ -58,7 +69,7 @@ export default withSentry(config, {
   url: "https://sentry.io/",
   // DO NOT COMMIT YOUR AUTH TOKEN
   authToken: "___ORG_AUTH_TOKEN___",
-  project: "___PROJECT_SLUG___s",
+  project: "___PROJECT_SLUG___",
   organization: "___ORG_SLUG___",
 });
 ```
@@ -76,3 +87,41 @@ const config = getSentryExpoConfig(__dirname);
 
 module.exports = config;
 ```
+
+## Automatic Upload for Release
+
+When Sentry Expo Plugin `@sentry/react-native/expo` and Sentry Metro Pugin are added to the application configuration source maps for the native builds are uploaded automatically during EAS Builds. And also when building the native application release locally using `expo prebuild`.
+
+## Manual Upload for EAS Updates
+
+To upload source maps for EAS Updates and `expo export` set up the Sentry Expo Plugin, Sentry Metro plugin and execute the `sentry-expo upload-sourcemaps` command.
+
+### Create Update
+
+To create an update for the application use the following command:
+
+```bash
+# expo export
+eas update
+```
+
+### Upload source maps
+
+To upload source maps for all platforms use the following command:
+
+```bash
+SENTRY_PROJECT=___PROJECT_SLUG___ \
+SENTRY_ORG=___ORG_SLUG___ \
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ \
+npx sentry-expo-upload-sourcemaps dist
+```
+
+#### Notes
+
+- `dist` is the default output directory for `eas update`.
+
+## Notes
+
+If you are looking for a guide on how to manually upload source maps for Expo applications releases, please refer to the following guide:
+
+- [How to manually upload source maps for Expo releases](/platforms/react-native/sourcemaps/uploading/expo-advanced/)
