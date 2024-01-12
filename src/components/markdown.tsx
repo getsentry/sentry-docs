@@ -31,7 +31,7 @@ import {PiiFields} from './relayPiifields';
 import {SandboxLink, SandboxOnly} from './sandboxLink';
 import {SignInNote} from './signInNote';
 import {SmartLink} from './smartLink';
-import {VimeoEmbed, YouTubeEmbed} from './video';
+import {VimeoEmbed} from './video';
 
 const mdxComponents = {
   Alert,
@@ -60,7 +60,6 @@ const mdxComponents = {
   RelayMetrics,
   LambdaLayerDetail,
   VimeoEmbed,
-  YouTubeEmbed,
   SandboxLink,
   SandboxOnly,
   SignInNote,
