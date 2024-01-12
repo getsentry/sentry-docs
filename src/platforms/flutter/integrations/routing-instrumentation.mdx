@@ -63,17 +63,47 @@ final router = GoRouter(
 ### 2. Define Route Names
 
 By default the application's main route name is `"/"`.
-For transactions to be created automatically when navigation changes, you need to provide route names through your routes settings.
 The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
+For transactions to be created when navigation changes, you need to provide route names:
+ - GoRouter: use the `name` parameter to set the route name.
+ - Flutter routing: use `RouteSettings` and set the name in the constructor.
 
-```dart
+```dart {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Setting the route name is required
 MaterialPageRoute(
   builder: (BuildContext context) => Settings(),
   settings: RouteSettings(name: 'Settings'),
 )
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final GoRouter _router = GoRouter(
+  observers: [SentryNavigatorObserver()],
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/',
+      name: 'Home',
+      builder: (BuildContext context, GoRouterState state) {
+        return const HomeScreen();
+      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: 'settings',
+          name: 'Settings',
+          builder: (BuildContext context, GoRouterState state) {
+            return const Settings();
+          },
+        ),
+      ],
+    ),
+  ],
+);
 ```
 
 ## Verify
@@ -124,7 +154,7 @@ class MyWidgetState extends State<MyWidget> {
 
 Use the navigator to transition to your widget. This should create and send a transaction named after the widget's route.
 
-```dart
+```dart {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
 import 'my_widget.dart';
 
@@ -136,6 +166,13 @@ Navigator.push(
     builder: (context) => MyWidget(),
   ),
 );
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+context.push('/settings')
 ```
 
 Log into [sentry.io](https://sentry.io) and open your project's performance page to see the transaction `MyWidget`.
