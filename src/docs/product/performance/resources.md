@@ -12,7 +12,7 @@ Starting with the [**Resources** page](#resources-page), you get a high-level ov
 
 ## Prerequisites and Limitations
 
-The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. Currently only JavaScript, CSS and certain resources that are initiated by CSS (such as fonts), are supported.
+The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. Currently only JavaScript, CSS, Images, and certain resources that are initiated by CSS (such as fonts), are supported.
 
 For the best experience, we recommend enabling automatic instrumentation via the `BrowserTracing` integration for your frontend project to see resource performance data. This is supported for the following JavaScript platforms:
 
@@ -137,6 +137,12 @@ At the bottom, you can find a list of pages the resource is found in, sorted by 
 If you want to investigate a specific page, click on it to open a sidebar showing some sample events.
 
 <div style="position: relative; padding-bottom: calc(50.829268292682926% + 41px); height: 0;"><iframe src="https://demo.arcade.software/D96Pu2LMLHddyVCn3BOd?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;color-scheme: light;"></iframe></div>
+
+### Image Samples
+
+When viewing an image resource, the resource summary page will also show the 5 largest images samples. If size information is not available, the samples will not be ordered in any particular order. If the images are publically accessible and the 'Enable Images' project settings is enabled, then the real images will be rendered in the UI.
+
+<!-- INSERT IMAGE HERE -->
 
 ## Sample List
 
