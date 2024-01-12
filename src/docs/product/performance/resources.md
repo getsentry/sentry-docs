@@ -140,9 +140,9 @@ If you want to investigate a specific page, click on it to open a sidebar showin
 
 ### Image Samples
 
-When viewing an image resource, the resource summary page will also show the 5 largest images samples. We determine if the span is an image if it has one of the following extensions: 'jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'apng','avif'.
+When viewing an image resource, the resource summary page will also show the 5 largest image samples. Sentry determines the span is an image if it has one of the following extensions: 'jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'apng', 'avif'.
 
-If size information is not available, the samples will not be ordered in any particular order. If the images are publically accessible and the 'Enable Images' project settings is enabled, then the real images will be rendered in the UI.
+If size information is not available, the samples will not be ordered in any particular order. If the images are publicly accessible and the 'Enable Images' project settings is enabled, then the actual images will be rendered in the UI.
 
 <!-- INSERT IMAGE HERE -->
 
