@@ -144,6 +144,12 @@ When viewing an image resource, the resource summary page will also show the 5 l
 
 If size information is not available, the samples will not be ordered in any particular order. If the images are publicly accessible and the 'Enable Images' project settings is enabled, then the actual images will be rendered in the UI.
 
+<Note>
+
+At the moment, relative resource span descriptions (ones that begin with '/') are not supported for the image preview. We are working on adding this soon! 
+
+</Note>
+
 <!-- INSERT IMAGE HERE -->
 
 ## Sample List
