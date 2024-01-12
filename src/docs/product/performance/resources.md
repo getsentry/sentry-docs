@@ -12,7 +12,7 @@ Starting with the [**Resources** page](#resources-page), you get a high-level ov
 
 ## Prerequisites and Limitations
 
-The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. Currently only JavaScript, CSS, Images, and certain resources that are initiated by CSS (such as fonts), are supported.
+The resource pages are only available for frontend JavaScript projects with performance monitoring enabled. Currently only JavaScript, CSS, images, and certain resources that are initiated by CSS (such as fonts), are supported.
 
 For the best experience, we recommend enabling automatic instrumentation via the `BrowserTracing` integration for your frontend project to see resource performance data. This is supported for the following JavaScript platforms:
 
