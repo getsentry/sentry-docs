@@ -42,26 +42,3 @@ const StyledVimeoIframe = styled.iframe`
   height: 100%;
   border: 0;
 `;
-
-export function YouTubeEmbed({id, className}: Video) {
-  return (
-    <ResponsiveEmbed className={className}>
-      <StyledYouTubeIframe
-        src={`https://www.youtube-nocookie.com/embed/${id}?rel=0`}
-        frameBorder="0"
-        allowFullScreen
-        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-      />
-    </ResponsiveEmbed>
-  );
-}
-
-const StyledYouTubeIframe = styled.iframe`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-`;

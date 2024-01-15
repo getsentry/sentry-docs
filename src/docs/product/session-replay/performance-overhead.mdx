@@ -24,9 +24,36 @@ Sentry's Session Replay SDK takes several measures to avoid negatively impacting
 - Sentry’s event ingestion infrastructure uses [distributed Points-of-Presence (PoPs)](https://blog.sentry.io/2022/03/31/sentry-points-of-presence-how-we-built-a-distributed-ingestion/) which place ingestion servers around the world and close to your users. When a Session Replay event is transmitted, the user’s browser connects and transmits the event payload to the closest PoP available for their region. This greatly reduces end-to-end latency and minimizes the amount of networking overhead placed on the browser.
 - The SDK is built to gracefully downgrade when needed. In the event several thousand DOM mutations happen at once, the SDK will disable recording to make sure recording the website doesn't further degrade user experience. The [mutation limit values are configurable](/platforms/javascript/session-replay/configuration/#mutation-limits).
 
-## Performance Overhead in Sentry
+## Factors in Performance Overhead
 
-While the performance overhead of our client SDK will be imperceptible to end-users most of the time, it can vary based on the complexity of your application. If an applications has a large DOM and numerous DOM node mutations, it will have a higher overhead than simpler, mostly static sites. The only way to get accurate metrics is to measure performance overhead yourself.
+While the performance overhead of our client SDK will be imperceptible to end-users most of the time, it can vary based on the complexity of your application. If an application has a large DOM and numerous DOM node mutations, there will be higher overhead compared to simpler, mostly static sites.
+
+There are different stages in the lifecycle of a webpage, each with different performance characteristics. Here is a list of stages in the lifecycle, and the most important performance metrics to be aware of.
+
+### Pageload stage
+
+- [SDK bundle size is something we optimize for.](https://blog.sentry.io/sentry-bundle-size-how-we-reduced-replay-sdk-by-35/) Make sure you have tree-shaking enabled, and have updated to the latest SDK version (at least version 7.78.0) for the smallest bundle sizes.
+- The size of your initial HTML page affects how long the SDK takes to read the initial snapshot. Using your browser devtools, filter the Network panel to show "type=document" and look at the size to get a sense of the impact on your site. A sterotypical single-page-app that shows a loading screen and needs to wait for JavaScript to render everything will have negligible overhead from the initial snapshot.
+- All Replay SDK data is compressed before being sent across the network. HTML is highly compressable, we were surprised how effective compression is on real websites. Network overhead is further reduced if you have [PII Masking and Blocking](https://docs.sentry.io/platforms/javascript/session-replay/privacy/) enabled (which is the default). Masked text is replaced with `*` which gzip shrinks really well, while blocked content is not included at all.
+
+### Capturing mouse/touch events
+
+- Mouse-move, click/touch & hover events are incredibly small and fast to log; overhead is negligible.
+- We deduplicate click events (while still detecting rage clicks) and use smoothing for mouse-move events to balance the detail you see while debugging, with the amount of redundant data captured.
+
+### Dynamic content & DOM mutations
+
+- The frequency of DOM mutations is highly application-specific. If there are no mutations happening then you will not see any replay data transmitted from the SDK to Sentry. On the other hand, if you have JavaScript timers that update the HTML on a regular basis, you will see a steady stream of HTML changes sent on the network.
+- The size of DOM mutations is also highly application-specific. Adding/removing/changing more DOM nodes at once will increase the time it takes to parse and minify the data. Keep in mind though that the overhead here happens after changes are made to the DOM as they are shown to the user (inside a `MutationObserver` callback).
+  The SDK has [mutation limits](https://docs.sentry.io/platforms/javascript/session-replay/configuration/#mutation-limits) to mitigate a negative user experience: changing 750 nodes will emit a warning breadcrumb into the replay, while emitting 10,000+ nodes will cause the replay to end.
+
+### Page unload stage
+
+- The SDK has no special handling for page unload; anything in memory will be deallocated by the browser and the user will transition to their next web page as quickly as possible.
+
+## Measuring Performance Overhead
+
+The only way to get accurate metrics is to measure performance overhead yourself. You can apply realistic access patterns against your own website and infrastructure, and correlate that to your own topline business metrics.
 To learn how to measure performance overhead of Session Replay on your applications without deploying to production, read out blog post: [Measuring Session Replay Overhead](https://sentry.engineering/blog/measuring-session-replay-overhead).
 
 We measured the overhead of the Replay SDK on Sentry's web UI using the methodology from the blog. Here are the results (median values are shown):
