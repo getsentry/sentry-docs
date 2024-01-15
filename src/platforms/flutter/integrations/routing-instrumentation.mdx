@@ -8,7 +8,7 @@ categories:
   - mobile
 ---
 
-Sentry's routing instrumentation for Flutter automatically tracks and reports page navigation events in your app.
+Sentry's routing instrumentation for Flutter semi-automatically tracks and reports page navigation events in your app.
 It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navigation) and the [GoRouter](https://pub.dev/packages/go_router) package.
 
 <Note>
@@ -22,7 +22,7 @@ The routing instrumentation feature is shipped with Sentry's Flutter SDK automat
 Before diving into the configuration, it's important to understand how routing instrumentation behaves:
 
 - Routing transactions attach to the current scope unless another transaction is already there.
-- If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded.
+- If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded. This means that after the navigation has begun you need to start a child span inside the pushed widget manually or via another instrumentation.
 
 ## Prerequisites
 
@@ -42,8 +42,8 @@ import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 return MaterialApp(
-  title: 'Home',
-  home: HomeScreen(),
+  title: 'My Widget',
+  home: MyWidget(),
   navigatorObservers: [
     SentryNavigatorObserver()
   ],
@@ -75,8 +75,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Setting the route name is required
 MaterialPageRoute(
-  builder: (BuildContext context) => Settings(),
-  settings: RouteSettings(name: 'Settings'),
+  builder: (BuildContext context) => MyWidget(),
+  settings: RouteSettings(name: 'My Widget'),
 )
 ```
 
@@ -95,10 +95,10 @@ final GoRouter _router = GoRouter(
       },
       routes: <RouteBase>[
         GoRoute(
-          path: 'settings',
-          name: 'Settings',
+          path: 'mywidget',
+          name: 'MyWidget',
           builder: (BuildContext context, GoRouterState state) {
-            return const Settings();
+            return const MyWidget();
           },
         ),
       ],
@@ -173,7 +173,7 @@ Navigator.push(
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-context.push('/settings')
+context.push('/mywidget')
 ```
 
 Log into [sentry.io](https://sentry.io) and open your project's performance page to see the transaction `MyWidget`.
