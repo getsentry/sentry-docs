@@ -46,3 +46,37 @@ Sentry.init({
 const { Replay } = await import("@sentry/browser");
 Sentry.addIntegration(replayIntegration());
 ```
+
+### Canvas Recording
+
+<Alert level="warning">
+There is currently no PII scrubbing in canvas recordings!
+</Alert>
+
+In order to record canvas, you will need to add an additional integration in your Sentry configuration. The canvas integration is exported from the browser SDK, so no additional package is required to be installed. Canvas recording is opt-in and will be tree-shaken from your bundle if it is not used:
+
+```js
+// import Sentry from your framework SDK (e.g. @sentry/react) instead of @sentry/browser
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+
+  integrations: [
+    new Sentry.Replay(),
+
+    // The following is all you need to enable canvas recording
+    new Sentry.ReplayCanvas(),
+  ],
+});
+```
+
+#### Canvas Recording Performance
+
+The canvas recording integration works by exporting the canvas as an image (at a rate of 2 frames per second). However, in order to export images from 3d and WebGL canvases, the integration needs to enable `preserveDrawingBuffer` which can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, then you will need to enable manual snapshotting and call a `snapshot()` method inside of your re-paint loop:
+
+```js
+TODO
+```
