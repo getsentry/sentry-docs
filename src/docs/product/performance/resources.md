@@ -146,7 +146,7 @@ If size information is not available, the samples will not be ordered in any par
 
 <Note>
 
-At the moment, relative resource paths (ones that begin with '/') are not supported for the image preview. We are working on adding this soon! 
+At the moment, relative resource span descriptions (ones that begin with '/') are not supported for the image preview. We are working on adding this soon!
 
 </Note>
 
