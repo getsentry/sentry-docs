@@ -75,8 +75,21 @@ Sentry.init({
 
 #### Canvas Recording Performance
 
-The canvas recording integration works by exporting the canvas as an image (at a rate of 2 frames per second). However, in order to export images from 3d and WebGL canvases, the integration needs to enable `preserveDrawingBuffer` which can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, then you will need to enable manual snapshotting and call a `snapshot()` method inside of your re-paint loop:
+The canvas recording integration works by exporting the canvas as an image (at a rate of 2 frames per second). However, in order to export images from 3d and WebGL canvases, the integration needs to enable `preserveDrawingBuffer` which can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, then you will need to enable manual snapshotting and call a `snapshot()` method inside of your re-paint loop. There are two things you must do in order to use manual snapshotting: first you must enable it when initializing the `ReplayCanvas` integration:
 
 ```js
-TODO;
+new Sentry.ReplayCanvas({
+  // Enabling the following will ensure your canvas elements are not forced
+  // into `preserveDrawingBuffer`.
+  enableManualSnapshot: true,
+});
+```
+
+Next, you need to call the the following `snapshot()` method inside of your application's paint loop. `snapshot()` needs to be called in the same execution loop as the canvas draw commands, otherwise you may be snapshotting empty canvas buffers. This is due to how WebGL works when `preserveDrawingBuffer` is `false`.
+
+```js
+function paint() {
+  const canvasRef = document.querySelector('#my-canvas');
+  Sentry.getClient().getIntegrationByName('ReplayCanvas').snapshot(canvasRef);
+}
 ```
