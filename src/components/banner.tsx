@@ -5,12 +5,12 @@ import React, {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
-  'Debug Web App Issues Faster: Sign Up for Session Replay Basics Workshop on Jan. 11th.';
+  '';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/session-replay-basics-debug-web-app-issues-faster/?promo_name=from-docs';
-const BANNER_LINK_TEXT = 'Sign up.';
+  '';
+const BANNER_LINK_TEXT = '';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
