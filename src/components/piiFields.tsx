@@ -1,5 +1,9 @@
-import { Note } from './note';
+import fs from 'fs';
+import path from 'path';
+import { PiiFieldsClient } from './piiFieldsClient';
 
 export function PiiFields() {
-  return <Note>The `PiiFields` component is under construction.</Note>;
+  const filename = path.join(process.cwd(), 'src', 'data', 'relay_event_pii.json');
+  const fields = JSON.parse(fs.readFileSync(filename, 'utf8'));
+  return <PiiFieldsClient fields={fields} />;
 }
