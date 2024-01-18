@@ -10,6 +10,7 @@ import { s } from 'hastscript'
 import remarkGfm from 'remark-gfm'
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkCodeTitles from './remark-code-title';
+import remarkCodeTabs from './remark-code-tabs';
 import remarkTocHeadings from './remark-toc-headings';
 // Rehype packages
 import rehypeSlug from 'rehype-slug'
@@ -175,6 +176,7 @@ export async function getFileBySlug(slug) {
           [remarkTocHeadings, { exportRef: toc }],
           remarkGfm,
           remarkCodeTitles,
+          remarkCodeTabs,
         ]
         options.rehypePlugins = [
           ...(options.rehypePlugins ?? []),

@@ -23,12 +23,16 @@ import { SandboxLink } from "./components/sandboxLink";
 import { SignInNote } from "./components/signInNote";
 import { SmartLink } from "./components/smartLink";
 import { VimeoEmbed } from "./components/video";
+import { CodeBlock } from "./components/codeBlock";
+import { CodeTabs } from "./components/codeTabs";
 
 export function mdxComponents(dynamicComponents: any = {}, wrapper: any = ({children}) => children): MDXComponents {
   return {
     Alert,
     Break,
     CliChecksumTable,
+    CodeBlock,
+    CodeTabs,
     ConfigKey,
     DefinitionList,
     Expandable,
@@ -51,7 +55,6 @@ export function mdxComponents(dynamicComponents: any = {}, wrapper: any = ({chil
     SignInNote,
     VimeoEmbed,
     ...dynamicComponents,
-    // a: Link, // TODO: fails type check
     wrapper: wrapper,
   }
 }

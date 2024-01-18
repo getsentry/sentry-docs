@@ -17,6 +17,7 @@ import { PlatformContent } from "sentry-docs/components/platformContent";
 import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { Metadata, ResolvingMetadata } from "next";
 import { PlatformSdkDetail } from "sentry-docs/components/platformSdkDetail";
+import { CodeContextProvider } from "sentry-docs/components/codeContext";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -80,7 +81,7 @@ const Layout = ({children, frontMatter, toc}) => {
                 }
               >
                 <h1>{frontMatter.title}</h1>
-                {children}
+                <CodeContextProvider>{children}</CodeContextProvider>
                 <GitHubCTA />
               </div>
               {hasToc && (
