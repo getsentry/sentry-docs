@@ -7,8 +7,8 @@ import { Navbar } from 'sentry-docs/components/navbar';
 import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
 import { GitHubCTA } from "sentry-docs/components/githubCta";
 import { notFound } from "next/navigation";
-import { setServerContext } from "sentry-docs/serverContext";
-import { frontmatterToTree, nodeForPath } from "sentry-docs/docTree";
+import { serverContext, setServerContext } from "sentry-docs/serverContext";
+import { frontmatterToTree, getCurrentPlatformOrGuide, nodeForPath } from "sentry-docs/docTree";
 import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
 import { mdxComponents } from "sentry-docs/mdxComponents";
 import { Include } from "sentry-docs/components/include";
@@ -16,6 +16,7 @@ import { Home } from "sentry-docs/components/home";
 import { PlatformContent } from "sentry-docs/components/platformContent";
 import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { Metadata, ResolvingMetadata } from "next";
+import { PlatformSdkDetail } from "sentry-docs/components/platformSdkDetail";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -43,7 +44,9 @@ const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent}, ({ ch
 ))
 
 const Layout = ({children, frontMatter, toc}) => {
-  const hasToc = !frontMatter.notoc;
+  const { rootNode, path } = serverContext();
+  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const hasToc = !frontMatter.notoc || !!platformOrGuide;
 
   return (
     <div className="document-wrapper">
@@ -83,6 +86,7 @@ const Layout = ({children, frontMatter, toc}) => {
               {hasToc && (
                 <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                   <div className="page-nav">
+                    <PlatformSdkDetail />
                     <div className="doc-toc">
                       {toc.length > 0 && <div className="doc-toc-title">
                         <h6>On this page</h6>

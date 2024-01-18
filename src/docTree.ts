@@ -124,17 +124,20 @@ function nodeToPlatform(n: DocNode): Platform {
     url: '/' + n.path + '/',
     title: n.frontmatter.title,
     caseStyle: platformData?.case_style,
+    sdk: n.frontmatter.sdk,
   };
 }
 
 function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
+  const key = `${platform}.${n.slug}`;
   return {
-    key: `${platform}.${n.slug}`,
+    key,
     name: n.slug,
     type: 'guide',
     url: '/' + n.path + '/',
     title: n.frontmatter.title,
     platform: platform,
+    sdk: n.frontmatter.sdk || `sentry.${key}`,
   }
 }
 
