@@ -1,5 +1,5 @@
 ---
-title: Profiling
+title: JavaScript Browser Profiling
 sidebar_order: 1
 supported:
   - javascript
@@ -7,7 +7,7 @@ notSupported:
   - javascript.bun
   - javascript.cordova
   - javascript.deno
-description: "Learn what transactions are captured after tracing is enabled."
+description: "Collect & view performance insights for JavaScript programs with Sentry’s JavaScript Profiling integration. Get started with browser profiling here."
 ---
 
 <Note>
@@ -22,13 +22,15 @@ Note that since the profiling API is currently only exposed in Chromium, profile
 
 <PlatformContent includePath="profiling/index/why-profiling" />
 
-In order to get started with browser profiling, you'll need to:
+## Prerequisites
 
-- Install the @sentry/browser SDK
+To get started with JavaScript browser profiling, you'll need to:
+
+- Install the @sentry/browser SDK, minimum version 7.60.0
 - Configure the document response header to include `Document-Policy: js-profiling`
 - Configure the SDK to use the `BrowserProfilingIntegration` and set `profilesSampleRate`
 
-## Install
+## Step 1: Install the JavaScript Browser SDK
 
 <PlatformSection notSupported={["javascript.electron"]}>
 
@@ -44,14 +46,26 @@ Install our Electron SDK using either `yarn` or `npm`, the minimum version that 
 
 <PlatformContent includePath="profiling/automatic-instrumentation-intro" />
 
-## Add Document-Policy: js-profiling header
+## Step 2: Add Document-Policy: js-profiling header
 
-In order for the profiler to start, the document response header has to include a `Document-Policy` header key with the `js-profiling` value.
+For the JavaScript browser profiler to start, the document response header needs to include a `Document-Policy` header key with the `js-profiling` value.
 
 <PlatformContent includePath="profiling/automatic-instrumentation-headers" />
 
-## Configure
+## Step 3: Configure the JavaScript SDK
 
 Configuration should happen as early as possible in your application's lifecycle. Once this is done, Sentry's JavaScript SDK will capture all unhandled exceptions and transactions.
 
 <PlatformContent includePath="profiling/automatic-instrumentation-setup" />
+
+## The Difference Between DevTools & Sentry's JavaScript Browser Profiler
+
+What does Sentry's JavaScript browser profile offer that Chrome DevTools does not?
+
+- Sentry JavaScript profiler runs in production and captures real user data, showing real-world performance. DevTools runs locally on your machine and only shows profiles of what's running on your machine.
+- Sentry runs at a lower sampling rate of 100Hz with a 10ms sample period versus a sampling rate of 1000Hz and a 1ms sample period for DevTools.
+- Sentry supports deobfuscation, making it so that all the function names in your code are correct. Typically, when you run JavaScript code, it's minified, meaning that all the function names are replaced with machine-generated abbreviations.
+
+Please note, that since the browser profiling API is currently only implemented in Chromium-based browsers, the profiles collected with Sentry's JavaScript browser profiling will inherently be biased toward that demographic. This is something that you'll need to consider if you're basing your decisions on the data collected.
+
+We hope that as the Javascript browser profiling API gains adoption, other browsers will implement it as well. If you find the browser profiling feature helpful and would like to see it gain further adoption, please consider supporting the spec at the official WICG repository.
