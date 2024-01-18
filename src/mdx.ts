@@ -29,8 +29,8 @@ function formatSlug(slug) {
 
 export type FrontMatter = {[key: string]: any};
 
-export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs'); 
+export async function getAllFilesFrontMatter(folder: string = "docs"): Promise<FrontMatter[]> {
+  const docsPath = path.join(root, folder); 
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach((file) => {
@@ -51,6 +51,11 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       sourcePath: path.join('docs', fileName)
     })
   });
+  
+  if (folder !== 'docs') {
+    // We exit early if we're not in the docs folder.
+    return allFrontMatter;
+  }
   
   // Add all `common` files in the right place.
   const platformsPath = path.join(docsPath, 'platforms');
