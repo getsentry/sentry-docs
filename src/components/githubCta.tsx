@@ -1,8 +1,21 @@
 import React from 'react';
 
 import Link from 'next/link';
+import { serverContext } from 'sentry-docs/serverContext';
+import { nodeForPath } from 'sentry-docs/docTree';
 
 export function GitHubCTA() {
+  const { path, rootNode } = serverContext();
+  if (!rootNode) {
+    return null;
+  }
+  let sourceUrl = 'https://github.com/getsentry/sentry-docs/';
+  const pageNode = nodeForPath(rootNode, path);
+  console.log(path, pageNode?.sourcePath);
+  if (pageNode && pageNode.sourcePath) {
+    sourceUrl += `edit/master/${pageNode.sourcePath}`;
+  }
+
   return (
     <div className="github-cta">
       <small>Help improve this content</small>
@@ -13,7 +26,7 @@ export function GitHubCTA() {
         be better").
         <div className="muted">
           <Link
-            href="https://github.com/getsentry/sentry-docs/edit/master/src/"
+            href={sourceUrl}
           >
             Suggest an edit to this page
           </Link>{' '}

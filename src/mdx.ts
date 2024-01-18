@@ -44,7 +44,8 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     const { data: frontmatter } = matter(source);
     allFrontMatter.push({
       ...frontmatter,
-      slug: formatSlug(fileName)
+      slug: formatSlug(fileName),
+      sourcePath: path.join('docs', fileName)
     })
   });
   
@@ -81,6 +82,7 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
         allFrontMatter.push({
           ...frontmatter,
           slug: formatSlug(slug),
+          sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
         })
       }
     })
@@ -109,6 +111,7 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
           allFrontMatter.push({
             ...frontmatter,
             slug: formatSlug(slug),
+            sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
           })
         }
       })

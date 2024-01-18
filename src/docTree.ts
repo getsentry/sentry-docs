@@ -9,6 +9,7 @@ export interface DocNode {
   parent?: DocNode;
   children: DocNode[];
   missing: boolean;
+  sourcePath: string;
 };
 
 function slugWithoutIndex(slug: string): string[] {
@@ -44,6 +45,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     },
     children: [],
     missing: false,
+    sourcePath: 'src/components/home.tsx',
   }
 
   const slugMap = {};
@@ -61,6 +63,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
         parent: rootNode,
         children: [],
         missing: false,
+        sourcePath: doc.sourcePath,
       };
       rootNode.children.push(node);
       slugMap[slug] = node;
@@ -91,6 +94,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
         parent: parent,
         children: [],
         missing: false,
+        sourcePath: doc.sourcePath,
       };
       parent.children.push(node);
       slugMap[slug] = node;
