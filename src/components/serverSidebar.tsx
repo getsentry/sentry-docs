@@ -5,7 +5,7 @@ import { NavNode, ProductSidebar } from "./productSidebar";
 import { PlatformSidebar, Node as PlatformSidebarNode } from "./platformSidebar";
 import { PlatformGuide } from "sentry-docs/types";
 
-function productSidebar(rootNode: DocNode) {
+export function productSidebar(rootNode: DocNode) {
   const productNode = nodeForPath(rootNode, 'product');
   if (!productNode) {
     return null;
