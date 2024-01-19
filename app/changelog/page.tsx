@@ -1,10 +1,10 @@
-import Layout from '../layout';
+import Layout from './layout';
 import { Navbar } from 'sentry-docs/components/changelog/navbar';
 import List from 'sentry-docs/components/changelog/list';
 import { getAllFilesFrontMatter } from "sentry-docs/mdx";
 
 const ENTRIES_PER_PAGE = 10;
-  
+
 export default async function ChangelogList({ params }) {
     const posts = await getAllFilesFrontMatter('changelog');
     const pageNumber = parseInt(params.page || 0);
@@ -16,7 +16,7 @@ export default async function ChangelogList({ params }) {
       currentPage: pageNumber,
       totalPages: Math.ceil(posts.length / ENTRIES_PER_PAGE),
     }
-    
+
   return (
     <Layout>
       <Navbar />

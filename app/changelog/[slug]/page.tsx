@@ -1,4 +1,4 @@
-import Layout from '../../layout';
+
 import {Navbar} from 'sentry-docs/components/changelog/navbar';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {getFileBySlug} from 'sentry-docs/mdx';
@@ -28,12 +28,11 @@ export default async function ChangelogEntry({params}) {
     }
   }
   const {mdxSource, toc, frontMatter} = entry;
-  console.log(entry);
-  return (
-    <Layout>
-      <Navbar />
 
+  return (
+  <>
+      <Navbar />
       <MDXLayoutRenderer toc={toc} mdxSource={mdxSource} frontMatter={frontMatter} />
-    </Layout>
+      </>
   );
 }
