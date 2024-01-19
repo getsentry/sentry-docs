@@ -15,7 +15,6 @@ export async function JsBundleList() {
       ))
     }
   ));
-  console.log('files', files);
   
   return <JsBundleListClient files={files} />;
 }

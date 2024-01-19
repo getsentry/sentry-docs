@@ -11,7 +11,6 @@ export function GitHubCTA() {
   }
   let sourceUrl = 'https://github.com/getsentry/sentry-docs/';
   const pageNode = nodeForPath(rootNode, path);
-  console.log(path, pageNode?.sourcePath);
   if (pageNode && pageNode.sourcePath) {
     sourceUrl += `edit/master/${pageNode.sourcePath}`;
   }
