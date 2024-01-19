@@ -4,9 +4,6 @@ import type {FrontMatter} from 'sentry-docs/mdx';
 
 import {useState} from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import Tag from './tag';
-import Date from './date';
 import Article from './article';
 
 export default function ListLayout({
