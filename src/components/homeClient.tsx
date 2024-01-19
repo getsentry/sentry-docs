@@ -26,6 +26,8 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
             <a href="/" title="Sentry error monitoring" className="index-logo">
               <Image
                 src={SentryWordmarkSVG}
+                width={215}
+                height={64}
                 alt="Sentry's logo" />
             </a>
             <Nav className="justify-content-end" style={{flex: 1}}>
