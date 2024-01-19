@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import {Nav} from 'react-bootstrap';
 
 import {Search} from './search';
 import { NavbarPlatformDropdown } from './navbarPlatformDropdown';
 import { Platform, PlatformGuide } from 'sentry-docs/types';
+import { SmartLink } from './smartLink';
 
 interface Props {
   platforms: Platform[];
@@ -22,28 +22,28 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
         <Nav className="justify-content-end" style={{flex: 1}}>
           <NavbarPlatformDropdown platforms={platforms} currentPlatform={currentPlatform} />
           <Nav.Item>
-            <Link className="nav-link" href="/product/">
+            <SmartLink className="nav-link" href="/product/">
               Product
-            </Link>
+            </SmartLink>
           </Nav.Item>
           <Nav.Item>
-            <Link className="nav-link" href="/api/">
+            <SmartLink className="nav-link" href="/api/">
               API
-            </Link>
+            </SmartLink>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-              <Nav.Link
-                className="text-primary"
-                href="https://try.sentry-demo.com/demo/start/"
-                target="_blank"
-              >
-                Sandbox
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
+            <Nav.Link
+              className="text-primary"
+              href="https://try.sentry-demo.com/demo/start/"
+              target="_blank"
+            >
+              Sandbox
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
             <Nav.Link href="https://sentry.io/">
               Sign In
               <svg

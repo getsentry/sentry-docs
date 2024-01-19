@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ExternalLink } from './externalLink';
 
 interface Props {
   activeClassName?: string;
@@ -23,6 +24,12 @@ export function SmartLink({
   isActive,
   ...props
 }: Props) {
+  if (to?.indexOf('://') !== -1) {
+    return <ExternalLink href={to} className={className} {...props}>
+      {children || to || href}
+    </ExternalLink>
+  }
+
   return (
     <Link
       href={to || href || ''}

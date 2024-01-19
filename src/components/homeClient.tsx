@@ -39,6 +39,15 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
               <NavItem>
                 <Link className="nav-link" href="https://changelog.getsentry.com/">Changelog</Link>
               </NavItem>
+              <Nav.Item>
+                  <Nav.Link
+                    className="text-primary"
+                    href="https://try.sentry-demo.com/demo/start/"
+                    target="_blank"
+                  >
+                    Sandbox
+                  </Nav.Link>
+                </Nav.Item>
               <NavItem>
                 <Link className="nav-link" href="https://sentry.io/">
                   Sign In
