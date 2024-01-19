@@ -10,6 +10,9 @@ type Props = {
 
 export async function Include({name}: Props) {
   let doc: any = null;
+  if (name.endsWith('.mdx')) {
+    name = name.slice(0, name.length - '.mdx'.length);
+  }
   try {
     doc = await getFileBySlug(`includes/${name}`);
   } catch (e) {
