@@ -18,6 +18,7 @@ import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { Metadata, ResolvingMetadata } from "next";
 import { PlatformSdkDetail } from "sentry-docs/components/platformSdkDetail";
 import { CodeContextProvider } from "sentry-docs/components/codeContext";
+import { TableOfContents } from "sentry-docs/components/tableOfContents";
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
@@ -90,19 +91,7 @@ const Layout = ({children, frontMatter, toc}) => {
                 <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                   <div className="page-nav">
                     <PlatformSdkDetail />
-                    <div className="doc-toc">
-                      {toc.length > 0 && <div className="doc-toc-title">
-                        <h6>On this page</h6>
-                      </div>}
-                      <ul className="section-nav">
-                        {toc.map((entry) => (
-                          <li className="toc-entry" key={entry.url}>
-                            <Link href={entry.url}>{entry.value}</Link>
-                          </li>
-                        ))}
-                      </ul>
-                      <GuideGrid className="section-nav" />
-                    </div>
+                    <TableOfContents toc={toc} />
                   </div>
                 </div>
               )}
