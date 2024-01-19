@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import yaml from 'js-yaml';
 
 import { s } from 'hastscript'
+
 // Remark packages
 import remarkGfm from 'remark-gfm'
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
@@ -29,8 +30,8 @@ function formatSlug(slug) {
 
 export type FrontMatter = {[key: string]: any};
 
-export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs'); 
+export async function getAllFilesFrontMatter(folder: string = "docs"): Promise<FrontMatter[]> {
+  const docsPath = path.join(root, folder);
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach((file) => {
@@ -38,20 +39,25 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
       return;
     }
-    
+
     if (fileName.indexOf('/common/') !== -1) {
       return;
     }
-    
+
     const source = fs.readFileSync(file, 'utf8');
     const { data: frontmatter } = matter(source);
     allFrontMatter.push({
       ...frontmatter,
       slug: formatSlug(fileName),
-      sourcePath: path.join('docs', fileName)
+      sourcePath: path.join(folder, fileName),
     })
   });
-  
+
+  if (folder !== 'docs') {
+    // We exit early if we're not in the docs folder. We use this for the changelog.
+    return allFrontMatter;
+  }
+
   // Add all `common` files in the right place.
   const platformsPath = path.join(docsPath, 'platforms');
   const platformNames = fs.readdirSync(platformsPath).filter((p) => !fs.statSync(path.join(platformsPath, p)).isFile());
@@ -73,7 +79,7 @@ export async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       const { data: frontmatter } = matter(source);
       return {commonFileName, frontmatter};
     })
-    
+
     commonFiles.forEach((f) => {
       const subpath = f.commonFileName.slice(commonPath.length + 1)
       const slug = f.commonFileName.slice(docsPath.length + 1).replace(/\/common\//, '/');
@@ -135,7 +141,7 @@ export async function getFileBySlug(slug) {
   let mdxIndexPath = path.join(root, slug, 'index.mdx')
   let mdPath = path.join(root, `${slug}.md`)
   let mdIndexPath = path.join(root, slug, 'index.md')
-  
+
   if (slug.indexOf('docs/platforms/') === 0 &&
       [mdxPath, mdxIndexPath, mdPath, mdIndexPath].filter((p) => fs.existsSync(p)).length === 0
   ) {
@@ -147,7 +153,7 @@ export async function getFileBySlug(slug) {
       commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'))
     } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
       commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'))
-    } 
+    }
     if (commonFilePath && fs.existsSync(commonPath)) {
       mdxPath = path.join(root, `${commonFilePath}.mdx`)
       mdxIndexPath = path.join(root, commonFilePath, 'index.mdx')
@@ -163,11 +169,11 @@ export async function getFileBySlug(slug) {
     : fs.existsSync(mdPath)
     ? fs.readFileSync(mdPath, 'utf8')
     : fs.readFileSync(mdIndexPath, 'utf8');
-  
+
     process.env.ESBUILD_BINARY_PATH = path.join(root, 'node_modules', 'esbuild', 'bin', 'esbuild');
-    
+
     let toc = []
-    
+
     const { code, frontmatter } = await bundleMDX({
       source,
       // mdx imports can be automatically source from the components directory
@@ -189,8 +195,8 @@ export async function getFileBySlug(slug) {
                 getAppRegistry(),
                 getPackageRegistry(),
               ]);
-    
-              return {apps, packages}; 
+
+              return {apps, packages};
             }
           }],
         ]
@@ -236,12 +242,12 @@ export async function getFileBySlug(slug) {
         return options
       },
     });
-    
+
     let mergedFrontmatter = frontmatter;
     if (configFrontmatter) {
       mergedFrontmatter = {...frontmatter, ...configFrontmatter};
     }
-    
+
     return {
       mdxSource: code,
       toc,
