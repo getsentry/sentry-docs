@@ -80,8 +80,10 @@ const Layout = ({children, frontMatter, toc}) => {
                   hasToc ? "col-sm-8 col-md-12 col-lg-8 col-xl-9" : 'col-12'
                 }
               >
-                <h1>{frontMatter.title}</h1>
-                <CodeContextProvider>{children}</CodeContextProvider>
+                <h1 className="mb-3">{frontMatter.title}</h1>
+                <div id="main">
+                  <CodeContextProvider>{children}</CodeContextProvider>
+                </div>
                 <GitHubCTA />
               </div>
               {hasToc && (
