@@ -81,6 +81,11 @@ export async function getAllFilesFrontMatter(folder: string = "docs"): Promise<F
     })
 
     commonFiles.forEach((f) => {
+      const supported = !f.frontmatter.supported?.length || f.frontmatter.supported.includes(platformName);
+      if (!supported) {
+        return;
+      }
+
       const subpath = f.commonFileName.slice(commonPath.length + 1)
       const slug = f.commonFileName.slice(docsPath.length + 1).replace(/\/common\//, '/');
       if (!fs.existsSync(path.join(docsPath, slug))) {
@@ -110,6 +115,12 @@ export async function getAllFilesFrontMatter(folder: string = "docs"): Promise<F
       }
 
       commonFiles.forEach((f) => {
+        const supported = !f.frontmatter.supported?.length ||
+          f.frontmatter.supported.includes(`${platformName}.${guideName}`);
+        if (!supported) {
+          return;
+        }
+
         const subpath = f.commonFileName.slice(commonPath.length + 1)
         const slug = path.join('platforms', platformName, 'guides', guideName, subpath)
         if (!fs.existsSync(path.join(docsPath, slug))) {
