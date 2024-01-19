@@ -54,6 +54,7 @@ export function mdxComponents(dynamicComponents: any = {}, wrapper: any = ({chil
     SandboxLink,
     SignInNote,
     VimeoEmbed,
+    a: SmartLink,
     ...dynamicComponents,
     wrapper: wrapper,
   }

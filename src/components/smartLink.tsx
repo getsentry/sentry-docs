@@ -24,8 +24,10 @@ export function SmartLink({
   isActive,
   ...props
 }: Props) {
-  if (to?.indexOf('://') !== -1) {
-    return <ExternalLink href={to} className={className} {...props}>
+  const realTo = to || href || '';
+
+  if (realTo?.indexOf('://') !== -1) {
+    return <ExternalLink href={realTo} className={className} {...props}>
       {children || to || href}
     </ExternalLink>
   }
