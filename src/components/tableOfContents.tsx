@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { GuideGrid } from "./guideGrid";
 
 interface TocItem {
