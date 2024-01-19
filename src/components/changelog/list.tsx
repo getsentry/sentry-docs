@@ -1,12 +1,19 @@
-'use client';
+"use client";
+
+import type {FrontMatter} from 'sentry-docs/types';
+
 import {useState} from 'react';
 import Link from 'next/link';
 import Tag from './tag';
 
-export default function ListLayout({posts, title, initialDisplayPosts = [], pagination}) {
+export default function ListLayout({posts, title, initialDisplayPosts = [], pagination}: {
+    posts: any;
+    title: any;
+    initialDisplayPosts?: FrontMatter[] | undefined;
+    pagination: any;
+}) {
   const [searchValue, setSearchValue] = useState('');
   const filteredBlogPosts = posts.filter(frontMatter => {
-    console.log(frontMatter.tags);
     const searchContent =
       frontMatter.title + frontMatter.summary + frontMatter.tags.join(' ');
     return searchContent.toLowerCase().includes(searchValue.toLowerCase());

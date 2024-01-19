@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import yaml from 'js-yaml';
 
 import { s } from 'hastscript'
+import type { FrontMatter } from './types';
 // Remark packages
 import remarkGfm from 'remark-gfm'
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
@@ -26,8 +27,6 @@ const root = process.cwd();
 function formatSlug(slug) {
   return slug.replace(/\.(mdx|md)/, '');
 }
-
-export type FrontMatter = {[key: string]: any};
 
 export async function getAllFilesFrontMatter(folder: string = "docs"): Promise<FrontMatter[]> {
   const docsPath = path.join(root, folder); 

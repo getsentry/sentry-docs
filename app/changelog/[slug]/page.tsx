@@ -1,21 +1,16 @@
-
+import Layout from '../layout';
 import {Navbar} from 'sentry-docs/components/changelog/navbar';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {getFileBySlug} from 'sentry-docs/mdx';
 import {notFound} from 'next/navigation';
 import {useMemo} from 'react';
 
-const mdxComponentsWithWrapper = ({children, frontMatter, toc}) => (
-  <Layout children={children} frontMatter={frontMatter} toc={toc} />
-);
-
 const MDXLayoutRenderer = ({mdxSource, ...rest}) => {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
-  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
+  return <MDXLayout {...rest} />;
 };
 
 export default async function ChangelogEntry({params}) {
-  console.log(params);
   let entry: any = null;
   try {
     entry = await getFileBySlug(`changelog/${params.slug}`);
@@ -30,9 +25,9 @@ export default async function ChangelogEntry({params}) {
   const {mdxSource, toc, frontMatter} = entry;
 
   return (
-  <>
+    <Layout>
       <Navbar />
       <MDXLayoutRenderer toc={toc} mdxSource={mdxSource} frontMatter={frontMatter} />
-      </>
+    </Layout>
   );
 }

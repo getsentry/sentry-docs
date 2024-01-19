@@ -14,11 +14,14 @@ export function Navbar() {
           title="Sentry error monitoring"
           className="flex flex-shrink-0 items-center"
         >
-          <Image src={SentryWordmarkSVG} alt="Sentry's logo" width={150}/>
+          <Image src={SentryWordmarkSVG} alt="Sentry's logo" width={150} />
         </a>
         <Nav className="flex space-x-4">
           <NavItem>
-            <Link className="hover:bg-gray rounded-md px-3 py-2 text-sm font-medium uppercase" href="/changelog">
+            <Link
+              className="hover:bg-gray rounded-md px-3 py-2 text-sm font-medium uppercase"
+              href="/changelog"
+            >
               Changelog
             </Link>
           </NavItem>
