@@ -25,6 +25,7 @@ import { SmartLink } from "./components/smartLink";
 import { VimeoEmbed } from "./components/video";
 import { CodeBlock } from "./components/codeBlock";
 import { CodeTabs } from "./components/codeTabs";
+import DocImage from "./components/docImage";
 
 export function mdxComponents(dynamicComponents: any = {}, wrapper: any = ({children}) => children): MDXComponents {
   return {
@@ -55,6 +56,7 @@ export function mdxComponents(dynamicComponents: any = {}, wrapper: any = ({chil
     SignInNote,
     VimeoEmbed,
     a: SmartLink,
+    img: DocImage,
     ...dynamicComponents,
     wrapper: wrapper,
   }
