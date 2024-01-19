@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { getAllFilesFrontMatter, getFileBySlug } from "sentry-docs/mdx";
 import { getMDXComponent } from 'mdx-bundler/client';
-import Link from "next/link";
 import { Header } from 'sentry-docs/components/header';
 import { Navbar } from 'sentry-docs/components/navbar';
 import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
@@ -14,7 +13,6 @@ import { mdxComponents } from "sentry-docs/mdxComponents";
 import { Include } from "sentry-docs/components/include";
 import { Home } from "sentry-docs/components/home";
 import { PlatformContent } from "sentry-docs/components/platformContent";
-import { GuideGrid } from "sentry-docs/components/guideGrid";
 import { Metadata, ResolvingMetadata } from "next";
 import { PlatformSdkDetail } from "sentry-docs/components/platformSdkDetail";
 import { CodeContextProvider } from "sentry-docs/components/codeContext";
