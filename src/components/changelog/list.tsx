@@ -1,6 +1,6 @@
 "use client";
 
-import type {FrontMatter} from 'sentry-docs/types';
+import type {FrontMatter} from 'sentry-docs/mdx';
 
 import {useState} from 'react';
 import Link from 'next/link';
