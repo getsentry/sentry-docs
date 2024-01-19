@@ -120,6 +120,7 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
 
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
+  const caseStyle = platformData?.case_style || n.frontmatter.caseStyle;
   return {
     guides: extractGuides(n),
     key: n.slug,
@@ -127,7 +128,7 @@ function nodeToPlatform(n: DocNode): Platform {
     type: 'platform',
     url: '/' + n.path + '/',
     title: n.frontmatter.title,
-    caseStyle: platformData?.case_style,
+    caseStyle,
     sdk: n.frontmatter.sdk,
   };
 }
