@@ -73,6 +73,7 @@ export function TableOfContents({toc}: Props) {
         <h6>On this page</h6>
       </div>
       <ul className="section-nav">{recursiveRender(items)}</ul>
+      <GuideGrid className="section-nav" />
     </div>
   );
 }
