@@ -7,6 +7,12 @@ const ENTRIES_PER_PAGE = 10;
 
 export default async function ChangelogList({params}) {
   const posts = await getAllFilesFrontMatter('changelog');
+  // sort posts by filename "2021-08-31-foo-bar.mdx"
+  posts.sort((a, b) => {
+    const aDate = new Date(a.date);
+    const bDate = new Date(b.date);
+    return bDate.getTime() - aDate.getTime();
+  });
   const pageNumber = parseInt(params.page || 0);
   const initialDisplayPosts = posts.slice(
     ENTRIES_PER_PAGE * (pageNumber - 1),

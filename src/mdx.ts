@@ -49,12 +49,12 @@ export async function getAllFilesFrontMatter(folder: string = "docs"): Promise<F
     allFrontMatter.push({
       ...frontmatter,
       slug: formatSlug(fileName),
-      sourcePath: path.join('docs', fileName)
+      sourcePath: path.join(folder, fileName),
     })
   });
 
   if (folder !== 'docs') {
-    // We exit early if we're not in the docs folder.
+    // We exit early if we're not in the docs folder. We use this for the changelog.
     return allFrontMatter;
   }
 

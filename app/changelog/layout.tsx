@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Rubik } from 'next/font/google'
 
 import './globals.css'
+import 'prism-sentry/index.css';
 
 const rubik = Rubik({
   subsets: ['latin'],
