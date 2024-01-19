@@ -12,11 +12,14 @@ import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkCodeTitles from './remark-code-title';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkTocHeadings from './remark-toc-headings';
+import remarkVariables from './remark-variables';
 // Rehype packages
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypePrismPlus from 'rehype-prism-plus'
 import rehypePresetMinify from 'rehype-preset-minify'
+import getAppRegistry from './build/appRegistry';
+import getPackageRegistry from './build/packageRegistry';
 
 const root = process.cwd();
 
@@ -180,6 +183,16 @@ export async function getFileBySlug(slug) {
           remarkGfm,
           remarkCodeTitles,
           remarkCodeTabs,
+          [remarkVariables, {
+            resolveScopeData: async () => {
+              const [apps, packages] = await Promise.all([
+                getAppRegistry(),
+                getPackageRegistry(),
+              ]);
+    
+              return {apps, packages}; 
+            }
+          }],
         ]
         options.rehypePlugins = [
           ...(options.rehypePlugins ?? []),
