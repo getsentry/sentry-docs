@@ -19,7 +19,7 @@ export function Navbar() {
         <Nav className="flex space-x-4">
           <NavItem>
             <Link
-              className="hover:bg-gray rounded-md px-3 py-2 text-sm font-medium uppercase"
+              className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
               href="/changelog"
             >
               Changelog
@@ -27,7 +27,7 @@ export function Navbar() {
           </NavItem>
           <NavItem>
             <Link
-              className="hover:bg-gray rounded-md px-3 py-2 text-sm font-medium uppercase"
+              className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
               href="https://sentry.io/"
             >
               Sign In

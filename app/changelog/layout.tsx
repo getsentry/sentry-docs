@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${rubik.variable}`}>
       <body>
-        <div className="bg-gray">
+        <div className="bg-gray-100">
           {children}
         </div>
       </body>
