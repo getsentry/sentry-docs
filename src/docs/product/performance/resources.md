@@ -47,7 +47,7 @@ If you've manually instrumented Sentry, you'll need to make sure that your spans
 
 Here's an example snippet of creating a resource span manually with the SDK.
 
-```js
+```javascript
 // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming
 const resources = performance.getEntriesByType("resource");
 resources.forEach((entry) => {
