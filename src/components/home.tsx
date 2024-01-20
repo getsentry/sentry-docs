@@ -1,7 +1,6 @@
 import {notFound} from 'next/navigation';
 
 import {docsRootNode, extractPlatforms} from 'sentry-docs/docTree';
-import {allDocsFrontMatter} from 'sentry-docs/mdx';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {HomeClient} from './homeClient';
