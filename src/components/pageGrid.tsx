@@ -13,7 +13,7 @@ type Props = {
   header?: string;
 };
 
-export function PageGrid({nextPages = false, header, exclude}: Props) {
+export function PageGrid({header}: Props) {
   const {rootNode, path} = serverContext();
   if (!rootNode) {
     return null;

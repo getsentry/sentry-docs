@@ -23,7 +23,7 @@ function slugWithoutIndex(slug: string): string[] {
 
 export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
   if (frontmatter.length === 0) {
-    return;
+    return undefined;
   }
 
   const sortedDocs = frontmatter.sort((a, b) => {
@@ -113,7 +113,7 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
     if (maybeChild) {
       node = maybeChild;
     } else {
-      return;
+      return undefined;
     }
   }
   return node;
@@ -150,7 +150,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
 export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
   const platformNode = nodeForPath(rootNode, ['platforms', name]);
   if (!platformNode) {
-    return;
+    return undefined;
   }
   return nodeToPlatform(platformNode);
 }
@@ -160,7 +160,7 @@ export function getCurrentPlatform(
   path: string[]
 ): Platform | undefined {
   if (path.length < 2 || path[0] !== 'platforms') {
-    return;
+    return undefined;
   }
   return getPlatform(rootNode, path[1]);
 }
@@ -170,7 +170,7 @@ export function getCurrentPlatformOrGuide(
   path: string[]
 ): Platform | PlatformGuide | undefined {
   if (path.length < 2 || path[0] !== 'platforms') {
-    return;
+    return undefined;
   }
 
   if (path.length >= 4 && path[2] === 'guides') {
@@ -187,7 +187,7 @@ export function getGuide(
 ): PlatformGuide | undefined {
   const guideNode = nodeForPath(rootNode, ['platforms', platform, 'guides', guide]);
   if (!guideNode) {
-    return;
+    return undefined;
   }
   return nodeToGuide(platform, guideNode);
 }

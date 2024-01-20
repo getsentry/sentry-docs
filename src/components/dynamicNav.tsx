@@ -1,4 +1,4 @@
-import React from 'react';
+import {Fragment} from 'react';
 
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
@@ -88,9 +88,7 @@ type ChildrenProps = {
 };
 
 export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
-  return (
-    <React.Fragment>{renderChildren(tree, exclude, path, showDepth)}</React.Fragment>
-  );
+  return <Fragment>{renderChildren(tree, exclude, path, showDepth)}</Fragment>;
 }
 
 type Props = {

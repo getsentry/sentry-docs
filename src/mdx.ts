@@ -30,9 +30,7 @@ function formatSlug(slug) {
 
 export type FrontMatter = {[key: string]: any};
 
-export async function getAllFilesFrontMatter(
-  folder: string = 'docs'
-): Promise<FrontMatter[]> {
+export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   const docsPath = path.join(root, folder);
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
@@ -119,9 +117,9 @@ export async function getAllFilesFrontMatter(
       .filter(g => !fs.statSync(path.join(guidesPath, g)).isFile());
     guideNames.forEach(guideName => {
       let guideFrontmatter: FrontMatter = {};
-      const configPath = path.join(guidesPath, guideName, 'config.yml');
-      if (fs.existsSync(configPath)) {
-        guideFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+      const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
+      if (fs.existsSync(guideConfigPath)) {
+        guideFrontmatter = yaml.load(fs.readFileSync(guideConfigPath, 'utf8'));
       }
 
       commonFiles.forEach(f => {
@@ -212,7 +210,7 @@ export async function getFileBySlug(slug) {
     source,
     // mdx imports can be automatically source from the components directory
     cwd: root,
-    mdxOptions(options, frontmatter) {
+    mdxOptions(options) {
       // this is the recommended way to add custom remark/rehype plugins:
       // The syntax might look weird, but it protects you in case we add/remove
       // plugins in the future.

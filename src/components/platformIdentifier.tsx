@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCaseStyle} from 'sentry-docs/types';

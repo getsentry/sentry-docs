@@ -27,7 +27,7 @@ export function SmartLink({
 }: Props) {
   const realTo = to || href || '';
 
-  if (realTo?.indexOf('://') !== -1) {
+  if (remote || realTo?.indexOf('://') !== -1) {
     return (
       <ExternalLink href={realTo} className={className} {...props}>
         {children || to || href}

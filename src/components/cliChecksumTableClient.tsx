@@ -1,22 +1,6 @@
 'use client';
 
-import React from 'react';
 import styled from '@emotion/styled';
-
-// const query = graphql`
-//   query CliExecutableChecksums {
-//     app(id: {eq: "sentry-cli"}) {
-//       version
-//       files {
-//         name
-//         checksums {
-//           name
-//           value
-//         }
-//       }
-//     }
-//   }
-// `;
 
 const ChecksumValue = styled.code`
   font-size: 0.75em;
@@ -29,10 +13,6 @@ type Props = {
 };
 
 export function CliChecksumTableClient({version, files}: Props) {
-  //   const {
-  //     app: {files, version},
-  //   } = useStaticQuery(query);
-
   return (
     <table style={{display: 'block', overflow: 'scroll'}}>
       <thead>

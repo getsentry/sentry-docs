@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {DynamicNav, toTree} from './dynamicNav';
 
 export type Node = {

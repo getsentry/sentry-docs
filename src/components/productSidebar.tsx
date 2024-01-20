@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {DynamicNav, toTree} from './dynamicNav';

@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 import {MDXProvider} from '@mdx-js/react';
 

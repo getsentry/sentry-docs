@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {Fragment, useState} from 'react';
 import Link from 'next/link';
 
 import type {FrontMatter} from 'sentry-docs/mdx';
@@ -9,9 +9,7 @@ import Article from './article';
 
 export default function ListLayout({
   posts,
-  title,
   initialDisplayPosts = [],
-  pagination,
 }: {
   pagination: any;
   posts: any;
@@ -35,7 +33,7 @@ export default function ListLayout({
       : filteredBlogPosts;
 
   return (
-    <React.Fragment>
+    <Fragment>
       <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6  space-x-4">
           <input
@@ -62,7 +60,7 @@ export default function ListLayout({
         {displayPosts.map(frontMatter => {
           const {slug, date, title, summary, tags, image} = frontMatter;
           return (
-            <Link href={`/changelog/${slug}`}>
+            <Link href={`/changelog/${slug}`} key={slug}>
               <Article
                 className="fancy-border"
                 key={slug}
@@ -166,9 +164,6 @@ export default function ListLayout({
           </button>
         </div>
       </div>
-      {/* {pagination && pagination.totalPages > 1 && !searchValue && (
-          <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
-        )} */}
-    </React.Fragment>
+    </Fragment>
   );
 }

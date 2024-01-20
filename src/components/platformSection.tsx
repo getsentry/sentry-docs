@@ -40,7 +40,6 @@ const isSupported = (
 export function PlatformSection({
   supported = [],
   notSupported = [],
-  platform,
   noGuides,
   children,
 }: Props) {

@@ -1,5 +1,6 @@
 'use client';
 
+import {Fragment} from 'react';
 import styled from '@emotion/styled';
 
 import {SmartLink} from './smartLink';
@@ -57,12 +58,12 @@ export function PlatformSdkDetailClient({
           <SmartLink to={repoUrl} target="_blank" />
         </dd>
         {apiDocsUrl && (
-          <React.Fragment>
+          <Fragment>
             <dt>API Documentation:</dt>
             <dd>
               <SmartLink to={apiDocsUrl} target="_blank" />
             </dd>
-          </React.Fragment>
+          </Fragment>
         )}
       </dl>
     </PackageDetail>

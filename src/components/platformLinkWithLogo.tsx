@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {getPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 

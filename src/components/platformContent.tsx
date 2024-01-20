@@ -15,12 +15,7 @@ type Props = {
   platform?: string;
 };
 
-export async function PlatformContent({
-  includePath,
-  platform,
-  children,
-  noGuides,
-}: Props) {
+export async function PlatformContent({includePath, platform, noGuides}: Props) {
   const {path} = serverContext();
 
   if (!platform) {
@@ -62,8 +57,8 @@ export async function PlatformContent({
   }
 
   const {mdxSource} = doc;
-  function MDXLayoutRenderer({mdxSource, ...rest}) {
-    const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
+  function MDXLayoutRenderer({mdxSource: source, ...rest}) {
+    const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
     return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
   }
   return <MDXLayoutRenderer mdxSource={mdxSource} />;

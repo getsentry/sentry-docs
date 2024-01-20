@@ -1,5 +1,6 @@
 'use client';
 
+import {Fragment} from 'react';
 import styled from '@emotion/styled';
 import Link from 'next/link';
 
@@ -15,25 +16,25 @@ type Props = {
 };
 
 export function Sidebar({node, path}: Props) {
-  const activeClassName = (node, baseClassName = '') => {
-    const className = node.path === path.join('/') ? 'active' : '';
+  const activeClassName = (n, baseClassName = '') => {
+    const className = n.path === path.join('/') ? 'active' : '';
     return `${baseClassName} ${className}`;
   };
 
   const renderChildren = children =>
     children && (
       <ul className="list-unstyled" data-sidebar-tree>
-        {children.map(node => (
-          <li className="toc-item" key={node.path} data-sidebar-branch>
+        {children.map(n => (
+          <li className="toc-item" key={n.path} data-sidebar-branch>
             <SidebarNavItem
-              href={'/' + node.path}
+              href={'/' + n.path}
               data-sidebar-link
-              className={activeClassName(node)}
+              className={activeClassName(n)}
             >
-              {node.frontmatter.sidebar_title || node.frontmatter.title}
-              {node.children.length > 0 && <Chevron direction="down" />}
+              {n.frontmatter.sidebar_title || n.frontmatter.title}
+              {n.children.length > 0 && <Chevron direction="down" />}
             </SidebarNavItem>
-            {renderChildren(node.children)}
+            {renderChildren(n.children)}
           </li>
         ))}
       </ul>
@@ -42,7 +43,7 @@ export function Sidebar({node, path}: Props) {
   return (
     <ul className="list-unstyled" data-sidebar-tree>
       <li className="mb-3" data-sidebar-branch>
-        <React.Fragment>
+        <Fragment>
           <SidebarNavItem
             href={'/' + node.path}
             className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
@@ -52,7 +53,7 @@ export function Sidebar({node, path}: Props) {
             <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
           </SidebarNavItem>
           {renderChildren(node.children)}
-        </React.Fragment>
+        </Fragment>
       </li>
     </ul>
   );

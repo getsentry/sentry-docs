@@ -1,6 +1,6 @@
 'use client';
 
-import {useContext} from 'react';
+import {Fragment, useContext} from 'react';
 import {usePathname} from 'next/navigation';
 
 import {Alert} from './alert';
@@ -16,7 +16,7 @@ export function OrgAuthTokenNote() {
   const orgAuthTokenUrl = useOrgAuthTokenUrl();
 
   return (
-    <React.Fragment>
+    <Fragment>
       <SignedInCheck isUserAuthenticated={false}>
         <Note>
           You can{' '}
@@ -41,7 +41,7 @@ export function OrgAuthTokenNote() {
           once right after creation - make sure to copy it!
         </Alert>
       </SignedInCheck>
-    </React.Fragment>
+    </Fragment>
   );
 }
 

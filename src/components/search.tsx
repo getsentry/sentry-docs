@@ -1,6 +1,6 @@
 'use client';
 
-import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import styled from '@emotion/styled';
 import {
   Hit,

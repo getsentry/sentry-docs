@@ -1,6 +1,6 @@
 'use client';
 
-import React, {Children, useEffect} from 'react';
+import {Children, useEffect, useState} from 'react';
 import styled from '@emotion/styled';
 
 import {SmartLink} from './smartLink';
@@ -36,7 +36,7 @@ export function SidebarLink({
   const enableSubtree = isActive || collapsed === false;
   const hasSubtree = Children.count(children) > 0;
 
-  const [showSubtree, setShowSubtree] = React.useState(enableSubtree);
+  const [showSubtree, setShowSubtree] = useState(enableSubtree);
 
   useEffect(() => {
     setShowSubtree(enableSubtree);

@@ -67,8 +67,8 @@ export function ServerSidebar() {
     }
 
     const name = path[1];
-    const node = nodeForPath(rootNode, ['platforms', name]);
-    if (!node) {
+    const platformNode = nodeForPath(rootNode, ['platforms', name]);
+    if (!platformNode) {
       return null;
     }
 
@@ -84,13 +84,14 @@ export function ServerSidebar() {
           platform: {
             name,
           },
-          title: node.frontmatter.title,
-          sidebar_order: node.frontmatter.sidebar_order,
-          sidebar_title: node.frontmatter.sidebar_title,
+          title: platformNode.frontmatter.title,
+          sidebar_order: platformNode.frontmatter.sidebar_order,
+          sidebar_title: platformNode.frontmatter.sidebar_title,
         },
-        path: '/' + node.path + '/',
+        path: '/' + platformNode.path + '/',
       },
     ];
+    // eslint-disable-next-line no-inner-declarations
     function addChildren(docNodes: DocNode[]) {
       docNodes.forEach(n => {
         nodes.push({
@@ -107,7 +108,7 @@ export function ServerSidebar() {
         addChildren(n.children);
       });
     }
-    addChildren(node.children);
+    addChildren(platformNode.children);
 
     return (
       <PlatformSidebar
@@ -132,11 +133,11 @@ export function ServerSidebar() {
 
   // Must not send full DocNodes to a client component, or the entire doc tree
   // will be serialized.
-  const nodeToSidebarNode = (node: DocNode): SidebarNode => {
+  const nodeToSidebarNode = (n: DocNode): SidebarNode => {
     return {
-      path: node.path,
-      frontmatter: node.frontmatter as {[key: string]: any},
-      children: node.children.map(nodeToSidebarNode),
+      path: n.path,
+      frontmatter: n.frontmatter as {[key: string]: any},
+      children: n.children.map(nodeToSidebarNode),
     };
   };
   return <Sidebar node={nodeToSidebarNode(node)} path={path} />;

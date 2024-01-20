@@ -8,7 +8,9 @@ module.exports = {
     Atomics: 'readonly',
     SharedArrayBuffer: 'readonly',
   },
-
+  rules: {
+    'import/no-nodejs-modules': 'off',
+  },
   overrides: [
     {
       files: ['*.ts', '*.tsx'],

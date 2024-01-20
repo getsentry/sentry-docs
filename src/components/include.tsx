@@ -24,8 +24,8 @@ export async function Include({name}: Props) {
     throw e;
   }
   const {mdxSource} = doc;
-  function MDXLayoutRenderer({mdxSource, ...rest}) {
-    const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
+  function MDXLayoutRenderer({mdxSource: source, ...rest}) {
+    const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
     return <MDXLayout components={mdxComponents({Include, PlatformContent})} {...rest} />;
   }
   return <MDXLayoutRenderer mdxSource={mdxSource} />;

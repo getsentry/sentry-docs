@@ -1,6 +1,6 @@
 'use client';
 
-import React, {Fragment} from 'react';
+import {Fragment} from 'react';
 import styled from '@emotion/styled';
 
 import {Alert} from './alert';
@@ -43,14 +43,14 @@ function Metric({metric}) {
   );
 }
 
-type Metric = {
+type MetricDetail = {
   description: string;
   features: string[];
   name: string;
   type: string;
 };
 type Props = {
-  metrics: Metric[];
+  metrics: MetricDetail[];
 };
 
 export function RelayMetricsClient({metrics}: Props) {

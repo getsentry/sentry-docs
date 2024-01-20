@@ -69,5 +69,4 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
       </div>
     </div>
   );
-  return null;
 }

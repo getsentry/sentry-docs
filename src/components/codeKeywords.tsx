@@ -1,4 +1,4 @@
-import React, {Children, Fragment, useContext, useState} from 'react';
+import {Children, Fragment, useContext, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {ArrowDown} from 'react-feather';
 import {usePopper} from 'react-popper';
@@ -122,13 +122,6 @@ const dropdownPopperOptions = {
 };
 
 function OrgAuthTokenCreator() {
-  const codeContext = useContext(CodeContext);
-  if (!codeContext) {
-    return null;
-  }
-  const {codeKeywords, sharedKeywordSelection} = codeContext;
-
-  const [sharedSelection, setSharedSelection] = sharedKeywordSelection;
   const [tokenState, setTokenState] = useState<TokenState>({status: 'none'});
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
@@ -138,6 +131,7 @@ function OrgAuthTokenCreator() {
     dropdownEl,
     dropdownPopperOptions
   );
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useOnClickOutside({
     ref: {current: referenceEl},
@@ -185,13 +179,18 @@ function OrgAuthTokenCreator() {
     }
   };
 
+  const codeContext = useContext(CodeContext);
+  if (!codeContext) {
+    return null;
+  }
+  const {codeKeywords, sharedKeywordSelection} = codeContext;
+  const [sharedSelection, setSharedSelection] = sharedKeywordSelection;
+
   const orgSet = new Set<string>();
   codeKeywords?.PROJECT?.forEach(projectKeyword => {
     orgSet.add(projectKeyword.ORG_SLUG);
   });
   const orgSlugs = [...orgSet];
-
-  const [isAnimating, setIsAnimating] = useState(false);
 
   if (!codeKeywords.USER) {
     // User is not logged in - show dummy token
@@ -292,14 +291,10 @@ function OrgAuthTokenCreator() {
 }
 
 function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
-  const codeContext = useContext(CodeContext);
-  if (!codeContext) {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const {styles, state, attributes} = usePopper(
     referenceEl,
@@ -313,14 +308,17 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
     handler: () => setIsOpen(false),
   });
 
+  const codeContext = useContext(CodeContext);
+  if (!codeContext) {
+    return null;
+  }
+
   const [sharedSelection, setSharedSelection] = codeContext.sharedKeywordSelection;
 
   const {codeKeywords} = codeContext;
   const choices = codeKeywords?.[group] ?? [];
   const currentSelectionIdx = sharedSelection[group] ?? 0;
   const currentSelection = choices[currentSelectionIdx];
-
-  const [isAnimating, setIsAnimating] = useState(false);
 
   if (!currentSelection) {
     return <Fragment>keyword</Fragment>;

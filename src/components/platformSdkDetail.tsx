@@ -14,7 +14,7 @@ export async function PlatformSdkDetail() {
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
   const entries = Object.entries(allSdks || {});
-  const pair: any = entries.find(([sdkName]) => sdkName == platformOrGuide.sdk);
+  const pair: any = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
   if (!pair) {
     return null;
   }
