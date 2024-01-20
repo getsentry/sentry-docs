@@ -1,7 +1,8 @@
-import Layout from './layout';
-import {Navbar} from 'sentry-docs/components/changelog/navbar';
 import List from 'sentry-docs/components/changelog/list';
+import {Navbar} from 'sentry-docs/components/changelog/navbar';
 import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
+
+import Layout from './layout';
 
 const ENTRIES_PER_PAGE = 10;
 
@@ -13,7 +14,7 @@ export default async function ChangelogList({params}) {
     const bDate = new Date(b.date);
     return bDate.getTime() - aDate.getTime();
   });
-  const pageNumber = parseInt(params.page || 0);
+  const pageNumber = parseInt(params.page || 0, 10);
   const initialDisplayPosts = posts.slice(
     ENTRIES_PER_PAGE * (pageNumber - 1),
     ENTRIES_PER_PAGE * pageNumber

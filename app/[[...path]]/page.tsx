@@ -1,33 +1,38 @@
-import { useMemo } from "react";
-import { getAllFilesFrontMatter, getFileBySlug } from "sentry-docs/mdx";
-import { getMDXComponent } from 'mdx-bundler/client';
-import { Header } from 'sentry-docs/components/header';
-import { Navbar } from 'sentry-docs/components/navbar';
-import { ServerSidebar } from 'sentry-docs/components/serverSidebar';
-import { GitHubCTA } from "sentry-docs/components/githubCta";
-import { notFound } from "next/navigation";
-import { serverContext, setServerContext } from "sentry-docs/serverContext";
-import { frontmatterToTree, getCurrentPlatformOrGuide, nodeForPath } from "sentry-docs/docTree";
-import { Breadcrumbs } from "sentry-docs/components/breadcrumbs";
-import { mdxComponents } from "sentry-docs/mdxComponents";
-import { Include } from "sentry-docs/components/include";
-import { Home } from "sentry-docs/components/home";
-import { PlatformContent } from "sentry-docs/components/platformContent";
-import { Metadata, ResolvingMetadata } from "next";
-import { PlatformSdkDetail } from "sentry-docs/components/platformSdkDetail";
-import { CodeContextProvider } from "sentry-docs/components/codeContext";
-import { TableOfContents } from "sentry-docs/components/tableOfContents";
+import {useMemo} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
+import {Metadata} from 'next';
+import {notFound} from 'next/navigation';
+
+import {Breadcrumbs} from 'sentry-docs/components/breadcrumbs';
+import {CodeContextProvider} from 'sentry-docs/components/codeContext';
+import {GitHubCTA} from 'sentry-docs/components/githubCta';
+import {Header} from 'sentry-docs/components/header';
+import {Home} from 'sentry-docs/components/home';
+import {Include} from 'sentry-docs/components/include';
+import {Navbar} from 'sentry-docs/components/navbar';
+import {PlatformContent} from 'sentry-docs/components/platformContent';
+import {PlatformSdkDetail} from 'sentry-docs/components/platformSdkDetail';
+import {ServerSidebar} from 'sentry-docs/components/serverSidebar';
+import {TableOfContents} from 'sentry-docs/components/tableOfContents';
+import {
+  frontmatterToTree,
+  getCurrentPlatformOrGuide,
+  nodeForPath,
+} from 'sentry-docs/docTree';
+import {getAllFilesFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {serverContext, setServerContext} from 'sentry-docs/serverContext';
 
 export async function generateStaticParams() {
   const docs = await getAllFilesFrontMatter();
-  const paths = docs.map((doc) => {
+  const paths = docs.map(doc => {
     let path = doc.slug.split('/');
     if (path[path.length - 1] === 'index') {
       path = path.slice(0, path.length - 1);
     }
-    return { path };
+    return {path};
   });
-  paths.push({ path: undefined }); // the home page
+  paths.push({path: undefined}); // the home page
   return paths;
 }
 
@@ -35,16 +40,17 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 export const dynamic = 'force-static';
 
-const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent}, ({ children, frontMatter, toc }) => (
-  <Layout
-    children={children}
-    frontMatter={frontMatter}
-    toc={toc}
-    />
-))
+const mdxComponentsWithWrapper = mdxComponents(
+  {Include, PlatformContent},
+  ({children, frontMatter, toc}) => (
+    <Layout frontMatter={frontMatter} toc={toc}>
+      {children}
+    </Layout>
+  )
+);
 
-const Layout = ({children, frontMatter, toc}) => {
-  const { rootNode, path } = serverContext();
+function Layout({children, frontMatter, toc}) {
+  const {rootNode, path} = serverContext();
   const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
   const hasToc = !frontMatter.notoc || !!platformOrGuide;
 
@@ -63,7 +69,7 @@ const Layout = ({children, frontMatter, toc}) => {
             </div>
           </div>
         </div>
-        <div className="d-sm-none d-block" id="navbar-menu"></div>
+        <div className="d-sm-none d-block" id="navbar-menu" />
       </div>
       <main role="main" className="px-0">
         <div className="flex-grow-1">
@@ -72,13 +78,11 @@ const Layout = ({children, frontMatter, toc}) => {
           </div>
 
           <section className="pt-3 px-3 content-max prose">
-            <div className="pb-3"><Breadcrumbs /></div>
+            <div className="pb-3">
+              <Breadcrumbs />
+            </div>
             <div className="row">
-              <div
-                className={
-                  hasToc ? "col-sm-8 col-md-12 col-lg-8 col-xl-9" : 'col-12'
-                }
-              >
+              <div className={hasToc ? 'col-sm-8 col-md-12 col-lg-8 col-xl-9' : 'col-12'}>
                 <h1 className="mb-3">{frontMatter.title}</h1>
                 <div id="main">
                   <CodeContextProvider>{children}</CodeContextProvider>
@@ -99,14 +103,14 @@ const Layout = ({children, frontMatter, toc}) => {
       </main>
     </div>
   );
-};
+}
 
-const MDXLayoutRenderer = ({ mdxSource, ...rest }) => {
-  const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource])
+function MDXLayoutRenderer({mdxSource, ...rest}) {
+  const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page({ params }) {
+export default async function Page({params}) {
   if (!params.path) {
     return <Home />;
   }
@@ -121,31 +125,30 @@ export default async function Page({ params }) {
 
   const pageNode = nodeForPath(rootNode, params.path);
   if (!pageNode) {
-    console.warn('no page node', params.path)
+    console.warn('no page node', params.path);
     return notFound();
   }
-  
+
   // get the MDX for the current doc and render it
   let doc: any = null;
   try {
     doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
-      console.error('ENOENT', pageNode.path)
+      console.error('ENOENT', pageNode.path);
       return notFound();
-    } else {
-      throw(e);
     }
+    throw e;
   }
-  const { mdxSource, toc, frontMatter } = doc;
-  
+  const {mdxSource, toc, frontMatter} = doc;
+
   setServerContext({
-    rootNode: rootNode,
+    rootNode,
     path: params.path,
-    toc: toc,
+    toc,
     frontmatter: frontMatter,
-  })
-  
+  });
+
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
   return (
     <MDXLayoutRenderer
@@ -153,20 +156,17 @@ export default async function Page({ params }) {
       toc={toc}
       mdxSource={mdxSource}
       frontMatter={frontMatter}
-      />
+    />
   );
 }
 
 type MetadataProps = {
   params: {
-    path: string[]
-  }
-}
+    path: string[];
+  };
+};
 
-export async function generateMetadata(
-  { params }: MetadataProps,
-  parent: ResolvingMetadata
-): Promise<Metadata> { 
+export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
   let title = 'Home';
 
   const docs = await getAllFilesFrontMatter();
@@ -179,6 +179,6 @@ export async function generateMetadata(
   }
   // get the MDX for the current doc and render it
   return {
-    title
-  }
+    title,
+  };
 }

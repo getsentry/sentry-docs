@@ -1,8 +1,8 @@
-import { Header } from "sentry-docs/components/header";
-import { Navbar } from "sentry-docs/components/navbar";
-import { productSidebar } from "sentry-docs/components/serverSidebar";
-import { frontmatterToTree } from "sentry-docs/docTree";
-import { getAllFilesFrontMatter } from "sentry-docs/mdx";
+import {Header} from 'sentry-docs/components/header';
+import {Navbar} from 'sentry-docs/components/navbar';
+import {productSidebar} from 'sentry-docs/components/serverSidebar';
+import {frontmatterToTree} from 'sentry-docs/docTree';
+import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
 
 export default async function NotFound() {
   const docs = await getAllFilesFrontMatter();
@@ -18,12 +18,10 @@ export default async function NotFound() {
           id="sidebar"
         >
           <div className="toc">
-            <div className="text-white p-3">
-              {sidebar}
-            </div>
+            <div className="text-white p-3">{sidebar}</div>
           </div>
         </div>
-        <div className="d-sm-none d-block" id="navbar-menu"></div>
+        <div className="d-sm-none d-block" id="navbar-menu" />
       </div>
       <main role="main" className="px-0">
         <div className="flex-grow-1">
@@ -32,7 +30,7 @@ export default async function NotFound() {
           </div>
 
           <section className="pt-3 px-3 content-max prose">
-            <div className="pb-3"></div>
+            <div className="pb-3" />
             <h1>Page Not Found</h1>
             <p>We couldn't find the page you were looking for.</p>
           </section>
