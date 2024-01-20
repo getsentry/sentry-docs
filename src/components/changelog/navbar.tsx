@@ -1,6 +1,3 @@
-'use client';
-
-import {Nav, NavItem} from 'react-bootstrap';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -17,16 +14,15 @@ export function Navbar() {
         >
           <Image src={SentryWordmarkSVG} alt="Sentry's logo" width={150} />
         </a>
-        <Nav className="flex space-x-4">
-          <NavItem>
+        <div className="flex space-x-4">
+          
             <Link
               className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
               href="/changelog"
             >
               Changelog
             </Link>
-          </NavItem>
-          <NavItem>
+          
             <Link
               className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
               href="https://sentry.io/"
@@ -46,8 +42,8 @@ export function Navbar() {
                 />
               </svg>
             </Link>
-          </NavItem>
-        </Nav>
+          
+        </div>
       </nav>
     </header>
   );

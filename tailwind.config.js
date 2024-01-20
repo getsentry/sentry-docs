@@ -11,7 +11,7 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: [
-          'var(--font-rubik)',
+          'Rubik',
           '-apple-system',
           'BlinkMacSystemFont',
           'Segoe UI',

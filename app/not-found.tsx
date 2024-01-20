@@ -3,6 +3,9 @@ import {Navbar} from 'sentry-docs/components/navbar';
 import {productSidebar} from 'sentry-docs/components/serverSidebar';
 import {docsRootNode} from 'sentry-docs/docTree';
 
+import 'prism-sentry/index.css';
+import 'sentry-docs/styles/screen.scss';
+
 export default function NotFound() {
   const rootNode = docsRootNode;
   const sidebar = rootNode && productSidebar(rootNode);

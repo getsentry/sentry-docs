@@ -4,6 +4,9 @@ import {useEffect} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import Error from 'next/error';
 
+import 'prism-sentry/index.css';
+import 'sentry-docs/styles/screen.scss';
+
 export default function GlobalError({error}) {
   useEffect(() => {
     Sentry.captureException(error);

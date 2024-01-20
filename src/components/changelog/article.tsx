@@ -32,13 +32,14 @@ export default function Article({
             className="object-cover rounded-lg rounded-b-none"
             src={image}
             fill
-            alt="Picture of the author"
+            alt={title}
+            sizes="(max-width: 768px) 100vw"
           />
         </div>
       )}
       <div className="p-6">
         <h3 className="text-3xl text-primary font-semibold mb-2">
-          <Link href={`/changelog/${slug}`}>{title}</Link>
+          {title}
         </h3>
         <div>
           <div className="flex flex-wrap gap-1 py-1">
