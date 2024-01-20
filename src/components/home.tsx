@@ -1,7 +1,7 @@
 import {notFound} from 'next/navigation';
 
 import {extractPlatforms, frontmatterToTree} from 'sentry-docs/docTree';
-import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
+import {allDocsFrontMatter} from 'sentry-docs/mdx';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {HomeClient} from './homeClient';
@@ -29,7 +29,7 @@ const HIGHLIGHTED_PLATFORMS = [
 ];
 
 export async function Home() {
-  const docs = await getAllFilesFrontMatter();
+  const docs = await allDocsFrontMatter;
   const rootNode = frontmatterToTree(docs);
   if (!rootNode) {
     console.warn('no root node');

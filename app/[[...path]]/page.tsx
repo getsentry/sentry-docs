@@ -19,12 +19,12 @@ import {
   getCurrentPlatformOrGuide,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {getAllFilesFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {allDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext, setServerContext} from 'sentry-docs/serverContext';
 
-export async function generateStaticParams() {
-  const docs = await getAllFilesFrontMatter();
+export function generateStaticParams() {
+  const docs = allDocsFrontMatter;
   const paths = docs.map(doc => {
     let path = doc.slug.split('/');
     if (path[path.length - 1] === 'index') {
@@ -116,7 +116,7 @@ export default async function Page({params}) {
   }
 
   // get frontmatter of all docs in tree
-  const docs = await getAllFilesFrontMatter();
+  const docs = allDocsFrontMatter;
   const rootNode = frontmatterToTree(docs);
   if (!rootNode) {
     console.warn('no root node');
@@ -166,10 +166,10 @@ type MetadataProps = {
   };
 };
 
-export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
+export function generateMetadata({params}: MetadataProps): Metadata {
   let title = 'Home';
 
-  const docs = await getAllFilesFrontMatter();
+  const docs = allDocsFrontMatter;
   const rootNode = frontmatterToTree(docs);
   if (rootNode && params.path) {
     const pageNode = nodeForPath(rootNode, params.path);

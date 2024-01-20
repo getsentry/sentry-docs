@@ -2,10 +2,10 @@ import {Header} from 'sentry-docs/components/header';
 import {Navbar} from 'sentry-docs/components/navbar';
 import {productSidebar} from 'sentry-docs/components/serverSidebar';
 import {frontmatterToTree} from 'sentry-docs/docTree';
-import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
+import {allDocsFrontMatter} from 'sentry-docs/mdx';
 
-export default async function NotFound() {
-  const docs = await getAllFilesFrontMatter();
+export default function NotFound() {
+  const docs = allDocsFrontMatter;
   const rootNode = frontmatterToTree(docs);
   const sidebar = rootNode && productSidebar(rootNode);
   return (

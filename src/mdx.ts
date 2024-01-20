@@ -30,6 +30,8 @@ function formatSlug(slug) {
 
 export type FrontMatter = {[key: string]: any};
 
+export const allDocsFrontMatter = getAllFilesFrontMatter();
+
 export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   const docsPath = path.join(root, folder);
   const files = getAllFilesRecursively(docsPath);
