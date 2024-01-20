@@ -41,6 +41,7 @@ export default function remarkCodeTabs() {
               attributes: [
                 {type: 'mdxJsxAttribute', name: 'language', value: `${node.lang || ''}`},
                 {type: 'mdxJsxAttribute', name: 'title', value: getTabTitle(node)},
+                {type: 'mdxJsxAttribute', name: 'filename', value: getFilename(node)},
               ],
               children: [Object.assign({}, node)],
             },
