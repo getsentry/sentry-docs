@@ -1,6 +1,5 @@
 import {ReactNode} from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 
 import Date from './date';
 import Tag from './tag';
@@ -16,7 +15,6 @@ type ArticleProps = {
 };
 
 export default function Article({
-  slug,
   title,
   image,
   tags,
@@ -38,9 +36,7 @@ export default function Article({
         </div>
       )}
       <div className="p-6">
-        <h3 className="text-3xl text-primary font-semibold mb-2">
-          {title}
-        </h3>
+        <h3 className="text-3xl text-primary font-semibold mb-2">{title}</h3>
         <div>
           <div className="flex flex-wrap gap-1 py-1">
             {Array.isArray(tags) && tags.map(tag => <Tag key={tag} text={tag} />)}
