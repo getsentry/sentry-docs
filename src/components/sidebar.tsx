@@ -4,9 +4,9 @@ import styled from '@emotion/styled';
 import Link from 'next/link';
 
 export type SidebarNode = {
-  path: string;
-  frontmatter: {[key: string]: any};
   children: SidebarNode[];
+  frontmatter: {[key: string]: any};
+  path: string;
 };
 
 type Props = {
@@ -42,7 +42,7 @@ export function Sidebar({node, path}: Props) {
   return (
     <ul className="list-unstyled" data-sidebar-tree>
       <li className="mb-3" data-sidebar-branch>
-        <>
+        <React.Fragment>
           <SidebarNavItem
             href={'/' + node.path}
             className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
@@ -52,7 +52,7 @@ export function Sidebar({node, path}: Props) {
             <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
           </SidebarNavItem>
           {renderChildren(node.children)}
-        </>
+        </React.Fragment>
       </li>
     </ul>
   );

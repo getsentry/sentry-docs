@@ -1,5 +1,6 @@
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+
 import {SmartLink} from './smartLink';
 
 type Props = {

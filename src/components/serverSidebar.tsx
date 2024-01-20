@@ -1,9 +1,10 @@
-import {serverContext} from 'sentry-docs/serverContext';
-import {Sidebar, SidebarNode} from './sidebar';
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
-import {NavNode, ProductSidebar} from './productSidebar';
-import {PlatformSidebar, Node as PlatformSidebarNode} from './platformSidebar';
+import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformGuide} from 'sentry-docs/types';
+
+import {Node as PlatformSidebarNode, PlatformSidebar} from './platformSidebar';
+import {NavNode, ProductSidebar} from './productSidebar';
+import {Sidebar, SidebarNode} from './sidebar';
 
 export function productSidebar(rootNode: DocNode) {
   const productNode = nodeForPath(rootNode, 'product');

@@ -1,9 +1,10 @@
 'use client';
 
-import type {FrontMatter} from 'sentry-docs/mdx';
-
 import {useState} from 'react';
 import Link from 'next/link';
+
+import type {FrontMatter} from 'sentry-docs/mdx';
+
 import Article from './article';
 
 export default function ListLayout({
@@ -12,10 +13,10 @@ export default function ListLayout({
   initialDisplayPosts = [],
   pagination,
 }: {
+  pagination: any;
   posts: any;
   title: any;
   initialDisplayPosts?: FrontMatter[] | undefined;
-  pagination: any;
 }) {
   const [searchValue, setSearchValue] = useState('');
   const filteredBlogPosts = posts.filter(frontMatter => {
@@ -34,7 +35,7 @@ export default function ListLayout({
       : filteredBlogPosts;
 
   return (
-    <>
+    <React.Fragment>
       <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6  space-x-4">
           <input
@@ -87,7 +88,7 @@ export default function ListLayout({
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              stroke-width="2"
+              strokeWidth="2"
               stroke="currentColor"
               aria-hidden="true"
               className="w-4 h-4"
@@ -96,7 +97,7 @@ export default function ListLayout({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-              ></path>
+              />
             </svg>
             Previous
           </button>
@@ -151,7 +152,7 @@ export default function ListLayout({
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              stroke-width="2"
+              strokeWidth="2"
               stroke="currentColor"
               aria-hidden="true"
               className="w-4 h-4"
@@ -160,7 +161,7 @@ export default function ListLayout({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-              ></path>
+              />
             </svg>
           </button>
         </div>
@@ -168,6 +169,6 @@ export default function ListLayout({
       {/* {pagination && pagination.totalPages > 1 && !searchValue && (
           <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
         )} */}
-    </>
+    </React.Fragment>
   );
 }

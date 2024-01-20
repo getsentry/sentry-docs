@@ -1,5 +1,6 @@
 import {extractPlatforms, getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+
 import {NavbarClient} from './navbarClient';
 
 export function Navbar() {

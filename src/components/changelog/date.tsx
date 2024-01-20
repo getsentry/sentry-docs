@@ -9,8 +9,8 @@ const formatDate = date => {
   return now;
 };
 
-const DateComponent = ({date}) => {
+function DateComponent({date}) {
   return <time dateTime={date}>{formatDate(date)}</time>;
-};
+}
 
 export default DateComponent;

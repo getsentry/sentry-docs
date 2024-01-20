@@ -1,4 +1,5 @@
 import getAppRegistry from 'sentry-docs/build/appRegistry';
+
 import {CliChecksumTableClient} from './cliChecksumTableClient';
 
 export async function CliChecksumTable() {

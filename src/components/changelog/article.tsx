@@ -1,17 +1,18 @@
+import {ReactNode} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Tag from './tag';
+
 import Date from './date';
-import {ReactNode} from 'react';
+import Tag from './tag';
 
 type ArticleProps = {
-  slug: string;
-  title: string;
-  image?: string;
-  tags: string[];
   date: string;
+  slug: string;
+  tags: string[];
+  title: string;
   children?: ReactNode;
   className?: string;
+  image?: string;
 };
 
 export default function Article({
@@ -30,7 +31,7 @@ export default function Article({
           <Image
             className="object-cover rounded-lg rounded-b-none"
             src={image}
-            fill={true}
+            fill
             alt="Picture of the author"
           />
         </div>

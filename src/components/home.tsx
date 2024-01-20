@@ -1,8 +1,10 @@
-import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
-import {HomeClient} from './homeClient';
-import {extractPlatforms, frontmatterToTree} from 'sentry-docs/docTree';
 import {notFound} from 'next/navigation';
+
+import {extractPlatforms, frontmatterToTree} from 'sentry-docs/docTree';
+import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
+
+import {HomeClient} from './homeClient';
 
 const HIGHLIGHTED_PLATFORMS = [
   'javascript',

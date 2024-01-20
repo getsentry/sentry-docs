@@ -1,9 +1,13 @@
 import {MDXComponents} from 'mdx/types';
+
 import {Alert} from './components/alert';
 import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
+import {CodeBlock} from './components/codeBlock';
+import {CodeTabs} from './components/codeTabs';
 import {ConfigKey} from './components/configKey';
 import {DefinitionList} from './components/definitionList';
+import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
@@ -23,9 +27,6 @@ import {SandboxLink} from './components/sandboxLink';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {VimeoEmbed} from './components/video';
-import {CodeBlock} from './components/codeBlock';
-import {CodeTabs} from './components/codeTabs';
-import DocImage from './components/docImage';
 
 export function mdxComponents(
   dynamicComponents: any = {},
@@ -61,6 +62,6 @@ export function mdxComponents(
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
-    wrapper: wrapper,
+    wrapper,
   };
 }

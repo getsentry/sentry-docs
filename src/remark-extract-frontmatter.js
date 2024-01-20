@@ -1,5 +1,5 @@
-import {visit} from 'unist-util-visit';
 import {load} from 'js-yaml';
+import {visit} from 'unist-util-visit';
 
 export default function extractFrontmatter() {
   return (tree, file) => {

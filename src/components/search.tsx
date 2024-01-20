@@ -9,15 +9,15 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import DOMPurify from 'dompurify';
-import algoliaInsights from 'search-insights';
-
-import {DocsBotButton} from 'sentry-docs/components/docsBotButton';
-import {useOnClickOutside} from 'sentry-docs/clientUtils';
-
-import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
-import {Logo} from './logo';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
+import algoliaInsights from 'search-insights';
+
+import {useOnClickOutside} from 'sentry-docs/clientUtils';
+import {DocsBotButton} from 'sentry-docs/components/docsBotButton';
+import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
+
+import {Logo} from './logo';
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {

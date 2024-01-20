@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import {ExternalLink} from './externalLink';
 
 interface Props {

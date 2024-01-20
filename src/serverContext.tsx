@@ -1,12 +1,14 @@
 import 'server-only';
+
 import {cache} from 'react';
+
 import {DocNode} from 'sentry-docs/docTree';
 
 interface ServerContext {
-  rootNode?: DocNode;
   frontmatter: {};
   path: string[];
   toc: any[];
+  rootNode?: DocNode;
 }
 
 export const serverContext = cache(() => {

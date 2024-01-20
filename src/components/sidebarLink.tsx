@@ -7,6 +7,10 @@ import {SmartLink} from './smartLink';
 
 interface SidebarLinkProps {
   /**
+   * The current page path being rendered
+   */
+  path: string;
+  /**
    * The text of the link
    */
   title: string;
@@ -19,10 +23,6 @@ interface SidebarLinkProps {
    * Indicates that the links are currently hidden. Overriden by isActive
    */
   collapsed?: boolean | null;
-  /**
-   * The current page path being rendered
-   */
-  path: string;
 }
 
 export function SidebarLink({

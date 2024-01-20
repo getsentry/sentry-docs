@@ -1,5 +1,6 @@
 import {getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+
 import {ExternalLink} from './externalLink';
 
 const scenarios = [

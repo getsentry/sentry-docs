@@ -1,7 +1,8 @@
-import {cache} from 'react';
-import yaml from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
+
+import {cache} from 'react';
+import yaml from 'js-yaml';
 
 const root = process.cwd();
 

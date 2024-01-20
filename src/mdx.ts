@@ -1,26 +1,26 @@
-import {bundleMDX} from 'mdx-bundler';
 import fs from 'fs';
 import path from 'path';
-import getAllFilesRecursively from './files';
+
 import matter from 'gray-matter';
-import yaml from 'js-yaml';
-
 import {s} from 'hastscript';
-
-// Remark packages
-import remarkGfm from 'remark-gfm';
-import remarkExtractFrontmatter from './remark-extract-frontmatter';
-import remarkCodeTitles from './remark-code-title';
-import remarkCodeTabs from './remark-code-tabs';
-import remarkTocHeadings from './remark-toc-headings';
-import remarkVariables from './remark-variables';
+import yaml from 'js-yaml';
+import {bundleMDX} from 'mdx-bundler';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypePresetMinify from 'rehype-preset-minify';
+import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypePrismPlus from 'rehype-prism-plus';
-import rehypePresetMinify from 'rehype-preset-minify';
+// Remark packages
+import remarkGfm from 'remark-gfm';
+
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
+import getAllFilesRecursively from './files';
+import remarkCodeTabs from './remark-code-tabs';
+import remarkCodeTitles from './remark-code-title';
+import remarkExtractFrontmatter from './remark-extract-frontmatter';
+import remarkTocHeadings from './remark-toc-headings';
+import remarkVariables from './remark-variables';
 
 const root = process.cwd();
 
@@ -206,7 +206,7 @@ export async function getFileBySlug(slug) {
     'esbuild'
   );
 
-  let toc = [];
+  const toc = [];
 
   const {code, frontmatter} = await bundleMDX({
     source,
@@ -290,7 +290,7 @@ export async function getFileBySlug(slug) {
     toc,
     frontMatter: {
       ...mergedFrontmatter,
-      slug: slug,
+      slug,
     },
   };
 }

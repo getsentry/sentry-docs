@@ -1,6 +1,7 @@
 import {extractPlatforms} from 'sentry-docs/docTree';
-import {PlatformGridClient} from './platformGridClient';
 import {serverContext} from 'sentry-docs/serverContext';
+
+import {PlatformGridClient} from './platformGridClient';
 
 export function PlatformGrid({noGuides = false}) {
   const {rootNode} = serverContext();

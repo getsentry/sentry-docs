@@ -1,8 +1,10 @@
 'use client';
 
 import styled from '@emotion/styled';
-import {PlatformIcon} from './platformIcon';
+
 import {Platform} from 'sentry-docs/types';
+
+import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 
 type Props = {

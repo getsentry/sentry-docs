@@ -2,19 +2,21 @@
 
 import {Nav, NavItem} from 'react-bootstrap';
 import Image from 'next/image';
-import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 import Link from 'next/link';
+
 import {Banner} from 'sentry-docs/components/banner';
-import {PlatformIcon} from './platformIcon';
+import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
-import {SmartLink} from './smartLink';
-import {Search} from './search';
+
 import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
+import {PlatformIcon} from './platformIcon';
+import {Search} from './search';
+import {SmartLink} from './smartLink';
 
 interface Props {
   platforms: Platform[];
-  visiblePlatforms: Array<Platform | PlatformGuide>;
   totalPlatformCount: number;
+  visiblePlatforms: Array<Platform | PlatformGuide>;
 }
 
 export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Props) {

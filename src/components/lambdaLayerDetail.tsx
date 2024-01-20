@@ -1,4 +1,5 @@
 import awsLambdaRegistry from 'sentry-docs/build/awsLambdaLayerRegistry';
+
 import {LambdaLayerDetailClient} from './lambdaLayerDetailClient';
 
 export async function LambdaLayerDetail({canonical}: {canonical: string}) {

@@ -1,9 +1,11 @@
 import {micromark} from 'micromark';
-import {RelayMetricsClient} from './relayMetricsClient';
+
 import metrics from 'sentry-docs/data/relay_metrics.json';
 
+import {RelayMetricsClient} from './relayMetricsClient';
+
 export function RelayMetrics() {
-  let metricsWithMarkdown = metrics.map(metric => ({
+  const metricsWithMarkdown = metrics.map(metric => ({
     ...metric,
     descriptionHtml: micromark(metric.description),
   }));

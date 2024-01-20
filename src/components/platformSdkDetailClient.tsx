@@ -1,6 +1,7 @@
 'use client';
 
 import styled from '@emotion/styled';
+
 import {SmartLink} from './smartLink';
 
 const PackageDetail = styled.div`
@@ -30,11 +31,11 @@ const PackageDetail = styled.div`
 `;
 
 type Props = {
-  url?: string;
-  canonical?: string;
-  version?: string;
-  repoUrl?: string;
   apiDocsUrl?: string;
+  canonical?: string;
+  repoUrl?: string;
+  url?: string;
+  version?: string;
 };
 
 export function PlatformSdkDetailClient({
@@ -56,12 +57,12 @@ export function PlatformSdkDetailClient({
           <SmartLink to={repoUrl} target="_blank" />
         </dd>
         {apiDocsUrl && (
-          <>
+          <React.Fragment>
             <dt>API Documentation:</dt>
             <dd>
               <SmartLink to={apiDocsUrl} target="_blank" />
             </dd>
-          </>
+          </React.Fragment>
         )}
       </dl>
     </PackageDetail>

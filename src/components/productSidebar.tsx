@@ -1,8 +1,9 @@
 import React from 'react';
 
+import {serverContext} from 'sentry-docs/serverContext';
+
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink} from './sidebarLink';
-import {serverContext} from 'sentry-docs/serverContext';
 
 export type NavNode = {
   context: {

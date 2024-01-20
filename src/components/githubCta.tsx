@@ -1,8 +1,8 @@
 import React from 'react';
-
 import Link from 'next/link';
-import {serverContext} from 'sentry-docs/serverContext';
+
 import {nodeForPath} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 
 export function GitHubCTA() {
   const {path, rootNode} = serverContext();

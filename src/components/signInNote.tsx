@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import {usePathname} from 'next/navigation';
 
 import {Note} from './note';
 import {SignedInCheck} from './signedInCheck';
-import Link from 'next/link';
-import {usePathname} from 'next/navigation';
 
 export function SignInNote() {
   const pathname = usePathname();

@@ -1,8 +1,8 @@
 'use client';
 
-import styled from '@emotion/styled';
 import {useState} from 'react';
 import Select from 'react-select';
+import styled from '@emotion/styled';
 
 type RegionData = {region: string; version: string};
 type LayerData = {

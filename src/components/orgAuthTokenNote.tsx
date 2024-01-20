@@ -1,12 +1,13 @@
 'use client';
 
 import {useContext} from 'react';
+import {usePathname} from 'next/navigation';
+
+import {Alert} from './alert';
 import {CodeContext} from './codeContext';
 import {ExternalLink} from './externalLink';
 import {Note} from './note';
 import {SignedInCheck} from './signedInCheck';
-import {Alert} from './alert';
-import {usePathname} from 'next/navigation';
 
 export function OrgAuthTokenNote() {
   const pathname = usePathname();
@@ -15,7 +16,7 @@ export function OrgAuthTokenNote() {
   const orgAuthTokenUrl = useOrgAuthTokenUrl();
 
   return (
-    <>
+    <React.Fragment>
       <SignedInCheck isUserAuthenticated={false}>
         <Note>
           You can{' '}
@@ -40,7 +41,7 @@ export function OrgAuthTokenNote() {
           once right after creation - make sure to copy it!
         </Alert>
       </SignedInCheck>
-    </>
+    </React.Fragment>
   );
 }
 

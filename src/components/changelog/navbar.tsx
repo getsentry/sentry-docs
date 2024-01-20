@@ -2,8 +2,9 @@
 
 import {Nav, NavItem} from 'react-bootstrap';
 import Image from 'next/image';
-import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 import Link from 'next/link';
+
+import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 
 export function Navbar() {
   return (

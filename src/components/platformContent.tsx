@@ -1,8 +1,10 @@
-import {getMDXComponent} from 'mdx-bundler/client';
 import {useMemo} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
+
 import {getFileBySlug} from 'sentry-docs/mdx';
-import {serverContext} from 'sentry-docs/serverContext';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {serverContext} from 'sentry-docs/serverContext';
+
 import {Include} from './include';
 
 type Props = {
@@ -60,10 +62,10 @@ export async function PlatformContent({
   }
 
   const {mdxSource} = doc;
-  const MDXLayoutRenderer = ({mdxSource, ...rest}) => {
+  function MDXLayoutRenderer({mdxSource, ...rest}) {
     const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
     return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
-  };
+  }
   return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }
 

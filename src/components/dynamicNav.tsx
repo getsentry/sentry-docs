@@ -1,10 +1,10 @@
 import React from 'react';
 
+import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 
 import {SidebarLink} from './sidebarLink';
 import {SmartLink} from './smartLink';
-import {serverContext} from 'sentry-docs/serverContext';
 
 type Node = {
   [key: string]: any;
@@ -81,10 +81,10 @@ export const renderChildren = (
 };
 
 type ChildrenProps = {
+  path: string;
   tree: EntityTree[];
   exclude?: string[];
   showDepth?: number;
-  path: string;
 };
 
 export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {

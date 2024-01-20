@@ -60,7 +60,7 @@ export default function remarkCodeTabs() {
         {
           type: 'mdxJsxFlowElement',
           name: 'CodeTabs',
-          children: children,
+          children,
         },
       ];
 

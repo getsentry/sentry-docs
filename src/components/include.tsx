@@ -1,7 +1,9 @@
-import {getMDXComponent} from 'mdx-bundler/client';
 import {useMemo} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
+
 import {getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+
 import {PlatformContent} from './platformContent';
 
 type Props = {
@@ -18,14 +20,13 @@ export async function Include({name}: Props) {
   } catch (e) {
     if (e.code === 'ENOENT') {
       return null;
-    } else {
-      throw e;
     }
+    throw e;
   }
   const {mdxSource} = doc;
-  const MDXLayoutRenderer = ({mdxSource, ...rest}) => {
+  function MDXLayoutRenderer({mdxSource, ...rest}) {
     const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
     return <MDXLayout components={mdxComponents({Include, PlatformContent})} {...rest} />;
-  };
+  }
   return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }

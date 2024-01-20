@@ -1,9 +1,10 @@
 import React, {Fragment} from 'react';
 
+import {getCurrentPlatform, getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+
 import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
-import {serverContext} from 'sentry-docs/serverContext';
-import {getCurrentPlatform, getPlatform} from 'sentry-docs/docTree';
 
 type Props = {
   className?: string;

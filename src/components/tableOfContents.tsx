@@ -1,9 +1,9 @@
 import {GuideGrid} from './guideGrid';
 
 interface TocItem {
-  value: string;
-  url: string;
   depth: number;
+  url: string;
+  value: string;
   children?: TocItem[];
 }
 

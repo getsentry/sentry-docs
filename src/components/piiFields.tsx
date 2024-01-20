@@ -2,6 +2,7 @@
 
 import React from 'react';
 import styled from '@emotion/styled';
+
 import fields from 'sentry-docs/data/relay_event_pii.json';
 
 const Asterisk = styled.span`

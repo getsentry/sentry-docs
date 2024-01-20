@@ -1,6 +1,7 @@
+import Link from 'next/link';
+
 import {nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import Link from 'next/link';
 
 type Props = {
   nextPages: boolean;
@@ -18,7 +19,7 @@ export function PageGrid({nextPages = false, header, exclude}: Props) {
     return null;
   }
 
-  let parentNode = nodeForPath(rootNode, path);
+  const parentNode = nodeForPath(rootNode, path);
   if (!parentNode) {
     return null;
   }

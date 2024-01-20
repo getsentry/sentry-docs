@@ -44,10 +44,10 @@ function Metric({metric}) {
 }
 
 type Metric = {
+  description: string;
+  features: string[];
   name: string;
   type: string;
-  features: string[];
-  description: string;
 };
 type Props = {
   metrics: Metric[];

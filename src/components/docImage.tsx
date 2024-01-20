@@ -6,7 +6,7 @@ export default function DocImage({src, ...props}: React.HTMLProps<HTMLImageEleme
     src = `/${path.join('/')}/${src}`;
   }
   return (
-    <a href={src} target="_blank">
+    <a href={src} target="_blank" rel="noreferrer">
       <img src={src} {...props} />
     </a>
   );

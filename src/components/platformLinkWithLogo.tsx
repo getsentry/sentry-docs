@@ -1,9 +1,10 @@
 import React from 'react';
 
+import {getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+
 import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
-import {serverContext} from 'sentry-docs/serverContext';
-import {getPlatform} from 'sentry-docs/docTree';
 
 type Props = {
   label?: string;

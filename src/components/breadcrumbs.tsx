@@ -1,6 +1,8 @@
 import React from 'react';
+
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+
 import {SmartLink} from './smartLink';
 
 export function Breadcrumbs() {

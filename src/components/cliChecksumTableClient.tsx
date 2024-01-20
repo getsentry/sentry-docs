@@ -24,8 +24,8 @@ const ChecksumValue = styled.code`
 `;
 
 type Props = {
-  version: string;
   files: any[];
+  version: string;
 };
 
 export function CliChecksumTableClient({version, files}: Props) {

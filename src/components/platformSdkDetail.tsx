@@ -1,6 +1,7 @@
 import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+
 import {PlatformSdkDetailClient} from './platformSdkDetailClient';
 
 export async function PlatformSdkDetail() {

@@ -1,15 +1,16 @@
 import type {FrontMatter} from 'sentry-docs/mdx';
-import {Platform, PlatformGuide} from './types';
+
 import {platformsData} from './platformsData';
+import {Platform, PlatformGuide} from './types';
 
 export interface DocNode {
+  children: DocNode[];
+  frontmatter: FrontMatter;
+  missing: boolean;
   path: string;
   slug: string;
-  frontmatter: FrontMatter;
-  parent?: DocNode;
-  children: DocNode[];
-  missing: boolean;
   sourcePath: string;
+  parent?: DocNode;
 }
 
 function slugWithoutIndex(slug: string): string[] {
@@ -58,7 +59,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     } else if (slugParts.length === 1) {
       const node = {
         path: slug,
-        slug: slug,
+        slug,
         frontmatter: doc,
         parent: rootNode,
         children: [],
@@ -91,7 +92,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
         path: slug,
         slug: slugParts[slugParts.length - 1],
         frontmatter: doc,
-        parent: parent,
+        parent,
         children: [],
         missing: false,
         sourcePath: doc.sourcePath,
@@ -141,7 +142,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     type: 'guide',
     url: '/' + n.path + '/',
     title: n.frontmatter.title,
-    platform: platform,
+    platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
   };
 }

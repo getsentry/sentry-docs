@@ -1,4 +1,5 @@
 import getPackageRegistry from 'sentry-docs/build/packageRegistry';
+
 import {JsBundleListClient} from './jsBundleListClient';
 
 export async function JsBundleList() {
