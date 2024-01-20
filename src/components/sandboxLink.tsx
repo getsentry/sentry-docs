@@ -1,6 +1,6 @@
-import { getCurrentPlatform } from "sentry-docs/docTree";
-import { serverContext } from "sentry-docs/serverContext";
-import { ExternalLink } from "./externalLink";
+import {getCurrentPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+import {ExternalLink} from './externalLink';
 
 const scenarios = [
   'performance',
@@ -78,12 +78,12 @@ export function SandboxLink({children, platform, target, ...params}: Props) {
   if (isSandboxHidden()) {
     return children;
   }
-  
+
   const {rootNode, path} = serverContext();
   const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
-  
+
   const currentPlatformkey = currentPlatform?.key ?? 'unknown';
-  
+
   if (!params.projectSlug) {
     if ((SANDBOX_PLATFORMS as readonly string[]).includes(currentPlatformkey)) {
       params.projectSlug = currentPlatformkey;
@@ -96,7 +96,7 @@ export function SandboxLink({children, platform, target, ...params}: Props) {
     <ExternalLink href={getSandboxURL(params).toString()} target={target || '_blank'}>
       {children}
     </ExternalLink>
-  )
+  );
 }
 
 export function SandboxOnly({children}) {

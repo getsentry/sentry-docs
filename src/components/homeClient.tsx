@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {Nav, NavItem} from 'react-bootstrap';
 import Image from 'next/image';
@@ -6,10 +6,10 @@ import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 import Link from 'next/link';
 import {Banner} from 'sentry-docs/components/banner';
 import {PlatformIcon} from './platformIcon';
-import { Platform, PlatformGuide } from 'sentry-docs/types';
-import { SmartLink } from './smartLink';
-import { Search } from './search';
-import { NavbarPlatformDropdown } from './navbarPlatformDropdown';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {SmartLink} from './smartLink';
+import {Search} from './search';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 
 interface Props {
   platforms: Platform[];
@@ -28,28 +28,35 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
                 src={SentryWordmarkSVG}
                 width={215}
                 height={64}
-                alt="Sentry's logo" />
+                alt="Sentry's logo"
+              />
             </a>
             <Nav className="justify-content-end" style={{flex: 1}}>
               <NavbarPlatformDropdown platforms={platforms} currentPlatform={undefined} />
               <NavItem>
-                <Link className="nav-link" href="/product/">Product</Link>
+                <Link className="nav-link" href="/product/">
+                  Product
+                </Link>
               </NavItem>
               <NavItem>
-                <Link className="nav-link" href="/api/">API</Link>
+                <Link className="nav-link" href="/api/">
+                  API
+                </Link>
               </NavItem>
               <NavItem>
-                <Link className="nav-link" href="https://changelog.getsentry.com/">Changelog</Link>
+                <Link className="nav-link" href="https://changelog.getsentry.com/">
+                  Changelog
+                </Link>
               </NavItem>
               <Nav.Item>
-                  <Nav.Link
-                    className="text-primary"
-                    href="https://try.sentry-demo.com/demo/start/"
-                    target="_blank"
-                  >
-                    Sandbox
-                  </Nav.Link>
-                </Nav.Item>
+                <Nav.Link
+                  className="text-primary"
+                  href="https://try.sentry-demo.com/demo/start/"
+                  target="_blank"
+                >
+                  Sandbox
+                </Nav.Link>
+              </Nav.Item>
               <NavItem>
                 <Link className="nav-link" href="https://sentry.io/">
                   Sign In
@@ -61,10 +68,10 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                  <path
-                    fillRule="evenodd"
-                    d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-                  />
+                    <path
+                      fillRule="evenodd"
+                      d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+                    />
                   </svg>
                 </Link>
               </NavItem>
@@ -96,7 +103,7 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
               </SmartLink>
             ))}
           </div>
-          
+
           <div className="integrations-all">
             <a href="/platforms/" className="see-all-btn">
               See All {totalPlatformCount} Supported Platforms

@@ -25,7 +25,13 @@ interface SidebarLinkProps {
   path: string;
 }
 
-export function SidebarLink({to, title, children, path, collapsed = null}: SidebarLinkProps) {
+export function SidebarLink({
+  to,
+  title,
+  children,
+  path,
+  collapsed = null,
+}: SidebarLinkProps) {
   const isActive = path.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
   const hasSubtree = Children.count(children) > 0;

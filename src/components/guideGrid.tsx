@@ -2,8 +2,8 @@ import React, {Fragment} from 'react';
 
 import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
-import { serverContext } from 'sentry-docs/serverContext';
-import { getCurrentPlatform, getPlatform } from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+import {getCurrentPlatform, getPlatform} from 'sentry-docs/docTree';
 
 type Props = {
   className?: string;
@@ -11,12 +11,14 @@ type Props = {
 };
 
 export function GuideGrid({platform, className}: Props) {
-  const { rootNode, path } = serverContext();
+  const {rootNode, path} = serverContext();
   if (!rootNode) {
     return null;
   }
 
-  const currentPlatform = platform ? getPlatform(rootNode, platform) : getCurrentPlatform(rootNode, path);
+  const currentPlatform = platform
+    ? getPlatform(rootNode, platform)
+    : getCurrentPlatform(rootNode, path);
   if (!currentPlatform) {
     return null;
   }

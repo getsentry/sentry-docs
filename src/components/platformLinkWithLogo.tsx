@@ -2,8 +2,8 @@ import React from 'react';
 
 import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
-import { serverContext } from 'sentry-docs/serverContext';
-import { getPlatform } from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+import {getPlatform} from 'sentry-docs/docTree';
 
 type Props = {
   label?: string;
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function PlatformLinkWithLogo({platform, label, url}: Props) {
-  const { rootNode } = serverContext();
+  const {rootNode} = serverContext();
   if (!rootNode || !platform) {
     return null;
   }

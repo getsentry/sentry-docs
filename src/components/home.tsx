@@ -1,8 +1,8 @@
-import { getAllFilesFrontMatter } from "sentry-docs/mdx";
-import { HomeClient } from "./homeClient";
-import { extractPlatforms, frontmatterToTree } from "sentry-docs/docTree";
-import { notFound } from "next/navigation";
-import { Platform, PlatformGuide } from "sentry-docs/types";
+import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
+import {HomeClient} from './homeClient';
+import {extractPlatforms, frontmatterToTree} from 'sentry-docs/docTree';
+import {notFound} from 'next/navigation';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 const HIGHLIGHTED_PLATFORMS = [
   'javascript',
@@ -33,7 +33,7 @@ export async function Home() {
     console.warn('no root node');
     return notFound();
   }
-  
+
   const platformList = extractPlatforms(rootNode);
 
   let totalPlatformCount = 0;
@@ -54,5 +54,11 @@ export async function Home() {
     (a, b) => HIGHLIGHTED_PLATFORMS.indexOf(a.key) - HIGHLIGHTED_PLATFORMS.indexOf(b.key)
   );
 
-  return <HomeClient visiblePlatforms={visiblePlatforms} totalPlatformCount={totalPlatformCount} platforms={platformList} />;
+  return (
+    <HomeClient
+      visiblePlatforms={visiblePlatforms}
+      totalPlatformCount={totalPlatformCount}
+      platforms={platformList}
+    />
+  );
 }

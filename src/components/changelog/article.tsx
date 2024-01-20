@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Tag from './tag';
 import Date from './date';
-import { ReactNode } from 'react';
+import {ReactNode} from 'react';
 
 type ArticleProps = {
   slug: string;
@@ -14,7 +14,15 @@ type ArticleProps = {
   className?: string;
 };
 
-export default function Article({slug, title, image, tags, date, children, className}: ArticleProps) {
+export default function Article({
+  slug,
+  title,
+  image,
+  tags,
+  date,
+  children,
+  className,
+}: ArticleProps) {
   return (
     <article className={`bg-white rounded-lg shadow-lg mb-8 ${className}`}>
       {image && (
@@ -33,9 +41,7 @@ export default function Article({slug, title, image, tags, date, children, class
         </h3>
         <div>
           <div className="flex flex-wrap gap-1 py-1">
-            {Array.isArray(tags) && tags.map(tag => (
-              <Tag key={tag} text={tag} />
-            ))}
+            {Array.isArray(tags) && tags.map(tag => <Tag key={tag} text={tag} />)}
           </div>
 
           <div className="prose max-w-none text-gray-700 py-2">{children}</div>

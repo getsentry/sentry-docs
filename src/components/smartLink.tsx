@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ExternalLink } from './externalLink';
+import {ExternalLink} from './externalLink';
 
 interface Props {
   activeClassName?: string;
@@ -27,9 +27,11 @@ export function SmartLink({
   const realTo = to || href || '';
 
   if (realTo?.indexOf('://') !== -1) {
-    return <ExternalLink href={realTo} className={className} {...props}>
-      {children || to || href}
-    </ExternalLink>
+    return (
+      <ExternalLink href={realTo} className={className} {...props}>
+        {children || to || href}
+      </ExternalLink>
+    );
   }
 
   return (

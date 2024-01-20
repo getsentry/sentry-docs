@@ -26,12 +26,12 @@ const ChecksumValue = styled.code`
 type Props = {
   version: string;
   files: any[];
-}
+};
 
 export function CliChecksumTableClient({version, files}: Props) {
-//   const {
-//     app: {files, version},
-//   } = useStaticQuery(query);
+  //   const {
+  //     app: {files, version},
+  //   } = useStaticQuery(query);
 
   return (
     <table style={{display: 'block', overflow: 'scroll'}}>

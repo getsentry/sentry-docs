@@ -1,5 +1,5 @@
-import { nodeForPath } from "sentry-docs/docTree";
-import { serverContext } from "sentry-docs/serverContext";
+import {nodeForPath} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 import Link from 'next/link';
 
 type Props = {
@@ -13,11 +13,11 @@ type Props = {
 };
 
 export function PageGrid({nextPages = false, header, exclude}: Props) {
-  const { rootNode, path } = serverContext();
+  const {rootNode, path} = serverContext();
   if (!rootNode) {
     return null;
   }
-  
+
   let parentNode = nodeForPath(rootNode, path);
   if (!parentNode) {
     return null;
@@ -30,7 +30,7 @@ export function PageGrid({nextPages = false, header, exclude}: Props) {
         {parentNode.children.map(n => (
           <li key={n.path} style={{marginBottom: '1rem'}}>
             <h4 style={{marginBottom: 0}}>
-              <Link href={"/" + n.path}>{n.frontmatter.title}</Link>
+              <Link href={'/' + n.path}>{n.frontmatter.title}</Link>
             </h4>
             {n.frontmatter.description ?? <p>{n.frontmatter.description}</p>}
           </li>

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import styled from "@emotion/styled";
-import { SmartLink } from "./smartLink";
+import styled from '@emotion/styled';
+import {SmartLink} from './smartLink';
 
 const PackageDetail = styled.div`
   font-size: 0.8em;
@@ -29,27 +29,26 @@ const PackageDetail = styled.div`
   }
 `;
 
-
 type Props = {
-  url?: string
-  canonical?: string
-  version?: string
-  repoUrl?: string
-  apiDocsUrl?: string
-}
+  url?: string;
+  canonical?: string;
+  version?: string;
+  repoUrl?: string;
+  apiDocsUrl?: string;
+};
 
-export function PlatformSdkDetailClient({url, canonical, version, repoUrl, apiDocsUrl}: Props) {
+export function PlatformSdkDetailClient({
+  url,
+  canonical,
+  version,
+  repoUrl,
+  apiDocsUrl,
+}: Props) {
   return (
     <PackageDetail>
       <dl>
         <dt>Package:</dt>
-        <dd>
-          {url ? (
-            <SmartLink to={url}>{canonical}</SmartLink>
-          ) : (
-            canonical
-          )}
-        </dd>
+        <dd>{url ? <SmartLink to={url}>{canonical}</SmartLink> : canonical}</dd>
         <dt>Version:</dt>
         <dd>{version}</dd>
         <dt>Repository:</dt>

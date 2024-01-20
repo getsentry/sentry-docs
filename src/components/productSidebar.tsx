@@ -2,7 +2,7 @@ import React from 'react';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink} from './sidebarLink';
-import { serverContext } from 'sentry-docs/serverContext';
+import {serverContext} from 'sentry-docs/serverContext';
 
 export type NavNode = {
   context: {
@@ -24,7 +24,7 @@ type ChildProps = {
 
 export function ProductSidebar({data}: ChildProps) {
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
-  const { path } = serverContext();
+  const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (
     <ul className="list-unstyled" data-sidebar-tree>
@@ -60,7 +60,11 @@ export function ProductSidebar({data}: ChildProps) {
           <SidebarLink to="/platforms/" title="Platforms" path={fullPath} />
           <SidebarLink to="/api/" title="API Reference" path={fullPath} />
           <SidebarLink to="/contributing/" title="Contributing to Docs" path={fullPath} />
-          <SidebarLink to="https://develop.sentry.dev" title="Developer Documentation" path={fullPath} />
+          <SidebarLink
+            to="https://develop.sentry.dev"
+            title="Developer Documentation"
+            path={fullPath}
+          />
           <SidebarLink
             to="https://develop.sentry.dev/self-hosted/"
             title="Self-Hosting Sentry"

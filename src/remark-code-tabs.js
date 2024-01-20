@@ -1,4 +1,4 @@
-import { visit } from 'unist-util-visit';
+import {visit} from 'unist-util-visit';
 
 function getFullMeta(node) {
   if (node.lang && node.meta) {
@@ -21,7 +21,7 @@ function getTabTitle(node) {
 
 // TODO(dcramer): this should only operate on MDX
 export default function remarkCodeTabs() {
-  return (markdownAST) => {
+  return markdownAST => {
     let lastParent = null;
     let pendingCode = [];
     let toRemove = [];
@@ -89,5 +89,5 @@ export default function remarkCodeTabs() {
     });
 
     return markdownAST;
-  }
-};
+  };
+}

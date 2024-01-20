@@ -4,7 +4,7 @@ import {sortPages} from 'sentry-docs/utils';
 
 import {SidebarLink} from './sidebarLink';
 import {SmartLink} from './smartLink';
-import { serverContext } from 'sentry-docs/serverContext';
+import {serverContext} from 'sentry-docs/serverContext';
 
 type Node = {
   [key: string]: any;
@@ -57,7 +57,7 @@ export const renderChildren = (
   exclude: string[],
   path: string,
   showDepth: number = 0,
-  depth: number = 0,
+  depth: number = 0
 ): React.ReactNode[] => {
   return sortPages(
     children.filter(
@@ -88,7 +88,9 @@ type ChildrenProps = {
 };
 
 export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
-  return <React.Fragment>{renderChildren(tree, exclude, path, showDepth)}</React.Fragment>;
+  return (
+    <React.Fragment>{renderChildren(tree, exclude, path, showDepth)}</React.Fragment>
+  );
 }
 
 type Props = {
@@ -142,9 +144,9 @@ export function DynamicNav({
     ? entity.children.find((n: EntityTree) => n.name === '')
     : null;
 
-  const { path } = serverContext();
+  const {path} = serverContext();
   const isActive = path.join('/').indexOf(root) === 0;
-  const linkPath = `/${path.join('/')}/`
+  const linkPath = `/${path.join('/')}/`;
 
   const headerClassName = 'sidebar-title d-flex align-items-center';
   const header =
@@ -172,7 +174,12 @@ export function DynamicNav({
             prependLinks.map(link => (
               <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />
             ))}
-          <Children tree={entity.children} exclude={exclude} showDepth={showDepth} path={linkPath} />
+          <Children
+            tree={entity.children}
+            exclude={exclude}
+            showDepth={showDepth}
+            path={linkPath}
+          />
         </ul>
       )}
     </li>

@@ -2,7 +2,7 @@
 /* eslint import/no-nodejs-modules:0 */
 /* eslint-disable no-console */
 
-import { visit } from 'unist-util-visit';
+import {visit} from 'unist-util-visit';
 
 function scopedEval(expr, context = {}) {
   // eslint-disable-next-line no-new-func
@@ -68,4 +68,4 @@ export default function remarkVariables(options) {
       }
     );
   };
-};
+}

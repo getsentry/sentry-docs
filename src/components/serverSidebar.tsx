@@ -1,24 +1,26 @@
-import { serverContext } from "sentry-docs/serverContext";
-import { Sidebar, SidebarNode } from "./sidebar";
-import { DocNode, getGuide, getPlatform, nodeForPath } from "sentry-docs/docTree";
-import { NavNode, ProductSidebar } from "./productSidebar";
-import { PlatformSidebar, Node as PlatformSidebarNode } from "./platformSidebar";
-import { PlatformGuide } from "sentry-docs/types";
+import {serverContext} from 'sentry-docs/serverContext';
+import {Sidebar, SidebarNode} from './sidebar';
+import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
+import {NavNode, ProductSidebar} from './productSidebar';
+import {PlatformSidebar, Node as PlatformSidebarNode} from './platformSidebar';
+import {PlatformGuide} from 'sentry-docs/types';
 
 export function productSidebar(rootNode: DocNode) {
   const productNode = nodeForPath(rootNode, 'product');
   if (!productNode) {
     return null;
   }
-  const nodes: NavNode[] = [{
-    context: {
-      draft: productNode.frontmatter.draft,
-      title: productNode.frontmatter.title,
-      sidebar_order: productNode.frontmatter.sidebar_order,
-      sidebar_title: productNode.frontmatter.sidebar_title
+  const nodes: NavNode[] = [
+    {
+      context: {
+        draft: productNode.frontmatter.draft,
+        title: productNode.frontmatter.title,
+        sidebar_order: productNode.frontmatter.sidebar_order,
+        sidebar_title: productNode.frontmatter.sidebar_title,
+      },
+      path: '/' + productNode.path + '/',
     },
-    path: '/' + productNode.path + '/'
-  }];
+  ];
   function addChildren(docNodes: DocNode[]) {
     docNodes.forEach(n => {
       nodes.push({
@@ -26,37 +28,33 @@ export function productSidebar(rootNode: DocNode) {
           draft: n.frontmatter.draft,
           title: n.frontmatter.title,
           sidebar_order: n.frontmatter.sidebar_order,
-          sidebar_title: n.frontmatter.sidebar_title
+          sidebar_title: n.frontmatter.sidebar_title,
         },
-        path: '/' + n.path + '/'
+        path: '/' + n.path + '/',
       });
       addChildren(n.children);
-    })
+    });
   }
   addChildren(productNode.children);
   const data = {
     allSitePage: {
       nodes,
-    }
-  }
-  return (
-    <ProductSidebar
-      data={data}
-    />
-  )
+    },
+  };
+  return <ProductSidebar data={data} />;
 }
 
 export function ServerSidebar() {
-  const { path, rootNode } = serverContext();
+  const {path, rootNode} = serverContext();
   if (!rootNode) {
     return null;
   }
-  
+
   let node = rootNode;
   if (path.indexOf('contributing') === 0) {
     const maybeNode = nodeForPath(rootNode, 'contributing');
     if (maybeNode) {
-      node = maybeNode
+      node = maybeNode;
     } else {
       return null;
     }
@@ -79,61 +77,65 @@ export function ServerSidebar() {
       guide = getGuide(rootNode, name, path[3]);
     }
 
-    const nodes: PlatformSidebarNode[] = [{
-      context: {
-        platform: {
-          name
+    const nodes: PlatformSidebarNode[] = [
+      {
+        context: {
+          platform: {
+            name,
+          },
+          title: node.frontmatter.title,
+          sidebar_order: node.frontmatter.sidebar_order,
+          sidebar_title: node.frontmatter.sidebar_title,
         },
-        title: node.frontmatter.title,
-        sidebar_order: node.frontmatter.sidebar_order,
-        sidebar_title: node.frontmatter.sidebar_title
+        path: '/' + node.path + '/',
       },
-      path: '/' + node.path + '/'
-    }];
+    ];
     function addChildren(docNodes: DocNode[]) {
       docNodes.forEach(n => {
         nodes.push({
           context: {
             platform: {
-              name
+              name,
             },
             title: n.frontmatter.title,
             sidebar_order: n.frontmatter.sidebar_order,
-            sidebar_title: n.frontmatter.sidebar_title
+            sidebar_title: n.frontmatter.sidebar_title,
           },
-          path: '/' + n.path + '/'
+          path: '/' + n.path + '/',
         });
         addChildren(n.children);
-      })
+      });
     }
     addChildren(node.children);
-    
+
     return (
       <PlatformSidebar
         platform={{
           name,
           title: platform?.title || '',
         }}
-        guide={guide && {
-          name: guide.name,
-          title: guide.title || '',
-        }}
+        guide={
+          guide && {
+            name: guide.name,
+            title: guide.title || '',
+          }
+        }
         data={{
           allSitePage: {
-            nodes
-          }
+            nodes,
+          },
         }}
       />
     );
   }
-  
+
   // Must not send full DocNodes to a client component, or the entire doc tree
   // will be serialized.
   const nodeToSidebarNode = (node: DocNode): SidebarNode => {
     return {
       path: node.path,
       frontmatter: node.frontmatter as {[key: string]: any},
-      children: node.children.map(nodeToSidebarNode)
+      children: node.children.map(nodeToSidebarNode),
     };
   };
   return <Sidebar node={nodeToSidebarNode(node)} path={path} />;

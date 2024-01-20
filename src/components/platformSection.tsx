@@ -1,8 +1,11 @@
-import { DocNode, getCurrentPlatformOrGuide, getPlatform } from "sentry-docs/docTree";
-import { serverContext } from "sentry-docs/serverContext";
-import { Platform, PlatformGuide } from "sentry-docs/types";
+import {DocNode, getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
-function getPlatformsWithFallback(rootNode: DocNode, platformOrGuide: Platform | PlatformGuide) {
+function getPlatformsWithFallback(
+  rootNode: DocNode,
+  platformOrGuide: Platform | PlatformGuide
+) {
   const result = [platformOrGuide.key];
   let curPlatform: Platform | PlatformGuide | undefined = platformOrGuide;
   while (curPlatform?.fallbackPlatform) {

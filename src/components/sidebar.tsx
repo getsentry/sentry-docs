@@ -1,56 +1,57 @@
 'use client';
 
-import styled from "@emotion/styled";
-import Link from "next/link";
+import styled from '@emotion/styled';
+import Link from 'next/link';
 
 export type SidebarNode = {
   path: string;
-  frontmatter: { [key: string] : any };
+  frontmatter: {[key: string]: any};
   children: SidebarNode[];
-}
+};
 
 type Props = {
   node: SidebarNode;
   path: string[];
-}
+};
 
-export function Sidebar({ node, path }: Props) {
+export function Sidebar({node, path}: Props) {
   const activeClassName = (node, baseClassName = '') => {
     const className = node.path === path.join('/') ? 'active' : '';
     return `${baseClassName} ${className}`;
-  }
+  };
 
-  const renderChildren = (children) => (
-    children && <ul className="list-unstyled" data-sidebar-tree>
-      {children.map((node) => (
-      <li className="toc-item" key={node.path} data-sidebar-branch>
-        <SidebarNavItem
-          href={"/" + node.path}
-          data-sidebar-link
-          className={activeClassName(node)}
-          >
-          {node.frontmatter.sidebar_title || node.frontmatter.title}
-          {node.children.length > 0 && <Chevron direction="down" />}
-        </SidebarNavItem>
-        {renderChildren(node.children)}
-      </li>
-      ))}
-    </ul>
-  );
-  
+  const renderChildren = children =>
+    children && (
+      <ul className="list-unstyled" data-sidebar-tree>
+        {children.map(node => (
+          <li className="toc-item" key={node.path} data-sidebar-branch>
+            <SidebarNavItem
+              href={'/' + node.path}
+              data-sidebar-link
+              className={activeClassName(node)}
+            >
+              {node.frontmatter.sidebar_title || node.frontmatter.title}
+              {node.children.length > 0 && <Chevron direction="down" />}
+            </SidebarNavItem>
+            {renderChildren(node.children)}
+          </li>
+        ))}
+      </ul>
+    );
+
   return (
     <ul className="list-unstyled" data-sidebar-tree>
       <li className="mb-3" data-sidebar-branch>
         <>
-        <SidebarNavItem
-          href={"/" + node.path}
-          className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
-          data-sidebar-link
-          key={node.path}
+          <SidebarNavItem
+            href={'/' + node.path}
+            className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
+            data-sidebar-link
+            key={node.path}
           >
-          <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
-        </SidebarNavItem>
-        {renderChildren(node.children)}
+            <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
+          </SidebarNavItem>
+          {renderChildren(node.children)}
         </>
       </li>
     </ul>

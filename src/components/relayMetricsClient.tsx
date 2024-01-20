@@ -48,10 +48,10 @@ type Metric = {
   type: string;
   features: string[];
   description: string;
-}
+};
 type Props = {
   metrics: Metric[];
-}
+};
 
 export function RelayMetricsClient({metrics}: Props) {
   return (

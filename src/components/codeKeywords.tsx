@@ -519,7 +519,11 @@ const DropdownHeader = styled('div')`
 `;
 
 const ItemButton = styled('button')<{isActive: boolean}>`
-  font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI';
+  font-family:
+    'Rubik',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI';
   font-size: 0.85rem;
   text-align: left;
   padding: 2px 8px;

@@ -1,6 +1,6 @@
-import type { FrontMatter} from 'sentry-docs/mdx';
-import { Platform, PlatformGuide } from './types';
-import { platformsData } from './platformsData';
+import type {FrontMatter} from 'sentry-docs/mdx';
+import {Platform, PlatformGuide} from './types';
+import {platformsData} from './platformsData';
 
 export interface DocNode {
   path: string;
@@ -10,7 +10,7 @@ export interface DocNode {
   children: DocNode[];
   missing: boolean;
   sourcePath: string;
-};
+}
 
 function slugWithoutIndex(slug: string): string[] {
   const parts = slug.split('/');
@@ -36,7 +36,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     }
     return (a.title || '').localeCompare(b.title || '');
   });
-  
+
   const rootNode: DocNode = {
     path: '/',
     slug: '',
@@ -46,13 +46,13 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
     children: [],
     missing: false,
     sourcePath: 'src/components/home.tsx',
-  }
+  };
 
   const slugMap = {};
-  sortedDocs.forEach((doc) => {
+  sortedDocs.forEach(doc => {
     const slugParts = slugWithoutIndex(doc.slug);
     const slug = slugParts.join('/');
-    
+
     if (slugParts.length === 0) {
       rootNode.frontmatter = doc;
     } else if (slugParts.length === 1) {
@@ -83,7 +83,7 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
           parent: grandparent,
           children: [],
           missing: true,
-        }
+        };
         grandparent.children.push(parent);
         slugMap[parentSlug] = parent;
       }
@@ -99,18 +99,18 @@ export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefin
       parent.children.push(node);
       slugMap[slug] = node;
     }
-  }); 
-  
+  });
+
   return rootNode;
 }
 
 export function nodeForPath(node: DocNode, path: string | string[]): DocNode | undefined {
-  const stringPath = (typeof path === 'string') ? path : path.join('/');
+  const stringPath = typeof path === 'string' ? path : path.join('/');
   const parts = slugWithoutIndex(stringPath);
   for (let i = 0; i < parts.length; i++) {
-    const maybeChild = node.children.find((child) => child.slug === parts[i])
+    const maybeChild = node.children.find(child => child.slug === parts[i]);
     if (maybeChild) {
-      node = maybeChild
+      node = maybeChild;
     } else {
       return;
     }
@@ -143,7 +143,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     title: n.frontmatter.title,
     platform: platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
-  }
+  };
 }
 
 export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
@@ -154,18 +154,24 @@ export function getPlatform(rootNode: DocNode, name: string): Platform | undefin
   return nodeToPlatform(platformNode);
 }
 
-export function getCurrentPlatform(rootNode: DocNode, path: string[]): Platform | undefined {
+export function getCurrentPlatform(
+  rootNode: DocNode,
+  path: string[]
+): Platform | undefined {
   if (path.length < 2 || path[0] !== 'platforms') {
     return;
   }
   return getPlatform(rootNode, path[1]);
 }
 
-export function getCurrentPlatformOrGuide(rootNode: DocNode, path: string[]): Platform | PlatformGuide | undefined {
+export function getCurrentPlatformOrGuide(
+  rootNode: DocNode,
+  path: string[]
+): Platform | PlatformGuide | undefined {
   if (path.length < 2 || path[0] !== 'platforms') {
     return;
   }
-  
+
   if (path.length >= 4 && path[2] === 'guides') {
     return getGuide(rootNode, path[1], path[3]);
   }
@@ -173,7 +179,11 @@ export function getCurrentPlatformOrGuide(rootNode: DocNode, path: string[]): Pl
   return getPlatform(rootNode, path[1]);
 }
 
-export function getGuide(rootNode: DocNode, platform: string, guide: string): PlatformGuide | undefined {
+export function getGuide(
+  rootNode: DocNode,
+  platform: string,
+  guide: string
+): PlatformGuide | undefined {
   const guideNode = nodeForPath(rootNode, ['platforms', platform, 'guides', guide]);
   if (!guideNode) {
     return;
@@ -186,7 +196,7 @@ export function extractPlatforms(rootNode: DocNode): Platform[] {
   if (!platformsNode) {
     return [];
   }
-  
+
   return platformsNode.children.map(nodeToPlatform);
 }
 
@@ -195,5 +205,5 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   if (!guidesNode) {
     return [];
   }
-  return guidesNode.children.map((n) => nodeToGuide(platformNode.slug, n));
+  return guidesNode.children.map(n => nodeToGuide(platformNode.slug, n));
 }

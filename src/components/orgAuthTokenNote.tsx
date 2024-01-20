@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useContext } from "react";
-import { CodeContext } from "./codeContext";
-import { ExternalLink } from "./externalLink";
-import { Note } from "./note";
-import { SignedInCheck } from "./signedInCheck";
-import { Alert } from "./alert";
-import { usePathname } from "next/navigation";
+import {useContext} from 'react';
+import {CodeContext} from './codeContext';
+import {ExternalLink} from './externalLink';
+import {Note} from './note';
+import {SignedInCheck} from './signedInCheck';
+import {Alert} from './alert';
+import {usePathname} from 'next/navigation';
 
 export function OrgAuthTokenNote() {
   const pathname = usePathname();
-  const url = "https://docs.sentry.io" + pathname;
+  const url = 'https://docs.sentry.io' + pathname;
 
   const orgAuthTokenUrl = useOrgAuthTokenUrl();
 

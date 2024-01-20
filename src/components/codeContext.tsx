@@ -94,7 +94,7 @@ type CodeContextType = {
   sharedCodeSelection: [string | null, React.Dispatch<string | null>];
   sharedKeywordSelection: [
     Record<string, number>,
-    React.Dispatch<Record<string, number>>
+    React.Dispatch<Record<string, number>>,
   ];
 };
 
@@ -149,7 +149,7 @@ function makeDefaults() {
 export async function fetchCodeKeywords(): Promise<CodeKeywords> {
   let json: {projects: ProjectApiResult[]; user: UserApiResult | undefined} = {
     projects: [],
-    user: undefined
+    user: undefined,
   };
 
   // First fetch which regions the user has a presence

@@ -3,24 +3,27 @@
 import {Nav} from 'react-bootstrap';
 
 import {Search} from './search';
-import { NavbarPlatformDropdown } from './navbarPlatformDropdown';
-import { Platform, PlatformGuide } from 'sentry-docs/types';
-import { SmartLink } from './smartLink';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {SmartLink} from './smartLink';
 
 interface Props {
   platforms: Platform[];
   currentPlatform: Platform | PlatformGuide | undefined;
-};
+}
 
 export function NavbarClient({platforms, currentPlatform}: Props) {
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
       <div>
-        <Search path={''} platforms={platforms.map((p) => p.key)} />
+        <Search path={''} platforms={platforms.map(p => p.key)} />
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
-          <NavbarPlatformDropdown platforms={platforms} currentPlatform={currentPlatform} />
+          <NavbarPlatformDropdown
+            platforms={platforms}
+            currentPlatform={currentPlatform}
+          />
           <Nav.Item>
             <SmartLink className="nav-link" href="/product/">
               Product
@@ -64,6 +67,6 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
         </Nav>
       </div>
     </div>
-  )
+  );
   return null;
-};
+}

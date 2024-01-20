@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import styled from "@emotion/styled";
-import { useState } from "react";
+import styled from '@emotion/styled';
+import {useState} from 'react';
 import Select from 'react-select';
 
 type RegionData = {region: string; version: string};
@@ -19,14 +19,20 @@ const toOption = ({region}: RegionData) => {
   };
 };
 
-export function LambdaLayerDetailClient({canonical, layerList}: {canonical: string, layerList: LayerData[]}) {
+export function LambdaLayerDetailClient({
+  canonical,
+  layerList,
+}: {
+  canonical: string;
+  layerList: LayerData[];
+}) {
   const layer = layerList.find(l => l.canonical === canonical);
   // if we don't find a matching layer, let the page blow up
   // cause the page is useless without it
   if (!layer) {
     throw new Error(`Could not find layer for: ${canonical}`);
   }
-  
+
   const {regions, layerName, accountNumber} = layer;
 
   const [regionOption, setRegion] = useState<{

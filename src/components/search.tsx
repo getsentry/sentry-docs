@@ -17,7 +17,7 @@ import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 import {Logo} from './logo';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import {useRouter} from 'next/navigation';
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {

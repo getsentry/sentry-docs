@@ -3,14 +3,17 @@ import {NavDropdown} from 'react-bootstrap';
 
 import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
-import { Platform, PlatformGuide } from 'sentry-docs/types';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 interface Props {
   platforms: Platform[];
   currentPlatform: Platform | PlatformGuide | undefined;
-};
+}
 
-export function NavbarPlatformDropdown({platforms: platformList, currentPlatform}: Props) {
+export function NavbarPlatformDropdown({
+  platforms: platformList,
+  currentPlatform,
+}: Props) {
   return (
     <NavDropdown
       title={

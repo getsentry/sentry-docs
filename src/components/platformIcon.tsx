@@ -252,663 +252,663 @@ import XamarinSVG from 'platformicons/svg/xamarin.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
 
 const formatToSVG = {
-  'HTML5': {
+  HTML5: {
     sm: Html5SVG,
-    lg: Html5SVGLarge
+    lg: Html5SVGLarge,
   },
-  'actix': {
+  actix: {
     sm: ActixSVG,
-    lg: ActixSVGLarge
+    lg: ActixSVGLarge,
   },
-  'aiohttp': {
+  aiohttp: {
     sm: AiohttpSVG,
-    lg: AiohttpSVGLarge
+    lg: AiohttpSVGLarge,
   },
-  'android': {
+  android: {
     sm: AndroidSVG,
-    lg: AndroidSVGLarge
+    lg: AndroidSVGLarge,
   },
-  'angularjs': {
+  angularjs: {
     sm: AngularjsSVG,
-    lg: AngularjsSVGLarge
+    lg: AngularjsSVGLarge,
   },
   'apache-airflow': {
     sm: ApacheairflowSVG,
-    lg: ApacheairflowSVGLarge
+    lg: ApacheairflowSVGLarge,
   },
   'apache-beam': {
     sm: ApachebeamSVG,
-    lg: ApachebeamSVGLarge
+    lg: ApachebeamSVGLarge,
   },
   'apache-spark': {
     sm: ApachesparkSVG,
-    lg: ApachesparkSVGLarge
+    lg: ApachesparkSVGLarge,
   },
   'app-engine': {
     sm: AppengineSVG,
-    lg: AppengineSVGLarge
+    lg: AppengineSVGLarge,
   },
-  'apple': {
+  apple: {
     sm: AppleSVG,
-    lg: AppleSVGLarge
+    lg: AppleSVGLarge,
   },
-  'ariadne': {
+  ariadne: {
     sm: AriadneSVG,
-    lg: AriadneSVGLarge
+    lg: AriadneSVGLarge,
   },
-  'astro': {
+  astro: {
     sm: AstroSVG,
-    lg: AstroSVGLarge
+    lg: AstroSVGLarge,
   },
-  'aws': {
+  aws: {
     sm: AwsSVG,
-    lg: AwsSVGLarge
+    lg: AwsSVGLarge,
   },
-  'awslambda': {
+  awslambda: {
     sm: AwslambdaSVG,
-    lg: AwslambdaSVGLarge
+    lg: AwslambdaSVGLarge,
   },
   'azure-functions': {
     sm: AzurefunctionsSVG,
-    lg: AzurefunctionsSVGLarge
+    lg: AzurefunctionsSVGLarge,
   },
-  'azure': {
+  azure: {
     sm: AzureSVG,
-    lg: AzureSVGLarge
+    lg: AzureSVGLarge,
   },
-  'backbone': {
+  backbone: {
     sm: BackboneSVG,
-    lg: BackboneSVGLarge
+    lg: BackboneSVGLarge,
   },
-  'blazor': {
+  blazor: {
     sm: BlazorSVG,
-    lg: BlazorSVGLarge
+    lg: BlazorSVGLarge,
   },
-  'bootstrap': {
+  bootstrap: {
     sm: BootstrapSVG,
-    lg: BootstrapSVGLarge
+    lg: BootstrapSVGLarge,
   },
-  'bottle': {
+  bottle: {
     sm: BottleSVG,
-    lg: BottleSVGLarge
+    lg: BottleSVGLarge,
   },
-  'bun': {
+  bun: {
     sm: BunSVG,
-    lg: BunSVGLarge
+    lg: BunSVGLarge,
   },
-  'capacitor': {
+  capacitor: {
     sm: CapacitorSVG,
-    lg: CapacitorSVGLarge
+    lg: CapacitorSVGLarge,
   },
-  'celery': {
+  celery: {
     sm: CelerySVG,
-    lg: CelerySVGLarge
+    lg: CelerySVGLarge,
   },
-  'chalice': {
+  chalice: {
     sm: ChaliceSVG,
-    lg: ChaliceSVGLarge
+    lg: ChaliceSVGLarge,
   },
-  'clickhouse': {
+  clickhouse: {
     sm: ClickhouseSVG,
-    lg: ClickhouseSVGLarge
+    lg: ClickhouseSVGLarge,
   },
-  'clojure': {
+  clojure: {
     sm: ClojureSVG,
-    lg: ClojureSVGLarge
+    lg: ClojureSVGLarge,
   },
-  'cloudflare': {
+  cloudflare: {
     sm: CloudflareSVG,
-    lg: CloudflareSVGLarge
+    lg: CloudflareSVGLarge,
   },
-  'connect': {
+  connect: {
     sm: ConnectSVG,
-    lg: ConnectSVGLarge
+    lg: ConnectSVGLarge,
   },
-  'cordova': {
+  cordova: {
     sm: CordovaSVG,
-    lg: CordovaSVGLarge
+    lg: CordovaSVGLarge,
   },
-  'cpp': {
+  cpp: {
     sm: CppSVG,
-    lg: CppSVGLarge
+    lg: CppSVGLarge,
   },
-  'cryengine': {
+  cryengine: {
     sm: CryengineSVG,
-    lg: CryengineSVGLarge
+    lg: CryengineSVGLarge,
   },
-  'csharp': {
+  csharp: {
     sm: CsharpSVG,
-    lg: CsharpSVGLarge
+    lg: CsharpSVGLarge,
   },
-  'css': {
+  css: {
     sm: CssSVG,
-    lg: CssSVGLarge
+    lg: CssSVGLarge,
   },
-  'dart': {
+  dart: {
     sm: DartSVG,
-    lg: DartSVGLarge
+    lg: DartSVGLarge,
   },
-  'default': {
+  default: {
     sm: DefaultSVG,
-    lg: DefaultSVGLarge
+    lg: DefaultSVGLarge,
   },
-  'deno': {
+  deno: {
     sm: DenoSVG,
-    lg: DenoSVGLarge
+    lg: DenoSVGLarge,
   },
-  'django': {
+  django: {
     sm: DjangoSVG,
-    lg: DjangoSVGLarge
+    lg: DjangoSVGLarge,
   },
-  'dotnet': {
+  dotnet: {
     sm: DotnetSVG,
-    lg: DotnetSVGLarge
+    lg: DotnetSVGLarge,
   },
-  'dotnetcore': {
+  dotnetcore: {
     sm: DotnetcoreSVG,
-    lg: DotnetcoreSVGLarge
+    lg: DotnetcoreSVGLarge,
   },
-  'dotnetfx': {
+  dotnetfx: {
     sm: DotnetfxSVG,
-    lg: DotnetfxSVGLarge
+    lg: DotnetfxSVGLarge,
   },
-  'echo': {
+  echo: {
     sm: EchoSVG,
-    lg: EchoSVGLarge
+    lg: EchoSVGLarge,
   },
-  'electron': {
+  electron: {
     sm: ElectronSVG,
-    lg: ElectronSVGLarge
+    lg: ElectronSVGLarge,
   },
-  'elixir': {
+  elixir: {
     sm: ElixirSVG,
-    lg: ElixirSVGLarge
+    lg: ElixirSVGLarge,
   },
-  'ember': {
+  ember: {
     sm: EmberSVG,
-    lg: EmberSVGLarge
+    lg: EmberSVGLarge,
   },
-  'express': {
+  express: {
     sm: ExpressSVG,
-    lg: ExpressSVGLarge
+    lg: ExpressSVGLarge,
   },
-  'falcon': {
+  falcon: {
     sm: FalconSVG,
-    lg: FalconSVGLarge
+    lg: FalconSVGLarge,
   },
-  'fastapi': {
+  fastapi: {
     sm: FastapiSVG,
-    lg: FastapiSVGLarge
+    lg: FastapiSVGLarge,
   },
-  'fasthttp': {
+  fasthttp: {
     sm: FasthttpSVG,
-    lg: FasthttpSVGLarge
+    lg: FasthttpSVGLarge,
   },
-  'flask': {
+  flask: {
     sm: FlaskSVG,
-    lg: FlaskSVGLarge
+    lg: FlaskSVGLarge,
   },
-  'flutter': {
+  flutter: {
     sm: FlutterSVG,
-    lg: FlutterSVGLarge
+    lg: FlutterSVGLarge,
   },
-  'font': {
+  font: {
     sm: FontSVG,
-    lg: FontSVGLarge
+    lg: FontSVGLarge,
   },
-  'fsharp': {
+  fsharp: {
     sm: FsharpSVG,
-    lg: FsharpSVGLarge
+    lg: FsharpSVGLarge,
   },
-  'gatsby': {
+  gatsby: {
     sm: GatsbySVG,
-    lg: GatsbySVGLarge
+    lg: GatsbySVGLarge,
   },
   'gcp-functions': {
     sm: GcpfunctionsSVG,
-    lg: GcpfunctionsSVGLarge
+    lg: GcpfunctionsSVGLarge,
   },
-  'gcp': {
+  gcp: {
     sm: GcpSVG,
-    lg: GcpSVGLarge
+    lg: GcpSVGLarge,
   },
-  'gin': {
+  gin: {
     sm: GinSVG,
-    lg: GinSVGLarge
+    lg: GinSVGLarge,
   },
-  'git': {
+  git: {
     sm: GitSVG,
-    lg: GitSVGLarge
+    lg: GitSVGLarge,
   },
-  'gnu': {
+  gnu: {
     sm: GnuSVG,
-    lg: GnuSVGLarge
+    lg: GnuSVGLarge,
   },
-  'go': {
+  go: {
     sm: GoSVG,
-    lg: GoSVGLarge
+    lg: GoSVGLarge,
   },
-  'godot': {
+  godot: {
     sm: GodotSVG,
-    lg: GodotSVGLarge
+    lg: GodotSVGLarge,
   },
-  'google': {
+  google: {
     sm: GoogleSVG,
-    lg: GoogleSVGLarge
+    lg: GoogleSVGLarge,
   },
-  'graphene': {
+  graphene: {
     sm: GrapheneSVG,
-    lg: GrapheneSVGLarge
+    lg: GrapheneSVGLarge,
   },
-  'graphql': {
+  graphql: {
     sm: GraphqlSVG,
-    lg: GraphqlSVGLarge
+    lg: GraphqlSVGLarge,
   },
-  'grpc': {
+  grpc: {
     sm: GrpcSVG,
-    lg: GrpcSVGLarge
+    lg: GrpcSVGLarge,
   },
-  'httpx': {
+  httpx: {
     sm: HttpxSVG,
-    lg: HttpxSVGLarge
+    lg: HttpxSVGLarge,
   },
-  'huey': {
+  huey: {
     sm: HueySVG,
-    lg: HueySVGLarge
+    lg: HueySVGLarge,
   },
-  'ionic': {
+  ionic: {
     sm: IonicSVG,
-    lg: IonicSVGLarge
+    lg: IonicSVGLarge,
   },
-  'iris': {
+  iris: {
     sm: IrisSVG,
-    lg: IrisSVGLarge
+    lg: IrisSVGLarge,
   },
-  'java': {
+  java: {
     sm: JavaSVG,
-    lg: JavaSVGLarge
+    lg: JavaSVGLarge,
   },
-  'javascript': {
+  javascript: {
     sm: JavascriptSVG,
-    lg: JavascriptSVGLarge
+    lg: JavascriptSVGLarge,
   },
-  'koa': {
+  koa: {
     sm: KoaSVG,
-    lg: KoaSVGLarge
+    lg: KoaSVGLarge,
   },
-  'kotlin': {
+  kotlin: {
     sm: KotlinSVG,
-    lg: KotlinSVGLarge
+    lg: KotlinSVGLarge,
   },
-  'laravel': {
+  laravel: {
     sm: LaravelSVG,
-    lg: LaravelSVGLarge
+    lg: LaravelSVGLarge,
   },
-  'linux': {
+  linux: {
     sm: LinuxSVG,
-    lg: LinuxSVGLarge
+    lg: LinuxSVGLarge,
   },
-  'logback': {
+  logback: {
     sm: LogbackSVG,
-    lg: LogbackSVGLarge
+    lg: LogbackSVGLarge,
   },
-  'loguru': {
+  loguru: {
     sm: LoguruSVG,
-    lg: LoguruSVGLarge
+    lg: LoguruSVGLarge,
   },
-  'martini': {
+  martini: {
     sm: MartiniSVG,
-    lg: MartiniSVGLarge
+    lg: MartiniSVGLarge,
   },
-  'maui': {
+  maui: {
     sm: MauiSVG,
-    lg: MauiSVGLarge
+    lg: MauiSVGLarge,
   },
-  'mongodb': {
+  mongodb: {
     sm: MongodbSVG,
-    lg: MongodbSVGLarge
+    lg: MongodbSVGLarge,
   },
-  'nativec': {
+  nativec: {
     sm: NativecSVG,
-    lg: NativecSVGLarge
+    lg: NativecSVGLarge,
   },
-  'nextjs': {
+  nextjs: {
     sm: NextjsSVG,
-    lg: NextjsSVGLarge
+    lg: NextjsSVGLarge,
   },
-  'nodejs': {
+  nodejs: {
     sm: NodejsSVG,
-    lg: NodejsSVGLarge
+    lg: NodejsSVGLarge,
   },
-  'perl': {
+  perl: {
     sm: PerlSVG,
-    lg: PerlSVGLarge
+    lg: PerlSVGLarge,
   },
-  'php': {
+  php: {
     sm: PhpSVG,
-    lg: PhpSVGLarge
+    lg: PhpSVGLarge,
   },
-  'postgresql': {
+  postgresql: {
     sm: PostgresqlSVG,
-    lg: PostgresqlSVGLarge
+    lg: PostgresqlSVGLarge,
   },
-  'pyramid': {
+  pyramid: {
     sm: PyramidSVG,
-    lg: PyramidSVGLarge
+    lg: PyramidSVGLarge,
   },
-  'python': {
+  python: {
     sm: PythonSVG,
-    lg: PythonSVGLarge
+    lg: PythonSVGLarge,
   },
-  'qt': {
+  qt: {
     sm: QtSVG,
-    lg: QtSVGLarge
+    lg: QtSVGLarge,
   },
-  'quart': {
+  quart: {
     sm: QuartSVG,
-    lg: QuartSVGLarge
+    lg: QuartSVGLarge,
   },
-  'rails': {
+  rails: {
     sm: RailsSVG,
-    lg: RailsSVGLarge
+    lg: RailsSVGLarge,
   },
   'react-native': {
     sm: ReactnativeSVG,
-    lg: ReactnativeSVGLarge
+    lg: ReactnativeSVGLarge,
   },
-  'react': {
+  react: {
     sm: ReactSVG,
-    lg: ReactSVGLarge
+    lg: ReactSVGLarge,
   },
-  'redis': {
+  redis: {
     sm: RedisSVG,
-    lg: RedisSVGLarge
+    lg: RedisSVGLarge,
   },
-  'redux': {
+  redux: {
     sm: ReduxSVG,
-    lg: ReduxSVGLarge
+    lg: ReduxSVGLarge,
   },
-  'remix': {
+  remix: {
     sm: RemixSVG,
-    lg: RemixSVGLarge
+    lg: RemixSVGLarge,
   },
-  'ruby': {
+  ruby: {
     sm: RubySVG,
-    lg: RubySVGLarge
+    lg: RubySVGLarge,
   },
-  'rust': {
+  rust: {
     sm: RustSVG,
-    lg: RustSVGLarge
+    lg: RustSVGLarge,
   },
-  'sanic': {
+  sanic: {
     sm: SanicSVG,
-    lg: SanicSVGLarge
+    lg: SanicSVGLarge,
   },
-  'scala': {
+  scala: {
     sm: ScalaSVG,
-    lg: ScalaSVGLarge
+    lg: ScalaSVGLarge,
   },
-  'sentry': {
+  sentry: {
     sm: SentrySVG,
-    lg: SentrySVGLarge
+    lg: SentrySVGLarge,
   },
-  'serverless': {
+  serverless: {
     sm: ServerlessSVG,
-    lg: ServerlessSVGLarge
+    lg: ServerlessSVGLarge,
   },
-  'sidekiq': {
+  sidekiq: {
     sm: SidekiqSVG,
-    lg: SidekiqSVGLarge
+    lg: SidekiqSVGLarge,
   },
-  'sinatra': {
+  sinatra: {
     sm: SinatraSVG,
-    lg: SinatraSVGLarge
+    lg: SinatraSVGLarge,
   },
-  'solid': {
+  solid: {
     sm: SolidSVG,
-    lg: SolidSVGLarge
+    lg: SolidSVGLarge,
   },
-  'spring': {
+  spring: {
     sm: SpringSVG,
-    lg: SpringSVGLarge
+    lg: SpringSVGLarge,
   },
-  'springboot': {
+  springboot: {
     sm: SpringbootSVG,
-    lg: SpringbootSVGLarge
+    lg: SpringbootSVGLarge,
   },
-  'sql': {
+  sql: {
     sm: SqlSVG,
-    lg: SqlSVGLarge
+    lg: SqlSVGLarge,
   },
-  'sqlalchemy': {
+  sqlalchemy: {
     sm: SqlalchemySVG,
-    lg: SqlalchemySVGLarge
+    lg: SqlalchemySVGLarge,
   },
-  'sqlserver': {
+  sqlserver: {
     sm: SqlserverSVG,
-    lg: SqlserverSVGLarge
+    lg: SqlserverSVGLarge,
   },
-  'starlette': {
+  starlette: {
     sm: StarletteSVG,
-    lg: StarletteSVGLarge
+    lg: StarletteSVGLarge,
   },
-  'strawberry': {
+  strawberry: {
     sm: StrawberrySVG,
-    lg: StrawberrySVGLarge
+    lg: StrawberrySVGLarge,
   },
-  'stride3d': {
+  stride3d: {
     sm: Stride3dSVG,
-    lg: Stride3dSVGLarge
+    lg: Stride3dSVGLarge,
   },
-  'svelte': {
+  svelte: {
     sm: SvelteSVG,
-    lg: SvelteSVGLarge
+    lg: SvelteSVGLarge,
   },
-  'swift': {
+  swift: {
     sm: SwiftSVG,
-    lg: SwiftSVGLarge
+    lg: SwiftSVGLarge,
   },
-  'symfony': {
+  symfony: {
     sm: SymfonySVG,
-    lg: SymfonySVGLarge
+    lg: SymfonySVGLarge,
   },
-  'tornado': {
+  tornado: {
     sm: TornadoSVG,
-    lg: TornadoSVGLarge
+    lg: TornadoSVGLarge,
   },
-  'tryton': {
+  tryton: {
     sm: TrytonSVG,
-    lg: TrytonSVGLarge
+    lg: TrytonSVGLarge,
   },
-  'unity': {
+  unity: {
     sm: UnitySVG,
-    lg: UnitySVGLarge
+    lg: UnitySVGLarge,
   },
-  'uno': {
+  uno: {
     sm: UnoSVG,
-    lg: UnoSVGLarge
+    lg: UnoSVGLarge,
   },
-  'unreal': {
+  unreal: {
     sm: UnrealSVG,
-    lg: UnrealSVGLarge
+    lg: UnrealSVGLarge,
   },
   'visual-basic': {
     sm: VisualbasicSVG,
-    lg: VisualbasicSVGLarge
+    lg: VisualbasicSVGLarge,
   },
-  'vue': {
+  vue: {
     sm: VueSVG,
-    lg: VueSVGLarge
+    lg: VueSVGLarge,
   },
-  'wasm': {
+  wasm: {
     sm: WasmSVG,
-    lg: WasmSVGLarge
+    lg: WasmSVGLarge,
   },
-  'windows': {
+  windows: {
     sm: WindowsSVG,
-    lg: WindowsSVGLarge
+    lg: WindowsSVGLarge,
   },
-  'xamarin': {
+  xamarin: {
     sm: XamarinSVG,
-    lg: XamarinSVGLarge
+    lg: XamarinSVGLarge,
   },
 };
 
 export const PLATFORM_TO_ICON = {
-  android: "android",
-  apple: "apple",
-  bun: "bun",
-  capacitor: "capacitor",
-  clojure: "clojure",
-  cocoa: "apple",
-  "cocoa-objc": "apple",
-  "cocoa-swift": "swift",
-  cordova: "cordova",
-  cloudflare: "cloudflare",
-  cpp: "cpp",
-  cryengine: "cryengine",
-  css: "css",
-  csharp: "csharp",
-  "csharp-aspnetcore": "csharp",
-  dart: "dart",
-  default: "default",
-  deno: "deno",
-  dotnet: "dotnet",
-  "dotnet-aspnetcore": "dotnet",
-  "dotnet-aspnet": "dotnet",
-  "dotnet-awslambda": "awslambda",
-  "dotnet-blazor": "blazor",
-  "dotnet-csharp": "csharp",
-  "dotnet-gcpfunctions": "gcp-functions",
-  "dotnet-maui": "maui",
-  "dotnet-uno": "uno",
-  "dotnet-xamarin": "xamarin",
-  dotnetcore: "dotnetcore",
-  dotnetfx: "dotnetfx",
-  electron: "electron",
-  elixir: "elixir",
-  flutter: "flutter",
-  font: "font",
-  fsharp: "fsharp",
-  git: "git",
-  go: "go",
-  "go-echo": "echo",
-  "go-fasthttp": "fasthttp",
-  "go-gin": "gin",
-  "go-iris": "iris",
-  "go-martini": "martini",
-  "go-negroni": "go",
-  godot: "godot",
-  java: "java",
-  "java-appengine": "app-engine",
-  "java-android": "android",
-  "java-log4j": "java",
-  "java-log4j2": "java",
-  "java-logback": "logback",
-  "java-logging": "java",
-  "java-spring": "spring",
-  "java-spring-boot": "springboot",
-  javascript: "javascript",
-  "javascript-astro": "astro",
-  "javascript-angular": "angularjs",
-  "javascript-angularjs": "angularjs",
-  "javascript-backbone": "backbone",
-  "javascript-browser": "javascript",
-  "javascript-capacitor": "capacitor",
-  "javascript-cordova": "cordova",
-  "javascript-electron": "electron",
-  "javascript-ember": "ember",
-  "javascript-gatsby": "gatsby",
-  "javascript-ionic": "ionic",
-  "javascript-nextjs": "nextjs",
-  "javascript-react": "react",
-  "javascript-remix": "remix",
-  "javascript-solid": "solid",
-  "javascript-svelte": "svelte",
-  "javascript-sveltekit": "svelte",
-  "javascript-vue": "vue",
-  "javascript-wasm": "wasm",
-  ionic: "ionic",
-  kotlin: "kotlin",
-  "kotlin-android": "android",
-  linux: "linux",
-  native: "nativec",
-  "native-qt": "qt",
-  node: "nodejs",
-  "node-awslambda": "awslambda",
-  "node-azurefunctions": "azure-functions",
-  "node-connect": "connect",
-  "node-express": "express",
-  "node-gcpfunctions": "gcp-functions",
-  "node-koa": "koa",
-  "node-serverlesscloud": "serverless",
-  perl: "perl",
-  php: "php",
-  "php-laravel": "laravel",
-  "php-monolog": "php",
-  "php-symfony2": "symfony",
-  "php-symfony": "symfony",
-  python: "python",
-  "python-aiohttp": "aiohttp",
-  "python-airflow": "apache-airflow",
-  "python-ariadne": "ariadne",
-  "python-asyncpg": "postgresql",
-  "python-awslambda": "awslambda",
-  "python-azurefunctions": "azure-functions",
-  "python-beam": "apache-beam",
-  "python-boto3": "aws",
-  "python-bottle": "bottle",
-  "python-celery": "celery",
-  "python-chalice": "chalice",
-  "python-clickhouse-driver": "clickhouse",
-  "python-django": "django",
-  "python-falcon": "falcon",
-  "python-fastapi": "fastapi",
-  "python-flask": "flask",
-  "python-gcpfunctions": "gcp-functions",
-  "python-gnu_backtrace": "gnu",
-  "python-gql": "graphql",
-  "python-graphene": "graphene",
-  "python-grpc": "grpc",
-  "python-httpx": "httpx",
-  "python-huey": "huey",
-  "python-loguru": "loguru",
-  "python-pylons": "python",
-  "python-pymongo": "mongodb",
-  "python-pyramid": "pyramid",
-  "python-pythonawslambda": "awslambda",
-  "python-quart": "quart",
-  "python-redis": "redis",
-  "python-rq": "redis",
-  "python-sanic": "sanic",
-  "python-serverless": "serverless",
-  "python-starlette": "starlette",
-  "python-strawberry": "strawberry",
-  "python-spark": "apache-spark",
-  "python-sqlalchemy": "sqlalchemy",
-  "python-tornado": "tornado",
-  "python-tryton": "tryton",
-  qt: "qt",
-  "react-native": "react-native",
-  ruby: "ruby",
-  "ruby-rack": "ruby",
-  "ruby-rails": "rails",
-  "ruby-sidekiq": "sidekiq",
-  "ruby-sinatra": "sinatra",
-  rust: "rust",
-  "rust-actix": "actix",
-  scala: "scala",
-  stride3d: "stride3d",
-  sql: "sql",
-  sqlserver: "sqlserver",
-  swift: "swift",
-  unity: "unity",
+  android: 'android',
+  apple: 'apple',
+  bun: 'bun',
+  capacitor: 'capacitor',
+  clojure: 'clojure',
+  cocoa: 'apple',
+  'cocoa-objc': 'apple',
+  'cocoa-swift': 'swift',
+  cordova: 'cordova',
+  cloudflare: 'cloudflare',
+  cpp: 'cpp',
+  cryengine: 'cryengine',
+  css: 'css',
+  csharp: 'csharp',
+  'csharp-aspnetcore': 'csharp',
+  dart: 'dart',
+  default: 'default',
+  deno: 'deno',
+  dotnet: 'dotnet',
+  'dotnet-aspnetcore': 'dotnet',
+  'dotnet-aspnet': 'dotnet',
+  'dotnet-awslambda': 'awslambda',
+  'dotnet-blazor': 'blazor',
+  'dotnet-csharp': 'csharp',
+  'dotnet-gcpfunctions': 'gcp-functions',
+  'dotnet-maui': 'maui',
+  'dotnet-uno': 'uno',
+  'dotnet-xamarin': 'xamarin',
+  dotnetcore: 'dotnetcore',
+  dotnetfx: 'dotnetfx',
+  electron: 'electron',
+  elixir: 'elixir',
+  flutter: 'flutter',
+  font: 'font',
+  fsharp: 'fsharp',
+  git: 'git',
+  go: 'go',
+  'go-echo': 'echo',
+  'go-fasthttp': 'fasthttp',
+  'go-gin': 'gin',
+  'go-iris': 'iris',
+  'go-martini': 'martini',
+  'go-negroni': 'go',
+  godot: 'godot',
+  java: 'java',
+  'java-appengine': 'app-engine',
+  'java-android': 'android',
+  'java-log4j': 'java',
+  'java-log4j2': 'java',
+  'java-logback': 'logback',
+  'java-logging': 'java',
+  'java-spring': 'spring',
+  'java-spring-boot': 'springboot',
+  javascript: 'javascript',
+  'javascript-astro': 'astro',
+  'javascript-angular': 'angularjs',
+  'javascript-angularjs': 'angularjs',
+  'javascript-backbone': 'backbone',
+  'javascript-browser': 'javascript',
+  'javascript-capacitor': 'capacitor',
+  'javascript-cordova': 'cordova',
+  'javascript-electron': 'electron',
+  'javascript-ember': 'ember',
+  'javascript-gatsby': 'gatsby',
+  'javascript-ionic': 'ionic',
+  'javascript-nextjs': 'nextjs',
+  'javascript-react': 'react',
+  'javascript-remix': 'remix',
+  'javascript-solid': 'solid',
+  'javascript-svelte': 'svelte',
+  'javascript-sveltekit': 'svelte',
+  'javascript-vue': 'vue',
+  'javascript-wasm': 'wasm',
+  ionic: 'ionic',
+  kotlin: 'kotlin',
+  'kotlin-android': 'android',
+  linux: 'linux',
+  native: 'nativec',
+  'native-qt': 'qt',
+  node: 'nodejs',
+  'node-awslambda': 'awslambda',
+  'node-azurefunctions': 'azure-functions',
+  'node-connect': 'connect',
+  'node-express': 'express',
+  'node-gcpfunctions': 'gcp-functions',
+  'node-koa': 'koa',
+  'node-serverlesscloud': 'serverless',
+  perl: 'perl',
+  php: 'php',
+  'php-laravel': 'laravel',
+  'php-monolog': 'php',
+  'php-symfony2': 'symfony',
+  'php-symfony': 'symfony',
+  python: 'python',
+  'python-aiohttp': 'aiohttp',
+  'python-airflow': 'apache-airflow',
+  'python-ariadne': 'ariadne',
+  'python-asyncpg': 'postgresql',
+  'python-awslambda': 'awslambda',
+  'python-azurefunctions': 'azure-functions',
+  'python-beam': 'apache-beam',
+  'python-boto3': 'aws',
+  'python-bottle': 'bottle',
+  'python-celery': 'celery',
+  'python-chalice': 'chalice',
+  'python-clickhouse-driver': 'clickhouse',
+  'python-django': 'django',
+  'python-falcon': 'falcon',
+  'python-fastapi': 'fastapi',
+  'python-flask': 'flask',
+  'python-gcpfunctions': 'gcp-functions',
+  'python-gnu_backtrace': 'gnu',
+  'python-gql': 'graphql',
+  'python-graphene': 'graphene',
+  'python-grpc': 'grpc',
+  'python-httpx': 'httpx',
+  'python-huey': 'huey',
+  'python-loguru': 'loguru',
+  'python-pylons': 'python',
+  'python-pymongo': 'mongodb',
+  'python-pyramid': 'pyramid',
+  'python-pythonawslambda': 'awslambda',
+  'python-quart': 'quart',
+  'python-redis': 'redis',
+  'python-rq': 'redis',
+  'python-sanic': 'sanic',
+  'python-serverless': 'serverless',
+  'python-starlette': 'starlette',
+  'python-strawberry': 'strawberry',
+  'python-spark': 'apache-spark',
+  'python-sqlalchemy': 'sqlalchemy',
+  'python-tornado': 'tornado',
+  'python-tryton': 'tryton',
+  qt: 'qt',
+  'react-native': 'react-native',
+  ruby: 'ruby',
+  'ruby-rack': 'ruby',
+  'ruby-rails': 'rails',
+  'ruby-sidekiq': 'sidekiq',
+  'ruby-sinatra': 'sinatra',
+  rust: 'rust',
+  'rust-actix': 'actix',
+  scala: 'scala',
+  stride3d: 'stride3d',
+  sql: 'sql',
+  sqlserver: 'sqlserver',
+  swift: 'swift',
+  unity: 'unity',
   // This will be deprecated in favor of 'unrealengine'
-  ue4: "unreal",
-  unreal: "unreal",
-  unrealengine: "unreal",
-  visualbasic: "visual-basic",
-  windows: "windows",
+  ue4: 'unreal',
+  unreal: 'unreal',
+  unrealengine: 'unreal',
+  visualbasic: 'visual-basic',
+  windows: 'windows',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
 } as const;
@@ -916,7 +916,7 @@ export const PLATFORM_TO_ICON = {
 function normalizePlatform(platform: string): string {
   // sentry uses format python-django, but docs uses python.django
   // this function normalizes that
-  return platform.replace(".", "-");
+  return platform.replace('.', '-');
 }
 
 function getIcon(platform: string): Platform {
@@ -927,25 +927,25 @@ function getIcon(platform: string): Platform {
     return icon;
   }
 
-  if (normalizedPlatform.includes("-")) {
+  if (normalizedPlatform.includes('-')) {
     return getLanguageIcon(normalizedPlatform);
   }
 
-  return "default";
+  return 'default';
 }
 
 function getLanguageIcon(platform: string): Platform {
-  const [language] = normalizePlatform(platform).split("-");
+  const [language] = normalizePlatform(platform).split('-');
 
   return getIcon(language);
 }
 
-type Platform = typeof PLATFORM_TO_ICON[keyof typeof PLATFORM_TO_ICON];
+type Platform = (typeof PLATFORM_TO_ICON)[keyof typeof PLATFORM_TO_ICON];
 
 type Props = React.HTMLAttributes<HTMLDivElement | HTMLImageElement> & {
   platform: string;
   size?: number;
-  format?: "sm" | "lg";
+  format?: 'sm' | 'lg';
   radius?: number | null;
   withLanguageIcon?: boolean;
   languageIconStyles?: React.CSSProperties;
@@ -954,7 +954,7 @@ type Props = React.HTMLAttributes<HTMLDivElement | HTMLImageElement> & {
 export const PlatformIcon = ({
   platform,
   size = 20,
-  format = "sm",
+  format = 'sm',
   radius = 3,
   withLanguageIcon,
   languageIconStyles = {},
@@ -963,30 +963,30 @@ export const PlatformIcon = ({
 }: Props) => {
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
-  if (!svg) console.log("svg is null")
+  if (!svg) console.log('svg is null');
 
   const languageIcon = getLanguageIcon(platform);
   const languageSvg = formatToSVG[languageIcon][format];
 
-  if (withLanguageIcon && languageIcon !== icon && languageIcon !== "default") {
+  if (withLanguageIcon && languageIcon !== icon && languageIcon !== 'default') {
     return (
-      <div {...otherProps} style={{ position: "relative", ...style }}>
+      <div {...otherProps} style={{position: 'relative', ...style}}>
         <Image
           src={svg}
           width={size}
           height={size}
-          style={{ borderRadius: `${radius}px` }}
+          style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
         />
         <Image
           src={languageSvg}
           style={{
-            position: "absolute",
-            bottom: "-1px",
-            right: "-1px",
-            height: "30%",
-            width: "30%",
-            borderRadius: "2px",
+            position: 'absolute',
+            bottom: '-1px',
+            right: '-1px',
+            height: '30%',
+            width: '30%',
+            borderRadius: '2px',
             ...languageIconStyles,
           }}
           alt={`${platform} icon`}
@@ -1002,7 +1002,7 @@ export const PlatformIcon = ({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{ borderRadius: `${radius}px`, ...style }}
+      style={{borderRadius: `${radius}px`, ...style}}
       alt={`${platform} icon`}
     />
   );

@@ -1,7 +1,7 @@
 import React from 'react';
-import { getCurrentPlatformOrGuide, getPlatform } from 'sentry-docs/docTree';
-import { serverContext } from 'sentry-docs/serverContext';
-import { PlatformCaseStyle } from 'sentry-docs/types';
+import {getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+import {PlatformCaseStyle} from 'sentry-docs/types';
 
 type Props = {
   name: string;
@@ -38,6 +38,6 @@ export function PlatformIdentifier({name, platform}: Props) {
   if (!currentPlatformOrGuide) {
     return null;
   }
-  
+
   return <code>{formatCaseStyle(currentPlatformOrGuide.caseStyle, name)}</code>;
 }

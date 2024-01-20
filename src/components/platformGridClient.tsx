@@ -1,9 +1,9 @@
 'use client';
 
-import styled from "@emotion/styled";
+import styled from '@emotion/styled';
 import {PlatformIcon} from './platformIcon';
-import { Platform } from "sentry-docs/types";
-import { SmartLink } from "./smartLink";
+import {Platform} from 'sentry-docs/types';
+import {SmartLink} from './smartLink';
 
 type Props = {
   noGuides: boolean;

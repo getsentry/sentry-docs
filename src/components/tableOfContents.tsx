@@ -1,4 +1,4 @@
-import { GuideGrid } from "./guideGrid";
+import {GuideGrid} from './guideGrid';
 
 interface TocItem {
   value: string;
