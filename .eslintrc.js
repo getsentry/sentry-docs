@@ -2,7 +2,7 @@
 /* eslint import/no-nodejs-modules:0 */
 
 module.exports = {
-  extends: ['sentry-docs'],
+  extends: ['sentry-docs', 'plugin:@next/next/recommended'],
   globals: {
     jest: true,
     Atomics: 'readonly',
