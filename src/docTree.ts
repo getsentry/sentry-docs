@@ -1,4 +1,4 @@
-import type {FrontMatter} from 'sentry-docs/mdx';
+import {allDocsFrontMatter, type FrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
 import {Platform, PlatformGuide} from './types';
@@ -21,7 +21,9 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-export function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
+export const docsRootNode = frontmatterToTree(allDocsFrontMatter);
+
+function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
   if (frontmatter.length === 0) {
     return undefined;
   }

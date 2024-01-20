@@ -14,11 +14,7 @@ import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {PlatformSdkDetail} from 'sentry-docs/components/platformSdkDetail';
 import {ServerSidebar} from 'sentry-docs/components/serverSidebar';
 import {TableOfContents} from 'sentry-docs/components/tableOfContents';
-import {
-  frontmatterToTree,
-  getCurrentPlatformOrGuide,
-  nodeForPath,
-} from 'sentry-docs/docTree';
+import {docsRootNode, getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {allDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext, setServerContext} from 'sentry-docs/serverContext';
@@ -117,7 +113,7 @@ export default async function Page({params}) {
 
   // get frontmatter of all docs in tree
   const docs = allDocsFrontMatter;
-  const rootNode = frontmatterToTree(docs);
+  const rootNode = docsRootNode;
   if (!rootNode) {
     console.warn('no root node');
     return notFound();
@@ -169,8 +165,7 @@ type MetadataProps = {
 export function generateMetadata({params}: MetadataProps): Metadata {
   let title = 'Home';
 
-  const docs = allDocsFrontMatter;
-  const rootNode = frontmatterToTree(docs);
+  const rootNode = docsRootNode;
   if (rootNode && params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {

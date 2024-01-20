@@ -1,6 +1,6 @@
 import {notFound} from 'next/navigation';
 
-import {extractPlatforms, frontmatterToTree} from 'sentry-docs/docTree';
+import {docsRootNode, extractPlatforms} from 'sentry-docs/docTree';
 import {allDocsFrontMatter} from 'sentry-docs/mdx';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
@@ -28,9 +28,8 @@ const HIGHLIGHTED_PLATFORMS = [
   'unreal',
 ];
 
-export async function Home() {
-  const docs = await allDocsFrontMatter;
-  const rootNode = frontmatterToTree(docs);
+export function Home() {
+  const rootNode = docsRootNode;
   if (!rootNode) {
     console.warn('no root node');
     return notFound();

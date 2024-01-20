@@ -1,12 +1,10 @@
 import {Header} from 'sentry-docs/components/header';
 import {Navbar} from 'sentry-docs/components/navbar';
 import {productSidebar} from 'sentry-docs/components/serverSidebar';
-import {frontmatterToTree} from 'sentry-docs/docTree';
-import {allDocsFrontMatter} from 'sentry-docs/mdx';
+import {docsRootNode} from 'sentry-docs/docTree';
 
 export default function NotFound() {
-  const docs = allDocsFrontMatter;
-  const rootNode = frontmatterToTree(docs);
+  const rootNode = docsRootNode;
   const sidebar = rootNode && productSidebar(rootNode);
   return (
     <div className="document-wrapper">
