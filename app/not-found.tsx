@@ -1,9 +1,10 @@
+import 'prism-sentry/index.css';
+
 import {Header} from 'sentry-docs/components/header';
 import {Navbar} from 'sentry-docs/components/navbar';
 import {productSidebar} from 'sentry-docs/components/serverSidebar';
 import {docsRootNode} from 'sentry-docs/docTree';
 
-import 'prism-sentry/index.css';
 import 'sentry-docs/styles/screen.scss';
 
 export default function NotFound() {
