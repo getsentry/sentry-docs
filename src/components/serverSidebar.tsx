@@ -2,6 +2,7 @@ import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformGuide} from 'sentry-docs/types';
 
+import {ApiSidebar} from './apiSidebar';
 import {Node as PlatformSidebarNode, PlatformSidebar} from './platformSidebar';
 import {NavNode, ProductSidebar} from './productSidebar';
 import {Sidebar, SidebarNode} from './sidebar';
@@ -61,6 +62,8 @@ export function ServerSidebar() {
     }
   } else if (path.indexOf('product') === 0) {
     return productSidebar(rootNode);
+  } else if (path.indexOf('api') === 0) {
+    return <ApiSidebar />;
   } else if (path.indexOf('platforms') === 0) {
     if (path.length === 1) {
       return productSidebar(rootNode);
