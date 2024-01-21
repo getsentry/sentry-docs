@@ -1,5 +1,4 @@
-const defaultTheme = require('tailwindcss/defaultTheme')
-const colors = require('tailwindcss/colors')
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -22,9 +21,10 @@ module.exports = {
       },
       colors: {
         primary: '#362d59',
+        pruple: '#8d5494',
         red: '#e1567c',
       },
     },
   },
   plugins: [require('@tailwindcss/typography')],
-}
+};
