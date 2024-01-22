@@ -26,7 +26,8 @@ const {withSentryConfig} = require('@sentry/nextjs');
 
 const cspHeader = `
     default-src 'self';
-    style-src 'self' 'unsafe-inline';
+    font-src 'self' https://fonts.gstatic.com/;
+    style-src 'self' https://fonts.googleapis.com/ 'unsafe-inline';
 `;
 
 module.exports = withSentryConfig(
