@@ -1,6 +1,12 @@
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
 
+const cspHeader = `
+    default-src 'self';
+    font-src 'self' https://fonts.gstatic.com/;
+    style-src 'self' https://fonts.googleapis.com/ 'unsafe-inline';
+`;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
@@ -9,6 +15,21 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+  },
+
+  // eslint-disable-next-line require-await
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: cspHeader.replace(/\n/g, ''),
+          },
+        ],
+      },
+    ];
   },
 };
 
@@ -23,12 +44,6 @@ module.exports = withMDX(nextConfig);
 // Injected content via Sentry wizard below
 
 const {withSentryConfig} = require('@sentry/nextjs');
-
-const cspHeader = `
-    default-src 'self';
-    font-src 'self' https://fonts.gstatic.com/;
-    style-src 'self' https://fonts.googleapis.com/ 'unsafe-inline';
-`;
 
 module.exports = withSentryConfig(
   module.exports,
@@ -65,15 +80,5 @@ module.exports = withSentryConfig(
     // https://docs.sentry.io/product/crons/
     // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true,
-
-    headers: {
-      source: '/(.*)',
-      headers: [
-        {
-          key: 'Content-Security-Policy',
-          value: cspHeader.replace(/\n/g, ''),
-        },
-      ],
-    },
   }
 );
