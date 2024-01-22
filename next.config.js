@@ -4,26 +4,30 @@ const remarkPrism = require('remark-prism');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-  
+
   trailingSlash: true,
-  
+
   experimental: {
-    serverComponentsExternalPackages: ['rehype-preset-minify']
-  }
+    serverComponentsExternalPackages: ['rehype-preset-minify'],
+  },
 };
 
 const withMDX = createMDX({
-    options: {
-        remarkPlugins: [remarkPrism],
-    }
+  options: {
+    remarkPlugins: [remarkPrism],
+  },
 });
 
 module.exports = withMDX(nextConfig);
 
-
 // Injected content via Sentry wizard below
 
-const { withSentryConfig } = require("@sentry/nextjs");
+const {withSentryConfig} = require('@sentry/nextjs');
+
+const cspHeader = `
+    default-src 'self';
+    style-src 'self' 'unsafe-inline';
+`;
 
 module.exports = withSentryConfig(
   module.exports,
@@ -33,8 +37,8 @@ module.exports = withSentryConfig(
 
     // Suppresses source map uploading logs during build
     silent: true,
-    org: "sentry",
-    project: "sentry-docs-nextjs",
+    org: 'sentry',
+    project: 'sentry-docs-nextjs',
   },
   {
     // For all available options, see:
@@ -47,7 +51,7 @@ module.exports = withSentryConfig(
     transpileClientSDK: true,
 
     // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
-    tunnelRoute: "/monitoring",
+    tunnelRoute: '/monitoring',
 
     // Hides source maps from generated client bundles
     hideSourceMaps: true,
@@ -60,5 +64,15 @@ module.exports = withSentryConfig(
     // https://docs.sentry.io/product/crons/
     // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true,
+
+    headers: {
+      source: '/(.*)',
+      headers: [
+        {
+          key: 'Content-Security-Policy',
+          value: cspHeader.replace(/\n/g, ''),
+        },
+      ],
+    },
   }
 );
