@@ -22,7 +22,9 @@ module.exports = {
       colors: {
         primary: '#362d59',
         pruple: '#8d5494',
+        darkPurple: '#1F1633',
         red: '#e1567c',
+        gold: '#F1B71C',
       },
     },
   },
