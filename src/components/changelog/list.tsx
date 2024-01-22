@@ -72,7 +72,7 @@ export default function ListLayout({
 
   return (
     <div className="w-full mx-auto grid grid-cols-12 bg-gray-200">
-      <div className="col-span-2 pl-5 pt-10">
+      <div className="hidden md:block md:col-span-2 pl-5 pt-10">
         <h3 className="text-2xl text-primary font-semibold mb-2">Categories:</h3>
         <div className="flex flex-wrap gap-1 py-1">
           {Array.isArray(allPostTags) &&
@@ -94,8 +94,8 @@ export default function ListLayout({
             })}
         </div>
       </div>
-      <div className="col-span-8">
-        <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 lg:px-8">
+      <div className="col-span-12 md:col-span-8">
+        <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 md:px-8">
           <div className="flex justify-between items-center py-6 space-x-4">
             <input
               aria-label="Search announcements"
@@ -166,7 +166,7 @@ export default function ListLayout({
           )}
         </div>
       </div>
-      <div className="col-span-2 pl-5 pt-10">
+      <div className="hidden md:block md:col-span-2 pl-5 pt-10">
         <h3 className="text-1xl text-primary font-semibold mb-2">Jump to:</h3>
         <ul>
           {monthsCopy.map((month, index) => (

@@ -34,20 +34,20 @@ export default async function ChangelogList({searchParams}) {
     <Layout>
       <Navbar />
       <div className="w-full mx-auto h-96 relative  bg-darkPurple">
-        <div className="hero-top absolute top-0 w-full h-10 bg-white" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 items-center">
+        <div className="hero-top absolute -top-1 w-full h-10 bg-white" />
+        <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 grid grid-cols-12 items-center">
           <Image
-            className="justify-self-center col-span-10 z-20"
+            className="justify-self-center col-span-10 z-20 hidden lg:block"
             src="/changelog/assets/hero.png"
             alt="Sentry Changelog"
             height={400}
             width={450}
           />
-          <div className="absolute w-96 right-1/4 -bottom-10">
-            <h1 className="justify-self-center text-white font-bold text-4xl text-left">
+          <div className="relative col-span-12 mt-32 lg:absolute lg:w-96 lg:right-1/4 lg:-bottom-10">
+            <h1 className="justify-self-center text-white font-bold text-4xl text-center lg:text-left">
               Sentry Changelog
             </h1>
-            <h2 className="justify-self-center z-20 text-gold text-1xl text-left">
+            <h2 className="justify-self-center z-20 text-gold text-1xl text-center lg:text-left">
               Stay up to date on everything big and small, from product updates to SDK
               changes with the Sentry Changelog.
             </h2>

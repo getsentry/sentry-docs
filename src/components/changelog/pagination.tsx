@@ -11,11 +11,11 @@ export default function Pagination({totalPages, currentPage}) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex items-center justify-center gap-0 md:gap-4">
       <ConditionalLink href={`?page=${currentPage - 1}`} condition={prevPage}>
         <button
           disabled={!prevPage}
-          className="flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle transition-all rounded-lg select-none hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          className="hidden md:flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle transition-all rounded-lg select-none hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
         >
           <svg
@@ -36,7 +36,7 @@ export default function Pagination({totalPages, currentPage}) {
           Previous
         </button>
       </ConditionalLink>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-0 md:gap-2">
         {pages.map(page => (
           <Link key={page} href={`?page=${page}`}>
             <button
@@ -53,7 +53,7 @@ export default function Pagination({totalPages, currentPage}) {
       <ConditionalLink href={`?page=${currentPage + 1}`} condition={nextPage}>
         <button
           disabled={!nextPage}
-          className="flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle transition-all rounded-lg select-none hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          className="hidden md:flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle transition-all rounded-lg select-none hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
         >
           Next
