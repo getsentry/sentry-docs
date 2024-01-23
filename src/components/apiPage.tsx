@@ -73,7 +73,27 @@ const getScopes = (data, securityScheme) => {
   return obj[securityScheme];
 };
 
+// https://stackoverflow.com/a/38137700
+function cssToObj(css) {
+  const obj = {},
+    s = css
+      .toLowerCase()
+      .replace(/-(.)/g, function (m, g) {
+        return g.toUpperCase();
+      })
+      .replace(/;\s?$/g, '')
+      .split(/:|;/g);
+  for (let i = 0; i < s.length; i += 2) {
+    obj[s[i].replace(/\s/g, '')] = s[i + 1].replace(/^\s+|\s+$/g, '');
+  }
+  return obj;
+}
+
 async function parseMarkdown(source: string): Promise<ReactElement> {
+  // Source uses string styles, but MDX requires object styles.
+  source = source.replace(/style="([^"]+)"/g, (_, style) => {
+    return `style={${JSON.stringify(cssToObj(style))}}`;
+  });
   const {code} = await bundleMDX({
     source,
     cwd: process.cwd(),
