@@ -94,6 +94,9 @@ export default function remarkCodeTabs() {
           lastParent = parent;
         }
         if (node.type === 'code') {
+          if (node.lang === null) {
+            node.lang = 'bash'; // bash is the default
+          }
           pendingCode.push([node, parent]);
         }
       }
