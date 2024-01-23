@@ -78,7 +78,7 @@ function cssToObj(css) {
   const obj = {},
     s = css
       .toLowerCase()
-      .replace(/-(.)/g, function (m, g) {
+      .replace(/-(.)/g, function (_, g) {
         return g.toUpperCase();
       })
       .replace(/;\s?$/g, '')
