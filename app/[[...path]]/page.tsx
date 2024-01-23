@@ -59,12 +59,9 @@ export default async function Page({params}) {
     return notFound();
   }
 
-  // TODO(mjq): Remove this hacky second call to setServerContext.
   setServerContext({
     rootNode,
     path: params.path,
-    toc: [],
-    frontmatter: {},
   });
 
   if (params.path[0] === 'api' && params.path.length > 1) {
@@ -99,13 +96,6 @@ export default async function Page({params}) {
     throw e;
   }
   const {mdxSource, toc, frontMatter} = doc;
-
-  setServerContext({
-    rootNode,
-    path: params.path,
-    toc,
-    frontmatter: frontMatter,
-  });
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
   return (
