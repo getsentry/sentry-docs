@@ -6,8 +6,10 @@ export default function DocImage({src, ...props}: React.HTMLProps<HTMLImageEleme
     src = `/${path.join('/')}/${src}`;
   }
   return (
-    <a href={src} target="_blank" rel="noreferrer">
-      <img src={src} {...props} />
-    </a>
+    <span style={{display: 'block', textAlign: 'center'}}>
+      <a href={src} target="_blank" rel="noreferrer">
+        <img src={src} {...props} />
+      </a>
+    </span>
   );
 }
