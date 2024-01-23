@@ -14,7 +14,7 @@ For more complex cases, it's helpful to understand how sessions work and how to 
 
 ## Default Session Initialization
 
-By default, Replay will immediately start a session when the `new Replay()` integration instance is added to the SDK client. The session will be in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
+By default, Replay will immediately start a session when the `replayIntegration()` integration instance is added to the SDK client. The session will be in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
 
 When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sampled, we'll start recording and sending Replay data immediately.
 
@@ -41,7 +41,7 @@ async function init(sessionSampleRate, errorSampleRate) {
   options.replaysSessionSampleRate = sessionSampleRate;
   options.replaysOnErrorSampleRate = errorSampleRate;
 
-  const replay = new Sentry.Replay({
+  const replay = Sentry.replayIntegration({
     maskAllText: true,
     // additional SDK config, see https://docs.sentry.io/platforms/javascript/session-replay/configuration/
   });
@@ -60,7 +60,7 @@ Sentry.init({
   // This initializes Replay without starting any session
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
-  integrations: [new Sentry.Replay()],
+  integrations: [Sentry.replayIntegration()],
 });
 
 // You can access the active replay instance from anywhere in your code like this:
@@ -108,7 +108,7 @@ There are ways to enable custom sampling if you're interested in tracking a part
 You can set up replays to be recorded automatically for a particular user group. Here's an example where we want to record session-based replays for all users who are employees. The `user` object has an `isEmployee` field to signal employee status.
 
 ```javascript
-const replay = new Sentry.Replay();
+const replay = Sentry.replayIntegration();
 
 /**
  * Initialize the Sentry SDK as normal.
@@ -145,7 +145,7 @@ if (loggedInUser.isEmployee) {
 You can also choose to record a replay every time a user lands on a specified URL. This can help developers debug problematic pages. To do this, use the [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API), which can listen to navigation events for a specific URL and start the replay recording.
 
 ```javascript
-const replay = new Sentry.Replay();
+const replay = Sentry.replayIntegration();
 
 /**
  * Initialize the Sentry SDK as normal.
@@ -178,7 +178,7 @@ When using `replaysOnErrorSampleRate`, we "roll the dice" on any Error that is c
 If you want to skip capturing a Replay for certain errors, you can use the `beforeErrorSampling` callback:
 
 ```javascript
-new Replay({
+replayIntegration({
   beforeErrorSampling: (error) => {
     return error.message?.includes("drop me");
   },
