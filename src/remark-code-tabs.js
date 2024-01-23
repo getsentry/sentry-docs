@@ -7,6 +7,19 @@ function getFullMeta(node) {
   return node.lang || node.meta;
 }
 
+function fixLanguage(node) {
+  // Title can be something like this without spaces, let's fix it to have proper lang
+  // ```javascript{tabTitle: Angular 12+}{filename: main.ts}
+  // match everytung between ``` and {
+  const match = node.lang.match(/([^{]+)\{/);
+  // if we match a broken lang with no spacing, we fix it and also put the remainder in front of meta
+  if (match && match[1]) {
+    node.meta = `${node.lang.replace(match[1], '')}${node.meta}`;
+    node.lang = (match && match[1]) || node.lang;
+  }
+  return `${node.lang || ''}`;
+}
+
 function getFilename(node) {
   const meta = getFullMeta(node);
   const match = (meta || '').match(/\{filename:\s*([^}]+)\}/);
@@ -39,7 +52,11 @@ export default function remarkCodeTabs() {
               type: 'mdxJsxFlowElement',
               name: 'CodeBlock',
               attributes: [
-                {type: 'mdxJsxAttribute', name: 'language', value: `${node.lang || ''}`},
+                {
+                  type: 'mdxJsxAttribute',
+                  name: 'language',
+                  value: fixLanguage(node),
+                },
                 {type: 'mdxJsxAttribute', name: 'title', value: getTabTitle(node)},
                 {type: 'mdxJsxAttribute', name: 'filename', value: getFilename(node)},
               ],
