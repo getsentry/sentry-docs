@@ -3,12 +3,13 @@ import 'prism-sentry/index.css';
 import {Header} from 'sentry-docs/components/header';
 import {Navbar} from 'sentry-docs/components/navbar';
 import {productSidebar} from 'sentry-docs/components/serverSidebar';
-import {docsRootNode} from 'sentry-docs/docTree';
+import {getDocsRootNode} from 'sentry-docs/docTree';
 
 import 'sentry-docs/styles/screen.scss';
 
-export default function NotFound() {
-  const rootNode = docsRootNode;
+export default async function NotFound() {
+  const rootNode = await getDocsRootNode();
+
   const sidebar = rootNode && productSidebar(rootNode);
   return (
     <div className="document-wrapper">

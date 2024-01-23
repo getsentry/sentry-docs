@@ -15,6 +15,7 @@ import remarkGfm from 'remark-gfm';
 
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
+import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
@@ -31,6 +32,27 @@ function formatSlug(slug) {
 export type FrontMatter = {[key: string]: any};
 
 export const allDocsFrontMatter = getAllFilesFrontMatter();
+
+export async function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  const frontMatter = [...allDocsFrontMatter];
+
+  const categories = await apiCategories();
+  categories.forEach(category => {
+    frontMatter.push({
+      title: category.name,
+      slug: `api/${category.slug}`,
+    });
+
+    category.apis.forEach(api => {
+      frontMatter.push({
+        title: api.name,
+        slug: `api/${category.slug}/${api.slug}`,
+      });
+    });
+  });
+
+  return frontMatter;
+}
 
 export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   const docsPath = path.join(root, folder);

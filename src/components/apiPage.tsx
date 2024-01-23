@@ -1,0 +1,176 @@
+import {Fragment, ReactElement, useMemo} from 'react';
+import {bundleMDX} from 'mdx-bundler';
+import {getMDXComponent} from 'mdx-bundler/client';
+
+import {type API} from 'sentry-docs/build/resolveOpenAPI';
+import {mdxComponents} from 'sentry-docs/mdxComponents';
+import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
+import remarkCodeTitles from 'sentry-docs/remark-code-title';
+
+import {ApiExamples} from './apiExamples';
+import {ApiSidebar} from './apiSidebar';
+import {DocPage} from './docPage';
+import {SmartLink} from './smartLink';
+
+function Params({params}) {
+  return (
+    <dl className="api-params">
+      {params.map(param => {
+        return (
+          <Fragment key={param.name}>
+            <dt>
+              <div>
+                <code data-index>{param.name}</code>
+                {!!param.schema?.type && (
+                  <em>
+                    {' '}
+                    ({param.schema.type}
+                    {param.schema.items && `(${param.schema.items.type})`})
+                  </em>
+                )}
+              </div>
+              {!!param.required && <div className="required">REQUIRED</div>}
+            </dt>
+
+            {!!param.description && (
+              <dd>
+                {param.schema?.enum && (
+                  <Fragment>
+                    <b>choices</b>:
+                    <ul>
+                      <code>
+                        {param.schema?.enum.map(e => {
+                          return <li key={e}>{e}</li>;
+                        })}
+                      </code>
+                    </ul>
+                  </Fragment>
+                )}
+                {param.schema?.items?.enum && (
+                  <Fragment>
+                    <b>choices</b>:
+                    <ul>
+                      <code>
+                        {param.schema?.items?.enum.map(e => {
+                          return <li key={e}>{e}</li>;
+                        })}
+                      </code>
+                    </ul>
+                  </Fragment>
+                )}
+                {param.description && parseMarkdown(param.description)}
+              </dd>
+            )}
+          </Fragment>
+        );
+      })}
+    </dl>
+  );
+}
+
+const getScopes = (data, securityScheme) => {
+  const obj = data.security.find(e => e[securityScheme]);
+  return obj[securityScheme];
+};
+
+async function parseMarkdown(source: string): Promise<ReactElement> {
+  const {code} = await bundleMDX({
+    source,
+    cwd: process.cwd(),
+    mdxOptions(options) {
+      options.remarkPlugins = [remarkCodeTitles, remarkCodeTabs];
+      return options;
+    },
+    esbuildOptions: options => {
+      options.loader = {
+        ...options.loader,
+        '.js': 'jsx',
+      };
+      return options;
+    },
+  });
+  function MDXLayoutRenderer({mdxSource, ...rest}) {
+    const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
+    return <MDXLayout components={mdxComponents()} {...rest} />;
+  }
+  return <MDXLayoutRenderer mdxSource={code} />;
+}
+
+type Props = {
+  api: API;
+};
+
+export function ApiPage({api}: Props) {
+  const frontMatter = {
+    title: api.name,
+  };
+  return (
+    <DocPage frontMatter={frontMatter} toc={[]} notoc sidebar={<ApiSidebar />}>
+      <div className="row">
+        <div className="col-12">
+          <div className="api-block">
+            <div className="api-block-header request">
+              <span className="api-request-block-verb">{api.method.toUpperCase()}</span>{' '}
+              <span>{api.apiPath}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-6">
+          {api.summary && <p>{api.summary}</p>}
+
+          {api.descriptionMarkdown && parseMarkdown(api.descriptionMarkdown)}
+
+          {!!api.pathParameters.length && (
+            <div className="api-info-row">
+              <h3>Path Parameters</h3>
+              <Params params={api.pathParameters} />
+            </div>
+          )}
+
+          {!!api.queryParameters.length && (
+            <div className="api-info-row">
+              <h3>Query Parameters:</h3>
+              <Params params={api.queryParameters} />
+            </div>
+          )}
+
+          {!!api.bodyParameters.length && (
+            <div className="api-info-row">
+              <h3>Body Parameters</h3>
+              <Params params={api.bodyParameters} />
+            </div>
+          )}
+
+          {api.security?.length && (
+            <div className="api-info-row">
+              <h3>Scopes</h3>
+
+              <div>
+                <div>
+                  {'You need to '}
+                  <SmartLink to="/api/auth">
+                    authenticate via bearer auth token.
+                  </SmartLink>
+                </div>
+                <code>{'<auth_token>'}</code> requires one of the following scopes:
+              </div>
+
+              <ul>
+                {getScopes(api, 'auth_token').map(scope => (
+                  <li key={scope} style={{fontWeight: 'bold'}}>
+                    <code>{scope}</code>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+        <div className="col-6">
+          <ApiExamples api={api} />
+        </div>
+      </div>
+    </DocPage>
+  );
+}

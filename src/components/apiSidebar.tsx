@@ -1,13 +1,13 @@
 import {Fragment} from 'react';
 
-import {DocNode, docsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {DocNode, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink} from './sidebarLink';
 
-export function ApiSidebar() {
-  const rootNode = docsRootNode;
+export async function ApiSidebar() {
+  const rootNode = await getDocsRootNode();
   const apiRootNode = rootNode && nodeForPath(rootNode, 'api');
   if (!apiRootNode) {
     return null;
