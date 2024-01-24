@@ -6,6 +6,7 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
 import {GitHubCTA} from './githubCta';
+import {GuideGrid} from './guideGrid';
 import {Header} from './header';
 import {Navbar} from './navbar';
 import {PlatformSdkDetail} from './platformSdkDetail';
@@ -15,7 +16,6 @@ import {TableOfContents} from './tableOfContents';
 type Props = {
   children: any;
   frontMatter: any;
-  toc: any[];
   notoc?: boolean;
   sidebar?: ReactNode;
 };
@@ -23,7 +23,6 @@ type Props = {
 export function DocPage({
   children,
   frontMatter,
-  toc,
   notoc = false,
   sidebar = <ServerSidebar />,
 }: Props) {
@@ -69,7 +68,7 @@ export function DocPage({
                 <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                   <div className="page-nav">
                     <PlatformSdkDetail />
-                    <TableOfContents toc={toc} />
+                    <TableOfContents guideGrid={<GuideGrid className="section-nav" />} />
                   </div>
                 </div>
               )}

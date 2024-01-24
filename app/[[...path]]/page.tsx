@@ -34,11 +34,7 @@ export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
-  ({children, frontMatter, toc}) => (
-    <DocPage frontMatter={frontMatter} toc={toc}>
-      {children}
-    </DocPage>
-  )
+  ({children, frontMatter}) => <DocPage frontMatter={frontMatter}>{children}</DocPage>
 );
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
@@ -95,16 +91,11 @@ export default async function Page({params}) {
     }
     throw e;
   }
-  const {mdxSource, toc, frontMatter} = doc;
+  const {mdxSource, frontMatter} = doc;
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
   return (
-    <MDXLayoutRenderer
-      docs={docs}
-      toc={toc}
-      mdxSource={mdxSource}
-      frontMatter={frontMatter}
-    />
+    <MDXLayoutRenderer docs={docs} mdxSource={mdxSource} frontMatter={frontMatter} />
   );
 }
 

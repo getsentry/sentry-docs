@@ -1,4 +1,7 @@
-import {GuideGrid} from './guideGrid';
+'use client';
+
+import {ReactElement, useEffect, useState} from 'react';
+import {slug} from 'github-slugger';
 
 interface TocItem {
   depth: number;
@@ -7,9 +10,9 @@ interface TocItem {
   children?: TocItem[];
 }
 
-interface Props {
-  toc: TocItem[];
-}
+type Props = {
+  guideGrid: ReactElement;
+};
 
 function recursiveRender(items: TocItem[]) {
   return items.map(i => {
@@ -56,24 +59,43 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
   return items;
 }
 
-export function TableOfContents({toc}: Props) {
-  if (toc.length === 0) {
-    return (
-      <div className="doc-toc">
-        <GuideGrid className="section-nav" />
-      </div>
-    );
-  }
-
-  const items = buildTocTree(toc);
+// The full, rendered page is required in order to generate the table of
+// contents since headings can come from child components, included MDX files,
+// etc. Even though this should hypothetically be doable on the server, methods
+// like React's `renderToString` aren't supported in Next:
+// https://github.com/vercel/next.js/discussions/57631
+//
+// For now, calculate the table of contents on the client.
+export function TableOfContents({guideGrid}: Props) {
+  const [headings, setHeadings] = useState<TocItem[]>([]);
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const main = document.getElementById('main');
+      const elements = main?.querySelectorAll('h2, h3');
+      const tocItems: TocItem[] = [];
+      elements?.forEach(e => {
+        const title = e.textContent?.trim();
+        if (title) {
+          tocItems.push({
+            depth: e.tagName === 'H2' ? 2 : 3,
+            url: `#${slug(title)}`,
+            value: title,
+          });
+        }
+      });
+      setHeadings(tocItems);
+    }
+  }, []);
 
   return (
     <div className="doc-toc">
-      <div className="doc-toc-title">
-        <h6>On this page</h6>
-      </div>
-      <ul className="section-nav">{recursiveRender(items)}</ul>
-      <GuideGrid className="section-nav" />
+      {!!headings.length && (
+        <div className="doc-toc-title">
+          <h6>On this page</h6>
+        </div>
+      )}
+      <ul className="section-nav">{recursiveRender(buildTocTree(headings))}</ul>
+      {guideGrid}
     </div>
   );
 }

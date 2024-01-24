@@ -125,7 +125,7 @@ export function ApiPage({api}: Props) {
     title: api.name,
   };
   return (
-    <DocPage frontMatter={frontMatter} toc={[]} notoc sidebar={<ApiSidebar />}>
+    <DocPage frontMatter={frontMatter} notoc sidebar={<ApiSidebar />}>
       <div className="row">
         <div className="col-12">
           <div className="api-block">

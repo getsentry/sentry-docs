@@ -14,7 +14,7 @@ export function ApiCategoryPage({category}: Props) {
   };
 
   return (
-    <DocPage frontMatter={frontMatter} toc={[]} notoc sidebar={<ApiSidebar />}>
+    <DocPage frontMatter={frontMatter} notoc sidebar={<ApiSidebar />}>
       {category.description}
       <ul data-noindex>
         {category.apis.map(api => (
