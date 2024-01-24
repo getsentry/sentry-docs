@@ -43,6 +43,7 @@ export function Navbar() {
           </Link>
         </div>
       </nav>
+      <div className="hero-top-left-down-slope absolute -bottom-[39] w-full h-10 bg-white" />
     </header>
   );
 }

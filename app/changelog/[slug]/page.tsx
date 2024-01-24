@@ -32,7 +32,6 @@ export default async function ChangelogEntry({params}) {
     <Layout>
       <Navbar />
       <div className="relative w-full mx-auto grid grid-cols-12 bg-gray-200">
-        <div className="hero-top absolute -top-1 w-full h-10 bg-white" />
         <div className="col-span-12 md:col-start-3 md:col-span-8">
           <div className="max-w-3xl mx-auto px-4 p-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center space-x-4 py-3">
@@ -74,6 +73,9 @@ export default async function ChangelogEntry({params}) {
             </Article>
           </div>
         </div>
+      </div>
+      <div className="w-full mx-auto h-32 relative bg-darkPurple">
+        <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
       </div>
     </Layout>
   );

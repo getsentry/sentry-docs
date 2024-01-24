@@ -1,7 +1,7 @@
 import './globals.css';
 import 'prism-sentry/index.css';
 
-import localFont from '@next/font/local';
+import localFont from 'next/font/local';
 
 const rubik = localFont({
   src: [

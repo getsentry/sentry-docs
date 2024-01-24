@@ -33,9 +33,8 @@ export default async function ChangelogList({searchParams}) {
   return (
     <Layout>
       <Navbar />
-      <div className="w-full mx-auto h-96 relative  bg-darkPurple">
-        <div className="hero-top absolute -top-1 w-full h-10 bg-white" />
-        <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 grid grid-cols-12 items-center">
+      <div className="w-full mx-auto h-96 relative bg-darkPurple">
+        <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 pt-8 grid grid-cols-12 items-center">
           <Image
             className="justify-self-center col-span-10 z-20 hidden lg:block"
             src="/changelog/assets/hero.png"
@@ -43,7 +42,7 @@ export default async function ChangelogList({searchParams}) {
             height={400}
             width={450}
           />
-          <div className="relative col-span-12 mt-32 lg:absolute lg:w-96 lg:right-1/4 lg:-bottom-10">
+          <div className="relative col-span-12 mt-32 lg:absolute lg:w-96 lg:right-1/4 lg:-bottom-2">
             <h1 className="justify-self-center text-white font-bold text-4xl text-center lg:text-left">
               Sentry Changelog
             </h1>
@@ -53,7 +52,7 @@ export default async function ChangelogList({searchParams}) {
             </h2>
           </div>
         </div>
-        <div className="hero-bottom absolute bottom-0 w-full h-10 bg-gray-200" />
+        <div className="hero-bottom-left-down-slope absolute bottom-0 w-full h-10 bg-gray-200" />
       </div>
       <List
         posts={posts}
@@ -61,6 +60,9 @@ export default async function ChangelogList({searchParams}) {
         pagination={pagination}
         title="All Posts"
       />
+      <div className="w-full mx-auto h-16 relative bg-darkPurple">
+        <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
+      </div>
     </Layout>
   );
 }
