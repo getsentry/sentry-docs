@@ -8,7 +8,7 @@ categories:
   - mobile
 ---
 
-Sentry's routing instrumentation for Flutter automatically tracks and reports page navigation events in your app.
+Sentry's routing instrumentation for Flutter semi-automatically tracks and reports page navigation events in your app.
 It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navigation) and the [GoRouter](https://pub.dev/packages/go_router) package.
 
 <Note>
@@ -22,7 +22,7 @@ The routing instrumentation feature is shipped with Sentry's Flutter SDK automat
 Before diving into the configuration, it's important to understand how routing instrumentation behaves:
 
 - Routing transactions attach to the current scope unless another transaction is already there.
-- If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded.
+- If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded. This means that after the navigation has begun you need to start a child span inside the pushed widget manually or via another instrumentation.
 
 ## Prerequisites
 
@@ -42,8 +42,8 @@ import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 return MaterialApp(
-  title: 'Home',
-  home: HomeScreen(),
+  title: 'My Widget',
+  home: MyWidget(),
   navigatorObservers: [
     SentryNavigatorObserver()
   ],
@@ -63,17 +63,48 @@ final router = GoRouter(
 ### 2. Define Route Names
 
 By default the application's main route name is `"/"`.
-For transactions to be created automatically when navigation changes, you need to provide route names through your routes settings.
 The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
+For transactions to be created when navigation changes, you need to provide route names:
 
-```dart
+- Flutter routing: use `RouteSettings` and set the name in the constructor.
+- GoRouter: use the `name` parameter to set the route name.
+
+```dart {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Setting the route name is required
 MaterialPageRoute(
-  builder: (BuildContext context) => Settings(),
-  settings: RouteSettings(name: 'Settings'),
+  builder: (BuildContext context) => MyWidget(),
+  settings: RouteSettings(name: 'My Widget'),
 )
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final GoRouter _router = GoRouter(
+  observers: [SentryNavigatorObserver()],
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/',
+      name: 'Home',
+      builder: (BuildContext context, GoRouterState state) {
+        return const HomeScreen();
+      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: 'mywidget',
+          name: 'MyWidget',
+          builder: (BuildContext context, GoRouterState state) {
+            return const MyWidget();
+          },
+        ),
+      ],
+    ),
+  ],
+);
 ```
 
 ## Verify
@@ -124,7 +155,7 @@ class MyWidgetState extends State<MyWidget> {
 
 Use the navigator to transition to your widget. This should create and send a transaction named after the widget's route.
 
-```dart
+```dart {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
 import 'my_widget.dart';
 
@@ -136,6 +167,13 @@ Navigator.push(
     builder: (context) => MyWidget(),
   ),
 );
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+context.push('/mywidget')
 ```
 
 Log into [sentry.io](https://sentry.io) and open your project's performance page to see the transaction `MyWidget`.
