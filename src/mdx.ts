@@ -19,6 +19,7 @@ import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
+import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkTocHeadings from './remark-toc-headings';
 import remarkVariables from './remark-variables';
@@ -245,6 +246,7 @@ export async function getFileBySlug(slug) {
         remarkGfm,
         remarkCodeTitles,
         remarkCodeTabs,
+        remarkComponentSpacing,
         [
           remarkVariables,
           {
