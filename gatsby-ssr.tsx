@@ -104,7 +104,7 @@ export const onRenderBody: GatsbySSR['onRenderBody'] = ({setHeadComponents}) => 
     // Plausible
     <script 
       defer 
-      data-domain="docs.sentry.io" 
+      data-domain="docs.sentry.io,rollup.sentry.io" 
       data-api="https://plausible.io/api/event"
       src="https://plausible.io/js/script.tagged-events.js">
     </script>,
