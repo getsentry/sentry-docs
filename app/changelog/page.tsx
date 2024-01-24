@@ -1,10 +1,9 @@
+import {Fragment} from 'react';
+import type {Metadata} from 'next';
 import Image from 'next/image';
 
 import List from 'sentry-docs/components/changelog/list';
-import {Navbar} from 'sentry-docs/components/changelog/navbar';
 import {getAllFilesFrontMatter} from 'sentry-docs/mdx';
-
-import Layout from './layout';
 
 const ENTRIES_PER_PAGE = 10;
 
@@ -31,8 +30,7 @@ export default async function ChangelogList({searchParams}) {
   };
 
   return (
-    <Layout>
-      <Navbar />
+    <Fragment>
       <div className="w-full mx-auto h-96 relative bg-darkPurple">
         <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 pt-8 grid grid-cols-12 items-center">
           <Image
@@ -60,9 +58,11 @@ export default async function ChangelogList({searchParams}) {
         pagination={pagination}
         title="All Posts"
       />
-      <div className="w-full mx-auto h-16 relative bg-darkPurple">
-        <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
-      </div>
-    </Layout>
+    </Fragment>
   );
 }
+
+export const metadata: Metadata = {
+  description:
+    'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
+};

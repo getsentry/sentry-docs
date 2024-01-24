@@ -1,14 +1,46 @@
-import {useMemo} from 'react';
+import {Fragment, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
+import type {Metadata, ResolvingMetadata} from 'next';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
 
 import Article from 'sentry-docs/components/changelog/article';
-import {Navbar} from 'sentry-docs/components/changelog/navbar';
 import {getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 
-import Layout from '../layout';
+const mdx: {[key: string]: object} = {};
+async function getMDXFile({params}) {
+  if (!mdx[params.slug]) {
+    mdx[params.slug] = await getFileBySlug(`changelog/${params.slug}`);
+  }
+  return mdx[params.slug];
+}
+
+type Props = {
+  params: {id: string};
+};
+
+export async function generateMetadata(
+  {params}: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  let entry: any = null;
+  try {
+    entry = await getMDXFile({params});
+  } catch (e) {
+    return {title: (await parent).title};
+  }
+
+  const {frontMatter} = entry;
+
+  return {
+    title: frontMatter.title,
+    description: frontMatter.summary,
+    openGraph: {
+      images: frontMatter.images,
+    },
+  };
+}
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
@@ -18,10 +50,9 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
 export default async function ChangelogEntry({params}) {
   let entry: any = null;
   try {
-    entry = await getFileBySlug(`changelog/${params.slug}`);
+    entry = await getMDXFile({params});
   } catch (e) {
     if (e.code === 'ENOENT') {
-      console.error('ENOENT', params.slug);
       return notFound();
     }
     throw e;
@@ -29,9 +60,8 @@ export default async function ChangelogEntry({params}) {
   const {mdxSource, toc, frontMatter} = entry;
 
   return (
-    <Layout>
-      <Navbar />
-      <div className="relative w-full mx-auto grid grid-cols-12 bg-gray-200">
+    <Fragment>
+      <div className="relative h-[calc(100vh-8rem)] w-full mx-auto grid grid-cols-12 bg-gray-200">
         <div className="col-span-12 md:col-start-3 md:col-span-8">
           <div className="max-w-3xl mx-auto px-4 p-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center space-x-4 py-3">
@@ -74,9 +104,6 @@ export default async function ChangelogEntry({params}) {
           </div>
         </div>
       </div>
-      <div className="w-full mx-auto h-32 relative bg-darkPurple">
-        <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
-      </div>
-    </Layout>
+    </Fragment>
   );
 }

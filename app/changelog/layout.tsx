@@ -1,7 +1,11 @@
 import './globals.css';
 import 'prism-sentry/index.css';
 
+import {ReactNode} from 'react';
+import type {Metadata} from 'next';
 import localFont from 'next/font/local';
+
+import {Navbar} from 'sentry-docs/components/changelog/navbar';
 
 const rubik = localFont({
   src: [
@@ -24,6 +28,18 @@ const rubik = localFont({
   variable: '--font-rubik',
 });
 
-export default function ChangelogLayout({children}: {children: React.ReactNode}) {
-  return <div className={`${rubik.variable} font-sans bg-gray-100`}>{children}</div>;
+export const metadata: Metadata = {
+  title: {template: '%s | Sentry Changelog', default: 'Changelog'},
+};
+
+export default function ChangelogLayout({children}: {children: ReactNode}) {
+  return (
+    <div className={`${rubik.variable} font-sans`}>
+      <Navbar />
+      <div className="bg-gray-100">{children}</div>
+      <div className="w-full mx-auto h-16 relative bg-darkPurple">
+        <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
+      </div>
+    </div>
+  );
 }
