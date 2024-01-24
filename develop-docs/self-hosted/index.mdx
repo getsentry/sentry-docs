@@ -8,6 +8,33 @@ In addition to making its source code available publicly, Sentry offers and main
 
 Our recommendation is to download the [latest release of the self-hosted repository](https://github.com/getsentry/self-hosted/releases/latest), and then run `./install.sh` inside this directory. This script will take care of all the things you need to get started, including a base-line configuration, and then will tell you to run `docker compose up -d` to start Sentry. Sentry binds to port `9000` by default. You should be able to reach the login page at [http://127.0.0.1:9000](http://127.0.0.1:9000/).
 
+To have easy maintainability for future upgrades, it is recommended to use Git workflow by cloning the self-hosted repository and check out to a specific CalVer tag. More about this on [Releases & Upgrading](/self-hosted/releases/).
+
+```bash
+VERSION="24.1.0"
+git clone https://github.com/getsentry/self-hosted.git
+cd self-hosted
+git checkout ${VERSION}
+sudo ./install.sh
+```
+
+## Recommended system resource
+
+Depending on your usage, required system resource to run Sentry may varies. Minimum system specification for running Sentry looks like this:
+
+- 2 CPU cores
+- 4 GB RAM
+
+Having a machine that have lower system specification than that will fail the installation script.
+
+Current recommended system specification for running Sentry is:
+
+- 4 CPU cores
+- 16 GB RAM
+- 20 GB free disk storage space
+
+Depending on your load, you might want to increase your system specification to handle higher traffic load better. If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period.
+
 ### Self-Hosted Monitoring
 
 When you run `./install.sh`, you have a choice to opt in or out of our monitoring. This monitoring is used for development and debugging purposes so that we're on top of issues you're facing, allowing us to provide a more seamless installation process. For more details please see the [section in the self-hosted README](https://github.com/getsentry/self-hosted#self-hosted-monitoring).
@@ -32,7 +59,7 @@ The following information is reported:
 Note: The contact email is utilized for security announcements, and will never be used outside of such. You can change your opt in/out settings for sending contact info at any time in the settings of the admin panel.
 
 The data reported is minimal and it greatly helps the development team behind Sentry. With that said, you can disable the beacon with the following setting:
-```
+```python
 SENTRY_BEACON = False
 ```
 
@@ -48,7 +75,7 @@ Here are the steps to follow:
 
 1. Set `http_proxy`, `https_proxy` and `no_proxy` variables in the `/etc/environment` file.
 2. To make the `docker pull` command respect your proxy settings, create a `/etc/systemd/system/docker.service.d/http-proxy.conf` file with these contents:
-```
+```systemd
 [Service]
 Environment="HTTP_PROXY=http://proxy:3128"
 Environment="HTTPS_PROXY=http://proxy:3128"
@@ -119,3 +146,9 @@ We strongly recommend using a dedicated load balancer in front of your Sentry se
 Once you have setup a load balancer or reverse proxy to your Sentry instance, you should modify the `system.url-prefix` in the `config.yml` file to match your new URL and protocol. You should also update the SSL/TLS section in the `sentry/sentry.conf.py` script, otherwise you may get CSRF-related errors when performing certain actions such as configuring integrations.
 
 Keep in mind that all this setup uses single-nodes for all services, including Kafka. For larger loads, you'd need a beefy machine with lots of RAM and disk storage. To scale up even further, you are very likely to use clusters with a more complex tool, such as Kubernetes. Due to self-hosted installations' very custom nature, we do not offer any recommendations or guidance around scaling up. We do what works for us for our thousands of customers over at [sentry.io](https://sentry.io/) and would love to have you over when you feel your local install's maintenance becomes a burden instead of a joy.
+
+## Licensing
+
+Sentry is using [FSL (Functional Source License)](https://fsl.software/). Although it's not an OSI-approved license, the source code of Sentry and its' surrounding service & libraries for self-hosted deployment are open and [available on GitHub](https://github.com/orgs/getsentry/repositories?q=has%3Atag-production). For self-hosted, this license means that users can use Sentry and deploy it anywhere (even inside an enterprise ecosystem), but users are prohibited to sell deployed self-hosted Sentry as any kind of offering (SaaS or any kind of business model) and users are prohibited to be a direct competitor of Sentry by using Sentry's code that is FSL-licensed.  After two years, the license converts to Apache 2.0 or MIT.
+
+For further information on the FSL License, you can [visit the fsl.software website](https://fsl.software/) or [read the announcement blog post](https://blog.sentry.io/introducing-the-functional-source-license-freedom-without-free-riding/).
