@@ -2,7 +2,7 @@
 title: "Self-Hosted Troubleshooting"
 ---
 
-Please keep in mind that the [self-hosted repository](https://github.com/getsentry/self-hosted) is geared towards low to medium loads with simplicity in mind. Folks needing larger setups or having event spikes can expand from here based on their specific needs and environments. If this is not your cup of tea, you are always welcome to [try out hosted Sentry](https://sentry.io/signup/).
+Please keep in mind that the [self-hosted repository](https://github.com/getsentry/self-hosted) is geared towards low traffic loads (less than ~1 million submitted Sentry events per month). Folks needing larger setups or having event spikes can expand from here based on their specific needs and environments. If this is not your cup of tea, you are always welcome to [try out hosted Sentry](https://sentry.io/signup/).
 
 ## General
 
@@ -146,7 +146,74 @@ container for service "${servicename}" is unhealthy
 
 This can usually be resolved by running `docker compose down` and `docker compose up -d` or rerunning the install script.
 
+## Docker Network Conflicting IP Address
+
+Self-hosted Sentry is using Docker's bridge networking, in which use a specific private IP range. By default, Docker uses `172.17.0.0/16` range (`172.17.0.0`-`172.17.255.255`). This may cause conflict with your private network. You can change Docker's default IP range by configuring the `/etc/docker/daemon.json` file. If the file does not exists, you can create it yourself.
+
+Assuming your safe IP range is `10.147.0.0/16` and `10.146.0.0/16`, your configuration would be:
+
+```json
+{
+    "default-address-pools": [
+   {
+     "base": "10.147.0.0/16",
+     "size": 24
+   },
+   {
+     "base": "10.146.0.0/16",
+     "size": 24
+   }
+ ]
+}
+```
+
+To apply new Docker daemon configuration, restart your Docker service with `systemctl restart docker`.
+
+Make sure you are using [valid private IP ranges](https://en.wikipedia.org/wiki/Reserved_IP_addresses), that is between these ranges:
+- `10.0.0.0/8` (address range of `10.0.0.0`–`10.255.255.255`)
+- `100.64.0.0/10` (address range of `100.64.0.0`–`100.127.255.255`)
+- `172.16.0.0/12` (address range of `172.16.0.0`–`172.31.255.255`)
+- `192.0.0.0/24` (address range of `192.0.0.0`–`192.0.0.255`)
+- `192.168.0.0/16` (address range of `192.168.0.0`–`192.168.255.255`)
+- `198.18.0.0/15` (address range of `198.18.0.0`–`198.19.255.255`)
+
+For further reading, you can see Matthew Stratiotto's article on [The definitive guide to docker's default-address-pools option](https://straz.to/2021-09-08-docker-address-pools/).
+
+## Docker Logs Disk Usage
+
+If you are suspecting persisted logs from Docker container logs consumes a lot of your disk space, you can configure the amount of persisted logs on Docker by configuring the `/etc/docker/daemon.json` file. If the file does not exists, you can create it yourself.
+
+```json
+{
+  "log-driver": "local",
+  "log-opts": {"max-size": "10m", "max-file": "3"}
+}
+```
+
+To apply new Docker daemon configuration, restart your Docker service with `systemctl restart docker`.
+
+If you want to delete immediate Docker logs, you can execute this as `root` user:
+
+```shell
+truncate -s 0 /var/lib/docker/containers/**/*-json.log
+```
+
+## Docker Image and Builder Cleanup
+
+Executing `./install.sh` will build a new Sentry Docker container, executing it often might cause Docker to consume your disk space. You can safely prune old or unneeded Docker containers, image, or builder to re-acquire used disk space. Executing these will not affect current running containers and volumes.
+
+```shell
+docker container prune
+docker builder prune
+docker image prune --all
+# WARNING: Executing "volume prune" might delete `sentry-vroom` volume as it's not an external volume.
+docker volume prune
+docker network prune
+```
+
+Append `-f` flag for no confirmation on deletions.
+
 ## Other
 
-If you are still stuck, you can always visit our [GitHub issues](https://github.com/getsentry/self-hosted/issues) to search for existing issues or create a new issue and ask for help. Please keep in mind that we expect the community to help itself, but Sentry employees also try to monitor and answer questions when they have time.
+If you are still stuck, you can always visit our [GitHub issues](https://github.com/getsentry/self-hosted/issues) to search for existing issues or create a new issue and ask for help. You can also visit [Sentry Community Discord server](https://discord.gg/sentry) on #self-hosted channel. Please keep in mind that we expect the community to help itself, but Sentry employees also try to monitor and answer questions when they have time.
 
