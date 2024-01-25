@@ -1,3 +1,5 @@
+import type {Route} from 'next';
+
 import {type APICategory} from 'sentry-docs/build/resolveOpenAPI';
 
 import {ApiSidebar} from './apiSidebar';
@@ -20,7 +22,9 @@ export function ApiCategoryPage({category}: Props) {
         {category.apis.map(api => (
           <li key={api.name} style={{marginBottom: '1rem'}}>
             <h4>
-              <SmartLink to={`/api/${category.slug}/${api.slug}`}>{api.name}</SmartLink>
+              <SmartLink to={`/api/${category.slug}/${api.slug}` as Route}>
+                {api.name}
+              </SmartLink>
             </h4>
           </li>
         ))}

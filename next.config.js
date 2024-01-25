@@ -9,6 +9,7 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+    typedRoutes: true,
   },
 };
 

@@ -1,16 +1,18 @@
+import type {Route} from 'next';
+
 import {type FrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
 import {Platform, PlatformGuide} from './types';
 
-export interface DocNode {
-  children: DocNode[];
+export interface DocNode<T extends string> {
+  children: DocNode<T>[];
   frontmatter: FrontMatter;
   missing: boolean;
-  path: string;
+  path: Route<T>;
   slug: string;
   sourcePath: string;
-  parent?: DocNode;
+  parent?: DocNode<T>;
 }
 
 function slugWithoutIndex(slug: string): string[] {

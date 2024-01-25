@@ -18,14 +18,13 @@ import {setServerContext} from 'sentry-docs/serverContext';
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
   const paths = docs.map(doc => {
-    let path = doc.slug.split('/');
-    if (path[path.length - 1] === 'index') {
-      path = path.slice(0, path.length - 1);
+    const path = doc.slug.split('/');
+    if (path.at(-1) === 'index') {
+      path.pop();
     }
     return {path};
   });
-  paths.push({path: undefined}); // the home page
-  return paths;
+  return paths.concat({path: undefined}); // the home page
 }
 
 // Only render paths returned by generateStaticParams

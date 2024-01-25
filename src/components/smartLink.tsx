@@ -1,21 +1,22 @@
+import type {Route} from 'next';
 import Link from 'next/link';
 
 import {ExternalLink} from './externalLink';
 
-interface Props {
+interface Props<T extends string> {
   activeClassName?: string;
   children?: React.ReactNode;
   className?: string;
-  href?: string;
+  href?: Route<T>;
   isActive?: boolean;
   onClick?: (e: React.MouseEvent) => void;
   remote?: boolean;
   target?: string;
   title?: string;
-  to?: string;
+  to?: Route<T>;
 }
 
-export function SmartLink({
+export function SmartLink<T extends string>({
   to,
   href,
   children,
@@ -24,8 +25,8 @@ export function SmartLink({
   className = '',
   isActive,
   ...props
-}: Props) {
-  const realTo = to || href || '';
+}: Props<T>) {
+  const realTo = to || href;
 
   if (remote || realTo?.indexOf('://') !== -1) {
     return (
@@ -35,9 +36,13 @@ export function SmartLink({
     );
   }
 
+  if (realTo === undefined || realTo === null) {
+    throw new Error(`This shouldn't happen. Href/to passed to SmartLink is empty`);
+  }
+
   return (
     <Link
-      href={to || href || ''}
+      href={realTo}
       className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >
