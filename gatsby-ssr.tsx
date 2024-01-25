@@ -101,5 +101,12 @@ export const onRenderBody: GatsbySSR['onRenderBody'] = ({setHeadComponents}) => 
       src="https://www.googletagmanager.com/gtm.js?id=GTM-N72TJRH"
       async
     />,
+    // Plausible
+    <script 
+      defer 
+      data-domain="docs.sentry.io,rollup.sentry.io" 
+      data-api="https://plausible.io/api/event"
+      src="https://plausible.io/js/script.tagged-events.js">
+    </script>,
   ]);
 };
