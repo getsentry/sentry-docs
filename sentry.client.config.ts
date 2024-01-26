@@ -31,5 +31,5 @@ Sentry.init({
 });
 
 if (process.env.NODE_ENV === 'development') {
-  Spotlight.init();
+  Spotlight.init({integrations: [Spotlight.sentry({injectIntoSDK: false})]});
 }
