@@ -1,0 +1,114 @@
+---
+title: Metrics
+description: "Learn how to configure Metrics in your app."
+---
+
+<Note>
+
+Metrics for PHP are supported with Sentry PHP SDK version `4.5.0` and above.
+
+</Note>
+
+## Setup
+
+```php
+\Sentry\init([
+   'dsn' => '___PUBLIC_DSN___',
+   'attach_metric_code_locations' => true, 
+]);
+```
+
+To attach the code location from where your metrics were emitted from, set `attach_metric_code_locations` to `true` (default is `false`).
+
+## Emit a counter
+
+Counters are the simplest type of metrics. With counters, you can count occurrences of certain events.
+
+```php
+// Increment a counter by one for each button click.
+\Sentry\metrics()->increment(
+    key: 'button_click',
+    value: 1,
+    tags: [
+        'browser' => 'Firefox',
+        'app_version' => '1.0.0',
+    ],
+)
+```
+
+## Emit a distribution
+
+Distributions are useful to get the most insights from your data. With distributions, you can obtain aggregations such as `p90`, `min`, `max`, and `avg`, making them very powerful.
+
+```php
+// Add '15.0' to a distribution used for tracking the loading times per page.
+\Sentry\metrics()->distribution(
+    key: 'page_load',
+    value: 15.0,
+    unit: \Sentry\Metrics\MetricsUnit::millisecond(),
+    tags: [
+        'page' => '/home',
+    ],
+)
+```
+
+## Emit a set
+
+Sets are useful for counting unique occurrences. With sets, you can obtain the count of unique elements you added, making them very useful for certain cases.
+
+```php
+// Add 'jane' to a set used for tracking the number of users that viewed a page.
+\Sentry\metrics()->set(
+    key: 'user_view',
+    value: 'jane',
+    unit: \Sentry\Metrics\MetricsUnit::custom('username'),
+    tags: [
+        'page' => '/home',
+    ],
+)
+```
+
+## Emit a gauge
+
+Gauges are a special kind of metric. You can obtain aggregates like `min`, `max`, `avg`, `sum`, and `count` with gauges but no percentiles. You might wonder why I need gauges if I have distributions that can do the same and more. The answer has to do with space efficiency since gauges can be represented in a much more space-efficient way, so if you don't need percentiles, gauges are the way to go.
+
+```php
+// Add '15.0' to a gauge used for tracking the loading times for a page.
+\Sentry\metrics()->set(
+    key: 'page_load',
+    value: 15.0,
+    unit: \Sentry\Metrics\MetricsUnit::millisecond(),
+    tags: [
+        'page' => '/home',
+    ],
+)
+```
+
+## Emit a timer
+
+Timers, which are implemented as a distribution with unit second, can be used to measure the execution time of a certain block of code.
+
+```php
+\Sentry\metrics()->timing(
+    key: 'event_processing_time',
+    callback: static fn() => process(),
+);
+```
+
+## Flush your metrics
+
+All metrics emitted need to be manually flushed to Sentry.
+
+```php
+use function Sentry\metrics;
+
+metrics()->flush();
+```
+
+To reduce overhead, we recommend registering the flushing in a shutdown function.
+
+```php
+use function Sentry\metrics;
+
+register_shutdown_function(static fn () => metrics()->flush());
+```
