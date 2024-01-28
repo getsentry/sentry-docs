@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import * as Sentry from '@sentry/nextjs';
+
 const pipe =
   (...fns) =>
   x =>
@@ -17,7 +19,15 @@ const walkDir = fullPath => {
 
 const pathJoinPrefix = prefix => extraPath => path.join(prefix, extraPath);
 
-const getAllFilesRecursively = folder =>
-  pipe(fs.readdirSync, map(pipe(pathJoinPrefix(folder), walkDir)), flattenArray)(folder);
+const getAllFilesRecursively = folder => {
+  return Sentry.startSpan({name: 'getAllFilesRecursively'}, span => {
+    span?.setAttribute('folder', folder);
+    return pipe(
+      fs.readdirSync,
+      map(pipe(pathJoinPrefix(folder), walkDir)),
+      flattenArray
+    )(folder);
+  });
+};
 
 export default getAllFilesRecursively;
