@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
 import Image from 'next/image';
 
@@ -63,12 +62,7 @@ export default async function ChangelogList({searchParams}) {
   );
 }
 
-export function generateMetadata(): Metadata {
-  return {
-    description:
-      'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
-    other: {
-      'sentry-trace': Sentry.getActiveSpan()?.toTraceparent(),
-    },
-  };
-}
+export const metadata: Metadata = {
+  description:
+    'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
+};

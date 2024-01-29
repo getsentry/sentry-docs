@@ -1,5 +1,4 @@
 import {Fragment, useMemo} from 'react';
-import * as Sentry from '@sentry/nextjs';
 import {getMDXComponent} from 'mdx-bundler/client';
 import type {Metadata, ResolvingMetadata} from 'next';
 import Link from 'next/link';
@@ -40,9 +39,6 @@ export async function generateMetadata(
     openGraph: {
       images: frontMatter.images,
     },
-    other: {
-      'sentry-trace': Sentry.getActiveSpan()?.toTraceparent(),
-    },
   };
 }
 
@@ -65,7 +61,7 @@ export default async function ChangelogEntry({params}) {
 
   return (
     <Fragment>
-      <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto grid grid-cols-12 bg-gray-200">
+      <div className="relative h-[calc(100vh-8rem)] w-full mx-auto grid grid-cols-12 bg-gray-200">
         <div className="col-span-12 md:col-start-3 md:col-span-8">
           <div className="max-w-3xl mx-auto px-4 p-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center space-x-4 py-3">
