@@ -11,14 +11,30 @@ Metrics for Python are supported with Sentry Python SDK version `1.38.0` and abo
 
 Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
 
+To setup Sentry metrics on the Python SDK with version `< 1.40.0`, do the following:
+```python
+sentry_init(
+	dsn="___PUBLIC_DSN___",
+	_experiments={
+		"enable_metrics": True
+	},
+)
+```
+
+<Note>
+
+As of version `>= 1.40.0`, metrics are enabled by default.
+
+</Note>
+
 ## Emit a Counter
 
 Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
 
 To emit a counter, do the following:
 
-```php
-// Increment a counter by one for each button click.
+```python
+# Increment a counter by one for each button click.
 sentry_sdk.metrics.incr(
 	key="button_click",
 	value=1,
@@ -35,8 +51,8 @@ Distributions help you get the most insights from your data by allowing you to o
 
 To emit a distribution, do the following:
 
-```php
-// Add '15.0' to a distribution used for tracking the loading times per page.
+```python
+# Add '15.0' to a distribution used for tracking the loading times per page.
 sentry_sdk.metrics.distribution(
 	key="page_load",
 	value=15.0,
@@ -53,8 +69,8 @@ Sets are useful for looking at unique occurrences and counting the unique elemen
 
 To emit a set, do the following:
 
-```php
-// Add 'jane' to a set used for tracking the number of users that viewed a page.
+```python
+# Add 'jane' to a set used for tracking the number of users that viewed a page.
 sentry_sdk.metrics.set(
 	key="user_view",
 	value="jane",
@@ -71,8 +87,8 @@ Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. T
 
 To emit a gauge, do the following:
 
-```php
-// Add '15.0' to a gauge used for tracking the loading times for a page.
+```python
+# Add '15.0' to a gauge used for tracking the loading times for a page.
 sentry_sdk.metrics.gauge(
 	key="page_load",
 	value=15.0,
@@ -89,7 +105,48 @@ Timers can be used to measure the execution time of a specific block of code. Th
 
 To emit a timer, do the following:
 
-```php
+```python
+# Measure the time of execution of the `process()` function.
 with sentry_sdk.metrics.timing(key="event_processing_time"):
 	process()
 ```
+
+## Setup Code Locations
+
+If you are using the Python SDK version `< 1.40.0`, you can attach the code location of your metrics by setting `metric_code_locations` to `true`.
+
+```php
+sentry_init(
+	dsn="___PUBLIC_DSN___",
+	_experiments={
+		"enable_metrics": True,
+		"metric_code_locations": True
+	},
+)
+```
+
+<Note>
+
+As of version `>= 1.40.0`, metric code locations are enabled by default.
+
+</Note>
+
+## Setup Metrics Summaries
+
+If you are using the Python SDK version `< 1.40.0`, you can connect metrics and spans by setting `metrics_summary_sample_rate` to `1.0`.
+
+```php
+sentry_init(
+	dsn="___PUBLIC_DSN___",
+	_experiments={
+		"enable_metrics": True,
+		"metric_code_locations": True
+	},
+)
+```
+
+<Note>
+
+As of version `>= 1.40.0`, metrics and spans correlations are enabled by default to `1.0`.
+
+</Note>
