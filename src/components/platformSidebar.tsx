@@ -70,6 +70,7 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[
           `/${pathRoot}/performance/`,
+          `/${pathRoot}/metrics/`,
           `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
@@ -81,6 +82,13 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
         prependLinks={[[`/${pathRoot}/performance/`, 'Set Up Performance']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/metrics`}
+        title="Metrics"
+        prependLinks={[[`/${pathRoot}/metrics/`, 'Set Up Metrics']]}
         suppressMissing
         tree={tree}
       />
