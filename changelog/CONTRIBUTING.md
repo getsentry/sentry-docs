@@ -21,7 +21,27 @@ via the browser, or by checking out the repo and making your edits locally. You 
 
 ### Create a New Entry
 
-Create a new file in sentry-docs/changelog/. Naming the file with the following convention ```YYYY-MM-DD-title-of-post.mdx``` 
+Create a new file in sentry-docs/changelog/. [Follow this link](https://github.com/getsentry/sentry-docs/new/smeubank-changelog-contribution/changelog?filename=YYYY-MM-title-of-post.mdx) to create a new mark down file. Then ensure the naming of the file follows this convention ```YYYY-MM-DD-title-of-post.mdx```, and update to the current date and a snazzy title of your choosing. You can then copy and paste the following template into the empty markdown file to begin crafting your chagelog post.
+
+
+```
+  ---
+  title: "Title of your awesome ship here"
+  summary: "Summary of your awesome ship here"
+  date: "2023-10-12T00:00:00.000Z"
+  tags: ["SDK","Crons","Ruby"]
+  ---
+
+  Content of your awesome ship here. `codeCase` example, and a line \
+  \
+  break.\
+  \
+  Here is a [sick hyperlink](https://changelog.sentry.io)
+
+ 
+
+```
+
 It is important to note that the tags used should be from the following list: 
 ```SDKS```,
 ```CRONS```,
@@ -45,22 +65,3 @@ It is important to note that the tags used should be from the following list:
 ```ENTERPRISE```,
 ```DASHBOARDS```, and
 ```BILLING```
-
-
-```
-  ---
-  title: "Title of your awesome ship here"
-  summary: "Summary of your awesome ship here"
-  date: "2023-10-12T00:00:00.000Z"
-  tags: ["SDK","Crons","Ruby"]
-  ---
-
-  Content of your awesome ship here. `codeCase` example, and a line \
-  \
-  break.\
-  \
-  Here is a [sick hyperlink](https://changelog.sentry.io)
-
- 
-
-```
