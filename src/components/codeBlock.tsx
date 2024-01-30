@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import {makeKeywordsClickable} from './codeKeywords';
