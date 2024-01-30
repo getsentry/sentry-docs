@@ -1,18 +1,9 @@
 'use client';
 
-import {useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
-import {MDXProvider} from '@mdx-js/react';
 
 import {makeKeywordsClickable} from './codeKeywords';
-
-function CodeWrapper({children, ...props}: React.ComponentProps<'code'>) {
-  return <code {...props}>{children ? makeKeywordsClickable(children) : children}</code>;
-}
-
-function SpanWrapper({children, ...props}: React.ComponentProps<'span'>) {
-  return <span {...props}>{children ? makeKeywordsClickable(children) : children}</span>;
-}
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -55,16 +46,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       <div className="copied" style={{opacity: showCopied ? 1 : 0}}>
         Copied
       </div>
-      <div ref={codeRef}>
-        <MDXProvider
-          components={{
-            code: CodeWrapper,
-            span: SpanWrapper,
-          }}
-        >
-          {children}
-        </MDXProvider>
-      </div>
+      <div ref={codeRef}>{makeKeywordsClickable(children)}</div>
     </div>
   );
 }

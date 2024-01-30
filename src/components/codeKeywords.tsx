@@ -1,4 +1,11 @@
-import {Children, Fragment, useContext, useState} from 'react';
+import {
+  Children,
+  cloneElement,
+  Fragment,
+  ReactElement,
+  useContext,
+  useState,
+} from 'react';
 import {createPortal} from 'react-dom';
 import {ArrowDown} from 'react-feather';
 import {usePopper} from 'react-popper';
@@ -21,10 +28,14 @@ export function makeKeywordsClickable(children: React.ReactNode) {
 
   return items.reduce((arr: ChildrenItem[], child) => {
     if (typeof child !== 'string') {
-      arr.push(child);
+      const updatedChild = cloneElement(
+        child as ReactElement,
+        {},
+        makeKeywordsClickable((child as ReactElement).props.children)
+      );
+      arr.push(updatedChild);
       return arr;
     }
-
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
