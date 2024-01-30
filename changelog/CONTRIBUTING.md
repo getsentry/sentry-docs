@@ -12,7 +12,7 @@ _Bad software is everywhere, and we're tired of it. Sentry is on a mission to he
 If you want to join us [<kbd>**Check out our open positions**</kbd>](https://sentry.io/careers/)_
 
 ### Sentry's Changelog
-Sentry's changelog is a site to promote recent changes to Sentry's produc, new releases in SDKs, and any other new goings ons which think might
+Sentry's changelog is a site to promote recent changes to Sentry's product, new releases in SDKs, and any other new goings ons which think might
 tickle our user's interests.
 
 ### Contributing
