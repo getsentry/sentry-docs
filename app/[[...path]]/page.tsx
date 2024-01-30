@@ -107,16 +107,31 @@ type MetadataProps = {
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
   let title = 'Home';
+  let description = '';
+  const images = [{url: 'https://docs.sentry.io/meta.png', width: 1200, height: 630}];
 
   const rootNode = await getDocsRootNode();
   if (rootNode && params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {
       title = pageNode.frontmatter.title;
+      description = pageNode.frontmatter.description;
     }
   }
-  // get the MDX for the current doc and render it
+
   return {
     title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images,
+    },
+    twitter: {
+      title,
+      description,
+      images,
+    },
   };
 }
