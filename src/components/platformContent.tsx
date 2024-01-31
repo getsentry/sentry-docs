@@ -1,207 +1,82 @@
-import React, {Fragment, useState} from 'react';
-import {graphql, useStaticQuery} from 'gatsby';
+import {useMemo} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
 
-import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
+import {getFileBySlug} from 'sentry-docs/mdx';
+import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {serverContext} from 'sentry-docs/serverContext';
 
-import {getPlatform, getPlatformsWithFallback, usePlatform} from './hooks/usePlatform';
-import {Content} from './content';
-import {SmartLink} from './smartLink';
-
-const includeQuery = graphql`
-  query PlatformContentQuery {
-    allFile(filter: {sourceInstanceName: {eq: "platform-includes"}}) {
-      nodes {
-        id
-        relativePath
-        name
-        childMdx {
-          body
-        }
-      }
-    }
-  }
-`;
-
-const slugMatches = (slug1: string, slug2: string): boolean => {
-  if (slug1 === 'browser') {
-    slug1 = 'javascript';
-  }
-  if (slug2 === 'browser') {
-    slug2 = 'javascript';
-  }
-  return slug1 === slug2;
-};
-
-type FileNode = {
-  childMdx: {
-    body: any;
-  };
-  id: string;
-  name: string;
-  relativePath: string;
-};
+import {Include} from './include';
 
 type Props = {
   includePath: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
   noGuides?: boolean;
-  notSupported?: string[];
   platform?: string;
-  supported?: string[];
 };
 
-const isSupported = (
-  platformKey: string,
-  supported: string[],
-  notSupported: string[]
-): boolean | null => {
-  if (supported.length && supported.find(p => p === platformKey)) {
-    return true;
-  }
-  if (notSupported.length && notSupported.find(p => p === platformKey)) {
-    return false;
-  }
-  return null;
-};
+export async function PlatformContent({includePath, platform, noGuides}: Props) {
+  const {path} = serverContext();
 
-const getFileForPlatform = (
-  fileList: FileNode[],
-  platform: Platform | PlatformGuide
-): FileNode | null => {
-  const platformsToSearch = getPlatformsWithFallback(platform);
-  platformsToSearch.push('_default');
-
-  const contentMatch = platformsToSearch
-    .map(name => name && fileList.find(m => slugMatches(m.name, name)))
-    .find(m => m);
-
-  return contentMatch || null;
-};
-
-export function PlatformContent({
-  includePath,
-  platform,
-  children,
-  noGuides,
-  supported = [],
-  notSupported = [],
-}: Props) {
-  const {
-    allFile: {nodes: files},
-  } = useStaticQuery(includeQuery);
-
-  const [dropdown, setDropdown] = useState(false);
-  const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
-  const hasDropdown = !isFixed;
-
-  const matches = files.filter(node => node.relativePath.indexOf(includePath) === 0);
-
-  if (currentPlatform === null) {
-    return null;
-  }
-
-  if (noGuides && currentPlatform.type !== 'platform') {
-    return null;
-  }
-
-  const platformsToSearch = getPlatformsWithFallback(currentPlatform);
-
-  let result: boolean | null = null;
-  // eslint-disable-next-line no-cond-assign
-  for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
-    if (!platformKey) {
-      continue;
-    }
-    result = isSupported(platformKey, supported, notSupported);
-    if (result === false) {
+  if (!platform) {
+    if (path.length < 2 || path[0] !== 'platforms') {
       return null;
     }
-    if (result === true) {
-      break;
+    platform = path[1];
+  }
+
+  let guide: string | undefined;
+  if (!noGuides && path.length >= 4 && path[2] === 'guides') {
+    guide = `${platform}.${path[3]}`;
+  }
+
+  let doc: any = null;
+  if (guide) {
+    try {
+      doc = await getFileBySlug(`platform-includes/${includePath}/${guide}`);
+    } catch (e) {
+      // It's fine - keep looking.
     }
   }
-  if (result === null && supported.length) {
-    return null;
+
+  if (!doc) {
+    try {
+      doc = await getFileBySlug(`platform-includes/${includePath}/${platform}`);
+    } catch (e) {
+      // It's fine - keep looking.
+    }
   }
 
-  const contentMatch = getFileForPlatform(matches, currentPlatform);
-
-  if (!contentMatch && !children) {
-    // children is used to conditionally show introductory paragraph if the
-    // snippet exists. in case children is null, it is unlikely that the page
-    // is correctly written to deal with missing snippets and the correct
-    // course of action is probably to hide the page for the affected platform
-    throw new Error(
-      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
-    );
+  if (!doc) {
+    const rootNode = await getDocsRootNode();
+    const platformObject = rootNode && getPlatform(rootNode, platform);
+    if (platformObject?.fallbackPlatform) {
+      try {
+        doc = await getFileBySlug(
+          `platform-includes/${includePath}/${platformObject.fallbackPlatform}`
+        );
+      } catch (e) {
+        // It's fine - keep looking.
+      }
+    }
   }
 
-  if (!contentMatch) {
-    return null;
+  if (!doc) {
+    try {
+      doc = await getFileBySlug(`platform-includes/${includePath}/_default`);
+    } catch (e) {
+      // Couldn't find anything.
+      return null;
+    }
   }
 
-  if (hasDropdown) {
-    throw new Error(`${includePath} has a dropdown??`);
+  const {mdxSource} = doc;
+  function MDXLayoutRenderer({mdxSource: source, ...rest}) {
+    const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
+    return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
   }
-
-  return (
-    <section className="platform-specific-content">
-      {hasDropdown && (
-        <div className="nav pb-1 flex">
-          <div className="dropdown mr-2 mb-1">
-            <button
-              className="btn btn-sm btn-secondary dropdown-toggle"
-              onClick={() => setDropdown(prevValue => !prevValue)}
-            >
-              {currentPlatform.title}
-            </button>
-
-            <div
-              className="nav dropdown-menu"
-              role="tablist"
-              style={{display: dropdown ? 'block' : 'none'}}
-            >
-              {matches.map(node => {
-                const nodePlatform = getPlatform(node.name);
-                if (!nodePlatform) {
-                  // eslint-disable-next-line no-console
-                  console.warn(`Cannot find platform for ${node.name}`);
-                  return null;
-                }
-                return (
-                  <a
-                    className="dropdown-item"
-                    role="tab"
-                    key={nodePlatform.key}
-                    style={{cursor: 'pointer'}}
-                    onClick={() => {
-                      setDropdown(false);
-                      setPlatform(nodePlatform.key);
-                      // TODO: retain scroll
-                      // window.scrollTo(window.scrollX, window.scrollY);
-                    }}
-                  >
-                    {nodePlatform.title}
-                  </a>
-                );
-              })}
-              <SmartLink className="dropdown-item" to="/platforms/">
-                <em>Platform not listed?</em>
-              </SmartLink>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="tab-content">
-        <div className="tab-pane show active">
-          <Fragment>
-            {children || null}
-            <Content key={contentMatch.id} file={contentMatch} />
-          </Fragment>
-        </div>
-      </div>
-    </section>
-  );
+  return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }
+
+const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent});

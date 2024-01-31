@@ -1,36 +1,22 @@
-import React from 'react';
-import {useLocation} from '@reach/router';
-import {graphql, useStaticQuery} from 'gatsby';
+'use client';
 
-import {ExternalLink} from './externalLink';
+import Link from 'next/link';
+import {usePathname} from 'next/navigation';
+
 import {Note} from './note';
 import {SignedInCheck} from './signedInCheck';
 
-const siteMetaQuery = graphql`
-  query SignInNoteQuery {
-    site {
-      siteMetadata {
-        siteUrl
-      }
-    }
-  }
-`;
-
 export function SignInNote() {
-  const location = useLocation();
-  const data = useStaticQuery(siteMetaQuery);
+  const pathname = usePathname();
 
-  const url = data.site.siteMetadata.siteUrl + location.pathname;
+  const url = 'https://sentry-docs-next.sentry.dev/' + pathname;
 
   return (
     <SignedInCheck isUserAuthenticated={false}>
       <Note>
         The following code sample will let you choose your personal config from the
         dropdown, once you're{' '}
-        <ExternalLink href={`https://sentry.io/auth/login/?next=${url}`}>
-          logged in
-        </ExternalLink>
-        .
+        <Link href={`https://sentry.io/auth/login/?next=${url}`}>logged in</Link>.
       </Note>
     </SignedInCheck>
   );

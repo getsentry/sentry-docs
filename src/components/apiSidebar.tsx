@@ -1,33 +1,46 @@
-import React, {Fragment} from 'react';
-import {useLocation} from '@reach/router';
-import {graphql, useStaticQuery} from 'gatsby';
+import {Fragment} from 'react';
+
+import {DocNode, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink} from './sidebarLink';
 
-const query = graphql`
-  query ApiNavQuery {
-    allSitePage(filter: {path: {regex: "//api//"}}, sort: {fields: path}) {
-      nodes {
-        path
-        context {
-          title
-        }
-      }
-    }
+export async function ApiSidebar() {
+  const rootNode = await getDocsRootNode();
+  const apiRootNode = rootNode && nodeForPath(rootNode, 'api');
+  if (!apiRootNode) {
+    return null;
   }
-`;
 
-export function ApiSidebar() {
-  const data = useStaticQuery(query);
-  const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
+  const nodes: {
+    context: {
+      title: string;
+    };
+    path: string;
+  }[] = [];
+  const addNodes = (ns: DocNode[]) => {
+    ns.forEach(n => {
+      nodes.push({
+        path: `/${n.path}/`,
+        context: {
+          title: n.frontmatter.title,
+        },
+      });
+      addNodes(n.children);
+    });
+  };
+  addNodes([apiRootNode]);
+
+  const tree = toTree(nodes);
   const endpoints = tree[0].children.filter(
     curr => curr.children.length > 1 && !curr.name.includes('guides')
   );
   const guides = tree[0].children.filter(curr => curr.name.includes('guides'));
-  const location = useLocation();
 
-  const isActive = path => location && location.pathname.startsWith(path);
+  const {path: pathParts} = serverContext();
+  const currentPath = `/${pathParts.join('/')}/`;
+  const isActive = p => currentPath.indexOf(p) === 0;
 
   return (
     <ul className="list-unstyled" data-sidebar-tree>
@@ -35,50 +48,57 @@ export function ApiSidebar() {
         root="api"
         title="API Reference"
         tree={tree}
-        exclude={endpoints
-          .map(elem => elem.node.path)
-          .concat(guides.map(elem => elem.node.path))}
+        exclude={
+          endpoints
+            .map(elem => elem.node?.path)
+            .concat(guides.map(elem => elem.node?.path))
+            .filter(Boolean) as string[]
+        }
       />
       <DynamicNav
         root="api/guides"
         title="Guides"
         tree={guides}
-        exclude={endpoints.map(elem => elem.node.path)}
+        exclude={endpoints.map(elem => elem.node?.path).filter(Boolean) as string[]}
       />
       <li className="mb-3" data-sidebar-branch>
         <div className="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
           <h6>Endpoints</h6>
         </div>
         <ul className="list-unstyled" data-sidebar-tree>
-          {endpoints.map(
-            ({
-              node: {
-                path,
-                context: {title},
-              },
-              children,
-            }) => (
-              <Fragment key={path}>
-                <SidebarLink to={path} title={title} />
-                {isActive(path) && (
-                  <div style={{paddingLeft: '0.5rem'}}>
-                    {children
-                      .filter(({node}) => !!node)
-                      .map(
-                        ({
-                          node: {
-                            path: childPath,
-                            context: {title: contextTitle},
-                          },
-                        }) => (
-                          <SidebarLink key={path} to={childPath} title={contextTitle} />
-                        )
-                      )}
-                  </div>
-                )}
-              </Fragment>
-            )
-          )}
+          {endpoints.map(({node, children}) => {
+            const path = node?.path;
+            const title = node?.context.title;
+            return (
+              path &&
+              title && (
+                <Fragment key={path}>
+                  <SidebarLink to={path} title={title} path={currentPath} />
+                  {isActive(path) && (
+                    <div style={{paddingLeft: '0.5rem'}}>
+                      {children
+                        .filter(({node: n}) => !!n)
+                        .map(({node: n}) => {
+                          const childPath = n?.path;
+                          const contextTitle = n?.context.title;
+                          return (
+                            childPath &&
+                            contextTitle && (
+                              <SidebarLink
+                                key={path}
+                                to={childPath}
+                                title={contextTitle}
+                                path={currentPath}
+                              />
+                            )
+                          );
+                        })}
+                    </div>
+                  )}
+                </Fragment>
+              )
+            );
+          })}
         </ul>
       </li>
     </ul>

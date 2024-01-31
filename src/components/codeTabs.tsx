@@ -1,4 +1,6 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+'use client';
+
+import {useContext, useEffect, useRef, useState} from 'react';
 import styled from '@emotion/styled';
 
 import {CodeBlockProps} from './codeBlock';

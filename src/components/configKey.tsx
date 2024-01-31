@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {PlatformIdentifier} from './platformIdentifier';
 import {PlatformSection} from './platformSection';
 

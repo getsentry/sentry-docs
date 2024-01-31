@@ -1,13 +1,20 @@
-import React, {Fragment} from 'react';
+import {Fragment} from 'react';
 import {NavDropdown} from 'react-bootstrap';
-import {PlatformIcon} from 'platformicons';
 
-import {usePlatform, usePlatformList} from './hooks/usePlatform';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
+
+import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 
-export function NavbarPlatformDropdown() {
-  const platformList = usePlatformList();
-  const [currentPlatform] = usePlatform(null, false, false);
+interface Props {
+  currentPlatform: Platform | PlatformGuide | undefined;
+  platforms: Platform[];
+}
+
+export function NavbarPlatformDropdown({
+  platforms: platformList,
+  currentPlatform,
+}: Props) {
   return (
     <NavDropdown
       title={

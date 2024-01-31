@@ -42,6 +42,12 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "buffer.projects_mem_count",
+    "description": "The current count of the keys in the \"in-memory\" buffer.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "buffer.reads",
     "description": "Number times the envelope buffer reads back from disk.",
@@ -54,6 +60,12 @@
     "features": []
   },
   {
+    "type": "Timer",
+    "name": "envelope.on_disk_buffer_time",
+    "description": "Total time in milliseconds an envelope spends in the Relay's on-disk buffer.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
@@ -63,9 +75,7 @@
     "type": "Counter",
     "name": "event.corrupted",
     "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
-    "features": [
-      "processing"
-    ]
+    "features": ["processing"]
   },
   {
     "type": "Counter",
@@ -155,17 +165,13 @@
     "type": "Timer",
     "name": "event_processing.process",
     "description": "Time in milliseconds spent running event processors on an event for normalization. Event\nprocessing happens before filtering.",
-    "features": [
-      "processing"
-    ]
+    "features": ["processing"]
   },
   {
     "type": "Timer",
     "name": "event_processing.rate_limiting",
     "description": "Time in milliseconds spent checking for organization, project, and DSN rate limits.\n\nNot all events reach this point. After an event is rate limited for the first time, the rate\nlimit is cached. Events coming in after this will be discarded earlier in the request queue\nand do not reach the processing queue.",
-    "features": [
-      "processing"
-    ]
+    "features": ["processing"]
   },
   {
     "type": "Timer",
@@ -321,9 +327,7 @@
     "type": "Counter",
     "name": "metrics.meta.redis.update",
     "description": "Incremented every time a redis key is updated to store or update metadata.",
-    "features": [
-      "redis"
-    ]
+    "features": ["redis"]
   },
   {
     "type": "Counter",
@@ -341,20 +345,12 @@
     "type": "Counter",
     "name": "processing.event.produced",
     "description": "Number of messages placed on the Kafka queues.\n\nWhen Relay operates as Sentry service and an Envelope item is successfully processed, each\nEnvelope item results in a dedicated message on one of the ingestion topics on Kafka.\n\nThis metric is tagged with:\n- `event_type`: The kind of message produced to Kafka.\n\nThe message types can be:\n\n- `event`: An error or transaction event. Error events are sent to `ingest-events`,\ntransactions to `ingest-transactions`, and errors with attachments are sent to\n`ingest-attachments`.\n- `attachment`: An attachment file associated with an error event, sent to\n`ingest-attachments`.\n- `user_report`: A message from the user feedback dialog, sent to `ingest-events`.\n- `session`: A release health session update, sent to `ingest-sessions`.",
-    "features": [
-      "processing"
-    ]
+    "features": ["processing"]
   },
   {
     "type": "Counter",
     "name": "processing.produce.error",
     "description": "Number of producer errors occurred after an envelope was already enqueued for sending to\nKafka.\n\nThese errors include, for example, _\"MessageTooLarge\"_ errors when the broker does not\naccept the requests over a certain size, which is usually due to invalid or inconsistent\nbroker/producer configurations.",
-    "features": []
-  },
-  {
-    "type": "Timer",
-    "name": "processor.message.duration",
-    "description": "Timing in milliseconds for processing a message in the internal CPU pool.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
     "features": []
   },
   {
@@ -397,9 +393,7 @@
     "type": "Timer",
     "name": "project_state.decompression",
     "description": "Time in milliseconds required to decompress a project config from redis.\n\nNote that this also times the cases where project config is uncompressed,\nin which case the timer should be very close to zero.",
-    "features": [
-      "processing"
-    ]
+    "features": ["processing"]
   },
   {
     "type": "Timer",
@@ -441,9 +435,7 @@
     "type": "Counter",
     "name": "project_state.redis.requests",
     "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
-    "features": [
-      "processing"
-    ]
+    "features": ["processing"]
   },
   {
     "type": "Counter",
@@ -472,7 +464,7 @@
   {
     "type": "Counter",
     "name": "project_upstream.failed",
-    "description": "Number of times an upstream request for a project config failed.\n\nFailure can happen, for example, when there's a network error. Refer to\n[`UpstreamRequestError`](crate::services::upstream::UpstreamRequestError) for all cases.",
+    "description": "Number of times an upstream request for a project config failed.\n\nFailure can happen, for example, when there's a network error. Refer to\n[`UpstreamRequestError`](crate::actors::upstream::UpstreamRequestError) for all cases.",
     "features": []
   },
   {
@@ -533,12 +525,6 @@
     "type": "Histogram",
     "name": "upstream.envelope.body_size",
     "description": "Size of queries (projectconfig queries, i.e. the request payload, not the response) sent by\nRelay over HTTP in bytes.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "upstream.metrics.body_size",
-    "description": "Size of batched global metrics requests sent by Relay over HTTP in bytes.",
     "features": []
   },
   {

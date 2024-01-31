@@ -1,8 +1,6 @@
-import React from 'react';
-
+import {getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCaseStyle} from 'sentry-docs/types';
-
-import {usePlatform} from './hooks/usePlatform';
 
 type Props = {
   name: string;
@@ -31,11 +29,14 @@ function formatCaseStyle(style: PlatformCaseStyle | undefined, value: string) {
 }
 
 export function PlatformIdentifier({name, platform}: Props) {
-  const [currentPlatform] = usePlatform(platform);
-
-  if (!currentPlatform) {
+  const {rootNode, path} = serverContext();
+  let currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  if (!currentPlatformOrGuide && platform) {
+    currentPlatformOrGuide = rootNode && getPlatform(rootNode, platform);
+  }
+  if (!currentPlatformOrGuide) {
     return null;
   }
 
-  return <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>;
+  return <code>{formatCaseStyle(currentPlatformOrGuide.caseStyle, name)}</code>;
 }

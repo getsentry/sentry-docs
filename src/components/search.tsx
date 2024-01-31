@@ -1,4 +1,6 @@
-import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+'use client';
+
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import styled from '@emotion/styled';
 import {
   Hit,
@@ -7,13 +9,14 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import DOMPurify from 'dompurify';
-import {Link, navigate} from 'gatsby';
+import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
+import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {DocsBotButton} from 'sentry-docs/components/docsBotButton';
-import {useOnClickOutside} from 'sentry-docs/utils';
+import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 
-import {useKeyboardNavigate} from './hooks/useKeyboardNavigate';
 import {Logo} from './logo';
 
 // https://stackoverflow.com/a/2117523/115146
@@ -69,6 +72,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const handleClickOutside = useCallback(() => {
     setInputFocus(false);
@@ -135,7 +139,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
 
   const {focused} = useKeyboardNavigate({
     list: flatHits,
-    onSelect: hit => navigate(relativizeUrl(hit.url)),
+    onSelect: hit => router.push(relativizeUrl(hit.url)),
   });
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
@@ -198,7 +202,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
                           }
                         >
                           <Link
-                            to={relativizeUrl(hit.url)}
+                            href={relativizeUrl(hit.url)}
                             onClick={() => trackSearchResultClick(hit, index)}
                           >
                             {hit.title && (
