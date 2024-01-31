@@ -20,7 +20,7 @@ export function GitHubCTA() {
       <br />
       <small>
         Our documentation is open source and available on GitHub. Your contributions are
-        welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would
+        welcome, whether fixing a typo (drat!) or suggesting an update ("yeah, this would
         be better").
         <div className="muted">
           <Link href={sourceUrl}>Suggest an edit to this page</Link>{' '}
