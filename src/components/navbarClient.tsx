@@ -18,7 +18,7 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
   if (currentPlatform) {
     searchPlatforms = [currentPlatform.name];
     if ('platform' in currentPlatform) {
-      // currentPlatform is a PlatformGuide, so include both names.
+      // currentPlatform is a PlatformGuide, so include its platform name too.
       searchPlatforms.unshift(currentPlatform.platform);
     }
   }
