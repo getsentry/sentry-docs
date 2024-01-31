@@ -1,7 +1,7 @@
 ---
 title: Basic Options
-sidebar_order: 1
 description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+sidebar_order: 1
 ---
 
 SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
@@ -23,59 +23,13 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </ConfigKey>
 
-<ConfigKey name="stack-trace-mode" supported={["dotnet"]}>
-
-- Original - Default .NET stack trace format.
-- Enhanced - Include `async`, return type, arguments, and more.
-
-Before version 3.0.0 of the Sentry SDK for .NET, there was no special treatment for the stack trace. Sentry reported what .NET made available at runtime.
-This behavior now called `StackTraceMode.Original`. With the introduction of 3.0, a new default mode is `Enhanced`.
-
-<Note>
-
-Changing this value will affect issue grouping. Since the frame significantly changes shape.
-
-</Note>
-
-</ConfigKey>
-
-<ConfigKey name="is-global-mode-enabled" supported={["dotnet"]}>
-
-Specifies whether to use global scope management mode. Should be `true` for client applications and `false` for server applications.
-
-Example scenarios where it should be explicitly set to true:
-
-- Universal Windows platform (UWP) applications
-- WinForms applications
-- Windows Presentation Foundation (WPF) applications
-- Single user console applications
-
-Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
-
-</ConfigKey>
-
-<ConfigKey name="database-path" supported={["native"]}>
-
-Allows you to specify a path to the local event- and crash-database of the Native SDK. This path will default to `.sentry-native` relative to the current working directory (`CWD`). While this is a convenient setting for development, we strongly urge you to provide an explicit database path for our production deployments. In many deployment scenarios, the path relative to the `CWD` will not be writable. For this reason, you should store the database in your application's user-specific data/cache directory (e.g., under `%AppData%\Local` on Windows, `~/Library/Application Support` on macOS, or `XDG_CACHE_HOME` on Linux).
-
-</ConfigKey>
-
-<ConfigKey name="debug" notSupported={["elixir", "php"]}>
+<ConfigKey name="debug">
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
 </ConfigKey>
 
-<ConfigKey name="logger" supported={["php", "php.laravel"]} notSupported={["php.symfony"]}>
-
-If enabled, the SDK prints out debug information about if something went wrong while sending events.
-It isn't recommended to use this in production.
-
-<PlatformContent includePath="configuration/logger/" />
-
-</ConfigKey>
-
-<ConfigKey name="diagnostic-level" supported={["dotnet", "java", "android", "dart", "flutter", "apple"]}>
+<ConfigKey name="diagnostic-level">
 
 Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
 
@@ -87,111 +41,25 @@ Enabling `debug` mode makes the SDK generate as much diagnostic data as possible
 
 </ConfigKey>
 
-<PlatformSection supported={["dotnet"]}>
-
-For app models that don't have a console to print to, you can <PlatformLink to="/configuration/diagnostic-logger/">customize the SDK's diagnostic logger</PlatformLink> to write to a file or to Visual Studio's debug window.
-
-</PlatformSection>
-
-<ConfigKey name="releaseName" supported={["apple"]}>
-
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
-
-</ConfigKey>
-
-<ConfigKey name="dist" supported={["apple", "java", "android", "dart", "flutter", "dotnet", "react-native"]}>
+<ConfigKey name="dist">
 
 Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
 
 </ConfigKey>
 
-<ConfigKey name="release" notSupported={["apple"]}>
+<ConfigKey name="release">
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-<PlatformSection notSupported={["unity", "javascript.electron"]}>
-
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.electron"]}>
-
-By default the SDK will read properties from the Electron `app` module to create the release in the format `appName@version`.
-
-</PlatformSection>
-
-<PlatformSection supported={["unity"]}>
-
-By default the SDK will read from `Application.productName` and `Application.version` to create the release in the format `$"{Application.productName}@{Application.version}".`
-
-</PlatformSection>
 
 </ConfigKey>
 
 <ConfigKey name="environment">
 
-<PlatformSection notSupported={["native", "javascript.electron", "unity", "dotnet", "python", "php"]}>
-
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
-
-</PlatformSection>
-
-<PlatformSection supported={["native"]}>
-
-Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
-
-By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Otherwise, the default environment is `production`.
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.electron"]}>
-
-Sets the environment. Defaults to `development` or `production` depending on whether the application is packaged.
-
-</PlatformSection>
-
-<PlatformSection supported={["unity"]}>
-
-Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
-
-By default, the SDK reports `editor` when running inside the Unity Editor. Otherwise, the default environment is `production`.
-
-</PlatformSection>
-
-<PlatformSection supported={["dotnet"]} notSupported={["unity"]}>
-
-Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
-
-By default, the SDK reports `debug` when the debugger is attached. Otherwise, the default environment is `production`.
-
-Additionally, if you are running with the ASP.NET Core integration, you will also see the environment named as `staging`, if running in staging, or `development`, if running in development mode.
-
-</PlatformSection>
-
-<PlatformSection supported={["python", "php"]}>
-
-Sets the environment. This string is freeform and set to `production` by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `production` or similar).
-
-By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable.
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="tunnel" supported={["javascript", "node"]} notSupported={["react-native"]}>
-
-Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
-
-</ConfigKey>
-
-<ConfigKey name="error-types" supported={["php"]}>
-
-Sets which errors are reported. It takes the same values as PHP's [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
-
-By default all types of errors are be reported (equivalent to `E_ALL`).
 
 </ConfigKey>
 
@@ -201,46 +69,23 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 </ConfigKey>
 
-<ConfigKey name="error-sampler" supported={["python"]}>
-
-Dynamically configures the sample rate for error events on a per-event basis. This configuration option accepts a function, which takes two parameters (the `event` and the `hint`), and which returns a boolean (indicating whether the event should be sent to Sentry) or a floating-point number between 0.0 and 1.0, inclusive (where the number indicates the probability the event is sent to Sentry; the SDK will randomly decide whether to send the event with the given probability).
-
-If this configuration option is specified, the <PlatformIdentifier name="sample-rate" /> option is ignored.
-
-</ConfigKey>
-
 <ConfigKey name="max-breadcrumbs">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
-<ConfigKey name="max-cache-items" supported={[ "android", "apple", "flutter", "java", "dotnet" ]} >
-
-The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
-
-</ConfigKey>
-
-<ConfigKey name="attach-stacktrace" notSupported={["elixir"]}>
+<ConfigKey name="attach-stacktrace">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
-<PlatformSection supported={["android", "apple", "java"]}>
-
-This option is turned on by default.
-
-</PlatformSection>
-<PlatformSection notSupported={["android", "apple", "java", "dotnet"]}>
-
 This option is turned off by default.
-
-</PlatformSection>
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "react-native", "python", "java", "php", "rust", "dart", "react-native"]}>
+<ConfigKey name="send-default-pii">
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -256,96 +101,15 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 </ConfigKey>
 
-<ConfigKey name="event-scrubber" supported={["python"]}>
-
-If <PlatformIdentifier name="send-default-pii" /> is turned off, scrubs the event payload for sensitive information from a `denylist`. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
-
-</ConfigKey>
-
-<ConfigKey name="include-source-context" supported={["python"]}>
-
-When enabled, source context will be included in events sent to Sentry. This source context includes the five lines of code above and below the line of code where an error happened.
-
-The option is enabled by default.
-
-</ConfigKey>
-
-<ConfigKey name="include-local-variables" supported={["python"]}>
-
-When enabled, the SDK will capture a snapshot of local variables to send with the event to help with debugging.
-
-This option is on by default.
-
-</ConfigKey>
-
-<ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java", "dart", "dotnet", "elixir"]} notSupported={["android"]}>
+<ConfigKey name="server-name">
 
 This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
-<PlatformSection notSupported={["dotnet"]}>
-
 Most SDKs will attempt to auto-discover this value.
 
-</PlatformSection>
-
-<PlatformSection supported={["dotnet"]}>
-
-For ASP.NET and ASP.NET Core applications, the value will default to the server's name. For other application types, the value will default to the computer's name only when the `SendDefaultPii` is set to `true`, because the computer's name can be considered personally identifiable information (PII) in the case of a desktop or mobile application.
-
-</PlatformSection>
-
 </ConfigKey>
 
-<ConfigKey name="ignore-errors" supported={["javascript", "node"]} notSupported={[]}>
-
-<Include name="platforms/configuration/options/ignore-errors.mdx" />
-
-</ConfigKey>
-
-<ConfigKey name="ignore-exceptions" supported={["php"]} notSupported={[]}>
-
-A list of class names that matches exceptions that shouldn't be sent to Sentry.
-Checks whether the provided class name is of a given type or subtype.
-
-</ConfigKey>
-
-<ConfigKey name="ignore-transactions" supported={["javascript", "node"]} notSupported={[]}>
-
-<Include name="platforms/configuration/options/ignore-transactions.mdx" />
-
-</ConfigKey>
-
-<ConfigKey name="ignore-transactions" supported={["php"]} notSupported={[]}>
-
-A list of strings that match transaction names that shouldn't be sent to Sentry.
-
-</ConfigKey>
-
-<ConfigKey name="deny-urls" supported={["javascript"]} notSupported={["node"]}>
-
-<Include name="platforms/configuration/options/deny-urls.mdx" />
-
-</ConfigKey>
-
-<ConfigKey name="allow-urls" supported={["javascript"]} notSupported={["node"]}>
-
-<Include name="platforms/configuration/options/allow-urls.mdx" />
-
-</ConfigKey>
-
-<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} notSupported={["javascript.electron"]}>
-
-When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
-
-</ConfigKey>
-
-<ConfigKey name="auto-session-tracking" supported={["javascript.electron"]} >
-
-When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
-
-</ConfigKey>
-
-<ConfigKey name="consider-in-app-frames-by-default" supported={["dart"]}>
+<ConfigKey name="consider-in-app-frames-by-default">
 
 Configures whether stack trace frames are considered as in app frames by default.
 You can use this to essentially make `inAppIncludes` or `inAppExcludes` an allow or deny list.
@@ -356,7 +120,7 @@ This value is used only if Sentry can not find the origin of the frame.
 
 </ConfigKey>
 
-<ConfigKey name="in-app-include" supported={["apple", "dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
+<ConfigKey name="in-app-include">
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
@@ -364,7 +128,7 @@ Sentry differentiates stack frames that are directly related to your application
 
 </ConfigKey>
 
-<ConfigKey name="in-app-exclude" supported={["apple", "dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
+<ConfigKey name="in-app-exclude">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -372,316 +136,21 @@ This option can be overridden using <PlatformIdentifier name="in-app-include" />
 
 </ConfigKey>
 
-<ConfigKey name="ignored-exceptions-for-type" supported={["java", "android"]}>
-
-A list of exception types that will be filtered out before sending to Sentry.
-
-</ConfigKey>
-
-<ConfigKey name="max-request-body-size" supported={["php", "dotnet.aspnet", "dotnet.aspnetcore", "java", "python"]}>
-
-This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
-
-- `never`: Request bodies are never sent.
-- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
-- `medium`: Medium and small requests will be captured (typically 10KB).
-- `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
-
-</ConfigKey>
-
-<ConfigKey name="max-value-length" supported={["php", "python"]}>
-
-The number of characters after which the values containing text in the event payload will be truncated (defaults to `1024`).
-
-<Note>
-  If the value you set for this is exceptionally large, the event may exceed 1
-  MiB and will be dropped by Sentry.
-</Note>
-
-</ConfigKey>
-
-<ConfigKey name="ca-certs" supported={["python", "node"]}>
-
-A path to an alternative CA bundle file in PEM-format.
-
-</ConfigKey>
-
-<ConfigKey name="context-lines" supported={["php"]}>
-
-The number of context lines for each frame in the stack trace when loading a file.
-
-</ConfigKey>
-
-<ConfigKey name="frame-context-lines" supported={["node"]}>
-
-The number of context lines for each frame when loading a file.
-
-#### Deprecated
-
-`frameContextLines` has moved to the <PlatformLink to="/configuration/integrations/default-integrations/#contextlines">`ContextLines` integration</PlatformLink>.
-
-</ConfigKey>
-
-<ConfigKey name="request-bodies" supported={["python"]}>
-
-#### Deprecated
-
-Has been renamed to [max_request_body_size](/platforms/python/configuration/options/#max-request-body-size).
-
-</ConfigKey>
-
-<ConfigKey name="with-locals" supported={["python"]}>
-
-#### Deprecated
-
-Has been renamed to [include_local_variables](/platforms/python/configuration/options/#include-local-variables).
-
-</ConfigKey>
-
-<ConfigKey name="initial-scope" supported={["javascript","node"]} notSupported={["react-native"]}>
-
-Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
-
-Object:
-
-<SignInNote />
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  debug: true,
-  initialScope: {
-    tags: { "my-tag": "my value" },
-    user: { id: 42, email: "john.doe@example.com" },
-  },
-});
-```
-
-Callback function:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  debug: true,
-  initialScope: (scope) => {
-    scope.setTags({ a: "b" });
-    return scope;
-  },
-});
-```
-
-</ConfigKey>
-
-<ConfigKey name="initial-scope" supported={["apple"]}>
-
-A block that configures the initial scope when starting the SDK.
-
-<SignInNote />
-
-```swift
-import Sentry
-
-SentrySDK.start { options in
-    options.dsn = "___PUBLIC_DSN___"
-    options.initialScope = { scope in
-        scope.setTag(value: "my value", key: "my-tag")
-        return scope
-    }
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-    options.initialScope = ^(SentryScope *scope) {
-        scope setTagValue:@"my value" forKey:@"my-tag"];
-        return scope;
-    };
-}];
-```
-
-_(New in [sentry-cocoa version 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870))_
-
-</ConfigKey>
-
-<ConfigKey name="max-value-length" supported={["javascript", "node"]}>
-
-Maximum number of characters a single value can have before it will be truncated (defaults to `250`).
-
-</ConfigKey>
-
-<ConfigKey name="normalize-depth" supported={["javascript", "node"]}>
-
-Sentry SDKs normalize any contextual data to a given depth. Any data beyond this depth will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed three levels deep.
-
-</ConfigKey>
-
-<ConfigKey name="normalize-max-breadth" supported={["javascript", "node"]} notSupported={["electron"]}>
-
-This is the maximum number of properties or entries that will be included in any given object or array when the SDK is normalizing contextual data. Any data beyond this depth will be dropped. (defaults to 1000)
-
-</ConfigKey>
-
-<ConfigKey name="attach-screenshot" supported={["android", "apple.ios", "unity", "dotnet.xamarin", "flutter", "react-native"]}>
-
-Takes a screenshot of the application when an error happens and includes it as an attachment.
-Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
-
-<PlatformSection supported={["react-native"]}>
-
-_(New in version 4.11.0)_
-
-</PlatformSection>
-
-<PlatformSection supported={["android"]}>
-
-_(New in version 6.0.0)_
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="screenshot-quality" supported={["unity", "dotnet.xamarin", "flutter"]}>
-
-The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`.
-
-</ConfigKey>
-
-<ConfigKey name="attach-viewhierarchy" supported={["apple.ios", "flutter", "android", "react-native"]}>
-
-Renders a JSON representation of the entire view hierarchy of the application when an error happens and includes it as an attachment.
-Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
-
-</ConfigKey>
-
-<ConfigKey name="idle-timeout" supported={["android", "flutter", "apple.ios"]}>
-
-The idle time, measured in ms, to wait until a transaction will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
-
-The default is `3000`.
-
-<PlatformSection supported={["android"]}>
-
-_(New in version 6.0.0)_
-
-<Note>
-
-This only affects [user interaction transactions](/platforms/android/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation).
-
-</Note>
-
-</PlatformSection>
-
-</ConfigKey>
-
-<PlatformSection supported={["javascript.electron"]}>
-
-<ConfigKey name="ipcMode" />
-
-Inter-process communication mode to receive event and scope updates from renderer processes.
-
-Available options are:
-
-- `IPCMode.Classic` - Configures Electron IPC modules
-- `IPCMode.Protocol` - Configures a custom protocol and `fetch`
-- `IPCMode.Both` (default) - Configures both modes for maximum compatibility
-
-<ConfigKey name="getSessions" />
-
-A function that returns an array of Electron `session` objects. These sessions are used to configure communication between the Electron main and renderer processes.
-
-Defaults to `() => [session.defaultSession]`
-
-<ConfigKey name="getRendererName" />
-
-Callback function that allows custom naming of renderer processes.
-
-`(contents: WebContents) => string | undefined`
-
-If the callback is not set, or it returns `undefined`, the default naming scheme is used.
-
-</PlatformSection>
-
-<ConfigKey name="enabled" supported={["javascript", "node", "java"]}>
-
-Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
-
-</ConfigKey>
-
-<ConfigKey name="send-client-reports" supported={["java", "javascript", "dotnet", "python", "dart", "apple"]} notSupported={["react-native"]}>
+<ConfigKey name="send-client-reports">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
-<PlatformSection supported={["java"]}>
-
-_(New in version 6.0.0)_
-
-</PlatformSection>
-
-<PlatformSection supported={["apple"]}>
-
-_(New in version 7.13.0)_
-
-</PlatformSection>
-
-<PlatformSection supported={["dart"]}>
-
 _(New in version 6.6.0)_
-
-</PlatformSection>
 
 </ConfigKey>
 
-<ConfigKey name="capture-failed-requests" supported={["dotnet","dart"]}>
+<ConfigKey name="capture-failed-requests">
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
-
-<PlatformSection supported={["dart"]}>
 
 _(New in version 7.0.0)_
 
-</PlatformSection>
-
 </ConfigKey>
-
-<ConfigKey name="enable-capture-failed-requests" supported={["apple","react-native"]}>
-
-Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
-
-<PlatformSection supported={["react-native"]}>
-
-_(New in version 5.3.0)_
-
-</PlatformSection>
-
-<PlatformSection supported={["apple"]}>
-
-_(New in version 7.30.0)_
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="include-local-variables" supported={["node"]}>
-
-Set this boolean to `true` to add stack local variables to stack traces.
-
-<Alert level="warning">
-
-Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we
-are currently unable to capture local variables for unhandled errors when using
-JavaScript modules (ESM).
-
-See the <PlatformLink to="/configuration/integrations/default-integrations/#localvariables">integration
-options</PlatformLink> for a workaround.
-
-</Alert>
-
-</ConfigKey>
-
-<PlatformSection supported={["javascript", "python", "node", "dart", "java", "apple"]}>
 
 ## Integration Configuration
 
@@ -699,18 +168,9 @@ This can be used to disable integrations that are added by default. When set to 
 
 This can be used to disable integrations that are enabled by default if the SDK detects that the corresponding framework or library is installed. When set to `false`, none of these integrations will be enabled by default, even if the corresponding framework/library is detected.
 
-</PlatformSection>
-
 ## Hooks
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
-
-<PlatformSection supported={["unity"]}>
-
-The callbacks you set as hooks will be called on the thread where the event happened. So you can only use
-thread-safe APIs and only use Unity-specific APIs after you've checked that you're on the UI thread.
-
-</PlatformSection>
 
 <ConfigKey name="before-send">
 
@@ -720,476 +180,19 @@ By the time <PlatformIdentifier name="before-send" /> is executed, all scope dat
 
 </ConfigKey>
 
-<ConfigKey name="before-send-transaction" supported={["javascript", "node", "php", "go", "python", "java"]}>
-
-This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
-
-<PlatformSection supported={["javascript", "node"]}>
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="on-crash" supported={["native"]}>
-
-This function is called with a backend-specific event object, and can return a modified event object or nothing to skip reporting the event. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
-
-</ConfigKey>
-
-<ConfigKey name="before-breadcrumb" notSupported={["native", "unreal", "elixir"]}>
+<ConfigKey name="before-breadcrumb">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
 </ConfigKey>
 
-<PlatformSection supported={["elixir"]}>
-
-<ConfigKey name="after-send-event">
-
-This function is called with an event and the result of sending that event. This is useful to log send results, instrument Sentry calls, and so on.
-
-</ConfigKey>
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "dart", "elixir"]}>
-
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "dart", "rust"]}>
+<ConfigKey name="transport">
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
 </ConfigKey>
-
-<ConfigKey name="transport-options" supported={["javascript", "node"]}>
-
-Options used to configure the transport. This is an object with the following possible optional keys:
-
-<PlatformSection supported={["node"]}>
-
-- `headers`: An object containing headers to be sent with every request.
-- `proxy`: A proxy used for outbound requests. Can be http or https.
-- `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
-- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
-- `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript"]} notSupported={["node"]}>
-
-- `headers`: An object containing headers to be sent with every request. Used by the SDK's fetch and XHR transports.
-- `fetchOptions`: An object containing options to be passed to the `fetch` call. Used by the SDK's fetch transport.
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="proxy" supported={["native"]}>
-  Configures an HTTP proxy for outgoing requests to the backend, (HTTPS requests
-  tunneled through that proxy). The Native SDK doesn't pick up the `http_proxy`
-  environment variable. You can find more details on the [transport
-  page](/platforms/native/configuration/transports/#using-an-http-proxy).
-</ConfigKey>
-
-<ConfigKey name="http-proxy" supported={["php", "python", "java", "dotnet", "rust"]}>
-
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
-
-</ConfigKey>
-
-<ConfigKey name="https-proxy" supported={["python", "rust"]}>
-
-Configures a separate proxy for outgoing HTTPS requests. This value might not be supported by all SDKs. When not supported the `http-proxy` value is also used for HTTPS requests at all times.
-
-</ConfigKey>
-
-<ConfigKey name="proxy-headers" supported={["python"]}>
-
-A dict containing additional proxy headers (usually for authentication) to be forwarded to `urllib3`'s [`ProxyManager`](https://urllib3.readthedocs.io/en/1.24.3/reference/index.html#urllib3.poolmanager.ProxyManager).
-
-</ConfigKey>
-
-<ConfigKey name="cache-directory-path" supported={["dotnet", "android", "unity"]}>
-
-Specifies a local directory used for caching payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
-
-</ConfigKey>
-
-<PlatformSection supported={["android"]}>
-
-Default: set to `android.content.Context.getCacheDir()/sentry`.
-
-</PlatformSection>
-
-<PlatformSection supported={["dotnet"]} notSupported={["dotnet.xamarin", "dotnet.maui", "unity"]}>
-
-Default: not set (caching is disabled).
-
-</PlatformSection>
-
-<PlatformSection supported={["unity"]}>
-
-The default value is `Application.persistentDataPath`. You can disable offline caching by setting it to `null`.
-
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.xamarin"]}>
-
-The default value is `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)`.
-
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.maui"]}>
-
-The default value is `Path.Combine(FileSystem.CacheDirectory, "sentry")`. See the [Microsoft docs](https://docs.microsoft.com/dotnet/maui/platform-integration/storage/file-system-helpers#platform-differences) for how `FileSystem.CacheDirectory` differs on each supported platform.
-
-</PlatformSection>
-
-<ConfigKey name="init-cache-flush-timeout" supported={["dotnet"]}>
-
-When caching is enabled (that is, <PlatformIdentifier name="cache-directory-path" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
-
-The default is `1` (one) second.
-
-</ConfigKey>
-
-<ConfigKey name="shutdown-timeout" supported={["python", "node", "java", "dotnet", "rust", "react-native", "javascript.capacitor"]}>
-
-Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
-
-</ConfigKey>
-
-<ConfigKey name="send-attempts" supported={["php"]}>
-
-_Deprecated._ Controls how many times the SDK will attempt to resend an event to Sentry. The default is `0`.
-
-</ConfigKey>
-
-<ConfigKey name="http-connect-timeout" supported={["php"]}>
-
-The maximum number of seconds to wait while trying to connect to a server. The default is `2`.
-
-</ConfigKey>
-
-<ConfigKey name="http-timeout" supported={["php"]}>
-
-The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option. The default is `5`.
-
-</ConfigKey>
-
-</PlatformSection>
-
-<PlatformSection supported={["elixir"]}>
-
-<ConfigKey name="send-result" supported={["elixir"]}>
-
-Controls whether to report events to Sentry _synchronously_ (if set to `:sync`) or _asynchronously_ (if set to `:none`). Defaults to `:none`.
-
-</ConfigKey>
-
-<ConfigKey name="send-max-attempts" supported={["elixir"]}>
-
-The maximum number of attempts to send an event to Sentry. Defaults to `4`.
-
-</ConfigKey>
-
-<ConfigKey name="client" supported={["elixir"]}>
-
-The HTTP client to use for sending events to Sentry. This must be a module that implements the [`Sentry.HTTPClient`](https://hexdocs.pm/sentry/Sentry.HTTPClient.html) behaviour. Defaults to `Sentry.HackneyClient`, which is based on the [Hackney](https://hexdocs.pm/hackney) HTTP client.
-
-</ConfigKey>
-
-<ConfigKey name="hackney-opts" supported={["elixir"]}>
-
-Options to be passed to Hackney. Only applied if `client` is set to `Sentry.HackneyClient`. Defaults to `[pool: :sentry_pool]`.
-
-</ConfigKey>
-
-<ConfigKey name="hackney-pool-max-connections" supported={["elixir"]}>
-
-The maximum number of connections to keep in the pool. Only applied if `client` is set to `Sentry.HackneyClient`. Defaults to `50`.
-
-</ConfigKey>
-
-<ConfigKey name="hackney-pool-timeout" supported={["elixir"]}>
-
-The maximum time to wait (in milliseconds) for a connection to become available. Only applied if `client` is set to `Sentry.HackneyClient`. Defaults to `5000`.
-
-</ConfigKey>
-
-</PlatformSection>
-
-<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "apple"]}>
-
-## Tracing Options
-
-<ConfigKey name="enable-tracing" supported={["apple", "node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dart"]}>
-
-A boolean value, if true, transactions and trace data will be generated and captured. This will set the `traces-sample-rate` to the recommended default of 1.0 if `traces-sample-rate` is not defined. Note that `traces-sample-rate` and `traces-sampler` take precedence over this option.
-
-</ConfigKey>
-
-<ConfigKey name="traces-sample-rate" supported={["apple","node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "rust", "native", "dart"]}>
-
-A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
-
-<PlatformSection supported={["python"]}>
-If <PlatformIdentifier name="traces-sample-rate" /> is 0, this means that no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service that include trace information, those traces will be continued and thus transactions will be sent to Sentry.
-
-If you want to disable all tracing you need to set <PlatformIdentifier name="traces-sample-rate" />`=None` or set <PlatformIdentifier name="enable-tracing" />`=False`. In this case, no new traces will be started and no incoming traces will be continued.
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="traces-sampler" supported={["apple", "node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet", "dart"]} notSupported={["native"]}>
-
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
-
-</ConfigKey>
-
-<ConfigKey name="tracing-origins" supported={["java"]}>
-
-An optional property that configures which downstream services receive the `sentry-trace` header attached to HTTP requests. It contains a list of URLs or regex against which URLs are matched. If not set, the `sentry-trace` header is attached to every request executed from an instrumented client.
-
-</ConfigKey>
-
-<ConfigKey name="trace-propagation-targets" supported={["node", "apple", "dart", "flutter", "java", "python"]}>
-
-An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
-
-The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
-If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
-String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
-
-If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
-
-</ConfigKey>
-
-<ConfigKey name="functions-to-trace" supported={["python"]}>
-
-An optional list of functions that should be set up for performance monitoring. For each function in the list, a span will be created when the function is executed.
-Functions in the list are represented as strings containing the fully qualified name of the function.
-
-This is a convenient option, making it possible to have one central place for configuring what functions to trace, instead of having custom instrumentation scattered all over your code base.
-
-To learn more, see the [Custom Instrumentation](/platforms/python/performance/instrumentation/custom-instrumentation/#define-span-creation-in-a-central-place) documentation.
-
-</ConfigKey>
-
-<ConfigKey name="enable-backpressure-handling" supported={["python"]}>
-
-When enabled, a new monitor thread will be spawned to perform health checks on the SDK. If the system is unhealthy, the SDK will keep halving the `traces_sample_rate` set by you in 10 second intervals until recovery. This downsampling helps ensure that the system stays stable and reduces SDK overhead under high load.
-
-This option is enabled by default.
-
-</ConfigKey>
-
-<ConfigKey name="enable-db-query-source" supported={["python"]}>
-
-When enabled, the source location will be added to database queries.
-
-This option is disabled by default.
-
-</ConfigKey>
-
-<ConfigKey name="db-query-source-threshold-ms" supported={["python"]}>
-
-The threshold in milliseconds for adding the source location to database queries. The query location will be added to the query for queries slower than the specified threshold.
-
-You need to set `enable_db_query_source` to `True` for this to work.
-
-Default is `100` ms.
-
-</ConfigKey>
-
-<ConfigKey name="trace-options-requests" supported={["java"]}>
-
-<PlatformSection supported={["java"]}>
-
-Set this boolean to `false` to disable tracing for `OPTIONS` requests. This options default value will likely be changed in the next major version, meaning you will have to set it to `true` if you want to keep tracing `OPTIONS` requests.
-
-</PlatformSection>
-
-</ConfigKey>
-
-</PlatformSection>
-
-<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor", "flutter"]}>
-
-## Experimental Features
-
-<ConfigKey name="experimental" supported={[]}>
-
-An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
-
-</ConfigKey>
-
-## Hybrid SDK Options
-
-<ConfigKey name="enableNative" supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
-
-Set this boolean to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
-
-</ConfigKey>
-
-<ConfigKey name="autoInitializeNativeSdk">
-
-Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
-
-<PlatformSection supported={["react-native", "javascript.cordova", "javascript.capacitor"]}>
-
-To disable the native layer, use [enableNative](#enableNative).
-
-You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
-
-</PlatformSection>
-
-<PlatformSection supported={["flutter"]}>
-
-You should follow the [guide to native initialization](/platforms/flutter/native-init/) if you chose to use this option.
-
-</PlatformSection>
-
-</ConfigKey>
-
-<ConfigKey name="enableNativeCrashHandling" supported={["react-native", "javascript.capacitor", "flutter"]}>
-
-Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
-
-</ConfigKey>
-
-<ConfigKey name="enableNativeNagger" supported={["react-native", "javascript.capacitor"]}>
-
-Set this boolean to `false` to disable the native nagger alert being shown.
-
-</ConfigKey>
-
-<ConfigKey name="enableAutoSessionTracking">
-
-Set this boolean to `false` to disable the [release health](/product/releases/health/) feature.
-
-</ConfigKey>
-
-<ConfigKey name="sessionTrackingIntervalMillis">
-
-Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
-
-</ConfigKey>
-
-<ConfigKey name="enableNdkScopeSync">
-
-Set this boolean to `false` to disable the scope sync from Java to NDK on Android.
-
-</ConfigKey>
-
-<ConfigKey name="attachThreads">
-
-Set this boolean to `true` to automatically attach all threads to all logged events on Android.
-
-</ConfigKey>
-
-<ConfigKey name="enableAutoPerformanceTracking" supported={["react-native"]}>
-
-Set this boolean to `false` to disable auto [performance monitoring](/product/performance/) tracking.
-
-</ConfigKey>
-
-<PlatformSection supported={["flutter"]}>
-
-<ConfigKey name="enableAutoPerformanceTracing" supported={["flutter"]}>
-
-Set this boolean to `false` to disable auto [performance monitoring](/product/performance/) tracking.
-
-</ConfigKey>
-
-</PlatformSection>
-
-<ConfigKey name="enableOutOfMemoryTracking" supported={["react-native", "javascript.capacitor"]}>
-
-Set this boolean to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
-
-</ConfigKey>
-
-<ConfigKey name="enableWatchdogTerminationTracking" supported={["apple", "flutter"]}>
-
-<Note>
-  Available since version 8.0.0 of Sentry Apple SDK. It was named
-  `enableOutOfMemoryTracking` before the 8.0.0 release.
-</Note>
-
-Set this boolean to `false` to disable [watchdog termination](/platforms/apple/guides/ios/configuration/watchdog-terminations/) tracking on iOS.
-
-</ConfigKey>
-
-<ConfigKey name="onReady" supported={["react-native"]}>
-
-Set this callback, which is called after the Sentry React Native SDK initializes its Native SDKs (Android and iOS).
-
-</ConfigKey>
-
-<ConfigKey name="enableScopeSync" supported={["flutter"]}>
-
-Set this boolean to `false` to disable sync of `Scope` data to Android and iOS SDKs.
-
-</ConfigKey>
-
-<ConfigKey name="reportPackages" supported={["flutter"]}>
-
-Set this boolean to `false` to disable reporting all the package dependencies.
-
-</ConfigKey>
-
-<ConfigKey name="anrEnabled" supported={["flutter"]}>
-
-Set this boolean to `true` to enable ANR (Application Not Responding) detection on Android.
-
-</ConfigKey>
-
-<ConfigKey name="anrTimeoutInterval" supported={["flutter"]}>
-
-Set this to change the default interval of the ANR detection. The default is `5` seconds.
-
-</ConfigKey>
-
-<ConfigKey name="reportSilentFlutterErrors" supported={["flutter"]}>
-
-Set this boolean to `true` to enable reporting [FlutterErrorDetails.silent](https://api.flutter.dev/flutter/foundation/FlutterErrorDetails/silent.html) errors automatically.
-
-</ConfigKey>
-
-<ConfigKey name="autoAppStart" supported={["flutter"]}>
-
-Set this boolean to `false` to disable automatic app start tracking.
-
-</ConfigKey>
-
-<ConfigKey name="enableAutoNativeBreadcrumbs" supported={["flutter"]}>
-
-Set this boolean to `false` to disable automatic breadcrumbs on the Native platforms.
-
-</ConfigKey>
-
-<ConfigKey name="enableUserInteractionBreadcrumbs" supported={["flutter"]}>
-
-Set this boolean to `false` to disable automatic User Interactions breadcrumbs.
-
-</ConfigKey>
-
-<ConfigKey name="enableUserInteractionTracing" supported={["flutter"]}>
-
-Set this boolean to `false` to disable automatic User Interactions tracing.
-
-</ConfigKey>
-
-<ConfigKey name="proguardUuid" supported={["flutter"]}>
-
-Sets the Proguard UUID for Android platform
-
-</ConfigKey>
-
-</PlatformSection>
