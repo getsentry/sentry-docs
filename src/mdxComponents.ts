@@ -10,6 +10,7 @@ import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
+import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {Note} from './components/note';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
@@ -43,6 +44,7 @@ export function mdxComponents(
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
+    LinkWithPlatformIcon,
     Note,
     OrgAuthTokenNote,
     PageGrid,
