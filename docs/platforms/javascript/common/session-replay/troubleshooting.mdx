@@ -26,11 +26,15 @@ redirect_from:
 
 This guide aims to extend the <PlatformLink to="/troubleshooting/">main troubleshooting</PlatformLink> guide by covering Replay-specific scenarios.
 
-## My `canvas` Elements Aren't Getting Captured
+## My `canvas` elements aren't getting captured
 
-There's currently no support for `canvas`. It's being tracked in this [GitHub issue](https://github.com/getsentry/sentry-javascript/issues/6519). Feel free to 👍 and help us prioritize it.
+Canvas is supported in SDK versions >= `7.98.0`. Please see the <PlatformLink to="/session-replay/#canvas-recording">canvas setup documention</PlatformLink> to get started with canvas recordings.
 
-## My Custom CSS/Images/Fonts/Media Aren't Appearing When I View the Replay
+## Replay is slowing down my `canvas`
+
+The integration needs to enable `preserveDrawingBuffer` to export images from 3D and WebGL canvases. This can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, you'll need to <PlatformLink to="/session-replay/#canvas-recording-performance">enable manual snapshotting</PlatformLink> and call a `snapshot()` method inside of your re-paint loop.
+
+## My custom CSS/Images/Fonts/Media aren't appearing when I view the Replay
 
 The replay 'video' is actually a video-like reproduction of the HTML on your website. This means that all the external resources your site uses (CSS/Images/Fonts), will be rendered by the corresponding &lt;style&gt;, &lt;img&gt; and &lt;video&gt; tags on your site. Add `sentry.io` to your CORS policy so the iframe hosted on sentry.io can fetch and display these resources.
 
@@ -84,7 +88,7 @@ On the other hand, there may be _false positives_. For example, if a user clicks
 For example, you could ignore detection of dad and rage clicks for download links in your application like this:
 
 ```javascript
-new Sentry.Replay({
+Sentry.replayIntegration({
   slowClickIgnoreSelectors: [
     ".download",
     // Any link with a label including "download" (case-insensitive)
@@ -116,7 +120,7 @@ When this happens, the Replay can't capture the response body because the reques
 
 To avoid this, disable this behavior of Apollo Client by configuring your own abort signal:
 
-```js
+```javascript
 const abortController = new AbortController();
 
 const httpLink = createHttpLink({
