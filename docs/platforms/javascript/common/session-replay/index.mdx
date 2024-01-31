@@ -48,6 +48,49 @@ To set up the integration, add the following to your Sentry initialization. Ther
 
 <PlatformContent includePath="session-replay/setup" />
 
+<PlatformSection supported={["javascript"]} notSupported={["javascript.deno", "javascript.bun", "javascript.wasm", "javascript.capacitor", "javascript.electron"]}>
+### Canvas Recording
+
+<Alert level="">
+  Canvas recording is currently in beta. Please submit an issue on
+  [GitHub](https://github.com/getsentry/sentry-javascript) if you encounter any
+  bugs.
+</Alert>
+
+<Alert level="warning">
+  There is currently no PII scrubbing in canvas recordings!
+</Alert>
+
+If you want to record HTML canvas elements, you'll need to add an additional integration in your Sentry configuration. The canvas integration is exported from the browser SDK, so no additional package is required. Canvas recording is opt-in and will be tree-shaken from your bundle if it's not being used:
+
+<PlatformContent includePath="session-replay/setup-canvas" />
+
+#### 3D and WebGL Canvases
+
+The canvas recording integration works by exporting the canvas as an image (at a rate of 2 frames per second). However, in order to export images from 3D and WebGL canvases, the integration needs to enable `preserveDrawingBuffer` which can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, you'll need to enable manual snapshotting and call a `snapshot()` method inside of your re-paint loop. There are two steps to using manual snapshotting:
+
+**Step 1.**
+Enable manual snapshotting when initializing the `ReplayCanvas` integration.
+
+```javascript
+Sentry.replayCanvasIntegration({
+  // Enabling the following will ensure your canvas elements are not forced
+  // into `preserveDrawingBuffer`.
+  enableManualSnapshot: true,
+});
+```
+
+**Step 2**
+Call the the following `snapshot()` method inside your application's paint loop. `snapshot()` needs to be called in the same execution loop as the canvas draw commands, otherwise you may be snapshotting empty canvas buffers. This is due to how WebGL works when `preserveDrawingBuffer` is `false`.
+
+```javascript
+function paint() {
+  const canvasRef = document.querySelector("#my-canvas");
+  Sentry.getClient().getIntegrationByName("ReplayCanvas").snapshot(canvasRef);
+}
+```
+</PlatformSection>
+
 ### Content Security Policy (CSP)
 
 Session Replay uses a WebWorker to perform work (for example, compression) off the main UI thread so as not to degrade the performance of your application. Add the below entry to make sure that workers can be loaded:
