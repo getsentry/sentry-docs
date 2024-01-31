@@ -25,7 +25,7 @@ export async function generateStaticParams() {
     return {path};
   });
   paths.push({path: undefined}); // the home page
-  return paths;
+  return paths.filter(p => p.path && p.path[0] === 'product');
 }
 
 // Only render paths returned by generateStaticParams
