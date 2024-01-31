@@ -6,8 +6,7 @@ import React, {useEffect, useState} from 'react';
 // we put a more robust solution in place.
 //
 const SHOW_BANNER = true;
-const BANNER_TEXT =
-  'Join us for our live product tour on February 22nd.';
+const BANNER_TEXT = 'Join us for our live product tour on February 22nd.';
 const BANNER_LINK_URL =
   'https://sentry.io/resources/intro-to-sentry-live-product-tour-2024/?promo_name=from-docs';
 const BANNER_LINK_TEXT = 'Sign Up';
