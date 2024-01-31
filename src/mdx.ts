@@ -121,7 +121,10 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
 
       const subpath = f.commonFileName.slice(commonPath.length + 1);
       const slug = f.commonFileName.slice(docsPath.length + 1).replace(/\/common\//, '/');
-      if (!fs.existsSync(path.join(docsPath, slug))) {
+      if (
+        !fs.existsSync(path.join(docsPath, slug)) &&
+        !fs.existsSync(path.join(docsPath, slug.replace('/index.mdx', '.mdx')))
+      ) {
         let frontmatter = f.frontmatter;
         if (subpath === 'index.mdx') {
           frontmatter = {...frontmatter, ...platformFrontmatter};
