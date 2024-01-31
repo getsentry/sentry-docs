@@ -82,11 +82,15 @@ As mentioned above, our Spike Protection Algorithm is based on the higher of two
 
 ### Minimum Event Calculation
 
-This calculation, which is the first step of our algorithm, identifies a minimum number of events, using your quota as a guide. This number takes the maximum of either 500 events or the result of the following formula `(3 \* your quota)/(720 \* number of projects)`. The equation represents your project using up three times your overall quota in 30 days if events are continually ingested at this hourly rate, thus flagging the project for a potential spike.
+This calculation, which is the first step of our algorithm, identifies a minimum number of events, using your quota as a guide. This number takes the maximum of either 500 events or the result of the following formula `(3 \* your quota)/(720 \* number of projects)`. The number of projects is capped at 5 and is used to adjust the floor. The equation represents your project using up three times your overall quota in 30 days if events are continually ingested at this hourly rate, thus flagging the project for a potential spike.
 
 ### Usage-Based Calculation
 
 This calculation, which is the second step of our algorithm, calculates hourly data from the past seven days to determine spike limit projections for the next seven days. This data is used to calculate weighted averages, which takes into account weekly and hourly seasonality. For example, the weighted average calculated for Monday at 3 pm is more heavily influenced by data points on Monday or the hours around 3 pm. This weighted average is then multiplied by a multiplier that is `5` times the overall standard deviation of the past week — this multiplier is bounded between `3` and `6`.
+
+### Decay Factor for Dropped Events
+
+Accepted events and dropped events are processed separately. An exponential decay is added to the contribution of dropped events to the overall threshold. The contribution of dropped events decays to ~10% weight 24 hours after a spike, and is essentially zero two days after a spike. This provides a mechanism for spike protection to still adjust (slowly) to increases in volume, but will provide better protection in the days following a significant spike.
 
 ### Example
 

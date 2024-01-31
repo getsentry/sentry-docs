@@ -40,7 +40,7 @@ then merge the event with the topmost scope's data.
 
 ## Configuring the Scope
 
-The most useful operation when working with scopes is the <PlatformIdentifier name="configure-scope" /> function. It can be used to reconfigure the current scope.
+There are two main ways to interact with the scope. You can access the current scope via `Sentry.getCurrentScope()` and use setters on the resulting scope, or you can use global methods like `Sentry.setTag()` directly, which will set on the respective scope under the hood.
 
 You'll first need to import the SDK, as usual:
 
@@ -48,14 +48,24 @@ You'll first need to import the SDK, as usual:
 
 You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
 
-<PlatformContent includePath="enriching-events/scopes/configure-scope" />
+```javascript
+const scope = Sentry.getCurrentScope();
+scope.setTag("my-tag", "my value");
+scope.setUser({
+  id: 42,
+  email: "john.doe@example.com",
+});
 
-You can also apply this configuration when unsetting a user at logout:
-
-<PlatformContent includePath="enriching-events/unset-user" />
+// Or use the global methods
+Sentry.setTag("my-tag", "my value");
+Sentry.setUser({
+  id: 42,
+  email: "john.doe@example.com",
+});
+```
 
 To learn what useful information can be associated with scopes see
-[the context documentation](../context/).
+[context](../context/), [tags](../tags), [users](../identify-user) and [breadcrumbs](../breadcrumbs/).
 
 ## Local Scopes
 
@@ -69,16 +79,6 @@ In the following example we use <PlatformIdentifier name="with-scope" /> to atta
 
 <PlatformContent includePath="enriching-events/scopes/with-scope" />
 
-While this example looks similar to <PlatformIdentifier name="configure-scope" />, it is actually very different.
-Calls to <PlatformIdentifier name="configure-scope" /> change the current active scope; all successive calls to <PlatformIdentifier name="configure-scope" /> will maintain previously set changes unless they are explicitly unset.
-
-On the other hand, <PlatformIdentifier name="with-scope" /> creates a clone of the current scope, and the changes
-made will stay isolated within the <PlatformIdentifier name="with-scope" /> callback function. This allows you to
+The scope inside the `withScope()` callback is only valid inside of the callback. Once the callback ends, the scope will be removed and no longer applied. The inner scope is only applied to events that are captured inside of the callback. `withScope()` will clone (or fork) the current scope, so that the current scope is not modified. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
-
-<Alert level="info" title="Important">
-
-Errors that occur within the callback of <PlatformIdentifier name="with-scope" /> are **not** caught and reported to Sentry.
-
-</Alert>

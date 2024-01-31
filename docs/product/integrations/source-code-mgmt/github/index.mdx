@@ -252,17 +252,31 @@ You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved. The commit must be associated with a release. Otherwise, if the commit is squashed, Sentry won’t know when the commit has been released, and the issue may never be marked as a regression. With GitHub, we recommend using `fixes <SENTRY-SHORT-ID>` in the body of your pull request that is going to be merged to your main branch.
 
-### Get Sentry Comments on Suspect Pull Requests
+### Get Sentry Comments on Pull Requests
 
-If a recently merged pull request is suspected of causing an issue, Sentry will comment on it as in the example below.
+Sentry can comment on merged and open pull requests. These features are automatically enabled once your GitHub integration has been set up. To disable it, go to **Settings > Integrations > GitHub** and toggle it off.
+
+![How to disable Sentry comments on GitHub pull requests](github-org-settings.png)
+
+#### Merged Pull Request Comments
+
+If a recently merged pull request is suspected of causing an issue, Sentry will comment on it to surface the issue, as shown in the example below.
 
 ![Sentry comment on suspect pull request in GitHub](sentry-github-pr-comment.png)
 
 Sentry will only comment on pull requests less than two weeks old that are associated with suspect commits. The comment will continuously be updated with up to five issues the pull request is suspected to have caused.
 
-This feature will be automatically enabled for you once your GitHub integration has been set up. To disable it, go to **Settings > Integrations > GitHub** and toggle it off.
+#### Open Pull Request Comments
 
-![How to disable Sentry comments on GitHub pull requests](github-org-settings.png)
+<Include name="feature-available-for-user-group-early-adopter.mdx" />
+
+When a pull request is opened, Sentry will parse the filenames and function names modified in the pull request from the PR diff to find recent unhandled, unresolved issues associated with your pull request.
+
+![Sentry comment on open pull request in GitHub](sentry-github-open-pr-comment.png)
+
+Sentry will comment on the pull request with up to five issues per file that were first seen within the past 90 days and were last seen within the past 14 days.
+
+This feature requires [code mappings](/product/issues/suspect-commits/#2-set-up-code-mappings) and is currently only supported for Python files.
 
 ### Missing Member Detection
 
@@ -315,7 +329,7 @@ Stack trace linking takes you from a file in your Sentry stack trace to that sam
 
 <Note>
 
-The following information is only valid for platforms which use traditional file paths. Platforms with package names (such as **Java**, **Cocoa**, and **Flutter**) require additional steps.
+The following information is only valid for platforms which use traditional file paths. Platforms with package names require additional steps. For **Java**, read more in the [page on source context](/platforms/java/source-context#setting-up-code-mappings).
 
 </Note>
 
@@ -323,7 +337,11 @@ First, navigate to a stack trace that you wish to map. Find an **In App** frame,
 
 ![Highlighting where in the UI to find the file name in the stack trace](../code-mappings-stacktrace.png)
 
-If you aren’t sure, you can look at the event JSON by clicking on the `{}` button in the event header. Find the text in the frame's `filename`.
+For certain native platforms, the stack trace will look different. In cases like these, you can find the absolute path by hovering over the filename.
+
+![Highlighting where in the UI to find the file path for native stack traces](../code-mappings-stacktrace-native.png)
+
+If you aren’t sure, you can look at the event JSON by clicking on the `{}` button in the event header. Find the text in the frame's `filename` or `abs_path`.
 
 ![Highlighting where in the UI to find the event JSON](../code-mappings-event-json.png)
 
