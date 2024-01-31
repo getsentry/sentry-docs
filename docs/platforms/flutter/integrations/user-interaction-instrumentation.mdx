@@ -12,19 +12,79 @@ redirect_from:
 
 _(New in version 6.17.0)_
 
-The UI instrumentation, once enabled, captures transactions and adds breadcrumbs for a set of different user interactions, which include clicks, long clicks, taps, and so on. The SDK composes the transaction name from the `key` of the `Widget` that captured the user interaction (for example, `login_button`). The transaction operation is set to `ui.action.click`.
+Enabling UI instrumentation captures transactions and adds breadcrumbs for a set of different user interactions, which include clicks, long clicks, taps, and so on.
 
-If the view doesn't have the `key` assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified otherwise.
+## Instrumentation Behaviour
 
-The `key` value should be unique across the whole application because the transactions are grouped by its name.
+Before diving into the configuration, it's important to understand how user interaction instrumentation behaves:
 
-<Note>
+- The instrumentation sets the transaction name specified in the `key` of the `Widget` from the `key` of the `Widget`, for example `login_button`.
+- The transaction operation is set to `ui.action.click`.
+- If the user interaction transaction has reached the [idleTimeout](/platforms/flutter/configuration/options/#idle-timeout), but didn't have any child spans added, it will be dropped.
 
-Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+## Prerequisites
 
-</Note>
+Before starting, ensure:
 
-The UI instrumentation tracing is an opt-out feature. The following example shows how to disable it:
+1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring is set up. Learn more [here](/platforms/flutter/performance/).
+
+## Configure
+
+### 1. Wrap root widget
+
+Wrap your root widget with `SentryUserInteractionWidget`:
+
+```dart
+Future<void> main2() async {
+  await SentryFlutter.init(
+    // Configure your options
+    (options) => options.dsn = '___DSN___',
+    appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
+  );
+}
+```
+
+### 2. Set a unique key for your widgets
+
+If the view doesn't have the key assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified.
+The key value should be unique across the whole application because the transactions are grouped by its name.
+
+```dart
+ElevatedButton(
+  key: const Key('my_button_widget'),
+  onPressed: () {
+    final activeSpan = Sentry.getSpan();
+    final childSpan = activeSpan?.startChild('some operation', description: 'some description');
+    childSpan?.finish();
+  }, child: const Text('User Interaction Example'),
+),
+```
+
+## Verify
+
+Tap on the button specified in step 2 of the configure section, wait for `idleTimeout` seconds (default is 3s) then check the performance page for a new transaction called `my_button_widget`.
+
+## Handling Successive User Interaction Events
+
+### Default Behaviour
+
+When a new user interaction occurs while a user interaction transaction is still in progress, the SDK automatically completes the ongoing transaction.
+This is necessary because only one transaction can be active in the scope at a time.
+
+### Interaction with the Same View
+
+If the same view is interacted with again (e.g. clicking an `ElevatedButton` repeatedly) within the `idleTimeout` period then the SDK does the following:
+
+- Resets the idle timer for the transaction.
+- Extends the transaction’s duration by the length of the `idleTimeout`.
+
+## Additional Configuration
+
+### Disabling User Interaction Tracing
+
+User interaction tracing is enabled by default.
+If you wish to opt-out of this feature set the `enableUserInteractionTracing` option to `false`.
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -38,38 +98,55 @@ Future<void> main() async {
 }
 ```
 
-The UI instrumentation breadcrumbs are enabled by default, but you can disable them by setting the `enableUserInteractionBreadcrumbs` option to `false`.
+### Disabling User Interaction Breadcrumbs
 
-Breadcrumbs don't contain the `Widget` labels, text, and so on, since they might include PII. However, if you want to capture them, you can enable capturing this information by setting the `sendDefaultPii` option to `true`.
-
-The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/flutter/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds). You can also disable the idle timeout by setting it to `null`, but the transaction must be finished manually in this case.
-
-<Note>
-
-If the UI transaction has idled, but didn't have any child spans added, it will be dropped.
-
-</Note>
-
-To finish the transaction manually, you can:
+User interaction breadcrumbs are enabled by default.
+If you wish to opt-out of this feature set the `enableUserInteractionBreadcrumbs` option to `false`.
 
 ```dart
-import 'package:sentry/sentry.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
-final span = Sentry.getSpan()
-await span?.finish();
-```
-
-Transactions are always bound to the `Scope` automatically if there's none set. Because of that, you can create spans using custom instrumentation, and those spans will be automatically associated with the running UI transaction.
-
-```dart
-import 'package:sentry/sentry.dart';
-
-Future<void> loadUserDataOnClick() async {
-  final span = Sentry.getSpan();
-  final innerSpan = span?.startChild('loadUserData');
-  // omitted code
-  await innerSpan?.finish();
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.enableUserInteractionBreadcrumbs = false,
+    appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
+  );
 }
 ```
 
-When the UI transaction is not finished yet, but the user makes a new interaction, the SDK automatically finishes the previous UI transaction. This is because only one transaction can be bound to the scope at a time. However, if the same view has been interacted with (for example, an `ElevatedButton` was clicked again within the `idleTimeout` window), the idle timer will be reset and the transaction duration will be extended with the `idleTimeout` value.
+### Breadcrumb PII
+
+By default, breadcrumbs exclude widget labels and text to avoid capturing personally identifiable information (PII).
+To include these details, set the `sendDefaultPii` option to `true`.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.sendDefaultPii = true,
+  appRunner: () => runApp(SentryUserInteractionWidget(child: MyApp())),
+  );
+}
+```
+
+### Transaction Timeout
+
+The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/flutter/configuration/options/#idle-timeout) and all of its child spans are finished.
+The `idleTimeoout` defaults to `3000` milliseconds (3 seconds).
+
+#### Disable Timeout
+
+You can also disable the idle timeout by setting it to `null`, but if you do, you must finish the transaction manually.
+
+To finish the transaction manually, use `Sentry.getSpan()` to retrieve the active transaction on the scope:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+// Finish the transaction manually
+final activeTransaction = Sentry.getSpan()
+await activeTransaction?.finish();
+```

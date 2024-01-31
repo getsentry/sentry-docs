@@ -41,7 +41,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Optional: Initialize Session Replay:
-  integrations: [new Sentry.Replay()],
+  integrations: [Sentry.replayIntegration()],
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 });
@@ -58,7 +58,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Optional: Initialize Session Replay:
-  integrations: [new Sentry.Replay()],
+  integrations: [Sentry.replayIntegration()],
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 });
@@ -455,3 +455,48 @@ export const load = wrapServerLoadWithSentry((event) => {
   //... your load code
 });
 ```
+
+### Configure Client-side `fetch` Instrumentation
+
+<Note>
+
+Available since version `7.91.0`
+
+</Note>
+
+The `sentryHandle` function you added to your `handle` hook in `hooks.server.ts` during [server-side setup](#server-side-setup) injects a small inline `<script>` tag into the HTML response of the server.
+This script attempts to proxy all client-side `fetch` calls, so that `fetch` calls inside your `load` functions are captured by the SDK.
+However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
+To enable the script, you need to add an exception for the `sentryHandle` script:
+
+First, specify your nonce in the `fetchProxyScriptNonce` option in your `sentryHandle` call:
+
+```javascript {filename:hooks.server.ts}
+// Add the nonce to the <script> tag:
+export const handle = sentryHandle({ fetchProxyScriptNonce: "<your-nonce>" });
+```
+
+Then, adjust your [SvelteKit CSP configuration](https://kit.svelte.dev/docs/configuration#csp):
+
+```javascript {svelte.config.js}
+const config = {
+  kit: {
+    csp: {
+      directives: {
+        "script-src": ["nonce-<your-nonce>"],
+      },
+    },
+  },
+};
+```
+
+#### Disable Client-side `fetch` Proxy Script
+
+If you do not want to inject the script responsible for instrumenting client-side `load` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
+
+```javascript {filename:hooks.server.ts}
+export const handle = sentryHandle({ injectFetchProxyScript: false });
+```
+
+Note that if you disable the `fetch` proxy script, the SDK will not be able to capture spans for `fetch` calls made in your `load` functions on the client.
+This also means that potential spans created on the server for these `fetch` calls will not be connected to the client-side trace.

@@ -9,8 +9,9 @@ import {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Discover all our latest product releases during Sentry Launch Week, coming Nov 13-17.';
-const BANNER_LINK_URL = 'https://sentry.io/events/launch-week/';
+  'Join our live workshop: Identify, Trace, and Fix Endpoint Regression Issues on Jan. 31st.';
+const BANNER_LINK_URL =
+  'https://sentry.io/resources/identify-trace-fix-endpoint-regression-issues-workshop/?promo_name=from-docs';
 const BANNER_LINK_TEXT = 'Sign Up';
 const OPTIONAL_BANNER_IMAGE = null;
 

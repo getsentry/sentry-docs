@@ -17,8 +17,12 @@ Errors reported to Sentry while transaction or span **bound to the scope** is ru
 ```java {tabTitle:Java}
 import io.sentry.Sentry;
 import io.sentry.ISpan;
+import io.sentry.ITransaction;
+import io.sentry.TransactionOptions;
 
-ITransaction span = Sentry.startTransaction(item.getTransactionName(), "task", true);
+TransactionOptions txOptions = new TransactionOptions();
+txOptions.setBindToScope(true);
+ITransaction span = Sentry.startTransaction(item.getTransactionName(), "task", txOptions);
 try {
   processItem();
 } catch (Exception e) {
@@ -30,8 +34,9 @@ try {
 
 ```kotlin {tabTitle:Kotlin}
 import io.sentry.Sentry
+import io.sentry.TransactionOptions;
 
-val span = Sentry.startTransaction(item.getTransactionName(), "task", true)
+val span = Sentry.startTransaction(item.getTransactionName(), "task", TransactionOptions().apply { isBindToScope = true })
 try {
   processItem()
 } catch (e: Exception) {

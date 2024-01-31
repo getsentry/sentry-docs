@@ -10,6 +10,10 @@ SentryAndroid.init(this, options -> {
   options.setTracesSampleRate(1.0);
   // OR: Determine traces sample rate based on the sampling context
   options.setTracesSampler(context -> {
+    if (context.getTransactionContext().isForNextAppStart()) {
+      // These refer to app start (if app start profiling is enabled), and are important - take a big sample
+      return 0.7;
+    }
     CustomSamplingContext ctx = context.getCustomSamplingContext();
     if (ctx != null) {
       if ("LoginActivity".equals(ctx.get("ActivityName"))) {
@@ -38,6 +42,10 @@ import io.sentry.SentryOptions.TracesSamplerCallback
 
 SentryAndroid.init(this) { options ->
   options.tracesSampler = TracesSamplerCallback { context ->
+    if (context.transactionContext.isForNextAppStart) {
+      // These refer to app start (if app start profiling is enabled), and are important - take a big sample
+      return@TracesSamplerCallback 0.7
+    }
     val ctx = context.customSamplingContext
     if (ctx != null) {
       when (ctx.get("ActivityName")) {
