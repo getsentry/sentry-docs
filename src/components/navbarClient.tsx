@@ -14,10 +14,19 @@ interface Props {
 }
 
 export function NavbarClient({platforms, currentPlatform}: Props) {
+  let searchPlatforms: string[] | undefined;
+  if (currentPlatform) {
+    searchPlatforms = [currentPlatform.name];
+    if ('platform' in currentPlatform) {
+      // currentPlatform is a PlatformGuide, so include both names.
+      searchPlatforms.unshift(currentPlatform.platform);
+    }
+  }
+
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
       <div>
-        <Search path="" platforms={platforms.map(p => p.key)} />
+        <Search path="" platforms={searchPlatforms} />
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
