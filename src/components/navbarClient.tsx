@@ -1,6 +1,7 @@
 'use client';
 
 import {Nav} from 'react-bootstrap';
+import {usePathname} from 'next/navigation';
 
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function NavbarClient({platforms, currentPlatform}: Props) {
+  const pathname = usePathname() ?? undefined;
   let searchPlatforms: string[] | undefined;
   if (currentPlatform) {
     searchPlatforms = [currentPlatform.name];
@@ -26,7 +28,7 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
       <div>
-        <Search path="" platforms={searchPlatforms} />
+        <Search path={pathname} platforms={searchPlatforms} />
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
