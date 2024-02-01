@@ -360,6 +360,16 @@ const nextConfig = {
       },
       {
         source: '/platforms/python/rq/',
+        destination: '/platforms/python/integrations/rq/',
+        permanent: true,
+      },
+      {
+        source: '/clients/python/integrations/bottle/',
+        destination: '/platforms/python/integrations/bottle/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/python/bottle/',
         destination: '/platforms/python/integrations/bottle/',
         permanent: true,
       },
@@ -1351,6 +1361,367 @@ const nextConfig = {
       {
         source: '/platforms/javascript/security-policy-reporting/',
         destination: '/product/security-policy-reporting/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/troubleshooting/session-replay/',
+        destination: '/platforms/javascript/session-replay/troubleshooting/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/:guide/troubleshooting/session-replay/',
+        destination: '/platforms/javascript/session-replay/troubleshooting/',
+        permanent: true,
+      },
+      {
+        source: '/sdks/javascript/config/sourcemaps/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/generation/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/troubleshooting/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/availability/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/configuration/sourcemaps/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/docPlatform/sourcemaps/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/:guide/sourcemaps/multiple-origins/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
+        destination: '/platforms/javascript/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/troubleshooting/',
+        destination: '/platforms/javascript/sourcemaps/troubleshooting_js/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
+        destination: '/platforms/javascript/sourcemaps/troubleshooting_js/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+        destination: '/platforms/javascript/sourcemaps/troubleshooting_js/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/troubleshooting_js/verify-artifact-distribution-value-matches-value-configured-in-your-sdk/',
+        destination: '/platforms/javascript/sourcemaps/troubleshooting_js/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
+        destination: '/platforms/javascript/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/tools/webpack/',
+        destination: '/platforms/javascript/sourcemaps/uploading/webpack/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/sourcemaps/hosting-publicly/',
+        destination: '/platforms/javascript/sourcemaps/uploading/hosting-publicly/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/cordova/troubleshooting/supported-browsers/',
+        destination: '/platforms/javascript/guides/cordova/troubleshooting/',
+        permanent: true,
+      },
+      {
+        source: '/clients/cordova/ionic/',
+        destination: '/platforms/javascript/guides/cordova/ionic/',
+        permanent: true,
+      },
+      {
+        source: '/sdks/react/integrations/vue-router/',
+        destination: '/platforms/javascript/guides/vue/features/vue-router/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/vue/configuration/integrations/vue-router/',
+        destination: '/platforms/javascript/guides/vue/features/vue-router/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/vue/',
+        destination: '/platforms/javascript/guides/vue/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/integrations/vue/',
+        destination: '/platforms/javascript/guides/vue/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/integrations/angular/',
+        destination: '/platforms/javascript/guides/angular/angular1/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/gatsby/',
+        destination: '/platforms/javascript/guides/gatsby/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/gatsby/errors/breadcrumbs/',
+        destination: '/platforms/javascript/guides/gatsby/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/integrations/ember/',
+        destination: '/platforms/javascript/guides/ember/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/ember/',
+        destination: '/platforms/javascript/guides/ember/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/electron/configuration/integrations/optional/',
+        destination: '/platforms/javascript/guides/electron/configuration/integrations/electronminidump/',
+        permanent: true,
+      },
+      {
+        source: '/clients/electron/',
+        destination: '/platforms/javascript/guides/electron/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/electron/',
+        destination: '/platforms/javascript/guides/electron/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/electron/',
+        destination: '/platforms/javascript/guides/electron/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/electron/sourcemaps/',
+        destination: '/platforms/javascript/guides/electron/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/electron/lazy-load-sentry/',
+        destination: '/platforms/javascript/guides/electron/',
+        permanent: true,
+      },
+      {
+        source: '/sdks/react/integrations/redux/',
+        destination: '/platforms/javascript/guides/react/features/redux/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/react/configuration/integrations/redux/',
+        destination: '/platforms/javascript/guides/react/features/redux/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/react/integrations/react-router/',
+        destination: '/platforms/javascript/guides/react/features/react-router/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/guides/react/configuration/integrations/react-router/',
+        destination: '/platforms/javascript/guides/react/features/react-router/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/javascript/react/',
+        destination: '/platforms/javascript/guides/react/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/integrations/react/',
+        destination: '/platforms/javascript/guides/react/',
+        permanent: true,
+      },
+      {
+        source: '/sdks/react/',
+        destination: '/platforms/javascript/guides/react/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/react/',
+        destination: '/platforms/javascript/guides/react/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/config/',
+        destination: '/platforms/javascript/legacy-sdk/config/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/install/',
+        destination: '/platforms/javascript/legacy-sdk/install/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/sourcemaps/',
+        destination: '/platforms/javascript/legacy-sdk/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/integrations/',
+        destination: '/platforms/javascript/legacy-sdk/integrations/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/usage/',
+        destination: '/platforms/javascript/legacy-sdk/usage/',
+        permanent: true,
+      },
+      {
+        source: '/clients/javascript/tips/',
+        destination: '/platforms/javascript/legacy-sdk/tips/',
+        permanent: true,
+      },
+
+      {
+        source: '/platforms/node/pluggable-integrations/',
+        destination: '/platforms/node/configuration/integrations/pluggable-integrations/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/default-integrations/',
+        destination: '/platforms/node/configuration/integrations/default-integrations/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/integrations/default-integrations/',
+        destination: '/platforms/node/configuration/integrations/default-integrations/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
+        destination: '/platforms/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/gcp_functions/',
+        destination: '/platforms/node/guides/gcp-functions/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/integrations/express/',
+        destination: '/platforms/node/guides/express/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/express/',
+        destination: '/platforms/node/guides/express/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/guides/express/integrations/default-integrations/',
+        destination: '/platforms/node/guides/express/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/aws_lambda/',
+        destination: '/platforms/node/guides/aws-lambda/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/azure_functions/',
+        destination: '/platforms/node/guides/azure-functions/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/guides/azure-functions/typescript/',
+        destination: '/platforms/node/guides/azure-functions/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/integrations/connect/',
+        destination: '/platforms/node/guides/connect/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/connect/',
+        destination: '/platforms/node/guides/connect/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/integrations/koa/',
+        destination: '/platforms/node/guides/koa/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/koa/',
+        destination: '/platforms/node/guides/koa/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/guides/koa/typescript/',
+        destination: '/platforms/node/guides/koa/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/config/',
+        destination: '/platforms/node/legacy-sdk/config/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/coffeescript/',
+        destination: '/platforms/node/legacy-sdk/coffeescript/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/sourcemaps/',
+        destination: '/platforms/node/legacy-sdk/sourcemaps/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/typescript/',
+        destination: '/platforms/node/legacy-sdk/typescript/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/node/typescript/',
+        destination: '/platforms/node/legacy-sdk/typescript/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/integrations/',
+        destination: '/platforms/node/legacy-sdk/integrations/',
+        permanent: true,
+      },
+      {
+        source: '/clients/node/usage/',
+        destination: '/platforms/node/legacy-sdk/usage/',
         permanent: true,
       },
       {
