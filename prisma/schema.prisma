@@ -1,0 +1,45 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String      @id @default(cuid())
+  passwordHash      String?     @db.VarChar(255)
+  externalId        String?     @unique
+  picture           String?
+  email             String      @unique
+  name              String?
+  canPostRestricted Boolean     @default(false)
+  admin             Boolean     @default(false)
+  changelogs        Changelog[]
+}
+
+model Changelog {
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  publishedAt DateTime?  @default(now())
+  updatedAt   DateTime   @updatedAt
+  title       String     @db.VarChar(255)
+  slug        String     @unique @db.VarChar(255)
+  image       String?
+  content     String?
+  summary     String?
+  published   Boolean    @default(false)
+  deleted     Boolean    @default(false)
+  authorId    String?
+  author      User?      @relation(fields: [authorId], references: [id])
+  categories  Category[]
+}
+
+model Category {
+  id         String      @id @default(cuid())
+  name       String      @unique @db.VarChar(255)
+  deleted    Boolean     @default(false)
+  changelogs Changelog[]
+}
