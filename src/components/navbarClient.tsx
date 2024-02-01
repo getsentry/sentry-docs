@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function NavbarClient({platforms, currentPlatform}: Props) {
-  const pathname = usePathname() || undefined;
+  const pathname = usePathname() ?? undefined;
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
