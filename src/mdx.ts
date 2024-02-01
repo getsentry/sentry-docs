@@ -113,8 +113,10 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
 
     commonFiles.forEach(f => {
       const supported =
-        !f.frontmatter.supported?.length ||
-        f.frontmatter.supported.includes(platformName);
+        (!f.frontmatter.supported?.length ||
+          f.frontmatter.supported.includes(platformName)) &&
+        (!f.frontmatter.notSupported?.length ||
+          !f.frontmatter.notSupported.includes(platformName));
       if (!supported) {
         return;
       }
@@ -155,9 +157,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       }
 
       commonFiles.forEach(f => {
+        const guideKey = `${platformName}.${guideName}`;
         const supported =
-          !f.frontmatter.supported?.length ||
-          f.frontmatter.supported.includes(`${platformName}.${guideName}`);
+          (!f.frontmatter.supported?.length ||
+            f.frontmatter.supported.includes(guideKey)) &&
+          (!f.frontmatter.notSupported?.length ||
+            !f.frontmatter.notSupported.includes(guideKey));
         if (!supported) {
           return;
         }
