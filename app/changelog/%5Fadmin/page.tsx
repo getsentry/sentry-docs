@@ -9,6 +9,8 @@ import {
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
 import {prisma} from 'sentry-docs/prisma';
 
+import Confirm from './confirm';
+
 export default async function ChangelogsListPage() {
   const changelogs = await prisma.changelog.findMany({
     include: {
@@ -84,41 +86,23 @@ export default async function ChangelogsListPage() {
                       👀 Show
                     </Link>
                     <Link
-                      href={`/changelog/admin/changelogs/${changelog.id}/edit`}
+                      href={`/changelog/_admin/${changelog.id}/edit`}
                       className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
                     >
                       📝 Edit
                     </Link>
                     {changelog.published ? (
-                      <form action={unpublishChangelog} className="inline-block">
-                        <input type="hidden" name="id" value={changelog.id} />
-                        <button
-                          type="submit"
-                          className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
-                        >
-                          ⛔️ Unpublish?
-                        </button>
-                      </form>
+                      <Confirm action={unpublishChangelog} changelog={changelog}>
+                        ⛔️ Unpublish?
+                      </Confirm>
                     ) : (
-                      <form action={publishChangelog} className="inline-block">
-                        <input type="hidden" name="id" value={changelog.id} />
-                        <button
-                          type="submit"
-                          className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
-                        >
-                          ✅ Publish?
-                        </button>
-                      </form>
+                      <Confirm action={publishChangelog} changelog={changelog}>
+                        ✅ Publish?
+                      </Confirm>
                     )}
-                    <form action={deleteChangelog} className="inline-block">
-                      <input type="hidden" name="id" value={changelog.id} />
-                      <button
-                        type="submit"
-                        className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
-                      >
-                        💀 Delete?
-                      </button>
-                    </form>
+                    <Confirm action={deleteChangelog} changelog={changelog}>
+                      💀 Delete?
+                    </Confirm>
                   </div>
                 </td>
               </tr>

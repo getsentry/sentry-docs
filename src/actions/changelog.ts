@@ -16,7 +16,7 @@ export async function unpublishChangelog(formData: FormData) {
     return {message: 'Unable to unpublish changelog'};
   }
 
-  revalidatePath(`/changelogs`);
+  revalidatePath(`/changelog/_admin`);
 }
 
 export async function publishChangelog(formData: FormData) {
@@ -31,14 +31,18 @@ export async function publishChangelog(formData: FormData) {
     return {message: 'Unable to publish changelog'};
   }
 
-  revalidatePath(`/changelogs`);
+  revalidatePath(`/changelog/_admin`);
 }
 
 export async function createChangelog(formData: FormData) {
   // iterate over all cateogires and create them if they don't exist
   const categories = formData.getAll('categories');
-  const connectOrCreate = categories.map(category => {
-    return {where: {name: category as string}, create: {name: category as string}};
+  await prisma.category.createMany({
+    data: categories.map(category => ({name: category as string})),
+    skipDuplicates: true,
+  });
+  const connect = categories.map(category => {
+    return {name: category as string};
   });
   const data = {
     // publishedAt: new Date(formData.get('publishedAt') as string).toISOString(),
@@ -52,7 +56,7 @@ export async function createChangelog(formData: FormData) {
     //   formData.get('author') !== ''
     //     ? {connect: {id: formData.get('author') as string}}
     //     : {},
-    categories: formData.get('categories') !== '' ? {connectOrCreate} : {},
+    categories: formData.get('categories') !== '' ? {connect} : {},
   };
 
   const changelog = await prisma.changelog.create({data});
@@ -64,21 +68,28 @@ export async function createChangelog(formData: FormData) {
 
 export async function editChangelog(formData: FormData) {
   const id = formData.get('id') as string;
+  const categories = formData.getAll('categories');
+  await prisma.category.createMany({
+    data: categories.map(category => ({name: category as string})),
+    skipDuplicates: true,
+  });
+  const connect = categories.map(category => {
+    return {name: category as string};
+  });
   try {
     const data = {
-      publishedAt: new Date(formData.get('publishedAt') as string).toISOString(),
+      // publishedAt: new Date(formData.get('publishedAt') as string).toISOString(),
       title: formData.get('title') as string,
       content: formData.get('content') as string,
-      published: formData.get('published') === 'on',
-      deleted: formData.get('deleted') === 'on',
-      author:
-        formData.get('author') != ''
-          ? {connect: {id: formData.get('author') as string}}
-          : {disconnect: true},
-      category:
-        formData.get('category') != ''
-          ? {connect: {id: formData.get('category') as string}}
-          : {disconnect: true},
+      summary: formData.get('summary') as string,
+      slug: formData.get('slug') as string,
+      // published: formData.get('published') === 'on',
+      // deleted: formData.get('deleted') === 'on',
+      // author:
+      //   formData.get('author') !== ''
+      //     ? {connect: {id: formData.get('author') as string}}
+      //     : {},
+      categories: formData.get('categories') !== '' ? {set: [...connect]} : {set: []},
     };
 
     await prisma.changelog.update({
@@ -86,11 +97,11 @@ export async function editChangelog(formData: FormData) {
       data,
     });
   } catch (error) {
-    console.error('[EDIT ACTION ERROR:', error);
+    console.error('EDIT ACTION ERROR:', error);
     return {message: error};
   }
 
-  redirect(`/changelogs/${id}`);
+  redirect(`/changelog/_admin`);
 }
 
 export async function deleteChangelog(formData: FormData) {
@@ -104,5 +115,5 @@ export async function deleteChangelog(formData: FormData) {
     return {message: 'Unable to delete changelog'};
   }
 
-  revalidatePath(`/changelogs`);
+  revalidatePath(`/changelog/_admin`);
 }

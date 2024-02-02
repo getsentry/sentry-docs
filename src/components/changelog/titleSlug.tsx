@@ -3,8 +3,8 @@ import {Fragment, useState} from 'react';
 
 import {Input} from './ui/Input';
 
-export function TitleSlug() {
-  const [slug, setSlug] = useState('');
+export function TitleSlug({defaultTitle = '', defaultSlug = ''}) {
+  const [slug, setSlug] = useState(defaultSlug);
   const [edited, setEdited] = useState(false);
 
   return (
@@ -16,6 +16,7 @@ export function TitleSlug() {
           name="title"
           className="w-full mb-2"
           required
+          defaultValue={defaultTitle}
           onChange={e => {
             if (!edited) {
               setSlug(
@@ -35,6 +36,7 @@ export function TitleSlug() {
           name="slug"
           className="w-full mb-2"
           required
+          defaultValue={defaultSlug}
           value={slug}
           onChange={e => {
             setSlug(e.target.value);

@@ -1,13 +1,17 @@
-import {Fragment} from 'react';
+import '@radix-ui/themes/styles.css';
+
+import {Fragment, Suspense} from 'react';
 import Link from 'next/link';
 
 import {editChangelog} from 'sentry-docs/actions/changelog';
+import {ForwardRefEditor} from 'sentry-docs/components/changelog/forwardRefEditor';
+import {TitleSlug} from 'sentry-docs/components/changelog/titleSlug';
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
-import {Input} from 'sentry-docs/components/changelog/ui/Input';
 import {Select} from 'sentry-docs/components/changelog/ui/Select';
 import {prisma} from 'sentry-docs/prisma';
 
-export default async function ChangelogEditPage({params}: {params: {id: string}}) {
+export default async function ChangelogCreatePage({params}) {
+  const categories = await prisma.category.findMany();
   const changelog = await prisma.changelog.findUnique({
     where: {id: params.id},
     include: {
@@ -16,9 +20,9 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
     },
   });
 
-  const authors = await prisma.user.findMany();
+  // const authors = await prisma.user.findMany();
 
-  const categories = await prisma.category.findMany();
+  // const categories = await prisma.category.findMany();
 
   if (!changelog) {
     return (
@@ -34,100 +38,59 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
   }
 
   return (
-    <Fragment>
-      <header className="mb-4">
-        <h2>Edit Changelog</h2>
-      </header>
-      <form action={editChangelog} className="px-2 max-w-xl">
-        <div>
-          <Input
-            type="datetime-local"
-            label="Published At"
-            name="publishedAt"
-            className="mb-2"
-            defaultValue={new Date(changelog.publishedAt || '')
-              .toISOString()
-              .slice(0, 16)}
-          />
-        </div>
-        <div>
-          <Input
-            type="text"
-            label="Title"
-            name="title"
-            className="mb-2"
-            defaultValue={changelog.title}
-            required
-          />
-        </div>
-        <div>
-          <Input
-            type="text"
-            label="Content"
-            name="content"
-            className="mb-2"
-            defaultValue={changelog.content}
-          />
-        </div>
-        <div>
-          <Input
-            type="checkbox"
-            label="Published"
-            name="published"
-            className="mb-2"
-            defaultChecked={changelog.published === true}
-            required
-          />
-        </div>
-        <div>
-          <Input
-            type="checkbox"
-            label="Deleted"
-            name="deleted"
-            className="mb-2"
-            defaultChecked={changelog.deleted === true}
-            required
-          />
+    <section className="overflow-x-auto col-start-3 col-span-8">
+      <form action={editChangelog} className="px-2 w-full">
+        <input type="hidden" name="id" value={changelog.id} />
+        <TitleSlug defaultSlug={changelog.slug} defaultTitle={changelog.title} />
+        <div className="mb-6">
+          <label htmlFor="summary" className="block text-xs font-medium text-gray-700">
+            Summary
+            <Fragment>
+              &nbsp;<span className="font-bold text-secondary">*</span>
+            </Fragment>
+          </label>
+          <textarea name="summary" className="w-full" required>
+            {changelog.summary}
+          </textarea>
+          <span className="text-xs text-gray-500 italic">
+            This will be shown in the list
+          </span>
         </div>
         <div>
           <Select
-            name="author"
-            className="mt-1 mb-2"
-            label="Author"
-            placeholder="Select Author"
-            defaultValue={{label: changelog.author?.id, value: changelog.author?.id}}
-            required
-            options={authors.map(author => ({
-              label: author.id,
-              value: author.id,
-            }))}
-          />
-        </div>
-        <div>
-          <Select
-            name="category"
-            className="mt-1 mb-2"
+            name="categories"
+            className="mt-1 mb-6"
             label="Category"
             placeholder="Select Category"
-            // TODO: defaultValue={{label: changelog.category?.id, value: changelog.category?.id}}
-            required
-            options={categories.map(category => ({
-              label: category.id,
-              value: category.id,
+            defaultValue={changelog.categories.map(category => ({
+              label: category.name,
+              value: category.name,
             }))}
+            options={categories.map(category => ({
+              label: category.name,
+              value: category.name,
+            }))}
+            isMulti
           />
         </div>
 
-        <input type="hidden" name="id" value={changelog.id} />
+        <Suspense fallback={null}>
+          <ForwardRefEditor
+            name="content"
+            defaultValue={changelog.content || ''}
+            className="w-full"
+          />
+        </Suspense>
 
-        <footer className="flex items-center justify-between mt-2">
-          <Link href="/changelogs" className="underline text-gray-500">
+        <footer className="flex items-center justify-between mt-2 mb-8">
+          <Link href="/changelog/_admin" className="underline text-gray-500">
             Return to Changelogs list
           </Link>
-
-          <Button type="submit">Update</Button>
+          <div>
+            <Button type="submit">Update</Button>
+          </div>
         </footer>
       </form>
-    </Fragment>
+    </section>
   );
 }
