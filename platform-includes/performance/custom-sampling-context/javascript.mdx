@@ -1,20 +1,28 @@
 ```javascript
-Sentry.startTransaction(
+Sentry.startSpan(
   {
-    // `transactionContext` - will be recorded on transaction
     name: 'Search from navbar',
     op: 'search',
-    tags: {
+    attributes: {
       testGroup: 'A3',
       treatmentName: 'eager load',
     },
   },
-  // `customSamplingContext` - won't be recorded
-  {
-    // PII
-    userId: '12312012',
-    // too big to send
-    resultsFromLastSearch: { ... }
-  },
 );
+
+// Will result in `tracesSampler` receiving:
+function tracesSampler(samplingContext) {
+  /*
+  samplingContext = { 
+    name: "Search from navbar", 
+    attributes: {
+      testGroup: 'A3',
+      treatmentName: 'eager load',
+    },
+  }
+  */
+ 
+  // Do not sample this specific span
+  return name !== 'Search from navbar';
+}
 ```

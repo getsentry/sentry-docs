@@ -60,7 +60,7 @@ export function ServerSidebar() {
     } else {
       return null;
     }
-  } else if (path.indexOf('product') === 0) {
+  } else if (path.indexOf('product') === 0 || path.indexOf('platform-redirect') === 0) {
     return productSidebar(rootNode);
   } else if (path.indexOf('api') === 0) {
     return <ApiSidebar />;

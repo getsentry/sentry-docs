@@ -63,20 +63,18 @@ http.createServer((request, response) => {
     : sentryTraceHeaders;
   const baggage = request.headers["baggage"];
 
-  const requestTransaction = Sentry.continueTrace(
+  Sentry.continueTrace(
     { sentryTrace, baggage },
     (transactionContext) => {
-      return Sentry.startTransaction({
+      Sentry.startSpan({
         ...transactionContext,
         name: "my request",
         op: "http.server",
+      }, () => {
+        // Your API code...
       });
     }
   );
-
-  // Your API code...
-
-  requestTransaction.finish();
 });
 ```
 

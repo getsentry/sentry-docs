@@ -1,8 +1,6 @@
 ---
 title: "Stack Trace Rules"
 sidebar_order: 30
-redirect_from:
-  - ../grouping-enhancements/
 description: "Learn about ways to enhance your custom grouping."
 ---
 
@@ -14,7 +12,7 @@ Each line is a single rule; one or multiple match expressions are followed by on
 
 The syntax for stack trace rules is similar to:
 
-```discover {tabTitle: Enhancement Rules}
+```bash {tabTitle: Enhancement Rules}
 matcher-name:expression other-matcher:expression ... action1 action2 ...
 ```
 
@@ -22,7 +20,7 @@ If you want to negate the match, prefix the expression with an exclamation mark 
 
 The following is a practical example of how this looks:
 
-```discover {tabTitle: Enhancement Rules}
+```bash {tabTitle: Enhancement Rules}
 # mark all functions in the std namespace to be outside the app
 family:native stack.function:std::*       -app
 
@@ -43,15 +41,15 @@ Multiple matchers can be defined in a line. The following matchers are available
 
 Matches on the general platform family, which currently includes `javascript`, `native` and `other`. Comma separate rules to apply them to multiple platforms.
 
-```discover {tabTitle:Match multiple}
+```bash {tabTitle:Match multiple}
 family:javascript,native stack.abs_path:**/generated/**  -group
 ```
 
-```discover {tabTitle:Match only JavaScript}
+```bash {tabTitle:Match only JavaScript}
 family:javascript stack.abs_path:**/generated/**  -group
 ```
 
-```discover {tabTitle:Match only native}
+```bash {tabTitle:Match only native}
 family:native stack.abs_path:**/generated/**  -group
 ```
 
@@ -61,7 +59,7 @@ alias: `path`
 
 This matcher is case insensitive with Unix glob behavior on a path in a stack trace. The path separators are normalized to `/`. As a special rule, if the filename is relative, it still matches on `**/`.
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 # match on all files under `project` with a `.c` extension
 stack.abs_path:**/project/**.c +app
 
@@ -84,7 +82,7 @@ alias: `function`
 
 Matches on a function in a stack trace, and is case-sensitive with normal globbing.
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.function:myproject_* +app
 stack.function:malloc      -group
 ```
@@ -95,7 +93,7 @@ alias: `package`
 
 Matches on a package in a stack trace. The package is the container that contains a function or module. This is a `.jar`, a `.dylib` or similar. The same matching rules as for `path` apply. For example, this is typically an absolute path.
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.package:**/libcurl.dylib -group
 ```
 
@@ -108,7 +106,7 @@ Matches on the current state of the in-app flag of a stack trace frame. `yes` me
 Matches on a [built-in](#built-in-categories) or a user-defined frame category.
 See [variable actions](#variable-actions) on how to set a category.
 
-```discover {tabTitle:Category Match}
+```bash {tabTitle:Category Match}
 category:telemetry -group
 ```
 
@@ -130,7 +128,7 @@ See [our source code](https://github.com/getsentry/sentry/blob/master/src/sentry
 
 If information about the surrounding frames is necessary to apply a rule to a frame, use caller/callee matching syntax. For example:
 
-```discover {tabTitle:Sibling matches}
+```bash {tabTitle:Sibling matches}
 # Ignore in-app frames if they are called by telemetry
 [ category:telemetry ] | app:yes -group
 
@@ -176,7 +174,7 @@ A limited set of _variables_ can be defined (`variable=value`):
 
 ### Example
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.abs_path:**/node_modules/** -group
 stack.abs_path:**/app/utils/requestError.jsx -group
 stack.abs_path:**src/getsentry/src/getsentry/** +app
@@ -202,7 +200,7 @@ To proactively improve your experience, help Sentry determine which frames in yo
 
 For instance, the following marks all frames that are below a specific C++ namespace are in-app:
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.function:myapplication::* +app
 ```
 
@@ -212,13 +210,13 @@ See [in-app frames for Apple](/platforms/apple/usage/in-app-frames) to find out 
 
 The following marks frames from libdispatch starting with `_dispatch_` as `inApp`.
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.function:_dispatch_*  +app
 ```
 
 You can also achieve the same result by marking other frames "not in-app." However, if that's the case, you should ensure that first all frames are set to "in-app" to override the defaults:
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 app:no                   +app
 stack.function:std::*    -app
 stack.function:boost::*  -app
@@ -232,7 +230,7 @@ You need to force all frames to be in-app first because there might already have
 
 If you're using the `sentry-cocoa` SDK, you can also achieve the same result by marking other frames `not inApp`. The following sample marks functions from the classes `DataRequest` and `DownloadRequest` as `not inApp`.
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.function:DataRequest*  -app
 stack.function:DownloadRequest*  -app
 ```
@@ -243,7 +241,7 @@ In many cases, you want to remove the top or bottom of the stack trace. For inst
 
 For example, if you use Rust, you likely want to remove some frames that are related to panic handling:
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.function:std::panicking::begin_panic       ^-app -app ^-group -group
 stack.function:core::panicking::begin_panic      ^-app -app ^-group -group
 ```
@@ -252,7 +250,7 @@ Here we tell the system that all frames from `begin-panic` to the crash location
 
 Likewise, you can also remove the base of a stack trace. This is particularly useful if you have different main loops that drive an application:
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 stack.function:myapp::LinuxMainLoop         v-group -group
 stack.function:myapp::MacMainLoop           v-group -group
 stack.function:myapp::WinMainLoop           v-group -group
@@ -264,7 +262,7 @@ This isn't useful for _all_ projects, but it can work well for large application
 
 For instance, if any of the frames in the stack trace refer to a common external library, you could tell the system only to consider the top N frames:
 
-```discover {tabTitle:Enhancement Rules}
+```bash {tabTitle:Enhancement Rules}
 # always only consider the top 1 frame for all native events
 family:native max-frames=1
 
