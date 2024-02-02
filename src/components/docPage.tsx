@@ -29,7 +29,7 @@ export function DocPage({
   const {rootNode, path} = serverContext();
   const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
   const hasToc = (!notoc && !frontMatter.notoc) || !!platformOrGuide;
-  const hasGithub = path?.length && path[0] !== 'api';
+  const hasGithub = !!path?.length && path[0] !== 'api';
 
   return (
     <div className="document-wrapper">
