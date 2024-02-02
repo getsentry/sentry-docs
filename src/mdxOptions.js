@@ -4,7 +4,6 @@ import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
-import remarkGfm from 'remark-gfm';
 
 // Remark packages
 import getAppRegistry from './build/appRegistry';
@@ -22,7 +21,6 @@ mdxOptions.remarkPlugins = [
   ...(mdxOptions.remarkPlugins ?? []),
   remarkExtractFrontmatter,
   [remarkTocHeadings],
-  remarkGfm,
   remarkComponentSpacing,
   [
     remarkVariables,

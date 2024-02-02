@@ -1,6 +1,11 @@
 import {Fragment} from 'react';
+import Link from 'next/link';
 
-import {deleteChangelog} from 'sentry-docs/actions/changelog';
+import {
+  deleteChangelog,
+  publishChangelog,
+  unpublishChangelog,
+} from 'sentry-docs/actions/changelog';
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
 import {prisma} from 'sentry-docs/prisma';
 
@@ -10,19 +15,14 @@ export default async function ChangelogsListPage() {
       categories: true,
     },
     orderBy: {
-      publishedAt: 'desc',
+      createdAt: 'desc',
     },
   });
 
   return (
     <Fragment>
       <header className="mb-4 col-start-10 col-span-1 text-right">
-        <Button
-          as="a"
-          href="/changelog/admin/changelogs/create"
-          className="font-medium"
-          size="sm"
-        >
+        <Button as="a" href="/changelog/_admin/create" className="font-medium" size="sm">
           New Changelog
         </Button>
       </header>
@@ -32,8 +32,7 @@ export default async function ChangelogsListPage() {
             <tr>
               <th className="whitespace-nowrap px-4 py-2">Title</th>
               <th className="whitespace-nowrap px-4 py-2">Categories</th>
-              <th className="whitespace-nowrap px-4 py-2">Published</th>
-              <th className="whitespace-nowrap px-4 py-2">Author Id</th>
+              <th className="whitespace-nowrap px-4 py-2">Published by</th>
 
               <th className="px-4 py-2" />
             </tr>
@@ -64,42 +63,61 @@ export default async function ChangelogsListPage() {
                     </div>
                   ))}
                 </td>
-                <td className="px-4 py-2">
-                  {changelog.published ? (
-                    <p className="text-xs italic">
-                      {new Date(changelog.publishedAt).toLocaleString()}
-                    </p>
-                  ) : (
-                    '⛔️'
+                <td className="px-4 py-2 text-center">
+                  {changelog.published && (
+                    <span className="text-gray-500">
+                      {new Date(changelog.publishedAt || '').toLocaleDateString(
+                        undefined,
+                        {month: 'long', day: 'numeric'}
+                      )}
+                    </span>
                   )}
+                  {changelog.authorId}
                 </td>
-                <td className="px-4 py-2">{changelog.authorId}</td>
 
                 <td className="px-4 py-2">
-                  <div className="flex gap-x-1 h-full justify-center">
-                    <Button
-                      as="a"
-                      size="sm"
-                      variant="ghost"
+                  <div className="flex h-full justify-end">
+                    <Link
                       href={`/changelog/${changelog.slug}`}
-                      className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
+                      className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
                     >
-                      Show
-                    </Button>
-                    <Button
-                      as="a"
-                      size="sm"
-                      variant="ghost"
+                      👀 Show
+                    </Link>
+                    <Link
                       href={`/changelog/admin/changelogs/${changelog.id}/edit`}
-                      className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
+                      className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
                     >
-                      Edit
-                    </Button>
+                      📝 Edit
+                    </Link>
+                    {changelog.published ? (
+                      <form action={unpublishChangelog} className="inline-block">
+                        <input type="hidden" name="id" value={changelog.id} />
+                        <button
+                          type="submit"
+                          className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
+                        >
+                          ⛔️ Unpublish?
+                        </button>
+                      </form>
+                    ) : (
+                      <form action={publishChangelog} className="inline-block">
+                        <input type="hidden" name="id" value={changelog.id} />
+                        <button
+                          type="submit"
+                          className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
+                        >
+                          ✅ Publish?
+                        </button>
+                      </form>
+                    )}
                     <form action={deleteChangelog} className="inline-block">
                       <input type="hidden" name="id" value={changelog.id} />
-                      <Button type="submit" className="font-medium">
-                        Delete
-                      </Button>
+                      <button
+                        type="submit"
+                        className="text-indigo-600 hover:bg-indigo-100 rounded-md px-1 py-2 text-xs whitespace-nowrap"
+                      >
+                        💀 Delete?
+                      </button>
                     </form>
                   </div>
                 </td>

@@ -45,7 +45,9 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
             label="Published At"
             name="publishedAt"
             className="mb-2"
-            defaultValue={new Date(changelog.publishedAt).toISOString().slice(0, 16)}
+            defaultValue={new Date(changelog.publishedAt || '')
+              .toISOString()
+              .slice(0, 16)}
           />
         </div>
         <div>

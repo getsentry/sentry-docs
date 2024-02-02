@@ -1,63 +1,61 @@
 import '@radix-ui/themes/styles.css';
 
-import {Suspense} from 'react';
+import {Fragment, Suspense} from 'react';
 import Link from 'next/link';
 
 import {createChangelog} from 'sentry-docs/actions/changelog';
 import {ForwardRefEditor} from 'sentry-docs/components/changelog/forwardRefEditor';
+import {TitleSlug} from 'sentry-docs/components/changelog/titleSlug';
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
-import {Input} from 'sentry-docs/components/changelog/ui/Input';
 import {Select} from 'sentry-docs/components/changelog/ui/Select';
 import {prisma} from 'sentry-docs/prisma';
 
 export default async function ChangelogCreatePage() {
-  const authors = await prisma.user.findMany();
-
   const categories = await prisma.category.findMany();
 
   return (
     <section className="overflow-x-auto col-start-3 col-span-8">
       <form action={createChangelog} className="px-2 w-full">
-        <div>
-          <Input
-            type="text"
-            label="Title"
-            name="title"
-            className="w-full mb-2"
-            required
-          />
+        <TitleSlug />
+        <div className="mb-6">
+          <label htmlFor="summary" className="block text-xs font-medium text-gray-700">
+            Summary
+            <Fragment>
+              &nbsp;<span className="font-bold text-secondary">*</span>
+            </Fragment>
+          </label>
+          <textarea name="summary" className="w-full" required />
+          <span className="text-xs text-gray-500 italic">
+            This will be shown in the list
+          </span>
         </div>
         <div>
           <Select
-            name="category"
-            className="mt-1 mb-2"
+            name="categories"
+            className="mt-1 mb-6"
             label="Category"
             placeholder="Select Category"
             options={categories.map(category => ({
               label: category.name,
-              value: category.id,
+              value: category.name,
             }))}
+            isMulti
           />
         </div>
+
         <Suspense fallback={null}>
           <ForwardRefEditor name="content" defaultValue="" className="w-full" />
         </Suspense>
-        <div>
-          <Input
-            type="checkbox"
-            label="Published"
-            name="published"
-            className="mb-2"
-            required
-          />
-        </div>
 
         <footer className="flex items-center justify-between mt-2">
-          <Link href="/changelogs" className="underline text-gray-500">
+          <Link href="/changelog/_admin" className="underline text-gray-500">
             Return to Changelogs list
           </Link>
-
-          <Button type="submit">Create</Button>
+          <div>
+            <Button type="submit">Create (not published yet)</Button>
+            <br />
+            <span className="text-xs text-gray-500 italic">You can publish it later</span>
+          </div>
         </footer>
       </form>
     </section>

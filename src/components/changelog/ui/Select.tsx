@@ -1,6 +1,7 @@
 'use client';
 import {Fragment} from 'react';
-import ReactSelect, {GroupBase, Props} from 'react-select';
+import {GroupBase, Props} from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 export function Select<
   Option,
@@ -20,7 +21,7 @@ export function Select<
           </Fragment>
         )}
       </label>
-      <ReactSelect id={props.id ?? props.name} {...props} />
+      <CreatableSelect id={props.id ?? props.name} {...props} />
     </Fragment>
   );
 }
