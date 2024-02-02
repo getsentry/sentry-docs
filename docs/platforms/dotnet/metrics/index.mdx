@@ -6,13 +6,13 @@ sidebar_order: 9000
 
 <Note>
 
-Metrics for .NET are supported with Sentry .NET SDK version `4.0.0-beta.7` and above.
+Metrics for .NET are supported with Sentry .NET SDK version `4.0.0` and above.
 
 </Note>
 
 Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
 
-# Initialization
+## Initialization
 
 To enable metrics you have to opt-in the metrics feature.
 
@@ -25,7 +25,7 @@ SentrySdk.Init(options =>
 });
 ```
 
-# Emit a Counter
+## Emit a Counter
 
 Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
 
@@ -37,20 +37,7 @@ SentrySdk.Metrics.Increment("ButtonClicked",
     tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
 ```
 
-# Emit a Set
-
-Sets are useful for looking at unique occurrences and counting the unique elements you added.
-
-To emit a set, do the following:
-
-```csharp
-// Adding a set of unique occurrences.
-SentrySdk.Metrics.Set("CheckoutCount", 7,
-    unit: MeasurementUnit.Custom("items"),
-    tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
-```
-
-# Emit a Distribution
+## Emit a Distribution
 
 Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
 
@@ -64,7 +51,20 @@ SentrySdk.Metrics.Distribution("LoadingTime",
     tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
 ```
 
-# Emit a Gauge
+## Emit a Set
+
+Sets are useful for looking at unique occurrences and counting the unique elements you added.
+
+To emit a set, do the following:
+
+```csharp
+// Adding a set of unique occurrences.
+SentrySdk.Metrics.Set("UserView", "Rufus",
+    unit: MeasurementUnit.Custom("username"),
+    tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
+```
+
+## Emit a Gauge
 
 Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
 
@@ -76,4 +76,18 @@ SentrySdk.Metrics.Gauge("LoadingTime",
     15,
     unit: MeasurementUnit.Duration.Millisecond,
     tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
+```
+
+## Emit a Timer
+
+Timers can be used to measure the execution time of a specific block of code. They're implemented like distributions, but measured in seconds.
+
+To emit a timer, do the following:
+
+```csharp
+// Measure the time of execution within the using block
+using (SentrySdk.Metrics.StartTimer("bingo"))
+{
+    // Your code goes here
+}
 ```
