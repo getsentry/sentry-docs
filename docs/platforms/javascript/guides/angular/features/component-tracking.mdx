@@ -184,8 +184,7 @@ User `TraceDirective` if you only want to track components in certain instances 
 
 ### Track Angular Bootstrapping
 
-You can add your own custom spans by attaching them to the currently active transaction using the `getActiveTransaction`
-helper. For example, you can track the duration of the Angular bootstrapping process to find out how long your app takes to bootstrap on your users' devices:
+You can add your own custom spans using `startSpan()`. For example, you can track the duration of the Angular bootstrapping process to find out how long your app takes to bootstrap on your users' devices:
 
 ```javascript {tabTitle: Angular 12+} {filename:main.ts}
 import { enableProdMode } from "@angular/core";
@@ -196,23 +195,18 @@ import { AppModule } from "./app/app.module";
 
 // ...
 
-const activeTransaction = Sentry.getActiveTransaction();
-const bootstrapSpan =
-  activeTransaction &&
-  activeTransaction.startChild({
+startSpan(
+  {
     description: "platform-browser-dynamic",
     op: "ui.angular.bootstrap",
-  });
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .then(() => console.log(`Bootstrap success`))
-  .catch((err) => console.error(err))
-  .finally(() => {
-    if (bootstrapSpan) {
-      bootstrapSpan.finish();
-    }
-  });
+  },
+  async () => {
+    await platformBrowserDynamic()
+      .bootstrapModule(AppModule)
+      .then(() => console.log(`Bootstrap success`))
+      .catch((err) => console.error(err));
+  }
+);
 ```
 
 ```javascript {tabTitle: Angular 10/11} {filename:main.ts}
@@ -224,23 +218,18 @@ import { AppModule } from "./app/app.module";
 
 // ...
 
-const activeTransaction = Sentry.getActiveTransaction();
-const bootstrapSpan =
-  activeTransaction &&
-  activeTransaction.startChild({
+startSpan(
+  {
     description: "platform-browser-dynamic",
     op: "ui.angular.bootstrap",
-  });
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .then(() => console.log(`Bootstrap success`))
-  .catch((err) => console.error(err))
-  .finally(() => {
-    if (bootstrapSpan) {
-      bootstrapSpan.finish();
-    }
-  });
+  },
+  async () => {
+    await platformBrowserDynamic()
+      .bootstrapModule(AppModule)
+      .then(() => console.log(`Bootstrap success`))
+      .catch((err) => console.error(err));
+  }
+);
 ```
 
 Learn more about [custom instrumentation](../../performance/instrumentation/custom-instrumentation/).
