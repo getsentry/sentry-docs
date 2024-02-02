@@ -12,7 +12,7 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
     where: {id: params.id},
     include: {
       author: true,
-      category: true,
+      categories: true,
     },
   });
 
@@ -24,7 +24,7 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
     return (
       <Fragment>
         <header>
-          <Heading>Changelog not found</Heading>
+          <h2>Changelog not found</h2>
         </header>
         <footer>
           <Link href="/changelogs">Return to Changelogs list</Link>
@@ -36,7 +36,7 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
   return (
     <Fragment>
       <header className="mb-4">
-        <Heading>Edit Changelog</Heading>
+        <h2>Edit Changelog</h2>
       </header>
       <form action={editChangelog} className="px-2 max-w-xl">
         <div>
@@ -107,7 +107,7 @@ export default async function ChangelogEditPage({params}: {params: {id: string}}
             className="mt-1 mb-2"
             label="Category"
             placeholder="Select Category"
-            defaultValue={{label: changelog.category?.id, value: changelog.category?.id}}
+            // TODO: defaultValue={{label: changelog.category?.id, value: changelog.category?.id}}
             required
             options={categories.map(category => ({
               label: category.id,
