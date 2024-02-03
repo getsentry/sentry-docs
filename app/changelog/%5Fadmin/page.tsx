@@ -6,6 +6,7 @@ import {
   publishChangelog,
   unpublishChangelog,
 } from 'sentry-docs/actions/changelog';
+import LoginButton from 'sentry-docs/components/changelog/loginButton';
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
 import {prisma} from 'sentry-docs/prisma';
 
@@ -27,6 +28,7 @@ export default async function ChangelogsListPage() {
         <Button as="a" href="/changelog/_admin/create" className="font-medium" size="sm">
           New Changelog
         </Button>
+        <LoginButton />
       </header>
       <section className="overflow-x-auto col-start-3 col-span-8 shadow-md rounded-lg">
         <table className="w-full text-sm text-left text-gray-500">
