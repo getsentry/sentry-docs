@@ -1,5 +1,3 @@
-import '@radix-ui/themes/styles.css';
-
 import {Fragment, Suspense} from 'react';
 import Link from 'next/link';
 
@@ -19,10 +17,6 @@ export default async function ChangelogCreatePage({params}) {
       categories: true,
     },
   });
-
-  // const authors = await prisma.user.findMany();
-
-  // const categories = await prisma.category.findMany();
 
   if (!changelog) {
     return (

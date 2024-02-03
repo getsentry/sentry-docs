@@ -2,6 +2,7 @@ import './globals.css';
 import 'prism-sentry/index.css';
 
 import {ReactNode} from 'react';
+import {Theme} from '@radix-ui/themes';
 import type {Metadata} from 'next';
 import localFont from 'next/font/local';
 
@@ -34,12 +35,14 @@ export const metadata: Metadata = {
 
 export default function ChangelogLayout({children}: {children: ReactNode}) {
   return (
-    <div className={`${rubik.variable} font-sans`}>
-      <Navbar />
-      <div className="bg-gray-100">{children}</div>
-      <div className="w-full mx-auto h-16 relative bg-darkPurple">
-        <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
+    <Theme accentColor="violet" grayColor="sand" radius="large" scaling="95%">
+      <div className={`${rubik.variable} font-sans`}>
+        <Navbar />
+        <div className="bg-gray-100">{children}</div>
+        <div className="w-full mx-auto h-16 relative bg-darkPurple">
+          <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
+        </div>
       </div>
-    </div>
+    </Theme>
   );
 }

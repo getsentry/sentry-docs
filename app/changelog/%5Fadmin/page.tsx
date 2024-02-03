@@ -1,4 +1,6 @@
-import {Fragment} from 'react';
+import {Fragment, Suspense} from 'react';
+import {PlusIcon} from '@radix-ui/react-icons';
+import {Button} from '@radix-ui/themes';
 import Link from 'next/link';
 
 import {
@@ -7,7 +9,6 @@ import {
   unpublishChangelog,
 } from 'sentry-docs/actions/changelog';
 import LoginButton from 'sentry-docs/components/changelog/loginButton';
-import {Button} from 'sentry-docs/components/changelog/ui/Button';
 import {prisma} from 'sentry-docs/prisma';
 
 import Confirm from './confirm';
@@ -24,11 +25,11 @@ export default async function ChangelogsListPage() {
 
   return (
     <Fragment>
-      <header className="mb-4 col-start-10 col-span-1 text-right">
-        <Button as="a" href="/changelog/_admin/create" className="font-medium" size="sm">
-          New Changelog
+      <header className="mb-4 col-start-3 col-span-2 text-left">
+        <Button>
+          <PlusIcon />
+          <Link href="/changelog/_admin/create">New Changelog</Link>
         </Button>
-        <LoginButton />
       </header>
       <section className="overflow-x-auto col-start-3 col-span-8 shadow-md rounded-lg">
         <table className="w-full text-sm text-left text-gray-500">

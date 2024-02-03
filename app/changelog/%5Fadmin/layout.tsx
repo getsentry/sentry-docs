@@ -1,13 +1,28 @@
-import {type ReactNode} from 'react';
+import {type ReactNode, Suspense} from 'react';
+import {GET} from 'app/api/auth/[...nextauth]/route';
+import {getServerSession} from 'next-auth/next';
 
+import LoginButton from 'sentry-docs/components/changelog/loginButton';
 import NextAuthSessionProvider from 'sentry-docs/components/nextAuthSessionProvider';
 
-export default function Layout({children}: {children: ReactNode}) {
-  return (
-    <NextAuthSessionProvider>
-      <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto grid grid-cols-12 bg-gray-200 pt-16">
-        {children}
+export default async function Layout({children}: {children: ReactNode}) {
+  const session = await getServerSession(GET);
+  let content = (
+    <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto bg-gray-200 pt-16 grid grid-cols-12">
+      {children}
+      <div className="fixed top-3 right-4 z-50">
+        <Suspense fallback={null}>
+          <LoginButton />
+        </Suspense>
       </div>
-    </NextAuthSessionProvider>
+    </div>
   );
+  if (!session) {
+    content = (
+      <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto bg-gray-200 pt-16 flex items-center justify-center">
+        <LoginButton />
+      </div>
+    );
+  }
+  return <NextAuthSessionProvider>{content}</NextAuthSessionProvider>;
 }

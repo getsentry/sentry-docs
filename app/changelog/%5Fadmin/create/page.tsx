@@ -1,5 +1,3 @@
-import '@radix-ui/themes/styles.css';
-
 import {Fragment, Suspense} from 'react';
 import Link from 'next/link';
 

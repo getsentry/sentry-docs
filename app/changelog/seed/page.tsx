@@ -37,7 +37,7 @@ async function main() {
           summary: post.summary,
           image: post.image,
           slug: post.slug,
-          content: mdx.mdxSource,
+          content: mdx.matter.content,
           published: true,
           deleted: false,
           categories,

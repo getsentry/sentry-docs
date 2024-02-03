@@ -245,7 +245,7 @@ export async function getFileBySlug(slug) {
 
   const toc = [];
 
-  const {code, frontmatter} = await bundleMDX({
+  const {code, frontmatter, matter} = await bundleMDX({
     source,
     // mdx imports can be automatically source from the components directory
     cwd: root,
@@ -324,6 +324,7 @@ export async function getFileBySlug(slug) {
   }
 
   return {
+    matter,
     mdxSource: code,
     toc,
     frontMatter: {
