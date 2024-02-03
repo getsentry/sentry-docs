@@ -1,10 +1,16 @@
 'use server';
+import {handler} from 'app/api/auth/[...nextauth]/route';
 import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
+import {getServerSession} from 'next-auth/next';
 
 import {prisma} from '../prisma';
 
 export async function unpublishChangelog(formData: FormData) {
+  const session = await getServerSession(handler);
+  if (!session) {
+    return {message: 'Unauthorized'};
+  }
   const id = formData.get('id') as string;
   try {
     await prisma.changelog.update({
@@ -20,6 +26,10 @@ export async function unpublishChangelog(formData: FormData) {
 }
 
 export async function publishChangelog(formData: FormData) {
+  const session = await getServerSession(handler);
+  if (!session) {
+    return {message: 'Unauthorized'};
+  }
   const id = formData.get('id') as string;
   try {
     await prisma.changelog.update({
@@ -35,7 +45,10 @@ export async function publishChangelog(formData: FormData) {
 }
 
 export async function createChangelog(formData: FormData) {
-  // iterate over all cateogires and create them if they don't exist
+  const session = await getServerSession(handler);
+  if (!session) {
+    return {message: 'Unauthorized'};
+  }
   const categories = formData.getAll('categories');
   await prisma.category.createMany({
     data: categories.map(category => ({name: category as string})),
@@ -43,6 +56,9 @@ export async function createChangelog(formData: FormData) {
   });
   const connect = categories.map(category => {
     return {name: category as string};
+  });
+  const user = await prisma.user.findUnique({
+    where: {email: session?.user?.email as string},
   });
   const data = {
     // publishedAt: new Date(formData.get('publishedAt') as string).toISOString(),
@@ -52,10 +68,7 @@ export async function createChangelog(formData: FormData) {
     slug: formData.get('slug') as string,
     // published: formData.get('published') === 'on',
     // deleted: formData.get('deleted') === 'on',
-    // author:
-    //   formData.get('author') !== ''
-    //     ? {connect: {id: formData.get('author') as string}}
-    //     : {},
+    author: {connect: {id: user?.id as string}},
     categories: formData.get('categories') !== '' ? {connect} : {},
   };
 
@@ -67,6 +80,10 @@ export async function createChangelog(formData: FormData) {
 }
 
 export async function editChangelog(formData: FormData) {
+  const session = await getServerSession(handler);
+  if (!session) {
+    return {message: 'Unauthorized'};
+  }
   const id = formData.get('id') as string;
   const categories = formData.getAll('categories');
   await prisma.category.createMany({
@@ -105,6 +122,10 @@ export async function editChangelog(formData: FormData) {
 }
 
 export async function deleteChangelog(formData: FormData) {
+  const session = await getServerSession(handler);
+  if (!session) {
+    return {message: 'Unauthorized'};
+  }
   const id = formData.get('id') as string;
   try {
     await prisma.changelog.delete({

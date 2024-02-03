@@ -1,6 +1,6 @@
-import {Fragment, Suspense} from 'react';
+import {Fragment} from 'react';
 import {PlusIcon} from '@radix-ui/react-icons';
-import {Button} from '@radix-ui/themes';
+import {Button, Text} from '@radix-ui/themes';
 import Link from 'next/link';
 
 import {
@@ -8,7 +8,6 @@ import {
   publishChangelog,
   unpublishChangelog,
 } from 'sentry-docs/actions/changelog';
-import LoginButton from 'sentry-docs/components/changelog/loginButton';
 import {prisma} from 'sentry-docs/prisma';
 
 import Confirm from './confirm';
@@ -17,6 +16,7 @@ export default async function ChangelogsListPage() {
   const changelogs = await prisma.changelog.findMany({
     include: {
       categories: true,
+      author: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -38,7 +38,6 @@ export default async function ChangelogsListPage() {
               <th className="whitespace-nowrap px-4 py-2">Title</th>
               <th className="whitespace-nowrap px-4 py-2">Categories</th>
               <th className="whitespace-nowrap px-4 py-2">Published by</th>
-
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -71,13 +70,17 @@ export default async function ChangelogsListPage() {
                 <td className="px-4 py-2 text-center">
                   {changelog.published && (
                     <span className="text-gray-500">
-                      {new Date(changelog.publishedAt || '').toLocaleDateString(
-                        undefined,
-                        {month: 'long', day: 'numeric'}
-                      )}
+                      <Text size="1">
+                        {' '}
+                        {new Date(changelog.publishedAt || '').toLocaleDateString(
+                          undefined,
+                          {month: 'long', day: 'numeric'}
+                        )}
+                      </Text>
+                      <br />
                     </span>
                   )}
-                  {changelog.authorId}
+                  <Text size="1">{changelog.author?.name}</Text>
                 </td>
 
                 <td className="px-4 py-2">

@@ -1,9 +1,11 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
+import {handler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
+import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
@@ -48,10 +50,16 @@ export async function generateMetadata(
 
 export default async function ChangelogEntry({params}) {
   let changelog: ChangelogWithCategories | null = null;
+  const session = await getServerSession(handler);
+  let published: boolean | undefined = undefined;
+  if (!session) {
+    published = true;
+  }
   try {
     changelog = await prisma.changelog.findUnique({
       where: {
         slug: params.slug,
+        published,
       },
       include: {
         categories: true,
