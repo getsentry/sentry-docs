@@ -1,0 +1,17 @@
+A `Func<SentryTransaction, Hint, SentryTransaction?>` can be used to update the transaction or drop it by returning `null` before it gets sent to Sentry. For example:
+
+```csharp
+using Sentry;
+
+// Add this to the SDK initialization callback
+options.SetBeforeSendTransaction((sentryTransaction, hint) =>
+{
+    // Modify the transaction
+    if (sentryTransaction.Operation.Equals("http.server"))
+    {
+        return null; // Drop the transaction by returning null
+    }
+
+    return sentryTransaction;
+});
+```
