@@ -13,7 +13,6 @@ import {
   QuoteIcon,
   StrikethroughIcon,
 } from '@radix-ui/react-icons';
-import * as Tabs from '@radix-ui/react-tabs';
 import * as Toolbar from '@radix-ui/react-toolbar';
 import type {TextareaMarkdownRef} from 'textarea-markdown-editor';
 import TextareaMarkdown, {Cursor} from 'textarea-markdown-editor';
@@ -22,22 +21,45 @@ function replaceText(cursor: Cursor, text: string, replaceWith: string) {
   cursor.setValue(cursor.value.replace(text, replaceWith));
 }
 
-async function uploadImage(file: File) {
-  const formData = new FormData();
-  formData.append('file', file);
+export function useFileUpload() {
+  return async (filename: string, file: File) => {
+    const result = await fetch(`/api/files/upload-url?file=${filename}`);
+    const {url, fields} = await result.json();
+    const formData = new FormData();
+    Object.entries({...fields, file}).forEach(([key, value]) => {
+      formData.append(key, value as string | Blob);
+    });
+    const upload = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+    return upload.ok;
+  };
+}
 
-  const res = await fetch('/upload-image', {
+async function uploadImage(file: File) {
+  const result = await fetch(`/changelog/_admin/upload?file=${file.name}`);
+  const {response, options} = await result.json();
+  const {url, fields} = response;
+  const formData = new FormData();
+  Object.entries({...fields, file}).forEach(([key, value]) => {
+    formData.append(key, value as string | Blob);
+  });
+
+  await fetch(url, {
     method: 'POST',
     body: formData,
   });
-
-  return await res.json();
+  return {
+    url: `${url}${options.destination}`,
+    originalFilename: file.name,
+  };
 }
 
 function handleUploadImages(textareaEl: HTMLTextAreaElement, fileList: File[]) {
   const cursor = new Cursor(textareaEl);
 
-  fileList.forEach(async (file, idx) => {
+  fileList.forEach(async (file, _idx) => {
     const loadingText = `![Uploading ${file.name}...]()`;
 
     cursor.insert(`${loadingText}${Cursor.MARKER}`);

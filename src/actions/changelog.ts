@@ -1,4 +1,5 @@
 'use server';
+
 import {handler} from 'app/api/auth/[...nextauth]/route';
 import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
@@ -61,13 +62,10 @@ export async function createChangelog(formData: FormData) {
     where: {email: session?.user?.email as string},
   });
   const data = {
-    // publishedAt: new Date(formData.get('publishedAt') as string).toISOString(),
     title: formData.get('title') as string,
     content: formData.get('content') as string,
     summary: formData.get('summary') as string,
     slug: formData.get('slug') as string,
-    // published: formData.get('published') === 'on',
-    // deleted: formData.get('deleted') === 'on',
     author: {connect: {id: user?.id as string}},
     categories: formData.get('categories') !== '' ? {connect} : {},
   };
@@ -95,17 +93,10 @@ export async function editChangelog(formData: FormData) {
   });
   try {
     const data = {
-      // publishedAt: new Date(formData.get('publishedAt') as string).toISOString(),
       title: formData.get('title') as string,
       content: formData.get('content') as string,
       summary: formData.get('summary') as string,
       slug: formData.get('slug') as string,
-      // published: formData.get('published') === 'on',
-      // deleted: formData.get('deleted') === 'on',
-      // author:
-      //   formData.get('author') !== ''
-      //     ? {connect: {id: formData.get('author') as string}}
-      //     : {},
       categories: formData.get('categories') !== '' ? {set: [...connect]} : {set: []},
     };
 
