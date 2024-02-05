@@ -110,6 +110,30 @@ Sentry.replayIntegration({
 
 We also have [server-side PII scrubbing](/product/data-management-settings/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
 
+### Example: Scrubbing URLs
+
+URLs can be stored in the recording event (which you can use the above `beforeAddRecordingEvent` to scrub), but they can also be stored in a replay event as well. In order to scrub the latter case, you must use `addEventProcessor`:
+
+```javascript
+Sentry.addEventProcessor((event: Sentry.Event) => {
+  // Ensure that we specifically look at replay events
+  if (event.type !== 'replay_event') {
+    // Return the event, otherwise the event will be dropped
+    return event;
+  }
+
+  // Your URL scrubbing function
+  function urlScrubber(url: string) {
+    return url.replace(/([a-z0-9]{3}\.[a-z]{5}\.[a-z]{7})/, '[Filtered]');
+  }
+
+  // Scrub all URLs with your scrubbing function
+  event.urls = event.urls.map(urlScrubber);
+
+  return event;
+});
+```
+
 ### Deprecated Options
 
 Note that the privacy API prior to version 7.35.0 has been deprecated and replaced with the options above. Please see the [Replay migration guide](https://github.com/getsentry/sentry-javascript/blob/master/packages/replay/MIGRATION.md#upgrading-replay-from-7340-to-7350---6645) for further information.
