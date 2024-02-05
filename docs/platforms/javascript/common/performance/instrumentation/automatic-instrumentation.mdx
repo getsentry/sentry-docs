@@ -2,8 +2,6 @@
 title: Automatic Instrumentation
 description: "Learn what transactions are captured after tracing is enabled."
 sidebar_order: 10
-supported:
-  - javascript
 notSupported:
   - javascript.cordova
 ---
@@ -72,27 +70,15 @@ The default value of `tracePropagationTargets` is `['localhost', /^\//]`. This m
 
 You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` and `baggage` headers. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"` and `"Access-Control-Allow-Headers: baggage"`, but it depends on your set up. If you do not allow the two headers, the request might be blocked.
 
-### routingInstrumentation
+### beforeStartSpan
 
-This option adds the ability to instrument routers for various frameworks to create transactions for route changes.
-
-<PlatformContent includePath="performance/browser-routing-instrumentation" />
-
-### beforeNavigate
-
-`beforeNavigate` is called at the start of every `pageload` or `navigation` transaction, and is passed an object containing the data with the transaction will be started. Using `beforeNavigate` gives you the option to modify that data, or drop the transaction entirely by returning `undefined`.
+`beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing the data with which the span will be started. Using `beforeStartSpan` gives you the option to modify that data, or drop the transaction entirely by returning `undefined`.
 
 <PlatformContent includePath="performance/beforeNavigate-example" />
 
 <Note>
-  If you're using React, read our docs about how to set up your{" "}
-  <a
-    class
-    href="/platforms/javascript/guides/react/configuration/integrations/react-router/"
-  >
-    React Router integration
-  </a>
-  .
+  If you're using React, read our docs about how to set up your
+  [React Router integration](/platforms/javascript/guides/react/configuration/integrations/react-router/).
 </Note>
 
 ### shouldCreateSpanForRequest
@@ -121,19 +107,19 @@ The time, measured in ms, one heartbeat takes. If no new spans were started or n
 
 The default is `5000`.
 
-### startTransactionOnLocationChange
+### instrumentNavigation
 
 This flag enables or disables creation of `navigation` transaction on history changes.
 
 The default is `true`.
 
-### startTransactionOnPageLoad
+### instrumentPageLoad
 
 This flag enables or disables creation of `pageload` transaction on first pageload.
 
 The default is `true`.
 
-### markBackgroundTransactions
+### markBackgroundSpans
 
 This option flags transactions when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
 
