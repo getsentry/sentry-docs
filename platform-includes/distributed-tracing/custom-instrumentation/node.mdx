@@ -14,29 +14,23 @@ If you can't find an integration for your framework, it is possible to set up di
 
 ## Enabling Distributed Tracing
 
-You can setup the `Http` integration in combination with `tracesSampleRate: 0` to enable distributed tracing without performance monitoring:
+If you set any `tracesSampleRate` (or set `enableTrace` or a `tracesSampler` function), distributed tracing will be enabled out of the box.
 
-To enable distributed tracing for your frontend, configure the `Http` or `Undici` integration in your `Sentry.init()` options as described in the <PlatformLink to="/performance/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> docs.
-
-If you want to use distributed tracing but not performance monitoring, set the `tracesSampleRate` option to `0`.
+If you want to use distributed tracing but not performance monitoring, set the `tracesSampleRate` option to `0`. The default `httpIntegration` and `nativeNodeFetchintegration` will automatically instrument `http` and `fetch` requests.
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    // The Undici integrations instruments fetch in Node 18+
-    new Sentry.Integrations.Undici(),
-  ],
+  integrations: [],
 
-  // Optionally disable performance monitoring:
-  // tracesSampleRate: 0,
+  // Set this to 0 to enable distributed tracing without performance monitoring
+  tracesSampleRate: 1,
 });
 ```
 
-## Enabling Distributed Tracing without `Http`/`Undici` Integration
+## Manually Extracing and Injecting Distributed Tracing Information
 
-If you do not want to use the `Http` or `Undici` integrations, you can manually extract and inject tracing data into your application. For this, you must:
+You can also manually extract and inject tracing data into your application. For this, you must:
 
 - Extract and store incoming tracing information from incoming request headers or similar.
 - Inject tracing information to any outgoing requests.

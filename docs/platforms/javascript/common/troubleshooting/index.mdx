@@ -308,30 +308,27 @@ If you can't avoid using global integrations (e.g. in a micro frontend applicati
 import * as Sentry from "@sentry/browser";
 
 // Very happy integration that'll prepend and append very happy stick figure to the message
-class HappyIntegration {
-  constructor() {
-    this.name = "HappyIntegration";
-  }
-
-  setupOnce() {
-    Sentry.addGlobalEventProcessor((event) => {
-      const self = Sentry.getClient().getIntegration(HappyIntegration);
-      // Run the integration ONLY when it was installed on the current Hub
-      if (self) {
-        event.message = `\\o/ ${event.message} \\o/`;
-      }
-      return event;
-    });
+function happyIntegration() {
+  return {
+    name: 'Happy',
+    setupOnce() {
+      Sentry.addGlobalEventProcessor((event) => {
+        const self = Sentry.getClient().getIntegration(HappyIntegration);
+        // Run the integration ONLY when it was installed on the current Hub
+        if (self) {
+          event.message = `\\o/ ${event.message} \\o/`;
+        }
+        return event;
+      });
+    }
   }
 }
-
-HappyIntegration.id = "HappyIntegration";
 
 const client1 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, new HappyIntegration()],
+  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 1", event);
     return null; // Returning `null` prevents the event from being sent
@@ -343,7 +340,7 @@ const client2 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___", // Can be a different DSN
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, new HappyIntegration()],
+  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 2", event);
     return null; // Returning `null` prevents the event from being sent
