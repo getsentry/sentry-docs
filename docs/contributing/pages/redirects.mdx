@@ -3,17 +3,31 @@ title: Redirects
 noindex: true
 ---
 
-Redirects are supported via yaml frontmatter in `.md` and `.mdx` files:
 
-```yaml
----
-redirect_from:
-  - /performance-monitoring/discover/
----
+Redirects allow you to automatically redirect an incoming request path to a new destination path. When you move or rename a file, you should make sure to set up a redirect from the old path to the new path, so that the old URL still takes users to the right place.
+
+## Add a New Redirect
+
+Redirects are configured in [`next.config.js`](https://github.com/getsentry/sentry-docs/blob/master/next.config.js) and are checked before the filesystem (including pages and `/public` files ). The `redirects` function returns an array holding redirect objects.
+
+To add a new redirect, add a new object in the redirects array with the following properties:
+
+- `source`: The incoming request path pattern.
+- `destination`: The new destination path you want to route to instead.
+- `permanent`: Whether the redirect is permanent and should be cached forever (`true`) or is temporary (`false`).
+
+### Example Redirect
+
+The example below adds a redirect for the alerts page after its parent folder was renamed from `alerts-notifications` to `alerts`.
+
+```javascript {filename:next.config.js}
+redirects() {
+    return [
+      {
+        source: '/product/alerts-notifications/',
+        destination: '/product/alerts/',
+        permanent: true,
+      },
+    ]
+}
 ```
-
-These will be generated as both client-side (using an empty page with a meta tag) and server-side (nginx rules).
-
-## Vercel
-
-Because docs.sentry.io is hosted on Vercel, there are also some wider-reaching redirects implemented to cover legacy URLs which cannot be re-implemented using `redirect_from`. See `vercel.json` for these.
