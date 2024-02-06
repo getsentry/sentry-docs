@@ -18,6 +18,7 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+    nftTracing: true,
   },
 
   redirects() {
@@ -1425,12 +1426,14 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly/',
+        source:
+          '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly/',
         destination: '/platforms/javascript/sourcemaps/',
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
+        source:
+          '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
         destination: '/platforms/javascript/sourcemaps/',
         permanent: true,
       },
@@ -1445,18 +1448,22 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+        source:
+          '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
         destination: '/platforms/javascript/sourcemaps/troubleshooting_js/',
         permanent: true,
       },
       {
-        source: '/platforms/javascript/sourcemaps/troubleshooting_js/verify-artifact-distribution-value-matches-value-configured-in-your-sdk/',
+        source:
+          '/platforms/javascript/sourcemaps/troubleshooting_js/verify-artifact-distribution-value-matches-value-configured-in-your-sdk/',
         destination: '/platforms/javascript/sourcemaps/troubleshooting_js/',
         permanent: true,
       },
       {
-        source: '/platforms/javascript/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
-        destination: '/platforms/javascript/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+        source:
+          '/platforms/javascript/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
+        destination:
+          '/platforms/javascript/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
         permanent: true,
       },
       {
@@ -1470,7 +1477,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/cordova/troubleshooting/supported-browsers/',
+        source:
+          '/platforms/javascript/guides/cordova/troubleshooting/supported-browsers/',
         destination: '/platforms/javascript/guides/cordova/troubleshooting/',
         permanent: true,
       },
@@ -1525,8 +1533,10 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/electron/configuration/integrations/optional/',
-        destination: '/platforms/javascript/guides/electron/configuration/integrations/electronminidump/',
+        source:
+          '/platforms/javascript/guides/electron/configuration/integrations/optional/',
+        destination:
+          '/platforms/javascript/guides/electron/configuration/integrations/electronminidump/',
         permanent: true,
       },
       {
@@ -1570,7 +1580,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/react/configuration/integrations/react-router/',
+        source:
+          '/platforms/javascript/guides/react/configuration/integrations/react-router/',
         destination: '/platforms/javascript/guides/react/features/react-router/',
         permanent: true,
       },
@@ -1641,8 +1652,10 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
-        destination: '/platforms/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+        source:
+          '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
+        destination:
+          '/platforms/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
         permanent: true,
       },
       {
