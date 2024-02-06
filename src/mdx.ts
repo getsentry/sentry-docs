@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
@@ -34,7 +35,7 @@ export type FrontMatter = {[key: string]: any};
 
 export const allDocsFrontMatter = getAllFilesFrontMatter();
 
-export async function getDocsFrontMatter(): Promise<FrontMatter[]> {
+export const getDocsFrontMatter = cache(async (): Promise<FrontMatter[]> => {
   const frontMatter = [...allDocsFrontMatter];
 
   const categories = await apiCategories();
@@ -53,7 +54,7 @@ export async function getDocsFrontMatter(): Promise<FrontMatter[]> {
   });
 
   return frontMatter;
-}
+});
 
 export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   const docsPath = path.join(root, folder);
