@@ -30,6 +30,29 @@ const root = process.cwd();
 function formatSlug(slug) {
   return slug.replace(/\.(mdx|md)/, '');
 }
+const isSupported = (
+  frontmatter: any,
+  platformName: string,
+  guideName?: string
+): boolean => {
+  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
+  if (frontmatter.supported && frontmatter.supported.length) {
+    if (frontmatter.supported.indexOf(canonical) !== -1) {
+      return true;
+    }
+    if (frontmatter.supported.indexOf(platformName) === -1) {
+      return false;
+    }
+  }
+  if (
+    frontmatter.notSupported &&
+    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
+      frontmatter.notSupported.indexOf(platformName) !== -1)
+  ) {
+    return false;
+  }
+  return true;
+};
 
 export type FrontMatter = {[key: string]: any};
 
@@ -113,12 +136,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     });
 
     commonFiles.forEach(f => {
-      const supported =
-        (!f.frontmatter.supported?.length ||
-          f.frontmatter.supported.includes(platformName)) &&
-        (!f.frontmatter.notSupported?.length ||
-          !f.frontmatter.notSupported.includes(platformName));
-      if (!supported) {
+      if (!isSupported(f.frontmatter, platformName)) {
         return;
       }
 
@@ -158,13 +176,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       }
 
       commonFiles.forEach(f => {
-        const guideKey = `${platformName}.${guideName}`;
-        const supported =
-          (!f.frontmatter.supported?.length ||
-            f.frontmatter.supported.includes(guideKey)) &&
-          (!f.frontmatter.notSupported?.length ||
-            !f.frontmatter.notSupported.includes(guideKey));
-        if (!supported) {
+        if (!isSupported(f.frontmatter, platformName, guideName)) {
           return;
         }
 
