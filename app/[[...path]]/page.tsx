@@ -101,14 +101,15 @@ export default async function Page({params}) {
 
 type MetadataProps = {
   params: {
-    path: string[];
+    path?: string[];
   };
 };
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
+  const domain = 'https://docs.sentry.io';
   let title = 'Home';
   let description = '';
-  const images = [{url: 'https://docs.sentry.io/meta.png', width: 1200, height: 630}];
+  const images = [{url: `${domain}/meta.png`, width: 1200, height: 630}];
 
   const rootNode = await getDocsRootNode();
   if (rootNode && params.path) {
@@ -117,6 +118,11 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       title = pageNode.frontmatter.title;
       description = pageNode.frontmatter.description;
     }
+  }
+
+  let canonical = domain;
+  if (params.path) {
+    canonical = `${domain}/${params.path.join('/')}/`;
   }
 
   return {
@@ -132,6 +138,9 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       title,
       description,
       images,
+    },
+    alternates: {
+      canonical,
     },
   };
 }
