@@ -5,6 +5,15 @@ const remarkPrism = require('remark-prism');
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+      },
+    ],
+  },
+
   trailingSlash: true,
 
   experimental: {
@@ -600,7 +609,8 @@ const nextConfig = {
       },
       {
         source: '/platforms/php/guides/symfony/performance/pm-integrations/',
-        destination: '/platforms/php/guides/symfony/performance/instrumentation/automatic-instrumentation/',
+        destination:
+          '/platforms/php/guides/symfony/performance/instrumentation/automatic-instrumentation/',
         permanent: true,
       },
       {
@@ -734,7 +744,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/flutter/configuration/integrations/user-interaction-instrumentation/',
+        source:
+          '/platforms/flutter/configuration/integrations/user-interaction-instrumentation/',
         destination: '/platforms/flutter/integrations/user-interaction-instrumentation/',
         permanent: true,
       },
@@ -919,7 +930,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/capacitor/configuration/integrations/rrweb/',
+        source:
+          '/platforms/javascript/guides/capacitor/configuration/integrations/rrweb/',
         destination: '/platforms/javascript/session-replay/',
         permanent: true,
       },
@@ -969,17 +981,20 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/remix/session-replay/custom-instrumentation/',
+        source:
+          '/platforms/javascript/guides/remix/session-replay/custom-instrumentation/',
         destination: '/platforms/javascript/session-replay/',
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/remix/session-replay/custom-instrumentation/privacy-configuration/',
+        source:
+          '/platforms/javascript/guides/remix/session-replay/custom-instrumentation/privacy-configuration/',
         destination: '/platforms/javascript/session-replay/',
         permanent: true,
       },
       {
-        source: '/platforms/javascript/guides/gatsby/session-replay/custom-instrumentation/',
+        source:
+          '/platforms/javascript/guides/gatsby/session-replay/custom-instrumentation/',
         destination: '/platforms/javascript/session-replay/',
         permanent: true,
       },
@@ -1115,7 +1130,8 @@ const nextConfig = {
       },
       {
         source: '/workflow/releases/release-automation/github-actions/',
-        destination: '/product/releases/setup/release-automation/github-deployment-gates/',
+        destination:
+          '/product/releases/setup/release-automation/github-deployment-gates/',
         permanent: true,
       },
       {
@@ -2430,7 +2446,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/',
+        source:
+          '/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/',
         destination: '/product/accounts/quotas/',
         permanent: true,
       },
@@ -2580,8 +2597,10 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/product/data-management-settings/event-grouping/server-side-fingerprinting/',
-        destination: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+        source:
+          '/product/data-management-settings/event-grouping/server-side-fingerprinting/',
+        destination:
+          '/product/data-management-settings/event-grouping/fingerprint-rules/',
         permanent: true,
       },
       {
@@ -2611,17 +2630,20 @@ const nextConfig = {
       },
       {
         source: '/platforms/data-management/',
-        destination: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+        destination:
+          '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
         permanent: true,
       },
       {
         source: '/data-management/advanced-datascrubbing/',
-        destination: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+        destination:
+          '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
         permanent: true,
       },
       {
         source: '/data-management-settings/advanced-datascrubbing/',
-        destination: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+        destination:
+          '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
         permanent: true,
       },
       {
@@ -2631,7 +2653,8 @@ const nextConfig = {
       },
       {
         source: '/data-management-settings/event-pii-fields/',
-        destination: '/product/data-management-settings/scrubbing/server-side-scrubbing/event-pii-fields/',
+        destination:
+          '/product/data-management-settings/scrubbing/server-side-scrubbing/event-pii-fields/',
         permanent: true,
       },
       {
@@ -2775,12 +2798,14 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/product/data-management-settings/server-side-sampling/current-limitations/',
+        source:
+          '/product/data-management-settings/server-side-sampling/current-limitations/',
         destination: '/product/performance/retention-priorities/',
         permanent: true,
       },
       {
-        source: '/product/data-management-settings/server-side-sampling/sampling-configurations/',
+        source:
+          '/product/data-management-settings/server-side-sampling/sampling-configurations/',
         destination: '/product/performance/retention-priorities/',
         permanent: true,
       },
@@ -2790,7 +2815,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
+        source:
+          '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
         destination: '/product/performance/retention-priorities/',
         permanent: true,
       },
@@ -2810,7 +2836,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/product/performance/performance-at-scale/benefits-performance-at-scale/',
+        source:
+          '/product/performance/performance-at-scale/benefits-performance-at-scale/',
         destination: '/product/performance/retention-priorities/',
         permanent: true,
       },
@@ -2916,7 +2943,8 @@ const nextConfig = {
       },
       {
         source: '/product/issues/performance-issues/regex-decoding-main-thread/',
-        destination: '/product/issues/issue-details/performance-issues/regex-main-thread/',
+        destination:
+          '/product/issues/issue-details/performance-issues/regex-main-thread/',
         permanent: true,
       },
       {
@@ -2931,7 +2959,8 @@ const nextConfig = {
       },
       {
         source: '/product/issues/performance-issues/image-decoding-main-thread/',
-        destination: '/product/issues/issue-details/performance-issues/image-decoding-main-thread/',
+        destination:
+          '/product/issues/issue-details/performance-issues/image-decoding-main-thread/',
         permanent: true,
       },
       {
@@ -2951,17 +2980,20 @@ const nextConfig = {
       },
       {
         source: '/product/issues/performance-issues/uncompressed-asset/',
-        destination: '/product/issues/issue-details/performance-issues/uncompressed-asset/',
+        destination:
+          '/product/issues/issue-details/performance-issues/uncompressed-asset/',
         permanent: true,
       },
       {
         source: '/product/issues/performance-issues/consecutive-db-queries/',
-        destination: '/product/issues/issue-details/performance-issues/consecutive-db-queries/',
+        destination:
+          '/product/issues/issue-details/performance-issues/consecutive-db-queries/',
         permanent: true,
       },
       {
         source: '/product/issues/performance-issues/json-decoding-main-thread/',
-        destination: '/product/issues/issue-details/performance-issues/json-decoding-main-thread/',
+        destination:
+          '/product/issues/issue-details/performance-issues/json-decoding-main-thread/',
         permanent: true,
       },
       {
@@ -2971,7 +3003,8 @@ const nextConfig = {
       },
       {
         source: '/product/issues/performance-issues/large-render-blocking-asset/',
-        destination: '/product/issues/issue-details/performance-issues/large-render-blocking-asset/',
+        destination:
+          '/product/issues/issue-details/performance-issues/large-render-blocking-asset/',
         permanent: true,
       },
       {
@@ -2981,7 +3014,8 @@ const nextConfig = {
       },
       {
         source: '/product/issues/performance-issues/large-http-payload/',
-        destination: '/product/issues/issue-details/performance-issues/large-http-payload/',
+        destination:
+          '/product/issues/issue-details/performance-issues/large-http-payload/',
         permanent: true,
       },
       {

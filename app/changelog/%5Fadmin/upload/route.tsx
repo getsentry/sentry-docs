@@ -35,7 +35,7 @@ const handler = async function handler(req: NextRequest) {
     fields: {'x-goog-meta-source': `${process.env.PROJECT_ID}`},
     destination: randomFilename,
   };
-  console.log(options);
+
   const [response] = await gcsFile.generateSignedPostPolicyV4(options);
 
   return Response.json({response, options});

@@ -1,3 +1,5 @@
+import {Storage} from '@google-cloud/storage';
+
 import {getAllFilesFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {prisma} from 'sentry-docs/prisma';
 
@@ -26,6 +28,14 @@ async function main() {
       }
     }
 
+    let image: string | null | undefined = undefined;
+    if (post.image) {
+      image = `${post.image}`.replace(
+        '/changelog/',
+        'https://storage.googleapis.com/sentry-docs-changelog/'
+      );
+    }
+
     const mdx = await getFileBySlug(`changelog/${post.slug}`);
 
     try {
@@ -35,7 +45,7 @@ async function main() {
           createdAt: new Date(post.date).toISOString(),
           title: post.title,
           summary: post.summary,
-          image: post.image,
+          image,
           slug: post.slug,
           content: mdx.matter.content,
           published: true,
