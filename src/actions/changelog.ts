@@ -1,6 +1,6 @@
 'use server';
 
-import {handler} from 'app/api/auth/[...nextauth]/route';
+import {GET as handler} from 'app/api/auth/[...nextauth]/route';
 import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
@@ -23,7 +23,7 @@ export async function unpublishChangelog(formData: FormData) {
     return {message: 'Unable to unpublish changelog'};
   }
 
-  revalidatePath(`/changelog/_admin`);
+  return revalidatePath(`/changelog/_admin`);
 }
 
 export async function publishChangelog(formData: FormData) {
@@ -42,7 +42,7 @@ export async function publishChangelog(formData: FormData) {
     return {message: 'Unable to publish changelog'};
   }
 
-  revalidatePath(`/changelog/_admin`);
+  return revalidatePath(`/changelog/_admin`);
 }
 
 export async function createChangelog(formData: FormData) {
@@ -59,6 +59,7 @@ export async function createChangelog(formData: FormData) {
     return {name: category as string};
   });
   const user = await prisma.user.findUnique({
+    // @ts-ignore
     where: {email: session?.user?.email as string},
   });
   const data = {
@@ -70,11 +71,9 @@ export async function createChangelog(formData: FormData) {
     categories: formData.get('categories') !== '' ? {connect} : {},
   };
 
-  const changelog = await prisma.changelog.create({data});
+  await prisma.changelog.create({data});
 
-  if (changelog) {
-    redirect(`/changelog/_admin`);
-  }
+  return redirect(`/changelog/_admin`);
 }
 
 export async function editChangelog(formData: FormData) {
@@ -109,7 +108,7 @@ export async function editChangelog(formData: FormData) {
     return {message: error};
   }
 
-  redirect(`/changelog/_admin`);
+  return redirect(`/changelog/_admin`);
 }
 
 export async function deleteChangelog(formData: FormData) {
@@ -127,5 +126,5 @@ export async function deleteChangelog(formData: FormData) {
     return {message: 'Unable to delete changelog'};
   }
 
-  revalidatePath(`/changelog/_admin`);
+  return revalidatePath(`/changelog/_admin`);
 }

@@ -1,7 +1,7 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
-import {handler} from 'app/api/auth/[...nextauth]/route';
+import {GET} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
@@ -43,14 +43,14 @@ export async function generateMetadata(
       images: changelog?.image || (await parent).openGraph?.images,
     },
     other: {
-      'sentry-trace': Sentry.getActiveSpan()?.toTraceparent(),
+      'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },
   };
 }
 
 export default async function ChangelogEntry({params}) {
   let changelog: ChangelogWithCategories | null = null;
-  const session = await getServerSession(handler);
+  const session = await getServerSession(GET);
   let published: boolean | undefined = undefined;
   if (!session) {
     published = true;

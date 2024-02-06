@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 import {Storage} from '@google-cloud/storage';
-import {handler as sessionHandler} from 'app/api/auth/[...nextauth]/route';
+import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import {NextRequest} from 'next/server';
 import {getServerSession} from 'next-auth/next';
 

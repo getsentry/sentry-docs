@@ -183,7 +183,7 @@ function Editor({name, defaultValue, minRows = 15}: EditorProps) {
         <Toolbar.Button
           value="image"
           aria-label="image"
-          onClick={e => {
+          onClick={() => {
             fileRef.current?.click();
           }}
         >
@@ -241,8 +241,7 @@ function Editor({name, defaultValue, minRows = 15}: EditorProps) {
 
 // Only import this to the next file
 export default function ForwardEditor({
-  editorRef,
   ...props
 }: {editorRef: ForwardedRef<null> | null} & EditorProps) {
-  return <Editor {...props} ref={editorRef} />;
+  return <Editor {...props} />;
 }

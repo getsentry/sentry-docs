@@ -209,7 +209,7 @@ export function generateMetadata(): Metadata {
     description:
       'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
     other: {
-      'sentry-trace': Sentry.getActiveSpan()?.toTraceparent(),
+      'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },
   };
 }
