@@ -23,7 +23,7 @@ _(Available in version 7 and above)_
 
 To use React Router v6 with Sentry:
 
-Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation and provide the functions it needs to enable performance tracing:
+Add `Sentry.reactRouterV6BrowserTracingIntegration` instead of the regular `Sentry.browserTracingIntegration` and provide the functions it needs to enable performance tracing:
 
     - `useEffect` hook from `react`
     - `useLocation` and `useNavigationType` hooks from `react-router-dom`
@@ -31,7 +31,7 @@ Initialize `Sentry.reactRouterV6Instrumentation` as your routing instrumentation
 
 <Alert level="warning">
 
-Make sure `Sentry.reactRouterV6Instrumentation` is initialized by your `Sentry.init` call, before you wrap `<Routes />` component or `useRoutes` hook. Otherwise, the routing instrumentation may not work properly.
+Make sure `Sentry.reactRouterV6BrowserTracingIntegration` is initialized by your `Sentry.init` call, before you wrap `<Routes />` component or `useRoutes` hook. Otherwise, the routing instrumentation may not work properly.
 
 </Alert>
 
@@ -50,14 +50,12 @@ import * as Sentry from "@sentry/react";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-        React.useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes
-      ),
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
     }),
   ],
   tracesSampleRate: 1.0,
@@ -100,14 +98,12 @@ import * as Sentry from "@sentry/react";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-        React.useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes
-      ),
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
     }),
   ],
   tracesSampleRate: 1.0,
@@ -154,14 +150,12 @@ import { useEffect } from "react";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-        useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes
-      ),
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
     }),
   ],
   tracesSampleRate: 1.0,
@@ -211,9 +205,9 @@ const history = createBrowserHistory();
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
-    }),
+    Sentry.reactRouterV5BrowserTracingIntegration({ history }),
+    // or
+    Sentry.reactRouterV4BrowserTracingIntegration({ history }),
   ],
 
   // We recommend adjusting this value in production, or using tracesSampler
@@ -253,8 +247,10 @@ const routes = [{ path: '/users/:userid' }, { path: '/users' }, { path: '/' }];
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history, routes, matchPath),
+    Sentry.reactRouterV5BrowserTracingIntegration({
+      history,
+      routes,
+      matchPath
     }),
   ],
 
@@ -301,13 +297,11 @@ const routes = (
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.reactRouterV3Instrumentation(
-        Router.browserHistory,
-        // Must be Plain Routes.
-        Router.createRoutes(routes),
-        Router.match
-      ),
+    Sentry.reactRouterV3BrowserTracingIntegration({
+      history: Router.browserHistory,
+      // Must be Plain Routes.
+      routes: Router.createRoutes(routes),
+      match: Router.match,
     }),
   ],
 
