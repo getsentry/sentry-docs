@@ -20,10 +20,10 @@ const handler = async function handler(req: NextRequest) {
   const file = searchParams.get('file');
 
   const storage = new Storage({
-    projectId: process.env.PROJECT_ID,
+    projectId: process.env.GOOGLE_PROJECT_ID,
     credentials: {
-      client_email: process.env.CLIENT_EMAIL,
-      private_key: process.env.PRIVATE_KEY,
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY,
     },
   });
   const bucket = storage.bucket(`${process.env.BUCKET_NAME}`);
@@ -32,7 +32,7 @@ const handler = async function handler(req: NextRequest) {
 
   const options = {
     expires: Date.now() + 5 * 60 * 1000, //  5 minutes,
-    fields: {'x-goog-meta-source': `${process.env.PROJECT_ID}`},
+    fields: {'x-goog-meta-source': `${process.env.GOOGLE_PROJECT_ID}`},
     destination: randomFilename,
   };
 
