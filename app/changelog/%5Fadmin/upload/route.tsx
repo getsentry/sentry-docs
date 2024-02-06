@@ -26,8 +26,8 @@ const handler = async function handler(req: NextRequest) {
       private_key: process.env.GOOGLE_PRIVATE_KEY,
     },
   });
-  const bucket = storage.bucket(`${process.env.BUCKET_NAME}`);
-  const randomFilename = `${crypto.randomBytes(20).toString('base64url')}-${file}`;
+  const bucket = storage.bucket(`${process.env.GOOGLE_BUCKET_NAME}`);
+  const randomFilename = `${crypto.randomBytes(5).toString('base64url')}-${file}`;
   const gcsFile = bucket.file(randomFilename as string);
 
   const options = {

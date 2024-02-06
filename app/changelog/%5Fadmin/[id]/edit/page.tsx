@@ -2,6 +2,7 @@ import {Fragment, Suspense} from 'react';
 import Link from 'next/link';
 
 import {editChangelog} from 'sentry-docs/actions/changelog';
+import {FileUpload} from 'sentry-docs/components/changelog/fileUpload';
 import {ForwardRefEditor} from 'sentry-docs/components/changelog/forwardRefEditor';
 import {TitleSlug} from 'sentry-docs/components/changelog/titleSlug';
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
@@ -36,7 +37,8 @@ export default async function ChangelogCreatePage({params}) {
       <form action={editChangelog} className="px-2 w-full">
         <input type="hidden" name="id" value={changelog.id} />
         <TitleSlug defaultSlug={changelog.slug} defaultTitle={changelog.title} />
-        <div className="mb-6">
+        <FileUpload defaultFile={changelog.image || ''} />
+        <div className="my-6">
           <label htmlFor="summary" className="block text-xs font-medium text-gray-700">
             Summary
             <Fragment>

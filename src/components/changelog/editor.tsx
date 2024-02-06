@@ -17,43 +17,10 @@ import * as Toolbar from '@radix-ui/react-toolbar';
 import type {TextareaMarkdownRef} from 'textarea-markdown-editor';
 import TextareaMarkdown, {Cursor} from 'textarea-markdown-editor';
 
+import {uploadImage} from 'sentry-docs/components/changelog/uploadImage';
+
 function replaceText(cursor: Cursor, text: string, replaceWith: string) {
   cursor.setValue(cursor.value.replace(text, replaceWith));
-}
-
-export function useFileUpload() {
-  return async (filename: string, file: File) => {
-    const result = await fetch(`/api/files/upload-url?file=${filename}`);
-    const {url, fields} = await result.json();
-    const formData = new FormData();
-    Object.entries({...fields, file}).forEach(([key, value]) => {
-      formData.append(key, value as string | Blob);
-    });
-    const upload = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
-    return upload.ok;
-  };
-}
-
-async function uploadImage(file: File) {
-  const result = await fetch(`/changelog/_admin/upload?file=${file.name}`);
-  const {response, options} = await result.json();
-  const {url, fields} = response;
-  const formData = new FormData();
-  Object.entries({...fields, file}).forEach(([key, value]) => {
-    formData.append(key, value as string | Blob);
-  });
-
-  await fetch(url, {
-    method: 'POST',
-    body: formData,
-  });
-  return {
-    url: `${url}${options.destination}`,
-    originalFilename: file.name,
-  };
 }
 
 function handleUploadImages(textareaEl: HTMLTextAreaElement, fileList: File[]) {

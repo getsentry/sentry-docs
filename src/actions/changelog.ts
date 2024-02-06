@@ -66,6 +66,7 @@ export async function createChangelog(formData: FormData) {
     title: formData.get('title') as string,
     content: formData.get('content') as string,
     summary: formData.get('summary') as string,
+    image: formData.get('image') as string,
     slug: formData.get('slug') as string,
     author: {connect: {id: user?.id as string}},
     categories: formData.get('categories') !== '' ? {connect} : {},
@@ -95,6 +96,7 @@ export async function editChangelog(formData: FormData) {
       title: formData.get('title') as string,
       content: formData.get('content') as string,
       summary: formData.get('summary') as string,
+      image: formData.get('image') as string,
       slug: formData.get('slug') as string,
       categories: formData.get('categories') !== '' ? {set: [...connect]} : {set: []},
     };

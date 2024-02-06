@@ -6,12 +6,9 @@ import rehypePrismPlus from 'rehype-prism-plus';
 import rehypeSlug from 'rehype-slug';
 
 // Remark packages
-import getAppRegistry from './build/appRegistry';
-import getPackageRegistry from './build/packageRegistry';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkTocHeadings from './remark-toc-headings';
-import remarkVariables from './remark-variables';
 
 export const mdxOptions = {};
 // this is the recommended way to add custom remark/rehype plugins:
@@ -22,19 +19,6 @@ mdxOptions.remarkPlugins = [
   remarkExtractFrontmatter,
   [remarkTocHeadings],
   remarkComponentSpacing,
-  [
-    remarkVariables,
-    {
-      resolveScopeData: async () => {
-        const [apps, packages] = await Promise.all([
-          getAppRegistry(),
-          getPackageRegistry(),
-        ]);
-
-        return {apps, packages};
-      },
-    },
-  ],
 ];
 mdxOptions.rehypePlugins = [
   ...(mdxOptions.rehypePlugins ?? []),

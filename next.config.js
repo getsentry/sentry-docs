@@ -18,7 +18,6 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
-    nftTracing: true,
   },
 
   redirects() {
