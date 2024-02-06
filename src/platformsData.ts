@@ -9,9 +9,11 @@ const root = process.cwd();
 export const platformsData = cache(() => {
   try {
     const data = yaml.load(
+      // @ts-ignore
       fs.readFileSync(path.join(root, 'src', 'data', 'platforms.yml'))
     );
     const map = {};
+    // @ts-ignore
     data.forEach(platform => {
       map[platform.slug] = platform;
     });
