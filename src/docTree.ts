@@ -1,3 +1,5 @@
+import {cache} from 'react';
+
 import {type FrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
@@ -21,9 +23,9 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-export async function getDocsRootNode(): Promise<DocNode | undefined> {
+export const getDocsRootNode = cache(async (): Promise<DocNode | undefined> => {
   return frontmatterToTree(await getDocsFrontMatter());
-}
+});
 
 function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
   if (frontmatter.length === 0) {
