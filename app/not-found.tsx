@@ -4,11 +4,16 @@ import {Header} from 'sentry-docs/components/header';
 import {Navbar} from 'sentry-docs/components/navbar';
 import {productSidebar} from 'sentry-docs/components/serverSidebar';
 import {getDocsRootNode} from 'sentry-docs/docTree';
+import {setServerContext} from 'sentry-docs/serverContext';
 
 import 'sentry-docs/styles/screen.scss';
 
 export default async function NotFound() {
   const rootNode = await getDocsRootNode();
+  setServerContext({
+    rootNode,
+    path: [],
+  });
 
   const sidebar = rootNode && productSidebar(rootNode);
   return (
