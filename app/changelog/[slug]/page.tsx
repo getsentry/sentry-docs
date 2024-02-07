@@ -9,7 +9,6 @@ import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
-import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 import {prisma} from 'sentry-docs/prisma';
 
@@ -112,7 +111,6 @@ export default async function ChangelogEntry({params}) {
                 options={{
                   mdxOptions,
                 }}
-                components={mdxComponents}
               />
             </Suspense>
           </Article>
