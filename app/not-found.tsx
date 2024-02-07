@@ -2,15 +2,10 @@ import 'prism-sentry/index.css';
 
 import {Header} from 'sentry-docs/components/header';
 import {Navbar} from 'sentry-docs/components/navbar';
-import {productSidebar} from 'sentry-docs/components/serverSidebar';
-import {getDocsRootNode} from 'sentry-docs/docTree';
 
 import 'sentry-docs/styles/screen.scss';
 
-export default async function NotFound() {
-  const rootNode = await getDocsRootNode();
-
-  const sidebar = rootNode && productSidebar(rootNode);
+export default function NotFound() {
   return (
     <div className="document-wrapper">
       <div className="sidebar">
@@ -21,7 +16,7 @@ export default async function NotFound() {
           id="sidebar"
         >
           <div className="toc">
-            <div className="text-white p-3">{sidebar}</div>
+            <div className="text-white p-3" />
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu" />
