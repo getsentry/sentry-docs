@@ -1,7 +1,6 @@
 import 'prism-sentry/index.css';
 
 import {Header} from 'sentry-docs/components/header';
-import {Navbar} from 'sentry-docs/components/navbar';
 
 import 'sentry-docs/styles/screen.scss';
 
@@ -23,9 +22,7 @@ export default function NotFound() {
       </div>
       <main role="main" className="px-0">
         <div className="flex-grow-1">
-          <div className="d-block navbar-right-half">
-            <Navbar />
-          </div>
+          <div className="d-block navbar-right-half" />
 
           <section className="pt-3 px-3 content-max prose">
             <div className="pb-3" />
