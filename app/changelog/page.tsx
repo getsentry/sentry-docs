@@ -130,7 +130,7 @@ export default async function ChangelogList({
             className="justify-self-center col-span-10 z-20 hidden lg:block"
             src="/changelog/assets/hero.png"
             alt="Sentry Changelog"
-            height={400}
+            height={273}
             width={450}
           />
           <div className="relative col-span-12 mt-32 lg:absolute lg:w-96 lg:right-1/4 lg:-bottom-2">
