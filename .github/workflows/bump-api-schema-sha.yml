@@ -24,7 +24,7 @@ jobs:
           git config user.name "openapi-getsentry-bot"
 
           filepath="src/build/resolveOpenAPI.ts"
-          sha="$(curl -sSL 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main' | awk 'BEGIN { RS=",|:{\n"; FS="\""; } $2 == "sha" { print $4 }')"
+          sha="$(curl -sSL 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main')" | jq --raw-output .sha
           sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"
 
           branch="bot/bump-api-schema-to-${sha:0:8}"
