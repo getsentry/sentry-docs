@@ -46,7 +46,7 @@ export async function generateMetadata(
   };
 }
 
-async function getChangelogEntry(slug: string) {
+export default async function ChangelogEntry({params}) {
   let changelog: ChangelogWithCategories | null = null;
   const session = await getServerSession(GET);
   let published: boolean | undefined = undefined;
@@ -56,7 +56,7 @@ async function getChangelogEntry(slug: string) {
   try {
     changelog = await prisma.changelog.findUnique({
       where: {
-        slug,
+        slug: params.slug,
         published,
       },
       include: {
@@ -67,25 +67,6 @@ async function getChangelogEntry(slug: string) {
     return <div>Not found</div>;
   }
 
-  return (
-    <Article
-      title={changelog?.title}
-      image={changelog?.image}
-      date={changelog?.publishedAt}
-    >
-      <Suspense fallback={<Fragment>Loading...</Fragment>}>
-        <MDXRemote
-          source={changelog?.content || 'No content found.'}
-          options={{
-            mdxOptions,
-          }}
-        />
-      </Suspense>
-    </Article>
-  );
-}
-
-export default function ChangelogEntry({params}) {
   return (
     <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto grid grid-cols-12 bg-gray-200">
       <div className="col-span-12 md:col-start-3 md:col-span-8">
@@ -115,9 +96,20 @@ export default function ChangelogEntry({params}) {
               </button>
             </Link>
           </div>
-          <Suspense fallback={<Fragment>Loading...</Fragment>}>
-            {getChangelogEntry(params.slug)}
-          </Suspense>
+          <Article
+            title={changelog?.title}
+            image={changelog?.image}
+            date={changelog?.publishedAt}
+          >
+            <Suspense fallback={<Fragment>Loading...</Fragment>}>
+              <MDXRemote
+                source={changelog?.content || 'No content found.'}
+                options={{
+                  mdxOptions,
+                }}
+              />
+            </Suspense>
+          </Article>
         </div>
       </div>
     </div>
