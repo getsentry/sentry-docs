@@ -46,7 +46,7 @@ export async function generateMetadata(
   };
 }
 
-export default async function ChangelogEntry({params}) {
+async function getChangelogEntry(slug: string) {
   let changelog: ChangelogWithCategories | null = null;
   const session = await getServerSession(GET);
   let published: boolean | undefined = undefined;
@@ -56,7 +56,7 @@ export default async function ChangelogEntry({params}) {
   try {
     changelog = await prisma.changelog.findUnique({
       where: {
-        slug: params.slug,
+        slug,
         published,
       },
       include: {
@@ -67,6 +67,25 @@ export default async function ChangelogEntry({params}) {
     return <div>Not found</div>;
   }
 
+  return (
+    <Article
+      title={changelog?.title}
+      image={changelog?.image}
+      date={changelog?.publishedAt}
+    >
+      <Suspense fallback={<Fragment>Loading...</Fragment>}>
+        <MDXRemote
+          source={changelog?.content || 'No content found.'}
+          options={{
+            mdxOptions,
+          }}
+        />
+      </Suspense>
+    </Article>
+  );
+}
+
+export default function ChangelogEntry({params}) {
   return (
     <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto grid grid-cols-12 bg-gray-200">
       <div className="col-span-12 md:col-start-3 md:col-span-8">
@@ -96,20 +115,9 @@ export default async function ChangelogEntry({params}) {
               </button>
             </Link>
           </div>
-          <Article
-            title={changelog?.title}
-            image={changelog?.image}
-            date={changelog?.publishedAt}
-          >
-            <Suspense fallback={<Fragment>Loading...</Fragment>}>
-              <MDXRemote
-                source={changelog?.content || 'No content found.'}
-                options={{
-                  mdxOptions,
-                }}
-              />
-            </Suspense>
-          </Article>
+          <Suspense fallback={<Fragment>Loading...</Fragment>}>
+            {getChangelogEntry(params.slug)}
+          </Suspense>
         </div>
       </div>
     </div>
