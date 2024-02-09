@@ -7,7 +7,7 @@ title: "Self-Hosted Backup & Restore"
 If you need a quick way to backup, view, examine, and restore data from your Sentry instance and
 don't need historical event data, you can use any of the following methods:
 
-- A custom, scoped backup via `sentry-admin.sh` (on self-hosted versions >=23.11.1).
+- A custom, scoped backup via `./sentry-admin.sh` (on self-hosted versions >=23.11.1).
 - Running the included backup and restore scripts in the `self-hosted/scripts` directory (on
   self-hosted versions >=23.3.1).
 - Manually calling the `export` and `import` commands in the `web` docker container.
@@ -62,24 +62,67 @@ which you will then need to manually remove.
 #### Advanced usage
 
 If you'd like more granular control over what gets backed up, and are using a `self-hosted` release
-greater than or equal to 23.11.1, you may use the `sentry-admin export` command instead. In
+greater than or equal to 23.11.1, you may use the `./sentry-admin.sh export` command instead. In
 particular, this command allows you export only a certain ***scope*** of data. There are four such
 scopes:
 
 - `User`: Exports data associated with Sentry users only, like their emails, permissions, and login
   credentials. Exports in this scope can be filtered by username. Exports in this scope can be
-  created using the `sentry-admin.sh export users ...` CLI command.
+  created using the `./sentry-admin.sh export users ...` CLI command.
 - `Organization`: Exports data owned by a set of Sentry organizations, and the users that are
   members of that set. Exports in this scope can be filtered by organization slug. Exports in this
-  scope can be created using the `sentry-admin.sh export organizations ...` CLI command.
+  scope can be created using the `./sentry-admin.sh export organizations ...` CLI command.
 - `Config`: Exports all instance-wide configurations, like global options and admin credentials.
-  Exports in this scope can be created using the `sentry-admin.sh export config ...` CLI command.
+  Exports in this scope can be created using the `./sentry-admin.sh export config ...` CLI command.
 - `Global`: Exports all exportable data. Exports in this scope can be created using the
-  `sentry-admin.sh export global ...` CLI command. This command is equivalent to running
+  `./sentry-admin.sh export global ...` CLI command. This command is equivalent to running
   `backup.sh`.
 
-For more detailed information, including how to encrypt a backup, see `sentry-admin.sh export
+For more detailed information, including how to encrypt a backup, see `./sentry-admin.sh export
 --help`.
+
+#### Encryption
+
+The `./sentry-admin.sh` CLI supports encryption and decryption of backups using 2048-bit asymmetric
+RSA keys. These keys can be stored manually as files accessible from the local file system:
+
+```shell
+# Encrypt and backup using locally stored keys.
+./sentry-admin.sh export global /path/to/export.tar --encrypt-with /path/to/public/key/rsa.pub
+
+# Decrypt and restore using locally stored keys.
+./sentry-admin.sh import global /path/to/export.tar --decrypt-with /path/to/private/key/rsa.priv
+```
+
+Alternatively, if you are using Google Cloud Platform's [Key Management
+Service](https://cloud.google.com/security/products/security-key-management?hl=en) to manage keys on
+your behalf, you can use that service directly from the CLI instead:
+
+
+```shell
+# Authenticate with Google Cloud (requires the `gcloud` CLI to be installed):
+gcloud auth login
+
+# Make a local JSON file specifying a key created via https://cloud.google.com/kms/docs/create-key:
+cat <<EOT >> /path/to/json/spec/for/your/key.json
+{
+    "project_id": "<YOUR_GCP_PROJECT_ID>",
+    "location": "<YOUR_KEY_LOCATION>",
+    "key_ring": "<YOUR_KEY_RING_NAME>",
+    "key": "<YOUR_KEY_NAME>",
+    "version": "<YOUR_KEY_VERSION>"
+}
+EOT
+
+# Encrypt and backup using GCP KMS:
+./sentry-admin.sh export global /path/to/export.tar --encrypt-with-gcp-kms /path/to/json/file/identifying/your/kms/key.json
+
+# Decrypt and restore using GCP KMS:
+./sentry-admin.sh import global /path/to/export.tar --decrypt-with-gcp-kms /path/to/json/spec/for/your/key.json
+```
+
+Note that when encryption is used, the output file will be a tarball (`.tar`) instead of a single
+JSON file (`.json`). 
 
 ### Restore
 
@@ -118,11 +161,11 @@ errors and may corrupt your database.
 #### Advanced usage
 
 If you'd like more granular control over what gets restored from a given backup, and are using a
-`self-hosted` release greater than or equal to 23.11.1, you may use the `sentry-admin import`
+`self-hosted` release greater than or equal to 23.11.1, you may use the `./sentry-admin.sh import`
 command instead. This command allows you to control the scope of data that gets imported, as well as
 how it interacts with data already loaded onto the instance.
 
-For more detailed information, including how to decrypt an encrypted backup, see `sentry-admin.sh
+For more detailed information, including how to decrypt an encrypted backup, see `./sentry-admin.sh
 export --help`.
 
 ## Full backup
