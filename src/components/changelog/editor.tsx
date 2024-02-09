@@ -33,7 +33,6 @@ function handleUploadImages(textareaEl: HTMLTextAreaElement, fileList: File[]) {
 
     try {
       const uploadedImage = await uploadImage(file);
-
       replaceText(
         cursor,
         loadingText,
