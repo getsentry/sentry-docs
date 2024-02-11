@@ -36,7 +36,6 @@ export function TitleSlug({defaultTitle = '', defaultSlug = ''}) {
           name="slug"
           className="w-full mb-2"
           required
-          defaultValue={defaultSlug}
           value={slug}
           onChange={e => {
             setSlug(e.target.value);

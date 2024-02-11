@@ -43,9 +43,7 @@ export default async function ChangelogCreatePage() {
           />
         </div>
 
-        <Suspense fallback={null}>
-          <ForwardRefEditor name="content" defaultValue="" className="w-full" />
-        </Suspense>
+        <ForwardRefEditor name="content" className="w-full" />
 
         <footer className="flex items-center justify-between mt-2">
           <Link href="/changelog/_admin" className="underline text-gray-500">
