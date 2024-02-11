@@ -20,12 +20,18 @@ jobs:
           # kick off for the PR we're about to create.
           GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
         run: |
+          set -euo pipefail
+
           git config user.email "bot@getsentry.com"
           git config user.name "openapi-getsentry-bot"
 
           filepath="src/build/resolveOpenAPI.ts"
-          sha="$(curl -sSL 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main' | awk 'BEGIN { RS=",|:{\n"; FS="\""; } $2 == "sha" { print $4 }')"
+
+          sha="$(curl -sSl -H 'Accept: application/vnd.github.VERSION.sha' 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main')"
+          echo "Latest commit to 'getsentry/sentry-api-schema' is $sha"
+
           sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"
+          echo "Updated $filepath"
 
           branch="bot/bump-api-schema-to-${sha:0:8}"
           git checkout -b "$branch"
