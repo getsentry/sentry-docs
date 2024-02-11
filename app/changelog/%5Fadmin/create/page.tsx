@@ -1,4 +1,4 @@
-import {Fragment, Suspense} from 'react';
+import {Fragment} from 'react';
 import Link from 'next/link';
 
 import {createChangelog} from 'sentry-docs/actions/changelog';
