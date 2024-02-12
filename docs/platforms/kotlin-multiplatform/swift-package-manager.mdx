@@ -80,9 +80,34 @@ Follow these steps in order to work around this issue:
 
 Choose the release based on the version specified in the version compatibility table and download the `Sentry.xcframework.zip` and unzip it.
 
-### 2. Create Frameworks directory
+### 2. Create Frameworks directory and insert Sentry.framework
 
-Create a Frameworks directory in the directory where the `test.kexe` resides and insert the Sentry.framework directory (this can be found inside of `ios-arm64_x86_64-simulator`).
+Create a `/Frameworks` directory in the directory where the `test.kexe` resides in and put the `Sentry.framework` into it (`Sentry.framework` can be found inside of `ios-arm64_x86_64-simulator`).
 The `test.kexe` will usually reside in `build/bin/iosSimulatorArm64/debugTest`.
 
+### 3. Add the linker options
 
+```kotlin {filename:shared/build.gradle.kts}
+  listOf(
+      iosX64(),
+      iosArm64(),
+      iosSimulatorArm64(),
+  ).forEach {
+      it.binaries.framework {
+          baseName = "shared"
+          isStatic = true
+      }
+      it.compilations.all {
+          if (compilationName == "test" && target.platformType == KotlinPlatformType.native) {
+              compilerOptions.configure {
+                  freeCompilerArgs.add("-linker-options")
+                  freeCompilerArgs.add("-F/your/path/Carthage/Build/Sentry.xcframework/ios-arm64_x86_64-simulator/")
+              }
+          }
+      }
+  }
+```
+
+### 4. Run the tests
+
+Now your tests should run successfully.
