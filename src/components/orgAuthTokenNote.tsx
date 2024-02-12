@@ -1,6 +1,7 @@
-import React, {Fragment, useContext} from 'react';
-import {useLocation} from '@reach/router';
-import {graphql, useStaticQuery} from 'gatsby';
+'use client';
+
+import {Fragment, useContext} from 'react';
+import {usePathname} from 'next/navigation';
 
 import {Alert} from './alert';
 import {CodeContext} from './codeContext';
@@ -8,21 +9,9 @@ import {ExternalLink} from './externalLink';
 import {Note} from './note';
 import {SignedInCheck} from './signedInCheck';
 
-const siteMetaQuery = graphql`
-  query SignInNoteQuery {
-    site {
-      siteMetadata {
-        siteUrl
-      }
-    }
-  }
-`;
-
 export function OrgAuthTokenNote() {
-  const location = useLocation();
-  const data = useStaticQuery(siteMetaQuery);
-
-  const url = data.site.siteMetadata.siteUrl + location.pathname;
+  const pathname = usePathname();
+  const url = 'https://docs.sentry.io' + pathname;
 
   const orgAuthTokenUrl = useOrgAuthTokenUrl();
 

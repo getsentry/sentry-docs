@@ -1,35 +1,32 @@
-import React from 'react';
-import {graphql, useStaticQuery} from 'gatsby';
+import {useMemo} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
 
-import {Content} from './content';
+import {getFileBySlug} from 'sentry-docs/mdx';
+import {mdxComponents} from 'sentry-docs/mdxComponents';
 
-const includeQuery = graphql`
-  query IncludeQuery {
-    allFile(filter: {sourceInstanceName: {eq: "includes"}}) {
-      nodes {
-        id
-        relativePath
-        name
-        childMdx {
-          body
-        }
-      }
-    }
-  }
-`;
+import {PlatformContent} from './platformContent';
 
 type Props = {
   name: string;
 };
 
-export function Include({name}: Props) {
-  const {
-    allFile: {nodes: files},
-  } = useStaticQuery(includeQuery);
-
-  const match = files.find(node => node.relativePath === name);
-  if (match) {
-    return <Content file={match} />;
+export async function Include({name}: Props) {
+  let doc: any = null;
+  if (name.endsWith('.mdx')) {
+    name = name.slice(0, name.length - '.mdx'.length);
   }
-  throw Error(`could not find include file for ${name}`);
+  try {
+    doc = await getFileBySlug(`includes/${name}`);
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return null;
+    }
+    throw e;
+  }
+  const {mdxSource} = doc;
+  function MDXLayoutRenderer({mdxSource: source, ...rest}) {
+    const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
+    return <MDXLayout components={mdxComponents({Include, PlatformContent})} {...rest} />;
+  }
+  return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }

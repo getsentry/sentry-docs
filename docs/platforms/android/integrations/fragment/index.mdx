@@ -1,0 +1,123 @@
+---
+title: Fragment
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.android.fragment
+description: "Learn more about the Sentry Fragment integration for the Android SDK."
+categories:
+  - mobile
+---
+
+The `sentry-android-fragment` library provides [Fragment](https://developer.android.com/jetpack/androidx/releases/fragment) support for Sentry using the [FragmentLifecycleIntegration](https://github.com/getsentry/sentry-java/blob/a5f30b43b1dad2634ce020809f3b52e0d564a22a/sentry-android-fragment/src/main/java/io/sentry/android/fragment/FragmentLifecycleIntegration.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/main/sentry-android-fragment/src/main/java/io/sentry/android/fragment).
+
+On this page, we get you up and running with Sentry's Fragment Integration, so that it will automatically add a breadcrumb for each fragment's lifecycle and start a span from an active transaction that's bound to the scope of each launch of a fragment.
+
+## Auto-Installation With the Sentry Android Gradle Plugin
+
+### Install
+
+Starting from version `3.1.0`, the Sentry Android Gradle plugin will automatically add the `sentry-android-fragment` dependency. The plugin will only add the `sentry-android-fragment` dependency if a `androidx.fragment` dependency was discovered on the classpath.
+
+Add the Sentry Android Gradle plugin in `build.gradle`:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+Then, initialize the [Android SDK](/platforms/android/#configure).
+
+The Android SDK automatically adds the `FragmentLifecycleIntegration` if the `sentry-android-fragment` dependency was found on the classpath. The integration is added with both `enableFragmentLifecycleBreadcrumbs` and `enableAutoFragmentLifecycleTracing` enabled.
+
+However, you can still override the default behaviour by adding your own instance of the `FragmentLifecycleIntegration`. For that, refer to the [manual installation](/platforms/android/integrations/fragment/#configure) section below.
+
+## Manual Installation
+
+### Install
+
+To add the Fragment integration, [manually initialize](/platforms/android/configuration/manual-init/#manual-initialization) the Android SDK, then add the `sentry-android-fragment` dependency. Using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '5.1.0') }}'
+implementation 'io.sentry:sentry-android-fragment:{{@inject packages.version('sentry.java.android.fragment', '5.1.0') }}'
+```
+
+### Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+```kotlin
+import android.app.Application
+import io.sentry.android.core.SentryAndroid
+import io.sentry.android.fragment.FragmentLifecycleIntegration
+
+SentryAndroid.init(this) { options ->
+    options.addIntegration(
+        FragmentLifecycleIntegration(
+            this,
+            enableFragmentLifecycleBreadcrumbs = true, // enabled by default
+            enableAutoFragmentLifecycleTracing = true  // disabled by default
+            )
+        )
+}
+```
+
+You can also configure which fragment lifecycle events will be added as breadcrumbs.
+
+```kotlin
+import android.app.Application
+import io.sentry.android.core.SentryAndroid
+import io.sentry.android.fragment.FragmentLifecycleIntegration
+import io.sentry.android.fragment.FragmentLifecycleState.CREATED
+import io.sentry.android.fragment.FragmentLifecycleState.DESTROYED
+
+SentryAndroid.init(this) { options ->
+    options.addIntegration(
+        FragmentLifecycleIntegration(
+            this,
+            filterFragmentLifecycleBreadcrumbs = setOf(FragmentLifecycleState.CREATED, FragmentLifecycleState.DESTROYED)
+            )
+        )
+}
+```
+
+## Verify
+
+Create a new `Fragment` view and add a button to it.
+This snippet captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import io.sentry.Sentry
+
+class SampleFragment : Fragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // generated databinding
+        return FragmentSampleBinding.inflate(inflater).apply {
+            this.sendMessage.setOnClickListener {
+                Sentry.captureMessage("Some message from Fragment Lifecycle events in breadcrumbs.")
+            }
+        }.root
+    }
+
+    companion object {
+        @JvmStatic fun newInstance() = SampleFragment()
+    }
+}
+```

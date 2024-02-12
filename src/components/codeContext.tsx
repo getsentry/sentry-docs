@@ -1,4 +1,6 @@
-import React, {createContext, useEffect, useState} from 'react';
+'use client';
+
+import {createContext, useEffect, useState} from 'react';
 import Cookies from 'js-cookie';
 
 type ProjectCodeKeywords = {
@@ -92,7 +94,7 @@ type CodeContextType = {
   sharedCodeSelection: [string | null, React.Dispatch<string | null>];
   sharedKeywordSelection: [
     Record<string, number>,
-    React.Dispatch<Record<string, number>>
+    React.Dispatch<Record<string, number>>,
   ];
 };
 
@@ -145,9 +147,9 @@ function makeDefaults() {
  * Fetch project details from sentry
  */
 export async function fetchCodeKeywords(): Promise<CodeKeywords> {
-  let json: {projects: ProjectApiResult[]; user: UserApiResult} = {
+  let json: {projects: ProjectApiResult[]; user: UserApiResult | undefined} = {
     projects: [],
-    user: null,
+    user: undefined,
   };
 
   // First fetch which regions the user has a presence
@@ -216,7 +218,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         title: `${project.organizationSlug} / ${project.projectSlug}`,
       };
     }),
-    USER: user.isAuthenticated
+    USER: user?.isAuthenticated
       ? {
           ID: user.id,
           NAME: user.name,

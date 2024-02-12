@@ -1,25 +1,7 @@
-import React from 'react';
-import {useLocation} from '@reach/router';
-import {graphql, useStaticQuery} from 'gatsby';
+import Link from 'next/link';
 
-import {sortPages} from 'sentry-docs/utils';
-
-import {SmartLink} from './smartLink';
-
-const query = graphql`
-  query PageGridQuery {
-    allSitePage(filter: {context: {draft: {ne: true}}}) {
-      nodes {
-        path
-        context {
-          description
-          title
-          sidebar_order
-        }
-      }
-    }
-  }
-`;
+import {nodeForPath} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 
 type Props = {
   nextPages: boolean;
@@ -31,39 +13,14 @@ type Props = {
   header?: string;
 };
 
-export function PageGrid({nextPages = false, header, exclude}: Props) {
-  const data = useStaticQuery(query);
-  const location = useLocation();
-
-  const currentPath = location.pathname;
-  const currentPathLen = currentPath.length;
-
-  let matches = sortPages(
-    data.allSitePage.nodes.filter(
-      n =>
-        n.context &&
-        n.context.title &&
-        n.path.indexOf(currentPath) === 0 &&
-        n.path.slice(currentPathLen).split('/', 2)[1] === ''
-    )
-  );
-
-  if (nextPages) {
-    const currentPage = matches.find(n => n.path === currentPath);
-    if (currentPage) {
-      matches = matches.slice(matches.indexOf(currentPage));
-    }
-  } else {
-    matches = matches.filter(n => n.path !== currentPath);
+export function PageGrid({header}: Props) {
+  const {rootNode, path} = serverContext();
+  if (!rootNode) {
+    return null;
   }
 
-  if (exclude && exclude.length) {
-    exclude.forEach(e => {
-      matches = matches.filter(n => !n.path.endsWith(`${e}/`));
-    });
-  }
-
-  if (!matches.length) {
+  const parentNode = nodeForPath(rootNode, path);
+  if (!parentNode) {
     return null;
   }
 
@@ -71,12 +28,12 @@ export function PageGrid({nextPages = false, header, exclude}: Props) {
     <nav>
       {header && <h2>{header}</h2>}
       <ul>
-        {matches.map(n => (
+        {parentNode.children.map(n => (
           <li key={n.path} style={{marginBottom: '1rem'}}>
             <h4 style={{marginBottom: 0}}>
-              <SmartLink to={n.path}>{n.context.title}</SmartLink>
+              <Link href={'/' + n.path}>{n.frontmatter.title}</Link>
             </h4>
-            {n.context.description ?? <p>{n.context.description}</p>}
+            {n.frontmatter.description ?? <p>{n.frontmatter.description}</p>}
           </li>
         ))}
       </ul>

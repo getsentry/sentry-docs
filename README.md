@@ -15,3 +15,5 @@ _Bad software is everywhere, and we're tired of it. Sentry is on a mission to he
 Take a look at our [Contributing to Docs](https://docs.sentry.io/contributing/) documentation to get started.
 
 Note: The documentation for this repository is self-hosted via `src/docs/contributing/`.
+
+This is the Next.js version of our docs.

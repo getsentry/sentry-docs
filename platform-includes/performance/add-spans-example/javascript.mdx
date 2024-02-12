@@ -1,0 +1,80 @@
+For example, if you want to create a transaction for a user interaction on your page:
+
+```javascript
+// Let's say this function is invoked when a user clicks on the checkout button of your shop
+function shopCheckout() {
+  return Sentry.startSpan({ name: "shopCheckout" }, () => {
+    // Assume this function makes a fetch call
+    const result = validateShoppingCartOnServer();
+
+    return Sentry.startSpan(
+      {
+        name: "processing shopping cart result",
+        op: "task",
+        attributes: {
+          // you can add additional attributes, if needed
+        },
+      },
+      () => {
+        // `startSpan` will automatically mark the span as errored, if an exception is thrown
+        // it will end the span when the callback is finished.
+        return processAndValidateShoppingCart(result);
+      }
+    );
+  });
+}
+```
+
+This example will send a transaction `shopCheckout` to Sentry. The span will contain a `task` child span that measures how long `processAndValidateShoppingCart` took. When the callback ends, the span will be finished and sent to Sentry.
+
+You can also take advantage of promises when creating spans for async operations. Keep in mind, though, that a span must finish before the parent span finishes in order to be sent to Sentry.
+
+If the callback passed to `startSpan()` is an async function or returns a promise, `startSpan` will automatically wait for the promise to resolve before finishing the span. If the promise rejects, the span will be marked as errored.
+
+For example, when returning a promise:
+
+```javascript
+function processItem(item) {
+  return Sentry.startSpan(
+    {
+      op: "http",
+      name: "GET /items/:item-id",
+    },
+    (span) => {
+      return new Promise((resolve, reject) => {
+        http.get(`/items/${item.id}`, (response) => {
+          response.on("data", () => {});
+          response.on("end", () => {
+            span.setTag("http.status_code", response.statusCode);
+            span.setAttribute(
+              "http.foobarsessionid",
+              getFoobarSessionid(response)
+            );
+            resolve(response);
+          });
+        });
+      });
+    }
+  );
+}
+```
+
+Or when using an async function:
+
+```javascript
+function processItem(item) {
+  return Sentry.startSpan(
+    {
+      op: "http",
+      name: "GET /items/:item-id",
+    },
+    async (span) => {
+      const response = await fetch("/items/${item.id}");
+      const json = await response.json();
+
+      span.setTag("http.status_code", response.statusCode);
+      span.setAttribute("http.foobarsessionid", getFoobarSessionid(response));
+    }
+  );
+}
+```

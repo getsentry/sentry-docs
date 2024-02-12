@@ -1,7 +1,9 @@
-import React, {Fragment} from 'react';
-import {PlatformIcon} from 'platformicons';
+import {Fragment} from 'react';
 
-import {usePlatform} from './hooks/usePlatform';
+import {getCurrentPlatform, getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+
+import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 
 type Props = {
@@ -10,13 +12,15 @@ type Props = {
 };
 
 export function GuideGrid({platform, className}: Props) {
-  const [currentPlatform] = usePlatform(platform);
-
-  if (currentPlatform === null) {
+  const {rootNode, path} = serverContext();
+  if (!rootNode) {
     return null;
   }
 
-  if (currentPlatform.type === 'guide') {
+  const currentPlatform = platform
+    ? getPlatform(rootNode, platform)
+    : getCurrentPlatform(rootNode, path);
+  if (!currentPlatform) {
     return null;
   }
 

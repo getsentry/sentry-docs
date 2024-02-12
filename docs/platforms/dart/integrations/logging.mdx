@@ -1,0 +1,71 @@
+---
+title: Logging Integration
+description: "Learn more about the Sentry Logging integration for the Dart SDK."
+caseStyle: canonical
+supportLevel: production
+sidebar_order: 3
+---
+
+The `sentry_logging` library provides [Logging](https://pub.dev/packages/logging) support for Sentry using the [onRecord property](https://pub.dev/documentation/logging/latest/logging/Logger/onRecord.html). It is able to collect breadcrumbs and capture events. Once this integration is configured, you can use Logging’s public API exclusively or in combination to the Sentry's SDK API to capture and enrich events.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-dart/tree/main/logging/).
+
+## Install
+
+To add the Logging integration, add the `sentry_logging` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '6.3.0') }}
+  sentry_logging: ^{{@inject packages.version('sentry.dart.logging', '6.3.0') }}
+  logging: ^1.0.2
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+<SignInNote />
+
+```dart
+import 'package:sentry_logging/sentry_logging.dart';
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.addIntegration(LoggingIntegration());
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+```
+
+## Verify
+
+This snippet captures an intentional error, so you can test that everything is working as soon as you set it up:
+
+```dart
+import 'package:logging/logging.dart';
+
+void main() async {
+  final log = Logger('MyAwesomeLogger');
+
+  log.info('a breadcrumb!');
+
+  try {
+    throw Exception();
+  } catch (error, stackTrace) {
+    log.severe('an error!', error, stackTrace);
+  }
+}
+```
+
+<Note>
+
+Learn more about manually capturing an error or message, in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.

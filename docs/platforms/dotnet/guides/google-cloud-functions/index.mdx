@@ -1,0 +1,163 @@
+---
+title: Google Cloud Functions
+sdk: sentry.google.cloud.function
+description: "Learn about Sentry's .NET integration with Google Cloud Functions."
+---
+
+Sentry provides an integration with `Google Cloud Functions` through the [Sentry.Google.Cloud.Functions NuGet package](https://www.nuget.org/packages/sentry.google.cloud.functions).
+
+## Overview of the Features
+
+- Easy Google Cloud Functions integration, single line: `[assembly: FunctionsStartup(typeof(SentryStartup))]`
+- Captures unhandled exceptions in the middleware pipeline
+- Captures exceptions handled by the framework `UseExceptionHandler`
+- Captures process-wide unhandled exceptions (AppDomain)
+- Captures `LogError` or `LogCritical`
+- Any event sent will include relevant application log messages
+- RequestId as tag
+- URL as tag
+- Environment is automatically set (IHostingEnvironment)
+- Request payload can be captured if opt-in
+- Support for EventProcessors registered with DI
+- Support for ExceptionProcessors registered with DI
+- Supports configuration system (bind to `SentryAspNetCoreOptions`)
+- Server OS info sent
+- Server Runtime info sent
+- Request headers sent
+- HTTP Proxy configuration
+- Request body compressed
+- Event flooding protection (429 retry-after and internal bound queue)
+- Assembly Strong named
+
+## Installation
+
+Add the Sentry dependency:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Google.Cloud.Functions -Version {{@inject packages.version('sentry.dotnet.google-cloud-function') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Google.Cloud.Functions -v {{@inject packages.version('sentry.dotnet.google-cloud-function') }}
+```
+
+Or, manually add the Sentry dependency into your csproj file:
+
+```xml {tabTitle:project.csproj}
+  <ItemGroup>
+    <PackageReference Include="Sentry.Google.Cloud.Functions" Version="{{@inject packages.version('sentry.dotnet.google-cloud-function') }}"/>
+  </ItemGroup>
+```
+
+This package extends `Sentry.AspNetCore`, which in turn extends `Sentry`'s main SDK. That means that besides the logging-related features, through this package you'll also get access to all API and features available in those packages.
+
+<Alert level="warning">
+
+Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+
+</Alert>
+
+## Configuration
+
+The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by setting up your Sentry configuration into `appsettings.json`
+using the assembly method `FunctionsStartup` to include the type `SentryStartup`.
+
+For example:
+
+<SignInNote />
+
+```json {filename:appsettings.json}
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "MaxRequestBodySize": "Always",
+    "SendDefaultPii": true,
+    "MinimumBreadcrumbLevel": "Debug",
+    "MinimumEventLevel": "Warning",
+    "AttachStackTrace": true,
+    "Debug": true,
+    "DiagnosticsLevel": "Error"
+  }
+```
+
+> An example of some of the options that can be configured via `appsettings.json`.
+
+To load the configurations, you will need to use the assembly `[assembly: FunctionsStartup(typeof(SentryStartup))]`. After being initialized, the framework automatically loads `appsettings.json` and environment variables, binding to `SentryAspNetCoreOptions`.
+
+```csharp {tabTitle:Function.cs}
+using System.Threading.Tasks;
+using Google.Cloud.Functions.Framework;
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Http;
+
+[assembly: FunctionsStartup(typeof(SentryStartup))]
+
+public class Function : IHttpFunction
+{
+}
+```
+
+Some of the settings require actual code. For those, like the `BeforeSend` callback, you will need to create a new class implementing the abstract class `FunctionsStartup` to set it up:
+
+```csharp
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Sentry.AspNetCore;
+
+[assembly: FunctionsStartup(typeof(CustomOptions))]
+
+public class CustomOptions : FunctionsStartup
+{
+    public override void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        base.ConfigureServices(context, services);
+        services.Configure<SentryAspNetCoreOptions>(options =>
+        {
+            options.SetBeforeSend(@event =>
+            {
+                @event.ServerName = null;
+                return @event;
+            });
+        });
+    }
+}
+```
+
+> Example modifying all events before they are sent to avoid server names being reported.
+
+## Dependency Injection
+
+Much of the behavior of the Google cloud functions integration with Sentry can be customized by using the frameworks dependency injection system. That is done by registering your own implementation of some of the exposed abstraction inside of `FunctionsStartup`.
+
+### Capturing the Affected User
+
+When opting in to `SendDefaultPii`, the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
+
+If you wish to change the behavior of how to read the user from the request, you can register a new `IUserFactory` into the container:
+
+```csharp
+using Google.Cloud.Functions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Sentry.AspNetCore;
+
+[assembly: FunctionsStartup(typeof(UserFactoryStartup))]
+
+public class UserFactoryStartup : FunctionsStartup
+{
+    public override void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        base.ConfigureServices(context, services);
+        services.AddSingleton<IUserFactory, MyUserFactory>();
+    }
+}
+```
+
+## Options & Initialization
+
+As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/), [Sentry.AspNetCore](/platforms/dotnet/guides/aspnetcore/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
+
+### Samples
+
+- [Google Cloud Functions sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Google.Cloud.Functions)
+- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.

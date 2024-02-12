@@ -1,0 +1,164 @@
+---
+title: Timber
+caseStyle: canonical
+supportLevel: production
+sdk: sentry.java.android.timber
+description: "Learn more about the Sentry Timber integration for the Android SDK."
+---
+
+The `sentry-android-timber` library provides [Timber](https://github.com/JakeWharton/timber) support for Sentry via [Timber Tree](https://github.com/JakeWharton/timber/blob/10f0adce3921ad2929ddf2f3b7fecda2cf3148a5/timber/src/main/java/timber/log/Timber.kt#L20) that sends events and breadcrumbs to Sentry. Once this integration is configured you can use Timber’s static API.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-android-timber/src/main/java/io/sentry/android/timber).
+
+## Auto-Installation With the Sentry Android Gradle Plugin
+
+### Install
+
+Starting from version `3.1.0`, the Sentry Android Gradle plugin will automatically add the `sentry-android-timber` dependency. The plugin will only add the `sentry-android-timber` dependency if a `timber` dependency was discovered on the classpath.
+
+Add the Sentry Android Gradle plugin in `build.gradle`:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+Then, initialize the [Android SDK](/platforms/android/#configure).
+
+The Android SDK automatically adds the `SentryTimberIntegration` if the `sentry-android-timber` dependency was found on the classpath. The integration is added with `minEventLevel` set to `ERROR` and `minBreadcrumbLevel` set to `INFO`.
+
+However, you can still override the default behaviour by adding your own instance of the `SentryTimberIntegration`. For that, refer to the [manual installation](/platforms/android/integrations/timber/#configure) section below.
+
+### Disable
+
+If you want to disable the Timber integration (to not exceed your event quota, for example), but keep using other auto-installation features, remove the `sentry-android-timber` dependency from the app configurations in `app/build.gradle`:
+
+```groovy
+configurations.configureEach {
+  exclude group: "io.sentry", module: "sentry-android-timber"
+}
+```
+
+```kotlin
+configurations.configureEach {
+  exclude(group = "io.sentry", module = "sentry-android-timber")
+}
+```
+
+## Manual Installation
+
+### Install
+
+To add the Timber integration, [manually initialize](/platforms/android/configuration/manual-init/#manual-initialization) the Android SDK, then add the `sentry-android-timber` dependency. Using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}'
+implementation 'io.sentry:sentry-android-timber:{{@inject packages.version('sentry.java.android.timber', '4.2.0') }}'
+```
+
+### Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.android.timber.SentryTimberIntegration
+import timber.log.Timber
+// import BuildConfig
+
+SentryAndroid.init(this) { options ->
+  if (!BuildConfig.DEBUG) {
+
+    // default values:
+    // minEventLevel = ERROR
+    // minBreadcrumbLevel = INFO
+    options.addIntegration(
+      SentryTimberIntegration(
+        minEventLevel = SentryLevel.ERROR,
+        minBreadcrumbLevel = SentryLevel.INFO
+      )
+    )
+  } else {
+    Timber.plant(Timber.DebugTree())
+  }
+}
+```
+
+```java
+import io.sentry.android.core.SentryAndroid;
+import io.sentry.android.timber.SentryTimberIntegration;
+import timber.log.Timber
+// import BuildConfig
+
+SentryAndroid.init(this, options -> {
+   if (!BuildConfig.DEBUG) {
+
+     // default values:
+     // minEventLevel = ERROR
+     // minBreadcrumbLevel = INFO
+     options.addIntegration(
+         new SentryTimberIntegration(
+             SentryLevel.ERROR,
+             SentryLevel.INFO
+         )
+     );
+   } else {
+     Timber.plant(new Timber.DebugTree());
+   }
+});
+```
+
+## Verify
+
+This snippet captures an intentional error, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import java.lang.Exception
+import timber.log.Timber
+
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    try {
+      throw Exception("This is a test.")
+    } catch (e: Exception) {
+      Timber.e(e);
+    }
+  }
+}
+```
+
+```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import java.lang.Exception;
+import timber.log.Timber;
+
+public class MyActivity extends AppCompatActivity {
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    try {
+      throw new Exception("This is a test.");
+    } catch (Exception e) {
+      Timber.e(e);
+    }
+  }
+}
+```
+
+<Note>
+
+Learn more about manually capturing an error or message, in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
