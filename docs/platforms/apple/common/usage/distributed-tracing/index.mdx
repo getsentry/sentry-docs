@@ -32,3 +32,38 @@ If you run any JavaScript applications in your distributed system, make sure tha
 <PlatformContent includePath="distributed-tracing/how-to-use/" />
 
 Remember that in order to propagate trace information through your whole distributed system, you have to use Sentry in all of the involved services and applications. Take a look at the respective SDK documentation to learn how distributed tracing can be enabled for each platform.
+
+### tracePropagationTargets
+
+Per default, the Cocoa SDK will attach the `sentry-trace` and `baggage` headers to all outgoing requests. You
+can use the allowlist `tracePropagationTargets` to specify to which URLs the Cocoa SDK should send these headers.
+You can put string or regexes into the allowlist, and the SDK then only attaches the `sentry-trace` and `baggage`
+headers to all outgoing requests whose destination contains a string in the list or matches a regex in the list.
+
+**The `tracePropagationTargets` option matches the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have additional headers attached.**
+
+The default value of `tracePropagationTargets` is `['.*']`. This means that by default, tracing headers are attached to all requests.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracePropagationTargets = [
+        "https://myproject.org",
+        "https://api.otherservice.org/",
+    ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracePropagationTargets = @[
+        @"https://myproject.org",
+        @"https://api.otherservice.org/"
+    ];
+}];
+```
