@@ -1,0 +1,24 @@
+### Custom routing
+
+By default, the `browserTracingIntegration()` will create a `pageload` span for when the page is initially loaded, as well as a `navigation` span whenever the URL changes afterwards.
+
+If you want to ensure navigation spans are created correctly for a custom routing setup, you can opt out of the default `navigation` span creation by setting `instrumentNavigation: false` in the `browserTracingIntegration()` options. Then, you can manually create navigation spans like this:
+
+```javascript
+Sentry.init({
+  integrations: [
+    // disable default navigation spans
+    Sentry.browserTracingIntegration({ instrumentNavigation: false }),
+  ],
+});
+
+// Somewhere, instrument your router like this:
+myRouter.on("routeChange", (route) => {
+  const client = Sentry.getClient();
+  Sentry.startBrowserTracingNavigationSpan(client, {
+    op: "navigation",
+    name: route.name, // or what the name of the span should be
+    // you can add additional data to add to the span here
+  });
+});
+```
