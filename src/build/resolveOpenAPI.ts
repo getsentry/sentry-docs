@@ -14,6 +14,8 @@ const SENTRY_API_SCHEMA_SHA = 'deea76e7205d4e1efb45f91796b9fc73499de226';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
+let cachedResonse: DeRefedOpenAPI | null = null;
+
 async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
   if (activeEnv === 'development' && process.env.OPENAPI_LOCAL_PATH) {
     try {
@@ -27,10 +29,15 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
       );
     }
   }
+
+  if (cachedResonse) {
+    return cachedResonse;
+  }
   const response = await fetch(
     `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
   );
-  return await response.json();
+  cachedResonse = await response.json();
+  return cachedResonse!;
 }
 
 export type APIParameter = {
