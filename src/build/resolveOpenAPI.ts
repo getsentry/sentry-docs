@@ -10,7 +10,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '51886adbfba153fb3ccd85bd42ec69d56cf2d04b';
+const SENTRY_API_SCHEMA_SHA = '76490f725fda1363e3412c8462a95567832a68ac';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
