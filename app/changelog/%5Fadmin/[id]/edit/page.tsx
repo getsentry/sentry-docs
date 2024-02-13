@@ -10,7 +10,11 @@ import {Select} from 'sentry-docs/components/changelog/ui/Select';
 import {prisma} from 'sentry-docs/prisma';
 
 export default async function ChangelogCreatePage({params}) {
-  const categories = await prisma.category.findMany();
+  const categories = await prisma.category.findMany({
+    orderBy: {
+      name: 'asc',
+    },
+  });
   const changelog = await prisma.changelog.findUnique({
     where: {id: params.id},
     include: {

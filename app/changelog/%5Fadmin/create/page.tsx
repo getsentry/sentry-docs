@@ -10,7 +10,11 @@ import {Select} from 'sentry-docs/components/changelog/ui/Select';
 import {prisma} from 'sentry-docs/prisma';
 
 export default async function ChangelogCreatePage() {
-  const categories = await prisma.category.findMany();
+  const categories = await prisma.category.findMany({
+    orderBy: {
+      name: 'asc',
+    },
+  });
 
   return (
     <section className="overflow-x-auto col-start-3 col-span-8">
