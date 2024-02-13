@@ -2,23 +2,45 @@
 
 By default, the `browserTracingIntegration()` will create a `pageload` span for when the page is initially loaded, as well as a `navigation` span whenever the URL changes afterwards.
 
-If you want to ensure navigation spans are created correctly for a custom routing setup, you can opt out of the default `navigation` span creation by setting `instrumentNavigation: false` in the `browserTracingIntegration()` options. Then, you can manually create navigation spans like this:
+If you want to ensure spans are created correctly for a custom routing setup, you can opt out of the default span creation by setting `instrumentNavigation: false` & `instrumentPageLoad: false` in the `browserTracingIntegration()` options. Then, you can manually create the spans like this:
 
 ```javascript
 Sentry.init({
   integrations: [
-    // disable default navigation spans
-    Sentry.browserTracingIntegration({ instrumentNavigation: false }),
+    Sentry.browserTracingIntegration({
+      // disable automatic span creation
+      instrumentNavigation: false,
+      instrumentPageLoad: false,
+    }),
   ],
+});
+
+// We start the pageload span as early as possible!
+let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan({
+  name: window.location.pathname
+  attributes: {
+    [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "url",
+  },
 });
 
 // Somewhere, instrument your router like this:
 myRouter.on("routeChange", (route) => {
   const client = Sentry.getClient();
-  Sentry.startBrowserTracingNavigationSpan(client, {
-    op: "navigation",
-    name: route.name, // or what the name of the span should be
-    // you can add additional data to add to the span here
-  });
+
+  // We want to make sure to update the pageload span to use the route name
+  // After that, each route change should trigger a navigation span (which will automatically finish the previous one)
+  if (pageLoadSpan) {
+    pageloadSpan.updateName(route.name);
+    pageloadSpan.setAttribute(Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE, "route");
+    pageLoadSpan = undefined;
+  } else {
+    Sentry.startBrowserTracingNavigationSpan(client, {
+      op: "navigation",
+      name: route.name, // or what the name of the span should be
+      attributes: {
+        [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "route",
+      },
+    });
+  }
 });
 ```
