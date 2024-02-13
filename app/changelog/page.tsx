@@ -1,7 +1,6 @@
 import {Fragment, Suspense} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 
 import Article from 'sentry-docs/components/changelog/article';
@@ -11,6 +10,8 @@ import Pagination from 'sentry-docs/components/changelog/pagination';
 import Search from 'sentry-docs/components/changelog/search';
 import Tags from 'sentry-docs/components/changelog/tags';
 import {prisma} from 'sentry-docs/prisma';
+
+import Header from './header';
 
 const ENTRIES_PER_PAGE = 10;
 
@@ -124,27 +125,7 @@ export default async function ChangelogList({
 
   return (
     <Fragment>
-      <div className="w-full mx-auto h-96 relative bg-darkPurple">
-        <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 pt-8 grid grid-cols-12 items-center">
-          <Image
-            className="justify-self-center col-span-10 z-20 hidden lg:block"
-            src="/changelog/assets/hero.png"
-            alt="Sentry Changelog"
-            height={273}
-            width={450}
-          />
-          <div className="relative col-span-12 mt-32 lg:absolute lg:w-96 lg:right-1/4 lg:-bottom-2">
-            <h1 className="justify-self-center text-white font-bold text-4xl text-center lg:text-left">
-              Sentry Changelog
-            </h1>
-            <h2 className="justify-self-center z-20 text-gold text-1xl text-center lg:text-left">
-              Stay up to date on everything big and small, from product updates to SDK
-              changes with the Sentry Changelog.
-            </h2>
-          </div>
-        </div>
-        <div className="hero-bottom-left-down-slope absolute bottom-0 w-full h-10 bg-gray-200" />
-      </div>
+      <Header loading={false} />
       <div className="w-full mx-auto grid grid-cols-12 bg-gray-200">
         <div className="hidden md:block md:col-span-2 pl-5 pt-10">
           <h3 className="text-2xl text-primary font-semibold mb-2">Categories:</h3>
