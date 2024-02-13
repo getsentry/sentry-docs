@@ -25,13 +25,13 @@ export default async function ChangelogsListPage() {
 
   return (
     <Fragment>
-      <header className="mb-4 col-start-3 col-span-2 text-left">
+      <header className="mb-4 col-start-2 col-span-2 text-left">
         <Button>
           <PlusIcon />
           <Link href="/changelog/_admin/create">New Changelog</Link>
         </Button>
       </header>
-      <section className="overflow-x-auto col-start-3 col-span-8 shadow-md rounded-lg">
+      <section className="overflow-x-auto col-start-2 col-span-10 shadow-md rounded-lg">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
