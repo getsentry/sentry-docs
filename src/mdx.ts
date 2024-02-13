@@ -118,6 +118,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     let platformFrontmatter: FrontMatter = {};
     const configPath = path.join(platformsPath, platformName, 'config.yml');
     if (fs.existsSync(configPath)) {
+      // @ts-ignore
       platformFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
     }
 
@@ -172,6 +173,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       let guideFrontmatter: FrontMatter = {};
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
       if (fs.existsSync(guideConfigPath)) {
+        // @ts-ignore
         guideFrontmatter = yaml.load(fs.readFileSync(guideConfigPath, 'utf8'));
       }
 
@@ -206,6 +208,7 @@ export async function getFileBySlug(slug) {
   const configPath = path.join(root, slug, 'config.yml');
   let configFrontmatter: {[key: string]: any} | undefined;
   if (fs.existsSync(configPath)) {
+    // @ts-ignore
     configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
   }
 
@@ -258,7 +261,7 @@ export async function getFileBySlug(slug) {
 
   const toc = [];
 
-  const {code, frontmatter} = await bundleMDX({
+  const result = await bundleMDX({
     source,
     // mdx imports can be automatically source from the components directory
     cwd: root,
@@ -331,12 +334,15 @@ export async function getFileBySlug(slug) {
     },
   });
 
+  const {code, frontmatter} = result;
+
   let mergedFrontmatter = frontmatter;
   if (configFrontmatter) {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
   return {
+    matter: result.matter,
     mdxSource: code,
     toc,
     frontMatter: {
