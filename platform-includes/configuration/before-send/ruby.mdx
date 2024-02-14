@@ -4,7 +4,8 @@ Sentry.init do |config|
   config.before_send = lambda do |event, hint|
     # skip ZeroDivisionError exceptions
     # note: hint[:exception] would be a String if you use async callback
-    if hint[:exception].is_a?(ZeroDivisionError)
+    exceptions_excluded = [ZeroDivisionError]
+    if exceptions_excluded.member? hint[:exception].class
       nil
     else
       event
