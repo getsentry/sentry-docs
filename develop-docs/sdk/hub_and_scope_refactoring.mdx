@@ -1,0 +1,38 @@
+# Hub & Scope Refactoring
+
+<Alert title="If you came here from a warning message:" level="warning"><markdown>
+
+`WARNING: The function "Hub.get_integation()" is deprecated and will be removed in the future.`
+
+**Everything is fine.** We are in the process of refactoring some of our underlying logic in the SDKs. If you never heard of the function in the warning message, this means that some of our integrations used in the SDK are not yet ported to the new API.
+
+We will port all our integrations soon and will release them in minor versions of the SDK. **Please make sure you update to the newest SDK versions now and then and the warning messages will go away.** Promised!
+
+If you do custom instrumentation with the SDK or are just curious what we are up to, continue reading, otherwise you can stop reading this page and go on with your day.
+</markdown></Alert>
+
+All of Sentry's SDKs use the so-called <Link to="/sdk/unified-api/">Unified API</Link> under the hood. This API has some limitations and therefore we are refactoring it. This is a massive undertaking.
+
+## Why are we doing this?
+
+We have different concepts like a `Hub` and `Scope`s in the Unified API and those concepts sometimes leak to the end user of our SDKs. Those concepts are complicated and the users should never need to think about what a `Hub` or a `Scope` is and if they should clone them or not. 
+
+We want to make it easier for the users to do custom performance instrumentation with as little as possible mental overhead. This is why we started this journey with an <Link to="https://github.com/getsentry/rfcs/pull/122">RFC</Link>.
+
+
+## What is the plan?
+
+We will merge the functionality of the `Hub` and the `Scope` of the <Link to="/sdk/unified-api/">Unified API</Link> into the `Scope` and we will remove the `Hub` for good. We will add some new APIs that make it easier for the user to do custom instrumentation. And as a side benefit it aligns us more to what OTel does, getting us a step closer to being fully compatible.
+
+
+## What does the new API look like?
+
+There will be no `Hub` but we will have three different kinds of `Scope`s (the end user does not have to think about the differences. Only SDK and SDK integration developers need to understand them. So probably you!)
+
+Have a look at the <Link to="https://github.com/getsentry/rfcs/pull/122">RFC</Link> and at the <Link to="https://gist.github.com/mitsuhiko/1bc78d04ea7d08e5b50d27e42676db80">FAQ</Link> that Armin put together.
+
+We also have a picture showing how managing the scopes without the stack of scopes works now:
+
+![New Scopes API](new-scopes-api.png)
+
+For a zoomable version visit the <a href="https://miro.com/app/board/uXjVNtPiOfI=/?share_link_id=140058397661" target="_blank">Miro Board</a>
