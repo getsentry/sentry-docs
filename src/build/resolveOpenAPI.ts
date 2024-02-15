@@ -4,8 +4,6 @@
 
 import {promises as fs} from 'fs';
 
-import {cache} from 'react';
-
 import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
@@ -77,7 +75,18 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
-export const apiCategories = cache(async (): Promise<APICategory[]> => {
+let apiCategoriesCache: Promise<APICategory[]> | undefined;
+
+export function apiCategories(): Promise<APICategory[]> {
+  if (apiCategoriesCache) {
+    return apiCategoriesCache;
+  }
+  apiCategoriesCache = apiCategoriesUncached();
+  return apiCategoriesCache;
+}
+
+async function apiCategoriesUncached(): Promise<APICategory[]> {
+  console.log('apiCategories');
   const data = await resolveOpenAPI();
 
   const categoryMap: {[name: string]: APICategory} = {};
@@ -142,7 +151,7 @@ export const apiCategories = cache(async (): Promise<APICategory[]> => {
     c.apis.sort((a, b) => a.name.localeCompare(b.name));
   });
   return categories;
-});
+}
 
 function getBodyParameters(apiData): APIParameter[] {
   const content = apiData.requestBody?.content;
