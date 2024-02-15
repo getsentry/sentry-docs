@@ -117,3 +117,54 @@ public class LoggingModule : NancyModule
     }
 }
 ```
+
+## Breadcrumbs
+
+Sentry supports a concept called [Breadcrumbs](/platforms/dotnet/enriching-events/breadcrumbs/), which is a trail of events which happened prior to an issue. Often times these events are very similar to traditional logs, but also have the ability to record more rich structured data.
+
+```csharp
+public class ExampleController : ApiController
+{
+    private readonly IRavenClient ravenClient;
+
+    public ExampleController(IRavenClient ravenClient)
+    {
+        this.ravenClient = ravenClient;
+    }
+
+    public IHttpActionResult GetProduct(int id) {
+        ravenClient.AddTrail(new Breadcrumb("example") { Message = "some message...", Level = BreadcrumbLevel.Info } );
+
+        var product = products.FirstOrDefault((p) => p.Id == id);
+        if (product == null)
+        {
+            ravenClient.AddTrail(new Breadcrumb("example") { Message = "Ops! It was not found.", Level = BreadcrumbLevel.Warn } );
+            return NotFound();
+        }
+
+        return Ok(product);
+    }
+}
+```
+
+## Debugging SharpRaven
+
+If an exception is raised internally to `RavenClient` it is logged to the `Console`. To extend this behavior use the property `ErrorOnCapture`:
+
+```csharp
+ravenClient.ErrorOnCapture = exception =>
+{
+    // Custom code here
+};
+```
+
+You can also hook into the `BeforeSend` function to inspect or manipulate the data being sent to Sentry before it is sent:
+
+```csharp
+ravenClient.BeforeSend = requester =>
+{
+    // Here you can log data from the requester
+    // or replace it entirely if you want.
+    return requester;
+}
+```
