@@ -1,6 +1,6 @@
 'use server';
 
-import {GET as handler} from 'app/api/auth/[...nextauth]/route';
+import {GET as handler} from 'app/changelog/api/auth/[...nextauth]/route';
 import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
