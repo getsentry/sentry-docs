@@ -31,15 +31,11 @@ export default function Article({
   return (
     <article className={`bg-white rounded-lg shadow-lg mb-8 ${className}`}>
       {image && (
-        <div className="relative w-full h-64">
-          <Image
-            className="object-cover rounded-lg rounded-b-none"
-            src={image}
-            fill
-            alt={title}
-            sizes="(max-width: 768px) 100vw"
-          />
-        </div>
+        <img
+          className="object-cover relative w-full h-64 rounded-lg rounded-b-none"
+          src={image}
+          alt={title}
+        />
       )}
       <div className="p-6">
         <h3 className="text-3xl text-primary font-semibold mb-2">{title}</h3>
