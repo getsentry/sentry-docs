@@ -100,6 +100,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
         ...frontmatter,
         slug: formatSlug(fileName),
         sourcePath: path.join(folder, fileName),
+        lastModified: fs.statSync(file).mtime,
       });
     }
   });
@@ -133,6 +134,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     const commonFiles = commonFileNames.map(commonFileName => {
       const source = fs.readFileSync(commonFileName, 'utf8');
       const {data: frontmatter} = matter(source);
+      frontmatter.lastModified = fs.statSync(commonFileName).mtime;
       return {commonFileName, frontmatter};
     });
 
