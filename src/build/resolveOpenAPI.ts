@@ -86,7 +86,6 @@ export function apiCategories(): Promise<APICategory[]> {
 }
 
 async function apiCategoriesUncached(): Promise<APICategory[]> {
-  console.log('apiCategories');
   const data = await resolveOpenAPI();
 
   const categoryMap: {[name: string]: APICategory} = {};
