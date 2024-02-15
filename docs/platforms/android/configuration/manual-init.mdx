@@ -1,0 +1,114 @@
+---
+title: Manual Configuration
+sidebar_order: 20
+description: "Learn how to initialize the SDK manually when you need to provide additional configuration."
+---
+
+## Manual Installation
+
+If you don't want the Sentry Gradle plugin to install the Sentry SDK automatically, you can define the dependency directly in the `build.gradle` file of your app module.
+
+```groovy {filename:app/build.gradle}
+dependencies {
+    implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}'
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+dependencies {
+    implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}")
+}
+```
+
+<Note>
+
+The [NDK integration](/platforms/android/using-ndk/) comes packaged with the SDK and requires API level 16, though other levels are supported. If you're using multiple Sentry dependencies, you can add a [bill of materials](/platforms/android/configuration/bill-of-materials) to avoid specifying the version of each dependency.
+
+</Note>
+
+## Manual Initialization
+
+Initialize the SDK manually when you need to provide additional configuration to the SDK that cannot be specified in the manifest.
+
+To initialize the SDK manually, disable the auto initialization. You can do so by adding the following line into your manifest:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-init" android:value="false" />
+</application>
+```
+
+Or, to completely remove the merging of the `ContentProvider`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <provider
+        android:name="io.sentry.android.core.SentryInitProvider"
+        android:authorities="${applicationId}.SentryInitProvider"
+        tools:node="remove" />
+
+    <provider
+        android:name="io.sentry.android.core.SentryPerformanceProvider"
+        android:authorities="${applicationId}.SentryPerformanceProvider"
+        tools:node="remove" />
+</application>
+```
+
+The next step is to initialize the SDK directly in your code.
+
+The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance your Application class right after the application is created. If you don't have a custom Application class yet, [checkout the official docs on how to create one](https://developer.android.com/reference/android/app/Application).
+
+Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
+
+<SignInNote />
+
+```java
+import io.sentry.SentryLevel;
+import io.sentry.android.core.SentryAndroid;
+import android.app.Application;
+
+public class MyApplication extends Application {
+  public void onCreate() {
+    super.onCreate();
+
+    SentryAndroid.init(this, options -> {
+      options.setDsn("___PUBLIC_DSN___");
+      // Add a callback that will be used before the event is sent to Sentry.
+      // With this callback, you can modify the event or, when returning null, also discard the event.
+      options.setBeforeSend((event, hint) -> {
+        if (SentryLevel.DEBUG.equals(event.getLevel()))
+          return null;
+        else
+          return event;
+      });
+    });
+  }
+}
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.Hint
+import android.app.Application
+
+class MyApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+
+    SentryAndroid.init(this) { options ->
+      options.dsn = "___PUBLIC_DSN___"
+      // Add a callback that will be used before the event is sent to Sentry.
+      // With this callback, you can modify the event or, when returning null, also discard the event.
+      options.beforeSend =
+        BeforeSendCallback { event: SentryEvent, hint: Hint ->
+          if (SentryLevel.DEBUG == event.level) {
+            null
+          } else {
+            event
+          }
+        }
+    }
+  }
+}
+```

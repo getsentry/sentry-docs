@@ -1,0 +1,43 @@
+To use the SDK, initialize it in your Solid entry point before bootstrapping your app. (In a typical Solid project that's the render-client.js, or render-client.tsx.)
+
+<SignInNote />
+
+```javascript {filename: render-client.jsx}
+import { render } from "solid-js/web";
+import App from "./app";
+import * as Sentry from "@sentry/browser";
+import { DEV } from "solid-js";
+
+// this will only initialize your Sentry client in production builds.
+if (!DEV) {
+  Sentry.init({
+    dsn: "<Sentry DSN>",
+    integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+
+    // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture Replay for 10% of all sessions,
+    // plus 100% of sessions with an error
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
+
+const app = document.getElementById("app");
+
+if (!app) throw new Error("No #app element found in the DOM.");
+
+render(() => <App />, app);
+```
+
+Once you've done this, the SDK will automatically capture unhandled errors and promise rejections, and monitor performance in the client.
+
+It's also possible to add Client-Side routing to your app with [Solid-Router](https://docs.solidjs.com/guides/how-to-guides/routing-in-solid/solid-router) without changing any additional settings. As long as you use the default HTML History API to handle routing.
+
+Once you've done this, the SDK will automatically capture unhandled errors and promise rejections, and monitor performance in the client. You can also [manually capture errors](/platforms/javascript/guides/solid/usage).

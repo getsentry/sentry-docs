@@ -1,0 +1,74 @@
+<SignInNote />
+
+```java
+import io.sentry.CustomSamplingContext;
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setDsn("___PUBLIC_DSN___");
+  // To set a uniform sample rate
+  options.setTracesSampleRate(1.0);
+  // OR: Determine traces sample rate based on the sampling context
+  options.setTracesSampler(context -> {
+    if (context.getTransactionContext().isForNextAppStart()) {
+      // These refer to app start (if app start profiling is enabled), and are important - take a big sample
+      return 0.7;
+    }
+    CustomSamplingContext ctx = context.getCustomSamplingContext();
+    if (ctx != null) {
+      if ("LoginActivity".equals(ctx.get("ActivityName"))) {
+        // These are important - take a big sample
+        return 0.5;
+      } else if ("SearchActivity".equals(ctx.get("ActivityName"))) {
+        // Search is less important and happen much more frequently - only take 1%
+        return 0.01;
+      } else if ("HealthCheckActivity".equals(ctx.get("ActivityName"))) {
+        // The health check is just noise - drop all transactions
+        return 0.0;
+      } else {
+        // Default sample rate
+        return 0.1;
+      }
+    } else {
+      return 0.1;
+    }
+  });
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.TracesSamplerCallback
+
+SentryAndroid.init(this) { options ->
+  options.tracesSampler = TracesSamplerCallback { context ->
+    if (context.transactionContext.isForNextAppStart) {
+      // These refer to app start (if app start profiling is enabled), and are important - take a big sample
+      return@TracesSamplerCallback 0.7
+    }
+    val ctx = context.customSamplingContext
+    if (ctx != null) {
+      when (ctx.get("ActivityName")) {
+        "LoginActivity" -> {
+          // These are important - take a big sample
+          0.5
+        }
+        "SearchActivity" -> {
+          // Search is less important and happen much more frequently - only take 1%
+          0.01
+        }
+        "HealthCheckActivity" -> {
+          // The health check is just noise - drop all transactions
+          0.0
+        }
+        else -> {
+          // Default sample rate
+          0.1
+        }
+      }
+    } else {
+      0.1
+    }
+  }
+}
+```

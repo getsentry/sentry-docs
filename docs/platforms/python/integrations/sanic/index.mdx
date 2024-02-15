@@ -1,0 +1,116 @@
+---
+title: Sanic
+description: "Learn about using Sentry with Sanic."
+---
+
+The Sanic integration adds support for the [Sanic Web Framework](https://sanic.dev/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `sanic` extra:
+
+```bash
+pip install --upgrade sentry-sdk[sanic]
+```
+
+If you're on Python 3.6, you also need the `aiocontextvars` package:
+
+```bash
+pip install --upgrade aiocontextvars
+```
+
+## Configure
+
+If you have the `sanic` package in your dependencies, the Sanic integration will be enabled automatically when you initialize the Sentry SDK.
+
+To ensure that errors occuring in background tasks get reported to Sentry, we always recommend enabling the [`AsyncioIntegration`](/platforms/python/integrations/asyncio/) when you are using the `SanicIntegration`. To enable the `AsyncioIntegration`, you must explicitly add the `AsyncioIntegration` to the `integrations` list and initialize the SDK within a `before_server_start` listener.
+
+The example below demonstrates the simplest recommended setup.
+
+<SignInNote />
+
+```python
+from sanic import Sanic
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
+app = Sanic(__main__)
+
+@app.listener("before_server_start")
+async def init_sentry(_):
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        integrations=[AsyncioIntegration()],
+    )
+```
+
+### Configuration options
+
+If you're using performance monitoring, you can configure the Sanic integration to not send transactions for requests that resulted in certain HTTP statuses using the `unsampled_statuses` option.
+
+By default, the Sanic integration generates transactions for all requests, except requests that result in a 404 HTTP status. To generate transactions for all HTTP statuses, including 404, or change which HTTP statuses don't generate transactions, you can manually instantiate the Sanic integration when initializing the Sentry SDK, like so:
+
+```python
+from sanic import Sanic
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.sanic import SanicIntegration
+
+@app.listener("before_server_start")
+async def init_sentry(_):
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        enable_tracing=True,
+        integrations=[
+            AsyncioIntegration(),
+            SanicIntegration(
+                # Configure the Sanic integration so that we generate
+                # transactions for all HTTP status codes, including 404
+                unsampled_statuses=None,
+            ),
+        ],
+    )
+```
+
+To specify a different set of HTTP statuses for which no transactions should be generated, set `unsampled_statuses` to a set containing the HTTP statuses that don't generate transactions. For example, if you wish to have no transactions for requests resulting in a 200 or 404 HTTP status, use `SanicIntegration(unsampled_statuses={200, 400})`.
+
+## Verify
+
+```python
+from sanic import Sanic
+from sanic.response import text
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
+app = Sanic(__name__)
+
+@app.listener("before_server_start")
+async def init_sentry(_):
+    sentry_sdk.init(...)  # same as above
+
+@app.get("/")
+async def hello_world(request):
+    1 / 0  # raises an error
+    return text("Hello, world.")`
+```
+
+When you point your browser to [http://localhost:8000/](http://localhost:8000/) an error event will be sent to [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Sentry Python SDK will install the Sanic integration for all of your apps.
+
+- All exceptions leading to an Internal Server Error are reported.
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+- Logging with any logger will create breadcrumbs when
+  the [Logging](/platforms/python/integrations/logging/)
+  integration is enabled (done by default).
+
+## Supported Versions
+
+- Sanic: 0.8+
+- Python: 3.6+ (Sanic 0.8+), 3.7+ (Sanic 21.0+)

@@ -1,7 +1,6 @@
-import React from 'react';
-import {useLocation} from '@reach/router';
-import {withPrefix} from 'gatsby';
+import {Fragment} from 'react';
 
+import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 
 import {SidebarLink} from './sidebarLink';
@@ -27,7 +26,7 @@ type Entity<T> = {
 export interface EntityTree extends Entity<EntityTree> {}
 
 export const toTree = (nodeList: Node[]): EntityTree[] => {
-  const result = [];
+  const result: EntityTree[] = [];
   const level = {result};
 
   nodeList
@@ -49,12 +48,14 @@ export const toTree = (nodeList: Node[]): EntityTree[] => {
       }, level);
     });
 
+  result.length; // result[0] is undefined without this. wat
   return result[0].children;
 };
 
 export const renderChildren = (
   children: EntityTree[],
   exclude: string[],
+  path: string,
   showDepth: number = 0,
   depth: number = 0
 ): React.ReactNode[] => {
@@ -71,21 +72,23 @@ export const renderChildren = (
         key={node.path}
         title={node.context.sidebar_title || node.context.title}
         collapsed={depth >= showDepth}
+        path={path}
       >
-        {renderChildren(nodeChildren, exclude, showDepth, depth + 1)}
+        {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
       </SidebarLink>
     );
   });
 };
 
 type ChildrenProps = {
+  path: string;
   tree: EntityTree[];
   exclude?: string[];
   showDepth?: number;
 };
 
-export function Children({tree, exclude = [], showDepth = 0}: ChildrenProps) {
-  return <React.Fragment>{renderChildren(tree, exclude, showDepth)}</React.Fragment>;
+export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
+  return <Fragment>{renderChildren(tree, exclude, path, showDepth)}</Fragment>;
 }
 
 type Props = {
@@ -111,13 +114,11 @@ export function DynamicNav({
   suppressMissing = false,
   noHeadingLink = false,
 }: Props) {
-  const location = useLocation();
-
   if (root.startsWith('/')) {
     root = root.substring(1);
   }
 
-  let entity: EntityTree;
+  let entity: EntityTree | undefined;
   let currentTree = tree;
   const rootBits = root.split('/');
   rootBits.forEach(bit => {
@@ -135,13 +136,15 @@ export function DynamicNav({
     return null;
   }
   if (!title && entity.node) {
-    title = entity.node.context.sidebar_title || entity.node.context.title;
+    title = entity.node.context.sidebar_title || entity.node.context.title || '';
   }
   const parentNode = entity.children
     ? entity.children.find((n: EntityTree) => n.name === '')
     : null;
 
-  const isActive = location && location.pathname.indexOf(withPrefix(`/${root}/`)) === 0;
+  const {path} = serverContext();
+  const isActive = path.join('/').indexOf(root) === 0;
+  const linkPath = `/${path.join('/')}/`;
 
   const headerClassName = 'sidebar-title d-flex align-items-center';
   const header =
@@ -167,9 +170,14 @@ export function DynamicNav({
         <ul className="list-unstyled" data-sidebar-tree>
           {prependLinks &&
             prependLinks.map(link => (
-              <SidebarLink to={link[0]} key={link[0]} title={link[1]} />
+              <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />
             ))}
-          <Children tree={entity.children} exclude={exclude} showDepth={showDepth} />
+          <Children
+            tree={entity.children}
+            exclude={exclude}
+            showDepth={showDepth}
+            path={linkPath}
+          />
         </ul>
       )}
     </li>

@@ -1,0 +1,192 @@
+If you are using [Quartz](http://www.quartz-scheduler.org/), please see <PlatformLink to="/integrations/quartz/">our Quartz integration</PlatformLink>. If you are using Spring Boot with `@Scheduled` tasks, see [our Spring Boot integration](/platforms/java/guides/spring-boot/crons/).
+
+## Check-Ins (Recommended)
+
+Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+
+### Wrapper
+
+The Sentry Java SDK offers a helper that takes care of wrapping your code and sending a check-in at the start and one at the end. It checks for exceptions and sets the status of the check-in accordingly.
+
+```java
+import io.sentry.util.CheckInUtils;
+
+String result = CheckInUtils.withCheckIn("<monitor-slug>", () -> {
+    // Execute your scheduled task here...
+    return "computed result";
+});
+```
+
+```kotlin
+import io.sentry.util.CheckInUtils
+
+CheckInUtils.withCheckIn("<monitor-slug>") {
+    // Execute your scheduled task here...
+}
+```
+
+You may also send a `MonitorConfig` with a `MontiorSchedule` so the monitor is created or updated (upsert) automatically.
+
+```java
+import io.sentry.MonitorConfig;
+import io.sentry.MonitorSchedule;
+import io.sentry.MonitorScheduleUnit;
+import io.sentry.util.CheckInUtils;
+
+MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE));
+
+String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> {
+    // Execute your scheduled task here...
+    return "computed result";
+});
+```
+
+```kotlin
+import io.sentry.MonitorConfig
+import io.sentry.MonitorSchedule
+import io.sentry.MonitorScheduleUnit
+import io.sentry.util.CheckInUtils
+
+val monitorConfig = MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE))
+
+CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig) {
+    // Execute your scheduled task here...
+}
+```
+
+### Manually sending check-ins
+
+It is also possible to manually send check-ins.
+
+```java
+import io.sentry.CheckIn;
+import io.sentry.CheckInStatus;
+import io.sentry.Sentry;
+import io.sentry.protocol.SentryId;
+
+// 🟡 Notify Sentry your job is running:
+SentryId checkInId = Sentry.captureCheckIn(
+    new CheckIn(
+        "<monitor-slug>",
+        CheckInStatus.IN_PROGRESS
+    )
+);
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+Sentry.captureCheckIn(
+    new CheckIn(
+        checkInId,
+        "<monitor-slug>",
+        CheckInStatus.OK
+    )
+);
+```
+
+If your job execution fails, you can notify Sentry about the failure:
+
+```java
+// 🔴 Notify Sentry your job has failed:
+Sentry.captureCheckIn(
+    new CheckIn(
+        checkInId,
+        "<monitor-slug>",
+        CheckInStatus.ERROR
+    )
+);
+```
+
+## Heartbeat
+
+Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
+
+```java
+import io.sentry.CheckIn;
+import io.sentry.CheckInStatus;
+import io.sentry.Sentry;
+import io.sentry.protocol.SentryId;
+
+// Execute your scheduled task...
+
+// 🟢 Notify Sentry your job completed successfully:
+CheckIn checkIn = new CheckIn(
+    "<monitor-slug>",
+    CheckInStatus.OK
+);
+checkIn.setDuration(10.0);
+Sentry.captureCheckIn(checkIn);
+```
+
+If your job execution fails, you can:
+
+```java
+import io.sentry.CheckIn;
+import io.sentry.CheckInStatus;
+import io.sentry.Sentry;
+import io.sentry.protocol.SentryId;
+
+// 🔴 Notify Sentry your job has failed:
+CheckIn checkIn = new CheckIn(
+    "<monitor-slug>",
+    CheckInStatus.ERROR
+);
+checkIn.setDuration(10.0);
+Sentry.captureCheckIn(checkIn);
+```
+
+## Upserting Cron Monitors
+
+You can create and update your Monitors programmatically with code
+rather than [creating and configuring them in Sentry.io](https://sentry.io/crons/create/).
+
+```java
+import io.sentry.MonitorSchedule;
+import io.sentry.MonitorScheduleUnit;
+
+// Create a crontab schedule object (every 10 minutes)
+MonitorSchedule monitorSchedule = MonitorSchedule.crontab("*/10 * * * *");
+
+// Or create an interval schedule object (every 10 minutes)
+MonitorSchedule monitorSchedule = MonitorSchedule.interval(10, MonitorScheduleUnit.MINUTE);
+```
+
+Supported units are:
+
+- `MonitorScheduleUnit.MINUTE`
+- `MonitorScheduleUnit.HOUR`
+- `MonitorScheduleUnit.DAY`
+- `MonitorScheduleUnit.WEEK`
+- `MonitorScheduleUnit.MONTH`
+- `MonitorScheduleUnit.YEAR`
+
+```java
+import io.sentry.MonitorConfig;
+
+// Create a config object
+MonitorConfig monitorConfig = new MonitorConfig(monitorSchedule);
+monitorConfig.setTimezone("Europe/Vienna"); // Optional timezone
+monitorConfig.setCheckinMargin(5L); // Optional check-in margin in minutes
+monitorConfig.setMaxRuntime(15L); // Optional max runtime in minutes
+monitorConfig.setFailureIssueThreshold(2L); //Optional failure issue threshold
+monitorConfig.setRecoveryThreshold(5L); // Optional recovery threshold
+
+// 🟡 Notify Sentry your job is running:
+CheckIn checkIn = new CheckIn(
+    "<monitor-slug>",
+    CheckInStatus.IN_PROGRESS
+);
+checkIn.setMonitorConfig(monitorConfig);
+SentryId checkInId = Sentry.captureCheckIn(checkIn);
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+Sentry.captureCheckIn(
+    new CheckIn(
+        checkInId,
+        "<monitor-slug>",
+        CheckInStatus.OK
+    )
+);
+```

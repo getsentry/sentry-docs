@@ -1,0 +1,93 @@
+---
+title: Google Cloud Functions
+description: "Learn about using Sentry with Google Cloud Functions."
+---
+
+## Install
+
+Add the Sentry SDK to your `requirements.txt`:
+
+```text {filename:requirements.txt}
+ sentry-sdk>=0.17.1
+```
+
+<Note>
+
+The GCP integration currently supports only the Python `3.7` runtime environment. If you try to run it with a newer version (such as `3.9`), an error message will be displayed (with debug mode on).
+
+Limited Sentry support is available on newer Python runtimes by directly enabling [integrations for supported frameworks](/platforms/python/integrations) and/or using the generic [serverless integration](/platforms/python/integrations/serverless/).
+
+</Note>
+
+## Configure
+
+You can use the Google Cloud Functions integration for the Python SDK like this:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.gcp import GcpIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        GcpIntegration(),
+    ],
+)
+
+def http_function_entrypoint(request):
+    # ...
+```
+
+Check out Sentry's [GCP sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions) for detailed examples.
+
+<Alert level="info" title="Note">
+
+If you are using a web framework inside of your Cloud Function, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [_the Python main page_](/platforms/python/) for more information.
+
+</Alert>
+
+### Timeout Warning
+
+The timeout warning reports an issue when the function execution time is near
+the [configured timeout](https://cloud.google.com/functions/docs/concepts/exec#timeout).
+
+To enable the warning, update the SDK initialization to set `timeout_warning` to
+`true`:
+
+<SignInNote />
+
+```python
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        GcpIntegration(
+            timeout_warning=True
+        ),
+    ],
+)
+```
+
+The timeout warning is sent only if the timeout in the Cloud Function configuration is set to a value greater than one second.
+
+## Behavior
+
+With the Google Cloud Functions integration enabled, the Python SDK will:
+
+- Automatically report all events from your Cloud Functions
+- You can <PlatformLink to="/configuration/filtering/">modify the transaction sample rate</PlatformLink> using `traces_sample_rate`.
+- Issues reports automatically include:
+
+  - A link to the stackdriver logs
+  - Function details
+  - `sys.argv` for the function
+  - Function execution time (in milliseconds)
+  - Function configured time (in seconds)
+  - You can add more data as described <PlatformLink to="/enriching-events/">here</PlatformLink>
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.

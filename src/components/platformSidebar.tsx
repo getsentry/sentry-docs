@@ -1,29 +1,6 @@
-import React from 'react';
-import {graphql, useStaticQuery} from 'gatsby';
-
 import {DynamicNav, toTree} from './dynamicNav';
 
-const navQuery = graphql`
-  query PlatformNavQuery {
-    allSitePage(
-      filter: {context: {draft: {ne: true}}, path: {regex: "/^/(platforms|product)/"}}
-    ) {
-      nodes {
-        path
-        context {
-          title
-          sidebar_title
-          sidebar_order
-          platform {
-            name
-          }
-        }
-      }
-    }
-  }
-`;
-
-type Node = {
+export type Node = {
   context: {
     platform: {
       name: string;
@@ -54,7 +31,7 @@ type ChildProps = Props & {
   };
 };
 
-export function SidebarContent({platform, guide, data}: ChildProps) {
+export function PlatformSidebar({platform, guide, data}: ChildProps) {
   const platformName = platform.name;
   const guideName = guide ? guide.name : null;
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
@@ -70,6 +47,7 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[
           `/${pathRoot}/performance/`,
+          `/${pathRoot}/metrics/`,
           `/${pathRoot}/session-replay/`,
           `/${pathRoot}/profiling/`,
           `/${pathRoot}/guides/`,
@@ -81,6 +59,13 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
         root={`/${pathRoot}/performance`}
         title="Performance Monitoring"
         prependLinks={[[`/${pathRoot}/performance/`, 'Set Up Performance']]}
+        suppressMissing
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/metrics`}
+        title="Metrics"
+        prependLinks={[[`/${pathRoot}/metrics/`, 'Set Up Metrics']]}
         suppressMissing
         tree={tree}
       />
@@ -114,10 +99,4 @@ export function SidebarContent({platform, guide, data}: ChildProps) {
       />
     </ul>
   );
-}
-
-export function PlatformSidebar(props: Props) {
-  const data = useStaticQuery(navQuery);
-
-  return <SidebarContent data={data} {...props} />;
 }

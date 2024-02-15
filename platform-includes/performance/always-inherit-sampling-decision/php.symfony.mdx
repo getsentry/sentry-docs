@@ -1,0 +1,40 @@
+{/*<!-- prettier-ignore -->*/}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        traces_sampler: 'sentry.callback.traces_sampler'
+
+services:
+    sentry.callback.traces_sampler:
+        class: 'App\Service\Sentry'
+        factory: [ '@App\Service\Sentry', 'getTracesSampler' ]
+```
+
+The service needed for the `traces_sampler` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public function getTracesSampler(): callable
+    {
+        return function (\Sentry\Tracing\SamplingContext $context): float {
+            // always inherit
+            if ($context->getParentSampled()) {
+                return 1.0;
+            }
+
+            // the rest of sampling logic
+        };
+    }
+}
+```
+
+<Note>
+
+Learn more in [Callables in Symfony Options](/platforms/php/guides/symfony/configuration/symfony-options/#callables).
+
+</Note>

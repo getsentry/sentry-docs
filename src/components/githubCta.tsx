@@ -1,13 +1,19 @@
-import React from 'react';
+import Link from 'next/link';
 
-import {SmartLink} from './smartLink';
+import {nodeForPath} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 
-type GitHubCTAProps = {
-  relativePath: string;
-  sourceInstanceName: string;
-};
+export function GitHubCTA() {
+  const {path, rootNode} = serverContext();
+  if (!rootNode) {
+    return null;
+  }
+  let sourceUrl = 'https://github.com/getsentry/sentry-docs/';
+  const pageNode = nodeForPath(rootNode, path);
+  if (pageNode && pageNode.sourcePath) {
+    sourceUrl += `edit/master/${pageNode.sourcePath}`;
+  }
 
-export function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps) {
   return (
     <div className="github-cta">
       <small>Help improve this content</small>
@@ -17,19 +23,12 @@ export function GitHubCTA({sourceInstanceName, relativePath}: GitHubCTAProps) {
         welcome, whether fixing a typo (drat!) or suggesting an update ("yeah, this would
         be better").
         <div className="muted">
-          <SmartLink
-            to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
-          >
-            Suggest an edit to this page
-          </SmartLink>{' '}
+          <Link href={sourceUrl}>Suggest an edit to this page</Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
-          <SmartLink to="https://docs.sentry.io/contributing/">
-            Contribute to Docs
-          </SmartLink>{' '}
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-          <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new/choose">
+          <Link href="/contributing/">Contribute to Docs</Link> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <Link href="https://github.com/getsentry/sentry-docs/issues/new/choose">
             Report a problem
-          </SmartLink>{' '}
+          </Link>{' '}
         </div>
       </small>
     </div>

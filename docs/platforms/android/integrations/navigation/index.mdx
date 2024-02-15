@@ -1,0 +1,151 @@
+---
+title: Navigation
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.android.navigation
+description: "Learn more about the Sentry Navigation integration for the Android SDK."
+categories:
+  - mobile
+---
+
+The `sentry-android-navigation` library provides [AndroidX Navigation](https://developer.android.com/jetpack/androidx/releases/navigation) support for Sentry using the [SentryNavigationListener](https://github.com/getsentry/sentry-java/blob/524ee49b212c3f2eead20960c3c6825ccdbf8007/sentry-android-navigation/src/main/java/io/sentry/android/navigation/SentryNavigationListener.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/main/sentry-android-navigation/src/main/java/io/sentry/android/navigation).
+
+On this page, we get you up and running with Sentry's Navigation Integration, so that it will automatically add a breadcrumb and start a transaction for each navigation event.
+
+## Install
+
+Sentry captures data by adding a `NavController.OnDestinationChangedListener`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-android-navigation` dependency using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-android-navigation:{{@inject packages.version('sentry.java.android.navigation', '6.2.0') }}'
+```
+
+## Configure
+
+Configuration should happen in the respective lifecycle callbacks, once you retrieve your `NavController` instance:
+
+```kotlin
+import androidx.navigation.NavController
+import io.sentry.android.navigation.SentryNavigationListener
+
+private val navController = findNavController(R.id.nav_host)
+private val sentryNavListener = SentryNavigationListener(
+  enableNavigationBreadcrumbs = true, // enabled by default
+  enableNavigationTracing = true  // enabled by default
+)
+
+override fun onResume() {
+  super.onResume()
+  navController.addOnDestinationChangedListener(sentryNavListener)
+}
+
+override fun onPause() {
+  super.onPause()
+  navController.removeOnDestinationChangedListener(sentryNavListener)
+}
+```
+
+```java
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import io.sentry.android.navigation.SentryNavigationListener;
+
+private final NavController navController = Navigation.findNavController(this, R.id.nav_host);
+private final SentryNavigationListener navListener = new SentryNavigationListener(
+  /* enableNavigationBreadcrumbs = */ true,
+  /* enableNavigationTracing = */ true
+);
+
+@Override
+protected void onResume() {
+  super.onResume();
+  navController.addOnDestinationChangedListener(sentryNavListener);
+}
+
+@Override
+protected void onPause() {
+  super.onPause();
+  navController.removeOnDestinationChangedListener(sentryNavListener);
+}
+```
+
+By default, the navigation transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. You can customize the timeout to your needs.
+
+## Verify
+
+This snippet includes a sample `Fragment` with a couple of navigation events and captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
+import io.sentry.android.navigation.SentryNavigationListener
+import io.sentry.Sentry
+
+class HomeFragment : Fragment() {
+
+  private val sentryNavListener = SentryNavigationListener()
+
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View {
+    // generated databinding
+    return FragmentHomeBinding.inflate(inflater).apply {
+        this.sendMessage.setOnClickListener {
+            Sentry.captureMessage("Some message.")
+        }
+        this.openFirstFragment.setOnClickListener {
+          findNavController().navigate(R.id.fragment_a)
+        }
+        this.openSecondFragment.setOnClickListener {
+          findNavController().navigate(R.id.fragment_b)
+        }
+    }.root
+  }
+
+  override fun onResume() {
+    super.onResume()
+    findNavController().addOnDestinationChangedListener(sentryNavListener)
+  }
+
+  override fun onPause() {
+    super.onPause()
+    findNavController().removeOnDestinationChangedListener(sentryNavListener)
+  }
+}
+```
+
+## Customize the Recorded Breadcrumb/Transaction
+
+By default, the Navigation integration captures route arguments as additional data on breadcrumbs and transactions. In case the arguments contain any PII data, you can strip it out by way of `BeforeBreadcrumbCallback` and `EventProcessor` respectively. To do that, [manually initialize](/platforms/android/configuration/manual-init/#manual-initialization) the SDK and add the following snippet:
+
+```kotlin
+import io.sentry.EventProcessor
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeBreadcrumbCallback
+import io.sentry.android.navigation.SentryNavigationListener
+
+SentryAndroid.init(this) { options ->
+  options.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb, hint ->
+    if (SentryNavigationListener.NAVIGATION_OP == breadcrumb.category) {
+      breadcrumb.data.remove("from_arguments")
+      breadcrumb.data.remove("to_arguments")
+    }
+    breadcrumb
+  }
+  options.addEventProcessor(object : EventProcessor {
+    override fun process(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
+      if (SentryNavigationListener.NAVIGATION_OP == transaction.contexts.trace.operation) {
+        transaction.removeExtra("arguments")
+      }
+      return transaction
+    }
+  })
+}
+```

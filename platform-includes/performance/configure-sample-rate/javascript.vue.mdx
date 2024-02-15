@@ -1,0 +1,40 @@
+<SignInNote />
+
+```javascript
+import Vue from "vue";
+import * as Sentry from "@sentry/vue";
+
+Sentry.init({
+  // Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
+  Vue: Vue,
+  dsn: "___PUBLIC_DSN___",
+
+  // This enables automatic instrumentation (highly recommended),
+  // but is not necessary for purely manual usage
+  // If you only want to use custom instrumentation:
+  // * Remove the `BrowserTracing` integration
+  // * add `Sentry.addTracingExtensions()` above your Sentry.init() call
+  integrations: [Sentry.browserTracingIntegration()],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+});
+```
+
+## Configure Tracing Instrumentation
+
+If you want to track child components, you can configure the SDK using additional options as shown below. Captured data will be then stored as spans and attached to the currently active transaction:
+
+```javascript
+Sentry.init({
+  Vue,
+  tracesSampleRate: 0.1,
+  trackComponents: ["Header", "Navigation", "Footer"],
+  hooks: ["create", "mount"],
+});
+```
+
+Learn more about [Vue component tracking](../features/component-tracking).

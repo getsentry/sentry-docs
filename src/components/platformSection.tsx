@@ -1,6 +1,19 @@
-import React, {Fragment} from 'react';
+import {DocNode, getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
-import {getPlatformsWithFallback, usePlatform} from './hooks/usePlatform';
+function getPlatformsWithFallback(
+  rootNode: DocNode,
+  platformOrGuide: Platform | PlatformGuide
+) {
+  const result = [platformOrGuide.key];
+  let curPlatform: Platform | PlatformGuide | undefined = platformOrGuide;
+  while (curPlatform?.fallbackPlatform) {
+    result.push(curPlatform.fallbackPlatform);
+    curPlatform = getPlatform(rootNode, curPlatform.fallbackPlatform);
+  }
+  return result;
+}
 
 type Props = {
   children?: React.ReactNode;
@@ -27,21 +40,20 @@ const isSupported = (
 export function PlatformSection({
   supported = [],
   notSupported = [],
-  platform,
   noGuides,
   children,
 }: Props) {
-  const [currentPlatform] = usePlatform(platform);
-
-  if (!currentPlatform) {
+  const {rootNode, path} = serverContext();
+  const currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  if (!currentPlatformOrGuide) {
     return null;
   }
 
-  if (noGuides && currentPlatform.type !== 'platform') {
+  if (noGuides && currentPlatformOrGuide.type !== 'platform') {
     return null;
   }
 
-  const platformsToSearch = getPlatformsWithFallback(currentPlatform);
+  const platformsToSearch = getPlatformsWithFallback(rootNode, currentPlatformOrGuide);
 
   let result: boolean | null = null;
   // eslint-disable-next-line no-cond-assign
@@ -61,5 +73,5 @@ export function PlatformSection({
     return null;
   }
 
-  return <Fragment>{children}</Fragment>;
+  return children;
 }

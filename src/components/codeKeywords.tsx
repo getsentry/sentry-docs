@@ -1,4 +1,11 @@
-import React, {Children, Fragment, useContext, useState} from 'react';
+import {
+  Children,
+  cloneElement,
+  Fragment,
+  ReactElement,
+  useContext,
+  useState,
+} from 'react';
 import {createPortal} from 'react-dom';
 import {ArrowDown} from 'react-feather';
 import {usePopper} from 'react-popper';
@@ -6,7 +13,7 @@ import styled from '@emotion/styled';
 import {AnimatePresence, motion} from 'framer-motion';
 import memoize from 'lodash/memoize';
 
-import {useOnClickOutside} from 'sentry-docs/utils';
+import {useOnClickOutside} from 'sentry-docs/clientUtils';
 
 import {CodeContext, createOrgAuthToken} from './codeContext';
 
@@ -21,10 +28,14 @@ export function makeKeywordsClickable(children: React.ReactNode) {
 
   return items.reduce((arr: ChildrenItem[], child) => {
     if (typeof child !== 'string') {
-      arr.push(child);
+      const updatedChild = cloneElement(
+        child as ReactElement,
+        {},
+        makeKeywordsClickable((child as ReactElement).props.children)
+      );
+      arr.push(updatedChild);
       return arr;
     }
-
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
@@ -84,7 +95,7 @@ function runRegex(
   }
 }
 
-const getPortal = memoize((): HTMLElement => {
+const getPortal = memoize((): HTMLElement | null => {
   if (typeof document === 'undefined') {
     return null;
   }
@@ -122,18 +133,16 @@ const dropdownPopperOptions = {
 };
 
 function OrgAuthTokenCreator() {
-  const {codeKeywords, sharedKeywordSelection} = useContext(CodeContext);
-
-  const [sharedSelection, setSharedSelection] = sharedKeywordSelection;
   const [tokenState, setTokenState] = useState<TokenState>({status: 'none'});
   const [isOpen, setIsOpen] = useState(false);
-  const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
-  const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
+  const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
+  const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
   const {styles, state, attributes} = usePopper(
     referenceEl,
     dropdownEl,
     dropdownPopperOptions
   );
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useOnClickOutside({
     ref: {current: referenceEl},
@@ -181,13 +190,18 @@ function OrgAuthTokenCreator() {
     }
   };
 
+  const codeContext = useContext(CodeContext);
+  if (!codeContext) {
+    return null;
+  }
+  const {codeKeywords, sharedKeywordSelection} = codeContext;
+  const [sharedSelection, setSharedSelection] = sharedKeywordSelection;
+
   const orgSet = new Set<string>();
   codeKeywords?.PROJECT?.forEach(projectKeyword => {
     orgSet.add(projectKeyword.ORG_SLUG);
   });
   const orgSlugs = [...orgSet];
-
-  const [isAnimating, setIsAnimating] = useState(false);
 
   if (!codeKeywords.USER) {
     // User is not logged in - show dummy token
@@ -288,11 +302,10 @@ function OrgAuthTokenCreator() {
 }
 
 function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
-  const codeContext = useContext(CodeContext);
-
   const [isOpen, setIsOpen] = useState(false);
-  const [referenceEl, setReferenceEl] = useState<HTMLSpanElement>(null);
-  const [dropdownEl, setDropdownEl] = useState<HTMLElement>(null);
+  const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
+  const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const {styles, state, attributes} = usePopper(
     referenceEl,
@@ -306,14 +319,17 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
     handler: () => setIsOpen(false),
   });
 
+  const codeContext = useContext(CodeContext);
+  if (!codeContext) {
+    return null;
+  }
+
   const [sharedSelection, setSharedSelection] = codeContext.sharedKeywordSelection;
 
-  const {codeKeywords} = useContext(CodeContext);
+  const {codeKeywords} = codeContext;
   const choices = codeKeywords?.[group] ?? [];
   const currentSelectionIdx = sharedSelection[group] ?? 0;
   const currentSelection = choices[currentSelectionIdx];
-
-  const [isAnimating, setIsAnimating] = useState(false);
 
   if (!currentSelection) {
     return <Fragment>keyword</Fragment>;
@@ -512,7 +528,11 @@ const DropdownHeader = styled('div')`
 `;
 
 const ItemButton = styled('button')<{isActive: boolean}>`
-  font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI';
+  font-family:
+    'Rubik',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI';
   font-size: 0.85rem;
   text-align: left;
   padding: 2px 8px;

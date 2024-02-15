@@ -1,0 +1,60 @@
+---
+title: Default Integrations
+description: "Learn more about the SentryCrashIntegration, SentryAutoBreadcrumbTrackingIntegration, SentryAutoSessionTrackingIntegration, and SentryOutOfMemoryTrackingIntegration, which are enabled by default."
+---
+
+All of Sentry’s SDKs provide integrations, which extend functionality of the SDK.
+
+System integrations are enabled by default to integrate into the standard library or the interpreter itself. They are documented so you can be both aware of what they do and disable them if they cause issues.
+
+### SentryCrashIntegration
+
+This integration is the core part of the SDK. It hooks into all signal and exception handlers to capture uncaught errors or crashes. This integration is also responsible for adding most of the device information to events. If it is disabled, you will not receive crash reports, nor will events contain much device data.
+
+<Note>
+
+Crash detection is not available for watchOS, and Mach exceptions are not reported on tvOS.
+
+</Note>
+
+<Note>
+
+Signal and exception handlers can't be installed if a debugger is attached. To test crashes locally, ensure that you've unchecked the "Debug executable" option in the Xcode scheme's Run action for your app.
+
+</Note>
+
+### SentryAutoBreadcrumbTrackingIntegration
+
+This integration will swizzle some methods to create breadcrumbs. For example, for `UIApplicationDidReceiveMemoryWarningNotification`, `sendAction:to:from:forEvent:` (UI interactions) or `viewDidAppear:` those breadcrumbs will be attached to your events.
+
+### SentryAutoSessionTrackingIntegration
+
+This integration registers for lifecycle notifications and automatically starts and ends sessions required for [Release health](/product/releases/health/#session).
+
+### SentryWatchdogTerminationsTrackingIntegration
+
+This integration tracks watchdog terminations based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst and works only if the application was in the foreground. Check out the <PlatformLink to="/configuration/watchdog-terminations/">configuration</PlatformLink> information for more details.
+
+## Disable an Integration
+
+This example removes the default-enabled integration for adding breadcrumbs to the event:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.integrations = Sentry.Options.defaultIntegrations().filter { name in
+        name != "SentryAutoBreadcrumbTrackingIntegration"
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+NSMutableArray *integrations = [SentryOptions defaultIntegrations].mutableCopy;
+[integrations removeObject:@"SentryAutoBreadcrumbTrackingIntegration"];
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.integrations = integrations;
+}];
+```

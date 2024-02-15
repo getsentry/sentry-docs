@@ -1,4 +1,6 @@
-import React, {Fragment, useContext} from 'react';
+'use client';
+
+import {Fragment, useContext} from 'react';
 
 import {CodeContext} from './codeContext';
 

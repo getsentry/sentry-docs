@@ -1,4 +1,6 @@
-import React, {useEffect, useState} from 'react';
+'use client';
+
+import {useEffect, useState} from 'react';
 
 //
 // BANNER CONFIGURATION
@@ -7,10 +9,10 @@ import React, {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Debug Web App Issues Faster: Sign Up for Session Replay Basics Workshop on Jan. 11th.';
+  'Join the metrics alpha! Track the data points you care about to pinpoint and solve issues with correlated traces.';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/session-replay-basics-debug-web-app-issues-faster/?promo_name=from-docs';
-const BANNER_LINK_TEXT = 'Sign up.';
+  'https://sentry.io/lp/metrics/?utm_source=docs&utm_medium=organic&utm_campaign=metrics-fy25q1-evergreen&utm_content=prod-metricsalpha-signup';
+const BANNER_LINK_TEXT = 'Sign Up';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
