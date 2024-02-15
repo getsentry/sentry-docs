@@ -693,6 +693,23 @@ Additional information that allows Sentry to connect multiple transactions, span
 
 : _Optional_. The origin of the trace indicates what created the trace. For more details, see <Link to="/sdk/performance/trace-origin">trace origin</Link>.
 
+`data`
+
+: _Optional_. The map of custom provided data. Currently Sentry SDKs can set following fields:
+
+| Field            | Type              | Description                                                  |
+| ---------------- | ----------------- | ------------------------------------------------------------ |
+| `route`          | `string` or `map` | The current route in the application.                        |
+| `previous_route` | `string` or `map` | The previous route in the application the user was visiting. |
+
+The `route` currently supports the following predefined fields if it's a map:
+
+| Field    | Type     | Description                                    |
+| -------- | -------- | ---------------------------------------------- |
+| `name`   | `string` | The name of the route in the user application. |
+| `params` | `map`    | Params assigned to this route.                 |
+
+If the route is set to a string (e.g. `"route": "foo"`), it will be normalized into a map (e.g. `"route": {"name": "foo"}`) server-side.
 
 ### Example Trace Context
 
@@ -715,7 +732,12 @@ Additional information that allows Sentry to connect multiple transactions, span
         "sample_rate": "1.0",
         "public_key": "93D0D1125146288EAEE2A9B3AF4F96CCBE3CB316"
       },
-      "origin": "auto.http.http_client_5"
+      "origin": "auto.http.http_client_5",
+      "data": {
+        "route": {
+          "name": "HomeRoute"
+        }
+      }
     }
   }
 }
@@ -727,8 +749,8 @@ Replay context contains the replay_id of the associated replay with the event.
 
 The only and required field is `replay_id`.
 
-This should not be sent by SDKs in most cases, as the Dynamic Sampling Context will be plucked in relay, 
-but for current versions of python and PHP these SDKs will send this context as they do not currently support the 
+This should not be sent by SDKs in most cases, as the Dynamic Sampling Context will be plucked in relay,
+but for current versions of python and PHP these SDKs will send this context as they do not currently support the
 envelope endpoint.
 
 `replay_id`
@@ -747,20 +769,19 @@ envelope endpoint.
 }
 ```
 
-
 ## Response Context
 
 Response context contains information about the HTTP response associated with the event.
 
 The only and required field is `status_code`.
 
-This is mostly set on transactions in a web server environment where one transaction represents a HTTP request/response cycle. 
+This is mostly set on transactions in a web server environment where one transaction represents a HTTP request/response cycle.
 
 `status_code`
 
 : **Required.** The integer status code from the HTTP response associated with the event.
-- Example: `200`
 
+- Example: `200`
 
 ### Example Response Context
 
