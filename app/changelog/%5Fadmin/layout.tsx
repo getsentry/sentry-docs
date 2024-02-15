@@ -1,5 +1,5 @@
 import {type ReactNode, Suspense} from 'react';
-import {GET} from 'app/api/auth/[...nextauth]/route';
+import {GET} from 'app/changelog/api/auth/[...nextauth]/route';
 import {getServerSession} from 'next-auth/next';
 
 import LoginButton from 'sentry-docs/components/changelog/loginButton';
