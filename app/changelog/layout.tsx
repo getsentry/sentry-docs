@@ -5,6 +5,7 @@ import {ReactNode} from 'react';
 import {Theme} from '@radix-ui/themes';
 import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
+import NextTopLoader from 'nextjs-toploader';
 
 import {Navbar} from 'sentry-docs/components/changelog/navbar';
 
@@ -21,7 +22,8 @@ export const metadata: Metadata = {
 export default function ChangelogLayout({children}: {children: ReactNode}) {
   return (
     <Theme accentColor="violet" grayColor="sand" radius="large" scaling="95%">
-      <div className={`${rubik.className} font-sans`}>
+      <NextTopLoader color="#8d5494" />
+      <div className={`${rubik.className}`}>
         <Navbar />
         <div className="bg-gray-100">{children}</div>
         <div className="w-full mx-auto h-16 relative bg-darkPurple">
