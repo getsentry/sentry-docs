@@ -6,11 +6,7 @@ To start tracing in a console application, you'll need to add Sentry to the trac
 
 ```csharp
 using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-    .AddSource(serviceName)
-    .ConfigureResource(resource =>
-        resource.AddService(
-            serviceName: serviceName,
-            serviceVersion: serviceVersion))
+    .AddSource(serviceName) // <-- The name of an activity sources you care about
     .AddSentry() // <-- Configure OpenTelemetry to send traces to Sentry
     .Build();
 ```
@@ -36,10 +32,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
         tracerProviderBuilder
-            .AddSource(Telemetry.ActivitySource.Name)
-            .ConfigureResource(resource => resource.AddService(Telemetry.ServiceName))
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
+            .AddAspNetCoreInstrumentation() // <-- Adds ASP.NET Core telemetry sources
+            .AddHttpClientInstrumentation() // <-- Adds HttpClient telemetry sources
             .AddSentry() // <-- Configure OpenTelemetry to send trace information to Sentry
     );
 ```
@@ -61,13 +55,7 @@ To start tracing in an ASP.NET application, you'll need to create a tracer provi
 
 ```csharp
 var builder = Sdk.CreateTracerProviderBuilder()
-    .AddAspNetInstrumentation()
-    .AddSource(Telemetry.ServiceName)
-    .SetResourceBuilder(
-        ResourceBuilder.CreateDefault()
-            .AddService(serviceName: Telemetry.ServiceName, serviceVersion: "1.0.0")
-        );
-
+    .AddAspNetInstrumentation(); // <-- Adds ASP.NET telemetry sources
 ```
 
 Next, initialize Sentry and opt into the use of OpenTelemetry. Provide the SDK with the builder for OpenTelemetry's tracer provider to allow sending spans to Sentry.

@@ -10,9 +10,11 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = 'c86b8b91bf25f01efe4000ab4fd77ebf00cac801';
+const SENTRY_API_SCHEMA_SHA = '78a8da372a1912d69e27b7f36603017cd29b6815';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
+
+let cachedResonse: DeRefedOpenAPI | null = null;
 
 async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
   if (activeEnv === 'development' && process.env.OPENAPI_LOCAL_PATH) {
@@ -27,10 +29,16 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
       );
     }
   }
+
+  if (cachedResonse) {
+    return cachedResonse;
+  }
   const response = await fetch(
-    `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
+    `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`,
+    {cache: 'no-store'}
   );
-  return await response.json();
+  cachedResonse = await response.json();
+  return cachedResonse!;
 }
 
 export type APIParameter = {

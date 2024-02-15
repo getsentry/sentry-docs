@@ -14,7 +14,7 @@ export function Navbar() {
         >
           <Image src={SentryWordmarkSVG} alt="Sentry's logo" width={150} />
         </a>
-        <div className="flex space-x-4">
+        <div className="flex space-x-4 hidden md:block">
           <Link
             className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
             href="/changelog"
@@ -24,14 +24,14 @@ export function Navbar() {
 
           <Link
             className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
-            href="/"
+            href="https://docs.sentry.io/"
           >
             Documentation
           </Link>
 
           <Link
             className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium uppercase"
-            href="/"
+            href="https://sentry.io/signup/"
           >
             Get started
           </Link>
