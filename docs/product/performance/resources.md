@@ -93,7 +93,7 @@ To view more details, click on a resource from the table to open its **Resource 
 
 <div style={{position: 'relative', paddingBottom: 'calc(50.86013462976814% + 41px)', height: 0}}><iframe src="https://demo.arcade.software/dVvM0eWdGjN7bVhxSwJr?embed" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', colorScheme: 'light'}}></iframe></div>
 
-### What does a render blocking mean?
+### What Does a Render Blocking Mean?
 
 A render blocking resource is one which will stop the browser from rendering anything on the screen, until the resource is fully download and processed by the browser.
 
@@ -150,7 +150,7 @@ At the moment, relative resource span descriptions (ones that begin with '/') ar
 
 </Note>
 
-![Example of Sample Images](./resource-sample-images.png)
+![Example of Sample Images](/product/performance/resource-sample-images.png)
 
 ## Sample List
 
