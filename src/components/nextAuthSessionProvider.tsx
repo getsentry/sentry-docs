@@ -7,7 +7,7 @@ type sessionProps = {
   children: ReactNode;
 };
 function NextAuthSessionProvider({children}: sessionProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return <SessionProvider basePath="/changelog/api/auth">{children}</SessionProvider>;
 }
 
 export default NextAuthSessionProvider;
