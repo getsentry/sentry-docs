@@ -9,7 +9,7 @@ import {setServerContext} from 'sentry-docs/serverContext';
 import 'sentry-docs/styles/screen.scss';
 
 export default async function Page({
-  searchParams: {next, platform},
+  searchParams: {next = '', platform},
 }: {
   searchParams: {[key: string]: string | string[] | undefined};
 }) {
