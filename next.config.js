@@ -13,9 +13,6 @@ const nextConfig = {
       },
     ];
   },
-  publicRuntimeConfig: {
-    assetPrefix: isProd ? 'https://docs.sentry.io' : undefined,
-  },
   assetPrefix: isProd ? 'https://docs.sentry.io' : undefined,
 
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
