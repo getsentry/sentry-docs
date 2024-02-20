@@ -5,12 +5,14 @@ const isProd = process.env.NODE_ENV === 'production' && !process.env.IS_PREVIEW;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  headers: [
-    {
-      source: '/_next/static/([^/]+/pages|chunks|runtime|css|fonts|media)/(.+)',
-      headers: [{key: 'Access-Control-Allow-Origin', value: '*'}],
-    },
-  ],
+  headers() {
+    return [
+      {
+        source: '/_next/static/([^/]+/pages|chunks|runtime|css|fonts|media)/(.+)',
+        headers: [{key: 'Access-Control-Allow-Origin', value: '*'}],
+      },
+    ];
+  },
   publicRuntimeConfig: {
     assetPrefix: isProd ? 'https://docs.sentry.io' : undefined,
   },
