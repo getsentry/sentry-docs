@@ -8,7 +8,7 @@ export default function Header({loading}) {
       <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 pt-8 grid grid-cols-12 items-center">
         <img
           className={`justify-self-center col-span-10 z-20 hidden lg:block ${loading ? 'animate-fade-in-left' : ''}`}
-          src={`${publicRuntimeConfig.assetPrefix}/changelog/assets/hero.png`}
+          src={`${publicRuntimeConfig.assetPrefix ?? ''}/changelog/assets/hero.png`}
           alt="Sentry Changelog"
           height={273}
           width={450}
