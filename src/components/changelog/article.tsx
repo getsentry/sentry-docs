@@ -1,5 +1,4 @@
 import {ReactNode} from 'react';
-import Image from 'next/image';
 
 import Date from './date';
 import Tag from './tag';
