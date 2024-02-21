@@ -13,7 +13,6 @@ const rubik = Rubik({
   weight: ['400', '500', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin'],
-  variable: '--font-rubik',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +23,7 @@ export default function ChangelogLayout({children}: {children: ReactNode}) {
   return (
     <Theme accentColor="violet" grayColor="sand" radius="large" scaling="95%">
       <NextTopLoader color="#8d5494" />
-      <div id="changelogcontent" className={`${rubik.variable}`}>
+      <div className={`${rubik.className}`}>
         <Navbar />
         <div className="bg-gray-100">{children}</div>
         <div className="w-full mx-auto h-16 relative bg-darkPurple">
