@@ -3,16 +3,6 @@ const remarkPrism = require('remark-prism');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  headers() {
-    return [
-      {
-        source: '/_next/static/([^/]+/pages|chunks|runtime|css|fonts|media)/(.+)',
-        headers: [{key: 'Access-Control-Allow-Origin', value: '*'}],
-      },
-    ];
-  },
-  assetPrefix: process.env.IS_PRODUCTION ? 'https://docs.sentry.io' : undefined,
-
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
   images: {
