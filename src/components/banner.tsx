@@ -9,10 +9,10 @@ import {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Join the metrics alpha! Track the data points you care about to pinpoint and solve issues with correlated traces.';
+  'Join us for Sentry Launch Week March 18-22 for product releases and exclusive demos.';
 const BANNER_LINK_URL =
-  'https://sentry.io/lp/metrics/?utm_source=docs&utm_medium=organic&utm_campaign=metrics-fy25q1-evergreen&utm_content=prod-metricsalpha-signup';
-const BANNER_LINK_TEXT = 'Sign Up';
+  'https://sentry.io/events/launch-week/?promo_name=docs-fy25q1launchweek';
+const BANNER_LINK_TEXT = 'See what’s new';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
