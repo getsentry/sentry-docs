@@ -30,13 +30,24 @@ function formatCaseStyle(style: PlatformCaseStyle | undefined, value: string) {
 
 export function PlatformIdentifier({name, platform}: Props) {
   const {rootNode, path} = serverContext();
-  let currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  if (!rootNode) {
+    return null;
+  }
+
+  let currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!currentPlatformOrGuide && platform) {
-    currentPlatformOrGuide = rootNode && getPlatform(rootNode, platform);
+    currentPlatformOrGuide = getPlatform(rootNode, platform);
   }
   if (!currentPlatformOrGuide) {
     return null;
   }
 
-  return <code>{formatCaseStyle(currentPlatformOrGuide.caseStyle, name)}</code>;
+  // For guides, fall back to the parent platform's case style.
+  let caseStyle = currentPlatformOrGuide.caseStyle;
+  if (!caseStyle && currentPlatformOrGuide.type === 'guide') {
+    const parent = getPlatform(rootNode, currentPlatformOrGuide.platform);
+    caseStyle = parent?.caseStyle;
+  }
+
+  return <code>{formatCaseStyle(caseStyle, name)}</code>;
 }
