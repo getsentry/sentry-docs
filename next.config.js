@@ -1,6 +1,8 @@
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
 
+const isProd = process.env.NODE_ENV === 'production' && !process.env.IS_PREVIEW;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   headers() {
@@ -11,7 +13,7 @@ const nextConfig = {
       },
     ];
   },
-  assetPrefix: process.env.IS_PRODUCTION ? 'https://docs.sentry.io' : undefined,
+  assetPrefix: isProd ? 'https://docs.sentry.io' : undefined,
 
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
