@@ -11,7 +11,7 @@ const SHOW_BANNER = true;
 const BANNER_TEXT =
   'Join us for Sentry Launch Week March 18-22 for product releases and exclusive demos.';
 const BANNER_LINK_URL =
-  'https://sentry.io/events/launch-week/?promo_name=fy25q1launchweek';
+  'https://sentry.io/events/launch-week/?promo_name=docs-fy25q1launchweek';
 const BANNER_LINK_TEXT = 'See what’s new';
 const OPTIONAL_BANNER_IMAGE = null;
 
