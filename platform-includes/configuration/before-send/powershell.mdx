@@ -1,0 +1,19 @@
+A `Func<SentryEvent, Hint, SentryEvent?>` can be used to mutate, discard (return null), or return a completely new event.
+
+```powershell
+Start-Sentry {
+    $_.Dsn = 'https://key@127.0.0.1/1'
+
+    # Capture all events in BeforeSend callback & drop them.
+    $_.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
+            param([Sentry.SentryEvent]$event_)
+            
+            if ($null -ne $event_.Exception -and $event_.Exception.Message.Contains("Noisy Exception"))
+            {
+                return $null # Don't send this event to Sentry
+            }
+            
+            return $event_
+        });
+}
+```

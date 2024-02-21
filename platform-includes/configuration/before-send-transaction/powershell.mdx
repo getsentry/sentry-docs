@@ -1,0 +1,29 @@
+A `Func<SentryTransaction, Hint, SentryTransaction?>` can be used to update the transaction or drop it by returning `null` before it gets sent to Sentry. For example:
+
+```powershell
+Start-Sentry {
+    $_.Dsn = 'https://key@127.0.0.1/1'
+
+    # Add this to the SDK initialization callback
+    $_.SetBeforeSendTransaction([System.Func[Sentry.SentryTransaction, Sentry.SentryTransaction]] {
+            param([Sentry.SentryTransaction]$sentryTransaction)
+            
+            # Modify the transaction
+            if ($sentryTransaction.Operation -eq 'http.server')
+            {
+                return $null; # Drop the transaction by returning null
+            }
+
+            return #sentryTransaction;
+        });
+}
+```
+
+```csharp
+using Sentry;
+
+
+options.SetBeforeSendTransaction((sentryTransaction, hint) =>
+{
+});
+```

@@ -1,0 +1,23 @@
+```powershell
+Start-Sentry {
+    // OR: Determine traces sample rate based on the sampling context
+    $_.TracesSampler = [System.Func[Sentry.TransactionSamplingContext, System.Nullable`1[System.Double]]] {
+        param([Sentry.TransactionSamplingContext]$context)
+
+        # If this is the continuation of a trace, just use that decision (rate controlled by the caller)
+        if ($context.TransactionContext.IsParentSampled)
+        {
+            return 1.0 # Keep all traces complete
+        }
+        
+        
+        # the rest of sampling logic, for example:
+        if ($context.TransactionContext.Name -eq 'important-endpoint')
+        {
+            return 1.0 # 100% for an important endpoint
+        }
+        
+        return 0.5 # 50% for everything else
+    }
+}
+```
