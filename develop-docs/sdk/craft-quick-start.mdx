@@ -144,3 +144,47 @@ This will create an [issue in `publish`] which you'll need an approver to
 add a label to.
 
 [issue in `publish`]: https://github.com/getsentry/publish/issues
+
+## [Optional] Using Multiple Craft Configs in a Repo
+
+In some cases, we need to maintain multiple or diverging publishing configs in a repository.
+For example, when we have to maintain multiple major versions of a package we release (e.g. Sentry JavaScript SDK v7 and v8), where we added or removed artifacts or publishing targets.
+
+By default, our publishing process is configured to take the `craft.yml` config from the repo's default branch as the single source of truth for publishing.
+
+You can opt your repo into using the config from a specific merge target branch (can be configured when triggering the Prepare Release Action) in two steps:
+
+### 1. Release Preparation:
+
+Add `craft_config_from_merge_target: true` when calling `getsentry/action-prepare-release` in your repo's release workflow:
+
+```yml
+# ...
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: 'Release a new version'
+    steps:
+      # ...
+      - name: Prepare release
+        uses: getsentry/action-prepare-release@v1
+        with:
+          # ...
+          craft_config_from_merge_target: true
+```
+
+### 2. Publish Configuration
+
+Add the branch(es) you want to take the config from to the `publish.yml` workflow in `getsentry/publish`:
+
+```yml
+# ...
+- name: Set target repo checkout branch
+  if: |
+    fromJSON(steps.inputs.outputs.result).repo == 'sentry-javascript' && fromJSON(steps.inputs.outputs.result).merge_target == 'v7'
+```
+
+Note: The branch(es) registered in this step **MUST BE** protected in the target repository.
+Disable direct pushing to the branch and require approvals for PRs before they can be merged.
+
+Good job! Now you can let your craft configs diverge across the different merge target branches and the publishing process will pick up the correct config based on the branch you're setting as a merge target.
