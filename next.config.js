@@ -22,12 +22,9 @@ const nextConfig = {
   },
 
   webpack: (config, _options) => {
-    console.log(process.env.VERCEL_ENV);
-    console.log(typeof process.env.CODECOV_TOKEN, process.env.CODECOV_TOKEN?.length);
     config.plugins.push(
       codecovWebpackPlugin({
-        enableBundleAnalysis:
-          process.env.VERCEL_ENV === 'production' || process.env.VERCEL_ENV === 'preview',
+        enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
         bundleName: 'sentry-docs',
         uploadToken: process.env.CODECOV_TOKEN,
       })
