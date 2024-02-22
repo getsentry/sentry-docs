@@ -37,6 +37,9 @@ export async function generateMetadata(
   return {
     title: changelog?.title,
     description: changelog?.summary,
+    alternates: {
+      canonical: `https://sentry.io/changelog/${params.slug}`,
+    },
     openGraph: {
       images: changelog?.image || (await parent).openGraph?.images,
     },
