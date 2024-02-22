@@ -20,6 +20,21 @@ const nextConfig = {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
   },
 
+  webpack: (config, _options) => {
+    config.plugins.push(
+      codecovWebpackPlugin({
+        enableBundleAnalysis:
+          process.env.GITHUB_ACTIONS === 'true' &&
+          typeof process.env.CODECOV_TOKEN === 'string' &&
+          process.env.CODECOV_TOKEN.length > 0,
+        bundleName: 'sentry-docs',
+        uploadToken: process.env.CODECOV_TOKEN,
+      })
+    );
+
+    return config;
+  },
+
   redirects() {
     return [
       {
