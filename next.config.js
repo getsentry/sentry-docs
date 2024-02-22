@@ -1,5 +1,6 @@
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
+const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
