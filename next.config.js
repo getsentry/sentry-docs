@@ -25,9 +25,7 @@ const nextConfig = {
     config.plugins.push(
       codecovWebpackPlugin({
         enableBundleAnalysis:
-          process.env.GITHUB_ACTIONS === 'true' &&
-          typeof process.env.CODECOV_TOKEN === 'string' &&
-          process.env.CODECOV_TOKEN.length > 0,
+          process.env.VERCEL_ENV === 'production' || process.env.VERCEL_ENV === 'preview',
         bundleName: 'sentry-docs',
         uploadToken: process.env.CODECOV_TOKEN,
       })
