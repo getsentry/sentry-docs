@@ -189,6 +189,9 @@ export function generateMetadata(): Metadata {
   return {
     description:
       'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
+    alternates: {
+      canonical: `https://sentry.io/changelog/`,
+    },
     other: {
       'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },
