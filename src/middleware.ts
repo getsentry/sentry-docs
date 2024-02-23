@@ -4,6 +4,7 @@ export function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const cspHeader = `
     default-src 'none';
+    base-uri 'none';
     script-src 'self' 'unsafe-inline' 'nonce-${nonce}' 'strict-dynamic';
     connect-src 'self' o1.ingest.sentry.io plausible.io;
     style-src 'self' 'unsafe-inline';
