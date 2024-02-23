@@ -1,5 +1,5 @@
-import { headers } from 'next/headers'
 import type {Metadata} from 'next';
+import {headers} from 'next/headers';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
-  const nonce = headers().get('x-nonce') || ''
+  const nonce = headers().get('x-nonce') || '';
   return (
     <html lang="en">
       <body>{children}</body>
