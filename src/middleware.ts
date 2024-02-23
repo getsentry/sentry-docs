@@ -10,6 +10,7 @@ export function middleware(request: NextRequest) {
     style-src 'self' 'unsafe-inline';
     img-src 'self' docs.sentry.io storage.googleapis.com;
     font-src 'self';
+    worker-src blob:;
     upgrade-insecure-requests;
 `;
   // Replace newline characters and spaces
