@@ -94,7 +94,7 @@ export default async function ChangelogList({
     take: 10,
   });
 
-  const reduceMoths = (changelog: any) => {
+  const reduceMonths = (changelog: any) => {
     return changelog.reduce((allMonths: any, post: any) => {
       const date = post.publishedAt as Date;
       const year = date.getFullYear();
@@ -107,9 +107,9 @@ export default async function ChangelogList({
   };
 
   // iterate over all posts and create a list of months & years
-  const months = reduceMoths(changelogs);
+  const months = reduceMonths(changelogs);
 
-  const allMonths = reduceMoths(
+  const allMonths = reduceMonths(
     await prisma.changelog.findMany({
       select: {publishedAt: true},
       orderBy: {
