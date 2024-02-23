@@ -44,6 +44,7 @@ module.exports = {
   devtool: "source-map",
   plugins: [
     sentryWebpackPlugin({
+      /* Other plugin config */
       _experiments: {
         moduleMetadata: ({ release }) => ({ dsn: "__MODULE_DSN__", release }),
       },
@@ -149,14 +150,13 @@ init({
 
 You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to as follows:
 
+<Note>
+It is important to always use a local scope when setting the tag (either as shown above or using [withScope](../../enriching-events/scopes/#local-scopes)). Using a global scope e.g. through `Sentry.setTag()` will result in all subsequent events being routed to the same DSN regardless of where they originate.
+</Note>
+
 ```
 captureException(new Error("oh no!"), (scope) => {
   scope.setTag("feature", "cart");
   return scope;
 });
 ```
-
-<Note>
-It is important to always use a local scope when setting the tag (either as shown above or using [withScope](../../enriching-events/scopes/#local-scopes)). Using a global scope e.g. through `Sentry.setTag()` will result in all subsequent events being routed to the same DSN regardless of where they originate.
-</Note>
-
