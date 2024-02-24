@@ -9,7 +9,7 @@ import Months from 'sentry-docs/components/changelog/months';
 import Pagination from 'sentry-docs/components/changelog/pagination';
 import Search from 'sentry-docs/components/changelog/search';
 import Tags from 'sentry-docs/components/changelog/tags';
-import {prisma} from 'sentry-docs/prisma';
+import prisma from 'sentry-docs/prisma';
 
 import Header from './header';
 

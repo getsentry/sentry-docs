@@ -9,7 +9,7 @@ import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
-import {prisma} from 'sentry-docs/prisma';
+import prisma from 'sentry-docs/prisma';
 
 type ChangelogWithCategories = Changelog & {
   categories: Category[];
