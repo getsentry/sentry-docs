@@ -6,7 +6,7 @@ import Article from 'sentry-docs/components/changelog/article';
 
 import Header from './header';
 
-export default async function ChangelogList() {
+export default function ChangelogList() {
   return (
     <Fragment>
       <Header loading={false} />
