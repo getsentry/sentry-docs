@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs';
 import {GET} from 'app/changelog/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import Link from 'next/link';
+import {notFound} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
@@ -67,7 +68,7 @@ export default async function ChangelogEntry({params}) {
       },
     });
   } catch (e) {
-    return <div>Not found</div>;
+    return notFound();
   }
 
   return (
