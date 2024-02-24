@@ -16,7 +16,12 @@ export default async function ChangelogList() {
           <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 md:px-8">
             <div className="flex justify-between items-center py-6 space-x-4" />
 
-            <Article title="Be right back" />
+            <Article title="Be right back">
+              <a href="https://changelog.getsentry.com">
+                We're currently updating our changelog. Please visit our changelog page
+                for the latest updates.
+              </a>
+            </Article>
           </div>
         </div>
         <div className="hidden md:block md:col-span-2 pl-5 pt-10" />
