@@ -5,7 +5,7 @@ import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
 
-import {prisma} from '../prisma';
+import prisma from '../prisma';
 
 export async function unpublishChangelog(formData: FormData) {
   const session = await getServerSession(handler);
