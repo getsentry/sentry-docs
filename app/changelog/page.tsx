@@ -2,30 +2,34 @@ import {Fragment} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
 
-import Article from 'sentry-docs/components/changelog/article';
+import List from 'sentry-docs/components/changelog/list';
 
 import Header from './header';
 
-export default function ChangelogList() {
+// export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-cache';
+
+const getChangelogs = async () => {
+  const result = await fetch(
+    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/api`,
+    {
+      next: {tags: ['changelogs']},
+    }
+  );
+  if (result.ok) {
+    return result.json();
+  }
+  return [];
+};
+
+export default async function ChangelogList() {
+  const changelogs = await getChangelogs();
+
   return (
     <Fragment>
       <Header loading={false} />
-      <div className="w-full mx-auto grid grid-cols-12 bg-gray-200">
-        <div className="hidden md:block md:col-span-2 pl-5 pt-10" />
-        <div className="col-span-12 md:col-span-8">
-          <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 md:px-8">
-            <div className="flex justify-between items-center py-6 space-x-4" />
-
-            <Article title="Be right back">
-              <a href="https://changelog.getsentry.com">
-                We're currently updating our changelog. Please visit our changelog page
-                for the latest updates.
-              </a>
-            </Article>
-          </div>
-        </div>
-        <div className="hidden md:block md:col-span-2 pl-5 pt-10" />
-      </div>
+      <List changelogs={changelogs} />
     </Fragment>
   );
 }
