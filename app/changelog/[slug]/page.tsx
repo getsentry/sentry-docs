@@ -40,10 +40,6 @@ export async function generateMetadata(
 }
 
 const getChangelog = async slug => {
-  // If CI we return nothing so prerendering doesn't error when calling an internal route
-  if (process.env.CI) {
-    return null;
-  }
   const result = await fetch(
     `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/${slug}/api`
   );

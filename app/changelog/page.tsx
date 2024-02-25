@@ -1,17 +1,16 @@
 import {Fragment} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
-import {revalidateTag} from 'next/cache';
 
 import List from 'sentry-docs/components/changelog/list';
 
 import Header from './header';
 
+// export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-cache';
+
 const getChangelogs = async () => {
-  // If CI we return nothing so prerendering doesn't error when calling an internal route
-  if (process.env.CI) {
-    return [];
-  }
   const result = await fetch(
     `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/api`,
     {
@@ -26,11 +25,6 @@ const getChangelogs = async () => {
 
 export default async function ChangelogList() {
   const changelogs = await getChangelogs();
-
-  // If we are now deployed, and changelogs are empty, clear cache
-  if (!process.env.CI && changelogs.length === 0) {
-    revalidateTag('changelogs');
-  }
 
   return (
     <Fragment>
