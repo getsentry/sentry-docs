@@ -70,8 +70,7 @@ export default function Changelogs({
   const monthsCopy = [...months];
 
   const showChangelogs = filteredChangelogs.map(changelog => {
-    // if month & year of the post match an entry in the months array, pop it from months array and display it
-    const monthYear = (changelog.publishedAt as Date).toLocaleString('default', {
+    const monthYear = new Date(changelog.publishedAt || '').toLocaleString('default', {
       month: 'long',
       year: 'numeric',
     });

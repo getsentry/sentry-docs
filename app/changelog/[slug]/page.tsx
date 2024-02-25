@@ -9,6 +9,9 @@ import {MDXRemote} from 'next-mdx-remote/rsc';
 import Article from 'sentry-docs/components/changelog/article';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 
+// We need this here so it's not prerendered during build
+export const dynamic = 'force-dynamic';
+
 type ChangelogWithCategories = Changelog & {
   categories: Category[];
 };
@@ -19,7 +22,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   let changelog: Changelog | null = null;
   try {
-    changelog = await await getChangelog(params.slug);
+    changelog = await getChangelog(params.slug);
   } catch (e) {
     return {title: (await parent).title};
   }
@@ -41,8 +44,7 @@ export async function generateMetadata(
 
 const getChangelog = async slug => {
   const result = await fetch(
-    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/${slug}/api`,
-    {method: 'GET', next: {tags: ['changelogs']}}
+    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/${slug}/api`
   );
   if (result.ok) {
     return result.json();
