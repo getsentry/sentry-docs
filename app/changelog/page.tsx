@@ -8,8 +8,8 @@ import Header from './header';
 
 const getChangelogs = async () => {
   const result = await fetch(
-    `${process.env.BASE_URL || process.env.VERCEL_URL}/changelog/api/`,
-    {method: 'GET'}
+    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/api`,
+    {method: 'GET', next: {tags: ['changelogs']}}
   );
   if (result.ok) {
     return result.json();

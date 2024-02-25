@@ -1,7 +1,7 @@
 'use server';
 
 import {GET as handler} from 'app/changelog/api/auth/[...nextauth]/route';
-import {revalidatePath} from 'next/cache';
+import {revalidatePath, revalidateTag} from 'next/cache';
 import {redirect} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
 
@@ -13,6 +13,7 @@ export async function unpublishChangelog(formData: FormData) {
     return {message: 'Unauthorized'};
   }
   const id = formData.get('id') as string;
+
   try {
     await prisma.changelog.update({
       where: {id},
@@ -23,6 +24,7 @@ export async function unpublishChangelog(formData: FormData) {
     return {message: 'Unable to unpublish changelog'};
   }
 
+  revalidateTag('changelogs');
   return revalidatePath(`/changelog/_admin`);
 }
 
@@ -32,6 +34,7 @@ export async function publishChangelog(formData: FormData) {
     return {message: 'Unauthorized'};
   }
   const id = formData.get('id') as string;
+
   try {
     await prisma.changelog.update({
       where: {id},
@@ -42,6 +45,7 @@ export async function publishChangelog(formData: FormData) {
     return {message: 'Unable to publish changelog'};
   }
 
+  revalidateTag('changelogs');
   return revalidatePath(`/changelog/_admin`);
 }
 
@@ -74,6 +78,7 @@ export async function createChangelog(formData: FormData) {
 
   await prisma.changelog.create({data});
 
+  revalidateTag('changelogs');
   return redirect(`/changelog/_admin`);
 }
 
@@ -91,6 +96,7 @@ export async function editChangelog(formData: FormData) {
   const connect = categories.map(category => {
     return {name: category as string};
   });
+
   try {
     const data = {
       title: formData.get('title') as string,
@@ -110,6 +116,7 @@ export async function editChangelog(formData: FormData) {
     return {message: error};
   }
 
+  revalidateTag('changelogs');
   return redirect(`/changelog/_admin`);
 }
 
@@ -128,5 +135,6 @@ export async function deleteChangelog(formData: FormData) {
     return {message: 'Unable to delete changelog'};
   }
 
+  revalidateTag('changelogs');
   return revalidatePath(`/changelog/_admin`);
 }

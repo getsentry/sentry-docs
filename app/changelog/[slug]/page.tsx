@@ -41,10 +41,8 @@ export async function generateMetadata(
 
 const getChangelog = async slug => {
   const result = await fetch(
-    `${process.env.BASE_URL || process.env.VERCEL_URL}/changelog/${slug}/api/`,
-    {
-      method: 'GET',
-    }
+    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/${slug}/api`,
+    {method: 'GET', next: {tags: ['changelogs']}}
   );
   if (result.ok) {
     return result.json();
