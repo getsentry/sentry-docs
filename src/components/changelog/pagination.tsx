@@ -13,6 +13,7 @@ export default function Pagination({totalPages, currentPage, setPageNumber}) {
   return (
     <div className="flex items-center justify-center gap-0 md:gap-4">
       <ConditionalLink
+        href={`#page${Math.max(currentPage - 1, 1)}`}
         onClick={() => setPageNumber(Math.max(currentPage - 1, 1))}
         condition={prevPage}
       >
@@ -41,7 +42,7 @@ export default function Pagination({totalPages, currentPage, setPageNumber}) {
       </ConditionalLink>
       <div className="flex items-center gap-0 md:gap-2">
         {pages.map(page => (
-          <a key={page} onClick={() => setPageNumber(page)}>
+          <a key={page} href={`#page${page}`} onClick={() => setPageNumber(page)}>
             <button
               className={`${page === currentPage ? 'bg-darkPurple relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg  text-center align-middle font-sans text-xs font-medium uppercase text-white shadow-md bg-darkPurple transition-all hover:shadow-lg hover:bg-darkPurple focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none' : 'relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-darkPurple/10 active:bg-darkPurple/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none'}`}
               type="button"
@@ -54,6 +55,7 @@ export default function Pagination({totalPages, currentPage, setPageNumber}) {
         ))}
       </div>
       <ConditionalLink
+        href={`#page${currentPage + 1}`}
         onClick={() => setPageNumber(currentPage + 1)}
         condition={nextPage}
       >
