@@ -1,36 +1,25 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
-import {GET} from 'app/changelog/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
-import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
-import prisma from 'sentry-docs/prisma';
 
 type ChangelogWithCategories = Changelog & {
   categories: Category[];
 };
 
-type Props = {
-  params: {slug: string};
-};
-
 export async function generateMetadata(
-  {params}: Props,
+  {params},
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   let changelog: Changelog | null = null;
   try {
-    changelog = await prisma.changelog.findUnique({
-      where: {
-        slug: params.slug,
-      },
-    });
+    changelog = await await getChangelog(params.slug);
   } catch (e) {
     return {title: (await parent).title};
   }
@@ -50,24 +39,23 @@ export async function generateMetadata(
   };
 }
 
-export default async function ChangelogEntry({params}) {
-  let changelog: ChangelogWithCategories | null = null;
-  const session = await getServerSession(GET);
-  let published: boolean | undefined = undefined;
-  if (!session) {
-    published = true;
+const getChangelog = async slug => {
+  const result = await fetch(
+    `${process.env.BASE_URL || process.env.VERCEL_URL}/changelog/${slug}/api/`,
+    {
+      method: 'GET',
+    }
+  );
+  if (result.ok) {
+    return result.json();
   }
-  try {
-    changelog = await prisma.changelog.findUnique({
-      where: {
-        slug: params.slug,
-        published,
-      },
-      include: {
-        categories: true,
-      },
-    });
-  } catch (e) {
+  return null;
+};
+
+export default async function ChangelogEntry({params}) {
+  const changelog: ChangelogWithCategories | null = await getChangelog(params.slug);
+
+  if (!changelog) {
     return notFound();
   }
 

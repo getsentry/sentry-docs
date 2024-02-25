@@ -58,7 +58,7 @@ export default function Changelogs({
 
   // iterate over all posts and create a list of months & years
   const months = changelogs.reduce((allMonths: any, post: any) => {
-    const date = post.publishedAt as Date;
+    const date = new Date(post.publishedAt) as Date;
     const year = date.getFullYear();
     const month = date.toLocaleString('default', {
       month: 'long',

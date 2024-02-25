@@ -3,22 +3,22 @@ import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
 
 import List from 'sentry-docs/components/changelog/list';
-import prisma from 'sentry-docs/prisma';
 
 import Header from './header';
 
+const getChangelogs = async () => {
+  const result = await fetch(
+    `${process.env.BASE_URL || process.env.VERCEL_URL}/changelog/api/`,
+    {method: 'GET'}
+  );
+  if (result.ok) {
+    return result.json();
+  }
+  return [];
+};
+
 export default async function ChangelogList() {
-  const changelogs = await prisma.changelog.findMany({
-    include: {
-      categories: true,
-    },
-    where: {
-      published: true,
-    },
-    orderBy: {
-      publishedAt: 'desc',
-    },
-  });
+  const changelogs = await getChangelogs();
 
   return (
     <Fragment>
