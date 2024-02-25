@@ -1,6 +1,7 @@
 import {Fragment} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
+import {revalidateTag} from 'next/cache';
 
 import List from 'sentry-docs/components/changelog/list';
 
@@ -25,6 +26,11 @@ const getChangelogs = async () => {
 
 export default async function ChangelogList() {
   const changelogs = await getChangelogs();
+
+  // If we are now deployed, and changelogs are empty, clear cache
+  if (!process.env.CI && changelogs.length === 0) {
+    revalidateTag('changelogs');
+  }
 
   return (
     <Fragment>
