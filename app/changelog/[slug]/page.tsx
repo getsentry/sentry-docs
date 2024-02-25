@@ -9,9 +9,6 @@ import {MDXRemote} from 'next-mdx-remote/rsc';
 import Article from 'sentry-docs/components/changelog/article';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 
-// We need this here so it's not prerendered during build
-export const dynamic = 'force-dynamic';
-
 type ChangelogWithCategories = Changelog & {
   categories: Category[];
 };
@@ -43,6 +40,10 @@ export async function generateMetadata(
 }
 
 const getChangelog = async slug => {
+  // If CI we return nothing so prerendering doesn't error when calling an internal route
+  if (process.env.CI) {
+    return null;
+  }
   const result = await fetch(
     `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/${slug}/api`
   );

@@ -6,10 +6,11 @@ import List from 'sentry-docs/components/changelog/list';
 
 import Header from './header';
 
-// We need this here so it's not prerendered during build
-export const dynamic = 'force-dynamic';
-
 const getChangelogs = async () => {
+  // If CI we return nothing so prerendering doesn't error when calling an internal route
+  if (process.env.CI) {
+    return [];
+  }
   const result = await fetch(
     `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/api`,
     {
