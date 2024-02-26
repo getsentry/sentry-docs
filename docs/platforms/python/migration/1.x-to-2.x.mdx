@@ -1,0 +1,67 @@
+---
+title: Migrating from Sentry SDK 1.x to 2.x
+sidebar_order: 8998
+description: "Learn about migrating from sentry-python 1.x to 2.x"
+---
+
+If you want to move to version 2.x of the `sentry-python` SDK, we provide a short guide here of the most common patterns.
+
+While the top level API stays the same for the most part, there's a number of deprecations and breaking changes in 2.0. Here's a selection that we think might affect the most people; for the full list of changes check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md).
+
+### Configuration option changes
+
+The `profiles_sample_rate` and `profiler_mode` options are not experimental anymore and can be used directly. Setting them via `_experiments` is deprecated and will be removed in the future.
+
+The deprecated `with_locals` and `request_bodies` options have been removed in favor of their new counterparts: `include_local_variables` and `max_request_body_size`, respectively.
+
+Passing a function to `transport` has been deprecated. If you wish to provide a custom transport, please pass a `sentry_sdk.transport.Transport` instance or a subclass.
+
+**Old**:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    with_locals=False,
+    request_bodies="always",
+    transport=
+    _experiments={
+        "profiles_sample_rate": 1.0,
+        "profiler_mode": "thread",
+    },
+)
+```
+
+**New**:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    include_local_variables=False,  # replaces with_locals
+    max_request_body_size="always",  # replaces request_bodies
+    profiles_sample_rate=1.0,  # replaces _experiments["profiles_sample_rate"]
+    profiler_mode="thread",  # replaces _experiments["profiler_mode"]
+)
+```
+
+### Python version support
+
+Sentry Python SDK 2.0 now only supports Python 3.6 and higher. If you're on Python 2.7 or 3.5 and lower, you'll need to stay on 1.x.
+
+### API changes
+
+The deprecated top level API function `last_event_id()` was removed. The last event ID is still returned by `capture_event()`, `capture_exception()` and `capture_message()`.
+
+### Transport changes
+
+The SDK will now always send events to the `/envelope` endpoint. If you're on SaaS you don't have to worry about this, but if you're running Sentry yourself you'll need version `v20.6.0` or higher of self-hosted Sentry.
+
+If you're using a custom transport, `sentry_sdk.transport.Transport.capture_event` has been deprecated. Use `sentry_sdk.transport.Transport.capture_envelope` instead. 
+
