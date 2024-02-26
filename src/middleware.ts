@@ -19,16 +19,17 @@ export function middleware(request: NextRequest) {
   const url = new URL(request.url);
   if (url.pathname.startsWith('/changelog/')) {
     const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+    const isDev = process.env.NODE_ENV === 'development';
     cspHeader = `
         default-src 'none';
         base-uri 'none';
-        script-src 'self' 'unsafe-inline' 'nonce-${nonce}' 'strict-dynamic';
-        connect-src 'self' o1.ingest.sentry.io plausible.io;
+        script-src 'self' 'unsafe-inline' ${isDev ? `'unsafe-eval'` : ``} 'nonce-${nonce}' 'strict-dynamic';
+        connect-src 'self' o1.ingest.sentry.io plausible.io ${isDev ? `localhost:8969` : ``};
         style-src 'self' 'unsafe-inline';
         img-src 'self' docs.sentry.io storage.googleapis.com;
         font-src 'self';
         worker-src blob:;
-        upgrade-insecure-requests;
+        ${isDev ? `` : `upgrade-insecure-requests;`}
     `;
 
     requestHeaders.set('x-nonce', nonce);
@@ -44,9 +45,9 @@ export function middleware(request: NextRequest) {
     },
   });
 
-  let cspHeaderName = 'Content-Security-Policy-Report-Only';
-  if (process.env.IS_PRODUCTION === 'true') {
-    cspHeaderName = 'Content-Security-Policy';
+  let cspHeaderName = 'Content-Security-Policy';
+  if (process.env.NODE_ENV === 'development') {
+    cspHeaderName = 'Content-Security-Policy-Report-Only';
   }
   response.headers.set(cspHeaderName, contentSecurityPolicyHeaderValue);
 
