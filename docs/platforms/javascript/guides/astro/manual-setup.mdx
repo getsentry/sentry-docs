@@ -1,0 +1,254 @@
+---
+title: Manual Setup
+sidebar_order: 1
+description: "Learn how to manually customize the SDK setup."
+---
+
+If you can't (or prefer not to) use the <PlatformLink to="/#install">Astro CLI</PlatformLink> to install the Sentry Astro SDK, follow the instructions below to configure the SDK in your application manually.
+
+This guide also explains how to further customize your SDK setup.
+
+## Manual Installation
+
+```bash {tabTitle:npm}
+npm install --save @sentry/astro
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/astro
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/astro
+```
+
+If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
+
+## Configure the Astro Integration
+
+Import and install the Sentry Astro integration:
+
+<SignInNote />
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      dsn: "___PUBLIC_DSN___",
+      sourceMapsUploadOptions: {
+        project: "___PROJECT_SLUG___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    }),
+  ],
+});
+```
+
+This integration enables the following features by default:
+
+- Error Monitoring with 100% sample rate
+- Performance Monitoring with 100% sample rate
+- Session Replay with
+  - 10% sample rate for regular replay sessions
+  - 100% sample rate for sessions where an error occurred
+- Automatic source maps upload for production builds to [Add Readable Stack Traces to Errors](/platforms/javascript/guides/astro/#add-readable-stack-traces-to-errors). This requires providing an auth token and project slug.
+
+### Astro Integration Options
+
+Besides the required `dsn` option, you can specify the following options in the integration directly. These are a subset of the full <PlatformLink to="/configuration/options">Sentry SDK options</PlatformLink>.
+
+- <PlatformLink to="/configuration/options/#release">release</PlatformLink>
+- <PlatformLink to="/configuration/options/#environment"> environment </PlatformLink>
+- <PlatformLink to="/configuration/options/#sample-rate"> sampleRate </PlatformLink>
+- <PlatformLink to="/configuration/options/#traces-sample-rate"> tracesSampleRate </PlatformLink>
+- <PlatformLink to="/session-replay/configuration/#general-integration-configuration"> replaysSessionSampleRate </PlatformLink>
+- <PlatformLink to="/session-replay/configuration/#general-integration-configuration"> replaysOnErrorSampleRate </PlatformLink>
+- <PlatformLink to="/configuration/options/#debug">debug</PlatformLink> Here's an example with all available integration options:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      dsn: "___PUBLIC_DSN___",
+      release: "1.0.0",
+      environment: "production",
+      sampleRate: 0.5,
+      tracesSampleRate: 1.0,
+      replaysSessionSampleRate: 0.2,
+      replaysOnErrorSampleRate: 0.8,
+      debug: false,
+      sourceMapsUploadOptions: {
+        project: "___PROJECT_SLUG___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    }),
+  ],
+});
+```
+
+## Manual SDK Initialization
+
+To fully customize the SDK initialization, you can manually initialize the SDK for the client, server, or both.
+At build time, the integration looks for the following two files in the root directory of your config:
+
+- `sentry.client.config.js` containing a `Sentry.init` call for the client side
+- `sentry.server.config.js` containing a `Sentry.init` call for the sever side
+
+This file can also be a `.ts`, `.mjs`, `.mts`, etc. file.
+
+In these files, you can specify the full range of <PlatformLink to="/configuration/options">Sentry SDK options</PlatformLink>.
+
+<Alert level="warning">
+
+If you add a `sentry.client.config.js` or `sentry.server.config.js` file, the options specified in the [Sentry Astro integration](#astro-integration-options) are ignored for the respective runtime.
+The only exception is `sourceMapsUploadOptions` which **always** needs to be set in the integration options.
+
+</Alert>
+
+### Client Side
+
+Here's an example of a custom client-side SDK setup:
+
+```javascript {filename:sentry.client.config.js}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.replayIntegration({
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+    Sentry.browserTracingIntegration({
+      tracePropagationTargets: [/\//, "my-api-domain.com"],
+    }),
+  ],
+  tracesSampler: (samplingContext) => {
+    if (samplingContext.transactionContext.name === "/home") {
+      return 0.5;
+    }
+    return 0.1;
+  },
+});
+```
+
+### Server Side
+
+Here's an example of a custom server-side SDK setup:
+
+```javascript {filename:sentry.server.config.js}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampler: (samplingContext) => {
+    if (samplingContext.transactionContext.name === "/home") {
+      return 0.5;
+    }
+    return 0.1;
+  },
+  beforeSend: (event) => {
+    console.log("before send", event);
+    return event;
+  },
+});
+```
+
+### Changing config files location
+
+To change the location of your `sentry.(client|server).config.js` files, specify the path to the files in the Sentry Astro integration options in your `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  // Other Astro project options
+  integrations: [
+    sentry({
+      clientInitPath: ".config/sentryClientInit.js",
+      serverInitPath: ".config/sentryServerInit.js",
+    }),
+  ],
+});
+```
+
+## Configure Server Instrumentation
+
+<Alert>
+
+Auto instrumentation only works for Astro 3.5.2 or newer. If you're using an older version, you need to [manually add the Sentry middleware](#manually-add-server-instrumentation) instead.
+
+</Alert>
+
+In SSR or hybrid mode configured Astro apps, the Sentry Astro integration will automatically add an [Astro middleware](https://docs.astro.build/en/guides/middleware/) request handler to your server code. This middleware enhances the data collected by Sentry on the server side by:
+
+- Collecting performance spans for incoming requests
+- Enabeling distributed tracing between client and server
+- Enhancing captured errors with additional information
+
+### Manually Add Server Instrumentation
+
+For Astro versions below 3.5.2, you need to manually add the Sentry middleware to your `src/middleware.js` file:
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest()
+  // other middleware handlers
+);
+```
+
+If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
+
+### Customize Server Instrumentation
+
+Sentry's Astro middleware allows control over what additional data should be added to the recorded request spans.
+
+To customize the server instrumentation, add the Sentry middleware to your `src/middleware.js` file:
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest({
+    trackClientIp: true, // defaults to false
+    trackHeaders: true, // defaults to false
+  })
+  // other middleware handlers
+);
+```
+
+If you're using Astro 3.5.2 or newer, make sure to also disable auto instrumentation as shown below.
+
+### Disable Auto Server Instrumentation
+
+For Astro 3.5.2 or newer, you can disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      autoInstrumentation: {
+        requestHandler: false,
+      },
+    }),
+  ],
+  output: "server",
+});
+```
+
+## Configure Source Maps Upload
+
+To enable readable stack traces, <PlatformLink to="/sourcemaps">set up source maps upload</PlatformLink> for your production builds.

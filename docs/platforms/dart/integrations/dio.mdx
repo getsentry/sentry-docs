@@ -1,0 +1,146 @@
+---
+title: Dio Integration
+description: "Learn more about the Sentry Dio integration for the Dart SDK."
+sidebar_order: 4
+---
+
+The `sentry_dio` library provides [Dio](https://pub.dev/packages/dio) support for Sentry using the [HttpClientAdapter](https://pub.dev/documentation/dio/latest/dio/HttpClientAdapter-class.html). It is able to collect breadcrumbs, run performance monitoring for HTTP requests, and capture events for failed requests.
+
+## Install
+
+To add the Dio integration, add the `sentry_dio` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '6.4.0') }}
+  sentry_dio: ^{{@inject packages.version('sentry.dart.dio', '6.4.0') }}
+  dio: ^4.0.0
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+<SignInNote />
+
+```dart
+import 'package:sentry_dio/sentry_dio.dart';
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+
+final dio = Dio();
+
+// This *must* be the last initialization step of the Dio setup.
+dio.addSentry(...);
+```
+
+## Reporting Bad HTTP Requests as Errors
+
+The `Interceptors` can also catch exceptions that may occur during requests — for example [DioError](https://pub.dev/documentation/dio/latest/dio/DioError-class.html).
+
+```dart
+import 'package:sentry_dio/sentry_dio.dart';
+
+final dio = Dio();
+
+dio.addSentry();
+
+final response = await dio.get<String>('https://wrong-url.dev/');
+```
+
+This is an opt-out feature. The following example shows how to disable it:
+
+<SignInNote />
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.captureFailedRequests = false;
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+```
+
+## Performance Monitoring for HTTP Requests
+
+The Dio integration also provides insight into performance monitoring for your HTTP requests done with Dio.
+
+### Instrumentation Behaviour
+
+- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the span will not be sent to Sentry.
+- The SDK sets the span operation to `http.client` and the description to request `$METHOD $url`. For example, `GET https://sentry.io`.
+- The span finishes once the request has been executed.
+- The span status depends on either the HTTP response code or `SpanStatus.internalError()` if the code does not match any of Sentry's SpanStatus options.
+- When the HTTP request throws an Exception, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and `SentryEvent` will be linked when viewing it on the Issue Details page in sentry.io.
+
+### Prerequisites
+
+Before starting, ensure:
+
+1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring is set up. Learn more [here](/platforms/flutter/performance/).
+
+### Configure
+
+Call `addSentry()` on your instance of `Dio:
+
+```dart
+import 'package:sentry_dio/sentry_dio.dart';
+
+final dio = Dio();
+
+dio.addSentry();
+```
+
+### Verify
+
+#### 1. Execute the Code
+
+```dart
+import 'package:sentry_dio/sentry_dio.dart';
+
+Future<void> makeWebRequestWithDio() async {
+  final dio = Dio();
+  dio.addSentry();
+
+  // If there is no active transaction, start one
+  final transaction = Sentry.startTransaction(
+    'dio-web-request',
+    'request',
+    bindToScope: true,
+  );
+  final span = transaction.startChild(
+    'dio',
+    description: 'desc',
+  );
+  Response<String>? response;
+  try {
+    response = await dio.get<String>(exampleUrl);
+      span.status = const SpanStatus.ok();
+    } catch (exception, stackTrace) {
+      span.throwable = exception;
+      span.status = const SpanStatus.internalError();
+      await Sentry.captureException(exception, stackTrace: stackTrace);
+    } finally {
+      await span.finish();
+    }
+}
+```
+
+#### 2. View the Transaction on Sentry.io
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `dio-web-request`.

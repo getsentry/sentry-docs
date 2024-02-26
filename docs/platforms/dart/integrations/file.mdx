@@ -1,0 +1,95 @@
+---
+title: File I/O
+description: "Learn more about the Sentry file I/O integration for the Dart SDK."
+sidebar_order: 5
+---
+
+File I/O operations are fundamental for reading from and writing to files within an application.
+The `sentry_file` integration provides [File](https://api.dart.dev/stable/2.18.5/dart-io/File-class.html) support for Sentry thus providing insight into performance monitoring of file operations.
+
+## Behavior
+
+- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the File I/O span will not be sent to Sentry.
+- The File I/O integration is only available for the `dart:io:File` class, not for the `dart:html:File` class.
+- The SDK sets the span `operation` to `file.copy`, `file.write`, `file.delete`, `file.open`, `file.read` or `file.rename`, and `description` to `filename` (for example, `file.txt`).
+- The span finishes once the operation has been executed. The span `status` is then set to `SpanStatus.ok` if successful, or `SpanStatus.internalError` if there was an error.
+- When the operation throws an `Exception`, Sentry's SDK associates it with the running span.
+
+## Prerequisites
+
+1. The Sentry [Dart](/platforms/dart/#configure) SDK is initialized.
+2. Performance Monitoring is set up. Learn more [here](/platforms/dart/performance/).
+
+## Install
+
+To use the `SentryFile` wrapper, add the `sentry_file` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '6.18.0') }}
+  sentry_file: ^{{@inject packages.version('sentry.dart.file', '6.18.0') }}
+```
+
+## Configure
+
+Call the Sentry extension method to wrap the file:
+
+```dart
+final sentryFile = file.sentryTrace();
+```
+
+## Verify
+
+### 1. Execute the Code
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_file/sentry_file.dart';
+import 'dart:io';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = 'https://example@sentry.io/example';
+      // To set a uniform sample rate
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: runApp, // Init your App.
+  );
+}
+
+Future<void> runApp() async {
+  final file = File('my_file.txt');
+  // Call the Sentry extension method to wrap up the File
+  final sentryFile = file.sentryTrace();
+
+  // Start a transaction if there's no active transaction
+  final transaction = Sentry.startTransaction(
+    'MyFileExample',
+    'file',
+    bindToScope: true,
+  );
+
+  // create the File
+  await sentryFile.create();
+  // Write some content
+  await sentryFile.writeAsString('Hello World');
+  // Read the content
+  final text = await sentryFile.readAsString();
+
+  print(text);
+
+  // Delete the file
+  await sentryFile.delete();
+
+  // Finish the transaction
+  await transaction.finish(status: SpanStatus.ok());
+
+  await Sentry.close();
+}
+```
+
+### 2. View the Recorded Transaction on Sentry.io
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `MyFileExample`.

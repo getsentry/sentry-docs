@@ -1,5 +1,3 @@
-import React from 'react';
-
 type Param = {
   name: string;
   description?: string;

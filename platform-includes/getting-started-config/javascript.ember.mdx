@@ -1,0 +1,39 @@
+This snippet includes automatic instrumentation to monitor the performance of your application, which registers and configures the Tracing integration, including custom [Ember instrumentation](./configuration/ember-options/).
+
+<SignInNote />
+
+```javascript
+import Application from "@ember/application";
+import Resolver from "ember-resolver";
+import loadInitializers from "ember-load-initializers";
+import config from "./config/environment";
+
+import * as Sentry from "@sentry/ember";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.replayIntegration()],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production,
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
+}
+```
+
+<Note>
+
+This SDK uses Ember configuration conventions to manage its automatic instrumentation and other Sentry options. This additional configuration can be found under <PlatformLink to="/configuration/ember-options/">Ember options</PlatformLink>.
+
+</Note>

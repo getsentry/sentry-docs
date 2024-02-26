@@ -1,0 +1,76 @@
+---
+title: Native Support
+description: "Learn how the Unity SDK handles native support."
+sidebar_order: 100
+---
+
+Currently, the Unity SDK offers native support for Android, iOS, Windows, macOS and Linux. The support is set to `enabled` by default, and you can opt out for each platform individually in the configuration window.
+
+<Note>
+
+The setup for the iOS and Android native SDKs happens during build time, with the options defined in the Sentry editor configuration window. Changes to the options object done through [ScriptableOptionsConfiguration](/platforms/unity/configuration/options/) will not affect events from the native layer.
+
+</Note>
+
+<Note>
+
+The Unity SDK captures C# exceptions and does not break any builds targeting Nintendo Switch.
+
+</Note>
+
+## Mobile
+
+The native crash support for Android and iOS is achieved by modifying the generated platform-specific projects during build time. That way, the Sentry native crash support gets initialized before Unity, making it possible to capture errors of the Unity engine itself.
+
+### Android
+
+When choosing Android as a build target, Unity creates a Gradle project. During the Unity build process, the SDK embeds the [Android SDK](/platforms/android/), as well as the provided options, by adding it to the generated project's Android Manifest.
+
+### iOS
+
+When building your game for iOS, Unity exports it as an Xcode project. By modifying that generated project, the SDK adds the [iOS SDK](/platforms/apple/guides/ios/) to provide native support. It adds the initialization code to the `main.m` and generates the options provided by the editor configuration window as `SentryOptions.m`. The SDK also copies the `SentryNativeBridge` that enables the C# layer to communicate with the iOS SDK. This means that there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
+
+The [iOS SDK](/platforms/apple/guides/ios/) supports capturing Objective-C exceptions which are disabled in the generated Xcode project by default. Consider enabling them in the "Build Settings" tab by setting `GCC_ENABLE_OBJC_EXCEPTIONS` to true.
+
+## Desktop
+
+The native support is configured and enabled as early as possible by the C# layer, right after the Unity engine starts. This is slightly different from on mobile where we inject native initialization code that runs before the Unity engine runs.
+
+### Windows
+
+On Windows, the Unity SDK includes the [Native SDK](/platforms/native/) with the crashpad backend. Windows native crashes are automatically captured through minidumps. To upload these to Sentry, the SDK copies the `crashpad_handler.exe` to the build output directory at the end of the build process. This executable must be included when shipping your game.
+
+### macOS
+
+The Native Support on macOS relies on the [macOS SDK](/platforms/apple/guides/macos/). Stackwalking happens in process.
+
+### Linux
+
+On Linux the Unity SDK includes the [Native SDK](/platforms/native/) with the breakpad backend. A minidump is created in process and no handler executable is required.
+
+## Debug Symbols
+
+Sentry requires [debug information files](/platforms/unity/data-management/debug-files/) to symbolicate your crashes. The Unity SDK provides an automated upload functionality for those symbol files that rely on the [sentry-cli](/product/cli/). This is done transparently so you're not required to run `sentry-cli` manually. The symbol upload happens during Unity build in the editor. We've included the executables for Windows, macOS, and Linux as part of the Unity SDK package.
+
+The automated debug symbols upload is enabled by default but requires configuration. Go to **Tools > Sentry > Editor** to enter the [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/), Organization Slug, and the Project Name. Note that the Unity SDK creates a file at `Assets/Plugins/Sentry/SentryCliOptions.asset` to store the configuration, that should **not** be made publicly available.
+
+### iOS - dSYM
+
+Debug information files on the iOS platform are called dSYM.
+
+For Sentry to symbolicate your crash logs we need two types of files:
+
+1. `dSYM` that the automated symbols upload will pick up at the end of the build process without further action required.
+2. `BCSymbolMap` files that are created during the archiving process
+
+The automated symbol upload will take care of the `BCSymbolMap` files by processing them during the archiving process.
+
+### Manual Upload Using sentry-cli
+
+If you don't want to rely on the automated symbol upload, you can run `sentry-cli` through the commandline. For that, you can use the provided executables from within the package or follow the [sentry-cli documentation](/product/cli/installation/) to make it available globally. To upload debug symbols, run it with:
+
+<OrgAuthTokenNote />
+
+```bash
+sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
+```

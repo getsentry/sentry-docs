@@ -1,11 +1,15 @@
-import React, {Children, useEffect} from 'react';
+'use client';
+
+import {Children, useEffect, useState} from 'react';
 import styled from '@emotion/styled';
-import {useLocation} from '@reach/router';
-import {withPrefix} from 'gatsby';
 
 import {SmartLink} from './smartLink';
 
 interface SidebarLinkProps {
+  /**
+   * The current page path being rendered
+   */
+  path: string;
   /**
    * The text of the link
    */
@@ -21,13 +25,18 @@ interface SidebarLinkProps {
   collapsed?: boolean | null;
 }
 
-export function SidebarLink({to, title, children, collapsed = null}: SidebarLinkProps) {
-  const location = useLocation();
-  const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
+export function SidebarLink({
+  to,
+  title,
+  children,
+  path,
+  collapsed = null,
+}: SidebarLinkProps) {
+  const isActive = path.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
   const hasSubtree = Children.count(children) > 0;
 
-  const [showSubtree, setShowSubtree] = React.useState(enableSubtree);
+  const [showSubtree, setShowSubtree] = useState(enableSubtree);
 
   useEffect(() => {
     setShowSubtree(enableSubtree);
@@ -38,10 +47,10 @@ export function SidebarLink({to, title, children, collapsed = null}: SidebarLink
       <SidebarNavItem
         to={to}
         data-sidebar-link
-        isActive={to === location?.pathname}
+        isActive={to === path}
         onClick={() => {
           // Allow toggling the sidebar subtree only if the item is selected
-          if (location.pathname === withPrefix(to)) {
+          if (path === to) {
             setShowSubtree(v => enableSubtree && !v);
           }
         }}

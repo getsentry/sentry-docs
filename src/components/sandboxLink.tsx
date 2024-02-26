@@ -1,6 +1,6 @@
-import React from 'react';
+import {getCurrentPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 
-import {usePlatform} from './hooks/usePlatform';
 import {ExternalLink} from './externalLink';
 
 const scenarios = [
@@ -75,12 +75,13 @@ const SANDBOX_PLATFORM_MAP: {[key: string]: string} = {
   node: 'react',
 };
 
-export function SandboxLink({children, platform, target, ...params}: Props) {
-  const [currentPlatform] = usePlatform(platform);
-
+export function SandboxLink({children, target, ...params}: Props) {
   if (isSandboxHidden()) {
     return children;
   }
+
+  const {rootNode, path} = serverContext();
+  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
 
   const currentPlatformkey = currentPlatform?.key ?? 'unknown';
 

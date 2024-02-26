@@ -1,0 +1,55 @@
+<SignInNote />
+
+```javascript
+import { createRoot } from "react-dom/client";
+import { createBrowserRouter } from "react-router-dom";
+import React from "react";
+import * as Sentry from "@sentry/react";
+import App from "./App";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+      // See docs for support of different versions of variation of react router
+      // https://docs.sentry.io/platforms/javascript/guides/react/configuration/integrations/react-router/
+    Sentry.reactRouterV6BrowserTracingIntegration({
+        useEffect: React.useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes
+    }),
+    Sentry.replayIntegration()
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+const container = document.getElementById(“app”);
+const root = createRoot(container);
+root.render(<App />);
+```
+
+Once this is done, all unhandled exceptions are automatically captured by Sentry.
+
+### Add Error Boundary
+
+If you're using React 16 or above, you can use the [Error Boundary](features/error-boundary/) component to automatically send Javascript errors from inside a component tree to Sentry, and set a fallback UI.
+
+### Set Up React Router
+
+The React Router integration is designed to work with our tracing package. Learn more about set up for our [React Router Integration](configuration/integrations/react-router/).
+
+### Apply Redux
+
+To apply Sentry to Redux, learn more about the [Redux Integration](configuration/integrations/redux/) and its options.

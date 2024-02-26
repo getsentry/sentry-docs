@@ -1,0 +1,70 @@
+---
+title: Starlite
+description: "Learn about using Sentry with Starlite."
+---
+
+The Starlite integration adds support for the [Starlite framework](https://docs.litestar.dev/1/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `starlite` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[starlite]' uvicorn
+```
+
+## Configure
+
+<SignInNote />
+
+```python
+from starlite import Starlite, get
+import sentry_sdk
+from sentry_sdk.integrations.starlite import StarliteIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[StarliteIntegration()],
+)
+
+app = Starlite(route_handlers=[])
+```
+
+## Verify
+
+```python
+from starlite import Starlite, get
+
+sentry_sdk.init(...)  # same as above
+
+@get("/hello")
+async def hello_world() -> str:
+    1 / 0
+    return "Hello!"
+
+app = Starlite(route_handlers=[hello_world])
+```
+
+Save the file above as `app.py` and start the development server with:
+
+```bash
+uvicorn app:app
+```
+
+When you point your browser to [http://localhost:8000/hello](http://localhost:8000/hello) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, the `ZeroDivisionError` we've snuck into our `hello_world` handler will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+<Alert level="warning" title="Note">
+
+Starlite was [renamed to Litestar](https://litestar.dev/about/organization.html#litestar-and-starlite)
+with the release of version 2.0. We don't support Litestar yet, so this guide only applies to Starlite 1.51.14
+and below.
+
+</Alert>
+
+- Starlite: 1.48.0 - 1.51.14
+- Python: 3.8+

@@ -1,6 +1,4 @@
-import React from 'react';
-import {PlatformIcon} from 'platformicons';
-
+import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 
 type Props = {
@@ -9,7 +7,10 @@ type Props = {
   url?: string;
 };
 
-export function linkWithPlatformIcon({platform, label, url}: Props) {
+export function LinkWithPlatformIcon({platform, label, url}: Props) {
+  if (!platform) {
+    return null;
+  }
   return (
     <span style={{whiteSpace: 'nowrap'}}>
       <SmartLink to={url}>

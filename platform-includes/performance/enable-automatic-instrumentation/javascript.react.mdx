@@ -1,0 +1,36 @@
+To enable tracing, include the `BrowserTracing` integration in your SDK configuration options.
+
+To use `react-router` integration, import and set a custom routing instrumentation using a custom history. Make sure you use a `Router` component combined with `createBrowserHistory` (or equivalent).
+
+<SignInNote />
+
+```javascript
+import { Router } from "react-router-dom";
+import { createBrowserHistory } from "history";
+
+import * as Sentry from "@sentry/react";
+
+const history = createBrowserHistory();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    Sentry.reactRouterV5BrowserTracingInstrumentation({ history }),
+      // You can also use one of:
+      // * reactRouterV3BrowserTracingInstrumentation
+      // * reactRouterV4BrowserTracingInstrumentation
+      // * reactRouterV6BrowserTracingInstrumentation
+      // or just browserTracingIntegration
+    }),
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+Now you should be generating `pageload`/`navigation` transactions from the `BrowserTracing` integration, using Sentry's [`react-router` instrumentation](/platforms/javascript/guides/react/configuration/integrations/react-router/).
+
+<PlatformContent includePath="performance/automatic-instrumentation-custom-routing" />

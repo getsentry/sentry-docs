@@ -1,0 +1,52 @@
+---
+title: Source Maps
+description: "Learn more about how to upload your source maps to Sentry."
+sidebar_order: 95
+---
+
+<Note>
+
+This guide assumes you are using a Sentry React Native SDK on version `5.11.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
+To get unminified stack traces for JavaScript code, source maps must be generated and uploaded. The React Native SDK handles source maps _automatically_ for iOS with Xcode and Android with Gradle, if you do not use custom values.
+
+Choose one of the following guides depending on your setup, or try the [automatic upload](#set-up-automatic-upload) to get started.
+
+- [Expo](/platforms/react-native/sourcemaps/uploading/expo/)
+- [Hermes](/platforms/react-native/sourcemaps/uploading/hermes/)
+- [JavaScript Core (JSC)](/platforms/react-native/sourcemaps/uploading/jsc/)
+
+## Set Up Automatic Upload
+
+<Include name="react-native-sourcemaps-wizard-instructions.mdx" />
+
+The wizard will guide you through the following steps:
+
+- Logging into Sentry and selecting a project
+- Installing the necessary Sentry packages
+- Configuring RN build tools to generate and upload source maps
+
+It supports JavaScript Core (including RAM Bundle) and Hermes. If you want to configure automatic source maps upload manually, follow the steps on the [Manual Configuration](/platforms/react-native/manual-setup/manual-setup) page.
+
+### Disable Automatic Upload
+
+If you want to disable the automatic upload of source maps, you can set the `SENTRY_DISABLE_AUTO_UPLOAD` environment variable:
+
+```bash
+export SENTRY_DISABLE_AUTO_UPLOAD=true
+```
+
+Add the `shouldSentryAutoUpload` function in `android/app/build.gradle`:
+
+```gradle
+apply from: "../../../sentry.gradle"
+
+sentry {
+    autoUploadProguardMapping = shouldSentryAutoUpload()
+    uploadNativeSymbols = shouldSentryAutoUpload()
+}
+```

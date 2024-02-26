@@ -1,57 +1,34 @@
-import React, {useMemo} from 'react';
+'use client';
 
-import {PageContext} from './basePage';
-import {GuideGrid} from './guideGrid';
+import {ReactElement, useEffect, useState} from 'react';
+import {slug} from 'github-slugger';
 
-interface Heading {
-  id: string;
-  level: number;
-  title: string;
+interface TocItem {
+  depth: number;
+  url: string;
+  value: string;
+  children?: TocItem[];
 }
 
-interface GetAnchorHeadingOptions {
-  /**
-   * The DOM element to extract heading nodes from
-   */
-  content: HTMLElement;
-  /**
-   * The levels to look for. These should be in consecutive order.
-   */
-  levels?: `h${number}`[];
+type Props = {
+  guideGrid: ReactElement;
+};
+
+function recursiveRender(items: TocItem[]) {
+  return items.map(i => {
+    if (!i.value) {
+      return recursiveRender(i.children || []);
+    }
+    return (
+      <li className="toc-entry" key={i.url}>
+        <a href={`${i.url}`}>{i.value}</a>
+        {i.children && <ul>{recursiveRender(i.children)}</ul>}
+      </li>
+    );
+  });
 }
 
-/**
- * Extract a list of Heading objects from the content of a HTML element
- * containing various headings.
- */
-function getAnchorHeadings({content, levels = ['h2', 'h3']}: GetAnchorHeadingOptions) {
-  const headingNodes = [
-    ...content.querySelectorAll<HTMLHeadingElement>(levels.join(', ')),
-  ];
-
-  const headings: Heading[] = headingNodes
-    .filter(node => !!node.id)
-    .map(node => ({
-      title: node.innerText,
-      level: Number(node.nodeName[1]),
-      id: node.id,
-    }));
-
-  return headings;
-}
-
-interface TocItem extends Heading {
-  /**
-   * Child elements of the TocItem
-   */
-  items: TocItem[];
-}
-
-/**
- * Constructs a tree of `TocItem` nodes given a HTMLElement containing various
- * headings. The tree will be constructed as each heading apperas within the list.
- */
-export function buildTocTree(headings: Heading[]): TocItem[] {
+function buildTocTree(toc: TocItem[]): TocItem[] {
   // Maintains our final constructed tree of TocItem's
   const items: TocItem[] = [];
 
@@ -59,12 +36,12 @@ export function buildTocTree(headings: Heading[]): TocItem[] {
   // ordered by depth.
   const stack: TocItem[] = [];
 
-  for (const heading of headings) {
-    const item: TocItem = {...heading, items: []};
+  for (const heading of toc) {
+    const item: TocItem = {...heading, children: []};
 
     // pop from the stack until the we reach the item with a level greater than
     // the heading we currently have
-    while (stack.length > 0 && stack[stack.length - 1].level >= heading.level) {
+    while (stack.length > 0 && stack[stack.length - 1].depth >= heading.depth) {
       stack.pop();
     }
 
@@ -73,7 +50,7 @@ export function buildTocTree(headings: Heading[]): TocItem[] {
       items.push(item);
     } else {
       // Heading is a child of the most recent item in the stack
-      stack[stack.length - 1].items.push(item);
+      stack[stack.length - 1].children?.push(item);
     }
 
     stack.push(item);
@@ -82,51 +59,43 @@ export function buildTocTree(headings: Heading[]): TocItem[] {
   return items;
 }
 
-type Props = {
-  /**
-   * Page content element to extract the TOC tree from
-   */
-  content: HTMLElement;
-  /**
-   * Page context used to display related guides
-   */
-  pageContext: PageContext;
-};
-
-function recursiveRender(items: TocItem[]) {
-  return items.map(i => {
-    if (!i.title) {
-      return recursiveRender(i.items);
+// The full, rendered page is required in order to generate the table of
+// contents since headings can come from child components, included MDX files,
+// etc. Even though this should hypothetically be doable on the server, methods
+// like React's `renderToString` aren't supported in Next:
+// https://github.com/vercel/next.js/discussions/57631
+//
+// For now, calculate the table of contents on the client.
+export function TableOfContents({guideGrid}: Props) {
+  const [headings, setHeadings] = useState<TocItem[]>([]);
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const main = document.getElementById('main');
+      const elements = main?.querySelectorAll('h2, h3');
+      const tocItems: TocItem[] = [];
+      elements?.forEach(e => {
+        const title = e.textContent?.trim();
+        if (title) {
+          tocItems.push({
+            depth: e.tagName === 'H2' ? 2 : 3,
+            url: `#${slug(title)}`,
+            value: title,
+          });
+        }
+      });
+      setHeadings(tocItems);
     }
-    return (
-      <li className="toc-entry" key={i.id}>
-        <a href={`#${i.id}`}>{i.title}</a>
-        {i.items && <ul>{recursiveRender(i.items)}</ul>}
-      </li>
-    );
-  });
-}
-
-export function TableOfContents({content, pageContext}: Props) {
-  const {platform} = pageContext;
-
-  const items = useMemo(() => buildTocTree(getAnchorHeadings({content})), [content]);
-
-  if (items.length === 0) {
-    return (
-      <div className="doc-toc">
-        {platform && <GuideGrid platform={platform.name} className="section-nav" />}
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="doc-toc">
-      <div className="doc-toc-title">
-        <h6>On this page</h6>
-      </div>
-      <ul className="section-nav">{recursiveRender(items)}</ul>
-      {platform && <GuideGrid platform={platform.name} className="section-nav" />}
+      {!!headings.length && (
+        <div className="doc-toc-title">
+          <h6>On this page</h6>
+        </div>
+      )}
+      <ul className="section-nav">{recursiveRender(buildTocTree(headings))}</ul>
+      {guideGrid}
     </div>
   );
 }

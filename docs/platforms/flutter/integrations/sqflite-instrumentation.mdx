@@ -1,0 +1,137 @@
+---
+title: sqflite Database Instrumentation
+description: "Learn more about the Sentry sqflite Database Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.sqflite
+categories:
+  - mobile
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 7.2.0)_
+
+The [sentry_sqflite](https://pub.dev/packages/sentry_sqflite) package provides `sqflite` support for database instrumentation and allows you to track the performance of your queries.
+
+## Instrumentation Behaviour
+
+- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the sqflite span will not be sent to Sentry.
+- The spans' `operation` are either `db`, `db.sql.execute`, `db.sql.query` or `db.sql.transaction`. Its `description` is the SQL statement using placeholders instead of its values due to the possibility of containing PII.
+
+## Prerequisites
+
+Before starting, ensure:
+
+1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring is set up. Learn more [here](/platforms/flutter/performance/).
+
+## Install
+
+Add the `sentry_sqflite` dependency to install the sqflite database instrumentation.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.2.0') }}
+  sentry_sqflite: ^{{@inject packages.version('sentry.dart.sqflite', '7.2.0') }}
+  sqflite: ^2.0.0
+```
+
+## Configure
+
+There are multiple ways to configure the sqflite database instrumentation:
+
+### Global `databaseFactory`
+
+By using the global `databaseFactory`, (which is used by the `openDatabase` method).
+With this approach, every call to `openDatabase` will be instrumented, including from other packages:
+
+```dart
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+databaseFactory = SentrySqfliteDatabaseFactory();
+final database = await openDatabase('path/to/db');
+```
+
+If you're using the `FFI` factories, you can instrument the `SentrySqfliteDatabaseFactory` with its factory:
+
+```dart
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+databaseFactory = SentrySqfliteDatabaseFactory(databaseFactory: databaseFactoryFfi);
+final database = await openDatabase('path/to/db');
+```
+
+### `openDatabaseWithSentry` Wrapper
+
+Use the `openDatabaseWithSentry` wrapper - with this approach only the database opened with this method will be instrumented:
+
+```dart
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+final database = await openDatabaseWithSentry('path/to/db');
+// or final database = await openReadOnlyDatabaseWithSentry('path/to/db');
+```
+
+### `SentryDatabase` Wrapper
+
+Use the `SentryDatabase` wrapper which can be used to instrument any `Database` instance:
+
+```dart
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+final database = await openDatabase('path/to/db');
+final sentryDatabase = SentryDatabase(database);
+```
+
+## Verify
+
+### 1. Execute the Code
+
+```dart
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+Future<void> sqfliteTest() async {
+  final tr = Sentry.startTransaction(
+    'sqfliteTest',
+    'db',
+    bindToScope: true,
+  );
+
+  // You can also use the other configuration methods
+  final db = await openDatabaseWithSentry(inMemoryDatabasePath);
+
+  await db.execute('''CREATE TABLE Product (id INTEGER PRIMARY KEY,title TEXT)''');
+  final dbTitles = <String>[];
+  for (int i = 1; i <= 20; i++) {
+    final title = 'Product $i';
+    dbTitles.add(title);
+    await db.insert('Product', <String, Object?>{'title': title});
+  }
+
+  await db.query('Product');
+
+  await db.transaction((txn) async {
+    await txn
+    .insert('Product', <String, Object?>{'title': 'Product Another one'});
+    await txn.delete('Product',
+    where: 'title = ?', whereArgs: ['Product Another one']);
+  });
+
+  await db.delete('Product', where: 'title = ?', whereArgs: ['Product 1']);
+
+  await db.close();
+
+  await tr.finish(status: const SpanStatus.ok());
+}
+```
+
+### 2. View the Transaction on Sentry
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `sqfliteTest`.

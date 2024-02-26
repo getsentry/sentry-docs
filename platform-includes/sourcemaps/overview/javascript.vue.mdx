@@ -1,0 +1,99 @@
+## Uploading Source Maps in a Vue Project
+
+<Note>
+
+This guide assumes you are using the `@sentry/vue` SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
+### Using the Sentry Wizard
+
+The easiest and recommended way to configure uploading source maps is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source maps upload manually, follow the guide for your bundler or build tool below.
+
+### Manual Setup with Vite
+
+If you are using Vue, chances are good you are using Vite to bundle your project.
+You can use the Sentry Vite plugin to automatically create [releases](/product/releases/) and upload source maps to Sentry when bundling your app.
+
+#### Installation
+
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+#### Configuration
+
+Learn more about configuring the plugin in our [Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with a `.env.sentry-build-plugin` file in the working directory when building your project.
+You likely want to add the auth token as an environment variable to your CI/CD environment.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Example:
+
+<SignInNote />
+
+```javascript {filename:vite.config.js}
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
+  plugins: [
+    vue(),
+
+    // Put the Sentry vite plugin after all other plugins
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+<Note>
+
+The Sentry Vite plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your implementation.
+
+</Note>
+
+### Other Bundlers
+
+In case you are using a bundler other than Vite to build your Vue project, we've compiled a list of guides on how to upload source maps to Sentry for the most popular JavaScript bundlers:
+
+- <PlatformLink to="/sourcemaps/uploading/webpack/">Webpack</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/typescript/"> TypeScript (tsc) </PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/rollup/">Rollup</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/esbuild/">esbuild</PlatformLink>
+
+## Other Tools
+
+If you're not using any of tools above, we assume you already know how to generate source maps with your toolchain and we recommend you upload them using <PlatformLink to="/sourcemaps/uploading/cli/">Sentry CLI</PlatformLink>.
+
+<Note>
+
+Though we strongly recommend uploading source maps as part of your build process, for browser applications it's also possible to <PlatformLink to="/sourcemaps/uploading/hosting-publicly/">host your source maps publicly</PlatformLink>.
+
+</Note>

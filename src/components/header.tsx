@@ -1,11 +1,11 @@
-import React from 'react';
+'use client';
 
-import {SmartLink} from './smartLink';
+import Link from 'next/link';
 
 export function Header() {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
-      <SmartLink to="/" title="Sentry error monitoring" className="navbar-brand pb-0">
+      <Link href="/" title="Sentry error monitoring" className="navbar-brand pb-0">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 75 75">
           <g height="75" width="75" className="loader-spin">
             <path
@@ -18,7 +18,7 @@ export function Header() {
           </g>
         </svg>
         <h6>Docs</h6>
-      </SmartLink>
+      </Link>
 
       <button
         className="d-md-none btn btn-outline-dark"
