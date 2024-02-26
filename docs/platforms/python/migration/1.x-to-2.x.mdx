@@ -63,6 +63,34 @@ Sentry Python SDK 2.0 now only supports Python 3.6 and higher. If you're on Pyth
 
 The deprecated top level API function `last_event_id()` was removed. The last event ID is still returned by `capture_event()`, `capture_exception()` and `capture_message()`.
 
+If you create a transaction manually and later mutate the transaction in a `configure_scope` block this does not work anymore. Here is a recipe on how to change your code to make it work:
+
+**Old**:
+
+<SignInNote />
+
+```python
+transaction = sentry_sdk.transaction(...)
+
+# later in the code execution:
+
+with sentry_sdk.configure_scope() as scope:
+    scope.set_transaction_name("new-transaction-name")
+```
+
+**New**:
+
+<SignInNote />
+
+```python
+transaction = sentry_sdk.transaction(...)
+
+# later in the code execution:
+
+scope = sentry_sdk.Scope.get_current_scope()
+scope.set_transaction_name("new-transaction-name")
+```
+
 ## Transport changes
 
 Sentry Python 2.0 is now only compatible with self-hosted Sentry `v20.6.0` and above, since the SDK now sends all events to the `/envelope` endpoint. Self-hosted Sentry users must upgrade their self-hosted instance to a compatible version. No action is needed for SaaS users and self-hosted users already running a compatible Sentry version.
