@@ -6,8 +6,14 @@ export default function Pagination({totalPages, currentPage, setPageNumber}) {
   const nextPage = currentPage + 1 <= parseInt(totalPages, 10);
 
   const pages: Array<number> = [];
+  let pushedMiddle = false;
   for (let i = 1; i <= totalPages; i++) {
-    pages.push(i);
+    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+      pages.push(i);
+    } else if (!pushedMiddle) {
+      pages.push(0);
+      pushedMiddle = true;
+    }
   }
 
   return (
@@ -42,13 +48,17 @@ export default function Pagination({totalPages, currentPage, setPageNumber}) {
       </ConditionalLink>
       <div className="flex items-center gap-0 md:gap-2">
         {pages.map(page => (
-          <a key={page} href={`#page${page}`} onClick={() => setPageNumber(page)}>
+          <a
+            key={page}
+            href={page === 0 ? undefined : `#page${page}`}
+            onClick={() => (page === 0 ? {} : setPageNumber(page))}
+          >
             <button
               className={`${page === currentPage ? 'bg-darkPurple relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg  text-center align-middle font-sans text-xs font-medium uppercase text-white shadow-md bg-darkPurple transition-all hover:shadow-lg hover:bg-darkPurple focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none' : 'relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-darkPurple/10 active:bg-darkPurple/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none'}`}
               type="button"
             >
               <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                {page}
+                {page === 0 ? '...' : page}
               </span>
             </button>
           </a>
