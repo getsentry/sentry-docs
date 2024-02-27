@@ -25,8 +25,7 @@ export async function unpublishChangelog(formData: FormData) {
   }
 
   revalidateTag('changelogs');
-  revalidatePath('/changelog', 'page');
-  revalidatePath('/changelog/[slug]', 'page');
+  revalidateTag('changelog-detail');
   return revalidatePath(`/changelog/_admin`);
 }
 
@@ -48,8 +47,7 @@ export async function publishChangelog(formData: FormData) {
   }
 
   revalidateTag('changelogs');
-  revalidatePath('/changelog', 'page');
-  revalidatePath('/changelog/[slug]', 'page');
+  revalidateTag('changelog-detail');
   return revalidatePath(`/changelog/_admin`);
 }
 
@@ -82,9 +80,6 @@ export async function createChangelog(formData: FormData) {
 
   await prisma.changelog.create({data});
 
-  revalidateTag('changelogs');
-  revalidatePath('/changelog', 'page');
-  revalidatePath('/changelog/[slug]', 'page');
   return redirect(`/changelog/_admin`);
 }
 
@@ -123,8 +118,7 @@ export async function editChangelog(formData: FormData) {
   }
 
   revalidateTag('changelogs');
-  revalidatePath('/changelog', 'page');
-  revalidatePath('/changelog/[slug]', 'page');
+  revalidateTag('changelog-detail');
   return redirect(`/changelog/_admin`);
 }
 
@@ -144,7 +138,6 @@ export async function deleteChangelog(formData: FormData) {
   }
 
   revalidateTag('changelogs');
-  revalidatePath('/changelog', 'page');
-  revalidatePath('/changelog/[slug]', 'page');
+  revalidateTag('changelog-detail');
   return revalidatePath(`/changelog/_admin`);
 }
