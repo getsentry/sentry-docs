@@ -1,50 +1,76 @@
 ---
 title: "App Starts"
 sidebar_order: 50
-description: "Learn more about App Starts and how to use it to identify slow or regressed screens."
+description: "Learn how to monitor your mobile application's performance by using App Starts to identify slow or regressed screens."
 ---
 
-The **App Starts** page shows an overview of how long it takes for your application to complete cold and warm starts. Here you can identify slow or regressed screens and get additional information to understand the factors contributing to the slowness of your application start times.
+![Example of App Starts](/product/performance/app-starts.png)
+
+The **App Starts** page shows an overview of the amount of time it takes for your application to complete cold and warm starts. It helps you identify slow or regressed screens and gives additional information so you can better understand the factors contributing to the slowness of your application start times.
 
 ### Minimum SDK Requirements:
 
 **For Android:**
 
-TODO: Fill in Android SDK requirements here
+- `>=7.4.0` for automatic instrumentation of app start spans and app start profiling
+- The `performanceV2` feature flag and [App Start Profiling](/platforms/android/profiling/#app-start-profiling) must also be enabled in the SDK, e.g.:
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    ...
+    options.setEnablePerformanceV2(true);
+    options.setEnableAppStartProfiling(true);
+})
+```
 
 **For iOS:**
 
-TODO: Fill in iOS SDK requirements here
+- `>=8.18.0` for automatic instrumentation of [app start spans](/platforms/apple/performance/instrumentation/automatic-instrumentation/#app-start-tracing)
+- `>=8.21.0` for app start profiling
+- [PerformanceV2](platforms/apple/performance/instrumentation/automatic-instrumentation/#performance-v2) must be enabled in the SDK, e.g.:
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    ...
+    options.enablePerformanceV2 = true
+}
+```
 
 By default, the **App Starts** page displays metrics for the two releases with the highest screen counts for the time range you’ve selected. To choose a different set of releases to compare, use the “release selector” at the top of the page. To change the app start type (cold or warm), use the “App Start” selector at the top of the page.
 
 The charts display the following metrics (using cold starts as an example):
 
 - Average Cold Start
-    - The overall time it takes your application to start compared by release.
+    - The overall time it takes your application to start, compared by release.
 - Top Screen Cold Start
-    - The time it takes for individual screens to start compared by release. This chart syncs with the sort order in the table below it.
+    - The time it takes for individual screens to start, compared by release. This chart syncs with the sort order in the table below it.
 - Count
     - The number of starts occurring in the selected time range for the releases. This gives you an idea of how statistically significant the aggregated data is.
-
-The table below shows a list of screens along with their average cold start times for both releases and the number of starts. The default sort is by the number of starts however you can sort the table by clicking on the column headers to sort by cold start time for a specific release or by how much change has occurred between the two releases.
 
 **Reasons Why You Might Not Be Seeing Any Data:**
 
 - You don’t have any transactions with op `ui.load`
 - Your SDKs don’t meet the minimum SDK requirements
 
-## Screen Details Page
+## Screen Summary Page
 
-To get additional information about any of your application’s screens, click on them to get to the **Screen Details** page. Here, you’ll see your average start duration broken down by release and [device class](/product/reference/search/searchable-properties/#device-classification) (high, medium, low, or unknown). This will help you understand how users with different device performance levels are being affected.
+![Example of Screen Summary](/product/performance/app-starts-screen-summary.png)
 
-The table below the chart shows spans that have changed between the two releases and allows you to filter for specific span operations and device classes to narrow down to specific event samples for debugging slow starts. 
+To get additional information about any of your application’s screens, click on them to get to the **Screen Summary** page. Here, you’ll see your average start duration broken down by release and [device class](/product/reference/search/searchable-properties/#device-classification) (high, medium, low, or unknown). This will help you understand how users with different device performance levels are being affected.
 
-You can also click the "By Event" toggle in the top right of the table to switch to seeing events only, separated by release. This alternative view will show you overall changes in start times between two releases as opposed to focusing on individual spans.
+The table below the chart shows spans that have changed from one release to the next and allows you to filter for specific span operations and device classes. Being able to narrow down to specific event samples helps debug slow starts. 
+
+Clicking the "By Event" toggle in the top right corner of this table will show you events split by release and you'll be able to see overall changes in start times between the two releases you've selected.
+
+![Example of Samples By Event](/product/performance/app-starts-samples-by-event.png)
 
 ## Span Detail View
 
-If you click on a span description, it’ll open a side panel view where you can see span details including the average duration and count for that span in each of the releases you’re looking at.
+![Example of Span Detail View](/product/performance/app-starts-span-detail-view.png)
+
+Clicking on a span description opens up a side panel that shows span details, including the average duration and count for that span in each of the releases you’re looking at.
 
 In the table below, you’ll see a list of sampled events and profiles (if they exist). By comparing the two, you’ll be able to see how much the duration of the span you’re looking at deviates from average spans in each of the two releases you’ve selected.
 
