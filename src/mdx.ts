@@ -26,7 +26,7 @@ import remarkVariables from './remark-variables';
 
 const root = process.cwd();
 
-function formatSlug(slug) {
+function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 const isSupported = (
@@ -205,7 +205,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   return allFrontMatter;
 }
 
-export async function getFileBySlug(slug) {
+export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug, 'config.yml');
   let configFrontmatter: {[key: string]: any} | undefined;
   if (fs.existsSync(configPath)) {
