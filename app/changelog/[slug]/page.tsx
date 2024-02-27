@@ -1,7 +1,7 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
-import {GET as sessionHandler} from 'app/changelog/api/auth/[...nextauth]/route';
+import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import {unstable_cache} from 'next/cache';
 import Link from 'next/link';
