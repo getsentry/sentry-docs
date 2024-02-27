@@ -1,11 +1,11 @@
 'use server';
 
-import {GET as handler} from 'app/changelog/api/auth/[...nextauth]/route';
-import {revalidatePath} from 'next/cache';
+import {GET as handler} from 'app/api/auth/[...nextauth]/route';
+import {revalidatePath, revalidateTag} from 'next/cache';
 import {redirect} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
 
-import {prisma} from '../prisma';
+import prisma from '../prisma';
 
 export async function unpublishChangelog(formData: FormData) {
   const session = await getServerSession(handler);
@@ -13,6 +13,7 @@ export async function unpublishChangelog(formData: FormData) {
     return {message: 'Unauthorized'};
   }
   const id = formData.get('id') as string;
+
   try {
     await prisma.changelog.update({
       where: {id},
@@ -23,6 +24,8 @@ export async function unpublishChangelog(formData: FormData) {
     return {message: 'Unable to unpublish changelog'};
   }
 
+  revalidateTag('changelogs');
+  revalidateTag('changelog-detail');
   return revalidatePath(`/changelog/_admin`);
 }
 
@@ -32,6 +35,7 @@ export async function publishChangelog(formData: FormData) {
     return {message: 'Unauthorized'};
   }
   const id = formData.get('id') as string;
+
   try {
     await prisma.changelog.update({
       where: {id},
@@ -42,6 +46,8 @@ export async function publishChangelog(formData: FormData) {
     return {message: 'Unable to publish changelog'};
   }
 
+  revalidateTag('changelogs');
+  revalidateTag('changelog-detail');
   return revalidatePath(`/changelog/_admin`);
 }
 
@@ -91,6 +97,7 @@ export async function editChangelog(formData: FormData) {
   const connect = categories.map(category => {
     return {name: category as string};
   });
+
   try {
     const data = {
       title: formData.get('title') as string,
@@ -110,6 +117,8 @@ export async function editChangelog(formData: FormData) {
     return {message: error};
   }
 
+  revalidateTag('changelogs');
+  revalidateTag('changelog-detail');
   return redirect(`/changelog/_admin`);
 }
 
@@ -128,5 +137,7 @@ export async function deleteChangelog(formData: FormData) {
     return {message: 'Unable to delete changelog'};
   }
 
+  revalidateTag('changelogs');
+  revalidateTag('changelog-detail');
   return revalidatePath(`/changelog/_admin`);
 }
