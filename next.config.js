@@ -1,23 +1,27 @@
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
+const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-      },
-    ],
-  },
-
   trailingSlash: true,
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+  },
+
+  webpack: (config, _options) => {
+    config.plugins.push(
+      codecovWebpackPlugin({
+        enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
+        bundleName: 'sentry-docs',
+        uploadToken: process.env.CODECOV_TOKEN,
+      })
+    );
+
+    return config;
   },
 
   redirects() {

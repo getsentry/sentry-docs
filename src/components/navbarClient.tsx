@@ -47,7 +47,7 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
             </SmartLink>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link href="https://changelog.getsentry.com/">Changelog</Nav.Link>
+            <Nav.Link href="https://sentry.io/changelog">Changelog</Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link
