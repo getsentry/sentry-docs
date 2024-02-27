@@ -1,13 +1,17 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
+import {GET as sessionHandler} from 'app/changelog/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
+import {unstable_cache} from 'next/cache';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
+import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
+import prisma from 'sentry-docs/prisma';
 
 type ChangelogWithCategories = Changelog & {
   categories: Category[];
@@ -39,15 +43,30 @@ export async function generateMetadata(
   };
 }
 
-const getChangelog = async slug => {
-  const result = await fetch(
-    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/${slug}/api`
-  );
-  if (result.ok) {
-    return result.json();
-  }
-  return null;
-};
+const getChangelog = unstable_cache(
+  async slug => {
+    const session = await getServerSession(sessionHandler);
+    let published: boolean | undefined = undefined;
+    if (!session) {
+      published = true;
+    }
+    try {
+      return await prisma.changelog.findUnique({
+        where: {
+          slug,
+          published,
+        },
+        include: {
+          categories: true,
+        },
+      });
+    } catch (e) {
+      return null;
+    }
+  },
+  ['changelog-detail'],
+  {tags: ['changelog-detail']}
+);
 
 export default async function ChangelogEntry({params}) {
   const changelog: ChangelogWithCategories | null = await getChangelog(params.slug);

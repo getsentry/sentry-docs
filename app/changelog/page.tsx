@@ -1,29 +1,32 @@
 import {Fragment} from 'react';
 import * as Sentry from '@sentry/nextjs';
-import {GET as changelogsEndpoint} from 'app/changelog/api/route';
 import type {Metadata} from 'next';
+import {unstable_cache} from 'next/cache';
 
 import List from 'sentry-docs/components/changelog/list';
+import prisma from 'sentry-docs/prisma';
 
 import Header from './header';
 
-const getChangelogs = async () => {
-  if (process.env.CI) {
-    // during CI, we invoke the API directly since the endpoint doesn't exist yet
-    return (await changelogsEndpoint()).json();
-  }
-  const result = await fetch(
-    `${process.env.BASE_URL || `https://${process.env.VERCEL_URL}` || 'https://localhost:3000'}/changelog/api`,
-    {
-      cache: 'force-cache',
-      next: {tags: ['changelogs']},
-    }
-  );
-  if (result.ok) {
-    return result.json();
-  }
-  return [];
-};
+export const dynamic = 'force-dynamic';
+
+const getChangelogs = unstable_cache(
+  async () => {
+    return await prisma.changelog.findMany({
+      include: {
+        categories: true,
+      },
+      where: {
+        published: true,
+      },
+      orderBy: {
+        publishedAt: 'desc',
+      },
+    });
+  },
+  ['changelogs'],
+  {tags: ['changelogs']}
+);
 
 export default async function ChangelogList() {
   const changelogs = await getChangelogs();
