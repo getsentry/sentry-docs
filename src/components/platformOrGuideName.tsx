@@ -18,7 +18,7 @@ export function PlatformOrGuideName({fallback}: PlatformOrGuideNameProps) {
   const {rootNode, path} = serverContext();
   const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
   if (!platformOrGuide) {
-    return 'fallbackName ';
+    return fallbackName;
   }
 
   return `${platformOrGuide.title || fallbackName} `;
