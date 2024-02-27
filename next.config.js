@@ -6,15 +6,6 @@ const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-      },
-    ],
-  },
-
   trailingSlash: true,
 
   experimental: {
