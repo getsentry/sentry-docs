@@ -65,7 +65,7 @@ export type APICategory = {
   name: string;
   slug: string;
 
-  /** descriptoin is a string of markdown with possible links */
+  /** description is a string of markdown with possible links */
   description?: string;
 };
 
