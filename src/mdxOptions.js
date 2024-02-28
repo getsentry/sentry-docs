@@ -1,3 +1,4 @@
+import {toString} from 'hast-util-to-string';
 import {h, s} from 'hastscript';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
@@ -21,7 +22,7 @@ mdxOptions.remarkPlugins = [
   remarkComponentSpacing,
 ];
 mdxOptions.rehypePlugins = [
-  ...(options.rehypePlugins ?? []),
+  ...(mdxOptions.rehypePlugins ?? []),
   rehypeSlug,
   [
     rehypeAutolinkHeadings,
