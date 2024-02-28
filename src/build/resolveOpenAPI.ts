@@ -64,6 +64,8 @@ export type APICategory = {
   apis: API[];
   name: string;
   slug: string;
+
+  /** description is a string of markdown with possible links */
   description?: string;
 };
 
@@ -93,7 +95,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
     categoryMap[tag.name] = {
       name: tag['x-sidebar-name'] || tag.name,
       slug: slugify(tag.name),
-      description: tag.description,
+      description: tag['x-display-description'] ? tag.description : undefined,
       apis: [],
     };
   });
