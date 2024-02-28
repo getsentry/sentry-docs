@@ -1,4 +1,4 @@
-import {s, h} from 'hastscript';
+import {h, s} from 'hastscript';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismPlus from 'rehype-prism-plus';

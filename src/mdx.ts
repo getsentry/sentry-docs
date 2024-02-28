@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 
 import matter from 'gray-matter';
-import {s, h} from 'hastscript';
 import {toString} from 'hast-util-to-string';
+import {h, s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
