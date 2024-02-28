@@ -75,10 +75,11 @@ export function TableOfContents({guideGrid}: Props) {
       const tocItems: TocItem[] = [];
       elements?.forEach(e => {
         const title = e.textContent?.trim();
-        if (title) {
+        const {id} = e;
+        if (title && id) {
           tocItems.push({
             depth: e.tagName === 'H2' ? 2 : 3,
-            url: `#${slug(title)}`,
+            url: `#${slug(id)}`,
             value: title,
           });
         }
