@@ -27,19 +27,12 @@ Types of matches available:
 
 The general format of a rule is: `type:pattern owners`
 
-`type`
-
-Can be either `path`, module, `url`, or `tags.TAG_NAME`, which matches the specified tag.
-
-`pattern`
-
-The pattern you're matching on. For example, `src/javascript/*` for `path`, `[https://www.example.io/checkout](https://www.example.io/checkout)` for `url`, or `Chrome 81.0.*` for `tags.browser`.
-
-`pattern` matching supports unix-style [glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)>). For example, add `*` to match anything and `?` to match a single character. _This is not a regex._
-
-`owners`
-
-The owner, or list of owners, identified by either the email of the Sentry user or the name of the team, prefixed with `#`. Thus, the owner may be example@company.com or example1@company.com example2@company.com or `#backend-team`. A space separates each owner in the list of owners.
+ - **`type`** - Can be either `path`, `module`, `url`, or `tags.TAG_NAME`, which matches the specified tag.
+ - **`pattern`** - The pattern you're matching on, which supports unix-style [glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)>). For example, add `*` to match anything and `?` to match a single character. _This is not a regex._ For example:
+   - `src/javascript/*` for a `path` type
+   - `https://www.example.io/checkout` for a `url` type
+   - `Chrome 81.0.*` for a `tags.browser` type
+ - **`owners`** - The owner, or list of owners, identified by either the email of the Sentry user or the name of the team, prefixed with `#`. Thus, the owner may be `example@company.com` or `example1@company.com example2@company.com` or `#backend-team`. A space separates each owner in the list of owners.
 
 Teams _must_ have access to the project to become owners. To grant a team access to a project, navigate to **[Project] > Settings > Project Teams**, and click "Add Team".
 
@@ -129,7 +122,7 @@ codeowners:*.js                    #ecosystem
 path:*.js                          #ecosystem #frontend
 path:sentry/api/*                  #api
 url:*subscription*                 #billing
-path:dist/frontend/components/*               #frontend
+path:dist/frontend/components/*    #frontend
 ```
 
 When Sentry receives an event with a stack trace filepath: `dist/frontend/components/sidebar.js`, we:
@@ -146,7 +139,7 @@ The matches, in order, are:
 [
   "codeowners:*.js                    #ecosystem",
   "path:*.js                          #ecosystem",
-  "path:dist/frontend/components/*               #frontend"
+  "path:dist/frontend/components/*    #frontend"
 ]
 ```
 
@@ -158,17 +151,21 @@ Once ownership rules are configured, they're applied in the following ways:
 
 ### Suggested Assignees
 
-On the **Issue Details** page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the **Issue Details** page shows the latest event). Suggested assignees can also be based on [suspect commits](/product/releases/suspect-commits/). You can assign the _issue_ to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
+On the **Issue Details** page, you'll see suggested assignees based on ownership rules matching the event, and [suspect commits](/product/releases/suspect-commits/). You can manually assign the issue to a suggested assignee by selecting an option on the dropdown. An event can have multiple suggested assignees if it matches multiple ownership rules.
 
 ![Avatar icons of suggested assignees and ability to click on them for assignment.](/product/issues/ownership-rules/suggested_assignees.png)
 
-### Auto-Assign
+### Auto-Assignment
 
 You can automatically assign issues to their owners by enabling the "Auto-assign to issue owner" setting in **[Project] > Settings > Ownership Rules**.
 
 ![Select from dropdown to automatically assign issues to their owners.](/product/issues/ownership-rules/auto-assign-issue-owner.png)
 
-If an issue is already assigned, a new event for that issue will not re-assign the issue even if it has a different owner. If an issue is not assigned, but a new event has multiple owners, [sentry.io](https://sentry.io) assigns it to the owner(s) from the last matching rule (regardless of the rule `type`).
+If an issue has already been assigned manually, new events will not change the current assignee. If an issue has not been assigned and a new event has multiple owners, Sentry assigns it to the owner(s) from the last matching rule (regardless of the rule `type`).
+
+Please keep in mind that auto-assignment may be skipped if a project is creating too many new issues at a given time due to rate limits. We'll try to auto-assign it the next time an event comes in for those skipped issues. If you are encountering this limit with non-recurring issues, you may want to take a look at [issue grouping](/product/data-management-settings/event-grouping/) strategies.
+
+
 
 ## Troubleshooting
 
