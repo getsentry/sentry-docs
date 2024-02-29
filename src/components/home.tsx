@@ -54,6 +54,15 @@ export async function Home() {
     (a, b) => HIGHLIGHTED_PLATFORMS.indexOf(a.key) - HIGHLIGHTED_PLATFORMS.indexOf(b.key)
   );
 
+  // this regex deals with names like .NET that would otherwise be sorted at the top
+  const leadingNonAlphaRegex = /^[^\w]/;
+
+  platformList.sort((a, b) =>
+    (a.title ?? a.name)
+      .replace(leadingNonAlphaRegex, '')
+      .localeCompare((b.title ?? b.name).replace(leadingNonAlphaRegex, ''))
+  );
+
   return (
     <HomeClient
       visiblePlatforms={visiblePlatforms}
