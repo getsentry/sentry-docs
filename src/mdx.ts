@@ -11,6 +11,7 @@ import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
+import rehypePrismDiff from 'rehype-prism-diff';
 // Remark packages
 import remarkGfm from 'remark-gfm';
 
@@ -333,6 +334,7 @@ export async function getFileBySlug(slug) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
+        [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];
       return options;
