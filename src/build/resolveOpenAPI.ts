@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '08ed4a872c76afdbaf6c8c915c08f202aa02b5e9';
+const SENTRY_API_SCHEMA_SHA = '4d634f4c7f9635ba01df39bc8afe5d9efeeea5b9';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -30,8 +30,6 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
   );
   return await response.json();
 }
-
-export default resolveOpenAPI;
 
 export type APIParameter = {
   description: string;
@@ -66,6 +64,8 @@ export type APICategory = {
   apis: API[];
   name: string;
   slug: string;
+
+  /** description is a string of markdown with possible links */
   description?: string;
 };
 
@@ -77,7 +77,17 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
-export async function apiCategories(): Promise<APICategory[]> {
+let apiCategoriesCache: Promise<APICategory[]> | undefined;
+
+export function apiCategories(): Promise<APICategory[]> {
+  if (apiCategoriesCache) {
+    return apiCategoriesCache;
+  }
+  apiCategoriesCache = apiCategoriesUncached();
+  return apiCategoriesCache;
+}
+
+async function apiCategoriesUncached(): Promise<APICategory[]> {
   const data = await resolveOpenAPI();
 
   const categoryMap: {[name: string]: APICategory} = {};
@@ -85,7 +95,7 @@ export async function apiCategories(): Promise<APICategory[]> {
     categoryMap[tag.name] = {
       name: tag['x-sidebar-name'] || tag.name,
       slug: slugify(tag.name),
-      description: tag.description,
+      description: tag['x-display-description'] ? tag.description : undefined,
       apis: [],
     };
   });

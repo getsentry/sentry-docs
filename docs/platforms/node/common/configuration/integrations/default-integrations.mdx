@@ -10,7 +10,7 @@ System integrations are enabled by default to integrate into the standard librar
 
 ### InboundFilters
 
-_Import name: `Sentry.Integrations.InboundFilters`_
+_Import name: `Sentry.inboundFiltersIntegration`_
 
 This integration allows you to ignore specific errors based on the error message or the URL from which the exception originated.
 
@@ -19,14 +19,14 @@ Keep in mind that `denyUrls` and `allowUrls` only work for captured exceptions, 
 
 ### FunctionToString
 
-_Import name: `Sentry.Integrations.FunctionToString`_
+_Import name: `Sentry.functionToStringIntegration`_
 
 This integration allows the SDK to provide original function and method names, even when those functions or methods
 are wrapped by our error or breadcrumb handlers.
 
 ### LinkedErrors
 
-_Import name: `Sentry.Integrations.LinkedErrors`_
+_Import name: `Sentry.linkedErrorsIntegration`_
 
 This integration allows you to configure linked errors. They'll be recursively read up to a specified limit, and a lookup will be performed by a specific key on the captured Error object. By default, the integration records up to five errors and the key used for recursion is `"cause"`.
 
@@ -45,13 +45,13 @@ Available options:
 
 ### Console
 
-_Import name: `Sentry.Integrations.Console`_
+_Import name: `Sentry.consoleIntegration`_
 
 This integration wraps the `console` module to record all of its calls as breadcrumbs.
 
 ### Http
 
-_Import name: `Sentry.Integrations.Http`_
+_Import name: `Sentry.httpIntegration`_
 
 This integration wraps the `http` and `https` modules to capture all network requests as breadcrumbs and/or tracing spans.
 
@@ -87,9 +87,44 @@ Where `TracingOptions` is:
 }
 ```
 
+### NativeNodeFetch (Undici)
+
+_(New in version 7.46.0)_
+
+_Import name: `nativeNodeFetchIntegration`_
+
+Instruments outgoing HTTP requests made with [undici](https://github.com/nodejs/undici) and [Node 18's Node Fetch](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch) by adding breadcrumbs and spans.
+
+Supports Undici `v4.7.0` or higher and requires Node `v16.7.0` or higher. There have been [reported issues with Node.js `v19`](https://github.com/getsentry/sentry-javascript/issues/7958) and the Undici integration so we recommend you use an [LTS version of Node.js](https://nodejs.dev/en/about/releases/) with this integration.
+
+Available options:
+
+```typescript
+{
+  /**
+   * If breadcrumbs should be created for outgoing requests.
+   * Defaults to true.
+   */
+  breadcrumbs?: boolean;
+  /**
+   * Function determining whether or not to create spans to track outgoing requests to the given URL.
+   * By default, spans will be created for all outgoing requests.
+   */
+  shouldCreateSpanForRequest?: (url: string) => boolean;
+}
+```
+
+To change what requests get the `sentry-trace` and `baggage` headers attached (for use in distributed tracing), use the top level `tracePropagationTargets` option.
+
+```typescript
+Sentry.init({
+  tracePropagationTargets: ["my-site-url.com"],
+});
+```
+
 ### OnUncaughtException
 
-_Import name: `Sentry.Integrations.OnUncaughtException`_
+_Import name: `Sentry.onUncaughtExceptionIntegration`_
 
 This integration attaches a global uncaught exception handler. It can be modified to provide a custom shutdown function.
 The `onFatalError` option is meant to perform a cleanup before the process exits, not fully prevent it from exiting.
@@ -110,7 +145,7 @@ Available options:
 
 ### OnUnhandledRejection
 
-_Import name: `Sentry.Integrations.OnUnhandledRejection`_
+_Import name: `Sentry.onUnhandledRejectionIntegration`_
 
 This integration attaches a global unhandled rejection handler. By default, all unhandled rejections trigger a warning and log the error. You can change this behavior using the `mode` option, which works with Node's CLI options: https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode.
 
@@ -124,7 +159,7 @@ Available options:
 
 ### ContextLines
 
-_Import name: `Sentry.Integrations.ContextLines`_
+_Import name: `Sentry.contextLinesIntegration`_
 
 _(Available in version 6.18.0 and above)_
 
@@ -141,7 +176,7 @@ Available options:
 
 ### LocalVariables
 
-_Import name: `Sentry.Integrations.LocalVariables`_
+_Import name: `Sentry.localVariablesIntegration`_
 
 _(Available in version 7.46.0 and above)_
 
@@ -175,7 +210,7 @@ enabling the `captureAllExceptions` option:
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.Integrations.LocalVariables({
+    Sentry.localVariablesIntegration({
       captureAllExceptions: true,
     }),
   ],
@@ -194,7 +229,7 @@ try {
 
 _(New in version 7.13.0.)_
 
-_Import name: `Sentry.Integrations.Modules`_
+_Import name: `Sentry.modulesIntegration`_
 
 This integration fetches names of all currently installed Node modules and attaches the list to the event. Once fetched, Sentry will cache the list for later reuse.
 
@@ -202,7 +237,7 @@ This integration fetches names of all currently installed Node modules and attac
 
 _(New in version 7.17.1.)_
 
-_Import name: `Sentry.Integrations.RequestData`_
+_Import name: `Sentry.requestDataIntegration`_
 
 This integration adds data from incoming requests to transaction and error events that occur during request handling.
 
@@ -243,7 +278,7 @@ To override an integration's settings, provide a new instance to the `integratio
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.Integrations.OnUncaughtException({
+    Sentry.onUncaughtExceptionIntegration({
       onFatalError: () => {
         // your implementation
       },

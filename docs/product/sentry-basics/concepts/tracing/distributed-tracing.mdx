@@ -1,22 +1,22 @@
 ---
 title: Distributed Tracing
 sidebar_order: 10
-description: "Learn more about distributed tracing and how Sentry tracks your software performance, measures throughput and latency, and displays the impact of errors across multiple systems."
+description: "With distributed tracing, you can track software performance and measure throughput & latency, while seeing the impact of errors across multiple systems."
 ---
 
-Enable performance monitoring to augment your existing error data, tracing interactions from the frontend to the backend. With tracing, Sentry tracks your software performance, measures metrics like throughput and latency, and displays the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you diagnose problems and measure your application's overall health more quickly. Tracing in Sentry provides insights such as:
+With distributed tracing, you can get a connected view of your application from the frontend to the backend. You'll be able to track your software performance, measure metrics like throughput and latency, and display the impact of errors across multiple systems. Distributed tracing makes Sentry a more complete performance monitoring solution, helping you diagnose problems and measure your application's overall health more quickly. Tracing in Sentry provides insights such as:
 
 - What occurred for a specific error event or issue
 - The conditions that cause bottlenecks or latency issues in your application
 - The endpoints or operations that consume the most time
 
-## What is Tracing?
+## What Is Tracing?
 
 To begin, a note about what tracing is not: Tracing is not profiling. Though the goals of profiling and tracing overlap quite a bit, and though they can both be used to diagnose problems in your application, they differ in terms of what they measure and how the data is recorded.
 
-A [profiler](<https://en.wikipedia.org/wiki/Profiling_(computer_programming)>) may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements.
+A profiler may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements.
 
-A [tracing tool](<https://en.wikipedia.org/wiki/Tracing_(software)>), on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is a log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
+A tracing tool, on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is a log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
 
 ### Why Tracing?
 
@@ -30,15 +30,15 @@ Applications typically consist of interconnected components, which are also call
 
 Each of these components may be written in a different language on a different platform. Each can be instrumented individually using a Sentry SDK to capture error data or crash reports, but that instrumentation doesn't provide the full picture, as each piece is considered separately. Tracing allows you to tie all of the data together.
 
-In our example web application, tracing means being able to follow a request from the frontend to the backend and back, pulling in data from any background tasks or notification jobs that request creates. Not only does this allow you to correlate Sentry error reports, to see how an error in one service may have propagated to another, but it also allows you to gain stronger insights into which services may be having a negative impact on your application's overall performance.
+In our example web application, tracing means being able to follow a request from the [frontend](/product/sentry-basics/integrate-frontend/) to the [backend](/product/sentry-basics/integrate-backend/) and back, pulling in data from any background tasks or notification jobs that request creates. Not only does this allow you to correlate Sentry error reports, to see how an error in one service may have propagated to another, but it also allows you to gain stronger insights into which services may be having a negative impact on your application's overall performance.
 
 Before learning how to enable tracing in your application, it helps to understand a few key terms and how they relate to one another.
 
-### Traces, Transactions, and Spans
+## Traces, Transactions, and Spans
 
 A **trace** represents the record of the entire operation you want to measure or track - like page load, an instance of a user completing some action in your application, or a cron job in your backend. When a trace includes work in multiple services, such as those listed above, it's called a **distributed trace**, because the trace is distributed across those services.
 
-Each trace consists of one or more tree-like structures called **transactions**, the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service. Here's an example trace, broken down into transactions and spans:
+Each trace consists of one or more tree-like structures called [**transactions**](/product/performance/transaction-summary/), the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service. Here's an example trace, broken down into transactions and spans:
 
 ![Diagram illustrating how a trace is composed of multiple transactions, and each transaction is composed of multiple spans.](/product/sentry-basics/concepts/tracing/diagram-transaction-trace.png)
 
@@ -48,7 +48,7 @@ Because a transaction has a tree structure, top-level spans can themselves be br
 
 To make all of this more concrete, let's consider our example web app again.
 
-### Example: Investigating Slow Page Load
+### Tracing, Transaction & Span Example: Investigating Slow Page Load
 
 Suppose your web application is slow to load, and you'd like to know why. A lot has to happen for your app to first get to a usable state: multiple requests to your backend, likely some work - including calls to your database or to outside APIs - completed before responses are returned, and processing by the browser to render all of the returned data into something meaningful to the user. So which part of that process is slowing things down?
 
@@ -57,11 +57,9 @@ Let's say, in this simplified example, that when a user loads the app in their b
 - _Browser_
   - 1 request each for HTML, CSS, and JavaScript
   - 1 rendering task, which sets off 2 requests for JSON data
-    ^
 - _Backend_
   - 3 requests to serve static files (the HTML, CSS, and JS)
   - 2 requests for JSON data - 1 requiring a call to the database - 1 requiring a call to an external API and work to process the results before returning them to the frontend
-    ^
 - _Database Server_
   - 1 request which requires 2 queries
     - 1 query to check authentication
@@ -97,16 +95,13 @@ Now, for the sake of completeness, back to our spans:
 
 - _Backend HTML/CSS/JS Request Transactions_: 1 span each
   - 1 root span representing the entire request (child of a browser span)
-    ^
 - _Backend Request with DB Call Transaction_: 2 spans
   - 1 root span representing the entire request (child of a browser span)
   - 1 span for querying the database (parent of the database server transaction)
-    ^
 - _Backend Request with API Call Transaction_: 3 spans
   - 1 root span representing the entire request (child of a browser span)
   - 1 span for the API request (unlike with the DB call, _not_ a parent span, since the API is external)
   - 1 span for processing the API data
-    ^
 - _Database Server Request Transaction_: 3 spans
   - 1 root span representing the entire request (child of the backend span above)
   - 1 span for the authentication query
@@ -114,7 +109,7 @@ Now, for the sake of completeness, back to our spans:
 
 To wrap up the example: after instrumenting all of your services, you might discover that - for some reason - it's the auth query in your database server that is making things slow, accounting for more than half of the time it takes for your entire page load process to complete. Tracing can't tell you _why_ that's happening, but at least now you know where to look!
 
-### Further Examples
+### Further Examples of Tracing, Transactions & Spans
 
 This section contains a few more examples of tracing, broken down into transactions and spans.
 
@@ -125,21 +120,18 @@ If your application involves e-commerce, you likely want to measure the time bet
 - The browser's full process (_T_ and root span _S_)
   - XHR request to backend\* (_S_)
   - Rendering confirmation screen (_S_)
-    ^
 - Your backend's processing of that request (_T_ and root span _S_)
   - Function call to compute total (_S_)
   - DB call to store order\* (_S_)
   - API call to payment processor (_S_)
   - Queuing of email confirmation\* (_S_)
-    ^
 - Your database's work updating the customer's order history (_T_ and root span _S_)
   - Individual SQL queries (_S_)
-    ^
 - The queued task of sending the email (_T_ and root span _S_)
   - Function call to populate email template (_S_)
   - API call to email-sending service (_S_)
 
-_Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
+\* Starred spans represent spans that are the parent of a later transaction (and its root span).
 
 #### Monitoring a Background Process
 
@@ -150,17 +142,15 @@ If your backend periodically polls for data from an external service, processes 
   - Processing function (_S_)
   - Call to caching service\* (_S_)
   - API call to internal service\* (_S_)
-    ^
 - The work done in your caching service (_T_ and root span _S_)
   - Checking cache for existing data (_S_)
   - Storing new data in cache (_S_)
-    ^
 - Your internal service's processing of the request (_T_ and root span _S_)
   - Anything that service might do to handle the request (_S_)
 
-_Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
+\* Starred spans represent spans that are the parent of a later transaction (and its root span).
 
-### Tracing Data Model
+### The Tracing Data Model
 
 > "Show me your flowchart and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowchart; it'll be obvious."
 >
@@ -201,13 +191,13 @@ The majority of the data in a transaction resides in the individual spans the tr
 
 An example use of the `op` and `description` properties together is `op: db.query` and `description: SELECT * FROM users WHERE last_active < %s`. The `status` property is often used to indicate the success or failure of the span's operation, or for a response code in the case of HTTP requests. Finally, `tags` and `data` allow you to attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
 
-### Further Information
+### Important Information About Tracing, Spans & Transactions
 
 A few more important points about traces, transactions, and spans, and the way they relate to one another:
 
 #### Trace Duration
 
-Because a trace just is a collection of transactions, traces don't have their own start and end times. Instead, a trace begins when its earliest transaction starts, and ends when its latest transaction ends. As a result, you can't explicitly start or end a trace directly. Instead, you create a trace by creating the first transaction in that trace, and you complete a trace by completing all of transactions it contains.
+Because a trace is just a collection of transactions, traces don't have their own start or end times. A trace begins when the earliest transaction it registers starts, and ends when the latest transaction it registers ends. So while you can't "start" or "end" a trace, you can initiate a transaction which will then trigger a trace. And you can end a trace by completing all of the transactions it would be registering.
 
 #### Async Transactions
 
@@ -253,4 +243,4 @@ Put simply: as a result of this head-based approach, where the decision is made 
 
 ## Viewing Trace Data
 
-Through [Performance](/product/performance/) and [Discover](/product/discover-queries/), you can view trace data in the event details.
+Through [Performance](/product/performance/) and [Discover](/product/discover-queries/), you can view trace data in the [event details](/product/sentry-basics/concepts/tracing/event-detail/).

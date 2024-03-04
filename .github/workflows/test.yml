@@ -1,4 +1,4 @@
-name: Build, Lint, and Test
+name: Lint, and Test
 
 on:
   push:
@@ -7,31 +7,6 @@ on:
     branches: [master]
 
 jobs:
-  job_build:
-    name: Build
-    runs-on: ubuntu-latest
-    env:
-      JEKYLL_ENABLE_PLATFORM_API: false
-    steps:
-      - uses: actions/checkout@v4.1.1
-      - uses: getsentry/action-setup-volta@c52be2ea13cfdc084edb806e81958c13e445941e # v1.2.0
-      - uses: actions/cache@v4
-        id: cache
-        with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashfiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            .cache
-            public
-          key: node-${{ runner.os }}-${{ hashfiles('**/yarn.lock') }}-gatsby-build
-      - name: yarn build
-        run: yarn build
-
   job_lint:
     name: Lint
     runs-on: ubuntu-latest

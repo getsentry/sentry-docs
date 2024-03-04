@@ -7,6 +7,7 @@ import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
+import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
@@ -29,13 +30,44 @@ const root = process.cwd();
 function formatSlug(slug) {
   return slug.replace(/\.(mdx|md)/, '');
 }
+const isSupported = (
+  frontmatter: any,
+  platformName: string,
+  guideName?: string
+): boolean => {
+  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
+  if (frontmatter.supported && frontmatter.supported.length) {
+    if (frontmatter.supported.indexOf(canonical) !== -1) {
+      return true;
+    }
+    if (frontmatter.supported.indexOf(platformName) === -1) {
+      return false;
+    }
+  }
+  if (
+    frontmatter.notSupported &&
+    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
+      frontmatter.notSupported.indexOf(platformName) !== -1)
+  ) {
+    return false;
+  }
+  return true;
+};
 
 export type FrontMatter = {[key: string]: any};
 
-export const allDocsFrontMatter = getAllFilesFrontMatter();
+let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
-export async function getDocsFrontMatter(): Promise<FrontMatter[]> {
-  const frontMatter = [...allDocsFrontMatter];
+export function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  if (getDocsFrontMatterCache) {
+    return getDocsFrontMatterCache;
+  }
+  getDocsFrontMatterCache = getDocsFrontMatterUncached();
+  return getDocsFrontMatterCache;
+}
+
+async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
+  const frontMatter = getAllFilesFrontMatter();
 
   const categories = await apiCategories();
   categories.forEach(category => {
@@ -94,6 +126,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     let platformFrontmatter: FrontMatter = {};
     const configPath = path.join(platformsPath, platformName, 'config.yml');
     if (fs.existsSync(configPath)) {
+      // @ts-ignore
       platformFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
     }
 
@@ -112,12 +145,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     });
 
     commonFiles.forEach(f => {
-      const supported =
-        (!f.frontmatter.supported?.length ||
-          f.frontmatter.supported.includes(platformName)) &&
-        (!f.frontmatter.notSupported?.length ||
-          !f.frontmatter.notSupported.includes(platformName));
-      if (!supported) {
+      if (!isSupported(f.frontmatter, platformName)) {
         return;
       }
 
@@ -153,17 +181,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       let guideFrontmatter: FrontMatter = {};
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
       if (fs.existsSync(guideConfigPath)) {
+        // @ts-ignore
         guideFrontmatter = yaml.load(fs.readFileSync(guideConfigPath, 'utf8'));
       }
 
       commonFiles.forEach(f => {
-        const guideKey = `${platformName}.${guideName}`;
-        const supported =
-          (!f.frontmatter.supported?.length ||
-            f.frontmatter.supported.includes(guideKey)) &&
-          (!f.frontmatter.notSupported?.length ||
-            !f.frontmatter.notSupported.includes(guideKey));
-        if (!supported) {
+        if (!isSupported(f.frontmatter, platformName, guideName)) {
           return;
         }
 
@@ -193,6 +216,7 @@ export async function getFileBySlug(slug) {
   const configPath = path.join(root, slug, 'config.yml');
   let configFrontmatter: {[key: string]: any} | undefined;
   if (fs.existsSync(configPath)) {
+    // @ts-ignore
     configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
   }
 
@@ -245,7 +269,7 @@ export async function getFileBySlug(slug) {
 
   const toc = [];
 
-  const {code, frontmatter} = await bundleMDX({
+  const result = await bundleMDX({
     source,
     // mdx imports can be automatically source from the components directory
     cwd: root,
@@ -305,6 +329,7 @@ export async function getFileBySlug(slug) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
+        [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];
       return options;
@@ -318,12 +343,15 @@ export async function getFileBySlug(slug) {
     },
   });
 
+  const {code, frontmatter} = result;
+
   let mergedFrontmatter = frontmatter;
   if (configFrontmatter) {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
   return {
+    matter: result.matter,
     mdxSource: code,
     toc,
     frontMatter: {

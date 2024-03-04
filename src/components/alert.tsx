@@ -4,7 +4,7 @@ type Props = {
   children?: any;
   deepLink?: string;
   dismiss?: boolean;
-  level?: string;
+  level?: 'info' | 'warning' | 'danger' | 'success' | '';
   title?: string;
 };
 

@@ -20,6 +20,8 @@ import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
 import {PlatformLink} from './components/platformLink';
 import {PlatformLinkWithLogo} from './components/platformLinkWithLogo';
+import {PlatformOrGuideName} from './components/platformOrGuideName';
+import {PlatformSdkPackageName} from './components/platformSdkPackageName';
 import {PlatformSection} from './components/platformSection';
 import {RelayMetrics} from './components/relayMetrics';
 import {SandboxLink} from './components/sandboxLink';
@@ -55,6 +57,8 @@ export function mdxComponents(
     PlatformLink,
     PlatformLinkWithLogo,
     PlatformSection,
+    PlatformOrGuideName,
+    PlatformSdkPackageName,
     RelayMetrics,
     SandboxLink,
     SignInNote,

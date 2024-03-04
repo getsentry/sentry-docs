@@ -50,7 +50,7 @@ module.exports = {
 
 Requires SDK version `7.59.0` or higher.
 
-Once metadata has been injected into modules, the `ModuleMetadata` integration
+Once metadata has been injected into modules, the `moduleMetadataIntegration` 
 can be used to look up that metadata and attach it to stack frames with
 matching file names. This metadata is then available in other integrations or in
 the `beforeSend` callback as the `module_metadata` property on each
@@ -59,11 +59,10 @@ for an error and used to tag or route events.
 
 ```javascript
 import * as Sentry from "@sentry/browser";
-import { ModuleMetadata } from "@sentry/core";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new ModuleMetadata()],
+  integrations: [Sentry.moduleMetadataIntegration()],
   beforeSend: (event) => {
     const frames = event?.exception?.values?.[0].stacktrace.frames || [];
     // Get all team names in the stack frames
@@ -193,8 +192,7 @@ Then when you initialize Sentry:
 - Create a transport that routes events when the `extra` property is present
 
 ```javascript
-import { init, makeFetchTransport } from "@sentry/browser";
-import { makeMultiplexedTransport, ModuleMetadata } from "@sentry/core";
+import { init, makeFetchTransport, moduleMetadataIntegration, makeMultiplexedTransport } from "@sentry/browser";
 
 const EXTRA_KEY = "ROUTE_TO";
 
@@ -213,7 +211,7 @@ const transport = makeMultiplexedTransport(makeFetchTransport, (args) => {
 
 init({
   dsn: "__DEFAULT_DSN__",
-  integrations: [new ModuleMetadata()],
+  integrations: [moduleMetadataIntegration()],
   transport,
   beforeSend: (event) => {
     if (event?.exception?.values?.[0].stacktrace.frames) {

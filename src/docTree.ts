@@ -21,7 +21,17 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-export async function getDocsRootNode(): Promise<DocNode | undefined> {
+let getDocsRootNodeCache: Promise<DocNode | undefined> | undefined;
+
+export function getDocsRootNode(): Promise<DocNode | undefined> {
+  if (getDocsRootNodeCache) {
+    return getDocsRootNodeCache;
+  }
+  getDocsRootNodeCache = getDocsRootNodeUncached();
+  return getDocsRootNodeCache;
+}
+
+async function getDocsRootNodeUncached(): Promise<DocNode | undefined> {
   return frontmatterToTree(await getDocsFrontMatter());
 }
 

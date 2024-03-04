@@ -40,12 +40,10 @@ import { useEffect } from "react";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.remixRouterInstrumentation(
-        useEffect,
-        useLocation,
-        useMatches
-      ),
+    Sentry.browserTracingIntegration({
+      useEffect,
+      useLocation,
+      useMatches,
     }),
     // Replay is only available in the client
     Sentry.replayIntegration(),
@@ -184,6 +182,7 @@ export function handleError(
   error: unknown,
   { request }: DataFunctionArgs
 ): void {
+  if (error instanceof Error) {
     Sentry.captureRemixServerException(error, "remix.server", request);
   } else {
     // Optionally capture non-Error objects
