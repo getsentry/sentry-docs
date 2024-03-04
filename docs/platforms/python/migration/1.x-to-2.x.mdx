@@ -24,37 +24,32 @@ The `profiles_sample_rate` and `profiler_mode` options are not experimental anym
 
 The deprecated `with_locals` and `request_bodies` options have been removed in favor of their new counterparts: `include_local_variables` and `max_request_body_size`, respectively.
 
-**Old**:
+**These are all potential changes you need to apply to your init**:
 
 <SignInNote />
 
-```python
+```python diff
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    with_locals=False,
-    request_bodies="always",
-    _experiments={
-        "profiles_sample_rate": 1.0,
-        "profiler_mode": "thread",
-    },
-)
-```
 
-**New**:
+    # Replace with_locals
+-   with_locals=False,
++   include_local_variables=False,
 
-<SignInNote />
+    # Replace request_bodies
+-   request_bodies="always",
++   max_request_body_size="always",
 
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    include_local_variables=False,  # replaces with_locals
-    max_request_body_size="always",  # replaces request_bodies
-    profiles_sample_rate=1.0,  # replaces _experiments["profiles_sample_rate"]
-    profiler_mode="thread",  # replaces _experiments["profiler_mode"]
+    # Replace _experiments["profiles_sample_rate"]
+    # Replace _experiments["profiler_mode"]
+-   _experiments={
+-       "profiles_sample_rate": 1.0,
+-       "profiler_mode": "thread",
+-   },
++   profiles_sample_rate=1.0,
++   profiler_mode="thread",
 )
 ```
 
@@ -66,30 +61,19 @@ The API function `last_event_id()` was removed. The last event ID is still retur
 
 You can no longer mutate a manually-created transaction in a `configure_scope` block. Instead, you need to get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
 
-**Old**:
-
 <SignInNote />
 
-```python
+```python diff
 transaction = sentry_sdk.transaction(...)
 
 # later in the code execution:
 
-with sentry_sdk.configure_scope() as scope:
-    scope.set_transaction_name("new-transaction-name")
-```
+-with sentry_sdk.configure_scope() as scope:
+-    scope.set_transaction_name("new-transaction-name")
 
-**New**:
++scope = sentry_sdk.Scope.get_current_scope()
++scope.set_transaction_name("new-transaction-name")
 
-<SignInNote />
-
-```python
-transaction = sentry_sdk.transaction(...)
-
-# later in the code execution:
-
-scope = sentry_sdk.Scope.get_current_scope()
-scope.set_transaction_name("new-transaction-name")
 ```
 
 ## Self-Hosted

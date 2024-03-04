@@ -7,6 +7,7 @@ import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
+import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
@@ -328,6 +329,7 @@ export async function getFileBySlug(slug) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
+        [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];
       return options;
