@@ -26,15 +26,14 @@ mdxOptions.rehypePlugins = [
   [
     rehypeAutolinkHeadings,
     {
-      behavior: 'append',
+      behavior: 'wrap',
       properties: {
-        className: 'autolink-header inline-flex ml-2',
         ariaHidden: true,
         tabIndex: -1,
       },
       content: [
         s(
-          'svg.autolink-svg',
+          'svg.anchor.before',
           {
             xmlns: 'http://www.w3.org/2000/svg',
             width: 16,
