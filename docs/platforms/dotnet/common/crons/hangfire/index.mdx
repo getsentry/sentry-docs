@@ -1,0 +1,45 @@
+---
+title: Hangfire
+description: "Learn more about how to monitor your Hangfire jobs."
+sidebar_order: 5001
+---
+
+The .NET SDK provides an integration for [Hangfire](https://www.hangfire.io/) to monitor your jobs by automatically creating check-ins for them. The SDK relies on job filters that get set up when you `UseSenty` like so
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+GlobalConfiguration.Configuration.UseSentry();
+```
+
+or if you're using the builder pattern
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHangfire(configuration => configuration
+    .UseSentry() // <- Add Sentry to automatically send check-ins
+);
+```
+
+To let the SDK know which jobs to monitor you need to provide the job with a monitor slug. This can be done by setting the `SentryMonitorSlug` attribute on the job. An example how to set up a fire-and-forget job that is getting monitored by Sentry could look like the following snippet:
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+GlobalConfiguration.Configuration.UseSentry();
+BackgroundJob.Enqueue<MyJobClass>(job => job.Execute());
+
+public class MyJobClass
+{
+    [SentryMonitorSlug("my-monitor-slug")]
+    public void Execute()
+    {
+        // Do your work
+    }
+}
+```
