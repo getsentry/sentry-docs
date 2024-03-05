@@ -33,6 +33,7 @@ export default function remarkVariables(options) {
 
     const scope = await options.resolveScopeData();
 
+    const interplolationError = new Error(`Failed to interpolate expression: "${expr}"`);
     visit(
       markdownAST,
       () => true,
@@ -59,11 +60,21 @@ export default function remarkVariables(options) {
           try {
             result = scopedEval(expr, {...scope, page});
           } catch (err) {
-            console.error(`Failed to interpolate expression: "${expr}"`);
+            console.error(interplolationError);
             throw err;
           }
 
-          node.value = node.value.replace(match[0], result);
+          if (result) {
+            node.value = node.value.replace(match[0], result);
+          } else {
+            // fail the build process in production
+            if (process.env.NODE_ENV === 'production') {
+              console.error(interplolationError);
+              // this is probably the only way to foce the build to fail
+              process.exit(1);
+            }
+            throw interplolationError;
+          }
         });
       }
     );
