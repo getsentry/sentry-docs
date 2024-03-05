@@ -15,6 +15,10 @@ export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   });
 }
 
+export const capitilize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 type Page = {
   context: {
     sidebar_order?: number;
