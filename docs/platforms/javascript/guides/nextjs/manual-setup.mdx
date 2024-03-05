@@ -287,6 +287,8 @@ const nextConfig = {
     //     - excludeServerRoutes
     //   'Configure Tunneling to avoid Ad-Blockers':
     //     - tunnelRoute
+    //   'Disable the Sentry SDK Debug Logger to Save Bundle Size':
+    //     - disableLogger
   },
 };
 
@@ -481,6 +483,12 @@ const nextConfig = {
 
 Setting this option will add an API endpoint to your application that is used to forward Sentry events to the Sentry servers.
 
+<Alert title={<>Complications when using <code>tunnelRoute</code> with Next.js Middleware</>}>
+
+If the route configured with `tunnelRoute` is intercepted by your Next.js middleware, the client-side events recording will fail. You can exclude the tunnel route by adding a negative matcher to your middleware like this: `(?!monitoring-tunnel)`
+
+</Alert>
+
 Please note that this option will tunnel Sentry events through your Next.js application so you might experience increased server usage.
 
 The `tunnelRoute` option does currently not work with self-hosted Sentry instances.
@@ -599,3 +607,18 @@ const nextConfig = {
 If you want the `sentry` to be available in your server side & not in client side, you can make your `sentry.client.config.js` empty. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle. The same goes the opposite for opting out of server side bundle by emptying `sentry.server.config.js`.
 
 You cannot delete the respective config files because the SDK requires you to have it.
+
+## Disable the Sentry SDK Debug Logger to Save Bundle Size
+
+_(New in version 7.50.0)_
+
+Set the `disableLogger` option to `true` to strip the Sentry SDK debug logger out of your client bundles, saving bundle size.
+Please note that this will effectively override and disable the `debug` option in your `Sentry.init()` calls.
+
+```javascript {filename:next.config.(js|mjs)}
+const nextConfig = {
+  sentry: {
+    disableLogger: true,
+  },
+};
+```

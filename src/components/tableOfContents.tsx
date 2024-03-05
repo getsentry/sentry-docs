@@ -1,7 +1,6 @@
 'use client';
 
 import {ReactElement, useEffect, useState} from 'react';
-import {slug} from 'github-slugger';
 
 interface TocItem {
   depth: number;
@@ -75,10 +74,11 @@ export function TableOfContents({guideGrid}: Props) {
       const tocItems: TocItem[] = [];
       elements?.forEach(e => {
         const title = e.textContent?.trim();
-        if (title) {
+        const {id} = e;
+        if (title && id) {
           tocItems.push({
             depth: e.tagName === 'H2' ? 2 : 3,
-            url: `#${slug(title)}`,
+            url: `#${id}`,
             value: title,
           });
         }

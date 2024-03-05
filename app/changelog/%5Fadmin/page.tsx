@@ -8,7 +8,7 @@ import {
   publishChangelog,
   unpublishChangelog,
 } from 'sentry-docs/actions/changelog';
-import {prisma} from 'sentry-docs/prisma';
+import prisma from 'sentry-docs/prisma';
 
 import Confirm from './confirm';
 

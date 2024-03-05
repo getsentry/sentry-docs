@@ -13,7 +13,9 @@ type ExpandedProps = {
   isExpanded: boolean;
 };
 
-const ExpandedIndicator = styled(ArrowDown)<ExpandedProps>`
+const ExpandedIndicator = styled(({isExpanded: _, ...props}) => (
+  <ArrowDown {...props} />
+))<ExpandedProps>`
   user-select: none;
   transition: transform 200ms ease-in-out;
   transform: rotate(${p => (p.isExpanded ? '180deg' : '0')});
