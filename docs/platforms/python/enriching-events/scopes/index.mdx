@@ -8,45 +8,28 @@ information from the current scope. SDKs will typically automatically manage the
 for you in the framework integrations and you don't need to think about them. However,
 you should know what a scope is and how you can use it for your advantage.
 
-## What's a Scope, What's a Hub
+## What's a Scope
 
-You can think of the hub as the central point that our SDKs use to route an
-event to Sentry. When you call `init()` a hub is created and a client and a
-blank scope are created on it. That hub is then associated with the current
-thread and will internally hold a stack of scopes.
+Scopes manage the data that should be sent along with an event. For instance [contexts](../context/) or [breadcrumbs](../breadcrumbs/) are stored on the scope.
 
-The scope will hold useful information that should be sent along with the
-event. For instance [contexts](../context/) or
-[breadcrumbs](../breadcrumbs/) are stored on
-the scope. When a scope is pushed, it inherits all data from the parent scope
-and when it pops all modifications are reverted.
+There are three types of scopes:
 
-The default SDK integrations will push and pop scopes intelligently. For
-instance web framework integrations will create and destroy scopes around your
+- the *global scope*, which is a simple global variable that contains data relevant for the whole app (e.g., the release)
+- *isolation scopes*, which are thread-local and are created for each request-response lifecycle
+- *current scopes*, which are thread-local and follow the lifecycle of a span
+
+The default SDK integrations will manage these scopes for you out of the box. For
+instance, web framework integrations will create and destroy isolation scopes around your
 routes or controllers.
 
-## How the Scope and Hub Work
+https://develop.sentry.dev/sdk/hub_and_scope_refactoring/
 
-As you start using an SDK, a scope and hub are automatically created for you out
-of the box. It's unlikely that you'll interact with the hub directly unless you're
-writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call <PlatformIdentifier name="configure-scope" /> at any point in
+As you start using the SDK, the initial scopes are created for you automatically. You can call <PlatformIdentifier name="configure-scope" /> at any point in
 time to modify data stored on the scope. This is useful for doing things like
 [modifying the context](../context/).
 
-<Alert>
-If you are very curious about how thread locality works: On platforms such as .NET
-or on Python 3.7 and later we will use "ambient data" to have either the hub flow
-with your code or the hub is already a singleton that internally manages the scope.
-
-Effectively this means that when you spawn a task in .NET and the execution flow is
-not suppressed all the context you have bound to the scope in Sentry will flow along.
-If however you suppress the flow, you get new scope data.
-
-</Alert>
-
 When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
-discovers the current hub and asks it to capture an event. Internally the hub will
+determines the correct scope to use to perform that functionality. Internally the hub will
 then merge the event with the topmost scope's data.
 
 ## Configuring the Scope
