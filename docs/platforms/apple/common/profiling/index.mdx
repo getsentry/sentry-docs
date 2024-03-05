@@ -72,3 +72,19 @@ SentrySDK.start { options in
 The <PlatformIdentifier name="profiles-sample-rate" /> setting is _relative_ to the <PlatformIdentifier name="traces-sample-rate" /> setting.
 
 </Note>
+
+## Enable Launch Profiling
+
+<Note>
+
+This feature is experimental and may have bugs.
+
+</Note>
+
+_(New in version 8.21.0)_
+
+Normally, a profile can only be taken during a trace span after the SDK has been initialized. Now, when you call `SentrySDK.startWithOptions`, your configuration of sample rates for traces and profiles will be used to determine if the subsequent app launch should be automatically profiled. This allows you to gather information on what is going on in your app even before `main` is called, helping you issues you may have with slow app launches.
+
+If you use `SentryOptions.tracesSampler` or `SentryOptions.profilesSampler`, you can check `SentryTransactionContext.forNextAppLaunch` to decide whether or not to profile the next launch. Your customer sampler blocks will be invoked passing this context object at some point after calling `SentrySDK.startWithOptions`. If instead you simply set `SentryOptions.tracesSampleRate` and `SentryOptions.profilesSampleRate`, those numerical rates will be used.
+
+Currently, launch profiles are attached to a special performance transaction operation `app.launch` named simply `launch`.
