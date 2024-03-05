@@ -30,6 +30,7 @@ mdxOptions.rehypePlugins = [
       properties: {
         ariaHidden: true,
         tabIndex: -1,
+        className: 'autolink-heading',
       },
       content: [
         s(
