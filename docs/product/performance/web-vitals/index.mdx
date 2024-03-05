@@ -1,75 +1,12 @@
 ---
 title: "Web Vitals"
 sidebar_order: 60
-description: "Understand the health of your application with Web Vitals by monitoring metrics such as render time, response time, and layout shift."
+description: "Understand your application's performance score and how each web vital contributes to it. Drill in to explore opportunities to improve your app's overall performance."
 ---
 
-[Web Vitals](https://web.dev/vitals/) are a set of metrics defined by Google to measure render time, response time, and layout shift. Each data point provides insights about the overall [performance](/product/performance/) of your application.
+Web vitals are a set of metrics that measure the quality of the user experience on a web page. To learn more about these metrics, see [Web Vitals Concepts](/product/performance/web-vitals/web-vitals-concepts/).
 
-The in-browser Sentry SDKs collect web vitals information (where supported) and adds that information to frontend [transactions](/product/performance/transaction-summary/). These web vitals are then summarized in several graphs for a quick overview of how each frontend transaction is performing for your users.
-
-![Visualization of Web Vitals](/product/performance/diagram-transaction-vitals.png)
-
-## Core Web Vitals
-
-Google considers Core Web Vitals to be the most important metrics for measuring the user experience on web pages. According to a May 2021 [Google blog post](https://developers.google.com/search/blog/2020/11/timing-for-page-experience), these metrics also impact your search ranking.
-
-### Largest Contentful Paint (LCP)
-
-[Largest Contentful Paint (LCP)](https://web.dev/lcp/) measures how long it takes for the content that covers the largest pixel area in the viewport to render - in other words, how long before a user sees the main content on a page. This content may take any form from the document object model (DOM), such as an image, SVG, or text block.
-
-### First Input Delay (FID)
-
-[First Input Delay (FID)](https://web.dev/fid/) measures response time when a user tries to interact with the viewport by clicking a button, link, or any other custom JavaScript controller. FID data is critical for understanding whether interactions on an application page are successful or not.
-
-### Cumulative Layout Shift (CLS)
-
-[Cumulative Layout Shift (CLS)](https://web.dev/cls/) is the sum of individual layout shift scores for every unexpected element shift that happens during the rendering process. An example of this would be trying to click a link on a page that hasn't finished loading and having that link shift down before you've had a chance to click on it due to image rendering issues. The CLS web vital score isn't based on duration. It represents the extent of the disruptive and visually unstable shifts.
-
-![Example of Cumulative Layout Shift](/product/performance/diagram-transaction-cls.png)
-
-Each layout shift score is calculated using an impact and distance fraction. The impact fraction is the total visible area that the element affects between the two rendered frames. The distance fraction measures the distance it has moved relative to the viewport.
-
-```
-Layout Shift Score = Impact Fraction * Distance Fraction
-```
-
-Let’s take a look at the example above which has one unstable element - the body text. The impact fraction is roughly 50% of the page and moves the body text down by 20%. The layout shift score is 0.1, the product of 0.5\*0.2. Thus, CLS is 0.1.
-
-## Other Web Vitals
-
-These Web Vitals are generally less user-visible, but are useful for troubleshooting issues with the Core Web Vitals.
-
-### First Paint (FP)
-
-First Paint (FP) measures the amount of time the first pixel takes to appear in the viewport, rendering any visual change from what was previously displayed. This may be in any form from the document object model (DOM), such as background color, canvas, or image. FP helps developers understand if anything unexpected is happening to render the page.
-
-### First Contentful Paint (FCP)
-
-[First Contentful Paint (FCP)](https://web.dev/fcp/) measures the time for the first content to render in the viewport. This may be in any form from the document object model (DOM), such as images, SVGs, or text blocks. FCP frequently overlaps with First Paint (FP). FCP helps developers understand how long it takes before the user sees any content change on the page.
-
-### Time To First Byte (TTFB)
-
-[Time To First Byte (TTFB)](https://web.dev/time-to-first-byte/) measures the time that it takes for a user's browser to receive the first byte of page content. TTFB helps developers understand whether their slowness is caused by the initial response or instead due to render-blocking content.
-
-## Thresholds
-
-Google's "Good", "Needs Improvement", and "Poor" thresholds are used to classify data points into green, yellow, and red for the corresponding Web Vitals. "Needs improvement" is referred to as "Meh" in Sentry.
-
-| Web Vital                                                       | Good     | Meh      | Poor    |
-| --------------------------------------------------------------- | -------- | -------- | ------- |
-| [Largest Contentful Paint](#largest-contentful-paint-lcp) (LCP) | &lt;= 2.5s  | &lt;= 4s    | > 4s    |
-| [First Input Delay](#first-input-delay-fid) (FID)               | &lt;= 100ms | &lt;= 300ms | > 300ms |
-| [Cumulative Layout Shift](#cumulative-layout-shift-cls) (CLS)   | &lt;= 0.1   | &lt;= 0.25  | > 0.25  |
-| [First Paint](#first-paint-fp) (FP)                             | &lt;= 1s    | &lt;= 3s    | > 3s    |
-| [First Contentful Paint](#first-contentful-paint-fcp) (FCP)     | &lt;= 1s    | &lt;= 3s    | > 3s    |
-| [Time To First Byte](#time-to-first-byte-ttfb) (TTFB)           | &lt;= 100ms | &lt;= 200ms | > 600ms |
-
-<Note>
-
-Some Web Vitals such as FP, FCP, LCP, and TTFB are measured relative to the start of the transaction. Values may differ when compared to values generated with other tools such as [Lighthouse](https://github.com/GoogleChrome/lighthouse).
-
-</Note>
+In Sentry, web vitals are used to calculate a [Performance Score](#performance-score) for your web application. Using these metrics, we surface the pages that have the most [opportunity](#opportunity) to improve your app's overall performance.
 
 ## Web Vitals Page
 
@@ -147,7 +84,7 @@ The **Performance Score** is comprised of 5 individual **Web Vital** components.
 | [First Contentful Paint](#first-contentful-paint-fcp) (FCP)     | [900ms](https://www.desmos.com/calculator/gcxbiypuuh)  | [1600ms](https://www.desmos.com/calculator/gcxbiypuuh) | 15%    |
 | [Time To First Byte](#time-to-first-byte-ttfb) (TTFB)           | [200ms](https://www.desmos.com/calculator/ykzahw9goi)  | [400ms](https://www.desmos.com/calculator/ykzahw9goi)  | 10%    |
 
-Performance Scores are currently only supported on desktop web browsers. Find out which Web Vitals are required to calculate Performance Scores in the [Browser Support](#browser-support) table.
+Performance Scores are currently only supported on desktop web browsers. Find out which Web Vitals are required to calculate Performance Scores in the [Browser Support](/product/performance/web-vitals/web-vitals-concepts/#browser-support) table.
 
 ## Opportunity
 
@@ -168,16 +105,3 @@ The vertical marker for each Web Vital is the 75th percentile of the observed da
 If you notice a region of interest on any of the histograms, click and drag over the area to zoom in for a more detailed view. You may also want to see more information related to the transactions in the histograms. Click "Open in Discover" beneath the Web Vital of choice to build a custom query for further investigation. For more details, see the full documentation for the Discover [Query Builder](/product/discover-queries/query-builder/).
 
 If you wish to see all of the data available, open the dropdown and click "View All". You will likely see extreme outliers when you click "View All". You can click and drag over an area to zoom in for a more detailed view.
-
-## Browser Support
-
-| Web Vital                                                       | Chrome | Edge | Opera | Firefox | Safari | IE  |
-| --------------------------------------------------------------- | ------ | ---- | ----- | ------- | ------ | --- |
-| [Largest Contentful Paint](#largest-contentful-paint-lcp) (LCP) | ✓\*    | ✓\*  | ✓\*   | ✓       |        |     |
-| [First Input Delay](#first-input-delay-fid) (FID)               | ✓      | ✓    | ✓     | ✓       | ✓      | ✓   |
-| [Cumulative Layout Shift](#cumulative-layout-shift-cls) (CLS)   | ✓\*    | ✓\*  | ✓\*   |         |        |     |
-| [First Paint](#first-paint-fp) (FP)                             | ✓      | ✓    | ✓     |         |        |     |
-| [First Contentful Paint](#first-contentful-paint-fcp) (FCP)     | ✓\*    | ✓\*  | ✓\*   | ✓\*     | ✓\*    |     |
-| [Time To First Byte](#time-to-first-byte-ttfb) (TTFB)           | ✓\*    | ✓\*  | ✓\*   | ✓\*     | ✓\*    | ✓   |
-
-\* These Web Vitals are required to calculate [Performance Scores](#performance-score), based on the clients browser. Some browsers may not always send all Web Vitals depending on the web page and/or browser version. Page loads that are missing required Web Vitals are not scored due to low data quality.
