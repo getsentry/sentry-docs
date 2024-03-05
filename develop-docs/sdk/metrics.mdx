@@ -58,7 +58,7 @@ class Aggregator:
 
 ## Normalization
 
-Normalization shall be done with unicode support if possible.
+Normalization shall be done for `statsd` envelope items with unicode support if possible.
 
 * **Keys and Tag Keys:** regex `[^a-zA-Z0-9_/.-]+` with replacement character `_`.
 * **Tag Values:** regex `[^\w\d\s_:/@\.{}\[\]$-]+` with no replacement character.
@@ -268,8 +268,8 @@ class Set:
 
 ## Serialization
 
-Metrics are emitted in regular flush intervals (every 10 seconds, with a random offset that
-is detemined once per startup) as envelope items.  The item type is `statsd` and the serialization
+Metrics are emitted in regular flush intervals (every 5 seconds, with a random offset that
+is determined once per startup) as envelope items.  The item type is `statsd` and the serialization
 format is statsd compatible.  Unlike normal statsd, more than one value can be emitted separated
 by a colon.  These values are the results of calling `serialize` or similar on the aggregation
 state.
@@ -278,6 +278,29 @@ The format is documented as part of relay: [relay_metrics](https://getsentry.git
 
 Additionally metric summaries retained on the spans shall be emitted as `_metrics_summary`
 on the metrics as documented by this RFC: [RFC-0123](https://github.com/getsentry/rfcs/blob/main/text/0123-metrics-correlation.md).
+
+
+## Hooks
+
+SDKs are encouraged to provide a `before_emit_metric` callback allowing developers to discard a metric from
+being emitted and later aggregated. The provided parameters are the metric key and the tags.
+The callback either returns `True` or `False`, indicating if the metric should be emitted or
+not.
+
+```python
+def before_emit_metric(key, tags):
+    if key in ["metric_a", "metric_b"]:
+        return False
+    return True
+
+sentry_sdk.init(
+    _experiments={
+        "enable_metrics": True,
+        "before_emit_metric": before_emit_metric
+    }
+)
+```
+
 
 ## Meta Data
 
