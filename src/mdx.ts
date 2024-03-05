@@ -27,7 +27,7 @@ import remarkVariables from './remark-variables';
 
 const root = process.cwd();
 
-function formatSlug(slug) {
+function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 const isSupported = (
@@ -103,13 +103,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
 
     const source = fs.readFileSync(file, 'utf8');
     const {data: frontmatter} = matter(source);
-    if (!frontmatter.draft) {
-      allFrontMatter.push({
-        ...frontmatter,
-        slug: formatSlug(fileName),
-        sourcePath: path.join(folder, fileName),
-      });
-    }
+    allFrontMatter.push({
+      ...frontmatter,
+      slug: formatSlug(fileName),
+      sourcePath: path.join(folder, fileName),
+    });
   });
 
   if (folder !== 'docs') {
@@ -159,13 +157,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
         if (subpath === 'index.mdx') {
           frontmatter = {...frontmatter, ...platformFrontmatter};
         }
-        if (!frontmatter.draft) {
-          allFrontMatter.push({
-            ...frontmatter,
-            slug: formatSlug(slug),
-            sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-          });
-        }
+        allFrontMatter.push({
+          ...frontmatter,
+          slug: formatSlug(slug),
+          sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+        });
       }
     });
 
@@ -197,13 +193,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
           if (subpath === 'index.mdx') {
             frontmatter = {...frontmatter, ...guideFrontmatter};
           }
-          if (!frontmatter.draft) {
-            allFrontMatter.push({
-              ...frontmatter,
-              slug: formatSlug(slug),
-              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-            });
-          }
+          allFrontMatter.push({
+            ...frontmatter,
+            slug: formatSlug(slug),
+            sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+          });
         }
       });
     });
@@ -212,7 +206,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   return allFrontMatter;
 }
 
-export async function getFileBySlug(slug) {
+export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug, 'config.yml');
   let configFrontmatter: {[key: string]: any} | undefined;
   if (fs.existsSync(configPath)) {
