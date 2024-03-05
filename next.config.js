@@ -23,11 +23,6 @@ const nextConfig = {
 
     return config;
   },
-
-  redirects() {
-    // all redirects are handled by manually by middleware to avoid Vercel limits
-    return [];
-  },
 };
 
 const withMDX = createMDX({
