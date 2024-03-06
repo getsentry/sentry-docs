@@ -1,12 +1,12 @@
 ---
-title: Scopes and Hubs
+title: Scopes
 description: "SDKs will typically automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
 ---
 
 When an event is captured and sent to Sentry, SDKs will merge that event data with extra
 information from the current scope. SDKs will typically automatically manage the scopes
 for you in the framework integrations and you don't need to think about them. However,
-you should know what a scope is and how you can use it for your advantage.
+you should know what a scope is and how you can use it to your advantage.
 
 ## What's a Scope
 
@@ -22,13 +22,17 @@ The default SDK integrations will manage these scopes for you out of the box. Fo
 instance, web framework integrations will create and destroy isolation scopes around your
 routes or controllers.
 
-When you call a global function such as <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />, the SDK internally determines the correct scope to use to perform that functionality. At the end of the pipeline, the final data applied to the event is the result of merging the global scope and the isolation and current scope together, applying data from each in turn.
+When you call a global function such as <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />, the SDK internally determines the correct scope to use to perform that functionality. At the end of the pipeline, the final data applied to the event is the result of merging the global scope and the isolation and current scopes together, applying data from each in turn.
 
 ## Changing the Scope
 
-The most useful operation when working with scopes is using the <PlatformIdentifier name="new-scope" /> context manager. It can be used to fork the current scope, apply modifications to the new scope as long as the context manager is active, and then return to the original scope afterwards. This is helpful if you only want to send data for one specific event, for instance for doing things like [modifying the context](../context/). It's roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
+In most cases, you should be good with using the top-level API (like <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />) and let the SDK handle the scopes for you in the background.
 
-You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
+If you need to interact with scopes directly, the most useful API is the <PlatformIdentifier name="new-scope" /> context manager. It can be used to fork the current scope, apply modifications to the new scope as long as the context manager is active, and then return to the original scope afterwards. This is helpful if you only want to send data for one specific event, for instance for doing things like [modifying the context](../context/). It's roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
+
+You should make sure you're not mixing the use of <PlatformIdentifier name="new-scope" /> and top-level APIs -- this won't work well because different scopes might be involved in the background. As long as you're inside of the <PlatformIdentifier name="new-scope" /> context manager, you should be calling methods directly on the scope you just created.
+
+Using <PlatformIdentifier name="new-scope" /> you can, for instance, add custom tags or inform Sentry about the currently authenticated user.
 
 <PlatformContent includePath="enriching-events/scopes/configure-scope" />
 
