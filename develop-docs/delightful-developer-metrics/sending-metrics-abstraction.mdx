@@ -43,10 +43,11 @@ metrics.incr(
 )
 
 # Emit a distribution.
-metrics.timing(
-	"distribution_name",
-	100,
-	tags={"user_segment": user_segment}
+metrics.distribution(
+	"gauge_name",
+	10,
+	tags={"nation": nation},
+	unit="second",
 )
 
 # Emit a gauge.
@@ -56,12 +57,11 @@ metrics.gauge(
 	tags={"nation": nation}
 )
 
-# Emit a gauge.
-metrics.distribution(
-	"gauge_name",
-	10,
-	tags={"nation": nation},
-	unit="second",
+# Emit a distribution (with default time-based unit).
+metrics.timing(
+	"distribution_name",
+	100,
+	tags={"user_segment": user_segment}
 )
 ```
 
@@ -69,7 +69,7 @@ If you want to measure how much time a specific piece of code takes, you can use
 
 ```python
 # Emit a distribution metric of the execution time of the function.
-with metrics.timer("my_func_speed"):
+with metrics.timer("my_func"):
 	my_func()
 ```
 
@@ -86,4 +86,3 @@ The current metrics sample rate is 5% with the goal of getting to 100% soon.
 The current implementation of the `MetricsBackend` is known as `CompositExperimentalMetricsBackend`. It's a backend that forwards your metrics to both **Datadog** and **Sentry**. For this reason, you will be able to see your metrics on both platforms, even though the end goal is to use our own metrics product when it is mature enough. More details [here](/services/metrics/#composit-experimental-backend).
 
 *Keep in mind that due to scale implications, we might sample the metrics sent to Sentry. This is only temporary but it means that for now if you need high-fidelity metrics, we still suggest you refer to Datadog.*
-
