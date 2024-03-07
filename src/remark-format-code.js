@@ -19,25 +19,26 @@ export default function remarkFormatCodeBlocks() {
 
 async function formatCode(node) {
   const lang = node.lang;
-  const parsers = {
-    javascript: 'babel',
-    jsx: 'babel',
-    typescript: 'babel-ts',
-    tsx: 'babel-ts',
-    html: 'html',
-    css: 'css',
-    json: 'json',
-    markdown: 'markdown',
-    yaml: 'yaml',
-    yml: 'yaml',
+  const parsersConfigs = {
+    javascript: {parser: 'babel'},
+    jsx: {parser: 'babel'},
+    typescript: {parser: 'babel-ts'},
+    tsx: {parser: 'babel-ts'},
+    html: {parser: 'html'},
+    css: {parser: 'css'},
+    json: {parser: 'json'},
+    markdown: {parser: 'markdown'},
+    yaml: {parser: 'yaml'},
+    yml: {parser: 'yaml'},
+    xml: {parser: 'xml', plugins: ['@prettier/plugin-xml']},
   };
-  const parser = parsers[lang];
-  if (!parser) {
+  const parserConfig = parsersConfigs[lang];
+  if (!parserConfig) {
     return;
   }
 
   try {
-    const formattedCode = await format(node.value, {parser: parsers[lang]});
+    const formattedCode = await format(node.value, parserConfig);
     // get rid of the trailing newline
     node.value = formattedCode.trimEnd();
   } catch (e) {
