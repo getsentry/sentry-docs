@@ -20,17 +20,21 @@ There are three types of scopes:
 
 The default SDK integrations will manage these scopes for you out of the box. For
 instance, web framework integrations will create and destroy isolation scopes around your
-routes or controllers.
+routes or controllers. When you call a global function such as <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />, the SDK internally determines the correct scope to use to perform that functionality.
 
-When you call a global function such as <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />, the SDK internally determines the correct scope to use to perform that functionality. At the end of the pipeline, the final data applied to the event is the result of merging the global scope and the isolation and current scopes together, applying data from each in turn.
+At the end of the pipeline, the final data applied to the event is the result of merging the global scope and the isolation and current scopes together, applying data from each in turn.
 
 ## Changing the Scope
 
-In most cases, you should be good with using the top-level API (like <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />) and let the SDK handle the scopes for you in the background.
+In most cases, it should be enough to use the top-level API (like <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />) and let the SDK handle the scopes for you in the background.
 
-If you need to interact with scopes directly, the most useful API is the <PlatformIdentifier name="new-scope" /> context manager. It can be used to fork the current scope, apply modifications to the new scope as long as the context manager is active, and then return to the original scope afterwards. This is helpful if you only want to send data for one specific event, for instance for doing things like [modifying the context](../context/). It's roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
+If you do need to interact with scopes directly, you can use the <PlatformIdentifier name="new-scope" /> context manager. It can be used to fork the current scope, apply modifications to the new scope as long as the context manager is active, and then return to the original scope afterwards. This is useful if you only want to send data for one specific event, for instance for doing things like [modifying the context](../context/). It's roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
 
-You should make sure you're not mixing the use of <PlatformIdentifier name="new-scope" /> and top-level APIs -- this won't work well because different scopes might be involved in the background. As long as you're inside of the <PlatformIdentifier name="new-scope" /> context manager, you should be calling methods directly on the scope you just created.
+<Note>
+
+Make sure you're not mixing the use of <PlatformIdentifier name="new-scope" /> and top-level APIs -- this won't work well because the top-level API might interact with a different scope in the background. As long as you're in the <PlatformIdentifier name="new-scope" /> context manager, you should be calling methods directly on the scope you just created.
+
+</Note>
 
 Using <PlatformIdentifier name="new-scope" /> you can, for instance, add custom tags or inform Sentry about the currently authenticated user.
 
