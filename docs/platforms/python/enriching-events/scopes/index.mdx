@@ -10,29 +10,27 @@ you should know what a scope is and how you can use it to your advantage.
 
 ## What's a Scope
 
-Scopes manage the data that should be sent along with an event. For instance [contexts](../context/) or [breadcrumbs](../breadcrumbs/) are stored on the scope.
+A scope manages an event's data. For instance, the SDK stores [contexts](../context/) and [breadcrumbs](../breadcrumbs/) on the scope.
 
 There are three types of scopes:
 
-- the *global scope*, which is a simple global variable that contains data relevant for the whole app (e.g., the release)
-- *isolation scopes*, which are thread-local and are created for each request-response lifecycle
-- *current scopes*, which are thread-local and follow the lifecycle of a span
+- the *global scope*: A single globally-shared scope storing data relevant for the whole app (e.g., the release)
+- *isolation scopes*: Thread-local scopes created for each request-response lifecycle to store data relevant to the request
+- *current scopes*: Thread-local scopes created for each span to store data relevant to the span
 
-The default SDK integrations will manage these scopes for you out of the box. For
-instance, web framework integrations will create and destroy isolation scopes around your
-routes or controllers. When you call a global function such as <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />, the SDK internally determines the correct scope to use to perform that functionality.
+The SDK and the SDK's built-in integrations automatically manage the scopes. For example, web framework integrations create an isolation scope for each request handled. When you call a top-level API function, such as <PlatformIdentifier name="set-tag" />, the SDK determines the correct scope on which to operate.
 
 At the end of the pipeline, the final data applied to the event is the result of merging the global scope and the isolation and current scopes together, applying data from each in turn.
 
 ## Changing the Scope
 
-In most cases, it should be enough to use the top-level API (like <PlatformIdentifier name="capture-event" /> or <PlatformIdentifier name="set-tag" />) and let the SDK handle the scopes for you in the background.
+We generally recommend using the top-level API, since the SDK's automatic scope management handles most use cases.
 
-If you do need to interact with scopes directly, you can use the <PlatformIdentifier name="new-scope" /> context manager. It can be used to fork the current scope, apply modifications to the new scope as long as the context manager is active, and then return to the original scope afterwards. This is useful if you only want to send data for one specific event, for instance for doing things like [modifying the context](../context/). It's roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
+However, if your use case requires direct access to the scope object, you can use the <PlatformIdentifier name="new-scope" /> context manager. <PlatformIdentifier name="new-scope" /> forks the current scope, allows you to modify the new scope while the context manager is active, and restores the original scope afterwards. Using <PlatformIdentifier name="new-scope" /> allows you to send data for only one specific event, for instance when [modifying the context](../context/). It is roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
 
 <Note>
 
-Make sure you're not mixing the use of <PlatformIdentifier name="new-scope" /> and top-level APIs -- this won't work well because the top-level API might interact with a different scope in the background. As long as you're in the <PlatformIdentifier name="new-scope" /> context manager, you should be calling methods directly on the scope you just created.
+Avoid calling top-level APIs inside the  <PlatformIdentifier name="new-scope" /> context manager. The top-level API might interact with a different scope from what <PlatformIdentifier name="new-scope" /> yields, causing unintended results. While within the <PlatformIdentifier name="new-scope" /> context manager, please call methods directly on the scope that <PlatformIdentifier name="new-scope" /> yields!
 
 </Note>
 
