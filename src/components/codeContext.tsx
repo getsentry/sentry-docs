@@ -307,7 +307,6 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
   );
 
   // Maintains the global selection for which code block tab is selected
-  // const sharedCodeSelection = useState<SeledtedCodeTabs>(storedSelections);
   const sharedCodeSelection = useReducer(
     (tabs: SelectedCodeTabs, [groupId, value]: [string, string]) => {
       return {...tabs, [groupId]: value};
