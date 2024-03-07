@@ -22,6 +22,7 @@ import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
+import remarkFormatCodeBlocks from './remark-format-code';
 import remarkTocHeadings from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 
@@ -276,6 +277,7 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        remarkFormatCodeBlocks,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
