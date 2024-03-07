@@ -88,12 +88,12 @@ export const DEFAULTS: CodeKeywords = {
   USER: undefined,
 };
 
-type SeledtedCodeTabs = Record<string, string | undefined>;
+type SelectedCodeTabs = Record<string, string | undefined>;
 
 type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
-  sharedCodeSelection: [SeledtedCodeTabs, React.Dispatch<[string, string]>];
+  sharedCodeSelection: [SelectedCodeTabs, React.Dispatch<[string, string]>];
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
@@ -309,7 +309,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
   // Maintains the global selection for which code block tab is selected
   // const sharedCodeSelection = useState<SeledtedCodeTabs>(storedSelections);
   const sharedCodeSelection = useReducer(
-    (tabs: SeledtedCodeTabs, [groupId, value]: [string, string]) => {
+    (tabs: SelectedCodeTabs, [groupId, value]: [string, string]) => {
       return {...tabs, [groupId]: value};
     },
     storedSelections
