@@ -4,7 +4,7 @@ description: "Learn more about how to monitor your Hangfire jobs."
 sidebar_order: 5001
 ---
 
-The .NET SDK provides an integration for [Hangfire](https://www.hangfire.io/) to monitor your jobs by automatically creating check-ins for them. The SDK relies on job filters that get set up when you `UseSenty` like so
+The .NET SDK provides an integration with [Hangfire](https://www.hangfire.io/) to monitor your jobs by automatically [creating check-ins for them](https://docs.sentry.io/product/crons/job-monitoring/). The SDK relies on job filters that are set up when you call `UseSentry`. For example:
 
 ```csharp
 using Hangfire;
@@ -13,7 +13,7 @@ using Sentry.Hangfire;
 GlobalConfiguration.Configuration.UseSentry();
 ```
 
-or if you're using the builder pattern
+Alternatively, if you're using the builder pattern, your code may look like this:
 
 ```csharp
 using Hangfire;
@@ -25,23 +25,23 @@ builder.Services.AddHangfire(configuration => configuration
 );
 ```
 
-To let the SDK know which jobs to monitor you need to provide the job with a monitor slug. This can be done by setting the `SentryMonitorSlug` attribute on the job. An example how to set up a fire-and-forget job that is getting monitored by Sentry could look like the following snippet:
+To let the SDK know which jobs to monitor, you need to provide the job with a monitor slug. This can be done by setting the `SentryMonitorSlug` attribute on the job. For example, the following snippet shows how to set up a fire-and-forget job that Sentry will monitor:
 
 ```csharp
 using Hangfire;
 using Sentry.Hangfire;
 
 GlobalConfiguration.Configuration.UseSentry();
-BackgroundJob.Enqueue<MyJobClass>(job => job.Execute());
+BackgroundJob.Enqueue<PricingUpdateWorker>(job => job.Execute());
 
-public class MyJobClass
+public class PricingUpdateWorker
 {
-    [SentryMonitorSlug("my-monitor-slug")]
+    [SentryMonitorSlug("update-pricing")]
     public void Execute()
     {
-        // Do your work
+        // Do your work to update the price
     }
 }
 ```
 
-The SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution the check-in will be updated as `CheckInStatus.ERROR` instead.
+The SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.ERROR` instead.
