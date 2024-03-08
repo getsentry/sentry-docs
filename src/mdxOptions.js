@@ -7,7 +7,7 @@ import rehypeSlug from 'rehype-slug';
 
 // Remark packages
 import remarkComponentSpacing from './remark-component-spacing';
-import remarkExtractFrontmatter from './remark-extract-frontmatter.mjs';
+import {remarkExtractFrontmatter} from './remark-extract-frontmatter.mjs';
 import remarkTocHeadings from './remark-toc-headings';
 
 export const mdxOptions = {};
