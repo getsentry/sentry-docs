@@ -1,46 +1,48 @@
 <Alert title="Note" level="info">
-This is work in progress. 
+This is work in progress.
 
 Development has started in JS and Python, but we are still ironing out the wrinkles.
 </Alert>
 
 # Hub & Scope Refactoring
 
-All of Sentry's SDKs use the so-called <Link to="/sdk/unified-api/">Unified API</Link> under the hood. This API has some limitations and therefore we are refactoring it. This is a massive undertaking.
+Historically Sentry's SDKs implemented the Hubs and Scopes models, a major defining aspect of the <Link to="/sdk/unified-api/">Unified API</Link>. This introduced a lot of complexity in a user facing manner, allowed more room for error from the user. Since looking at adopting OpenTelemetry "packages", to replace or addition to, our existing performance packages in SDKs, there is a forcing factor. Sentry's model being different to OpenTelemetry's prevent that we can support OpenTelemetry.
 
-## Why Are We Doing This?
+## A) Why Are We Doing This?
 
 There are two reasons we are doing this:
-1. Being 100% compatible with OpenTelemetry (OTel) performance data.
-2. Make Sentry concepts easier to understand and match the concepts of OpenTelemetry (OTel).
+1. Being compatible with OpenTelemetry (OTel) performance data.
+2. Make Sentry performance instrumentation easier to understand and get right.
 
-### Being 100% Compatible to OpenTelemetry
+### Being Compatible to OpenTelemetry
 
-What Sentry calls a `Scope` is called <Link to="https://opentelemetry.io/docs/specs/otel/context/">`Context`</Link> in OTel. Contexts in OTel are immutable and thus whenever a context is mutated in OTel a new context is created (forked from the currently active scope). 
+What Sentry calls a `Scope` is called <Link to="https://opentelemetry.io/docs/specs/otel/context/">`Context`</Link> in OTel. Contexts in OTel are immutable and thus whenever a context is mutated in OTel a new context is created (forked from the currently active scope).
 Whenever a new span is created in Otel a new context is forked. This leads to a lot of nested contexts and the Sentry scopes should be able to reproduce this.
 This is necessary because the Sentry SDKs should be able to capture all spans from OTel with the correct data from the correct context applied to them before sending them to Sentry.
 
+### Make Sentry Performance Instrumentation Easier
 
-### Make Sentry Concepts Easier to Understand
+Hubs and scopes is a complicated system, that can easily be misused (also see [here](https://develop.sentry.dev/sdk/research/performance/#scope-propagation)). It requires us to create new hubs which in turn breaks breadcrumbs and other features. For the future we want to have one consistent system, that is easy to understand and use.
 
-We have different concepts like a `Hub` and `Scope`s in the Unified API and those concepts sometimes leak to the end user of our SDKs. Those concepts are complicated and the users should never need to think about what a `Hub` or a `Scope` is and if they should clone them or not. 
+---
 
+## B) What Is the Outcome of the Refactoring?
 
-## What Is the Outcome of the Refactoring?
+1. The SDKs model of Scope forking is aligned with the one from OTel. Paving the way for making it possble to use OTel tooling for performance monitoring and still see their data in Sentry. (And Sentry error events are still connected to the spans captured by OTel).
+2. The new Scopes API is implemented in the API and can be used.
+3. The old `Hub` based API still works as expected for backwards compatibility. After a transition phase the `Hub` will be removed in a major update of the SDK.
 
-1. We want to make Sentry SDKs 100% compatible with OTel performance data, so users can choose to use OTel tooling for their performance monitoring and still see their data in Sentry. (And Sentry error events are still connected to the spans captured by OTel)
-1. We want to make it easier for the users to do custom performance instrumentation with as little as possible mental overhead. The `Hub` will be gone.
+<Alert title="Note" level="info">
+The decision of removing the Hub from all Sentry SDKs was confirmed in a meeting on 2024-05-03 with most of the SDK engineers and Armin present. This decision is final.
+</Alert>
 
 This is why we started this journey with an <Link to="https://github.com/getsentry/rfcs/pull/122">RFC</Link>.
 
+---
 
-## What Is the Plan?
+## C) The New Concepts
 
-We will merge the functionality of the `Hub` and the `Scope` of the <Link to="/sdk/unified-api/">Unified API</Link> into the `Scope` and we will remove the `Hub`. We will add some new APIs that make it easier for the user to do custom instrumentation. We will update our auto instrumentation to fork a scope whenever a new span is created. This aligns us with what OTel does.
-
-## The New Concepts
-
-The `Hub` will be removed and only the `Scope`, the `Client`, and the `Transport` of the Unified API will remain. 
+The `Hub` will be removed and only the `Scope`, the `Client`, and the `Transport` of the Unified API will remain.
 
 ### Transport
 
@@ -50,9 +52,11 @@ The `Transport` is not touched. It will not change.
 
 The `Client` stays the same. The only difference will be that there is always a client available. More on that later.
 
+TODO: add more explanation about how that there is now always a client.
+
 ### Scope
 
-This is where the most work needs to be done. The `Scope` will evolve and take over some functionality of the `Hub`. 
+This is where the most work needs to be done. The `Scope` will evolve and take over some functionality of the `Hub`.
 The scope now comes in three flavors:
 - Global Scope
 - Isolation Scope
@@ -65,7 +69,7 @@ The difference is in how the scope data is applied to events.
 
 **Global Scope**
 
-This is a simple global variable that is the same for the whole execution of the software. Data applied to this scope will end up in **all** events sent from the software. So the same for all users, threads, async tasks, everything. 
+This is a simple global variable that is the same for the whole execution of the software. Data applied to this scope will end up in **all** events sent from the software. So the same for all users, threads, async tasks, everything.
 
 This scope is probably only used for process-wide data like the `release`.
 
@@ -73,7 +77,7 @@ This scope is probably only used for process-wide data like the `release`.
 
 This scope holds data only applicable to the current request (on a server), tab (in a browser), or user (on a mobile). The top-level APIs that manipulate data (like `sentry_sdk.set_tag()`, `sentry_sdk.set_context()` etc) write to the isolation scope.
 
-The isolation scope is stored in a context variable, thread local, async local, or something similar (depending on the platform). 
+The isolation scope is stored in a context variable, thread local, async local, or something similar (depending on the platform).
 
 The isolation scope is forked by our integrations, end users should not need to think about isolation scopes or forking of one. (See diagram below.)
 
@@ -81,12 +85,52 @@ The isolation scope is forked by our integrations, end users should not need to 
 
 This scope holds data for the currently active span. Whenever a new span is started the current scope of the parent span is forked (read: duplicated) giving the new span all the data from the parent span and making it possible to add/manipulate data that is just applied to the new span.
 
-The current scope is stored in a context variable, thread local, async local, or something similar (depending on the platform). 
+The current scope is stored in a context variable, thread local, async local, or something similar (depending on the platform).
 
 The current scope can be forked by the end user. Either explicitly or implicitly by starting a new span. (See diagram below.)
 
+**Copy-on-write**
 
-## How Is Scope Data Applied to Events?
+Getting rid of hubs also implies a soft copy-on-write.
+
+In our current system with hubs and scopes, `Scope` is always mutable and what makes it somewhat immutable is pushing/popping scopes and creating new hubs. This however has to be done manually.
+
+If an async operation is started halfway in between handling a request, a new hub clone has to be created to achieve copy-on-write. In case we don't create a new hub clone, popping a `Scope` also affects the original execution, leading to lost data or worst case exceptions.
+
+After merging hubs and scopes, scopes can be forked at any time and a user no longer has to take care of it, as it should automatically do the right thing. With this new system, the async execution can manipulate scope without affecting other execution.
+
+This soft copy-on-write relies on `Scope` being forked in certain cases:
+- `withScope` and similar API wraps the callback in a forked `Scope` that'll be cleaned up by the SDK after the callback is finished
+- we also have to fork, when OTel does, however there's some grey area here at the moment
+	- it depends on what API is available in the OTel implementation relevant for each SDK
+	- in some cases, we may only be able to intercept `Context` storage, i.e. when an already forked `Context` is being stored, e.g. in a ThreadLocal variable.
+	- in some cases we can intercept `Context` forking, i.e. when a mutated copy of a `Context` is created
+	- in some cases it might be necessary to have a mix of both, since not all auto instrumentation and user instrumentation go through a single place in the same way. e.g. in Java SDK we're sometimes handed a `Context` with some properties already set into our `ContextStorage` where we can then wrap it and intercept future forks of that `Context`
+	- {open question} do we need to fork every time OTel `Context` copied or only when a new OTel span is set
+
+While it's still possible to misuse, this is a sort of soft copy-on-write that should protect most users.
+
+---
+
+## D) Backwards compatibility
+
+### Migrating from Hubs and Scopes to Scopes Only
+
+There has to be some period of time, where users can keep using the old API. We do not want a big bang change, where we leave behind users who can't easily upgrade. This bears the risk of having to support old versions of the SDK. This means we shouldn't have a major version A of an SDK that has hubs and then the next version that has them merged no longer supports hubs. There has to be a migration phase for our users.
+
+For the migration phase we can have top level static API (like `Sentry.setTag()`) write to both current and isolation scope. In a later major version we can then change this to only write to isolation scope. Hub API should be shimmed and redirect to scopes.
+
+For most use cases writing to isolation scope should be what we want. For other use cases users should mostly be using `withScope()` already where they use the `Scope` passed into the callback instead of static API. We're deprecating `configureScope` to let users know they should reevaluate what scope they want to write to. Users can then get the scope they need and call e.g. `setTag` on that `Scope`. There might be some cases where we change behaviour but the damage should be contained to e.g. an incoming server request.
+
+---
+
+## E) Implementation Details
+
+We will merge the functionality of the `Hub` and the `Scope` of the <Link to="/sdk/unified-api/">Unified API</Link> into the `Scope` and we will remove the `Hub`. We will add some new APIs that make it easier for the user to do custom instrumentation. We will update our auto instrumentation to fork a scope whenever a new span is created. This aligns us with what OTel does.
+
+TODO: add where the propagation context is stored and applied, add how tracing without performance works, where spans/transactions live and other problems we discovered and solved in implementing this in the first two SDKs.
+
+### How Is Scope Data Applied to Events?
 
 Data from the different scope flavors is merged before it is applied to the event.
 
@@ -95,15 +139,15 @@ This is done in the following order:
 2. merge in the data from the isolation scope
 3. merge in the data from the current scope
 4. optional: merge in given additional data
-4. apply the merged scope to the event
+5. apply the merged scope to the event
 
 
-See the RFC for a <Link to="https://github.com/getsentry/rfcs/blob/fn/merge-hub-scope/text/0122-sdk-hub-scope-merge.md#applying-scopes">code example</Link>. 
+See the RFC for a <Link to="https://github.com/getsentry/rfcs/blob/fn/merge-hub-scope/text/0122-sdk-hub-scope-merge.md#applying-scopes">code example</Link>.
 
 See the diagram below for an illustration of how scope data is applied to events.
 
 
-## What Does the New API Look Like?
+### What Does the New API Look Like?
 
 There are now two new APIs for forking the current scope or forking the isolation scope (and at the same time the current scope.) They should be called `withIsolationScope(callback)` and `withScope(callback)` or something similar.
 
@@ -113,9 +157,22 @@ This image illustrates the behavior of these new APIs and how scope data is appl
 
 For a zoomable version visit the <a href="https://miro.com/app/board/uXjVNtPiOfI=/?share_link_id=140058397661" target="_blank">Miro Board</a>
 
-<Alert title="TODO" level="info"><markdown>
+---
 
-- explain how trace propagation works
-- explain the fact that there is now always a client
+## F) Use OTel for Performance Instrumentation (POtel)
 
-</markdown></Alert>
+For more information like the goals (and non-goals) see this GitHub Issue:
+
+https://github.com/getsentry/team-sdks/issues/4
+
+### Implementation Details
+
+TODO: Add some findings we discovered when implementing this in the first two SDKs.
+
+Also add this somewhere: https://miro.com/app/board/uXjVNnI7dsE=/
+
+### Isolation Scope
+
+Without an isolation scope, writing to the current `Scope` can lead to unexpected results. Writes can go to a scope that's never applied the way a user would expect. While this is already a problem today, it is exaggerated by moving over to OTel, as OTel auto instrumentation can do lots of context forking, leading to deeply nested scopes. Some hooks are automatically wrapped in a new span by OTel, causing it to also have a separate `Scope`, so the outer `Scope` can't be manipulated.
+
+With isolation scope, we have a place where e.g. hooks can write to that should affect e.g. the whole request.
