@@ -1,29 +1,25 @@
-const createMDX = require('@next/mdx');
-const remarkPrism = require('remark-prism');
-const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
+import createMDX from '@next/mdx';
+import {withSentryConfig} from '@sentry/nextjs';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypePresetMinify from 'rehype-preset-minify';
+import rehypePrismPlus from 'rehype-prism-plus';
+import rehypeSlug from 'rehype-slug';
+import remarkPrism from 'remark-prism';
+
+import {remarkCodeTabs} from './src/remark-code-tabs.mjs';
+import {remarkCodeTitles} from './src/remark-code-title.mjs';
+import {remarkExtractFrontmatter} from './src/remark-extract-frontmatter.mjs';
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+let nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
   trailingSlash: true,
 
   experimental: {
+    mdxRs: false,
     serverComponentsExternalPackages: ['rehype-preset-minify'],
   },
-
-  webpack: (config, _options) => {
-    config.plugins.push(
-      codecovWebpackPlugin({
-        enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
-        bundleName: 'sentry-docs',
-        uploadToken: process.env.CODECOV_TOKEN,
-      })
-    );
-
-    return config;
-  },
-
   redirects() {
     return [
       {
@@ -3130,18 +3126,22 @@ const nextConfig = {
 
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkPrism],
+    remarkPlugins: [remarkExtractFrontmatter, remarkCodeTitles, remarkCodeTabs],
+    rehypePlugins: [
+      rehypeSlug,
+      [rehypePrismPlus, {ignoreMissing: true}],
+      // [rehypePrismDiff, {remove: true}],
+      rehypePresetMinify,
+    ],
   },
 });
 
-module.exports = withMDX(nextConfig);
+nextConfig = withMDX(nextConfig);
 
 // Injected content via Sentry wizard below
 
-const {withSentryConfig} = require('@sentry/nextjs');
-
-module.exports = withSentryConfig(
-  module.exports,
+nextConfig = withSentryConfig(
+  nextConfig,
   {
     // For all available options, see:
     // https://github.com/getsentry/sentry-webpack-plugin#options
@@ -3174,3 +3174,5 @@ module.exports = withSentryConfig(
     automaticVercelMonitors: true,
   }
 );
+
+export default nextConfig;

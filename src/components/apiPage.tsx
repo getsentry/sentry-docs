@@ -4,8 +4,8 @@ import {getMDXComponent} from 'mdx-bundler/client';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
-import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
-import remarkCodeTitles from 'sentry-docs/remark-code-title';
+import {remarkCodeTabs} from 'sentry-docs/remark-code-tabs.mjs';
+import {remarkCodeTitles} from 'sentry-docs/remark-code-title.mjs';
 
 import {ApiExamples} from './apiExamples';
 import {ApiSidebar} from './apiSidebar';

@@ -33,7 +33,7 @@ function getTabTitle(node) {
 }
 
 // TODO(dcramer): this should only operate on MDX
-export default function remarkCodeTabs() {
+export function remarkCodeTabs() {
   return markdownAST => {
     let lastParent = null;
     let pendingCode = [];
