@@ -7,7 +7,10 @@ import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
+import remarkGfm from 'remark-gfm';
 
+import getAppRegistry from 'sentry-docs/build/appRegistry';
+import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
@@ -23,6 +26,7 @@ import {remarkCodeTitles} from 'sentry-docs/remark-code-title.mjs';
 import remarkComponentSpacing from 'sentry-docs/remark-component-spacing';
 import {remarkExtractFrontmatter} from 'sentry-docs/remark-extract-frontmatter.mjs';
 import remarkTocHeadings from 'sentry-docs/remark-toc-headings';
+import remarkVariables from 'sentry-docs/remark-variables';
 import {setServerContext} from 'sentry-docs/serverContext';
 
 export async function generateStaticParams() {
@@ -58,7 +62,7 @@ export default async function Page({params}) {
   }
 
   // get frontmatter of all docs in tree
-  const docs = await getDocsFrontMatter();
+  // const docs = await getDocsFrontMatter();
   const rootNode = await getDocsRootNode();
   if (!rootNode) {
     console.warn('no root node');
@@ -106,23 +110,23 @@ export default async function Page({params}) {
     remarkPlugins: [
       remarkExtractFrontmatter,
       [remarkTocHeadings, {exportRef: []}],
-      // remarkGfm,
-      // remarkCodeTitles,
-      // remarkCodeTabs,
+      remarkGfm,
+      remarkCodeTitles,
+      remarkCodeTabs,
       remarkComponentSpacing,
-      // [
-      //   remarkVariables,
-      //   {
-      //     resolveScopeData: async () => {
-      //       const [apps, packages] = await Promise.all([
-      //         getAppRegistry(),
-      //         getPackageRegistry(),
-      //       ]);
+      [
+        remarkVariables,
+        {
+          resolveScopeData: async () => {
+            const [apps, packages] = await Promise.all([
+              getAppRegistry(),
+              getPackageRegistry(),
+            ]);
 
-      //       return {apps, packages};
-      //     },
-      //   },
-      // ],
+            return {apps, packages};
+          },
+        },
+      ],
     ],
     rehypePlugins: [
       rehypeSlug,
@@ -163,6 +167,7 @@ export default async function Page({params}) {
       <MDXRemote
         source={doc.source}
         options={{
+          // @ts-expect-error
           mdxOptions,
           parseFrontmatter: true,
         }}

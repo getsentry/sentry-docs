@@ -6,7 +6,10 @@ import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
 import rehypeSlug from 'rehype-slug';
+import remarkGfm from 'remark-gfm';
 
+import getAppRegistry from 'sentry-docs/build/appRegistry';
+import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 // Remark packages
 import {getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
 import {getFileBySlug} from 'sentry-docs/mdx';
@@ -16,6 +19,7 @@ import {remarkCodeTitles} from 'sentry-docs/remark-code-title.mjs';
 import remarkComponentSpacing from 'sentry-docs/remark-component-spacing';
 import {remarkExtractFrontmatter} from 'sentry-docs/remark-extract-frontmatter.mjs';
 import remarkTocHeadings from 'sentry-docs/remark-toc-headings';
+import remarkVariables from 'sentry-docs/remark-variables';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {Include} from './include';
@@ -87,23 +91,23 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     remarkPlugins: [
       remarkExtractFrontmatter,
       [remarkTocHeadings, {exportRef: []}],
-      // remarkGfm,
-      // remarkCodeTitles,
-      // remarkCodeTabs,
+      remarkGfm,
+      remarkCodeTitles,
+      remarkCodeTabs,
       remarkComponentSpacing,
-      // [
-      //   remarkVariables,
-      //   {
-      //     resolveScopeData: async () => {
-      //       const [apps, packages] = await Promise.all([
-      //         getAppRegistry(),
-      //         getPackageRegistry(),
-      //       ]);
+      [
+        remarkVariables,
+        {
+          resolveScopeData: async () => {
+            const [apps, packages] = await Promise.all([
+              getAppRegistry(),
+              getPackageRegistry(),
+            ]);
 
-      //       return {apps, packages};
-      //     },
-      //   },
-      // ],
+            return {apps, packages};
+          },
+        },
+      ],
     ],
     rehypePlugins: [
       rehypeSlug,
@@ -142,6 +146,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   return (
     <MDXRemote
       source={doc.source}
+      // @ts-expect-error
       options={{mdxOptions, parseFrontmatter: true}}
       components={mdxComponentsWithWrapper}
     />

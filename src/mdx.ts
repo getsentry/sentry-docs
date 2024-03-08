@@ -4,10 +4,8 @@ import path from 'path';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
-import {bundleMDX} from 'mdx-bundler';
 import {serialize} from 'next-mdx-remote/serialize';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
 // Rehype packages
@@ -268,23 +266,23 @@ export async function getFileBySlug(slug: string) {
     remarkPlugins: [
       remarkExtractFrontmatter,
       [remarkTocHeadings, {exportRef: toc}],
-      // remarkGfm,
+      remarkGfm,
       remarkCodeTitles,
       remarkCodeTabs,
       remarkComponentSpacing,
-      // [
-      //   remarkVariables,
-      //   {
-      //     resolveScopeData: async () => {
-      //       const [apps, packages] = await Promise.all([
-      //         getAppRegistry(),
-      //         getPackageRegistry(),
-      //       ]);
+      [
+        remarkVariables,
+        {
+          resolveScopeData: async () => {
+            const [apps, packages] = await Promise.all([
+              getAppRegistry(),
+              getPackageRegistry(),
+            ]);
 
-      //       return {apps, packages};
-      //     },
-      //   },
-      // ],
+            return {apps, packages};
+          },
+        },
+      ],
     ],
     rehypePlugins: [
       rehypeSlug,
@@ -321,6 +319,7 @@ export async function getFileBySlug(slug: string) {
   };
 
   const mdxSource = await serialize(source, {
+    // @ts-expect-error
     mdxOptions,
   });
 
