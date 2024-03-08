@@ -28,7 +28,8 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       return;
     }
 
-    let code = codeRef.current.textContent || codeRef.current.innerText.replace(/\n\n/g, '\n');
+    let code =
+      codeRef.current.textContent || codeRef.current.innerText.replace(/\n\n/g, '\n');
 
     // don't copy leading prompt for bash
     if (language === 'bash' || language === 'shell') {
