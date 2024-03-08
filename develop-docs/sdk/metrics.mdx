@@ -69,15 +69,28 @@ SDKs should permit any string unit, but some of them are known to the system and
 will in the future permit recalculations.  They are documented as part of
 relay: [`MetricUnit`](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html).
 
-## Trace Seeking
+## Span Seeking and Span Creating Mode
 
-When a metric is emitted it needs to find the current trace (trace seeking),
-most specifically the current span.  From there two things shall be happening
-unless they are disabled:
+When a metric is emitted it shall either determine the current span (span seeking) or 
+create a new span (span creating).
 
+In **span seeking** mode, the span is determined based on the current span on the scope.
+APIs such as `.increment()`, `.distribution()`, `.gauge()` and `.set()` operate in span 
+seeking mode.
+
+In **span creating** mode a new active span is started.
+The `.timing()` API operates in span creating mode.
+
+In span creating mode the span should be setup the following way:
+* `span.op = "metric.timing"`
+* `span.description = key` (the metric key)
+* the metric tags should be applied to the span as well
+* the span is finished once the timing callback finishes
+
+From there two things shall be happening unless they are disabled:  
 * **Common tag attaching:** the tags `transaction`, `release` and `environment`
   shall be automatically added to the metric.
-* **Span local aggregation:** the metric shall be attached to the current span
+* **Span local aggregation:** the metric shall be attached to the determined span
   as a local summary (a form of gauge).  For more information see below.
 
 ## API
