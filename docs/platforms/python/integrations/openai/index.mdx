@@ -69,7 +69,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 - The supported modules are currently `chat.completions.create` and `embeddings.create`.
 
-- Sentry is configured not to send LLM and tokenizer inputs/outputs by default. If you want to include them, add the `include_prompts=True` flag to `OpenAIIntegration`, or set `send_default_pii=True` in the `sentry_sdk.init()` call.
+- Sentry is configured not to consider LLM and tokenizer inputs/outputs as PII. If you want to include them, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts despite `send_default_pii=True`, configure the integration with `include_prompts=False` like in the Options section.
 
 ## Options
 
@@ -82,10 +82,11 @@ from sentry_sdk.integrations.openai import OpenAIIntegration
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     enable_tracing=True,
+    send_default_pii=True,
     traces_sample_rate=1.0,
     integrations = [
         OpenAIIntegration(
-            include_prompts=True, # now LLM/tokenizer inputs/outputs will be sent to Sentry
+            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
         ),
     ],
 )
