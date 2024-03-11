@@ -1,0 +1,99 @@
+---
+title: OpenAI
+description: "Learn about using Sentry for OpenAI."
+---
+
+This integration connects Sentry with the [OpenAI Python SDK](https://github.com/openai/openai-python).
+The integration has been confirmed to work with OpenAI 1.13.3.
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `openai` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[openai]'
+```
+
+## Configure
+
+If you have the `openai` package in your dependencies, the OpenAI integration will be enabled automatically when you initialize the Sentry SDK.
+
+An additional dependency, `tiktoken`, is required if you want to calculate token usage for streaming chat responses.
+
+<SignInNote />
+
+```python
+from openai import OpenAI
+
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    traces_sample_rate=1.0,
+)
+
+client = OpenAI()
+```
+
+## Verify
+
+Verify that the integration works by inducing an error. The error and performance transaction should appear in your Sentry project. 
+```python
+from openai import OpenAI
+import sentry_sdk
+
+sentry_sdk.init(...)  # same as above
+
+client = OpenAI(api_key="a bad API key")
+with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+    response = (
+        client.chat.completions.create(
+            model="some-model", messages=[{"role": "system", "content": "hello"}]
+        )
+        .choices[0]
+        .message.content
+    )
+    print(response)
+```
+
+After running this script, a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event (about the bad API key) will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The OpenAI integration will connect Sentry with all supported OpenAI methods automatically.
+
+- All exceptions leading to an OpenAIException are reported.
+
+- The supported modules are currently `chat.completions.create` and `embeddings.create`.
+
+- Sentry is configured not to consider LLM and tokenizer inputs/outputs as PII. If you want to include them, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts despite `send_default_pii=True`, configure the integration with `include_prompts=False` like in the Options section.
+
+## Options
+
+By adding `OpenAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `OpenAIIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    integrations = [
+        OpenAIIntegration(
+            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+## Supported Versions
+
+- OpenAI: 1.0+
+- tiktoken: 0.6.0+
+- Python: 3.9+
