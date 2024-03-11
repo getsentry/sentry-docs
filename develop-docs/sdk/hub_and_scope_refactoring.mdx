@@ -6,7 +6,7 @@ Development has started in JS and Python, but we are still ironing out the wrink
 
 # Hub & Scope Refactoring
 
-Historically Sentry's SDKs implemented the Hubs and Scopes models, a major defining aspect of the <Link to="/sdk/unified-api/">Unified API</Link>. This introduced a lot of complexity in a user facing manner, allowed more room for error from the user. Since looking at adopting OpenTelemetry "packages", to replace or addition to, our existing performance packages in SDKs, there is a forcing factor. Sentry's model being different to OpenTelemetry's prevent that we can support OpenTelemetry.
+Historically Sentry's SDKs implemented the Hubs and Scopes models, a major defining aspect of the <Link to="/sdk/unified-api/">Unified API</Link>. This introduced a lot of complexity in a user facing manner, allowed more room for error from the user as well as SDK maintainers. Since looking at adopting OpenTelemetry "packages", to replace or in addition to, our existing performance packages in SDKs, there is a forcing factor. Sentry's model being different to OpenTelemetry's prevents us from supporting OpenTelemetry.
 
 ## A) Why Are We Doing This?
 
@@ -52,7 +52,8 @@ The `Transport` is not touched. It will not change.
 
 The `Client` stays the same. The only difference will be that there is always a client available. More on that later.
 
-TODO: add more explanation about how that there is now always a client.
+- TODO: add more explanation about how that there is now always a client.
+- TODO: explain which scope the client should be stored on (and why)
 
 ### Scope
 
@@ -75,25 +76,29 @@ This scope is probably only used for process-wide data like the `release`.
 
 **Isolation Scope**
 
-This scope holds data only applicable to the current request (on a server), tab (in a browser), or user (on a mobile). The top-level APIs that manipulate data (like `sentry_sdk.set_tag()`, `sentry_sdk.set_context()` etc) write to the isolation scope.
+This scope holds data only applicable to the current request (on a server), tab (in a browser), or user (on a mobile). The top-level APIs that manipulate data (like `sentry_sdk.set_tag()`, `sentry_sdk.set_context()` etc) write to the isolation scope (at least once the migration phase is over, see "Backwards Compatibility").
 
-The isolation scope is stored in a context variable, thread local, async local, or something similar (depending on the platform).
+The isolation scope is stored in a context variable, thread local, async local, or something similar (depending on the platform). It may also be stored on OTel `Context` so we can rely on OTels `Context` propagation once SDKs implement POTEL.
 
-The isolation scope is forked by our integrations, end users should not need to think about isolation scopes or forking of one. (See diagram below.)
+The isolation scope is forked by our integrations, end users should not need to think about isolation scopes or forking of one (See diagram below.).
+
+SDKs should not fork isolation scope more than necessary as otherwise we'd bring back the problem that isolation scopes are meant to solve.
 
 **Current Scope**
 
-This scope holds data for the currently active span. Whenever a new span is started the current scope of the parent span is forked (read: duplicated) giving the new span all the data from the parent span and making it possible to add/manipulate data that is just applied to the new span.
+This scope holds data for the currently active span. Whenever a new span is started the current scope of the parent span is forked (read: duplicated) giving the new span all the data from the parent span and making it possible to add/manipulate data that is just applied to the new span (see also "Copy-on-write").
 
-The current scope is stored in a context variable, thread local, async local, or something similar (depending on the platform).
+Changing the original scope after forking does not modify the forked scope.
 
-The current scope can be forked by the end user. Either explicitly or implicitly by starting a new span. (See diagram below.)
+The current scope is stored in a context variable, thread local, async local, or something similar (depending on the platform). It may also be stored on OTel `Context` so we can rely on OTels `Context` propagation once SDKs implement POTEL.
+
+The current scope can be forked by the end user. Either explicitly (e.g. using `Sentry.withScope()` or implicitly by starting a new span. (See diagram below.)
 
 **Copy-on-write**
 
 Getting rid of hubs also implies a soft copy-on-write.
 
-In our current system with hubs and scopes, `Scope` is always mutable and what makes it somewhat immutable is pushing/popping scopes and creating new hubs. This however has to be done manually.
+In our current system with hubs and scopes, `Scope` is always mutable and what makes it somewhat immutable is pushing/popping scopes as well as creating new hubs. This however has to be done manually.
 
 If an async operation is started halfway in between handling a request, a new hub clone has to be created to achieve copy-on-write. In case we don't create a new hub clone, popping a `Scope` also affects the original execution, leading to lost data or worst case exceptions.
 
