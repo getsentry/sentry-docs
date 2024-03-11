@@ -4,22 +4,30 @@ description: "Troubleshoot and resolve edge cases."
 sidebar_order: 9000
 ---
 
-If you need help solving issues with your Sentry Kotlin Multiplatform SDK, you can read the edge cases documented below. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-kotlin-multiplatform/issues/new/choose). Customers on a paid plan may also contact support.
+This document covers common issues you may encounter when using the Sentry Kotlin Multiplatform SDK and provides steps to troubleshoot.
+
+If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-kotlin-multiplatform/issues/new/choose). Customers on a paid plan may also contact support.
 
 ## Tests not working
 
 If you configured the Sentry Kotlin Multiplatform SDK and tests are still failing with the following error: `ld: framework 'Sentry' not found` then follow these steps for the workaround:
 
-### 1. Download the Sentry xcframework
+<Note>
+This example shows you how to fix the issue for the iOS simulator target, but the same approach can be used for other targets.
+</Note>
 
-Choose the release based on the version specified in the version compatibility table, download the `Sentry.xcframework.zip`, and unzip it.
+1. Download the Sentry xcframework
 
-### 2. Create Frameworks directory and insert Sentry.framework
+Ensure you have a compatible Sentry xcframework. Choose the release based on the version specified in the [version compatibility table](/platforms/kotlin-multiplatform/#cocoa-sdk-version-compatibility-table), download the `Sentry.xcframework.zip`, and unzip it.
+
+2. Create Frameworks directory and insert Sentry.framework
 
 Create a `/Frameworks` directory in the directory where the `test.kexe` resides. Put the `Sentry.framework` into it. (The `Sentry.framework` can be found inside of the `ios-arm64_x86_64-simulator`.)
 The `test.kexe` will usually reside in `build/bin/iosSimulatorArm64/debugTest`.
 
-### 3. Add the linker options
+3. Add linker options
+
+Modify `shared/build.gradle.kts` to include linker options, as shown below:
 
 ```kotlin {filename:shared/build.gradle.kts}
   listOf(
@@ -29,7 +37,6 @@ The `test.kexe` will usually reside in `build/bin/iosSimulatorArm64/debugTest`.
   ).forEach {
       it.binaries.framework {
           baseName = "shared"
-          isStatic = true
       }
       it.compilations.all {
           if (compilationName == "test" && target.platformType == KotlinPlatformType.native) {
@@ -42,6 +49,6 @@ The `test.kexe` will usually reside in `build/bin/iosSimulatorArm64/debugTest`.
   }
 ```
 
-### 4. Run the tests
+4. Run the tests
 
 Now your tests should run successfully.
