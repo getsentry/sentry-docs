@@ -13,6 +13,7 @@ import rehypePrismPlus from 'rehype-prism-plus';
 import rehypeSlug from 'rehype-slug';
 // Remark packages
 import remarkGfm from 'remark-gfm';
+import remarkMdxImages from 'remark-mdx-images';
 
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
@@ -263,10 +264,18 @@ export async function getFileBySlug(slug: string) {
 
   const toc = [];
 
+  // cwd is how mdx-bundler knows how to resolve relative paths
+  const cwd = path.join(
+    root,
+    slug.startsWith('platform-includes')
+      ? // take the directory name of the slug
+        path.dirname(slug)
+      : slug
+  );
+
   const result = await bundleMDX({
     source,
-    // mdx imports can be automatically source from the components directory
-    cwd: root,
+    cwd,
     mdxOptions(options) {
       // this is the recommended way to add custom remark/rehype plugins:
       // The syntax might look weird, but it protects you in case we add/remove
@@ -276,6 +285,7 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        remarkMdxImages,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -332,7 +342,20 @@ export async function getFileBySlug(slug: string) {
       options.loader = {
         ...options.loader,
         '.js': 'jsx',
+        '.png': 'file',
+        '.gif': 'file',
+        '.jpg': 'file',
+        '.jpeg': 'file',
+        // inline svgs
+        '.svg': 'dataurl',
       };
+      // Set the `outdir` to a public location for this bundle.
+      // this where this images will be copied
+      options.outdir = path.join(root, 'public', 'mdx-images');
+
+      // Set write to true so that esbuild will output the files.
+      options.write = true;
+
       return options;
     },
   });
