@@ -32,9 +32,7 @@ export function DocPage({
 
   const platforms = (rootNode && extractPlatforms(rootNode)) || [];
   const platformDropdown = (
-    <div className="p-3">
-      <NavbarPlatformDropdown platforms={platforms} currentPlatform={platformOrGuide} />
-    </div>
+    <NavbarPlatformDropdown platforms={platforms} currentPlatform={platformOrGuide} />
   );
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!platformOrGuide;
@@ -51,9 +49,7 @@ export function DocPage({
         >
           {platformDropdown}
           <div className="toc">
-            <div className="text-white px-3">
-              {sidebar}
-            </div>
+            <div className="text-white px-3">{sidebar}</div>
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu" />
