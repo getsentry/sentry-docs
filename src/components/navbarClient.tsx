@@ -5,16 +5,14 @@ import {usePathname} from 'next/navigation';
 
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
-import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {Search} from './search';
 import {SmartLink} from './smartLink';
 
 interface Props {
   currentPlatform: Platform | PlatformGuide | undefined;
-  platforms: Platform[];
 }
 
-export function NavbarClient({platforms, currentPlatform}: Props) {
+export function NavbarClient({currentPlatform}: Props) {
   const pathname = usePathname() ?? undefined;
   let searchPlatforms: string[] | undefined;
   if (currentPlatform) {
@@ -32,10 +30,6 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
-          <NavbarPlatformDropdown
-            platforms={platforms}
-            currentPlatform={currentPlatform}
-          />
           <Nav.Item>
             <SmartLink className="nav-link" href="/product/">
               Product

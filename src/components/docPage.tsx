@@ -1,6 +1,6 @@
 import {ReactNode} from 'react';
 
-import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
+import {extractPlatforms, getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {Breadcrumbs} from './breadcrumbs';
@@ -9,6 +9,7 @@ import {GitHubCTA} from './githubCta';
 import {GuideGrid} from './guideGrid';
 import {Header} from './header';
 import {Navbar} from './navbar';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {PlatformSdkDetail} from './platformSdkDetail';
 import {ServerSidebar} from './serverSidebar';
 import {TableOfContents} from './tableOfContents';
@@ -28,6 +29,14 @@ export function DocPage({
 }: Props) {
   const {rootNode, path} = serverContext();
   const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+
+  const platforms = (rootNode && extractPlatforms(rootNode)) || [];
+  const platformDropdown = (
+    <div className="p-3">
+      <NavbarPlatformDropdown platforms={platforms} currentPlatform={platformOrGuide} />
+    </div>
+  );
+
   const hasToc = (!notoc && !frontMatter.notoc) || !!platformOrGuide;
   const hasGithub = !!path?.length && path[0] !== 'api';
 
@@ -40,8 +49,11 @@ export function DocPage({
           className="d-md-flex flex-column align-items-stretch collapse navbar-collapse"
           id="sidebar"
         >
+          {platformDropdown}
           <div className="toc">
-            <div className="text-white p-3">{sidebar}</div>
+            <div className="text-white px-3">
+              {sidebar}
+            </div>
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu" />
