@@ -246,13 +246,8 @@ export async function getFileBySlug(slug: string) {
     }
   }
 
-  const source = fs.existsSync(mdxPath)
-    ? fs.readFileSync(mdxPath, 'utf8')
-    : fs.existsSync(mdxIndexPath)
-      ? fs.readFileSync(mdxIndexPath, 'utf8')
-      : fs.existsSync(mdPath)
-        ? fs.readFileSync(mdPath, 'utf8')
-        : fs.readFileSync(mdIndexPath, 'utf8');
+  const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
@@ -265,13 +260,7 @@ export async function getFileBySlug(slug: string) {
   const toc = [];
 
   // cwd is how mdx-bundler knows how to resolve relative paths
-  const cwd = path.join(
-    root,
-    slug.startsWith('platform-includes')
-      ? // take the directory name of the slug
-        path.dirname(slug)
-      : slug
-  );
+  const cwd = path.dirname(sourcePath);
 
   const result = await bundleMDX({
     source,
