@@ -1,0 +1,99 @@
+## Job Monitoring
+
+If you're using [Oban](https://github.com/sorentwo/oban) or [Quantum](https://github.com/quantum-elixir/quantum-core), Sentry can automatically capture check-ins for all jobs that are scheduled to run periodically. To achieve this, you need to enable the corresponding Sentry plugin:
+
+```elixir
+config :sentry,
+  integrations: [
+    oban: [cron: [enabled: true]],
+    # Or for Quantum:
+    quantum: [cron: [enabled: true]],
+  ]
+```
+
+## Manual Setup
+
+If you're using another library or a custom solution for scheduling jobs, you'll need to instrument those jobs manually.
+
+### Check-Ins (Recommended)
+
+Check-in monitoring allows you to track a job's progress by completing **two check-ins**: one at the start of your job, and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+
+```elixir
+{:ok, check_in_id} = Sentry.capture_check_in(status: :in_progress, monitor_slug: "<monitor-slug>")
+
+# Execute your scheduled task here
+my_scheduled_job()
+
+Sentry.capture_check_in(check_in_id: check_in_id, status: :ok, monitor_slug: "<monitor-slug>")
+```
+
+If your job execution fails, you can notify Sentry about the failure:
+
+```elixir
+Sentry.capture_check_in(check_in_id: check_in_id, status: :error, monitor_slug: "<monitor-slug>")
+```
+
+### Heartbeats
+
+Heartbeat monitoring notifies Sentry of a job's status through _a single check-in_. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
+
+```elixir
+Sentry.capture_check_in(status: :ok, monitor_slug: "<monitor-slug>")
+```
+
+If your job execution fails, you can notify Sentry about the failure:
+
+```elixir
+Sentry.capture_check_in(status: :error, monitor_slug: "<monitor-slug>")
+```
+
+## Upserting Cron Monitors
+
+You can create and update your monitors programmatically with code rather than [creating and configuring them in Sentry](https://sentry.io/crons/create/).
+
+To do that, you need to pass a `:monitor_config` set of options to `Sentry.capture_check_in/3`:
+
+```elixir
+# Create a config from a crontab schedule (every 10 minutes)
+monitor_config = [
+  schedule: [
+    type: :crontab,
+    value: "5 * * * *",
+  ],
+  checkin_margin: 5, # Optional check-in margin in minutes
+  max_runtime: 15, # Optional max runtime in minutes
+  timezone: "Europe/Vienna", # Optional timezone
+]
+
+# Alternatively, create a config from an interval schedule (every 10 minutes in this case):
+monitor_config = [
+  schedule: [
+    type: :interval,
+    unit: :minute,
+    value: 10
+  ],
+  checkin_margin: 5, # Optional check-in margin in minutes
+  max_runtime: 15, # Optional max runtime in minutes
+  timezone: "Europe/Vienna", # Optional timezone
+]
+
+# Notify Sentry your job is running:
+{:ok, check_in_id} =
+  Sentry.capture_check_in(
+    status: :in_progress,
+    monitor_slug: "<monitor-slug>",
+    monitor_config: monitor_config
+  )
+
+# Execute your job:
+execute_job()
+
+# Notify Sentry your job has completed successfully:
+Sentry.capture_check_in(
+  status: :ok,
+  check_in_id: check_in_id,
+  monitor_slug: "<monitor-slug>",
+  monitor_config: monitor_config
+)
+```

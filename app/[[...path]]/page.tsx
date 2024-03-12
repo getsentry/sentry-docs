@@ -10,10 +10,15 @@ import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
-import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {
+  getCurrentPlatformOrGuide,
+  getDocsRootNode,
+  nodeForPath,
+} from 'sentry-docs/docTree';
 import {getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {capitilize} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
@@ -112,10 +117,14 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
   const images = [{url: `${domain}/meta.png`, width: 1200, height: 630}];
 
   const rootNode = await getDocsRootNode();
+
   if (rootNode && params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {
-      title = pageNode.frontmatter.title;
+      const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+      title =
+        pageNode.frontmatter.title +
+        (guideOrPlatform ? ` | Sentry for ${capitilize(guideOrPlatform.name)}` : '');
       description = pageNode.frontmatter.description;
     }
   }

@@ -4,23 +4,27 @@ sidebar_order: 60
 description: "Understand your application's performance score and how each web vital contributes to it. Drill in to explore opportunities to improve your app's overall performance."
 ---
 
+<Note>
+On March 12, 2024, Google replaced [First Input Display (FID)](/product/performance/web-vitals/web-vitals-concepts/#first-input-delay-fid) with [Interaction to Next Paint (INP)](/product/performance/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) as a Core Web Vital. To begin collecting INP measurements, make sure your Javascript SDK version is [7.104.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.104.0) or higher and that the option [`enableInp`](/platforms/javascript/performance/instrumentation/automatic-instrumentation/#enableinp) is on. FID measurements are no longer shown in the **Web Vitals** page, but can still be accessed in [Discover](/product/discover-queries). You may see changes to your performance score during this transition.
+</Note>
+
 Web vitals are a set of metrics that measure the quality of the user experience on a web page. To learn more about these metrics, see [Web Vitals Concepts](/product/performance/web-vitals/web-vitals-concepts/).
 
 In Sentry, web vitals are used to calculate a [Performance Score](#performance-score) for your web application. Using these metrics, we surface the pages that have the most [opportunity](#opportunity) to improve your app's overall performance.
 
 ## Web Vitals Page
 
-The **Web Vitals** page, nested under the **Performance** page, gives you an overview of your page load performance for the selected project(s). You can use this page as a starting point to investigate poor Web Vitals affecting your web application and drill down to better understand which pages are affecting your web performance the most.
+The **Web Vitals** page, nested under the **Performance** page, gives you an overview of your page load and interaction performance for the selected project(s). You can use this page as a starting point to investigate poor Web Vitals affecting your web application and drill down to better understand which pages are affecting your web performance the most.
 
 In the top left, the [Performance Score](#performance-score) ring shows the overall performance rating of your application. Each component of the ring represents a single Web Vital and its relative weight and impact on the Performance Score. The area chart on the right shows you a breakdown - by Web Vitals - of your performance score over time.
 
-Below this, you can see your application's average vital values and the individual scores for each Web Vital. These metrics can help you prioritize which Web Vitals need attention most. Click on a Web Vital to open a more detailed summary of that metric and see which pages have the most [opportunity](#opportunity) for improvement.
+Below this, you can see your application's p75 vital values and the individual scores for each Web Vital. These metrics can help you prioritize which Web Vitals need attention most. Click on a Web Vital to open a more detailed summary of that metric and see which pages have the most [opportunity](#opportunity) for improvement.
 
-At the bottom of the **Web Vitals** page, a sortable table shows a list of your application's pages, along with their associated average values for each Web Vital. Each page also has its own individual Performance Score. The Opportunity column displays a page score's potential improvement to your application's overall Performance Score if maximized to 100. The search bar above this table allows you to filter for specific pages by route name.
+At the bottom of the **Web Vitals** page, a sortable table shows a list of your application's pages, along with their associated p75 values for each Web Vital. Each page also has its own individual Performance Score. The Opportunity column displays a page score's potential improvement to your application's overall Performance Score if maximized to 100. The search bar above this table allows you to filter for specific pages by route name.
 
 <Note>
 
-The **Web Vitals** page only displays data from your application's initial page load transactions. Navigations are not included.
+The **Web Vitals** page only displays data from your application's initial page load transactions and interactions. Navigations are not included.
 
 </Note>
 
@@ -38,7 +42,7 @@ The **Web Vitals** page only displays data from your application's initial page 
 
 ## Page Overview
 
-From the table in **Web Vitals** or a Web Vital Summary panel, click on a page to open its **Page Overview**. Here, you can see summary of that single page's Web Vitals. In **Page Overview**, you can further drill down to a specific page load sample [Event](/product/sentry-basics/concepts/tracing/event-detail/), [Replay](/product/session-replay/), or [Profile](/product/profiling/).
+From the table in **Web Vitals** or a Web Vital Summary panel, click on a page to open its **Page Overview**. Here, you can see a summary of that single page's Web Vitals. In **Page Overview**, you can further drill down to a specific page load sample [Event](/product/sentry-basics/concepts/tracing/event-detail/), [Interaction](/product/performance/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp), [Replay](/product/session-replay/), or [Profile](/product/profiling/).
 
 The **Page Overview** page displays a "Page Loads" chart in the right sidebar of the page. A mini **Aggregate Span Waterfall** is also displayed in the right sidebar, which shows you common span paths that your application's page may take. Click the "View Full Waterfall" button or the "Aggregate Spans" tab at the top of the page to see the full **Aggregate Span Waterfall**.
 
@@ -56,7 +60,7 @@ The **Page Overview** page displays a "Page Loads" chart in the right sidebar of
 
 ### Samples List
 
-At the center of the **Page Overview**, Web Vital average values and scores are displayed. Clicking a Web Vital score will open a slideout panel containing a variety of **Page Load** samples with good to poor scores. Each sample contains an **Event ID** that can be clicked to open the [Event Detail](/product/sentry-basics/concepts/tracing/event-detail/) page for further investigation. If there is a [Replay](/product/session-replay/) or [Profile](/product/profiling/) associated with the sample page load, links will be included in the associated table columns.
+At the center of the **Page Overview**, Web Vital p75 values and scores are displayed. Clicking a Web Vital score will open a slideout panel containing a variety of **Page Load** samples with good to poor scores. Each sample contains an **Event ID** that can be clicked to open the [Event Detail](/product/sentry-basics/concepts/tracing/event-detail/) page for further investigation. If there is a [Replay](/product/session-replay/) or [Profile](/product/profiling/) associated with the sample page load, links will be included in the associated table columns.
 
 <div style={{"height":"0px","paddingBottom":"calc(56.9796% + 41px)","position":"relative"}}>
   <iframe
@@ -72,19 +76,34 @@ At the center of the **Page Overview**, Web Vital average values and scores are 
 
 ## Performance Score
 
-**Performance Score** is a rating from 0 to 100 that summarizes the perceived performance of your web application. Each page load on your web application that gets sent to Sentry is scored based on its **Web Vitals**. These scores are aggregated to provide a score for each of your pages and an overall score for your application.
+**Performance Score** is a rating from 0 to 100 that summarizes the perceived performance of your web application. Page loads and Interactions on your web application are scored based on their **Web Vitals**. Each **Web Vital** is given a rating from 0 to 100 through a [Log-Normal Distribution](https://www.desmos.com/calculator/o98tbeyt1t), which is then weighed and aggregated by page and overall for your entire web application.
 
-The **Performance Score** is comprised of 5 individual **Web Vital** components. Each **Web Vital** is given a rating from 0 to 100 through a [Log-Normal Distribution](https://www.desmos.com/calculator/o98tbeyt1t). Each **Web Vital** rating is given a weight, which is summed up to create the overall **Performance Score** with a maximum value of 100. Some browsers may not support all the **Web Vitals** used in Sentry's **Performance Score** calculation, so weights are dynamically adjusted depending on which **Web Vitals** are available on a page load. The default weight as well as the p90 and p50 distribution values for each **Web Vital** can be found in the table below.
+A **Page Load Performance Score** is comprised of up to 4 individual **Web Vital** components found on each event. The default weights and rating thresholds for each **Web Vital** can be found in the table below.
 
-| Web Vital                                                       | P90                                                    | P50                                                    | Weight |
+| Page Load Web Vital                                             | P90 (Good)                                             | P50 (Meh)                                              | Weight |
 | --------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ | ------ |
-| [Largest Contentful Paint](#largest-contentful-paint-lcp) (LCP) | [1200ms](https://www.desmos.com/calculator/ejhjazajbd) | [2400ms](https://www.desmos.com/calculator/ejhjazajbd) | 30%    |
-| [First Input Delay](#first-input-delay-fid) (FID)               | [100ms](https://www.desmos.com/calculator/vy5qiu1idj)  | [300ms](https://www.desmos.com/calculator/vy5qiu1idj)  | 30%    |
-| [Cumulative Layout Shift](#cumulative-layout-shift-cls) (CLS)   | [0.1](https://www.desmos.com/calculator/irdoqfftdf)    | [0.25](https://www.desmos.com/calculator/irdoqfftdf)   | 15%    |
-| [First Contentful Paint](#first-contentful-paint-fcp) (FCP)     | [900ms](https://www.desmos.com/calculator/gcxbiypuuh)  | [1600ms](https://www.desmos.com/calculator/gcxbiypuuh) | 15%    |
-| [Time To First Byte](#time-to-first-byte-ttfb) (TTFB)           | [200ms](https://www.desmos.com/calculator/ykzahw9goi)  | [400ms](https://www.desmos.com/calculator/ykzahw9goi)  | 10%    |
+| [Largest Contentful Paint](/product/performance/web-vitals/web-vitals-concepts/#largest-contentful-paint-lcp) (LCP) | [1200ms](https://www.desmos.com/calculator/ejhjazajbd) | [2400ms](https://www.desmos.com/calculator/ejhjazajbd) | ~42%   |
+| [Cumulative Layout Shift](/product/performance/web-vitals/web-vitals-concepts/#cumulative-layout-shift-cls) (CLS)   | [0.1](https://www.desmos.com/calculator/irdoqfftdf)    | [0.25](https://www.desmos.com/calculator/irdoqfftdf)   | ~22%   |
+| [First Contentful Paint](/product/performance/web-vitals/web-vitals-concepts/#first-contentful-paint-fcp) (FCP)     | [900ms](https://www.desmos.com/calculator/gcxbiypuuh)  | [1600ms](https://www.desmos.com/calculator/gcxbiypuuh) | ~22%   |
+| [Time To First Byte](/product/performance/web-vitals/web-vitals-concepts/#time-to-first-byte-ttfb) (TTFB)           | [200ms](https://www.desmos.com/calculator/ykzahw9goi)  | [400ms](https://www.desmos.com/calculator/ykzahw9goi)  | ~14%   |
 
-Performance Scores are currently only supported on desktop web browsers. Find out which Web Vitals are required to calculate Performance Scores in the [Browser Support](/product/performance/web-vitals/web-vitals-concepts/#browser-support) table.
+<Note>
+Some browsers may not support all **Web Vitals** used in Sentry's **Performance Score** calculation, so weights are dynamically adjusted depending on which ones are available on the browser.
+
+Find out which Web Vitals are required to calculate Page Load Performance Scores in the [Browser Support](/product/performance/web-vitals/web-vitals-concepts/#browser-support) table.
+</Note>
+
+An **Interaction Performance Score** is based off a single **Web Vital** component, INP (Interaction to Next Paint).
+
+| Interaction Web Vital                                             | P90 (Good)                                           | P50 (Meh)                                              | Weight |
+| --------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ | ------ |
+| [Interaction to Next Paint](/product/performance/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) (INP)   | [200ms](https://www.desmos.com/calculator/jaqxodpx8d)  | [500ms](https://www.desmos.com/calculator/jaqxodpx8d)  | 100%   |
+
+The overall **Performance Score** of your web application is the weighted average of your **Page Load** and **Interaction** scores. If your web application has far more Page Load scores than Interaction scores, your overall **Performance Score** will be biased towards Page Loads, and vice versa. An equal number of Page Load and Interaction scores produces an overall **Performance Score** comprised of a 50/50 average.
+
+<Note>
+Performance Scores are currently only supported on desktop web browsers.
+</Note>
 
 ## Opportunity
 

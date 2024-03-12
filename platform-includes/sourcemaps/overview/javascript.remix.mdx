@@ -5,13 +5,52 @@ Whenever you run the `build` script in your `package.json` source maps will be u
 
 If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
 
-### Configure Source Maps Upload
+### Using Vite Plugin (Recommended)
 
-<Alert level="info" title="Uploading sourcemaps on Vite projects">
+Starting from version 2.2.0, Remix supports [Vite](https://vitejs.dev/) as a build tool, and from Remix version 2.7.0 it's stable and the recommended way to build your application.
 
-Starting from version 2.2.0, Remix supports [Vite](https://vitejs.dev/) as a build tool. If you use Vite to build your project, you can use the [Vite plugin](/platforms/javascript/sourcemaps/uploading/vite/) to upload source maps to Sentry. You do not need to follow the steps below.
+If you use Vite to build your project, you can use the [Vite plugin](/platforms/javascript/sourcemaps/uploading/vite/) to upload source maps to Sentry.
 
-</Alert>
+First, install the plugin if you haven't already done so:
+
+```bash
+npm install --save-dev @sentry/vite-plugin
+```
+
+Then, add the plugin to your Vite configuration:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from 'vite'
+import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryVitePlugin } from '@sentry/vite-plugin'
+
+export default defineConfig({
+  plugins: [
+    remix({
+      // ... your Remix plugin options
+    }),
+    sentryVitePlugin({
+      // If you use .sentryclirc or environment variables,
+      // you don't need to specify these options
+      authToken: '___SENTRY_AUTH_TOKEN___',
+      org: '___SENTRY_ORG_SLUG___',
+      project: '___SENTRY_PROJECT_SLUG___',
+    })
+  ],
+  build: {
+    sourcemaps: true,
+    // ... rest of your Vite build options
+  }
+
+  // ... rest of your Vite config
+})
+```
+
+To see the full list of options, refer to the [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+
+### Using `sentry-upload-sourcemaps` Script
+
+If you're not using Vite to build your project, you can use the `sentry-upload-sourcemaps` script to upload source maps to Sentry.
 
 The Sentry Remix SDK provides a script to automatically create a release and upload source maps after you've built your project.
 Under the hood, it uses the [Sentry CLI](/product/cli/).
