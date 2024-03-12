@@ -1,0 +1,97 @@
+---
+title: Set Up Metrics
+description: "Learn how to measure the data points you care about by configuring Metrics in your Unity project."
+sidebar_order: 9000
+---
+
+<Include name="feature-stage-alpha-metrics.mdx" />
+
+<Note>
+
+Metrics for Unity are supported with Sentry Unity SDK version `2.0.0` and above.
+
+</Note>
+
+Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
+
+## Initialization
+
+To enable metrics you have to opt-in the metrics feature.
+
+```csharp
+public class SentryRuntimeConfiguration : SentryRuntimeOptionsConfiguration
+{
+    public override void Configure(SentryUnityOptions options)
+    {
+        // Initialize some (non null) ExperimentalMetricsOptions to enable Sentry Metrics,
+        options.ExperimentalMetrics = new ExperimentalMetricsOptions { EnableCodeLocations = true };
+    }
+}
+```
+
+## Emit a Counter
+
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```csharp
+// Incrementing a counter by one for each button click.
+SentrySdk.Metrics.Increment("ButtonClicked",
+    tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
+```
+
+## Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
+
+```csharp
+// Adding '15' to a distribution used to track the loading time.
+SentrySdk.Metrics.Distribution("LoadingTime",
+    15,
+    unit: MeasurementUnit.Duration.Millisecond,
+    tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
+```
+
+## Emit a Set
+
+Sets are useful for looking at unique occurrences and counting the unique elements you added.
+
+To emit a set, do the following:
+
+```csharp
+// Adding a set of unique occurrences.
+SentrySdk.Metrics.Set("UserView", "Rufus",
+    unit: MeasurementUnit.Custom("username"),
+    tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
+```
+
+## Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```csharp
+// Adding '15' to a gauge used to track the loading time.
+SentrySdk.Metrics.Gauge("LoadingTime",
+    15,
+    unit: MeasurementUnit.Duration.Millisecond,
+    tags: new Dictionary<string, string> {{ "region", "us-west-1" }});
+```
+
+## Emit a Timer
+
+Timers can be used to measure the execution time of a specific block of code. They're implemented like distributions, but measured in seconds.
+
+To emit a timer, do the following:
+
+```csharp
+// Measure the time of execution within the using block
+using (SentrySdk.Metrics.StartTimer("bingo"))
+{
+    // Your code goes here
+}
+```
