@@ -5,6 +5,7 @@ import {serverContext} from 'sentry-docs/serverContext';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
+import {ScrollActiveLink} from './focus-active-link';
 import {GitHubCTA} from './githubCta';
 import {GuideGrid} from './guideGrid';
 import {Header} from './header';
@@ -41,6 +42,7 @@ export function DocPage({
           id="sidebar"
         >
           <div className="toc">
+            <ScrollActiveLink />
             <div className="text-white p-3">{sidebar}</div>
           </div>
         </div>
