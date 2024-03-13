@@ -48,6 +48,9 @@ export function DocPage({
           id="sidebar"
         >
           {platformDropdown}
+          <div className="px-3 guide-grid">
+            <GuideGrid className="section-nav" />
+          </div>
           <div className="toc">
             <div className="text-white px-3">{sidebar}</div>
           </div>
@@ -76,7 +79,7 @@ export function DocPage({
                 <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                   <div className="page-nav">
                     <PlatformSdkDetail />
-                    <TableOfContents guideGrid={<GuideGrid className="section-nav" />} />
+                    <TableOfContents />
                   </div>
                 </div>
               )}
