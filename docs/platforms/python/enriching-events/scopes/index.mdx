@@ -12,15 +12,15 @@ you should know what a scope is and how you can use it to your advantage.
 
 A scope manages an event's data. For instance, the SDK stores [contexts](../context/) and [breadcrumbs](../breadcrumbs/) on the scope.
 
-There are three types of scopes:
+There are three types of scopes. Exactly one scope of each type will be active at a specific point in time.
 
-- the *global scope*: A single globally-shared scope storing data relevant for the whole app (e.g., the release)
-- *isolation scopes*: Thread-local scopes created for each request-response lifecycle to store data relevant to the request
-- *current scopes*: Thread-local scopes created for each span to store data relevant to the span
+- *Global scope*: A single globally-shared scope storing data relevant for the whole app (e.g., the release).
+- *Isolation scope*: Thread-local scope created for each request-response lifecycle to store data relevant to the request.
+- *Current scope*: Thread-local scope created for each span to store data relevant to the span.
 
 The SDK and the SDK's built-in integrations automatically manage the scopes. For example, web framework integrations create an isolation scope for each request handled. When you call a top-level API function, such as <PlatformIdentifier name="set-tag" />, the SDK determines the correct scope on which to operate.
 
-At the end of the pipeline, the final data applied to the event is the result of merging the global scope and the isolation and current scopes together, applying data from each in turn.
+When sending an event to Sentry, the final data applied to the event is the result of merging the three scopes, applying data from each in turn. The global scope is applied first, followed by the isolation scope and finally the current scope.
 
 ## Changing the Scope
 
