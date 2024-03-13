@@ -303,6 +303,7 @@ export async function getFileBySlug(slug: string) {
             properties: {
               ariaHidden: true,
               tabIndex: -1,
+              className: 'autolink-heading',
             },
             content: [
               s(
