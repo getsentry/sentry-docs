@@ -20,7 +20,7 @@ export function PageGrid({header}: Props) {
   }
 
   const parentNode = nodeForPath(rootNode, path);
-  if (!parentNode) {
+  if (!parentNode || parentNode.children.length === 0) {
     return null;
   }
 
