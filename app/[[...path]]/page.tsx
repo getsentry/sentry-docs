@@ -23,10 +23,7 @@ import {capitilize} from 'sentry-docs/utils';
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
   const paths = docs.map(doc => {
-    let path = doc.slug.split('/');
-    if (path[path.length - 1] === 'index') {
-      path = path.slice(0, path.length - 1);
-    }
+    const path = doc.slug.split('/');
     return {path};
   });
   paths.push({path: undefined}); // the home page
