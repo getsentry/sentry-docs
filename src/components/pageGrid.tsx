@@ -7,12 +7,6 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {isTruthy} from 'sentry-docs/utils';
 
 type Props = {
-  nextPages: boolean;
-  /**
-   * A list of pages to exclude from the grid.
-   * Specify the file name of the page, for example, "index" for "index.mdx"
-   */
-  exclude?: string[];
   header?: string;
 };
 
