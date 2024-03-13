@@ -8,7 +8,7 @@ categories:
   - mobile
 ---
 
-Sentry's routing instrumentation for Flutter semi-automatically tracks and reports page navigation events in your app.
+Sentry's routing instrumentation for Flutter automatically tracks and reports page navigation events in your app.
 It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navigation) and the [GoRouter](https://pub.dev/packages/go_router) package.
 
 <Note>
@@ -16,13 +16,6 @@ It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navig
 The routing instrumentation feature is shipped with Sentry's Flutter SDK automatically.
 
 </Note>
-
-## Instrumentation Behaviour
-
-Before diving into the configuration, it's important to understand how routing instrumentation behaves:
-
-- Routing transactions attach to the current scope unless another transaction is already there.
-- If the routing transaction has no child spans attached, the transaction will be dropped and not sent to Sentry because there's no callback to identify when the screen has been loaded. This means that after the navigation has begun you need to start a child span inside the pushed widget manually or via another instrumentation.
 
 ## Prerequisites
 
@@ -106,6 +99,61 @@ final GoRouter _router = GoRouter(
   ],
 );
 ```
+
+## Time To Initial Display
+
+Time to initial display (TTID) provides insight into how long it takes your Widget to launch and draw their first frame, by adding a span for navigation to a Widget. The SDK sets the span operation to `ui.load.initial-display` and the span description to the Widget's route name followed by initial display, for example, `MyWidget initial display`.
+
+### Approximation
+
+The time to initial display is enabled by default and provides an approximation of TTID.
+
+### Manual
+
+The manual approach allows you to set a more accurate time to initial display manually.
+In order to report TTID manually wrap the desired widget with `SentryDisplayWidget`.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryDisplayWidget(
+  child: MyWidget(),
+)
+```
+
+### Combining both approaches
+
+Since the approximation is enabled by default, you can combine both approaches to report the TTID of only certain Widgets manually where you need accurate measurements and leave the rest to be reported automatically via approximation.
+
+## Time To Full Display
+
+Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of their content, by adding a span for each navigation to a Widget. The SDK sets the span operation to `ui.load.full-display` and the span description to the Widget's route name followed by full display, for example, `MyWidget full display`.
+
+TTFD is disabled by default. In order to use follow these steps:
+
+1. Enable the option in the SDK configuration.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.enableTimeToFullDisplayTracing = true,
+    appRunner: () => runApp(MyApp()),
+  );
+}
+```
+
+2. Report manually
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryFlutter.reportFullyDisplayed();
+```
+
+If the span finishes through the API, its status is set to `SpanStatus.OK`. If the span doesn't finish after 30 seconds, it will be finished by the SDK automatically, and its status will be set to `SpanStatus.DEADLINE_EXCEEDED`, also its duration will match the same of the Time to initial display span.
 
 ## Verify
 
