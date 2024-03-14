@@ -53,28 +53,27 @@ export function ServerSidebar() {
       guide = getGuide(rootNode, name, path[3]);
     }
 
-    const nodes: PlatformSidebarNode[] = [];
-    // eslint-disable-next-line no-inner-declarations
-    function addChildren(docNodes: DocNode[]) {
-      docNodes.forEach(n => {
-        if (n.frontmatter.draft) {
-          return;
-        }
-        nodes.push({
-          context: {
-            platform: {
-              name,
-            },
-            title: n.frontmatter.title,
-            sidebar_order: n.frontmatter.sidebar_order,
-            sidebar_title: n.frontmatter.sidebar_title,
+    const docNodeToPlatformSidebarNode = (n: DocNode) => {
+      if (n.frontmatter.draft) {
+        return undefined;
+      }
+      return {
+        context: {
+          platform: {
+            name,
           },
-          path: '/' + n.path + '/',
-        });
-        addChildren(n.children);
-      });
-    }
-    addChildren([platformNode]);
+          title: n.frontmatter.title,
+          sidebar_order: n.frontmatter.sidebar_order,
+          sidebar_title: n.frontmatter.sidebar_title,
+        },
+        path: '/' + n.path + '/',
+      };
+    };
+
+    const nodes: PlatformSidebarNode[] = getNavNodes(
+      [platformNode],
+      docNodeToPlatformSidebarNode
+    );
 
     return (
       <Fragment>
@@ -107,4 +106,20 @@ export function ServerSidebar() {
     };
   };
   return <Sidebar node={nodeToSidebarNode(node)} path={path} />;
+}
+
+export function getNavNodes<NavNode>(
+  docNodes: DocNode[],
+  docNodeToNavNode: (doc: DocNode) => NavNode | undefined,
+  nodes: NavNode[] = []
+) {
+  docNodes.forEach(n => {
+    const navNode = docNodeToNavNode(n);
+    if (!navNode) {
+      return;
+    }
+    nodes.push(navNode);
+    getNavNodes(n.children, docNodeToNavNode, nodes);
+  });
+  return nodes;
 }
