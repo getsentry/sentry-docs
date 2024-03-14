@@ -1,3 +1,4 @@
+import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {DynamicNav, toTree} from './dynamicNav';
@@ -14,15 +15,41 @@ export type NavNode = {
 };
 
 type ChildProps = {
-  data: {
-    allSitePage: {
-      nodes: NavNode[];
-    };
-  };
+  rootNode: DocNode;
 };
 
-export function ProductSidebar({data}: ChildProps) {
-  const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
+export function ProductSidebar({rootNode}: ChildProps) {
+  const productNode = nodeForPath(rootNode, 'product');
+  if (!productNode) {
+    return null;
+  }
+  const nodes: NavNode[] = [
+    {
+      context: {
+        draft: productNode.frontmatter.draft,
+        title: productNode.frontmatter.title,
+        sidebar_order: productNode.frontmatter.sidebar_order,
+        sidebar_title: productNode.frontmatter.sidebar_title,
+      },
+      path: '/' + productNode.path + '/',
+    },
+  ];
+  function addChildren(docNodes: DocNode[]) {
+    docNodes.forEach(n => {
+      nodes.push({
+        context: {
+          draft: n.frontmatter.draft,
+          title: n.frontmatter.title,
+          sidebar_order: n.frontmatter.sidebar_order,
+          sidebar_title: n.frontmatter.sidebar_title,
+        },
+        path: '/' + n.path + '/',
+      });
+      addChildren(n.children);
+    });
+  }
+  addChildren(productNode.children);
+  const tree = toTree(nodes.filter(n => !!n.context));
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (

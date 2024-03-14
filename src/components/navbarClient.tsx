@@ -31,11 +31,6 @@ export function NavbarClient({currentPlatform}: Props) {
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Nav className="justify-content-end" style={{flex: 1}}>
           <Nav.Item>
-            <SmartLink className="nav-link" href="/product/">
-              Product
-            </SmartLink>
-          </Nav.Item>
-          <Nav.Item>
             <SmartLink className="nav-link" href="/api/">
               API
             </SmartLink>
