@@ -5,6 +5,7 @@ import {serverContext} from 'sentry-docs/serverContext';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
+import {ScrollActiveLink} from './focus-active-link';
 import {GitHubCTA} from './githubCta';
 import {GuideDropdown} from './guideDropdown';
 import {Header} from './header';
@@ -59,7 +60,10 @@ export function DocPage({
             />
           </div>
           <div className="toc">
+ ui-redesign
             <div className="text-white px-3">{sidebar}</div>
+            <ScrollActiveLink />
+            <div className="text-white p-3">{sidebar}</div>
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu" />
