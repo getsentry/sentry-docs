@@ -1,12 +1,12 @@
 import {ReactNode} from 'react';
 
-import {extractPlatforms, getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
+import {extractPlatforms, getCurrentGuide, getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
 import {GitHubCTA} from './githubCta';
-import {GuideGrid} from './guideGrid';
+import {GuideDropdown} from './guideDropdown';
 import {Header} from './header';
 import {Navbar} from './navbar';
 import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
@@ -28,14 +28,12 @@ export function DocPage({
   sidebar = <ServerSidebar />,
 }: Props) {
   const {rootNode, path} = serverContext();
-  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
+  const currentGuide = rootNode && getCurrentGuide(rootNode, path);
 
   const platforms = (rootNode && extractPlatforms(rootNode)) || [];
-  const platformDropdown = (
-    <NavbarPlatformDropdown platforms={platforms} currentPlatform={platformOrGuide} />
-  );
 
-  const hasToc = (!notoc && !frontMatter.notoc) || !!platformOrGuide;
+  const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
 
   return (
@@ -47,9 +45,18 @@ export function DocPage({
           className="d-md-flex flex-column align-items-stretch collapse navbar-collapse"
           id="sidebar"
         >
-          {platformDropdown}
-          <div className="px-3 guide-grid">
-            <GuideGrid className="section-nav" />
+          <div className="px-3 pt-2 pb-1">
+            <NavbarPlatformDropdown
+              platforms={platforms}
+              currentPlatform={currentPlatform}
+            />
+          </div>
+
+          <div className="px-3 pb-3">
+            <GuideDropdown
+              guides={currentPlatform?.guides || []}
+              currentGuide={currentGuide}
+            />
           </div>
           <div className="toc">
             <div className="text-white px-3">{sidebar}</div>
