@@ -26,7 +26,16 @@ export function ServerSidebar() {
   } else if (path.indexOf('product') === 0 || path.indexOf('platform-redirect') === 0) {
     return <ProductSidebar rootNode={rootNode} />;
   } else if (path.indexOf('api') === 0) {
-    return <ApiSidebar />;
+    if (!rootNode) {
+      return <ApiSidebar />;
+    }
+    return (
+      <Fragment>
+        <ApiSidebar />
+        <hr />
+        <ProductSidebar rootNode={rootNode} />
+      </Fragment>
+    );
   } else if (path.indexOf('platforms') === 0) {
     if (path.length === 1) {
       return <ProductSidebar rootNode={rootNode} />;
