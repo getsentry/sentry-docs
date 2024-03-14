@@ -24,17 +24,13 @@ type Props = {
 };
 
 type ChildProps = Props & {
-  data: {
-    allSitePage: {
-      nodes: Node[];
-    };
-  };
+  nodes: Node[];
 };
 
-export function PlatformSidebar({platform, guide, data}: ChildProps) {
+export function PlatformSidebar({platform, guide, nodes}: ChildProps) {
   const platformName = platform.name;
   const guideName = guide ? guide.name : null;
-  const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
+  const tree = toTree(nodes.filter(n => !!n.context));
   const pathRoot = guideName
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;

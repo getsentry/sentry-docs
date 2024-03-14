@@ -53,19 +53,7 @@ export function ServerSidebar() {
       guide = getGuide(rootNode, name, path[3]);
     }
 
-    const nodes: PlatformSidebarNode[] = [
-      {
-        context: {
-          platform: {
-            name,
-          },
-          title: platformNode.frontmatter.title,
-          sidebar_order: platformNode.frontmatter.sidebar_order,
-          sidebar_title: platformNode.frontmatter.sidebar_title,
-        },
-        path: '/' + platformNode.path + '/',
-      },
-    ];
+    const nodes: PlatformSidebarNode[] = [];
     // eslint-disable-next-line no-inner-declarations
     function addChildren(docNodes: DocNode[]) {
       docNodes.forEach(n => {
@@ -86,7 +74,7 @@ export function ServerSidebar() {
         addChildren(n.children);
       });
     }
-    addChildren(platformNode.children);
+    addChildren([platformNode]);
 
     return (
       <Fragment>
@@ -101,11 +89,7 @@ export function ServerSidebar() {
               title: guide.title || '',
             }
           }
-          data={{
-            allSitePage: {
-              nodes,
-            },
-          }}
+          nodes={nodes}
         />
         <hr />
         <ProductSidebar rootNode={rootNode} />

@@ -23,17 +23,7 @@ export function ProductSidebar({rootNode}: ChildProps) {
   if (!productNode) {
     return null;
   }
-  const nodes: NavNode[] = [
-    {
-      context: {
-        draft: productNode.frontmatter.draft,
-        title: productNode.frontmatter.title,
-        sidebar_order: productNode.frontmatter.sidebar_order,
-        sidebar_title: productNode.frontmatter.sidebar_title,
-      },
-      path: '/' + productNode.path + '/',
-    },
-  ];
+  const nodes: NavNode[] = [];
   function addChildren(docNodes: DocNode[]) {
     docNodes.forEach(n => {
       nodes.push({
@@ -48,7 +38,7 @@ export function ProductSidebar({rootNode}: ChildProps) {
       addChildren(n.children);
     });
   }
-  addChildren(productNode.children);
+  addChildren([productNode]);
   const tree = toTree(nodes.filter(n => !!n.context));
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
