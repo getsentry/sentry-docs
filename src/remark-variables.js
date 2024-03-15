@@ -63,7 +63,15 @@ export default function remarkVariables(options) {
             throw err;
           }
 
+          // replace the match with the result (even if it's empty)
           node.value = node.value.replace(match[0], result);
+          if (!result) {
+            console.error(new Error(`Failed to interpolate expression: "${expr}"`));
+            // fail the build process in production
+            if (process.env.NODE_ENV === 'production') {
+              process.exit(1);
+            }
+          }
         });
       }
     );
