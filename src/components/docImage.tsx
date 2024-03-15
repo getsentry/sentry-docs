@@ -1,6 +1,5 @@
 import path from 'path';
 
-import imageSize from 'image-size';
 import Image from 'next/image';
 
 import {serverContext} from 'sentry-docs/serverContext';
@@ -21,19 +20,27 @@ export default function DocImage({
     return <img src={src} {...props} />;
   }
 
-  // If the image is not an absolute URL, we assume it's a relative path
-  // and we prepend the current path to it
+  // If the image src is not an absolute URL, we assume it's a relative path
+  // and we prepend /mdx-images/ to it.
   if (src.startsWith('./')) {
     src = path.join('/mdx-images', src);
-  } else if (!src?.startsWith('/') && !src?.includes('://')) {
+  }
+  // account for the old way of doing things where the public folder structure mirrored the docs folder
+  else if (!src?.startsWith('/') && !src?.includes('://')) {
     src = `/${pagePath.join('/')}/${src}`;
   }
 
-  const {width, height} = imageSize(path.join(process.cwd(), 'public', src));
+  // parse the size from the URL hash (set by remark-image-size.js)
+  const srcURL = new URL(src, 'https://example.com');
+  const imgPath = srcURL.pathname;
+  const [width, height] = srcURL.hash // #wxh
+    .slice(1)
+    .split('x')
+    .map(s => parseInt(s, 10));
 
   return (
     <div style={{textAlign: 'center'}}>
-      <a href={src} target="_blank" rel="noreferrer">
+      <a href={imgPath} target="_blank" rel="noreferrer">
         <Image
           {...props}
           src={src}

@@ -23,6 +23,7 @@ import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
+import remarkImageSize from './remark-image-size';
 import remarkTocHeadings from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 
@@ -274,6 +275,7 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
         remarkCodeTitles,
         remarkCodeTabs,
