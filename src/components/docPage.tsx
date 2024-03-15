@@ -60,7 +60,6 @@ export function DocPage({
             />
           </div>
           <div className="toc">
-            ui-redesign
             <div className="text-white px-3">{sidebar}</div>
             <ScrollActiveLink />
             <div className="text-white p-3">{sidebar}</div>
