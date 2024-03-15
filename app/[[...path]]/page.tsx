@@ -83,7 +83,7 @@ export default async function Page({params}) {
   }
 
   // get the MDX for the current doc and render it
-  let doc: any = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   try {
     doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
