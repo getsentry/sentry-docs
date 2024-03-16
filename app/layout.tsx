@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {headers} from 'next/headers';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
+  const nonce = headers().get('x-nonce') || '';
   return (
     <html lang="en" suppressHydrationWarning>
       <body>{children}</body>
@@ -17,6 +19,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         data-domain="docs.sentry.io,rollup.sentry.io"
         data-api="https://plausible.io/api/event"
         src="https://plausible.io/js/script.tagged-events.js"
+        nonce={nonce}
       />
     </html>
   );
