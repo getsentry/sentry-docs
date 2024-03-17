@@ -1,0 +1,93 @@
+---
+title: Anthropic
+description: "Learn about using Sentry for Anthropic."
+---
+
+This integration connects Sentry with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python).
+The integration has been confirmed to work with Anthropic 0.16.0.
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `anthropic` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[anthropic]'
+```
+
+## Configure
+
+Add the `AnthropicIntegration` to the `sentry_sdk.init` call:
+
+```python
+from anthropic import Anthropic
+
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    traces_sample_rate=1.0,
+    integrations=[AnthropicIntegration()],
+)
+
+client = Anthropic()
+```
+
+## Verify
+
+Verify that the integration works by snucking in a bug (e.g. a bad API key), this will cause a new error event to be sent to Sentry:
+```python
+from anthropic import Anthropic
+import sentry_sdk
+
+sentry_sdk.init(...)  # same as above
+
+client = Anthropic(api_key="invalid-key")
+with sentry_sdk.start_transaction(op="ai-inference", name="AI inference"):
+    response = (
+        client.messages.create(
+            max_tokens=42,
+            model="some-model",
+            messages=[{"role": "system", "content": "Hello, Anthropic!"}]
+        )
+    )
+    print(response)
+```
+
+Executing this script initiates a transaction within the Performance section of [sentry.io](https://sentry.io). Furthermore, it triggers the sending of an error event (about the bad API key) to [sentry.io](https://sentry.io), which will be linked to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The supported modules are currently `chat.messages.create` with `stream=True` and `stream=False`.
+
+- All exceptions leading to an `AnthropicError` are reported.
+
+- Sentry is configured not to consider LLM and tokenizer inputs/outputs as PII. If you want to include them, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts despite `send_default_pii=True`, configure the integration with `include_prompts=False` like in the Options section.
+
+## Options
+
+The `AnthropicIntegration` takes an optional `include_prompts` parameter. If set to `False`, prompts are excluded from being sent to Sentry, despite `send_default_pii=True`.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.anthropic import AnthropicIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    integrations = [
+        AnthropicIntegration(
+            include_prompts=False, # Exclude prompts from being sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+## Supported Versions
+
+- Anthropic: 0.16.0+
+- Python: 3.7+
