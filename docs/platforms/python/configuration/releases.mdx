@@ -1,60 +1,48 @@
 ---
-title: Releases & Health
+title: Releases
 sidebar_order: 40
 description: "Learn how to configure your SDK to tell Sentry about your releases."
 ---
 
-A release is a version of your code that is deployed to an <PlatformLink to="/configuration/environments/">environment</PlatformLink>. When you give Sentry information about your releases, you can:
+A `release` is a version of your code that is deployed to an <PlatformLink to="/configuration/environments/">environment</PlatformLink>. When you give Sentry information about your releases, you can:
 
 - Determine issues and regressions introduced in a new release
 - Predict which commit caused an issue and who is likely responsible
 - Resolve issues by including the issue number in your commit message
 - Receive email notifications when your code gets deployed
 
-## Bind the Version
 
-Include a release ID (often called a "version") when you initialize the SDK.
-
-The release name cannot:
+Include the `release` when you initialize the SDK. The release name cannot:
 
 - contain newlines, tabulator characters, forward slashes(`/`) or back slashes(`\`)
 - be (in their entirety) period (`.`), double period (`..`), or space ( )
 - exceed 200 characters
 
-The value can be arbitrary, but we recommend either of these naming strategies:
+The value can be arbitrary, but we recommend [Semantic Versioning](https://semver.org/), [Calendar Versioning](https://calver.org/), or the Git commit SHA.
 
-- **Semantic Versioning**: `package@version` or `package@version+build` (for example, `my.project.name@2.3.12+1234`)
-  - `package` is the unique identifier of the project/app (`CFBundleIdentifier` on iOS, `packageName` on Android)
-  - `version` is the semver-like structure `<major>.<minor?>.<patch?>.<revision?>-<prerelease?>` (`CFBundleShortVersionString` on iOS, `versionName` on Android)
-  - `build` is the number that identifies an iteration of your app (`CFBundleVersion` on iOS, `versionCode` on Android)
-- **Commit SHA**: If you use a version control system like Git, we recommend using the identifying hash (for example, the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let Sentry CLI automatically determine this hash for supported version control systems. Learn more in our [Sentry CLI](/product/cli/releases/#creating-releases) documentation.
+Releases are global per organization; prefix them with something project-specific (such as `"myapp@1.0.0"`) for easy differentiation.
 
-<Note>
 
-Releases are global per organization; prefix them with something project-specific for easy differentiation.
-
-</Note>
-
-The behavior of a few features depends on whether a project is using semantic or time-based versioning.
+The behavior of a few features depends on whether a project is using semantic or time-based versioning:
 
 - Regression detection
-- `release:latest`
+- Data filtering by `release:latest`
 
-We automatically detect whether a project is using semantic or time-based versioning based on:
-
-- If ≤ 2 releases total: we look at most recent release.
-- If 3-9 releases (inclusive): if any of the most recent 3 releases is semver, project is semver.
-- If 10 or more releases: if any of the most recent 3 releases is semver, and 3 out of the most recent 10 releases is semver, then the project is semver.
+We automatically detect whether a project is using semantic or time-based versioning.
 
 ## Setting a Release
 
 <PlatformContent includePath="set-release" notateUnsupported />
 
-How you make the release name (or version) available to your code is up to you. For example, you could use an environment variable that is set during the build process or during initial start-up.
+How you make the `release` available to your code is up to you. For example, you could use an environment variable that is set during the build process or during initial start-up.
 
-Setting the release name tags each event with that release name. We recommend that you tell Sentry about a new release before sending events with that release name, as this will unlock a few more features. Learn more in our [Releases](/product/releases/) documentation.
+The `release` can also be set using the environment variable, `SENTRY_RELEASE`.
 
-If you don't tell Sentry about a new release, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
+If no `release` is set, the Sentry SDK will try to guess it. If a Git repository is present, it will take the Git SHA from the latest commit. If this did not work, the SDK will check some environment variables used by hosting providers like `HEROKU_SLUG_COMMIT`, `SOURCE_VERSION`, `CODEBUILD_RESOLVED_SOURCE_VERSION`, `CIRCLE_SHA1`, and `GAE_DEPLOYMENT_ID`.
+
+## Unlocking More Release Features
+
+We recommend that you tell Sentry about a new release before sending events with that release name, as this will unlock a few more features like identifying regressions and associating commits to releases. Learn more in our [Releases](/product/releases/) documentation.
 
 After configuring your SDK, you can install a repository integration or manually supply Sentry with your own commit metadata. Read our documentation about [setting up releases](/product/releases/setup/) for further information about integrations, associating commits, and telling Sentry when deploying releases.
 
@@ -62,16 +50,4 @@ After configuring your SDK, you can install a repository integration or manually
 
 Monitor the [health of releases](/product/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/product/releases/health/#crash), and [session data](/product/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the [Release Details](/product/releases/release-details/) graphs and filters.
 
-<Note>
-
-Crash reporting and app hang detection are not available for watchOS.
-
-</Note>
-
-In order to monitor release health, the SDK sends session data.
-
-### Sessions
-
-A session represents the interaction between the user and the application. Sessions contain a timestamp, a status (if the session was OK or if it crashed), and are always linked to a release. Most Sentry SDKs can manage sessions automatically.
-
-<PlatformContent includePath="configuration/auto-session-tracking" />
+In order to monitor release health, the SDK sends <PlatformLink to="/configuration/sessions/">sessions</PlatformLink>.
