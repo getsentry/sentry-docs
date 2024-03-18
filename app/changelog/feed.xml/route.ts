@@ -1,4 +1,4 @@
-import {getChangelogs} from 'app/changelog/page';
+import {getChangelogs} from 'app/changelog/utils';
 import RSS from 'rss';
 
 export async function GET() {
