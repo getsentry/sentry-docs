@@ -16,11 +16,11 @@ type ExampleProps = {
 };
 
 function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
-  let exampleJson;
+  let exampleJson: any;
   if (api.responses[selectedResponse].content?.examples) {
-    exampleJson = Object.values(api.responses[selectedResponse].content?.examples).map(
-      (e: any) => e.value
-    )[0];
+    exampleJson = Object.values(
+      api.responses[selectedResponse].content?.examples ?? {}
+    ).map(e => e.value)[0];
   } else if (api.responses[selectedResponse].content?.example) {
     exampleJson = api.responses[selectedResponse].content?.example;
   }
@@ -45,7 +45,7 @@ function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
         <code
           dangerouslySetInnerHTML={{
             __html: Prism.highlight(
-              JSON.stringify(api.responses[selectedResponse].content.schema, null, 2),
+              JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
               Prism.languages.json,
               'json'
             ),
