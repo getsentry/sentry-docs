@@ -1,7 +1,7 @@
-import {type FrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
+import {getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
-import {Platform, PlatformGuide} from './types';
+import {FrontMatter, Platform, PlatformGuide} from './types';
 
 export interface DocNode {
   children: DocNode[];
