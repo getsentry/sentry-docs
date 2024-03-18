@@ -142,7 +142,7 @@ export function ServerSidebar() {
   const nodeToSidebarNode = (n: DocNode): SidebarNode => {
     return {
       path: n.path,
-      frontmatter: n.frontmatter as {[key: string]: any},
+      frontmatter: n.frontmatter,
       children: n.children.map(nodeToSidebarNode),
     };
   };
