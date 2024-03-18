@@ -9,11 +9,13 @@ import {Fragment, useState} from 'react';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
-function Example(props) {
-  const selectedTabView: number = props.selectedTabView;
-  const api: API = props.api;
-  const selectedResponse: number = props.selectedResponse;
+type ExampleProps = {
+  api: API;
+  selectedResponse: number;
+  selectedTabView: number;
+};
 
+function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
   let exampleJson;
   if (api.responses[selectedResponse].content?.examples) {
     exampleJson = Object.values(api.responses[selectedResponse].content?.examples).map(
@@ -54,7 +56,7 @@ function Example(props) {
   );
 }
 
-const strFormat = str => {
+const strFormat = (str: string) => {
   const s = str.trim();
   if (s.endsWith('.')) {
     return s;
