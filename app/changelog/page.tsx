@@ -10,7 +10,7 @@ import Header from './header';
 
 export const dynamic = 'force-dynamic';
 
-const getChangelogs = unstable_cache(
+export const getChangelogs = unstable_cache(
   async () => {
     return await prisma.changelog.findMany({
       include: {
