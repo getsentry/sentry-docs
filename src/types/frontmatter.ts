@@ -41,6 +41,11 @@ export interface FrontMatter {
    */
   sidebar_order?: number;
 
+  /**
+   * optional sidebar title
+   */
+  sidebar_title?: string;
+
   sourcePath?: string;
   /**
    * Specific guides that this page is relevant to.
