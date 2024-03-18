@@ -1,7 +1,9 @@
 'use client';
 
+import {ReactNode} from 'react';
+
 type Props = {
-  children?: any;
+  children?: ReactNode;
   level?: 'info' | 'warning' | 'danger' | 'success' | '';
   title?: string;
 };
@@ -11,7 +13,7 @@ export function Alert({title, children, level}: Props) {
   if (level) {
     className += ` alert-${level}`;
   }
-  if (children.props && typeof children.props.children === 'string') {
+  if (children && typeof children === 'string') {
     className += ' markdown-text-only';
   }
   return (
