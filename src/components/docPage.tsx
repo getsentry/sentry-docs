@@ -1,7 +1,13 @@
 import {ReactNode} from 'react';
 
-import {extractPlatforms, getCurrentGuide, getCurrentPlatform} from 'sentry-docs/docTree';
+import {
+  extractPlatforms,
+  getCurrentGuide,
+  getCurrentPlatform,
+  nodeForPath,
+} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
@@ -32,7 +38,32 @@ export function DocPage({
   const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
   const currentGuide = rootNode && getCurrentGuide(rootNode, path);
 
-  const platforms = (rootNode && extractPlatforms(rootNode)) || [];
+  const platforms: Platform[] = !rootNode
+    ? []
+    : extractPlatforms(rootNode).map(platform => {
+        const platformForPath = nodeForPath(rootNode, [
+          'platforms',
+          platform.name,
+          ...path.slice(currentGuide ? 4 : 2),
+        ]);
+        // link to the section of this platform's docs that matches the current path when applicable
+        return platformForPath
+          ? {...platform, url: '/' + platformForPath.path + '/'}
+          : platform;
+      });
+
+  const guides: PlatformGuide[] = !(rootNode && currentPlatform)
+    ? []
+    : currentPlatform.guides.map(guide => {
+        const guideForPath = nodeForPath(rootNode, [
+          'platforms',
+          currentPlatform.name,
+          'guides',
+          guide.name,
+          ...path.slice(currentGuide ? 4 : 2),
+        ]);
+        return guideForPath ? {...guide, url: '/' + guideForPath.path + '/'} : guide;
+      });
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
@@ -54,10 +85,7 @@ export function DocPage({
           </div>
 
           <div className="px-3 pb-3">
-            <GuideDropdown
-              guides={currentPlatform?.guides || []}
-              currentGuide={currentGuide}
-            />
+            <GuideDropdown guides={guides} currentGuide={currentGuide} />
           </div>
           <div className="toc">
             <div className="text-white px-3">{sidebar}</div>
