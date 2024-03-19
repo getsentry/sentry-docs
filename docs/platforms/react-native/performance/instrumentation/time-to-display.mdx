@@ -3,16 +3,16 @@ title: Time To Display
 sidebar_order: 30
 sdk: sentry.javascript.react-native
 
-description: "Learn what is a time to display and how to measure it with Sentry React Native SDK."
+description: "Learn how to measure time to display with the Sentry React Native SDK."
 ---
 
-Sentry's React Native SDK package ships with a performance monitoring feature that allows you to measure the time it takes for your application to display a screen. This feature is called Time to Display and it measures the time it takes for your application to display a screen after the user initiates navigation. This guide will show you how to use Sentry's React Native SDK to measure Time to Display in your application.
+Sentry's React Native SDK package ships with a performance monitoring feature that allows you to measure your application's [Time to Display](/product/performance/mobile-vitals/#time-to-initial-display-and-time-to-full-display). This guide will show you how to use Sentry's React Native SDK to measure Time to Display in your application.
 
-Time to Display consists of two parts, Time To Initial Diplay (TTID) and Time To Full Display (TTFD). TTID measures the first time screen was displayed, while TTFD measures the time it takes for a requested content to apear.
+Time to Display consists of two parts, Time To Initial Display (TTID) and Time To Full Display (TTFD). TTID measures the time it takes to display the first frame, while TTFD measures the time it takes to display the full content for the user to interact with.
 
 ## Automatic Time To Initial Display for React Navigation
 
-To measure Time to Initial Display of React Navigation Screens, you need `Sentry.ReactNavigationInstrumentation` instance with `enableTimeToInitialDisplay` option enabled.
+To automatically measure Time to Initial Display of React Navigation Screens, enable the `enableTimeToInitialDisplay` option in your instance of `Sentry.ReactNavigationInstrumentation`.
 
 <Include name="react-native-react-navigation-setup.mdx" />
 
@@ -22,13 +22,13 @@ To measure Time to Initial Display of React Navigation Screens, you need `Sentry
 
 - The measured value of Time to Initial Display starts when React Navigation dispatches the navigation event and ends when the next frame after the native Screen component initialization is rendered.
 
-- If the screen is animated, the measured value of Time to Initial Display will include the time it takes for the animation to complete. Except for JavaScript driven animations on iOS.
+- If the screen is animated, the measured value of Time to Initial Display will include the time it takes for the animation to complete (except for JavaScript driven animations on iOS).
 
 - Time to Initial Display is only available for React Navigation version 5 and above.
 
 ## Time To Full Display
 
-To measure the time when a screen is fully displayed, you can use `Sentry.TimeToFullDisplay` component.
+To measure the time when a screen is fully displayed, you can use the `Sentry.TimeToFullDisplay` component.
 
 ```jsx {tabTitle: <TimeToFullDisplay />}
 import * as Sentry from "@sentry/react-native";
@@ -74,14 +74,14 @@ function MyComponent() {
 
 ## Notes
 
-- The `Sentry.TimeTo*` components behave the same as `<></>` when wrapped around other components.
+- The `Sentry.TimeToInitialDisplay` and `Sentry.TimeToFullDisplay` components behave the same as `<></>` when wrapped around other components.
 
-- Any scheduled animations executed after the `Sentry.TimeTo*` component receives `record={true}` won't be included in the measured value.
+- Any scheduled animations executed after the `Sentry.TimeToInitialDisplay` and `Sentry.TimeToFullDisplay` components are recorded won't be included in the measured Time to Display values.
 
 ## Troubleshooting
 
 - Time To Display is not available on Web and React Native New Architecture yet.
 
-- Time To Display supports Expo applications, but doesn't work Expo Go. Build the native projects to test this feature.
+- Time To Display supports Expo applications, but doesn't work for Expo Go. Build the native projects to test this feature.
 
-- Time To Display requires Sentry's native components. When upgrading from older SDK's version rebuild the native projects to ensure the native components are up to date.
+- Time To Display requires Sentry's native components. When upgrading from older SDK versions, rebuild the native projects to ensure the native components are up to date.
