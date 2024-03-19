@@ -32,6 +32,14 @@ type PathWithTrailingSlash = `${string}/`;
 
 const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
+    from: '/platforms/react-native/install/cocoapods/',
+    to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
+    from: '/platforms/react-native/install/',
+    to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',
     to: '/platforms/unity/usage/sdk-fingerprinting/',
   },
