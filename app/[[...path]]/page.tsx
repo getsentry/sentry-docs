@@ -22,7 +22,7 @@ import {capitilize} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
-  const paths = docs.map(doc => {
+  const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
   });
@@ -122,7 +122,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       title =
         pageNode.frontmatter.title +
         (guideOrPlatform ? ` | Sentry for ${capitilize(guideOrPlatform.name)}` : '');
-      description = pageNode.frontmatter.description;
+      description = pageNode.frontmatter.description ?? '';
     }
   }
 
