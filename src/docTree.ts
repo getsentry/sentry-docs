@@ -1,16 +1,16 @@
 import {getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
-import {FrontMatter, Platform, PlatformGuide} from './types';
+import {FrontMatter, Platform, PlatformConfig, PlatformGuide} from './types';
 
 export interface DocNode {
   children: DocNode[];
-  frontmatter: FrontMatter;
+  frontmatter: FrontMatter & PlatformConfig;
   missing: boolean;
   path: string;
   slug: string;
-  sourcePath: string;
   parent?: DocNode;
+  sourcePath?: string;
 }
 
 function slugWithoutIndex(slug: string): string[] {
@@ -57,6 +57,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     slug: '',
     frontmatter: {
       title: 'Home',
+      slug: 'home',
     },
     children: [],
     missing: false,
