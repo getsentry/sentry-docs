@@ -64,7 +64,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     sourcePath: 'src/components/home.tsx',
   };
 
-  const slugMap = {};
+  const slugMap: {[slug: string]: DocNode} = {};
   sortedDocs.forEach(doc => {
     const slugParts = slugWithoutIndex(doc.slug);
     const slug = slugParts.join('/');
@@ -72,7 +72,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     if (slugParts.length === 0) {
       rootNode.frontmatter = doc;
     } else if (slugParts.length === 1) {
-      const node = {
+      const node: DocNode = {
         path: slug,
         slug,
         frontmatter: doc,
@@ -85,7 +85,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
       slugMap[slug] = node;
     } else {
       const parentSlug = slugParts.slice(0, slugParts.length - 1).join('/');
-      let parent = slugMap[parentSlug];
+      let parent: DocNode | undefined = slugMap[parentSlug];
       if (!parent) {
         const grandparentSlug = slugParts.slice(0, slugParts.length - 2).join('/');
         const grandparent = slugMap[grandparentSlug];
@@ -95,7 +95,11 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
         parent = {
           path: parentSlug,
           slug: slugParts[slugParts.length - 2],
-          frontmatter: {},
+          frontmatter: {
+            slug: slugParts[slugParts.length - 2],
+            // not ideal
+            title: '',
+          },
           parent: grandparent,
           children: [],
           missing: true,
