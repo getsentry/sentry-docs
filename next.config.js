@@ -22,7 +22,7 @@ const nextConfig = {
     );
 
     return config;
-  },
+  }
 };
 
 const withMDX = createMDX({

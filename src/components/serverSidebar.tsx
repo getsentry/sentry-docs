@@ -97,6 +97,9 @@ export function ServerSidebar() {
     // eslint-disable-next-line no-inner-declarations
     function addChildren(docNodes: DocNode[]) {
       docNodes.forEach(n => {
+        if (n.frontmatter.draft) {
+          return;
+        }
         nodes.push({
           context: {
             platform: {

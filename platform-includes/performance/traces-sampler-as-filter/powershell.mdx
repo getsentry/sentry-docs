@@ -1,0 +1,18 @@
+```powershell
+Start-Sentry {
+    $_.TracesSampler = [System.Func[Sentry.TransactionSamplingContext, System.Nullable`1[System.Double]]] {
+        param([Sentry.TransactionSamplingContext]$context)
+
+    if (/* make a decision based on `samplingContext` */) {
+      # Drop this transaction, by setting its sample rate to 0%
+      return 0
+    } else if (/* ... */) {
+      # Override sample rate for other cases (replaces `options.TracesSampleRate`)
+      return 0.1
+    }
+
+    # Can return `null` to fallback to the rate configured by `options.TracesSampleRate`
+    return $null
+    }
+}
+```

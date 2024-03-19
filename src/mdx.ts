@@ -27,7 +27,7 @@ import remarkVariables from './remark-variables';
 
 const root = process.cwd();
 
-function formatSlug(slug) {
+function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 const isSupported = (
@@ -84,6 +84,14 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     });
   });
 
+  // Remove a trailing /index, since that is also removed from the path by Next.
+  frontMatter.forEach(fm => {
+    const trailingIndex = '/index';
+    if (fm.slug.endsWith(trailingIndex)) {
+      fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
+    }
+  });
+
   return frontMatter;
 }
 
@@ -103,13 +111,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
 
     const source = fs.readFileSync(file, 'utf8');
     const {data: frontmatter} = matter(source);
-    if (!frontmatter.draft) {
-      allFrontMatter.push({
-        ...frontmatter,
-        slug: formatSlug(fileName),
-        sourcePath: path.join(folder, fileName),
-      });
-    }
+    allFrontMatter.push({
+      ...frontmatter,
+      slug: formatSlug(fileName),
+      sourcePath: path.join(folder, fileName),
+    });
   });
 
   if (folder !== 'docs') {
@@ -159,13 +165,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
         if (subpath === 'index.mdx') {
           frontmatter = {...frontmatter, ...platformFrontmatter};
         }
-        if (!frontmatter.draft) {
-          allFrontMatter.push({
-            ...frontmatter,
-            slug: formatSlug(slug),
-            sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-          });
-        }
+        allFrontMatter.push({
+          ...frontmatter,
+          slug: formatSlug(slug),
+          sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+        });
       }
     });
 
@@ -197,13 +201,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
           if (subpath === 'index.mdx') {
             frontmatter = {...frontmatter, ...guideFrontmatter};
           }
-          if (!frontmatter.draft) {
-            allFrontMatter.push({
-              ...frontmatter,
-              slug: formatSlug(slug),
-              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-            });
-          }
+          allFrontMatter.push({
+            ...frontmatter,
+            slug: formatSlug(slug),
+            sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+          });
         }
       });
     });
@@ -212,7 +214,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   return allFrontMatter;
 }
 
-export async function getFileBySlug(slug) {
+export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug, 'config.yml');
   let configFrontmatter: {[key: string]: any} | undefined;
   if (fs.existsSync(configPath)) {
@@ -305,15 +307,15 @@ export async function getFileBySlug(slug) {
         [
           rehypeAutolinkHeadings,
           {
-            behavior: 'append',
+            behavior: 'wrap',
             properties: {
-              className: 'autolink-header inline-flex ml-2',
               ariaHidden: true,
               tabIndex: -1,
+              className: 'autolink-heading',
             },
             content: [
               s(
-                'svg.autolink-svg',
+                'svg.anchor.before',
                 {
                   xmlns: 'http://www.w3.org/2000/svg',
                   width: 16,
