@@ -1,0 +1,92 @@
+---
+title: React Navigation V4
+description: "Learn how to use Sentry's React Navigation Legacy instrumentation."
+sidebar_order: 51
+---
+
+Sentry's React Native SDK package ships with instrumentation for React Navigation V4 and older. This allows you to see the performance of your navigation transitions and the errors that occur during them. This page will guide you through setting up the instrumentation and configuring it to your needs.
+
+```jsx {tabTitle: Functional Components}
+// Construct a new instrumentation instance. This is needed to communicate between the integration and React
+const routingInstrumentation = new Sentry.ReactNavigationV4Instrumentation();
+
+Sentry.init({
+  ...
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      // Pass instrumentation to be used as `routingInstrumentation`
+      routingInstrumentation,
+      ...
+    }),
+  ],
+})
+
+// Functional Component Example
+const App = () => {
+  // Create a ref for the navigation container
+  const appContainer = React.useRef();
+
+  // Register the navigation container with the instrumentation
+  React.useEffect(() => {
+    routingInstrumentation.registerAppContainer(appContainer);
+  }, []);
+
+  return (
+    // Connect the ref to the navigation container
+    <AppContainer ref={appContainer} />
+  );
+};
+```
+
+```jsx {tabTitle: Class Components}
+// Construct a new instrumentation instance. This is needed to communicate between the integration and React
+const routingInstrumentation = new Sentry.ReactNavigationV4Instrumentation();
+
+Sentry.init({
+  ...
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      // Pass instrumentation to be used as `routingInstrumentation`
+      routingInstrumentation,
+      ...
+    }),
+  ],
+})
+
+class App extends React.Component {
+  // Create a ref for the navigation container
+  appContainer = React.createRef();
+
+  componentDidMount() {
+    // Register the navigation container with the instrumentation
+    routingInstrumentation.registerAppContainer(this.appContainer);
+  }
+
+  render() {
+    return (
+      // Connect the ref to the navigation container
+      <AppContainer ref={this.appContainer} />
+    )
+  }
+}
+```
+
+## Options
+
+You can configure the instrumentation by passing an options object to the constructor:
+
+```javascript
+new Sentry.ReactNavigationV4Instrumentation({
+  routeChangeTimeoutMs: 1000, // default: 1000
+});
+```
+
+### routeChangeTimeoutMs
+
+How long the instrumentation will wait for the **initial** route to mount after a change has been initiated before the transaction is discarded. Default: 1000ms
+
+## Notes
+
+- This instrumentation supports React Navigation version 4 and older. If you use React Navigation version 5 and newer, see the [instrumentation for React Navigation](/platforms/react-native/performance/instrumentation/react-navigation/).
+
+- The instrumentation creates a transaction on every route change including `goBack` navigations.

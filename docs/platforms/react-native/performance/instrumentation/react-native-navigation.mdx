@@ -1,0 +1,43 @@
+---
+title: React Native Navigation
+description: "Learn how to use Sentry's React Native Navigation instrumentation."
+sidebar_order: 61
+---
+
+Sentry's React Native SDK package ships with instrumentation for [React Native Navigation](https://github.com/wix/react-native-navigation). This allows you to see the performance of your navigation transitions and the errors that occur during them. This page will guide you through setting up the instrumentation and configuring it to your needs.
+
+## Initialization
+
+You will need to pass the `Navigation` object imported from the library to initialize our routing instrumentation. It is recommended that you initialize our SDK and the routing instrumentation as early as possible in the lifecycle of your app; this would most likely be before the point where you initialize your screens.
+
+```javascript {filename: index.js}
+import * as Sentry from "@sentry/react-native";
+import { Navigation } from 'react-native-navigation';
+
+Sentry.init({
+  ...
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      // Pass instrumentation to be used as `routingInstrumentation`
+      routingInstrumentation: new Sentry.ReactNativeNavigationInstrumentation(
+        Navigation,
+      )
+      // ...
+    }),
+  ],
+})
+```
+
+## Options
+
+You can configure the instrumentation by passing an options object to the constructor:
+
+```javascript
+new Sentry.ReactNativeNavigationInstrumentation({
+  routeChangeTimeoutMs: 1000, // default: 1000
+});
+```
+
+### routeChangeTimeoutMs
+
+How long the instrumentation will wait for the route to mount after a change has been initiated, before the transaction is discarded.
