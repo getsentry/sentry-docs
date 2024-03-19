@@ -86,6 +86,14 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     });
   });
 
+  // Remove a trailing /index, since that is also removed from the path by Next.
+  frontMatter.forEach(fm => {
+    const trailingIndex = '/index';
+    if (fm.slug.endsWith(trailingIndex)) {
+      fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
+    }
+  });
+
   return frontMatter;
 }
 

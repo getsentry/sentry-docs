@@ -1,5 +1,5 @@
 import getPackageRegistry from 'sentry-docs/build/packageRegistry';
-import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
+import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {PlatformSdkDetailClient} from './platformSdkDetailClient';
@@ -11,10 +11,12 @@ export async function PlatformSdkDetail() {
     return null;
   }
 
+  const node = nodeForPath(rootNode, path);
+  const sdk = node?.frontmatter.sdk ?? platformOrGuide.sdk;
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
   const entries = Object.entries(allSdks || {});
-  const pair: any = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
+  const pair = entries.find(([sdkName]) => sdkName === sdk);
   if (!pair) {
     return null;
   }

@@ -3124,6 +3124,16 @@ const nextConfig = {
         destination: '/product/reference/search/searchable-properties/session-replay/',
         permanent: true,
       },
+      {
+        source: '/platforms/react-native/install/cocoapods',
+        destination: '/platforms/react-native/manual-setup/manual-setup/',
+        permanent: true,
+      },
+      {
+        source: '/platforms/react-native/install/',
+        destination: '/platforms/react-native/manual-setup/manual-setup/',
+        permanent: true,
+      },
     ];
   },
 };
