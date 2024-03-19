@@ -88,7 +88,7 @@ export function CodeTabs({children}: CodeTabProps) {
 
   // The groupId is used to store the selection in localStorage.
   // It is a unique identifier based on the tab titles.
-  const groupId = 'Tabgroup:' + possibleChoices.toSorted().join('|');
+  const groupId = 'Tabgroup:' + possibleChoices.slice().sort().join('|');
 
   const [sharedSelections, setSharedSelections] = codeContext?.sharedCodeSelection ?? [];
 
