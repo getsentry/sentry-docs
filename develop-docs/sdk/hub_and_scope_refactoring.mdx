@@ -127,6 +127,8 @@ For the migration phase we can have top level static API (like `Sentry.setTag()`
 
 For most use cases writing to isolation scope should be what we want. For other use cases users should mostly be using `withScope()` already where they use the `Scope` passed into the callback instead of static API. We're deprecating `configureScope` to let users know they should reevaluate what scope they want to write to. Users can then get the scope they need and call e.g. `setTag` on that `Scope`. There might be some cases where we change behaviour but the damage should be contained to e.g. an incoming server request.
 
+We should make it very clear in the changelog that top level API only writes to isolation scope, after we change it.
+
 ---
 
 ## E) Implementation Details
@@ -170,14 +172,84 @@ For more information like the goals (and non-goals) see this GitHub Issue:
 
 https://github.com/getsentry/team-sdks/issues/4
 
-### Implementation Details
-
-TODO: Add some findings we discovered when implementing this in the first two SDKs.
-
-Also add this somewhere: https://miro.com/app/board/uXjVNnI7dsE=/
-
 ### Isolation Scope
 
 Without an isolation scope, writing to the current `Scope` can lead to unexpected results. Writes can go to a scope that's never applied the way a user would expect. While this is already a problem today, it is exaggerated by moving over to OTel, as OTel auto instrumentation can do lots of context forking, leading to deeply nested scopes. Some hooks are automatically wrapped in a new span by OTel, causing it to also have a separate `Scope`, so the outer `Scope` can't be manipulated.
 
 With isolation scope, we have a place where e.g. hooks can write to that should affect e.g. the whole request.
+
+When isolation scope is forked, the SDK should also fork current scope at the same time. Otherwise users would have to e.g. call both `withScope` and `withIsolationScope` leading to less readable code.
+
+### Implementation Details
+
+#### OTel `Context`
+
+OTel stores spans as well as other information in a `Context` and takes care of propagating this `Context` through libraries and threads. We want to rely on this propagation as it allows us to not worry about propagation, instead we just store our scopes in `Context` and trust OTel to propagate it correctly.
+
+**Can't we simply propagate our `Scopes` ourselves and ignore OTEL Context?**
+If we didn't want to rely on OTels `Context` propagation, we'd have to provide a counterpart for every OTel propagation mechanism. We would no longer be able to just rely on OTel for instrumentations but have to mirror some of what they do. This would also have to be kept up to date. Whenever OTel changes something about how they propagate `Context` we'd have to adapt as well. Keeping `Context` and `Scopes` in sync would be hard and possibly also hard to detect. Version compatibility between Sentry and OTel could also become difficult.
+
+Examples of where we had to provide our own propagation before POTel:
+
+- Reactive libraries ([current Sentry implementation](https://github.com/getsentry/sentry-java/blob/8c08ad9170b5549ddbc469a5c9ee6804aa6577a5/sentry-spring-jakarta/src/main/java/io/sentry/spring/jakarta/webflux/ReactorUtils.java) vs [OTEL](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/instrumentation/reactor/reactor-3.1/library/src/main/java/io/opentelemetry/instrumentation/reactor/v3_1/TracingSubscriber.java?rgh-link-date=2024-02-28T11%3A58%3A57Z))
+- Executor libraries where you can schedule a task to be run on another thread ([current Sentry implementation](https://github.com/getsentry/sentry-java/blob/39e3ed71814ad6ec3406a344aa341c68ed1b98d4/sentry/src/main/java/io/sentry/SentryWrapper.java))
+
+
+#### Hook
+
+In order to fork our scopes, when required by OTel, we need some sort of a hook. We're not yet completely sure, when forking is actually required. In theory it should suffice to fork scopes, whenever a new OTel span is created, or maybe even only when the span is saved. What hooks are available in OTel depends on the language, so this will likely differer from SDK to SDK.
+
+- Context Forking: Whenever a modified copy of an OTel `Context` is created using `context.with(...)`.
+- Context Storing: Whenever an OTel `Context` is stored using `context.makeCurrent()`
+- Span Creation: Whenever a new OTel span is created, regardless of it being stored in any `Context` or that `Context` being stored.
+
+For `Context` forking / storing we could filter changes to only fork scopes when the span changes in order to have fewer forked scopes.
+
+If no hook is available, we have to fall back to a more complex variant of global storage. See the middle example in [this miro board](https://miro.com/app/board/uXjVNnI7dsE=/).
+
+A `Context` fork/storage hook alone unfortunately does not allow us to do everything we need. In `SpanProcessor.onEnd` and by extension also `SpanExporter.export`, `Context.current()` returns the parent `Context` and not the `Context` that was active during span execution. This seems to be by design in OTel. This means even if we managed to add our Scopes to `Context`, we can't access it in `SpanProcessor.onEnd()`.
+
+#### Storing Scopes which Belong to a Certain Span
+
+If your language allows you to modify the OTel span and add Sentry `Scopes` to the span, that's probably the easiest way of getting scopes into `SpanProcessor.onEnd` and by extension `SpanExporter.export`. However we haven't explored this variant in detail yet.
+
+If modifying the span isn't possible, the only way to retrieve the `Scopes` in `SpanExporter.export`, we've found so far, is to use a global storage. For this global storage, we use OTel spans as weakly referenced keys and Sentry `Scopes` as values. We use weak references, so we don't cause memory leaks, e.g. in case a span is never finished.
+
+The hook for OTel span creation / `Context` forking / storing then needs to look up Sentry `Scopes` in either the span (if the language supports this variant) or the global storage.
+
+Scopes forked in `SpanProcessor.onStart` can be found via the OTel span in `Context` (or global storage if span can't be modified). However, there may already be a `Scopes` object on the `Context`. The hook has to figure out which `Scopes` object to fork. An ancestry check can be used to see if the `Scopes` from `Context` is an ancestor of the `Scopes` of the span (or from global storage). If so, we fork the `Scopes` from the span (or global storage), since it's the "youngest". If that's not the case, we fork `Scopes` from `Context` or fall back to forking root scopes, if there's no `Scopes` on the `Context`.
+
+We can't rely on `Context.current()` in `SpanProcessor.onEnd` as it will either return the parent `Context` or an unrelated `Context`. In `SpanExporter.export` we also can't use `Context.current()` because that's usually batched and may run on a different thread where `Context` isn't even propagated to.
+
+Some of the variants for storing `Scopes` can be seen on [this miro board](https://miro.com/app/board/uXjVNnI7dsE=/). The variant on the right is preferred, if the SDK can modify spans in `SpanProcessor.onStart`. The variant in the middle is a fallback, if there's no hooks available. The variant on the left is what we use, when there's hooks but we can't modify spans in `SpanProcessor.onStart`.
+
+#### Sentry API that interacts with OTel
+
+Some of the Sentry API will have to create and manage modified copies of OTel `Context`. In `withScope` for example, we create a copy of the current `Context` and set forked `Scopes` on it using `ctx = Context.current().with(forkedScopes)`. We then invoke the callback passed to `withScope` and afterwards restore previous `Context`, e.g. by calling `.close()` on a lifecycle management object handed to us by OTel.
+
+
+#### When to fork Isolation Scope
+
+Untested:
+We can use `Propagator.extract` to fork isolation scope. We try to read the `Scopes` from the `Context` that's passed into `Propagator.extract` and fork that or fall back to forking root scopes if there's no `Scopes` in the `Context`.
+
+`Propagator.extract` should be called by auto instrumentation for server and consumer use cases.
+
+[If forking in `Propagator.extract` doesn't work out, we can try and check if a span has a parent in the current process (`span.isRemote`) and create an isolation scope if not.]
+
+
+#### Tracing Without Performance
+
+Untested: 
+In `Propagator.extract` we can create `PropagationContext` from incoming headers (or similar metadata) or fall back to creating a new `PropagationContext` with random IDs. We then store this `PropagationContet` on the isolation scope. In `Propagator.inject` and when sending events to Sentry, we can use that `PropagationContext` from isolation scope and generate headers (or similar).
+
+- tbd: how does freezing DSC/baggage work? Can we simply freeze whenever the first request (or similar) goes out?
+- tbd: should Sentry.continueTrace write to isolation scope? Would it then also need to always fork an isolation scope at the same time? Should it create a new span (in case performance is enabled)?
+
+#### Where to Store Sentry Span
+
+Until we can completely remove Sentry `Span` and solely rely on OTel spans, we can store Sentry spans on the current scope. Storing it on the isolation scope would allow users to hide the current span by setting a span on the current scope, thereby breaking instrumentation. We'd have to modify isolation scope a lot to maintain which span is currently active - this would imply that the current span is leaked into e.g. async execution where there could be a separate span.
+
+#### What to Move Along When Execution moves e.g. to Another Thread
+
+When execution moves e.g. to another thread, we should bring along isolation scope and current scope. It may also make sense to have current scope forked in this case. If we're able to rely on OTels `Context` propagation, this should automatically be taken care of. See the right side of [this miro board](https://miro.com/app/board/uXjVNtPiOfI=/) for examples.
