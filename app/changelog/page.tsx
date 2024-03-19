@@ -27,9 +27,6 @@ export function generateMetadata(): Metadata {
     alternates: {
       canonical: `https://sentry.io/changelog/`,
     },
-    openGraph: {
-      images: 'https://docs.sentry.io/changelog/assets/hero.png',
-    },
     other: {
       'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },

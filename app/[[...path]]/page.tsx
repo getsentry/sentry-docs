@@ -111,7 +111,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
   const domain = 'https://docs.sentry.io';
   let title = 'Home';
   let description = '';
-  const images = [{url: `${domain}/meta.png`, width: 1200, height: 630}];
+  const images = [{url: `${domain}/og.png`, width: 1200, height: 630}];
 
   const rootNode = await getDocsRootNode();
 
