@@ -17,7 +17,7 @@ import {TableOfContents} from './tableOfContents';
 
 type Props = {
   children: ReactNode;
-  frontMatter: FrontMatter;
+  frontMatter: Omit<FrontMatter, 'slug'>;
   notoc?: boolean;
   sidebar?: ReactNode;
 };
