@@ -113,7 +113,8 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : domain;
-  let title = 'Application Performance Monitoring &amp; Error Tracking Software';
+  let title =
+    'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
   const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
