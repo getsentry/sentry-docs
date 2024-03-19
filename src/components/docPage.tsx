@@ -41,11 +41,19 @@ export function DocPage({
   const platforms: Platform[] = !rootNode
     ? []
     : extractPlatforms(rootNode).map(platform => {
-        const platformForPath = nodeForPath(rootNode, [
-          'platforms',
-          platform.name,
-          ...path.slice(currentGuide ? 4 : 2),
-        ]);
+        const platformForPath =
+          nodeForPath(rootNode, [
+            'platforms',
+            platform.name,
+            ...path.slice(currentGuide ? 4 : 2),
+          ]) ||
+          // try to go one level higher
+          nodeForPath(rootNode, [
+            'platforms',
+            platform.name,
+            ...path.slice(currentGuide ? 4 : 2, path.length - 1),
+          ]);
+
         // link to the section of this platform's docs that matches the current path when applicable
         return platformForPath
           ? {...platform, url: '/' + platformForPath.path + '/'}
