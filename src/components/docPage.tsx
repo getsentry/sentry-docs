@@ -96,7 +96,6 @@ export function DocPage({
             <GuideDropdown guides={guides} currentGuide={currentGuide} />
           </div>
           <div className="toc">
-            <div className="text-white px-3">{sidebar}</div>
             <ScrollActiveLink />
             <div className="text-white p-3">{sidebar}</div>
           </div>
