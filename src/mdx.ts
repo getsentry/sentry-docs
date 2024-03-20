@@ -22,7 +22,7 @@ import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
-import remarkTocHeadings from './remark-toc-headings';
+import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 
@@ -270,7 +270,7 @@ export async function getFileBySlug(slug: string) {
     'esbuild'
   );
 
-  const toc = [];
+  const toc: TocNode[] = [];
 
   const result = await bundleMDX<Platform>({
     source,
