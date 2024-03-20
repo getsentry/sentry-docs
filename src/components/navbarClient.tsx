@@ -25,11 +25,8 @@ export function NavbarClient({currentPlatform}: Props) {
 
   return (
     <div className="navbar navbar-expand-sm navbar-light global-header">
-      <div>
-        <Search path={pathname} platforms={searchPlatforms} />
-      </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
-        <Nav className="justify-content-end" style={{flex: 1}}>
+        <Nav className="justify-content-start" style={{flex: 1}}>
           <Nav.Item>
             <SmartLink className="nav-link" href="/api/">
               API
@@ -66,6 +63,9 @@ export function NavbarClient({currentPlatform}: Props) {
             </Nav.Link>
           </Nav.Item>
         </Nav>
+      </div>
+      <div>
+        <Search path={pathname} platforms={searchPlatforms} />
       </div>
     </div>
   );

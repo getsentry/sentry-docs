@@ -168,6 +168,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   return (
     <div ref={ref}>
       <SearchBar>
+        <DocsBotButton />
         <input
           type="search"
           placeholder="Search"
@@ -178,8 +179,6 @@ export function Search({path, autoFocus, platforms = []}: Props) {
           onFocus={() => setInputFocus(true)}
           ref={inputRef}
         />
-        <Separator>Feeling bold?</Separator>
-        <DocsBotButton />
       </SearchBar>
       {query.length >= 2 && inputFocus && (
         <div className="sgs-search-results">
@@ -283,8 +282,4 @@ const SearchBar = styled('div')`
   flex-direction: row;
   align-items: center;
   gap: 1rem;
-`;
-
-const Separator = styled('div')`
-  white-space: nowrap;
 `;
