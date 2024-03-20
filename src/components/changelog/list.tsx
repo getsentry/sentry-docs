@@ -43,7 +43,11 @@ export default function Changelogs({
       return (
         searchContent.toLowerCase().includes(searchValue.toLowerCase()) &&
         (!selectedCategories.length ||
-          selectedCategories.some(category => changelog.categories.includes(category))) &&
+          selectedCategories.some(selectedCategory =>
+            changelog.categories.some(
+              changelogCategory => changelogCategory.id === selectedCategory.id
+            )
+          )) &&
         (!selectedMonth || selectedMonth === postMonthYear)
       );
     })
