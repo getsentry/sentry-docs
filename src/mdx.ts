@@ -9,10 +9,9 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
-// Rehype packages
 import rehypeSlug from 'rehype-slug';
-// Remark packages
 import remarkGfm from 'remark-gfm';
+import remarkMdxImages from 'remark-mdx-images';
 
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
@@ -22,6 +21,7 @@ import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
+import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
@@ -254,13 +254,8 @@ export async function getFileBySlug(slug: string) {
     }
   }
 
-  const source = fs.existsSync(mdxPath)
-    ? fs.readFileSync(mdxPath, 'utf8')
-    : fs.existsSync(mdxIndexPath)
-      ? fs.readFileSync(mdxIndexPath, 'utf8')
-      : fs.existsSync(mdPath)
-        ? fs.readFileSync(mdPath, 'utf8')
-        : fs.readFileSync(mdIndexPath, 'utf8');
+  const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
@@ -272,10 +267,12 @@ export async function getFileBySlug(slug: string) {
 
   const toc: TocNode[] = [];
 
+  // cwd is how mdx-bundler knows how to resolve relative paths
+  const cwd = path.dirname(sourcePath);
+
   const result = await bundleMDX<Platform>({
     source,
-    // mdx imports can be automatically source from the components directory
-    cwd: root,
+    cwd,
     mdxOptions(options) {
       // this is the recommended way to add custom remark/rehype plugins:
       // The syntax might look weird, but it protects you in case we add/remove
@@ -285,6 +282,8 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        remarkMdxImages,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -341,7 +340,20 @@ export async function getFileBySlug(slug: string) {
       options.loader = {
         ...options.loader,
         '.js': 'jsx',
+        '.png': 'file',
+        '.gif': 'file',
+        '.jpg': 'file',
+        '.jpeg': 'file',
+        // inline svgs
+        '.svg': 'dataurl',
       };
+      // Set the `outdir` to a public location for this bundle.
+      // this where this images will be copied
+      options.outdir = path.join(root, 'public', 'mdx-images');
+
+      // Set write to true so that esbuild will output the files.
+      options.write = true;
+
       return options;
     },
   });
