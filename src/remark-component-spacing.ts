@@ -1,11 +1,14 @@
+import type {Root} from 'mdast';
+import type {Plugin} from 'unified';
+import type {Node} from 'unist';
 import {visit} from 'unist-util-visit';
 
 const affectedComponents = ['PlatformIdentifier'];
 
-export default function remarkComponentSpacing() {
+const remarkComponentSpacing: Plugin<void[], Root> = function () {
   return (tree, _file) => {
-    let componentNode = undefined;
-    let componentNodeParent = undefined;
+    let componentNode: Node | undefined = undefined;
+    let componentNodeParent: Node | undefined = undefined;
     return visit(tree, (node, _, parent) => {
       if (componentNode) {
         if (parent === componentNodeParent) {
@@ -19,11 +22,13 @@ export default function remarkComponentSpacing() {
         componentNode = componentNodeParent = undefined;
       } else if (
         node.type === 'mdxJsxTextElement' &&
-        affectedComponents.includes(node.name)
+        affectedComponents.includes(node.name ?? '')
       ) {
         componentNode = node;
         componentNodeParent = parent;
       }
     });
   };
-}
+};
+
+export default remarkComponentSpacing;
