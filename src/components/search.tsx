@@ -1,6 +1,7 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {NavItem} from 'react-bootstrap';
 import styled from '@emotion/styled';
 import {
   Hit,
@@ -14,7 +15,6 @@ import {useRouter} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
-import {DocsBotButton} from 'sentry-docs/components/docsBotButton';
 import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 
 import {Logo} from './logo';
@@ -168,7 +168,17 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   return (
     <div ref={ref}>
       <SearchBar>
-        <DocsBotButton />
+        <NavItem>
+          <Link
+            className="nav-link"
+            href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
+            target="_blank"
+            rel="noreferrer"
+            style={{textWrap: 'nowrap'}}
+          >
+            Ask A Bot
+          </Link>
+        </NavItem>
         <input
           type="search"
           placeholder="Search Docs"

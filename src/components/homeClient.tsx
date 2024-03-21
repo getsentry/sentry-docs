@@ -3,43 +3,33 @@
 import {Nav, NavItem} from 'react-bootstrap';
 import Image from 'next/image';
 import Link from 'next/link';
+import {usePathname} from 'next/navigation';
 
 import {Banner} from 'sentry-docs/components/banner';
-import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
+import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
-import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {PlatformIcon} from './platformIcon';
 import {Search} from './search';
 import {SmartLink} from './smartLink';
 
 interface Props {
-  platforms: Platform[];
   totalPlatformCount: number;
   visiblePlatforms: Array<Platform | PlatformGuide>;
 }
 
-export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Props) {
+export function HomeClient({visiblePlatforms, totalPlatformCount}: Props) {
+  const pathname = usePathname() ?? undefined;
   return (
     <div className="index-wrapper">
       <div className="hero-section">
-        <div className="index-container">
+        <div className="index-navbar-wrapper">
           <div className="index-navbar">
             <a href="/" title="Sentry error monitoring" className="index-logo">
-              <Image
-                src={SentryWordmarkSVG}
-                width={215}
-                height={64}
-                alt="Sentry's logo"
-              />
+              <Image src={SentryLogoSVG} width={54} height={50} alt="Sentry's logo" />
+              Docs
             </a>
-            <Nav className="justify-content-end" style={{flex: 1}}>
-              <NavbarPlatformDropdown platforms={platforms} currentPlatform={undefined} />
-              <NavItem>
-                <Link className="nav-link" href="/product/">
-                  Product
-                </Link>
-              </NavItem>
+            <Nav className="justify-content-start" style={{flex: 1}}>
               <NavItem>
                 <Link className="nav-link" href="/api/">
                   API
@@ -51,35 +41,22 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
                 </Link>
               </NavItem>
               <Nav.Item>
-                <Nav.Link
-                  className="text-primary"
-                  href="https://try.sentry-demo.com/demo/start/"
-                  target="_blank"
-                >
+                <Nav.Link href="https://try.sentry-demo.com/demo/start/" target="_blank">
                   Sandbox
                 </Nav.Link>
               </Nav.Item>
               <NavItem>
                 <Link className="nav-link" href="https://sentry.io/">
                   Sign In
-                  <svg
-                    width="1em"
-                    height="1em"
-                    viewBox="0 0 16 16"
-                    className="bi bi-arrow-right-short"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-                    />
-                  </svg>
                 </Link>
               </NavItem>
             </Nav>
+            <div>
+              <Search path={pathname} platforms={[]} />
+            </div>
           </div>
-
+        </div>
+        <div className="index-container">
           <h1>Welcome to Sentry Docs</h1>
           <center>
             <p>

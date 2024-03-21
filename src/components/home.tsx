@@ -67,7 +67,6 @@ export async function Home() {
     <HomeClient
       visiblePlatforms={visiblePlatforms}
       totalPlatformCount={totalPlatformCount}
-      platforms={platformList}
     />
   );
 }
