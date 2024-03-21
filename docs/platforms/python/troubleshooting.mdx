@@ -11,11 +11,12 @@ Use the information in this page to help answer these questions:
 
 - "What do I do if scope data is leaking between requests?"
 - "What do I do if my transaction has nested spans when they should be parallel?"
-
-The short answer to those: check if your `contextvars` work and you clone the
-hub where needed.
+- "What do I do if the SDK has trouble sending events to Sentry?"
 
 ## Addressing Concurrency Issues
+
+The short answer to the first two questions: make sure your `contextvars` work and
+that your hubs were cloned for each concurrency unit.
 
 Python supports several distinct solutions to concurrency, including threads and
 coroutines.
@@ -110,3 +111,27 @@ be fixed from within the SDK.
 
 This [issue has been fixed with gevent 20.5](https://github.com/gevent/gevent/issues/1407) but continues to be one for
 eventlet.
+
+## Network Issues
+
+Your SDK might have issues sending events to Sentry.
+In case of errors and tracing data, this manifests as errors and transactions
+missing in Sentry. In case of cron monitors, you might be seeing crons
+marked as timed out in Sentry when you know they've run successfully. The SDK
+itself might be logging errors about the connection getting reset or the
+server closing the connection without response.
+
+If you experience this, try turning on the <PlatformLink to="/configuration/options/#keep-alive">keep-alive</PlatformLink> configuration option, available in SDK
+versions `1.43.0` and up.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    # your usual options
+    keep_alive=True,
+)
+```
+
+If you need more fine-grained control over the behavior of the socket, check out
+<PlatformLink to="/configuration/options/#socket-options">socket-options</PlatformLink>.
