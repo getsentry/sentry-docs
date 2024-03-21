@@ -92,9 +92,11 @@ export function DocPage({
             />
           </div>
 
-          <div className="px-3 pb-3">
-            <GuideDropdown guides={guides} currentGuide={currentGuide} />
-          </div>
+          {guides.length > 0 && (
+            <div className="px-3 pb-3">
+              <GuideDropdown guides={guides} currentGuide={currentGuide} />
+            </div>
+          )}
           <div className="toc">
             <ScrollActiveLink />
             <div className="text-white p-3">{sidebar}</div>
