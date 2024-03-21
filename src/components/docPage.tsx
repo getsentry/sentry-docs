@@ -93,13 +93,13 @@ export function DocPage({
           </div>
 
           {guides.length > 0 && (
-            <div className="px-3 pb-3">
+            <div className="px-3 pb-1">
               <GuideDropdown guides={guides} currentGuide={currentGuide} />
             </div>
           )}
           <div className="toc">
             <ScrollActiveLink />
-            <div className="text-white p-3">{sidebar}</div>
+            <div className="text-white px-3">{sidebar}</div>
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu" />
