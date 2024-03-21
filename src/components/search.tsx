@@ -171,7 +171,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         <DocsBotButton />
         <input
           type="search"
-          placeholder="Search"
+          placeholder="Search Docs"
           aria-label="Search"
           className="form-control search-input"
           value={query}
