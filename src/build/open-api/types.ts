@@ -32,6 +32,8 @@ type Tag = {
     url: string;
   };
   name: string;
+  'x-display-description': boolean;
+  'x-sidebar-name': string;
 };
 
 export type DeRefedOpenAPI = {

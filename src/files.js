@@ -17,6 +17,9 @@ const walkDir = fullPath => {
 
 const pathJoinPrefix = prefix => extraPath => path.join(prefix, extraPath);
 
+//
+// @returns {string[]} - Array of file paths
+//
 const getAllFilesRecursively = folder =>
   pipe(fs.readdirSync, map(pipe(pathJoinPrefix(folder), walkDir)), flattenArray)(folder);
 

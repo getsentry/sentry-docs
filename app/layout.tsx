@@ -3,11 +3,17 @@ import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Home',
+  icons: {
+    icon: 'https://docs.sentry.io/favicon.ico',
+  },
+  openGraph: {
+    images: 'https://docs.sentry.io/changelog/assets/og.png',
+  },
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>{children}</body>
       <Script
         defer

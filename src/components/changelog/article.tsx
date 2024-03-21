@@ -46,7 +46,7 @@ export default function Article({
           <div className="prose max-w-none text-gray-700 py-2">{children}</div>
           <dl>
             <dd className="text-xs leading-6 text-gray-400">
-              <Date date={date} />
+              {date && <Date date={date} />}
             </dd>
           </dl>
         </div>

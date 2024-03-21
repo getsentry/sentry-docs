@@ -3,18 +3,56 @@ title: Images
 noindex: true
 ---
 
-All images must live in the [`public`](https://github.com/getsentry/sentry-docs/tree/master/public) folder in order to be processed correctly.
+If you want to add images to your docs, you can add them next to your `.mdx` files, under `./img` by convention.
+You don't have to follow a rigid folder structure as long as the relative path (starts with `./`) to the image is correct.
 
-The folder structure of `docs` is duplicated in `public` so that you can still use relative paths to reference images in your content files.
+If an image is used in multiple places, it's best to put it in `includes/common-imgs`, reference it from there in a local `md[x]` file
+and then `Include` it in the target `mdx` files.
 
-For instance, the file, `docs/product/alerts/alert-types.mdx`, can reference the image, `public/product/alerts/issue-alert.png`, like so :
+Images can also be added to the `public` folder (but not recommended for docs images).
+
+<Note>
+  Every image that starts with `/` (instead of `./`) is considered to be in the `public` folder.
+</Note>
+
+### Example
+
+- Local images:
+
+The file, `docs/product/alerts/alert-types.mdx`, can reference the local `./img/issue-alert.png` image like so :
 
 ```markdown {filename:docs/product/alerts/alert-types.mdx}
-![Issue alert](issue-alert.png)
+![Alert details ...](./img/alert-details-example.png)
 ```
 
-Content files that live elsewhere (such as `/docs/platform/apple/index.mdx`) can still use the same image by referencing it with the full path (`/public` does not need to be included), like so:
+- Images with multiple references:
 
-```markdown {filename:/docs/platform/apple/index.mdx}
-![Issue alert](/product/alerts/issue-alert.png)
+The image `docs/common-imgs/imgs/tags.png` is referenced in `docs/common-imgs/tags.md` as a local image:
+
+```markdown {filename:docs/common-imgs/tags.mdx}
+![Tags](./img/tags.png)
 ```
+
+which is then included in many other files:
+
+```markdown {filename:docs/platforms/ruby/common/enriching-events/tags/index.mdx}
+<Include name="common-imgs/tags" />
+```
+
+
+## Image Optimization
+
+To save space and ensure consistency, we ask that all image files be compressed and cropped to the dimensions listed below. When adding an image, please makes sure that it's high-resolution and crisp and that text is big enough to read.
+
+### Recommended Dimensions
+- If you want the image to take up the full width of the page, make it **1484 pixels** wide.
+
+- If you want the image to be indented once (for example, if it's under a list item), make it **1400 pixels** wide.
+
+### Image Compression
+
+For performance reasons, images should be compressed. We recommend using ImageOptim. Here are the steps to follow:
+
+1. Download and install https://imageoptim.com/.
+2. Drag and drop your image(s) into the tool. The files will be compressed in place.
+3. Wait until a green checkmark appears, then add the compressed image to the appropriate path in the `public` folder of the docs repo.

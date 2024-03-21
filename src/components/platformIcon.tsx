@@ -84,6 +84,7 @@ import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
+import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
 import PythonSVG from 'platformicons/svg/python.svg';
 import QtSVG from 'platformicons/svg/qt.svg';
@@ -209,6 +210,7 @@ import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
+import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
 import PythonSVGLarge from 'platformicons/svg_80x80/python.svg';
 import QtSVGLarge from 'platformicons/svg_80x80/qt.svg';
@@ -591,6 +593,10 @@ const formatToSVG = {
     sm: PostgresqlSVG,
     lg: PostgresqlSVGLarge,
   },
+  powershell: {
+    sm: PowershellSVG,
+    lg: PowershellSVGLarge,
+  },
   pyramid: {
     sm: PyramidSVG,
     lg: PyramidSVGLarge,
@@ -887,6 +893,7 @@ export const PLATFORM_TO_ICON = {
   'python-sqlalchemy': 'sqlalchemy',
   'python-tornado': 'tornado',
   'python-tryton': 'tryton',
+  powershell: 'powershell',
   qt: 'qt',
   'react-native': 'react-native',
   ruby: 'ruby',

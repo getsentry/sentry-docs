@@ -1,0 +1,26 @@
+In PowerShell you can capture any `[ErrorRecord]` object that you caught:
+
+```powershell
+try
+{
+    AFunctionThatMightFail
+}
+catch
+{
+    $_ | Out-Sentry
+}
+```
+
+Or you can install a `trap` in a block to log errors that occur within that block. 
+Be sure to understand how `trap` works especially in regards to scope and how the execution continues/breaks when `trap` is used.
+
+```powershell
+AFunctionThatMightFail
+
+# The trap will get called even if it is declared after the code that throws.
+# It's because traps are processed by PowerShell before the script is executed.
+trap 
+{
+    $_ | Out-Sentry
+}
+```

@@ -8,28 +8,7 @@ A fingerprint is a way to uniquely identify an event, and all events have one. E
 
 By default, Sentry will run one of our built-in grouping algorithms to generate an event fingerprint based on information available within the event. The available information and the grouping algorithms vary by event type. Sentry fingerprints error events based on information like `stacktrace`, `exception`, and `message`. Transaction events are fingerprinted by their `spans`.
 
-If the way that Sentry is grouping issues for your organization is already ideal, you don't need to make any changes. However, you may find that Sentry is either creating too many similar groups, or is grouping disparate events into groups that should be separate. If this is the case, for **error issues**, you can extend and change the default grouping behavior. Error grouping can be extended and changed completely according to your needs. Transaction grouping currently cannot be customized.
-
-You can customize error grouping using a combination of the following options, listed from least to most complex:
-
-1. In your project, by [Merging Issues](/product/data-management-settings/event-grouping/merging-issues/)
-   > Merges together similar issues that have already been created. No settings or configuration changes are required for this.
-1. In your project, using [Fingerprint Rules](./fingerprint-rules/)
-   > Sets a new fingerprint for incoming events based on matchers. This doesn't affect already existing issues.
-1. In your project, using [Stack Trace Rules](./stack-trace-rules/)
-   > Sets rules for how incoming events should be treated based on matchers. This doesn't affect already existing issues.
-1. In your SDK, using [SDK Fingerprinting](/platform-redirect/?next=/usage/sdk-fingerprinting/)
-   > Sets a new fingerprint for incoming events based on matchers in the SDK. This doesn't affect already existing issues. Note that is not supported in WebAssembly.
-
-<Note>
-
-Stack trace rules can work as a combination of both SDK and project settings. As a result, we maintain the documentation in one location.
-
-</Note>
-
-You can see a fingerprint by opening an issue, clicking the JSON link, and finding the _fingerprint_ property in that file. If the default grouping was used, you'll see "default" written there. If a different grouping was used, you'll see the actual fingerprint value itself.
-
-## Error Grouping Algorithms
+## Default Error Grouping Algorithms
 
 Each time default error grouping behavior is modified, Sentry releases it as a new version. As a result, modifications to the default behavior do not affect the grouping of existing issues.
 
@@ -37,7 +16,19 @@ When you create a Sentry project, the most recent version of the error grouping 
 
 To upgrade an existing project to a new error grouping algorithm version, navigate to **Settings > Projects > [project] > Issue Grouping > Upgrade Grouping**. After upgrading to a new error grouping algorithm, you will very likely see new groups being created.
 
-All versions consider the `stack trace` first, the `exception` next, and then finally the `message`.
+All versions consider the `fingerprint` first, the `stack trace` next, then the `exception`, and then finally the `message`.
+
+To see how an isssue was grouped, go to its **Issue Details** page and scroll down to "Event Grouping Information". There, you'll see if it was grouped by a fingerprint, stack trace, exception, or message.
+
+### Grouping by Built-In Fingerprinting Rules
+
+Some kinds of errors, like [chunk load errors](https://sentry.io/answers/chunk-load-errors-javascript/) and [hydration errors](https://sentry.io/answers/hydration-error-nextjs/), often have various different error types, values, or transaction messsages that may result in separate but similar issues. To better handle these cases, Sentry maintains a set of built-in fingerprinting rules to better group such errors.
+
+Issues grouped by Sentry's built-in fingerprinting rules will list "Sentry Defined Fingerprint" in the "Event Grouping Information" at the bottom of the **Issue Details** page.
+
+![event grouping information for a sentry defined fingerprint](./sentry-defined-fingerprint.png)
+
+Built-in fingerprinting rules work the same as custom fingerprinting rules and are applied by default. If an user defined custom fingerprinting rule matches an event, the custom rule will always take precedence over the built-in ones.
 
 ### Grouping by Stack Trace
 
@@ -63,6 +54,44 @@ If the stack trace is not available, but exception information is, then the grou
 ### Fallback Grouping
 
 Grouping falls back to messages if the stack trace, `type`, and `value` are not available. When this happens, the grouping algorithm will try to use the message without any parameters. If that is not available, the grouping algorithm will use the full message attribute.
+
+## Ways to Customize Error Grouping
+
+If the way that Sentry is grouping issues for your organization is already ideal, you don't need to make any changes. However, you may find that Sentry is either creating too many similar groups, or is grouping disparate events into groups that should be separate. If this is the case, for **error issues**, you can extend and change the default grouping behavior. Error grouping can be extended and changed completely according to your needs. Transaction grouping currently cannot be customized.
+
+You can customize error grouping using a combination of the following options, listed from least to most complex:
+
+1. In your project, by [Merging Issues](/product/data-management-settings/event-grouping/merging-issues/)
+   > Merges together similar issues that have already been created. No settings or configuration changes are required for this.
+1. In your project, using [Fingerprint Rules](./fingerprint-rules/)
+   > Sets a new fingerprint for incoming events based on matchers. This doesn't affect already existing issues.
+1. In your project, using [Stack Trace Rules](./stack-trace-rules/)
+   > Sets rules for how incoming events should be treated based on matchers. This doesn't affect already existing issues.
+1. In your SDK, using [SDK Fingerprinting](/platform-redirect/?next=/usage/sdk-fingerprinting/)
+   > Sets a new fingerprint for incoming events based on matchers in the SDK. This doesn't affect already existing issues. Note that is not supported in WebAssembly.
+
+<Note>
+
+Stack trace rules can work as a combination of both SDK and project settings. As a result, we maintain the documentation in one location.
+
+</Note>
+
+## How to View the Fingerprint
+
+You can see a fingerprint by opening an issue, clicking "{} View JSON", and finding the _fingerprint_ property in that file. If the default grouping was used, you'll see "default" written there. If a different grouping was used, you'll see the actual fingerprint value itself.
+
+<div style={{"height":"0px","paddingBottom":"calc(56.88524590163935% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/8vE2p1OF0WRxjg7XN8HH?embed"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="View Issue Fingerprint"
+  ></iframe>
+</div>
 
 ## Transaction Grouping Algorithms
 

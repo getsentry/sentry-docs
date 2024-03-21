@@ -1,0 +1,86 @@
+---
+title: Migrate from 1.x to 2.x
+sidebar_order: 8998
+description: "Learn about migrating from sentry-python 1.x to 2.x"
+---
+
+<Note>
+
+There is no stable 2.0 release of the Sentry Python SDK yet. A release candidate (`2.0.0rc3`) is available for testing. If you decide to give it a try, please [let us know](https://github.com/getsentry/sentry-python/issues) if you run into any issues!
+
+</Note>
+
+This guide describes the common patterns involved in migrating to version 2.x of the `sentry-python` SDK.
+
+While the top level API stays the same for the most part, there's a number of deprecations and breaking changes in 2.0. This guide captures the top changes that will affect most users and the corresponding updates they'll need to make in order to migrate. For the full list of changes, check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/sentry-sdk-2.0/MIGRATION_GUIDE.md).
+
+## Python Version Support
+
+Sentry Python SDK 2.0 now only supports Python 3.6 and higher. If you're on Python 2.7 or 3.5 and lower, you'll need to stay on 1.x.
+
+## Configuration Options
+
+The `profiles_sample_rate` and `profiler_mode` options are not experimental anymore and can be used directly. Setting them via `_experiments` is deprecated and will be removed in the future.
+
+The deprecated `with_locals` and `request_bodies` options have been removed in favor of their new counterparts: `include_local_variables` and `max_request_body_size`, respectively.
+
+**These are all potential changes you need to apply to your init**:
+
+<SignInNote />
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Replace with_locals
+-   with_locals=False,
++   include_local_variables=False,
+
+    # Replace request_bodies
+-   request_bodies="always",
++   max_request_body_size="always",
+
+    # Replace _experiments["profiles_sample_rate"]
+    # Replace _experiments["profiler_mode"]
+-   _experiments={
+-       "profiles_sample_rate": 1.0,
+-       "profiler_mode": "thread",
+-   },
++   profiles_sample_rate=1.0,
++   profiler_mode="thread",
+)
+```
+
+## API
+
+The API function `last_event_id()` was removed. The last event ID is still returned by `capture_event()`, `capture_exception()` and `capture_message()`.
+
+## Custom Instrumentation
+
+You can no longer mutate a manually-created transaction in a `configure_scope` block. Instead, you need to get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
+
+<SignInNote />
+
+```python diff
+transaction = sentry_sdk.transaction(...)
+
+# later in the code execution:
+
+-with sentry_sdk.configure_scope() as scope:
+-    scope.set_transaction_name("new-transaction-name")
+
++scope = sentry_sdk.Scope.get_current_scope()
++scope.set_transaction_name("new-transaction-name")
+
+```
+
+## Self-Hosted
+
+Sentry Python 2.0 is now only compatible with self-hosted Sentry `v20.6.0` and above, since the SDK now sends all events to the `/envelope` API endpoint. Self-hosted Sentry users must upgrade their self-hosted instance to a compatible version. No action is needed for SaaS users and self-hosted users already running a compatible Sentry version.
+
+## Transport
+
+If you're using a custom transport, `sentry_sdk.transport.Transport.capture_event` has been deprecated. Use `sentry_sdk.transport.Transport.capture_envelope` instead. Additionally, custom transports should now all be implemented as `sentry_sdk.transport.Transport` subclasses, since transport functions are deprecated.
+

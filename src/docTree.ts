@@ -1,5 +1,3 @@
-import {cache} from 'react';
-
 import {type FrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
@@ -23,9 +21,19 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-export const getDocsRootNode = cache(async (): Promise<DocNode | undefined> => {
+let getDocsRootNodeCache: Promise<DocNode | undefined> | undefined;
+
+export function getDocsRootNode(): Promise<DocNode | undefined> {
+  if (getDocsRootNodeCache) {
+    return getDocsRootNodeCache;
+  }
+  getDocsRootNodeCache = getDocsRootNodeUncached();
+  return getDocsRootNodeCache;
+}
+
+async function getDocsRootNodeUncached(): Promise<DocNode | undefined> {
   return frontmatterToTree(await getDocsFrontMatter());
-});
+}
 
 function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
   if (frontmatter.length === 0) {

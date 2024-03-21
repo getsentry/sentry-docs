@@ -46,7 +46,7 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
                 </Link>
               </NavItem>
               <NavItem>
-                <Link className="nav-link" href="https://changelog.getsentry.com/">
+                <Link className="nav-link" href="https://sentry.io/changelog">
                   Changelog
                 </Link>
               </NavItem>
