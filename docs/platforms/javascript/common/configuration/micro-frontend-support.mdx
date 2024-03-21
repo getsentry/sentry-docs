@@ -14,7 +14,11 @@ keywords:
 If your frontend includes JavaScript bundles from multiple sources with
 different release cycles, you may want to identify these or route events to specific projects. This is especially useful if you've set up [module federation](https://module-federation.github.io/) or a similar frontend architecture.
 
-Below we offer two approaches. Please note that `Sentry.init()` must be called only once, doing otherwise will result in undefined behavior.
+Below we offer two approaches. 
+
+<Note>
+In all cases `Sentry.init()` must never be called more than once, doing so will result in undefined behavior.
+</Note>
 
 ## Automatically Route Errors to Different Projects Depending on Module
 
@@ -36,7 +40,8 @@ Requires SDK version `7.59.0` or higher.
 
 First, to identify the source of an error, you must inject metadata that helps identify
 which bundles were responsible for the error. You can do this with any of the
-Sentry bundler plugins by enabling the `_experiments.moduleMetadata` option.
+Sentry bundler plugins by enabling the `_experiments.moduleMetadata` option. Example
+below is for Webpack, but this is also supported in Vite, Rollup, and esbuild.
 
 ```javascript
 // webpack.config.js
@@ -66,26 +71,42 @@ for the multiplexed transport to reference for routing.
 In practice, here is what your Sentry initialization should look like:
 
 ```javascript
-import { init, makeFetchTransport, moduleMetadataIntegration, makeSimpleMultiplexedTransport, MULTIPLEXED_TRANSPORT_EXTRA_KEY } from "@sentry/browser";
+import { init, makeFetchTransport, moduleMetadataIntegration, makeMultiplexedTransport } from "@sentry/browser";
+
+const EXTRA_KEY = "ROUTE_TO";
+
+const transport = makeMultiplexedTransport(makeFetchTransport, (args) => {
+  const event = args.getEvent();
+  if (
+    event &&
+    event.extra &&
+    EXTRA_KEY in event.extra &&
+    Array.isArray(event.extra[EXTRA_KEY])
+  ) {
+    return event.extra[EXTRA_KEY];
+  }
+  return [];
+});
 
 init({
   dsn: "__DEFAULT_DSN__",
   integrations: [moduleMetadataIntegration()],
-  makeMultiplexedTransport(makeFetchTransport),
+  transport,
   beforeSend: (event) => {
     if (event?.exception?.values?.[0].stacktrace.frames) {
       const frames = event.exception.values[0].stacktrace.frames;
-
       // Find the last frame with module metadata containing a DSN
-      const route_to = frames
+      const routeTo = frames
         .filter((frame) => frame.module_metadata && frame.module_metadata.dsn)
         .map((v) => v.module_metadata)
         .slice(-1); // using top frame only - you may want to customize this according to your needs
 
-      event.extra = {
-        ...event.extra,
-        [MULTIPLEXED_TRANSPORT_EXTRA_KEY]: route_to,
-      };
+      if (routeTo.length) {
+        event.extra = {
+          ...event.extra,
+          [EXTRA_KEY]: routeTo,
+        };
+      }
     }
 
     return event;
