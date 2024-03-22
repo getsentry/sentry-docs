@@ -2,6 +2,7 @@ import {ReactNode} from 'react';
 
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+import {FrontMatter} from 'sentry-docs/types';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
@@ -15,8 +16,8 @@ import {ServerSidebar} from './serverSidebar';
 import {TableOfContents} from './tableOfContents';
 
 type Props = {
-  children: any;
-  frontMatter: any;
+  children: ReactNode;
+  frontMatter: Omit<FrontMatter, 'slug'>;
   notoc?: boolean;
   sidebar?: ReactNode;
 };

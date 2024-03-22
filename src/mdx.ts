@@ -9,9 +9,7 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
-// Rehype packages
 import rehypeSlug from 'rehype-slug';
-// Remark packages
 import remarkGfm from 'remark-gfm';
 import remarkMdxImages from 'remark-mdx-images';
 
@@ -24,8 +22,9 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkImageSize from './remark-image-size';
-import remarkTocHeadings from './remark-toc-headings';
+import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
+import {FrontMatter, Platform, PlatformConfig} from './types';
 
 const root = process.cwd();
 
@@ -33,7 +32,7 @@ function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 const isSupported = (
-  frontmatter: any,
+  frontmatter: FrontMatter,
   platformName: string,
   guideName?: string
 ): boolean => {
@@ -55,8 +54,6 @@ const isSupported = (
   }
   return true;
 };
-
-export type FrontMatter = {[key: string]: any};
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
@@ -97,7 +94,7 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   return frontMatter;
 }
 
-export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
+export function getAllFilesFrontMatter(folder: string = 'docs') {
   const docsPath = path.join(root, folder);
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
@@ -114,7 +111,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     const source = fs.readFileSync(file, 'utf8');
     const {data: frontmatter} = matter(source);
     allFrontMatter.push({
-      ...frontmatter,
+      ...(frontmatter as FrontMatter),
       slug: formatSlug(fileName),
       sourcePath: path.join(folder, fileName),
     });
@@ -131,11 +128,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     .readdirSync(platformsPath)
     .filter(p => !fs.statSync(path.join(platformsPath, p)).isFile());
   platformNames.forEach(platformName => {
-    let platformFrontmatter: FrontMatter = {};
+    let platformFrontmatter: PlatformConfig = {};
     const configPath = path.join(platformsPath, platformName, 'config.yml');
     if (fs.existsSync(configPath)) {
-      // @ts-ignore
-      platformFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+      platformFrontmatter = yaml.load(
+        fs.readFileSync(configPath, 'utf8')
+      ) as PlatformConfig;
     }
 
     const commonPath = path.join(platformsPath, platformName, 'common');
@@ -143,13 +141,13 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       return;
     }
 
-    const commonFileNames = getAllFilesRecursively(commonPath).filter(
+    const commonFileNames: string[] = getAllFilesRecursively(commonPath).filter(
       p => path.extname(p) === '.mdx'
     );
     const commonFiles = commonFileNames.map(commonFileName => {
       const source = fs.readFileSync(commonFileName, 'utf8');
       const {data: frontmatter} = matter(source);
-      return {commonFileName, frontmatter};
+      return {commonFileName, frontmatter: frontmatter as FrontMatter};
     });
 
     commonFiles.forEach(f => {
@@ -184,11 +182,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       .readdirSync(guidesPath)
       .filter(g => !fs.statSync(path.join(guidesPath, g)).isFile());
     guideNames.forEach(guideName => {
-      let guideFrontmatter: FrontMatter = {};
+      let guideFrontmatter: FrontMatter | null = null;
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
       if (fs.existsSync(guideConfigPath)) {
-        // @ts-ignore
-        guideFrontmatter = yaml.load(fs.readFileSync(guideConfigPath, 'utf8'));
+        guideFrontmatter = yaml.load(
+          fs.readFileSync(guideConfigPath, 'utf8')
+        ) as FrontMatter;
       }
 
       commonFiles.forEach(f => {
@@ -218,10 +217,10 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
 
 export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug, 'config.yml');
-  let configFrontmatter: {[key: string]: any} | undefined;
+
+  let configFrontmatter: PlatformConfig | undefined;
   if (fs.existsSync(configPath)) {
-    // @ts-ignore
-    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8')) as PlatformConfig;
   }
 
   let mdxPath = path.join(root, `${slug}.mdx`);
@@ -266,12 +265,12 @@ export async function getFileBySlug(slug: string) {
     'esbuild'
   );
 
-  const toc = [];
+  const toc: TocNode[] = [];
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
 
-  const result = await bundleMDX({
+  const result = await bundleMDX<Platform>({
     source,
     cwd,
     mdxOptions(options) {
