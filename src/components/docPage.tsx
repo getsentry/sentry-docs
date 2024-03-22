@@ -1,15 +1,22 @@
 import {ReactNode} from 'react';
 
-import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
+import {
+  extractPlatforms,
+  getCurrentGuide,
+  getCurrentPlatform,
+  nodeForPath,
+} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
 import {ScrollActiveLink} from './focus-active-link';
 import {GitHubCTA} from './githubCta';
-import {GuideGrid} from './guideGrid';
+import {GuideDropdown} from './guideDropdown';
 import {Header} from './header';
 import {Navbar} from './navbar';
+import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {PlatformSdkDetail} from './platformSdkDetail';
 import {ServerSidebar} from './serverSidebar';
 import {TableOfContents} from './tableOfContents';
@@ -28,8 +35,45 @@ export function DocPage({
   sidebar = <ServerSidebar />,
 }: Props) {
   const {rootNode, path} = serverContext();
-  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
-  const hasToc = (!notoc && !frontMatter.notoc) || !!platformOrGuide;
+  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
+  const currentGuide = rootNode && getCurrentGuide(rootNode, path);
+
+  const platforms: Platform[] = !rootNode
+    ? []
+    : extractPlatforms(rootNode).map(platform => {
+        const platformForPath =
+          nodeForPath(rootNode, [
+            'platforms',
+            platform.name,
+            ...path.slice(currentGuide ? 4 : 2),
+          ]) ||
+          // try to go one level higher
+          nodeForPath(rootNode, [
+            'platforms',
+            platform.name,
+            ...path.slice(currentGuide ? 4 : 2, path.length - 1),
+          ]);
+
+        // link to the section of this platform's docs that matches the current path when applicable
+        return platformForPath
+          ? {...platform, url: '/' + platformForPath.path + '/'}
+          : platform;
+      });
+
+  const guides: PlatformGuide[] = !(rootNode && currentPlatform)
+    ? []
+    : currentPlatform.guides.map(guide => {
+        const guideForPath = nodeForPath(rootNode, [
+          'platforms',
+          currentPlatform.name,
+          'guides',
+          guide.name,
+          ...path.slice(currentGuide ? 4 : 2),
+        ]);
+        return guideForPath ? {...guide, url: '/' + guideForPath.path + '/'} : guide;
+      });
+
+  const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
 
   return (
@@ -41,9 +85,21 @@ export function DocPage({
           className="d-md-flex flex-column align-items-stretch collapse navbar-collapse"
           id="sidebar"
         >
+          <div className="px-3 pt-2 pb-1">
+            <NavbarPlatformDropdown
+              platforms={platforms}
+              currentPlatform={currentPlatform}
+            />
+          </div>
+
+          {guides.length > 0 && (
+            <div className="px-3 pb-1">
+              <GuideDropdown guides={guides} currentGuide={currentGuide} />
+            </div>
+          )}
           <div className="toc">
             <ScrollActiveLink />
-            <div className="text-white p-3">{sidebar}</div>
+            <div className="text-white px-3">{sidebar}</div>
           </div>
         </div>
         <div className="d-sm-none d-block" id="navbar-menu" />
@@ -70,7 +126,7 @@ export function DocPage({
                 <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
                   <div className="page-nav">
                     <PlatformSdkDetail />
-                    <TableOfContents guideGrid={<GuideGrid className="section-nav" />} />
+                    <TableOfContents />
                   </div>
                 </div>
               )}

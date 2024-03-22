@@ -1,6 +1,8 @@
+import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {DynamicNav, toTree} from './dynamicNav';
+import {getNavNodes} from './serverSidebar';
 import {SidebarLink} from './sidebarLink';
 
 export type NavNode = {
@@ -14,15 +16,26 @@ export type NavNode = {
 };
 
 type ChildProps = {
-  data: {
-    allSitePage: {
-      nodes: NavNode[];
-    };
-  };
+  rootNode: DocNode;
 };
 
-export function ProductSidebar({data}: ChildProps) {
-  const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
+const docNodeToNavNode = (node: DocNode): NavNode => ({
+  context: {
+    draft: node.frontmatter.draft,
+    title: node.frontmatter.title,
+    sidebar_order: node.frontmatter.sidebar_order,
+    sidebar_title: node.frontmatter.sidebar_title,
+  },
+  path: '/' + node.path + '/',
+});
+
+export function ProductSidebar({rootNode}: ChildProps) {
+  const productNode = nodeForPath(rootNode, 'product');
+  if (!productNode) {
+    return null;
+  }
+  const nodes: NavNode[] = getNavNodes([productNode], docNodeToNavNode);
+  const tree = toTree(nodes.filter(n => !!n.context));
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (

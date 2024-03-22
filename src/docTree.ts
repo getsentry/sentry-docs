@@ -180,6 +180,17 @@ export function getCurrentPlatform(
   return getPlatform(rootNode, path[1]);
 }
 
+export function getCurrentGuide(
+  rootNode: DocNode,
+  path: string[]
+): PlatformGuide | undefined {
+  if (path.length >= 4 && path[2] === 'guides') {
+    return getGuide(rootNode, path[1], path[3]);
+  }
+
+  return undefined;
+}
+
 export function getCurrentPlatformOrGuide(
   rootNode: DocNode,
   path: string[]

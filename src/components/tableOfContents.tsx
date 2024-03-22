@@ -1,6 +1,6 @@
 'use client';
 
-import {ReactElement, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 
 interface TocItem {
   depth: number;
@@ -8,10 +8,6 @@ interface TocItem {
   value: string;
   children?: TocItem[];
 }
-
-type Props = {
-  guideGrid: ReactElement;
-};
 
 function recursiveRender(items: TocItem[]) {
   return items.map(i => {
@@ -65,7 +61,7 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
 // https://github.com/vercel/next.js/discussions/57631
 //
 // For now, calculate the table of contents on the client.
-export function TableOfContents({guideGrid}: Props) {
+export function TableOfContents() {
   const [headings, setHeadings] = useState<TocItem[]>([]);
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -95,7 +91,6 @@ export function TableOfContents({guideGrid}: Props) {
         </div>
       )}
       <ul className="section-nav">{recursiveRender(buildTocTree(headings))}</ul>
-      {guideGrid}
     </div>
   );
 }
