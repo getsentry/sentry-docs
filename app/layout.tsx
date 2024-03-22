@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   openGraph: {
     images: 'https://docs.sentry.io/changelog/assets/og.png',
   },
-  zd-site-verification {
-    content: 'ocu6mswx6pke3c6qvozr2e',  
+  other: {
+    'zd-site-verification': 'ocu6mswx6pke3c6qvozr2e',
   },
 };
 
