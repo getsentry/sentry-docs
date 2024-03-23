@@ -36,15 +36,12 @@ export async function Home() {
 
   const platformList = extractPlatforms(rootNode);
 
-  let totalPlatformCount = 0;
   const visiblePlatforms: Array<Platform | PlatformGuide> = [];
   platformList.forEach(platform => {
-    totalPlatformCount += 1;
     if (HIGHLIGHTED_PLATFORMS.indexOf(platform.key) !== -1) {
       visiblePlatforms.push(platform);
     }
     platform.guides?.forEach(guide => {
-      totalPlatformCount += 1;
       if (HIGHLIGHTED_PLATFORMS.indexOf(guide.key) !== -1) {
         visiblePlatforms.push(guide);
       }
@@ -63,10 +60,5 @@ export async function Home() {
       .localeCompare((b.title ?? b.name).replace(leadingNonAlphaRegex, ''))
   );
 
-  return (
-    <HomeClient
-      visiblePlatforms={visiblePlatforms}
-      totalPlatformCount={totalPlatformCount}
-    />
-  );
+  return <HomeClient visiblePlatforms={visiblePlatforms} />;
 }
