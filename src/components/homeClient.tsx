@@ -24,8 +24,8 @@ interface Props {
 export function HomeClient({visiblePlatforms}: Props) {
   const pathname = usePathname() ?? undefined;
   return (
-    <div className="index-wrapper tw-app">
-      <div className="index-navbar-wrapper">
+    <div className="tw-app">
+      <div className="index-navbar-wrapper md:px-4 border-b">
         <div className="index-navbar">
           <a href="/" title="Sentry error monitoring" className="index-logo">
             <Image src={SentryLogoSVG} width={54} height={50} alt="Sentry's logo" />
