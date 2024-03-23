@@ -115,7 +115,7 @@ export function DocPage({
             <Navbar />
           </div>
 
-          <section className="pt-3 px-3 content-max prose">
+          <section className="pt-3 px-3 content-max prose2">
             <div className="pb-3">
               <Breadcrumbs />
             </div>
