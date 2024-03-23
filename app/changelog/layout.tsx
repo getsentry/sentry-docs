@@ -1,4 +1,3 @@
-import './globals.css';
 import 'prism-sentry/index.css';
 
 import {ReactNode} from 'react';
