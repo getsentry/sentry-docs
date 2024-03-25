@@ -1,6 +1,5 @@
 'use client';
 
-import {Nav, NavItem} from 'react-bootstrap';
 import Image from 'next/image';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -13,6 +12,7 @@ import SupportImage from 'sentry-docs/imgs/support.png';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
+import {NavLink} from './navlink';
 import {PlatformIcon} from './platformIcon';
 import {Search} from './search';
 import {SmartLink} from './smartLink';
@@ -25,39 +25,27 @@ export function HomeClient({visiblePlatforms}: Props) {
   const pathname = usePathname() ?? undefined;
   return (
     <div className="tw-app">
-      <div className="index-navbar-wrapper md:px-4 border-b">
-        <div className="index-navbar">
-          <a href="/" title="Sentry error monitoring" className="index-logo">
-            <Image src={SentryLogoSVG} width={54} height={50} alt="Sentry's logo" />
+      <header className="bg-white py-2 w-full h-16 z-50">
+        <nav className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex items-center text-primary">
+          <a
+            href="/"
+            title="Sentry error monitoring"
+            className="flex flex-shrink-0 items-center text-2xl font-bold text-darkPurple hover:no-underline hover:text-darkPurple"
+          >
+            <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
             Docs
           </a>
-          <Nav className="justify-content-start" style={{flex: 1}}>
-            <NavItem>
-              <Link className="nav-link" href="/api/">
-                API
-              </Link>
-            </NavItem>
-            <NavItem>
-              <Link className="nav-link" href="https://sentry.io/changelog">
-                Changelog
-              </Link>
-            </NavItem>
-            <Nav.Item>
-              <Nav.Link href="https://try.sentry-demo.com/demo/start/" target="_blank">
-                Sandbox
-              </Nav.Link>
-            </Nav.Item>
-            <NavItem>
-              <Link className="nav-link" href="https://sentry.io/">
-                Sign In
-              </Link>
-            </NavItem>
-          </Nav>
-          <div>
+          <div className="flex md:block w-full ml-2">
+            <NavLink href="/product/">API</NavLink>
+            <NavLink href="/changelog">Changelog</NavLink>
+            <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
+            <NavLink href="https://sentry.io/">Sign In</NavLink>
+          </div>
+          <div className="flex justify-end w-full">
             <Search path={pathname} platforms={[]} />
           </div>
-        </div>
-      </div>
+        </nav>
+      </header>
       <div className="max-w-screen-lg px-2 mx-auto">
         <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between">
           <div className="flex flex-col justify-center items-start">

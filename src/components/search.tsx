@@ -18,6 +18,7 @@ import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 
 import {Logo} from './logo';
+import {NavLink} from './navlink';
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {
@@ -169,15 +170,14 @@ export function Search({path, autoFocus, platforms = []}: Props) {
     <div ref={ref}>
       <SearchBar>
         <NavItem>
-          <Link
-            className="nav-link"
+          <NavLink
             href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
             target="_blank"
             rel="noreferrer"
             style={{textWrap: 'nowrap'}}
           >
             Ask A Bot
-          </Link>
+          </NavLink>
         </NavItem>
         <input
           type="search"
