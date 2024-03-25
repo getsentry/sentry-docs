@@ -46,6 +46,8 @@ module.exports = {
         primary: '#362d59',
         pruple: '#8d5494',
         darkPurple: '#1F1633',
+        'accent-purple': '#6A5FC1',
+        'accent-md-violet': '#584774',
         red: '#e1567c',
         gold: '#F1B71C',
       },
