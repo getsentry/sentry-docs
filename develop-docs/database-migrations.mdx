@@ -376,3 +376,69 @@ Renaming columns is dangerous and will result in downtime. The reason this occur
   - Stop writing to the old column and remove references from the code.
   - Drop the old column from the database.
   - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
+
+## Migration Deployment
+
+<Alert title="Employees Only" level="warning">
+  The following section covers migration deployment in Sentry's
+  saas products.
+</Alert>
+
+We support two kinds of migrations in our saas deployments:
+
+- Deploy time migrations
+- Post-deploy migrations
+
+### Deployment Migrations
+
+Deployment migrations are run in each region and tenant before code is deployed. Deployment migrations are expected to finish quickly and all statements must complete within 5 seconds. If a migration could take longer because a large number of rows is being operated on, it should be deployed as a post-deploy migration instead. Deployment migrations are ideal for:
+
+* Adding new tables and columns.
+* Adding indexes to most tables.
+* Removing columns and tables - as long as you follow the processes outlined
+  above.
+
+### Post-deploy migrations (is_dangerous) 
+
+Post-deploy migrations are run manually by engineers **after** a migration has been deployed **to all** regions. During deployment, post-deploy migrations are marked as complete (faked) with django's fake migration behavior. When a post-deploy migration is run, it is run against all regions and tenants. Post-deploy migrations are triggered manually by engineers.
+
+Post-deploy migrations are ideal for:
+
+* Adding indexes to large tables, where adding the index would take longer than
+  5 seconds in any given region.
+* Doing data backfills or mutations on tables with more than 50,000 rows.
+
+Post-deploy migrations **should not** be used for:
+
+* Column additions, removals or renames.
+* Table creation.
+
+Using post-deploy migrations for these operations will cause an outage.
+
+### Running post-deploy migrations
+
+Post-deploy migrations (both data and schema) are now run through a [GoCD
+pipeline](https://deploy.getsentry.net/go/pipelines?viewName=Default#!/) named
+`post-deploy-migrations`.
+
+To run a post-deploy migration, first locate the `post-deploy-migrations job`. Click on the play button:
+
+![post-deploy task](/post-deploy-pipeline-tile.png)
+
+Under `Materials`, input the getsentry SHA you want to run migrations from. The sha you choose should be one that contains the migration, and has been deployed to all regions.
+
+![post-deploy migration materials](/post-deploy-pipeline-materials.png)
+
+Then click `Environment Variables` and fill in a value for `django_app` and `django_migration`. The django_app should match the app name containing the migration. e.g. `sentry`, `getsentry`.  Next, input the name of the migration to run, e.g. `0233_pickle_to_json_admin_auditlogentry`.
+
+![post-deploy migration variables](/post-deploy-pipeline-variables.png)
+
+### Cancelling a post-deploy migration
+
+Just cancel the GoCD stage.
+
+We don't have tooling to reverse migrations, so generally we introduce another migration which reverse the migration we want to reverse and run that. 
+
+### Cancelling a DDL/schema Migration
+
+GoCD won’t always be able to kill a long-running query - so instead we'll need to find the query run in `pg_stat_activity` and kill it using `pg_terminate_backend(pid)`. This will require assistance from SRE.
