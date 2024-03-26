@@ -1,7 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
-import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
+import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 
 export function Navbar() {
   return (
@@ -12,7 +11,7 @@ export function Navbar() {
           title="Sentry error monitoring"
           className="flex flex-shrink-0 items-center"
         >
-          <Image src={SentryWordmarkSVG} alt="Sentry's logo" width={150} />
+          <SentryWordmarkLogo width={150} height={45} />
         </a>
         <div className="flex space-x-4 hidden md:block">
           <Link

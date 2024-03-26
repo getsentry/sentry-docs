@@ -6,12 +6,12 @@ import Link, {type LinkProps} from 'next/link';
 import {usePathname} from 'next/navigation';
 
 import {Banner} from 'sentry-docs/components/banner';
+import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import HeroImage from 'sentry-docs/imgs/home_illustration.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
-import SentryWordmark from 'sentry-docs/logos/sentry-wordmark-dark.svg';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {NavLink} from './navlink';
@@ -160,7 +160,7 @@ export function HomeClient({visiblePlatforms}: Props) {
           © 2023 • Sentry is a registered trademark of Functional Software, Inc.
         </p>
         <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
-          <Image src={SentryWordmark} alt="Sentry's logo" height={50} className="h-12" />
+          <SentryWordmarkLogo height={50} fill="#ffffff" />
         </div>
       </footer>
     </div>
