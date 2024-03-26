@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
+import styles from './banner.module.scss';
 
 //
 // BANNER CONFIGURATION
@@ -73,11 +74,11 @@ export function Banner({isModule = false}) {
   return SHOW_BANNER
     ? isVisible && (
         <div
-          className={['promo-banner', isModule && 'banner-module']
+          className={[styles['promo-banner'], isModule && styles['banner-module']]
             .filter(Boolean)
             .join(' ')}
         >
-          <div className="promo-banner-message">
+          <div className={styles['promo-banner-message']}>
             {OPTIONAL_BANNER_IMAGE ? <img src={OPTIONAL_BANNER_IMAGE} /> : ''}
             <span>
               {BANNER_TEXT}
@@ -85,7 +86,7 @@ export function Banner({isModule = false}) {
             </span>
           </div>
           <button
-            className="promo-banner-dismiss"
+            className={styles['promo-banner-dismiss']}
             role="button"
             onClick={() => {
               const manifest = readOrResetLocalStorage() || [];
