@@ -7,8 +7,16 @@ const ChecksumValue = styled.code`
   white-space: nowrap;
 `;
 
+export type Files = {
+  checksums: {
+    name: string;
+    value: string;
+  }[];
+  name: string;
+};
+
 type Props = {
-  files: any[];
+  files: Files[];
   version: string;
 };
 
@@ -37,7 +45,7 @@ export function CliChecksumTableClient({version, files}: Props) {
               </td>
               <td style={{verticalAlign: 'middle', width: '100%'}}>
                 <ChecksumValue>
-                  {`sha384-${file.checksums.find(c => c.name === 'sha256-hex').value}`}
+                  {`sha384-${file.checksums.find(c => c.name === 'sha256-hex')?.value}`}
                 </ChecksumValue>
               </td>
             </tr>

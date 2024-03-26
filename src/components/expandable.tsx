@@ -1,11 +1,11 @@
 'use client';
 
-import {useState} from 'react';
+import {ReactNode, useState} from 'react';
 import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 
 type Props = {
-  children: any;
+  children: ReactNode;
   title: string;
 };
 
