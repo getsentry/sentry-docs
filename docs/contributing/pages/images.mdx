@@ -4,40 +4,55 @@ noindex: true
 ---
 
 If you want to add images to your docs, you can add them in a `./img` folder in the same directory as your `.mdx` files.
-You don't have to follow a rigid folder structure as long as the relative path (starts with `./`) to the image is correct.
+You don't have to follow a rigid folder structure as long as the relative path (starts with `./`) to the image is correct. See [local images](#local-images).
 
-If an image is used in multiple places, it's best to put it in `includes/common-imgs/imgs` and reference it in a local [`include` file ](/contributing/approach/product-docs/write-index/#includes) to be used in the target `mdx` file.
+If an image is used in multiple places, it's best to put it in `includes/common-imgs/imgs` and reference it in a local [`include` file ](/contributing/approach/product-docs/write-index/#includes) to be used in the target `mdx` file. See [common images](#common-images).
 
-While this is not our recommended method, images can also be added to the `public` folder.
+Alternatively, images can also be added to the `public` folder and referenced using their relative or full path within the folder. See [public images](#public-images)
 
 <Note>
-  Every image that starts with `/` (instead of `./`) is considered to be in the `public` folder.
+  Every image path that starts with `/` (instead of `./`) is considered to be in the `public` folder.
 </Note>
 
 ### Example
 
-- Local images:
+#### Local Images
 
-The file, `docs/product/alerts/alert-types.mdx`, can reference the local `./img/issue-alert.png` image like so :
+The file, `docs/product/alerts/alert-types.mdx`, can reference the local `docs/product/alerts/img/alert-details-example.png` image like so :
 
 ```markdown {filename:docs/product/alerts/alert-types.mdx}
 ![Alert details ...](./img/alert-details-example.png)
 ```
 
-- Images with multiple references:
+#### Common Images
 
-The image `docs/common-imgs/imgs/tags.png` is referenced in `docs/common-imgs/tags.md` as a local image:
+Images that are reused in multiple files should be single-sourced as an `include` file. For example, the common image, `includes/common-imgs/imgs/tags.png`, is referenced in the `include` file, `includes/common-imgs/tags.mdx`, like so:
 
-```markdown {filename:docs/common-imgs/tags.mdx}
+```markdown {filename:includes/common-imgs/tags.mdx}
 ![Tags](./img/tags.png)
 ```
 
-The image can then be used in multiple files by referencing the `include` file with the following syntax:
+The image can then be used in multiple places (such as `docs/platforms/ruby/common/enriching-events/tags/index.mdx`) by referencing the `include` file with the following syntax:
 
 ```markdown {filename:docs/platforms/ruby/common/enriching-events/tags/index.mdx}
 <Include name="common-imgs/tags" />
 ```
 
+#### Public Images
+
+While we recommend storing images locally with the files that reference them, you can also put them in the `public` folder. By default, the docs platform assumes images referenced with paths starting with `/` live in the `public` folder, so you don't need to include `public` in the image path.
+
+The folder structure of `public` mimics that of `docs` so that you can reference these images with relative paths. For example, the file, `docs/product/alerts/alert-types.mdx`, can reference the image, `public/product/alerts/issue-alert.png`, like so :
+
+```markdown {filename:docs/product/alerts/alert-types.mdx}
+![Issue alert](issue-alert.png)
+```
+
+Content files living elsewhere can also reference public images by using their full paths (excluding `public`). For example, the file, `docs/platform/apple/index.mdx`, can also reference the same image, `public/product/alerts/issue-alert.png`, like so:
+
+```markdown {filename:docs/platform/apple/index.mdx}
+![Issue alert](/product/alerts/issue-alert.png)
+```
 
 ## Image Optimization
 
