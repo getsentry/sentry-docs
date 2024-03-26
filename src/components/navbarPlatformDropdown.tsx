@@ -35,6 +35,7 @@ export function NavbarPlatformDropdown({
         )
       }
       id="nd-platforms"
+      className="dropdown-fw"
     >
       {platformList.map(platform => (
         <SmartLink

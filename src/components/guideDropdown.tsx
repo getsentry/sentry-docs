@@ -36,6 +36,7 @@ export function GuideDropdown({currentGuide, guides}: Props) {
         )
       }
       id="nd-platforms"
+      className="dropdown-fw"
     >
       {guides.map(guide => (
         <SmartLink

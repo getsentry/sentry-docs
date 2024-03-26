@@ -85,18 +85,23 @@ export function DocPage({
           className="d-md-flex flex-column align-items-stretch collapse navbar-collapse"
           id="sidebar"
         >
-          <div className="px-3 pt-2 pb-1">
-            <NavbarPlatformDropdown
-              platforms={platforms}
-              currentPlatform={currentPlatform}
-            />
-          </div>
-
-          {guides.length > 0 && (
-            <div className="px-3 pb-1">
-              <GuideDropdown guides={guides} currentGuide={currentGuide} />
+          <div className="platform-selector">
+            <div className="px-3 pt-2">
+              <div className="sidebar-title">
+                <h6>Language / Framework</h6>
+              </div>
+              <NavbarPlatformDropdown
+                platforms={platforms}
+                currentPlatform={currentPlatform}
+              />
             </div>
-          )}
+
+            {guides.length > 0 && (
+              <div className="px-3 pt-1">
+                <GuideDropdown guides={guides} currentGuide={currentGuide} />
+              </div>
+            )}
+          </div>
           <div className="toc">
             <ScrollActiveLink />
             <div className="text-white px-3">{sidebar}</div>
