@@ -132,7 +132,7 @@ export function HomeClient({visiblePlatforms}: Props) {
       </div>
       <footer className="py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t space-y-4">
         <div className="flex md:items-center flex-wrap md:flex-row flex-col gap-3">
-          <FooterLink href="">Security & Legal</FooterLink>
+          <FooterLink href="/product/security/">Security & Legal</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
           <FooterLink href="https://help.sentry.io/" external>
             Support
