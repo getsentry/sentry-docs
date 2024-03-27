@@ -48,6 +48,7 @@ export function HomeClient({visiblePlatforms}: Props) {
           </div>
         </nav>
       </header>
+      <Banner />
       <div className="max-w-screen-lg px-2 mx-auto">
         <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between">
           <div className="flex flex-col justify-center items-start">
@@ -128,9 +129,8 @@ export function HomeClient({visiblePlatforms}: Props) {
             </div>
           </Link>
         </div>
-        <Banner />
       </div>
-      <footer className="py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t space-y-4">
+      <footer className="mt-20 py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t space-y-4">
         <div className="flex md:items-center flex-wrap md:flex-row flex-col gap-3">
           <FooterLink href="/product/security/">Security & Legal</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
