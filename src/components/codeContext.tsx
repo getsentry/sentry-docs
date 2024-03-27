@@ -1,6 +1,6 @@
 'use client';
 
-import {createContext, useEffect, useState} from 'react';
+import {createContext, useEffect, useReducer, useState} from 'react';
 import Cookies from 'js-cookie';
 
 type ProjectCodeKeywords = {
@@ -88,10 +88,12 @@ export const DEFAULTS: CodeKeywords = {
   USER: undefined,
 };
 
+type SelectedCodeTabs = Record<string, string | undefined>;
+
 type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
-  sharedCodeSelection: [string | null, React.Dispatch<string | null>];
+  sharedCodeSelection: [SelectedCodeTabs, React.Dispatch<[string, string]>];
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
@@ -297,8 +299,20 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
   // that is the only namespace that actually has a list
   const sharedKeywordSelection = useState<Record<string, number>>({});
 
+  const storedSelections = Object.fromEntries(
+    Object.entries(
+      // default to an empty object if localStorage is not available on the server
+      typeof localStorage === 'undefined' ? {} : localStorage
+    ).filter(([key]) => key.startsWith('Tabgroup:'))
+  );
+
   // Maintains the global selection for which code block tab is selected
-  const sharedCodeSelection = useState<string | null>(null);
+  const sharedCodeSelection = useReducer(
+    (tabs: SelectedCodeTabs, [groupId, value]: [string, string]) => {
+      return {...tabs, [groupId]: value};
+    },
+    storedSelections
+  );
 
   const result: CodeContextType = {
     codeKeywords,

@@ -25,7 +25,7 @@ export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameP
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
   const entries = Object.entries(allSdks || {});
-  const pair: any = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
+  const pair = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
   if (!pair) {
     return <code>{fallbackName} </code>;
   }
