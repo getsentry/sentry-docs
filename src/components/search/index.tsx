@@ -1,7 +1,6 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
-import {NavItem} from 'react-bootstrap';
 import styled from '@emotion/styled';
 import {
   Hit,
@@ -17,8 +16,10 @@ import algoliaInsights from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 
-import {Logo} from './logo';
-import {NavLink} from './navlink';
+import styles from './search.module.scss';
+
+import {Logo} from '../logo';
+import {NavLink} from '../navlink';
 
 // https://stackoverflow.com/a/2117523/115146
 function uuidv4() {
@@ -100,7 +101,6 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   const searchFor = useCallback(
     async (inputQuery, args = {}) => {
       setQuery(inputQuery);
-
       if (inputQuery.length === 2) {
         setShowOffsiteResults(false);
         setResults([]);
@@ -167,48 +167,50 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   }, []);
 
   return (
-    <div ref={ref}>
+    <div className={styles.search} ref={ref}>
       <SearchBar>
-        <NavItem>
-          <NavLink
-            href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
-            target="_blank"
-            rel="noreferrer"
-            style={{textWrap: 'nowrap'}}
-          >
-            Ask A Bot
-          </NavLink>
-        </NavItem>
         <input
           type="search"
           placeholder="Search Docs"
           aria-label="Search"
-          className="form-control search-input"
+          className={styles['search-input']}
           value={query}
           onChange={({target: {value}}) => searchFor(value)}
           onFocus={() => setInputFocus(true)}
           ref={inputRef}
         />
+        <NavLink
+          href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
+          target="_blank"
+          rel="noreferrer"
+          style={{textWrap: 'nowrap'}}
+        >
+          Ask A Bot
+        </NavLink>
       </SearchBar>
       {query.length >= 2 && inputFocus && (
-        <div className="sgs-search-results">
+        <div className={styles['sgs-search-results']}>
           {loading && <Logo loading />}
 
           {!loading && totalHits > 0 && (
-            <div className="sgs-search-results-scroll-container">
+            <div className={styles['sgs-search-results-scroll-container']}>
               {results
                 .filter(x => x.hits.length > 0)
                 .map((result, i) => (
                   <Fragment key={result.site}>
                     {showOffsiteResults && (
-                      <h4 className="sgs-site-result-heading">From {result.name}</h4>
+                      <h4 className={styles['sgs-site-result-heading']}>
+                        From {result.name}
+                      </h4>
                     )}
-                    <ul className={`sgs-hit-list ${i === 0 ? '' : 'sgs-offsite'}`}>
+                    <ul
+                      className={`${styles['sgs-hit-list']} ${i === 0 ? '' : styles['sgs-offsite']}`}
+                    >
                       {result.hits.slice(0, MAX_HITS).map((hit, index) => (
                         <li
                           key={hit.id}
-                          className={`sgs-hit-item ${
-                            focused?.id === hit.id ? 'sgs-hit-focused' : ''
+                          className={`${styles['sgs-hit-item']} ${
+                            focused?.id === hit.id ? styles['sgs-hit-focused'] : ''
                           }`}
                           ref={
                             // Scroll to eleemnt on focus
@@ -242,14 +244,14 @@ export function Search({path, autoFocus, platforms = []}: Props) {
                               />
                             )}
                             {hit.context && (
-                              <div className="sgs-hit-context">
+                              <div className={styles['sgs-hit-context']}>
                                 {hit.context.context1 && (
-                                  <div className="sgs-hit-context-left">
+                                  <div className={styles['sgs-hit-context-left']}>
                                     {hit.context.context1}
                                   </div>
                                 )}
                                 {hit.context.context2 && (
-                                  <div className="sgs-hit-context-right">
+                                  <div className={styles['sgs-hit-context-right']}>
                                     {hit.context.context2}
                                   </div>
                                 )}
@@ -265,15 +267,15 @@ export function Search({path, autoFocus, platforms = []}: Props) {
           )}
 
           {!loading && totalHits === 0 && (
-            <div className="sgs-hit-empty-state">
+            <div className={styles['sgs-hit-empty-state']}>
               No results for <em>{query}</em>
             </div>
           )}
 
           {!loading && !showOffsiteResults && (
-            <div className="sgs-expand-results">
+            <div className={styles['sgs-expand-results']}>
               <button
-                className="sgs-expand-results-button"
+                className={styles['sgs-expand-results-button']}
                 onClick={() => setShowOffsiteResults(true)}
                 onMouseOver={() => searchFor(query, {searchAllIndexes: true})}
               >
@@ -292,4 +294,5 @@ const SearchBar = styled('div')`
   flex-direction: row;
   align-items: center;
   gap: 1rem;
+  margin-left: 1rem;
 `;
