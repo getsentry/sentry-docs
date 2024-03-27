@@ -27,7 +27,7 @@ export function HomeClient({visiblePlatforms}: Props) {
   const pathname = usePathname() ?? undefined;
   return (
     <div className="tw-app">
-      <header className="bg-white py-2 w-full h-16 z-50">
+      <header className="bg-white py-3 w-full z-50 border-b">
         <nav className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex items-center text-primary">
           <a
             href="/"
@@ -37,14 +37,14 @@ export function HomeClient({visiblePlatforms}: Props) {
             <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
             Docs
           </a>
-          <div className="flex md:block w-full ml-2">
+          <div className="flex w-full">
+            <Search path={pathname} platforms={[]} />
+          </div>
+          <div className="flex w-full justify-end">
             <NavLink href="/product/">API</NavLink>
             <NavLink href="/changelog">Changelog</NavLink>
             <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
             <NavLink href="https://sentry.io/">Sign In</NavLink>
-          </div>
-          <div className="flex justify-end w-full">
-            <Search path={pathname} platforms={[]} />
           </div>
         </nav>
       </header>
