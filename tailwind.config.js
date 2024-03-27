@@ -1,10 +1,14 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
+import {
+  scopedPreflightStyles,
+  isolateInsideOfContainer,
+} from 'tailwindcss-scoped-preflight';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './app/changelog/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/changelog/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -15,16 +19,16 @@ module.exports = {
       },
       keyframes: () => ({
         fadeIn: {
-          '0%': {opacity: 0},
-          '100%': {opacity: 1},
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
         },
         fadeInLeft: {
-          '0%': {opacity: 0, transform: 'translateX(-20px)'},
-          '100%': {opacity: 1, transform: 'translateX(0)'},
+          '0%': { opacity: 0, transform: 'translateX(-20px)' },
+          '100%': { opacity: 1, transform: 'translateX(0)' },
         },
         fadeInRight: {
-          '0%': {opacity: 0, transform: 'translateX(20px)'},
-          '100%': {opacity: 1, transform: 'translateX(0)'},
+          '0%': { opacity: 0, transform: 'translateX(20px)' },
+          '100%': { opacity: 1, transform: 'translateX(0)' },
         },
       }),
       fontFamily: {
@@ -47,5 +51,13 @@ module.exports = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+    scopedPreflightStyles({
+      // pretty minimalistic example. Same options as in the previous example are available
+      isolationStrategy: isolateInsideOfContainer('.tw-app'),
+    }),
+  ],
+  blocklist: ['collapse'],
 };
