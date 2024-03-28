@@ -1315,7 +1315,10 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     from: '/clients/javascript/tips/',
     to: '/platforms/javascript/legacy-sdk/tips/',
   },
-
+  {
+    from: '/platforms/javascript/usage/distributed-tracing/',
+    to: '/platforms/javascript/tracing',
+  },
   {
     from: '/platforms/node/pluggable-integrations/',
     to: '/platforms/node/configuration/integrations/pluggable-integrations/',
