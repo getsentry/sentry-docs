@@ -1,0 +1,95 @@
+On this page you will learn how to manually propagate trace information into and out of your .NET application. Please note, that you do not need to do this manually, if you [use one of our supported frameworks](/platforms/dotnet/tracing/#how-to-use-tracing), or you have our <PlatformLink to="/performance/">performance monitoring feature</PlatformLink> turned on.
+
+To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+
+## Step 1) Extract Incoming Tracing Information
+
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `ContinueTrace()` function to help you with this. Tracing information can come from incoming headers, for example, by another Sentry SDK used in your frontend project.
+
+Here's an example using RabbitMQ of how to extract and store incoming tracing information using `ContinueTrace()`:
+
+```csharp
+using System.Text;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using Sentry;
+
+var factory = new ConnectionFactory()
+{
+    HostName = "localhost",
+    UserName = "guest",
+    Password = "guest"
+};
+
+using var connection = factory.CreateConnection();
+using var channel = connection.CreateModel();
+
+var consumer = new EventingBasicConsumer(channel);
+consumer.Received += (model, ea) =>
+{
+    // Extract headers from the incoming message
+    var headers = ea.BasicProperties.Headers;
+    if (headers != null)
+    {
+        var sentryTraceHeader = string.Empty;
+        var sentryBaggageHeader = string.Empty;
+
+        if (headers.TryGetValue("sentry-trace", out var traceHeader))
+        {
+            sentryTraceHeader = Encoding.UTF8.GetString((byte[])traceHeader);
+        }
+
+        if (headers.TryGetValue("baggage", out var baggageHeader))
+        {
+            sentryBaggageHeader = Encoding.UTF8.GetString((byte[])baggageHeader);
+        }
+
+        var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
+        var transaction = SentrySdk.StartTransaction(transactionContext);
+    }
+};
+```
+
+If you pass these headers to Sentry's `ContinueTrace()` function it will store them in memory for later use.
+
+## Step 2) Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must now also be added to outgoing requests.
+
+If you send outgoing HTTP requests with an HTTP client that uses `SentryHttpMessageHandler`, this tracing information is automatically added to outgoing requests. You do not have to enable Performance for distributed tracing to work.
+
+If you're not using the `SentryHttpMessageHandler`, you can generate this tracing information with the Sentry SDK's `GetTraceHeader()` and `GetBaggage()` functions. Here's an example using RabbitMQ:
+
+```csharp
+using RabbitMQ.Client;
+using Sentry;
+
+var factory = new ConnectionFactory()
+{
+    HostName = "localhost",
+    UserName = "guest",
+    Password = "guest"
+};
+
+using var connection = factory.CreateConnection();
+using var channel = connection.CreateModel();
+
+var properties = channel.CreateBasicProperties();
+properties.Headers = new Dictionary<string, object>();
+properties.Headers.Add("sentry-trace", SentrySdk.GetTraceHeader()?.ToString());
+properties.Headers.Add("baggage", SentrySdk.GetBaggage()?.ToString());
+
+channel.BasicPublish(
+    exchange: "..",
+    routingKey: "...",
+    basicProperties: properties,
+    body: new ReadOnlyMemory<byte>());
+```
+
+This way, tracing information is propagated to the project receiving the message. If this project uses the Sentry .NET SDK, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.

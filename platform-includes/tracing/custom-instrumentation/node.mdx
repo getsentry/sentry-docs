@@ -1,0 +1,111 @@
+On this page, you will learn how to manually propagate trace information into and out of your Node.js application.
+
+Distributed tracing will be set up automatically if:
+
+- You've <PlatformLink to="/performance/">Set Up Performance</PlatformLink> in Sentry.
+- You're using one of the platforms that include distributed tracing out of the box:
+  - `@sentry/nextjs`
+  - `@sentry/sveltekit`
+  - `@sentry/remix`
+  - `@sentry/astro`
+
+If you're not using any of the packages above, take a look at the framework-specific Sentry integrations (like our [Express integration](/platforms/node/guides/express/)). These integrations will also enable distributed tracing automatically for your application.
+If you can't find an integration for your framework, it is possible to set up distributed tracing for your application manually.
+
+## Enabling Distributed Tracing
+
+If you set a `tracesSampleRate` (or `enableTrace`, or a `tracesSampler` function), distributed tracing will be enabled out of the box.
+
+If you want to use distributed tracing, but not performance monitoring, set the `tracesSampleRate` option to `0`. The default `httpIntegration` and `nativeNodeFetchintegration` will automatically instrument `http` and `fetch` requests.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [],
+
+  // Set this to 0 to enable distributed tracing without performance monitoring
+  tracesSampleRate: 1,
+});
+```
+
+## Manually Extracing and Injecting Distributed Tracing Information
+
+You can also manually extract and inject tracing data into your application. For this, you must:
+
+- Extract and store incoming tracing information from incoming request headers or similar.
+- Inject tracing information to any outgoing requests.
+
+To learn more about distributed tracing, see our <PlatformLink to="/tracing/">Distributed Tracing</PlatformLink> docs.
+
+### Extracting Incoming Tracing Information
+
+You must extract and store incoming tracing information in memory for later use. Sentry provides the `continueTrace()` function to help you with this. Incoming tracing information can come from different places:
+
+- In a web environment, it's sent with HTTP headers, for example, by another Sentry SDK used in your frontend project.
+- In a job queue, it can be retrieved from meta or header variables.
+- You also can pick up tracing information from environment variables.
+
+Here's an example of how to extract and store incoming tracing information using `continueTrace()`:
+
+```javascript
+const http = require("http");
+
+http.createServer((request, response) => {
+  const sentryTraceHeaders = request.headers["sentry-trace"];
+  const sentryTrace = Array.isArray(sentryTraceHeaders)
+    ? sentryTraceHeaders.join(",")
+    : sentryTraceHeaders;
+  const baggage = request.headers["baggage"];
+
+  Sentry.continueTrace(
+    { sentryTrace, baggage },
+    (transactionContext) => {
+      Sentry.startSpan({
+        ...transactionContext,
+        name: "my request",
+        op: "http.server",
+      }, () => {
+        // Your API code...
+      });
+    }
+  );
+});
+```
+
+In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` headers.
+
+### Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers that you extracted and stored in the `requestTransaction`, `sentry-trace` and `baggage`, must be added to outgoing http/fetch requests.
+
+Here's an example of how to collect and inject this tracing information to outgoing requests:
+
+```javascript
+// Create `sentry-trace` header
+const sentryTraceHeader = requestTransaction.toTraceparent();
+
+// Create `baggage` header
+const dynamicSamplingContext = requestTransaction.getDynamicSamplingContext();
+const sentryBaggageHeader = dynamicSamplingContextToSentryBaggageHeader(
+  dynamicSamplingContext
+);
+
+// Make outgoing request
+fetch("https://example.com", {
+  method: "GET",
+  headers: {
+    baggage: sentryBaggageHeader,
+    "sentry-trace": sentryTraceHeader,
+  },
+}).then((response) => {
+  // ...
+});
+```
+
+In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses a Sentry SDK, it will extract and save the tracing information for later use.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+## Verification
+
+If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
