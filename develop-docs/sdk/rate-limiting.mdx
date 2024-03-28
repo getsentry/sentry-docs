@@ -11,13 +11,14 @@ In addition to `Retry-After`, Sentry (Relay) also includes a special response he
 X-Sentry-Rate-Limits: <quota_limit>, <quota_limit>, ...
 ```
 
-Each *quota_limit* has the form `retry_after:categories:scope:reason_code:...` with the following parameters:
+Each *quota_limit* has the form `retry_after:categories:scope:reason_code:namespaces:...` with the following parameters:
 
 - `retry_after`: Number of seconds (as an integer or a floating point number) until this rate limit expires.
 - `categories`: Semicolon-separated list of [data categories](https://github.com/getsentry/relay/blob/master/relay-common/src/constants.rs#L97-L115). **If empty, this limit applies to all categories**. 
     While these categories might look similar to the [envelope item types](/sdk/envelopes/#data-model), they are not identical, and have slight differences.
 - `scope`: The scope that this limit applies to. Can be ignored by SDKs.
 - `reason_code`: A unique identifier for the quota hinting at the rate limiting reason. Can be ignored by SDKs.
+- `namespaces`: Semicolon-separated list of metric namespace identifiers. This will only be present if the rate limit applies to the `metric_bucket` data category.
 - More parameters can be added in the future, and can be ignored by SDKs (promise of backward compatibility).
 
 The header may contain spaces which must be ignored. Relay will only emit spaces after `,` to separate *quota_limits*.
@@ -38,6 +39,14 @@ X-Sentry-Rate-Limits:
 HTTP/1.1 429 Too Many Requests
 Retry-After: 2700
 X-Sentry-Rate-Limits: 60::organization, 2700::organization
+```
+
+**Example response** (for metric buckets):
+
+```python
+HTTP/1.1 429 Too Many Requests
+Retry-After: 2700
+X-Sentry-Rate-Limits: 2700:metric_bucket:organization:quota_exceeded:custom
 ```
 
 The `X-Sentry-Rate-Limits` header may appear in any response, regardless of status code, even `200` responses. This is to proactively inform SDKs that certain payload types are disabled before SDKs even try to send them.
@@ -83,6 +92,7 @@ While these [data categories](https://github.com/getsentry/relay/blob/master/rel
   - `session`: Session update events
   - `profile`: Profiling events
   - `replay`: Session Replays
+  - `metric_bucket`: Sentry Metrics sent via the `statsd` or `metrics` items. The `namespace` component of the *quota_limit* defines which namespace is affected.
   - `internal`: a sentry/system internal event[^internal]
 
 
