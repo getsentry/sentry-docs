@@ -2,8 +2,6 @@
 title: Tracing
 description: "Learn how to connect events across applications/services."
 sidebar_order: 40
-notSupported:
-  - javascript.cordova
 ---
 
 If the overall application landscape that you want to observe with Sentry consists of more than just a single service or application, distributed tracing can add a lot of value.
@@ -34,3 +32,40 @@ If you run any JavaScript applications in your distributed system, make sure tha
 <PlatformContent includePath="tracing/how-to-use/" />
 
 Remember that in order to propagate trace information through your whole distributed system, you have to use Sentry in all of the involved services and applications. Take a look at the respective SDK documentation to learn how tracing can be enabled for each platform.
+
+### tracePropagationTargets
+
+The Cocoa SDK will attach the `sentry-trace` and `baggage` headers to all outgoing requests by default. To narrow
+this down to only specific URLs, add those URLs to the `tracePropagationTargets` allowlist, (you can use both
+string and regexes). The SDK will then only attach the `sentry-trace` and `baggage` headers to outgoing requests
+whose destination either contains a string or matches a regex in your allowlist.
+
+<Note>
+The `tracePropagationTargets` option matches the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have additional headers attached.
+</Note>
+
+Since the value of `tracePropagationTargets` is `['.*']` by default, tracing headers are attached to all requests unless otherwise specified.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracePropagationTargets = [
+        "https://myproject.org",
+        "https://api.otherservice.org/",
+    ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracePropagationTargets = @[
+        @"https://myproject.org",
+        @"https://api.otherservice.org/"
+    ];
+}];
+```
