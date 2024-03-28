@@ -1,0 +1,146 @@
+---
+title: Set Up Metrics
+description: "Learn how to measure the data points you care about by configuring Metrics in your app."
+---
+
+<Include name="feature-stage-beta-metrics.mdx" />
+<Note>
+
+Metrics are supported with Sentry Cocoa SDK version `8.23.0` and above.
+
+</Note>
+
+Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
+
+## Enabling the Metrics Feature
+
+Here's how to add Metrics to your application:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+
+    options.enableMetrics = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions * options) {
+    options.Dsn = @"___PUBLIC_DSN___";
+
+    options.enableMetrics = YES;
+}];
+```
+
+## Emit a Counter
+
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.metrics
+    .increment(key: "button_login_click",
+               value: 1.0,
+               tags: ["screen": "login"]
+    )
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK.metrics
+    incrementWithKey :@"button_login_click"
+    value: 1.0
+    unit: SentryMeasurementUnit.none
+    tags: @{ @"screen" : @"login" }
+];
+```
+
+## Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.metrics
+    .distribution(key: "image_download_duration",
+               value: 150.0,
+               unit: MeasurementUnitDuration.millisecond,
+               tags: ["screen": "login"]
+    )
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK.metrics
+    distributionWithKey: @"button_login_click"
+    value: 150.0
+    unit: SentryMeasurementUnitDuration.millisecond
+    tags: @{ @"screen" : @"login" }
+];
+```
+
+## Emit a Set
+
+Sets are useful for looking at unique occurrences and counting the unique elements you added.
+
+To emit a set, do the following:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.metrics
+    .set(key: "user_view",
+          value: "jane",
+          unit: MeasurementUnit(unit: "username"),
+          tags: ["screen": "login"]
+    )
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK.metrics
+    setWithKey :@"button_login_click"
+    value: @"jane"
+    unit: [[SentryMeasurementUnit alloc] initWithUnit:@"username"]
+    tags: @{ @"screen" : @"login" }
+];
+```
+
+## Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```swift {tabTitle:Swift}
+SentrySDK.metrics
+    .gauge(key: "page_load",
+          value: "jane",
+          unit: MeasurementUnitDuration.millisecond,
+          tags: ["screen": "login"]
+    )
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK.metrics
+    gaugeWithKey: @"page_load"
+    value: 1.0
+    unit: SentryMeasurementUnitDuration.millisecond
+    tags: @{ @"screen" : @"login" }
+];
+```
