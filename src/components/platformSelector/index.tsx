@@ -6,7 +6,7 @@ import {matchSorter} from 'match-sorter';
 import {useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
-import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {Platform} from 'sentry-docs/types';
 
 import styles from './style.module.scss';
 
@@ -14,31 +14,35 @@ export function PlatformSelector({
   platforms,
   currentPlatform,
 }: {
-  platforms: Array<Platform | PlatformGuide>;
-  currentPlatform?: Platform | PlatformGuide;
+  platforms: Array<Platform>;
+  currentPlatform?: Platform;
 }) {
+  // append guides to each platform
+  const platformsAndGuides = platforms
+    .map(platform => [platform, platform.guides])
+    .flat(2);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(currentPlatform?.name ?? '');
   const [searchValue, setSearchValue] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const url = platforms.find(platform => platform.name === value)?.url;
+    const url = platformsAndGuides.find(platform => platform.name === value)?.url;
     if (url) {
       router.push(url);
     }
-  }, [value, platforms, router]);
+  }, [value, platformsAndGuides, router]);
 
   const matches = useMemo(() => {
     if (!searchValue) {
-      return platforms;
+      return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
     const keys = ['name', 'aliases', 'sdk'];
-    const matches_ = matchSorter(platforms, searchValue, {keys});
+    const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
-    const selectedPlatform = platforms.find(lang => lang.name === value);
+    const selectedPlatform = platformsAndGuides.find(lang => lang.name === value);
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
@@ -106,7 +110,14 @@ export function PlatformSelector({
               >
                 <ComboboxItem>
                   <RadixSelect.ItemText>
-                    <span className={styles['item-text']}>
+                    <span
+                      className={styles['item-text']}
+                      style={{
+                        paddingLeft:
+                          // indent guides when there search value is empty
+                          platform.type === 'guide' && !searchValue ? '1.2rem' : '0',
+                      }}
+                    >
                       <PlatformIcon
                         platform={platform.icon ?? platform.key}
                         size={16}
