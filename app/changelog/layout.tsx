@@ -1,7 +1,6 @@
 import 'prism-sentry/index.css';
 
-import {ReactNode} from 'react';
-import {Theme} from '@radix-ui/themes';
+import {Fragment, ReactNode} from 'react';
 import type {Metadata} from 'next';
 import NextTopLoader from 'nextjs-toploader';
 
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function ChangelogLayout({children}: {children: ReactNode}) {
   return (
-    <Theme accentColor="violet" grayColor="sand" radius="large" scaling="95%">
+    <Fragment>
       <NextTopLoader color="#8d5494" />
       <div id="changelogcontent" className="tw-app">
         <Navbar />
@@ -23,6 +22,6 @@ export default function ChangelogLayout({children}: {children: ReactNode}) {
           <div className="footer-top-right-down-slope absolute w-full -top-1 h-10 bg-gray-200" />
         </div>
       </div>
-    </Theme>
+    </Fragment>
   );
 }
