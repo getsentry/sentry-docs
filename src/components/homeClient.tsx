@@ -21,10 +21,10 @@ import {Search} from './search';
 import {SmartLink} from './smartLink';
 
 interface Props {
-  visiblePlatforms: Array<Platform | PlatformGuide>;
+  platforms: Array<Platform | PlatformGuide>;
 }
 
-export function HomeClient({visiblePlatforms}: Props) {
+export function HomeClient({platforms}: Props) {
   const pathname = usePathname() ?? undefined;
   return (
     <div className="tw-app">
@@ -70,11 +70,11 @@ export function HomeClient({visiblePlatforms}: Props) {
             <p className="m-0">If you use it, we probably support it.</p>
           </div>
           <div className="md:w-1/2 flex justify-end">
-            <PlatformSelector platforms={visiblePlatforms} />
+            <PlatformSelector platforms={platforms} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8">
-          {visiblePlatforms.map(platform => (
+          {platforms.map(platform => (
             <SmartLink
               to={platform.url}
               className="text-black hover:no-underline"
