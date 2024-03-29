@@ -11,7 +11,6 @@ import {ArrowDown} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
 import {AnimatePresence, motion} from 'framer-motion';
-import memoize from 'lodash/memoize';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 
@@ -69,11 +68,11 @@ function runRegex(
   arr: ChildrenItem[],
   str: string,
   regex: RegExp,
-  cb: (lastIndex: number, match: any[]) => React.ReactNode
+  cb: (lastIndex: number, match: RegExpExecArray) => React.ReactNode
 ): void {
   regex.lastIndex = 0;
 
-  let match;
+  let match: RegExpExecArray | null;
   let lastIndex = 0;
   // eslint-disable-next-line no-cond-assign
   while ((match = regex.exec(str)) !== null) {
@@ -95,7 +94,7 @@ function runRegex(
   }
 }
 
-const getPortal = memoize((): HTMLElement | null => {
+const getPortal = (): HTMLElement | null => {
   if (typeof document === 'undefined') {
     return null;
   }
@@ -107,7 +106,7 @@ const getPortal = memoize((): HTMLElement | null => {
     document.body.appendChild(portal);
   }
   return portal;
-});
+};
 
 type KeywordSelectorProps = {
   group: string;

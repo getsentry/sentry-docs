@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '2c1056120fcde70097de32f2c5f0b474f609b770';
+const SENTRY_API_SCHEMA_SHA = 'f47d1e4559f64f5c6b6f65c92197c1b5dea189b3';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -44,6 +44,24 @@ export type APIParameter = {
   };
 };
 
+type APIExample = {
+  summary: string;
+  value: any;
+};
+
+type APIResponse = {
+  description: string;
+  status_code: string;
+  content?: {
+    content_type: string;
+    schema: any;
+    example?: APIExample;
+    examples?: {[key: string]: APIExample};
+  };
+};
+
+type APIData = DeRefedOpenAPI['paths'][string][string];
+
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
@@ -51,7 +69,7 @@ export type API = {
   name: string;
   pathParameters: APIParameter[];
   queryParameters: APIParameter[];
-  responses: any;
+  responses: APIResponse[];
   slug: string;
   bodyContentType?: string;
   descriptionMarkdown?: string;
@@ -64,6 +82,8 @@ export type APICategory = {
   apis: API[];
   name: string;
   slug: string;
+
+  /** description is a string of markdown with possible links */
   description?: string;
 };
 
@@ -93,7 +113,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
     categoryMap[tag.name] = {
       name: tag['x-sidebar-name'] || tag.name,
       slug: slugify(tag.name),
-      description: tag.description,
+      description: tag['x-display-description'] ? tag.description : undefined,
       apis: [],
     };
   });
@@ -152,7 +172,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
   return categories;
 }
 
-function getBodyParameters(apiData): APIParameter[] {
+function getBodyParameters(apiData: APIData): APIParameter[] {
   const content = apiData.requestBody?.content;
   const contentType = content && Object.values(content)[0];
   const properties = contentType?.schema?.properties;
@@ -174,7 +194,7 @@ function getBodyParameters(apiData): APIParameter[] {
   }));
 }
 
-function getBodyContentType(apiData): string | undefined {
+function getBodyContentType(apiData: APIData): string | undefined {
   const content = apiData.requestBody?.content;
   const types = content && Object.keys(content);
   if (!types?.length) {

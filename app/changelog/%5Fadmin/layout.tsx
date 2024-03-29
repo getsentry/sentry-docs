@@ -1,9 +1,14 @@
 import {type ReactNode, Suspense} from 'react';
-import {GET} from 'app/changelog/api/auth/[...nextauth]/route';
+import {GET} from 'app/api/auth/[...nextauth]/route';
+import type {Metadata} from 'next';
 import {getServerSession} from 'next-auth/next';
 
 import LoginButton from 'sentry-docs/components/changelog/loginButton';
 import NextAuthSessionProvider from 'sentry-docs/components/nextAuthSessionProvider';
+
+export const metadata: Metadata = {
+  robots: 'noindex, nofollow',
+};
 
 export default async function Layout({children}: {children: ReactNode}) {
   const session = await getServerSession(GET);

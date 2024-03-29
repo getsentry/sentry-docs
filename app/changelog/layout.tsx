@@ -13,17 +13,22 @@ const rubik = Rubik({
   weight: ['400', '500', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin'],
+  variable: '--font-rubik',
 });
 
 export const metadata: Metadata = {
   title: {template: '%s | Sentry Changelog', default: 'Changelog'},
+  metadataBase: new URL('https://sentry.io/changelog/'),
+  openGraph: {
+    images: 'https://docs.sentry.io/changelog/assets/hero.png',
+  },
 };
 
 export default function ChangelogLayout({children}: {children: ReactNode}) {
   return (
     <Theme accentColor="violet" grayColor="sand" radius="large" scaling="95%">
       <NextTopLoader color="#8d5494" />
-      <div className={`${rubik.className}`}>
+      <div id="changelogcontent" className={`${rubik.variable}`}>
         <Navbar />
         <div className="bg-gray-100">{children}</div>
         <div className="w-full mx-auto h-16 relative bg-darkPurple">

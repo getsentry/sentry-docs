@@ -74,7 +74,14 @@ export function Search({path, autoFocus, platforms = []}: Props) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const handleClickOutside = useCallback(() => {
+  const handleClickOutside = useCallback((ev: MouseEvent) => {
+    // don't close the search results if the user is clicking the expand button
+    if (
+      (ev.target as HTMLButtonElement).classList.contains('sgs-expand-results-button')
+    ) {
+      return;
+    }
+
     setInputFocus(false);
     setShowOffsiteResults(false);
   }, []);

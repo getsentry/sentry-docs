@@ -31,5 +31,7 @@ Sentry.init({
 });
 
 if (process.env.NODE_ENV === 'development') {
-  Spotlight.init();
+  Spotlight.init({
+    showClearEventsButton: true,
+  });
 }

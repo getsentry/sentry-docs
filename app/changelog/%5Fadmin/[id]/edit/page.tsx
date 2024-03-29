@@ -7,7 +7,7 @@ import {ForwardRefEditor} from 'sentry-docs/components/changelog/forwardRefEdito
 import {TitleSlug} from 'sentry-docs/components/changelog/titleSlug';
 import {Button} from 'sentry-docs/components/changelog/ui/Button';
 import {Select} from 'sentry-docs/components/changelog/ui/Select';
-import {prisma} from 'sentry-docs/prisma';
+import prisma from 'sentry-docs/prisma';
 
 export default async function ChangelogCreatePage({params}) {
   const categories = await prisma.category.findMany({

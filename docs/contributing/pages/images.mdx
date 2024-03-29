@@ -3,18 +3,70 @@ title: Images
 noindex: true
 ---
 
-All images must live in the [`public`](https://github.com/getsentry/sentry-docs/tree/master/public) folder in order to be processed correctly.
+If you want to add images to your docs, you can add them in a `./img` folder in the same directory as your `.mdx` files.
+You don't have to follow a rigid folder structure as long as the relative path (starts with `./`) to the image is correct. See [local images](#local-images).
 
-The folder structure of `docs` is duplicated in `public` so that you can still use relative paths to reference images in your content files.
+If an image is used in multiple places, it's best to put it in `includes/common-imgs/imgs` and reference it in a local [`include` file ](/contributing/approach/product-docs/write-index/#includes) to be used in the target `mdx` file. See [common images](#common-images).
 
-For instance, the file, `docs/product/alerts/alert-types.mdx`, can reference the image, `public/product/alerts/issue-alert.png`, like so :
+Alternatively, images can also be added to the `public` folder and referenced using their relative or full path within the folder. See [public images](#public-images)
+
+<Note>
+  Every image path that starts with `/` (instead of `./`) is considered to be in the `public` folder.
+</Note>
+
+### Examples
+
+#### Local Images
+
+The file, `docs/product/alerts/alert-types.mdx`, can reference the local `docs/product/alerts/img/alert-details-example.png` image like so :
+
+```markdown {filename:docs/product/alerts/alert-types.mdx}
+![Alert details ...](./img/alert-details-example.png)
+```
+
+#### Common Images
+
+Images that are reused in multiple files should be single-sourced as an `include` file. For example, the common image, `includes/common-imgs/imgs/tags.png`, is referenced in the `include` file, `includes/common-imgs/tags.mdx`, like so:
+
+```markdown {filename:includes/common-imgs/tags.mdx}
+![Tags](./img/tags.png)
+```
+
+The image can then be used in multiple places (such as `docs/platforms/ruby/common/enriching-events/tags/index.mdx`) by referencing the `include` file with the following syntax:
+
+```markdown {filename:docs/platforms/ruby/common/enriching-events/tags/index.mdx}
+<Include name="common-imgs/tags" />
+```
+
+#### Public Images
+
+While we recommend storing images locally with the files that reference them, you can also put them in the `public` folder. By default, the docs platform assumes images referenced with paths starting with `/` live in the `public` folder, so you don't need to include `public` in the image path.
+
+The folder structure of `public` mimics that of `docs` so that you can reference these images with relative paths. For example, the file, `docs/product/alerts/alert-types.mdx`, can reference the image, `public/product/alerts/issue-alert.png`, like so :
 
 ```markdown {filename:docs/product/alerts/alert-types.mdx}
 ![Issue alert](issue-alert.png)
 ```
 
-Content files that live elsewhere (such as `/docs/platform/apple/index.mdx`) can still use the same image by referencing it with the full path (`/public` does not need to be included), like so:
+Content files living elsewhere can also reference public images by using their full paths (excluding `public`). For example, the file, `docs/platform/apple/index.mdx`, can also reference the same image, `public/product/alerts/issue-alert.png`, like so:
 
-```markdown {filename:/docs/platform/apple/index.mdx}
+```markdown {filename:docs/platform/apple/index.mdx}
 ![Issue alert](/product/alerts/issue-alert.png)
 ```
+
+## Image Optimization
+
+To save space and ensure consistency, we ask that all image files be compressed and cropped to the dimensions listed below. When adding an image, please makes sure that it's high-resolution and crisp and that text is big enough to read.
+
+### Recommended Dimensions
+- If you want the image to take up the full width of the page, make it **1484 pixels** wide.
+
+- If you want the image to be indented once (for example, if it's under a list item), make it **1400 pixels** wide.
+
+### Image Compression
+
+For performance reasons, images should be compressed. We recommend using ImageOptim. Here are the steps to follow:
+
+1. Download and install https://imageoptim.com/.
+2. Drag and drop your image(s) into the tool. The files will be compressed in place.
+3. Wait until a green checkmark appears, then add the compressed image to the appropriate path in the `public` folder of the docs repo.

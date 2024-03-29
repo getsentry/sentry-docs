@@ -1,35 +1,29 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
-import {GET} from 'app/changelog/api/auth/[...nextauth]/route';
+import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
+import {unstable_cache} from 'next/cache';
 import Link from 'next/link';
+import {notFound} from 'next/navigation';
 import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
-import {prisma} from 'sentry-docs/prisma';
+import prisma from 'sentry-docs/prisma';
 
 type ChangelogWithCategories = Changelog & {
   categories: Category[];
 };
 
-type Props = {
-  params: {slug: string};
-};
-
 export async function generateMetadata(
-  {params}: Props,
+  {params},
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   let changelog: Changelog | null = null;
   try {
-    changelog = await prisma.changelog.findUnique({
-      where: {
-        slug: params.slug,
-      },
-    });
+    changelog = await getChangelog(params.slug);
   } catch (e) {
     return {title: (await parent).title};
   }
@@ -37,6 +31,9 @@ export async function generateMetadata(
   return {
     title: changelog?.title,
     description: changelog?.summary,
+    alternates: {
+      canonical: `https://sentry.io/changelog/${params.slug}`,
+    },
     openGraph: {
       images: changelog?.image || (await parent).openGraph?.images,
     },
@@ -46,25 +43,36 @@ export async function generateMetadata(
   };
 }
 
+const getChangelog = unstable_cache(
+  async slug => {
+    const session = await getServerSession(sessionHandler);
+    let published: boolean | undefined = undefined;
+    if (!session) {
+      published = true;
+    }
+    try {
+      return await prisma.changelog.findUnique({
+        where: {
+          slug,
+          published,
+        },
+        include: {
+          categories: true,
+        },
+      });
+    } catch (e) {
+      return null;
+    }
+  },
+  ['changelog-detail'],
+  {tags: ['changelog-detail']}
+);
+
 export default async function ChangelogEntry({params}) {
-  let changelog: ChangelogWithCategories | null = null;
-  const session = await getServerSession(GET);
-  let published: boolean | undefined = undefined;
-  if (!session) {
-    published = true;
-  }
-  try {
-    changelog = await prisma.changelog.findUnique({
-      where: {
-        slug: params.slug,
-        published,
-      },
-      include: {
-        categories: true,
-      },
-    });
-  } catch (e) {
-    return <div>Not found</div>;
+  const changelog: ChangelogWithCategories | null = await getChangelog(params.slug);
+
+  if (!changelog) {
+    return notFound();
   }
 
   return (

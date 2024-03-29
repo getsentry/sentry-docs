@@ -4,14 +4,16 @@ description: "Learn about how your SDK marks frames as in-app."
 sidebar_order: 40
 ---
 
-The `sentry-cocoa` SDK always marks public frameworks such as UIKitCore, CoreFoundation, GraphicsServices, and so forth as `not inApp`. Before version 7.0.0, the sentry-cocoa SDK marks all private frameworks and the main executable inside the application bundle as `inApp`. Since version 7.0.0, the sentry-cocoa SDK sets the `inApp` flag only for frames originating from the main executable by using the [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable). For private frameworks, such as Sentry, dynamic and static frameworks differ. If you are not familiar with these terms, you can learn more:
+The `sentry-cocoa` SDK always marks public frameworks such as UIKitCore, CoreFoundation, GraphicsServices, and so forth as `not inApp`. If you're using a version of our SDK that's older than 7.0.0, all private frameworks and the main executable inside the application bundle will be marked as `inApp`. If you're using version 7.0.0 and up, the SDK will only set the `inApp` flag for frames originating from the main executable by using the [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable). For private frameworks such as Sentry, dynamic and static frameworks will differ. 
+
+If you're not familiar with these terms, you can learn more:
 
 - [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable)
 - [Dynamic Library Programming Topics](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/000-Introduction/Introduction.html)
 
 ## Dynamic Frameworks
 
-If you use dynamic frameworks, such as, for example, Sentry, the SDK marks these as `not inApp`. In case you have a private framework that should be `inApp`, you can use [`inAppInclude`](/platforms/apple/configuration/options/#in-app-include) or [`inAppExclude`](/platforms/apple/configuration/options/#in-app-exclude) of the SentryOptions.
+If you use dynamic frameworks such as Sentry, the Sentry SDK will mark them as `not inApp`. If you have a private framework that should be marked as `inApp`, use the SentryOptions [`inAppInclude`](/platforms/apple/configuration/options/#in-app-include) or [`inAppExclude`](/platforms/apple/configuration/options/#in-app-exclude).
 
 <SignInNote />
 
@@ -45,5 +47,5 @@ SentrySDK.start { options in
 
 ## Static Frameworks
 
-When using static frameworks, the frameworks end up in the main executable. Therefore, the SDK currently can't detect if a frame of the main executable
-originates from your application or a private framework and marks all of them as `inApp`. To improve your experience, use the below explained stack trace rules on the server to tell Sentry which should be marked as `not inApp`.
+Because static frameworks end up in the main executable, if you're using one, the Sentry SDK won't be able to detect if a frame of the main executable
+originates from your application or a private framework and will mark all frames as `inApp`. To work around this, tell Sentry which frames should be marked as `not inApp`, using [Stack Trace Rules](/product/data-management-settings/event-grouping/stack-trace-rules/#stack-trace-rules) on the server.
