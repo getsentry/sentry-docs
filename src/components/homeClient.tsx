@@ -6,6 +6,7 @@ import Link, {type LinkProps} from 'next/link';
 import {usePathname} from 'next/navigation';
 
 import {Banner} from 'sentry-docs/components/banner';
+import {PlatformSelector} from 'sentry-docs/components/platformSelector';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import HeroImage from 'sentry-docs/imgs/home_illustration.png';
@@ -49,7 +50,7 @@ export function HomeClient({visiblePlatforms}: Props) {
         </nav>
       </header>
       <Banner />
-      <div className="max-w-screen-lg px-2 mx-auto">
+      <div className="max-w-screen-lg px-4 mx-auto">
         <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between">
           <div className="flex flex-col justify-center items-start">
             <h1 className="text-[40px] font-medium mb-2">Welcome to Sentry Docs</h1>
@@ -68,10 +69,9 @@ export function HomeClient({visiblePlatforms}: Props) {
             <h2 className="text-2xl font-medium">Choose your SDK</h2>
             <p className="m-0">If you use it, we probably support it.</p>
           </div>
-          <input
-            className="w-full md:w-1/2 p-2 rounded border-[#D2C7DA]"
-            placeholder="Find your language or framework"
-          />
+          <div className="md:w-1/2 flex justify-end">
+            <PlatformSelector platforms={visiblePlatforms} />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8">
           {visiblePlatforms.map(platform => (
