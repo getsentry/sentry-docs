@@ -1,7 +1,7 @@
 'use client';
 import {startTransition, useEffect, useMemo, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
-import {CaretSortIcon, CheckIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
+import {CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
 import {useRouter} from 'next/navigation';
@@ -20,7 +20,13 @@ export function PlatformSelector({
 }) {
   // append guides to each platform
   const platformsAndGuides = platforms
-    .map(platform => [platform, platform.guides])
+    .map(platform => [
+      platform,
+      platform.guides.map((guide, i) => ({
+        ...guide,
+        isLastGuide: i === platform.guides.length - 1,
+      })),
+    ])
     .flat(2);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(currentPlatform?.name ?? '');
@@ -108,17 +114,12 @@ export function PlatformSelector({
                 value={platform.name}
                 asChild
                 className={styles.item}
+                data-guide={searchValue === '' && platform.type === 'guide'}
+                data-last-guide={platform.type === 'guide' && platform.isLastGuide}
               >
                 <ComboboxItem>
                   <RadixSelect.ItemText>
-                    <span
-                      className={styles['item-text']}
-                      style={{
-                        paddingLeft:
-                          // indent guides when there search value is empty
-                          platform.type === 'guide' && !searchValue ? '1.2rem' : '0',
-                      }}
-                    >
+                    <span className={styles['item-text']}>
                       <PlatformIcon
                         platform={platform.icon ?? platform.key}
                         size={16}
@@ -128,9 +129,6 @@ export function PlatformSelector({
                       {platform.title}
                     </span>
                   </RadixSelect.ItemText>
-                  <RadixSelect.ItemIndicator className={styles['item-indicator']}>
-                    <CheckIcon />
-                  </RadixSelect.ItemIndicator>
                 </ComboboxItem>
               </RadixSelect.Item>
             ))}

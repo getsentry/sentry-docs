@@ -7,17 +7,16 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {Platform} from 'sentry-docs/types';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
 import {ScrollActiveLink} from './focus-active-link';
 import {GitHubCTA} from './githubCta';
-import {GuideDropdown} from './guideDropdown';
 import {Header} from './header';
 import {Navbar} from './navbar';
-import {NavbarPlatformDropdown} from './navbarPlatformDropdown';
 import {PlatformSdkDetail} from './platformSdkDetail';
+import {PlatformSelector} from './platformSelector';
 import {ServerSidebar} from './serverSidebar';
 import {TableOfContents} from './tableOfContents';
 
@@ -60,19 +59,6 @@ export function DocPage({
           : platform;
       });
 
-  const guides: PlatformGuide[] = !(rootNode && currentPlatform)
-    ? []
-    : currentPlatform.guides.map(guide => {
-        const guideForPath = nodeForPath(rootNode, [
-          'platforms',
-          currentPlatform.name,
-          'guides',
-          guide.name,
-          ...path.slice(currentGuide ? 4 : 2),
-        ]);
-        return guideForPath ? {...guide, url: '/' + guideForPath.path + '/'} : guide;
-      });
-
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
 
@@ -90,17 +76,11 @@ export function DocPage({
               <div className="sidebar-title">
                 <h6>Language / Framework</h6>
               </div>
-              <NavbarPlatformDropdown
+              <PlatformSelector
                 platforms={platforms}
-                currentPlatform={currentPlatform}
+                currentPlatform={currentGuide || currentPlatform}
               />
             </div>
-
-            {guides.length > 0 && (
-              <div className="px-3 pt-1">
-                <GuideDropdown guides={guides} currentGuide={currentGuide} />
-              </div>
-            )}
           </div>
           <div className="toc">
             <ScrollActiveLink />
