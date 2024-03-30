@@ -1,3 +1,4 @@
+'use client';
 import {startTransition, useEffect, useMemo, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretSortIcon, CheckIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
@@ -6,7 +7,7 @@ import {matchSorter} from 'match-sorter';
 import {useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
-import {Platform} from 'sentry-docs/types';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import styles from './style.module.scss';
 
@@ -15,7 +16,7 @@ export function PlatformSelector({
   currentPlatform,
 }: {
   platforms: Array<Platform>;
-  currentPlatform?: Platform;
+  currentPlatform?: Platform | PlatformGuide;
 }) {
   // append guides to each platform
   const platformsAndGuides = platforms
