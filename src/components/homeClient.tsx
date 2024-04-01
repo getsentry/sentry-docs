@@ -13,7 +13,7 @@ import HeroImage from 'sentry-docs/imgs/home_illustration.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
-import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {Platform} from 'sentry-docs/types';
 
 import {NavLink} from './navlink';
 import {PlatformIcon} from './platformIcon';
@@ -21,7 +21,7 @@ import {Search} from './search';
 import {SmartLink} from './smartLink';
 
 interface Props {
-  platforms: Array<Platform | PlatformGuide>;
+  platforms: Array<Platform>;
 }
 
 export function HomeClient({platforms}: Props) {
