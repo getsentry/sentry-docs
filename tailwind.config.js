@@ -17,6 +17,9 @@ module.exports = {
         'fade-in-left': 'fadeInLeft 0.55s ease-in-out',
         'fade-in-right': 'fadeInRight 0.55s ease-in-out',
       },
+      boxShadow: {
+        DEFAULT: '0px 4px 16px 0px rgba(31, 22, 51, 0.10)',
+      },
       keyframes: () => ({
         fadeIn: {
           '0%': { opacity: 0 },
