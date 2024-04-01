@@ -123,7 +123,6 @@ export function PlatformSelector({
                       <PlatformIcon
                         platform={platform.icon ?? platform.key}
                         size={16}
-                        style={{marginRight: '0.5rem'}}
                         format="sm"
                       />
                       {platform.title}
