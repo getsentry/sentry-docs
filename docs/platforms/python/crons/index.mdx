@@ -12,6 +12,56 @@ Sentry Crons allows you to monitor the uptime and performance of any scheduled, 
 
 <PlatformContent includePath="crons/setup" />
 
+## Check-Ins
+
+Check-in monitoring allows you to track a job's progress by capturing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+
+If you use the `monitor` decorator/context manager, the SDK will create check-ins for the wrapped code automatically.
+
+```python
+from sentry_sdk.crons import capture_checkin
+from sentry_sdk.crons.consts import MonitorStatus
+
+check_in_id = capture_checkin(
+    monitor_slug='<monitor-slug>',
+    status=MonitorStatus.IN_PROGRESS,
+)
+
+# Execute your task here...
+
+capture_checkin(
+    monitor_slug='<monitor-slug>',
+    check_in_id=check_in_id,
+    status=MonitorStatus.OK,
+)
+```
+
+## Upserting Cron Monitors
+
+You can create and update your Monitors programmatically with code rather than [creating and configuring them in Sentry.io](https://sentry.io/crons/create/).
+
+To create/update a monitor, use `monitor` as outlined above and pass in your monitor configuration as `monitor_config`:
+
+```python
+monitor_config = {
+    # TODO
+}
+
+@monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config)
+def tell_the_world():
+    print('My scheduled task...')
+```
+
+If you're using [manual check-ins](#check-ins), you can pass your `monitor_config` to the `capture_checkin` call:
+
+```python
+check_in_id = capture_checkin(
+    monitor_slug='<monitor-slug>',
+    status=MonitorStatus.IN_PROGRESS,
+    monitor_config=monitor_config,
+)
+```
+
 ## Alerts
 
 When your recurring job fails to check in (missed), runs beyond its configured maximum runtime (failed), or manually reports a failure, Sentry will create an error event with a tag to your monitor.
