@@ -9,6 +9,13 @@ declare global {
 
 const prisma = global.prisma || new PrismaClient();
 
+// Check and log the presence of DATABASE_URL environment variable
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL environment variable is not set.');
+} else {
+  console.log('DATABASE_URL environment variable is set.');
+}
+
 if (process.env.NODE_ENV === 'development') {
   global.prisma = prisma;
 }
