@@ -24,7 +24,6 @@ const nextConfig = {
         uploadToken: process.env.CODECOV_TOKEN,
       })
     );
-}
 
     return config;
   }
