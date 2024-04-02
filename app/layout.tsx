@@ -23,7 +23,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${rubik.variable} text-darkPurple`}>
-        <Theme accentColor="violet" grayColor="sand" radius="large" scaling="95%">
+        <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
           {children}
         </Theme>
       </body>
