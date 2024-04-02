@@ -41,7 +41,7 @@ export function HomeClient({platforms}: Props) {
           <div className="flex w-full">
             <Search path={pathname} platforms={[]} />
           </div>
-          <div className="flex w-full justify-end">
+          <div className="flex justify-end w-full space-x-2 items-center">
             <NavLink href="/product/">API</NavLink>
             <NavLink href="/changelog">Changelog</NavLink>
             <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
@@ -131,7 +131,7 @@ export function HomeClient({platforms}: Props) {
         </div>
       </div>
       <footer className="mt-20 py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t border-gray space-y-4">
-        <div className="flex md:items-center flex-wrap md:flex-row flex-col gap-3">
+        <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3">
           <FooterLink href="/product/security/">Security & Legal</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
           <FooterLink href="https://help.sentry.io/" external>
@@ -173,12 +173,9 @@ function FooterLink({
 }: LinkProps &
   AnchorHTMLAttributes<any> & {children: React.ReactNode; external?: boolean}) {
   const target = props.target ?? (props.href?.startsWith('http') ? '_blank' : undefined);
+
   return (
-    <Link
-      {...props}
-      target={target}
-      className="hover:bg-gray-100 rounded-md px-3 py-2 text-sm font-medium text-darkPurple hover:text-darkPurple hover:no-underline uppercase text-nowrap flex items-center"
-    >
+    <NavLink {...props} target={target}>
       {children}
       {props.external && (
         <svg
@@ -193,6 +190,6 @@ function FooterLink({
           </g>
         </svg>
       )}
-    </Link>
+    </NavLink>
   );
 }
