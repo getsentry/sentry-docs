@@ -4,6 +4,10 @@ const { codecovWebpackPlugin } = require('@codecov/webpack-plugin');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverRuntimeConfig: {
+    bodySizeLimit: '1mb',
+  },
+
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
   trailingSlash: true,
@@ -20,6 +24,7 @@ const nextConfig = {
         uploadToken: process.env.CODECOV_TOKEN,
       })
     );
+}
 
     return config;
   }
