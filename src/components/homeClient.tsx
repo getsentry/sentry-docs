@@ -28,7 +28,7 @@ export function HomeClient({platforms}: Props) {
   const pathname = usePathname() ?? undefined;
   return (
     <div className="tw-app">
-      <header className="bg-white py-3 w-full z-50 border-b">
+      <header className="bg-white py-3 w-full z-50 border-b border-gray">
         <nav className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex items-center text-primary">
           <a
             href="/"
@@ -130,7 +130,7 @@ export function HomeClient({platforms}: Props) {
           </Link>
         </div>
       </div>
-      <footer className="mt-20 py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t space-y-4">
+      <footer className="mt-20 py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t border-gray space-y-4">
         <div className="flex md:items-center flex-wrap md:flex-row flex-col gap-3">
           <FooterLink href="/product/security/">Security & Legal</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
