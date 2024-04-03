@@ -1,6 +1,6 @@
 'use client';
 
-import {AnchorHTMLAttributes} from 'react';
+import {AnchorHTMLAttributes, ReactNode} from 'react';
 import Image from 'next/image';
 import Link, {type LinkProps} from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -15,6 +15,7 @@ import SupportImage from 'sentry-docs/imgs/support.png';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
 
+import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {PlatformIcon} from './platformIcon';
 import {Search} from './search';
@@ -41,11 +42,14 @@ export function HomeClient({platforms}: Props) {
           <div className="flex w-full">
             <Search path={pathname} platforms={[]} />
           </div>
-          <div className="flex justify-end w-full space-x-2 items-center">
+          <div className="hidden lg:flex justify-end w-full space-x-2 items-center">
             <NavLink href="/product/">API</NavLink>
             <NavLink href="/changelog">Changelog</NavLink>
             <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
             <NavLink href="https://sentry.io/">Sign In</NavLink>
+          </div>
+          <div className="lg:hidden">
+            <MobileMenu />
           </div>
         </nav>
       </header>
@@ -170,8 +174,7 @@ export function HomeClient({platforms}: Props) {
 function FooterLink({
   children,
   ...props
-}: LinkProps &
-  AnchorHTMLAttributes<any> & {children: React.ReactNode; external?: boolean}) {
+}: LinkProps & AnchorHTMLAttributes<any> & {children: ReactNode; external?: boolean}) {
   const target = props.target ?? (props.href?.startsWith('http') ? '_blank' : undefined);
 
   return (
