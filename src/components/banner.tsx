@@ -9,10 +9,10 @@ import {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Join us for Sentry Launch Week March 18-22 for product releases and exclusive demos.';
+  'Let’s par-tee - join us at Google Cloud Next for Sentry’s After Party at Topgolf on April 9 @ 7pm.';
 const BANNER_LINK_URL =
-  'https://sentry.io/events/launch-week/?promo_name=docs-fy25q1launchweek';
-const BANNER_LINK_TEXT = 'See what’s new';
+  'https://sentry.io/resources/sentry-google-cloud-next-2024/?promo=docs-banner';
+const BANNER_LINK_TEXT = 'RSVP here.';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
