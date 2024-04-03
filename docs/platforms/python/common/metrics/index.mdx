@@ -12,10 +12,6 @@ Metrics for Python are supported with Sentry Python SDK version `1.40.0` and abo
 
 Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
 
-## Configure Metrics
-
-You do not need to do anything to enable metrics support, it works out of the box.
-
 
 ## Emit a Counter
 
@@ -53,6 +49,8 @@ sentry_sdk.metrics.distribution(
 )
 ```
 
+Sentry supports arbitrary custom values for `unit`, but we recommend using one of the [supported units listed below](./#supported-metric-units).
+
 ## Emit a Set
 
 Sets are useful for looking at unique occurrences and counting the unique elements you added.
@@ -70,6 +68,9 @@ sentry_sdk.metrics.set(
 	}
 )
 ```
+
+Sentry supports arbitrary custom values for `unit`, but we recommend using one of the [supported units listed below](./#supported-metric-units).
+
 
 ## Emit a Gauge
 
@@ -89,6 +90,9 @@ sentry_sdk.metrics.gauge(
 )
 ```
 
+Sentry supports arbitrary custom values for `unit`, but we recommend using one of the [supported units listed below](./#supported-metric-units).
+
+
 ## Emit a Timer
 
 Timers can be used to measure the execution time of a specific block of code. They're implemented like distributions, but measured in seconds.
@@ -104,11 +108,13 @@ with sentry_sdk.metrics.timing(key="event_processing_time"):
 
 ## Options
 
-You do not need to do anything to enable metrics support. There are some options you can set/change to influence the metrics behavior. As Metrics is still in the beta phase, those options are under the `_experimental` option.
+There are some options you can set/change to influence the behavior of metrics. As metrics is still in the beta phase, those options are under the `_experimental` option.
 
 <ConfigKey name="metrics_summary_sample_rate">
 
-The sampling rate for metrics summaries. Float value that defaults to `1.0`.
+The sampling rate for metrics summaries.
+
+Default: `1.0`.
 
 ```python
 sentry_sdk.init(
@@ -123,7 +129,7 @@ sentry_sdk.init(
 
 <ConfigKey name="should_summarize_metric">
 
-A callback function hat is called with a metric `key` and the `tags` associated with that key. If the callback function returns `True` a summary for the metrics with the given `key` is generated, if the callback function returns `False` no summary of the metric with the given `key` is generated.
+A callback function hat is called to decide if a summary should be generated for a metric with the given `key`. The `tags` are passed to the callback so they can be used when finding a decision. If the callback function returns `True` a summary for the metrics with the given `key` is generated, if the callback function returns `False` no summary of the metric with the given `key` is generated.
 
 In this example only summaries for the metrics with the key `important.metric.key` will be generated:
 ```python
@@ -142,16 +148,14 @@ sentry_sdk.init(
 
 <ConfigKey name="before_emit_metric">
 
-A callback function that is called before a metric is emmited. If the callback returns `False` the metric is not emitted, if the callback returns `True` the metric is emitted. The given tags can also be updated in the callback function.
+A callback function that is called before a metric is emmited. If the callback returns `False` the metric is not emitted, if the callback returns `True` the metric is emitted. The given `tags` can also be updated in the callback function.
 
 ```python
 def before_emit(key, tags):
 	if key == "removed-metric":
 		return False
-
 	tags["extra"] = "foo"
 	del tags["release"]
-
 	return True
 
 sentry_sdk.init(
@@ -168,6 +172,8 @@ sentry_sdk.init(
 
 If `True` the line of code where the metric was emitted will be added to the metric. The code location will be omitted when this option is set to `False`.
 
+Default: `True`
+
 ```python
 sentry_sdk.init(
 	...
@@ -179,43 +185,6 @@ sentry_sdk.init(
 
 </ConfigKey>
 
-
-
 ## Supported Metric Units
 
-Units augment metric values by giving meaning to what otherwise might be abstract numbers. Adding units also allows Sentry to offer controls - unit conversions, filters, and so on - based on those units. For values that are unitless, you can supply an empty string or `none`.
-
-### Duration Units
-
-- `nanosecond`
-- `microsecond`
-- `millisecond`
-- `second`
-- `minute`
-- `hour`
-- `day`
-- `week`
-
-### Information Units
-
-- `bit`
-- `byte`
-- `kilobyte`
-- `kibibyte`
-- `megabyte`
-- `mebibyte`
-- `gigabyte`
-- `gibibyte`
-- `terabyte`
-- `tebibyte`
-- `petabyte`
-- `pebibyte`
-- `exabyte`
-- `exbibyte`
-
-### Fraction Units
-
-- `ratio`
-- `percent`
-
-If you want to explore further, you can find details about supported units in our [event ingestion documentation](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html).
+<PlatformContent includePath="metrics/metrics-units" />
