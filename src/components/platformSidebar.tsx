@@ -59,7 +59,9 @@ export function PlatformSidebar({platform, guide, data}: ChildProps) {
       <DynamicNav
         root={`/${pathRoot}/distributed-tracing`}
         title="Distributed Tracing"
-        prependLinks={[[`/${pathRoot}/distributed-tracing/`, 'Set Up Distributed Tracing']]}
+        prependLinks={[
+          [`/${pathRoot}/distributed-tracing/`, 'Set Up Distributed Tracing'],
+        ]}
         suppressMissing
         tree={tree}
       />
