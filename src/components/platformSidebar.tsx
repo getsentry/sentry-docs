@@ -46,6 +46,7 @@ export function PlatformSidebar({platform, guide, data}: ChildProps) {
         title={`Sentry for ${(guide || platform).title}`}
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[
+          `/${pathRoot}/distributed-tracing/`,
           `/${pathRoot}/performance/`,
           `/${pathRoot}/metrics/`,
           `/${pathRoot}/session-replay/`,
@@ -54,6 +55,15 @@ export function PlatformSidebar({platform, guide, data}: ChildProps) {
           `/${pathRoot}/crons/`,
           `/${pathRoot}/user-feedback/`,
         ]}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/distributed-tracing`}
+        title="Distributed Tracing"
+        prependLinks={[
+          [`/${pathRoot}/distributed-tracing/`, 'Set Up Distributed Tracing'],
+        ]}
+        suppressMissing
+        tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/performance`}
