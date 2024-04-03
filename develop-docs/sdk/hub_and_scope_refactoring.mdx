@@ -164,6 +164,43 @@ This image illustrates the behavior of these new APIs and how scope data is appl
 
 For a zoomable version visit the <a href="https://miro.com/app/board/uXjVNtPiOfI=/?share_link_id=140058397661" target="_blank">Miro Board</a>
 
+Here's how the new APIs roughly map to the old-style APIs. In case of `configure_scope` and `push_scope` it's not clear-cut whether to use the current or the isolation scope. The choice essentially depends on how long/for which context the changed/forked scope should be active.
+
+<table>
+	<thead>
+		<tr>
+			<th>Old API</th>
+			<th>New API</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><code>hub = Hub(Hub.current)</code> (hub clone)</td>
+			<td><code>with isolation_scope() as scope</code></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td rowspan="2" style="vertical-align: middle;"><code>with configure_scope() as scope</code></td>
+			<td><code>scope = Scope.get_isolation_scope()</code></td>
+			<td>Should affect the whole transaction (one request/response cycle, one execution of a task, etc.).</td>
+		</tr>
+		<tr>
+			<td><code>scope = Scope.get_current_scope()</code></td>
+			<td>Should affect the whole span or a part of code isolated via a forked current scope with <code>new_scope</code>.</td>
+		</tr>
+		<tr>
+			<td rowspan="2" style="vertical-align: middle;"><code>with push_scope() as scope</code></td>
+			<td><code>with isolation_scope() as scope</code></td>
+			<td>We're starting a new transaction-worthy unit (request/response cycle, etc.).</td>
+		</tr>
+		<tr>
+			<td><code>with new_scope() as scope</code></td>
+			<td>Should affect a localized part of code, e.g. if the user wants to add specific data to a specific event.</td>
+		</tr>
+	</tbody>
+</table>
+
 ---
 
 ## F) Use OTel for Performance Instrumentation (POtel)
