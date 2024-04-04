@@ -82,10 +82,13 @@ export default async function Page({params}) {
     return notFound();
   }
 
+  const pagePath =
+    // if the page comes from a superFallbackPlatform, use the superFallbackPlatform's slug
+    pageNode.frontmatter.superFallbackSlug ?? pageNode.frontmatter.slug;
   // get the MDX for the current doc and render it
   let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   try {
-    doc = await getFileBySlug(`docs/${pageNode.path}`);
+    doc = await getFileBySlug(`docs/${pagePath}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
       console.error('ENOENT', pageNode.path);

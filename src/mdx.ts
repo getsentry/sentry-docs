@@ -104,7 +104,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
       return;
     }
 
-    if (fileName.indexOf('/common/') !== -1) {
+    if (fileName.includes('/common/')) {
       return;
     }
 
@@ -136,7 +136,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
       ) as PlatformConfig;
     }
 
-    const commonPath = path.join(platformsPath, platformName, 'common');
+    const superFallbackPlatform = platformFrontmatter.superFallbackPlatform;
+    const commonPath = path.join(
+      platformsPath,
+      superFallbackPlatform || platformName,
+      'common'
+    );
     if (!fs.existsSync(commonPath)) {
       return;
     }
@@ -147,7 +152,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
     const commonFiles = commonFileNames.map(commonFileName => {
       const source = fs.readFileSync(commonFileName, 'utf8');
       const {data: frontmatter} = matter(source);
-      return {commonFileName, frontmatter: frontmatter as FrontMatter};
+      return {
+        commonFileName,
+        frontmatter: frontmatter as FrontMatter,
+        superFallbackPlatform,
+      };
     });
 
     commonFiles.forEach(f => {
@@ -165,11 +174,15 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
         if (subpath === 'index.mdx') {
           frontmatter = {...frontmatter, ...platformFrontmatter};
         }
-        allFrontMatter.push({
+        const fileFrontmatter = {
           ...frontmatter,
-          slug: formatSlug(slug),
+          slug: formatSlug(
+            slug.replace(superFallbackPlatform || platformName, platformName)
+          ),
+          superFallbackSlug: formatSlug(slug),
           sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-        });
+        };
+        allFrontMatter.push(fileFrontmatter);
       }
     });
 

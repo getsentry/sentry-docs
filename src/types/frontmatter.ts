@@ -48,6 +48,11 @@ export interface FrontMatter {
 
   sourcePath?: string;
   /**
+   * If this docuent comes from a superFallbackPlatform (practically /common files), this is the slug of the platform it falls back to.
+   */
+  superFallbackSlug?: string;
+
+  /**
    * Specific guides that this page is relevant to.
    */
   supported?: string[];

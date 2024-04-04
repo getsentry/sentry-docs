@@ -96,6 +96,7 @@ export interface PlatformConfig {
    * inherit configuration values from the parent platform.
    */
   fallbackPlatform?: string;
+
   /**
    * The icon to use for this platform. This is the name of the icon as defined
    */
@@ -108,6 +109,10 @@ export interface PlatformConfig {
    * Used to map a platform to a specific SDK as defined by the SDK registry.
    */
   sdk?: string;
+  /**
+   * The platform that this platform should fallback to on /common/ files.
+   */
+  superFallbackPlatform?: string;
   /**
    * Is this a first-party or third-party SDK?
    */
