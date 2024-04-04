@@ -198,7 +198,7 @@ end
 ```javascript
   const SENTRY_HOST = "oXXXXXX.ingest.sentry.io"
   const SENTRY_PROJECT_IDS = ["123456"]
-  
+
   export const postAction = async ({ request }) => {
       try {
           const envelope = await request.text();
@@ -206,18 +206,18 @@ end
           const header = JSON.parse(piece);
           const dsn = new URL(header["dsn"]);
           const project_id = dsn.pathname?.replace("/", "");
-  
+
           if (dsn.hostname !== SENTRY_HOST) {
               throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
           }
-  
+
           if (!project_id || !SENTRY_PROJECT_IDS.includes(project_id)) {
               throw new Error(`Invalid sentry project id: ${project_id}`);
           }
-  
+
           const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
           await fetch(upstream_sentry_url, { method: "POST", body: envelope });
-  
+
           return json({}, { status: 200 });
       } catch (e) {
           console.error("error tunneling to sentry", e);
@@ -298,7 +298,7 @@ import {
   defaultStackParser,
   defaultIntegrations,
   makeFetchTransport,
-  Hub,
+  Scope,
 } from "@sentry/browser";
 
 const client = new BrowserClient({
@@ -308,12 +308,13 @@ const client = new BrowserClient({
   integrations: defaultIntegrations,
 });
 
-// You have to bind the client to a hub, otherwise integrations will not run!
-const hub = new Hub(client);
-// Or, if you already have a hub you want to re-use, you can also do:
-// hub.bindClient(client);
+const scope = new Scope();
+scope.setClient(client);
 
-hub.captureException(new Error("example"));
+client.init() // initializing has to be done after setting the client on the scope
+
+// You can capture exceptions manually for this client like this:
+scope.captureException(new Error("example"));
 ```
 
 You can now customize the hub to your liking, without affecting other hubs/clients.
