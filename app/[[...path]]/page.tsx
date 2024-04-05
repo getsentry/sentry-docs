@@ -84,7 +84,7 @@ export default async function Page({params}) {
 
   const pagePath =
     // if the page comes from a superFallbackPlatform, use the superFallbackPlatform's slug
-    pageNode.frontmatter.superFallbackSlug ?? pageNode.frontmatter.slug;
+    pageNode.frontmatter.superFallbackSlug ?? pageNode.path;
   // get the MDX for the current doc and render it
   let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   try {

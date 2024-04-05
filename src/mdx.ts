@@ -179,7 +179,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
           slug: formatSlug(
             slug.replace(superFallbackPlatform || platformName, platformName)
           ),
-          superFallbackSlug: formatSlug(slug),
+          superFallbackSlug: superFallbackPlatform && formatSlug(slug),
           sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
         };
         allFrontMatter.push(fileFrontmatter);
