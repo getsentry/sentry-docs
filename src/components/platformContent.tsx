@@ -48,17 +48,26 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     }
   }
 
-  if (!doc) {
-    const rootNode = await getDocsRootNode();
-    const platformObject = rootNode && getPlatform(rootNode, platform);
-    if (platformObject?.fallbackPlatform) {
-      try {
-        doc = await getFileBySlug(
-          `platform-includes/${includePath}/${platformObject.fallbackPlatform}`
-        );
-      } catch (e) {
-        // It's fine - keep looking.
-      }
+  const rootNode = await getDocsRootNode();
+  const platformObject = rootNode && getPlatform(rootNode, platform);
+  if (!doc && platformObject?.fallbackPlatform) {
+    console.log('platformObject', platformObject);
+    try {
+      doc = await getFileBySlug(
+        `platform-includes/${includePath}/${platformObject.fallbackPlatform}`
+      );
+    } catch (e) {
+      // It's fine - keep looking.
+    }
+  }
+
+  if (!doc && platformObject?.superFallbackPlatform) {
+    try {
+      doc = await getFileBySlug(
+        `platform-includes/${includePath}/${platformObject.superFallbackPlatform}`
+      );
+    } catch (e) {
+      // It's fine - keep looking.
     }
   }
 

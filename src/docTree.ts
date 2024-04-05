@@ -151,6 +151,7 @@ function nodeToPlatform(n: DocNode): Platform {
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    superFallbackPlatform: n.frontmatter.superFallbackPlatform,
   };
 }
 
