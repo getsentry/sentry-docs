@@ -2488,6 +2488,18 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     from: '/product/sentry-basics/search/searchable-properties/session-replay/',
     to: '/product/reference/search/searchable-properties/session-replay/',
   },
+  {
+    from: '/platforms/javascript/configuration/micro-frontend-support/',
+    to: '/platforms/javascript/best-practices/micro-frontends/',
+  },
+  {
+    from: '/platforms/javascript/configuration/sentry-testkit/',
+    to: '/platforms/javascript/best-practices/sentry-testkit/',
+  },
+  {
+    from: 'platforms/javascript/configuration/webworkers/',
+    to: '/platforms/javascript/best-practices/web-workers/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
