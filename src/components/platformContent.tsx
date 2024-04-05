@@ -51,7 +51,6 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   const rootNode = await getDocsRootNode();
   const platformObject = rootNode && getPlatform(rootNode, platform);
   if (!doc && platformObject?.fallbackPlatform) {
-    console.log('platformObject', platformObject);
     try {
       doc = await getFileBySlug(
         `platform-includes/${includePath}/${platformObject.fallbackPlatform}`
