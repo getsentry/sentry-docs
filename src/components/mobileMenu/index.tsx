@@ -1,7 +1,9 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
-import {Button} from '@radix-ui/themes';
+import {Box, Button} from '@radix-ui/themes';
 import Link from 'next/link';
+
+import {Search} from 'sentry-docs/components/search';
 
 import styles from './styles.module.scss';
 
@@ -11,7 +13,7 @@ export function MobileMenu() {
       <DropdownMenu.Trigger asChild>
         <Button
           variant="ghost"
-          size="3"
+          size="4"
           color="gray"
           radius="medium"
           className="font-medium text-darkPurple"
@@ -23,6 +25,23 @@ export function MobileMenu() {
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
+          <Box display={{xs: 'block', sm: 'none'}}>
+            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+              <Search />
+            </DropdownMenu.Item>
+
+            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+              <Link
+                href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
+                target="_blank"
+                className="mt-2 md:hidden"
+              >
+                Ask A Bot
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
+          </Box>
+
           <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
             <Link href="/product/">API</Link>
           </DropdownMenu.Item>

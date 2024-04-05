@@ -1,7 +1,6 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
-import styled from '@emotion/styled';
 import {
   Hit,
   Result,
@@ -168,7 +167,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
 
   return (
     <div className={styles.search} ref={ref}>
-      <SearchBar>
+      <div className={styles['search-bar']}>
         <input
           type="search"
           placeholder="Search Docs"
@@ -184,10 +183,11 @@ export function Search({path, autoFocus, platforms = []}: Props) {
           target="_blank"
           rel="noreferrer"
           style={{textWrap: 'nowrap'}}
+          className="hidden md:flex"
         >
           Ask A Bot
         </NavLink>
-      </SearchBar>
+      </div>
       {query.length >= 2 && inputFocus && (
         <div className={styles['sgs-search-results']}>
           {loading && <Logo loading />}
@@ -288,11 +288,3 @@ export function Search({path, autoFocus, platforms = []}: Props) {
     </div>
   );
 }
-
-const SearchBar = styled('div')`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 1rem;
-  margin-left: 1rem;
-`;

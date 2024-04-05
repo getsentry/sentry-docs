@@ -30,7 +30,7 @@ export function HomeClient({platforms}: Props) {
   return (
     <div className="tw-app">
       <header className="bg-white py-3 w-full z-50 border-b border-gray">
-        <nav className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex items-center text-primary">
+        <nav className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center text-primary">
           <a
             href="/"
             title="Sentry error monitoring"
@@ -39,7 +39,7 @@ export function HomeClient({platforms}: Props) {
             <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
             Docs
           </a>
-          <div className="flex w-full">
+          <div className="hidden md:flex w-full">
             <Search path={pathname} platforms={[]} />
           </div>
           <div className="hidden lg:flex justify-end w-full space-x-2 items-center">
@@ -48,7 +48,7 @@ export function HomeClient({platforms}: Props) {
             <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
             <NavLink href="https://sentry.io/">Sign In</NavLink>
           </div>
-          <div className="lg:hidden">
+          <div className="lg:hidden ml-auto">
             <MobileMenu />
           </div>
         </nav>
