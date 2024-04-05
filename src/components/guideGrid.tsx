@@ -38,7 +38,10 @@ export function GuideGrid({platform, className}: Props) {
           <li key={guide.key}>
             <SmartLink to={guide.url}>
               <PlatformIcon
-                platform={guide.icon ?? guide.key}
+                platform={(guide.icon ?? guide.key).replace(
+                  currentPlatform.key,
+                  currentPlatform.superFallbackPlatform ?? currentPlatform.key
+                )}
                 style={{marginRight: '0.5rem', border: 0, boxShadow: 'none'}}
                 format="sm"
               />
