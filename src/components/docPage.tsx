@@ -61,7 +61,7 @@ export function DocPage({
             </div>
             <div className="row">
               <div className={hasToc ? 'col-sm-8 col-md-12 col-lg-8 col-xl-9' : 'col-12'}>
-                <h1 className="mb-3">{frontMatter.title}</h1>
+                <h1 className="mb-3">{frontMatter.title ?? platformOrGuide?.title}</h1>
                 <div id="main">
                   <CodeContextProvider>{children}</CodeContextProvider>
                 </div>
