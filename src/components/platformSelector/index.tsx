@@ -81,8 +81,6 @@ export function PlatformSelector({
           aria-label="Platforms"
           position="popper"
           className={styles.popover}
-          sideOffset={4}
-          alignOffset={-16}
         >
           <div className={styles['combobox-wrapper']}>
             <div className={styles['combobox-icon']}>
