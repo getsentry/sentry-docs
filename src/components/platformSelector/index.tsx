@@ -29,12 +29,12 @@ export function PlatformSelector({
     ])
     .flat(2);
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(currentPlatform?.name ?? '');
+  const [value, setValue] = useState(currentPlatform?.key ?? '');
   const [searchValue, setSearchValue] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const url = platformsAndGuides.find(platform => platform.name === value)?.url;
+    const url = platformsAndGuides.find(platform => platform.key === value)?.url;
     if (url) {
       router.push(url);
     }
@@ -111,7 +111,7 @@ export function PlatformSelector({
             {matches.map(platform => (
               <RadixSelect.Item
                 key={platform.key}
-                value={platform.name}
+                value={platform.key}
                 asChild
                 className={styles.item}
                 data-guide={searchValue === '' && platform.type === 'guide'}
