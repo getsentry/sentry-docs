@@ -122,8 +122,9 @@ export function PlatformSelector({
                         platform={platform.icon ?? platform.key}
                         size={16}
                         format="sm"
+                        className={styles['platform-icon']}
                       />
-                      {platform.title}
+                      {platform.title?.replace(/(.)\.(.)/g, '$1 $2')}
                     </span>
                   </RadixSelect.ItemText>
                 </ComboboxItem>
