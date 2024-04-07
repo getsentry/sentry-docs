@@ -29,37 +29,37 @@ export function PlatformSelector({
     ])
     .flat(2);
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(currentPlatform?.key ?? '');
+  const [platformKey, setPlatformKey] = useState(currentPlatform?.key);
   const [searchValue, setSearchValue] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const url = platformsAndGuides.find(platform => platform.key === value)?.url;
+    const url = platformsAndGuides.find(platform => platform.key === platformKey)?.url;
     if (url) {
       router.push(url);
     }
-  }, [value, platformsAndGuides, router]);
+  }, [platformKey, router, platformsAndGuides]);
 
   const matches = useMemo(() => {
     if (!searchValue) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['name', 'aliases', 'sdk'];
+    const keys = ['title', 'aliases', 'sdk'];
     const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
-    const selectedPlatform = platformsAndGuides.find(lang => lang.name === value);
+    const selectedPlatform = platformsAndGuides.find(lang => lang.key === platformKey);
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
     return matches_;
-  }, [searchValue, value]);
+  }, [searchValue, platformKey]);
 
   return (
     <RadixSelect.Root
-      value={value}
-      onValueChange={setValue}
+      value={platformKey}
+      onValueChange={setPlatformKey}
       open={open}
       onOpenChange={setOpen}
     >
