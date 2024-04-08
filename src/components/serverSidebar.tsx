@@ -25,6 +25,10 @@ export function ServerSidebar() {
     }
   } else if (path.indexOf('product') === 0 || path.indexOf('platform-redirect') === 0) {
     return <ProductSidebar rootNode={rootNode} />;
+  } else if (path.indexOf('cli') === 0) {
+    return <ProductSidebar rootNode={rootNode} />;
+  } else if (path.indexOf('account') === 0) {
+    return <ProductSidebar rootNode={rootNode} />;
   } else if (path.indexOf('api') === 0) {
     if (!rootNode) {
       return <ApiSidebar />;
