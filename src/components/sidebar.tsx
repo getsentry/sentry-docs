@@ -4,9 +4,11 @@ import {Fragment} from 'react';
 import styled from '@emotion/styled';
 import Link from 'next/link';
 
+import {FrontMatter} from 'sentry-docs/types';
+
 export type SidebarNode = {
   children: SidebarNode[];
-  frontmatter: {[key: string]: any};
+  frontmatter: FrontMatter;
   path: string;
 };
 
@@ -21,7 +23,7 @@ export function Sidebar({node, path}: Props) {
     return `${baseClassName} ${className}`;
   };
 
-  const renderChildren = children =>
+  const renderChildren = (children: SidebarNode[]) =>
     children && (
       <ul className="list-unstyled" data-sidebar-tree>
         {children.map(n => (

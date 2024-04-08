@@ -75,9 +75,7 @@
     "type": "Counter",
     "name": "event.corrupted",
     "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Histogram",
@@ -165,17 +163,15 @@
   },
   {
     "type": "Timer",
-    "name": "event_processing.pii",
-    "description": "Time in milliseconds spent in data scrubbing for the current event. Data scrubbing happens\nlast before serializing the event back to JSON.",
+    "name": "event_processing.normalization",
+    "description": "Time in milliseconds spent running normalization on an event. Normalization\nhappens before envelope filtering and metric extraction.",
     "features": []
   },
   {
     "type": "Timer",
-    "name": "event_processing.process",
-    "description": "Time in milliseconds spent running event processors on an event for normalization. Event\nprocessing happens before filtering.",
-    "features": [
-      "processing"
-    ]
+    "name": "event_processing.pii",
+    "description": "Time in milliseconds spent in data scrubbing for the current event. Data scrubbing happens\nlast before serializing the event back to JSON.",
+    "features": []
   },
   {
     "type": "Timer",
@@ -234,9 +230,75 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "kafka.in_flight_count",
+    "description": "The number of messages waiting to be sent to, or acknowledged by, the broker.\n\nSee <https://docs.confluent.io/platform/7.5/clients/librdkafka/html/rdkafka_8h.html#ad4b3b7659cf9a79d3353810d6b625bb7>.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "kafka.message_size",
     "description": "Size of emitted kafka message in bytes, tagged by message type.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.connects",
+    "description": "The number of connection attempts, including successful and failed attempts, and name resolution failures.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.disconnects",
+    "description": "The number of disconnections, whether triggered by the broker, the network, the load balancer, or something else.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.int_latency",
+    "description": "Maximum internal producer queue latency, in microseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf.messages",
+    "description": "The number of messages awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf.requests",
+    "description": "The number of requests awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf_latency",
+    "description": "Maximum internal request queue latency, in microseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_count",
+    "description": "The current number of messages in producer queues.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_count_max",
+    "description": "The maximum number of messages allowed in the producer queues.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_size",
+    "description": "The current total size of messages in producer queues.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_size_max",
+    "description": "The maximum total size of messages allowed in the producer queues.",
     "features": []
   },
   {
@@ -394,42 +456,6 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "processor.batched_metrics.calls",
-    "description": "Number of times the batched metrics processing has been called with at least one bucket of\na namespace.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "processor.batched_metrics.cost",
-    "description": "Bucket cost for all buckets processed in the batched metrics handling of the envelope processor.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "processor.batched_metrics.count",
-    "description": "Number of buckets processed in the batched metrics handling of the envelope processor.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "processor.encode_metrics.calls",
-    "description": "Number of times the metric encoding has been called with at least one bucket of\na namespace.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "processor.encode_metrics.cost",
-    "description": "Bucket cost for all buckets encoded in the envelope processor.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "processor.encode_metrics.count",
-    "description": "Number of metric buckets encoded in the envelope processor.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": []
-  },
-  {
     "type": "Timer",
     "name": "processor.message.duration",
     "description": "Timing in milliseconds for processing a message in the internal CPU pool.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
@@ -437,27 +463,9 @@
   },
   {
     "type": "Counter",
-    "name": "processor.rate_limit_buckets.calls",
-    "description": "Number of times metric bucket rate limiting has been called with at least one bucket of\na namespace.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": [
-      "processing"
-    ]
-  },
-  {
-    "type": "Counter",
-    "name": "processor.rate_limit_buckets.cost",
-    "description": "Bucket cost for all buckets rate limited envelope processor.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": [
-      "processing"
-    ]
-  },
-  {
-    "type": "Counter",
-    "name": "processor.rate_limit_buckets.count",
-    "description": "Number of metric buckets rate limited in the envelope processor.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
-    "features": [
-      "processing"
-    ]
+    "name": "producer.enqueue.error",
+    "description": "Number of messages that failed to be enqueued in the Kafka producer's memory buffer.\n\nThese errors include, for example, _\"UnknownTopic\"_ errors when attempting to send a\nmessage a topic that does not exist.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.",
+    "features": []
   },
   {
     "type": "Counter",

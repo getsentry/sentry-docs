@@ -10,9 +10,9 @@ type Node = {
   [key: string]: any;
   context: {
     [key: string]: any;
-    sidebar_order?: number | null;
-    sidebar_title?: string | null;
-    title?: string | null;
+    sidebar_order?: number;
+    sidebar_title?: string;
+    title?: string;
   };
   path: string;
 };
@@ -64,13 +64,17 @@ export const renderChildren = (
       ({name, node}) =>
         node && !!node.context.title && name !== '' && exclude.indexOf(node.path) === -1
     ),
-    ({node}) => node
+    ({node}) => node!
   ).map(({node, children: nodeChildren}) => {
+    // will not be null because of the filter above
+    if (!node) {
+      return null;
+    }
     return (
       <SidebarLink
         to={node.path}
         key={node.path}
-        title={node.context.sidebar_title || node.context.title}
+        title={node.context.sidebar_title || node.context.title!}
         collapsed={depth >= showDepth}
         path={path}
       >

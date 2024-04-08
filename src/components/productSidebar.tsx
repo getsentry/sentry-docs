@@ -8,8 +8,8 @@ import {SidebarLink} from './sidebarLink';
 export type NavNode = {
   context: {
     draft: boolean;
-    sidebar_order: number;
     title: string;
+    sidebar_order?: number;
     sidebar_title?: string;
   };
   path: string;
