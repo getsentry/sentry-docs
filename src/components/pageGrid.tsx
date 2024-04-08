@@ -31,7 +31,10 @@ export function PageGrid({header}: Props) {
         {parentNode.children
           /* NOTE: temp fix while we figure out the reason why some nodes have empty front matter */
           .filter(c => c.frontmatter.title)
-          .sort((a, b) => a.frontmatter.sidebar_order - b.frontmatter.sidebar_order)
+          .sort(
+            (a, b) =>
+              (a.frontmatter.sidebar_order ?? 0) - (b.frontmatter.sidebar_order ?? 0)
+          )
           .map(n => (
             <li key={n.path} style={{marginBottom: '1rem'}}>
               <h4 style={{marginBottom: 0}}>

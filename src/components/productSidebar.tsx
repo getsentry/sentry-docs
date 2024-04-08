@@ -21,7 +21,7 @@ type ChildProps = {
 
 const docNodeToNavNode = (node: DocNode): NavNode => ({
   context: {
-    draft: node.frontmatter.draft,
+    draft: Boolean(node.frontmatter.draft),
     title: node.frontmatter.title,
     sidebar_order: node.frontmatter.sidebar_order,
     sidebar_title: node.frontmatter.sidebar_title,
