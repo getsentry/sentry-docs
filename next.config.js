@@ -1758,17 +1758,32 @@ const nextConfig = {
       },
       {
         source: '/learn/cli/configuration/',
-        destination: '/product/cli/configuration/',
+        destination: '/cli/configuration/',
         permanent: true,
       },
       {
         source: '/learn/cli/',
-        destination: '/product/cli/',
+        destination: '/cli/',
         permanent: true,
       },
       {
         source: '/learn/cli/releases/',
-        destination: '/product/cli/releases/',
+        destination: '/cli/releases/',
+        permanent: true,
+      },
+      {
+        source: '/product/cli/',
+        destination: '/cli/',
+        permanent: true,
+      },
+      {
+        source: '/product/cli/:path/',
+        destination: '/cli/:path/',
+        permanent: true,
+      },
+      {
+        source: '/product/crons/getting-started/cli/',
+        destination: '/cli/crons/',
         permanent: true,
       },
       {
