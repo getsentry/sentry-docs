@@ -1,7 +1,9 @@
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
-import {SmartLink} from './smartLink';
+import styles from './style.module.scss';
+
+import {SmartLink} from '../smartLink';
 
 export function Breadcrumbs() {
   const {rootNode, path} = serverContext();
@@ -18,11 +20,11 @@ export function Breadcrumbs() {
   }
 
   return (
-    <ul className="breadcrumb" style={{margin: 0}}>
+    <ul className="list-none flex gap-3 p-0" style={{margin: 0}}>
       {nodes.map(n => {
         const to = n.path === '/' ? n.path : `/${n.path}/`;
         return (
-          <li className="breadcrumb-item" key={n.path}>
+          <li className={styles['breadcrumb-item']} key={n.path}>
             <SmartLink to={to}>{n.frontmatter.title}</SmartLink>
           </li>
         );
