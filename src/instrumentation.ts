@@ -8,6 +8,7 @@ export function register() {
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
       spotlight: process.env.NODE_ENV === 'development',
+      integrations: [Sentry.prismaIntegration()],
     });
   }
 
