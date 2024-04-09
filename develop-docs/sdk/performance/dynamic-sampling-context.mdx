@@ -64,7 +64,7 @@ Baggage is a standard HTTP header with URI encoded key-value pairs.
 For the propagation of DSC, SDKs first read the DSC from the baggage header of incoming requests/messages.
 To propagate DSC to downstream SDKs/services, we create a baggage header (or modify an existing one) through HTTP request instrumentation.
 
-The `baggage` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](/sdk/performance/#tracepropagationtargets) SDK option.
+The `baggage` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](/sdk/performance/#tracepropagationtargets) SDK option or this option is set to `null` or not set.
 
 <Alert level="info">
 
@@ -108,7 +108,7 @@ Any values on the DSC should be propagated "as is" - this includes values like "
 
 SDKs should recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
 
-- The incoming request has a `sentry-trace` header
+- The incoming request has a `sentry-trace` and/or `traceparent` header
 - The incoming request has a `baggage` header containing one or more keys starting with "`sentry-`"
 
 After the DSC of a particular trace has been frozen, API calls like `set_user` should have no effect on the DSC.
@@ -197,7 +197,7 @@ def has_sentry_value_in_baggage_header(request):
   # header of `request`, for which the key starts with "sentry-". Otherwise, it returns False.
 
 def on_incoming_request(request):
-  if request.has_header("sentry-trace") and (not request.has_header("baggage") or not has_sentry_value_in_baggage_header(request)):
+  if (request.has_header("sentry-trace") or request.has_header("traceparent")) and (not request.has_header("baggage") or not has_sentry_value_in_baggage_header(request)):
     # Request comes from an old SDK which doesn't support Dynamic Sampling Context yet
     # --> we don't propagate baggage for this trace
     current_transaction.dynamic_sampling_context_frozen = True
@@ -245,12 +245,12 @@ Here's an example of that flow:
 
 - Page starts loading
 - Sentry initializes and starts `pageload` transaction
-- Page makes HTTP request to user service to get user (propogates sentry-trace/baggage to user service)
+- Page makes HTTP request to user service to get user (propogates sentry-trace/traceparent/baggage to user service)
   - user service continues trace by automatically creating sampling transaction
-  - user service pings database service (propogates sentry-trace/baggage to database service)
+  - user service pings database service (propogates sentry-trace/traceparent/baggage to database service)
   - database service continues trace by automatically creating sampling transaction
 - Page gets data from user service, calls `Sentry.setUser` and sets `user_segment`
-- Page makes HTTP requests to service A, service B, and service C (propogates sentry-trace/baggage to services A, B and C)
+- Page makes HTTP requests to service A, service B, and service C (propogates sentry-trace/traceparent/baggage to services A, B and C)
   - DSC is propogated with baggage to service A, service B, and service C, so 3 child transactions
 - Page finishes loading, finishing `pageload` transaction, which is sent to Sentry
 
@@ -266,7 +266,7 @@ To illustrate this, let's look at another example:
 
 - Page starts loading
 - Sentry initializes and starts `pageload` transaction (with transaction name `/teams/123/user/456` - based on window URL)
-- Page makes HTTP request to service A (propogates sentry-trace/baggage to user service)
+- Page makes HTTP request to service A (propogates sentry-trace/traceparent/baggage to user service)
 - Page renders with react router, triggering paramaterization of transaction name (`/teams/123/user/456` -> `/teams/:id/user/:id`).
 - Page finishes loading, finishing pageload transaction, which is sent to Sentry
 

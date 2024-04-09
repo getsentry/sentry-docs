@@ -46,7 +46,7 @@ This option takes an array of strings and/or regular expressions. SDKs should on
 
 SDKs may choose a default value which makes sense for their use case. Most SDKs default to the regex `.*` (meaning they attach headers to all outgoing requests), but deviation is allowed if necessary. For example, because of CORS, browser-based SDKs default to only adding headers to domain-internal requests.
 
-See [`sentry-trace`](#header-sentry-trace) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage) for more details on the individual headers which are attached to outgoing requests.
+See [`sentry-trace`](#header-sentry-trace), [`traceparent`](#header-traceparent) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage) for more details on the individual headers which are attached to outgoing requests.
 
 #### Example
 
@@ -117,7 +117,8 @@ tree as well as the unit of reporting to Sentry.
   - `Span` should have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
   - The `startChild` method should respect the `maxSpans` limit, and once the limit is reached the SDK should not create new child spans for the given transaction.
   - `Span` should have a method called `toSentryTrace` which returns a string that could be sent as a header called `sentry-trace`.
-  - `Span` should have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace()}` right now. See `continueFromHeaders` as to why this exists and should be preferred when writing integrations.
+  - `Span` should have a method called `toW3CTrace` which returns a string that could be sent as a header called `traceparent`.
+  - `Span` should have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace(), "traceparent": toW3CTrace()}` right now. See `continueFromHeaders` as to why this exists and should be preferred when writing integrations.
 
 - `Transaction` Interface
 
@@ -127,6 +128,7 @@ tree as well as the unit of reporting to Sentry.
   - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
   - A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions should not be sent to Sentry.
   - `TransactionContext` should have a static/ctor method called `fromSentryTrace` which prefills a `TransactionContext` with data received from a `sentry-trace` header value
+  - `TransactionContext` should have a static/ctor method called `fromW3CTrace` which prefills a `TransactionContext` with data received from a `traceparent` header value
   - `TransactionContext` should have a static/ctor method called `continueFromHeaders(headerMap)` which is really just a thin wrapper around `fromSentryTrace(headerMap.get("sentry-trace"))` right now. This should be preferred by integration/framework-sdk authors over `fromSentryTrace` as it hides the exact header names used deeper in the core sdk, and leaves opportunity for using additional headers (from the W3C) in the future without changing all integrations.
 
 - `Span.finish()`
@@ -198,7 +200,7 @@ To offer a minimal compatibility with the [W3C `traceparent` header](https://www
 To avoid confusion with the W3C `traceparent` header (to which our header is similar but not identical), we call it simply `sentry-trace`.
 No version is being defined in the header.
 
-The `sentry-trace` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#tracepropagationtargets) SDK option.
+The `sentry-trace` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#tracepropagationtargets) SDK option or this options is set to `null`.
 
 ### The `sampled` Value
 
@@ -219,6 +221,18 @@ Besides the [usual reasons to use \*defer](https://github.com/apache/incubator-z
 `sentry-trace = sampled`
 
 Which in reality is useful for proxies to set it to `0` and opt out of tracing.
+
+## Header `traceparent`
+
+The header is used for trace propagation. SDKs use the header to continue traces from upstream services (e.g. incoming HTTP requests), and to propagate tracing information to downstream services (e.g. outgoing HTTP requests).
+
+`traceparent = version-traceid-spanid-traceflags`
+
+We can assume a version of `00`, as well as traceflags being either `-00` or `-01`.
+A deferred sampling decision is not part of the specfication.
+See [W3C `traceparent` header](https://www.w3.org/TR/trace-context/#traceparent-header) for more information.
+
+The `traceparent` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#tracepropagationtargets) SDK option or this option is set to `null` or not set.
 
 ## Static API Changes
 
