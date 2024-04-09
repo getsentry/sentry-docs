@@ -23,7 +23,7 @@ Each metric also needs to have a unit associated with it, so that you know what 
 
 ## Augmenting Metrics with Tags
 
-Metrics are powerful on their own, but you can enrich them further by adding dimensions in the form of Tags. These are key/value string pairs (for example, `cuisine:Italian`) that are associated with metrics to provide contextual information, and are often used to filter and group them during analysis.
+Metrics are powerful on their own, but you can enrich them further by adding dimensions in the form of Tags. These are key/value string pairs (for example, `platform:ios`) that are associated with metrics to provide contextual information, and are often used to filter and group them during analysis.
 
 Sentry adds certain common tags by default such as, `transaction`, `environment`, and `release`, but you can also create your own custom tags to track attributes that help organize your data for your specific use case. Some common examples of useful tags are browser name, region, language, or customer.
 
@@ -35,22 +35,24 @@ Cardinality, in the context of metrics, refers to how many unique time series yo
 
 When dealing with tags, it's important to be wary of cardinality explosion. Here's an example to help you understand what this means.
 
-Suppose you're trying to make dinner plans and want your friends to vote on their preference. Each vote has two properties:
+Suppose you are collecting a metric that counts how many logins are being made every day. You might want to emit a metric called `login` and decide to add tags such as `platform` with values `ios`, `android`, `web`, which track where the login is coming from. You might also want to add a `user_id` tag, which contains the ID of the user that logged in; however, this tag will have a lot of values that are likely to increase. If you then consider that for each `user_id`, logins might be performed across all of your `platform`(s), this will increase the number of unique time series needed to plot your data. As an example, if you have 100k user ids, you might need at most 300k time series to plot data for all the combinations of the tags.
 
-- Cuisine Type: type of restaurant (for example, Asian, Italian, German).
-- Price: price range of restaurant (for example, $, $$, $$).
+A common way to solve the problem of cardinality explosion is to choose tag values that have a fixed set of values. Instead of using `user_id`, you might decide to add additional data like the `country` from where the user logged in, which is a tag that has a fixed set of values.
 
-How would you count all the votes by type and price? The simple solution is to create multiple boxes that contain all the votes for each combination of type and price (Italian-$, German-$$). If you have 3 types and 3 prices, the resulting number of boxes you'd need would be 9, which is quite a lot.
+### Unsupported Characters Normalization
 
-Now imagine if a friend comes and says, let's also vote on the day of the month, which has 31 values. Now all the combinations go from 3 × 3 = 9 to 3 × 3 × 31 = 279. As you can see, adding multiple properties can quickly become overwhelming. This is what's known as a cardinality explosion.
+The metric name, tag keys and tag values are normalized before being sent to Sentry:
+- Metric name -> any unsupported character is replaced with `_`.
+- Metric tag keys -> any unsupported character is removed.
+- Metric tag values -> any unsupported character is replaced by a specific character.
 
-To prevent such an explosion you can use tags which have a low number of distinct values. The end goal is to have a small product of the tag values.
+More information about the normalization of unsupported characters can be found [here](https://develop.sentry.dev/sdk/metrics/#normalization).
 
-### Tags
+### Metric Tags Length
 
-Tag keys have a maximum length of 32 characters and can contain only letters (a-z, A-Z), numbers (0-9), underscores (\_), periods (.), colons (:), and dashes (-).
-
-Tag values have a maximum length of 200 characters and cannot contain the newline (`\n`) character.
+Metric tags have a maximum length:
+- Tag keys -> 32 characters.
+- Tag values -> 200 characters.
 
 ### Retention
 
