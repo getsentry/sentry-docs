@@ -46,6 +46,7 @@ import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
+import FiberSVG from 'platformicons/svg/fasthttp.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -172,6 +173,7 @@ import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
+import FiberSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -444,6 +446,10 @@ const formatToSVG = {
   fasthttp: {
     sm: FasthttpSVG,
     lg: FasthttpSVGLarge,
+  },
+  fiber: {
+    sm: FiberSVG,
+    lg: FiberSVGLarge,
   },
   flask: {
     sm: FlaskSVG,
@@ -803,6 +809,7 @@ export const PLATFORM_TO_ICON = {
   'go-iris': 'iris',
   'go-martini': 'martini',
   'go-negroni': 'go',
+  "go-fiber": "fiber",
   godot: 'godot',
   java: 'java',
   'java-appengine': 'app-engine',
@@ -978,12 +985,12 @@ export function PlatformIcon({
 
   if (withLanguageIcon && languageIcon !== icon && languageIcon !== 'default') {
     return (
-      <div {...otherProps} style={{position: 'relative', ...style}}>
+      <div {...otherProps} style={{ position: 'relative', ...style }}>
         <Image
           src={svg}
           width={size}
           height={size}
-          style={{borderRadius: `${radius}px`}}
+          style={{ borderRadius: `${radius}px` }}
           alt={`${platform} icon`}
         />
         <Image
@@ -1010,7 +1017,7 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{borderRadius: `${radius}px`, ...style}}
+      style={{ borderRadius: `${radius}px`, ...style }}
       alt={`${platform} icon`}
     />
   );
