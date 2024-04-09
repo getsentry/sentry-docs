@@ -35,9 +35,15 @@ Cardinality, in the context of metrics, refers to how many unique time series yo
 
 When dealing with tags, it's important to be wary of cardinality explosion. Here's an example to help you understand what this means.
 
-Suppose you are collecting a metric that counts how many logins are being made every day. You might want to emit a metric called `login` and decide to add tags such as `platform` with values `ios`, `android`, `web`, which track where the login is coming from. You might also want to add a `user_id` tag, which contains the ID of the user that logged in; however, this tag will have a lot of values that are likely to increase. If you then consider that for each `user_id`, logins might be performed across all of your `platform`(s), this will increase the number of unique time series needed to plot your data. As an example, if you have 100k user ids, you might need at most 300k time series to plot data for all the combinations of the tags.
+Suppose you are collecting a metric that counts how many logins are being made every day. You might want to emit a metric called `login` and decide to add tags such as `platform` with values `ios`, `android`, `web`, which track the platoform from where the login was performed. You might also want to add a `user_id` tag, which contains the ID of the user that logged in; however, this tag will have a lot of values that are likely to increase. If you then consider that for each `user_id`, logins might be performed across all of your `platform`(s), this will increase the number of unique time series needed to plot your data. As an example, if you have 100k user ids, you might need at most 100k * 3 time series to plot data for all the combinations of the tags.
 
 A common way to solve the problem of cardinality explosion is to choose tag values that have a fixed set of values. Instead of using `user_id`, you might decide to add additional data like the `country` from where the user logged in, which is a tag that has a fixed set of values.
+
+<Note>
+
+Sentry has protection mechanisms in place that will result in your metrics being dropped if their cardinality surpasses a limit that is defined internally.
+
+</Note>
 
 ### Unsupported Characters Normalization
 
