@@ -64,23 +64,29 @@ const GuideList = styled.div`
   }
 `;
 
+const PlatformGrid = styled.div`
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+`;
+
 export function PlatformGridClient({noGuides = false, platforms}: Props) {
   return (
-    <div className="row">
-      {platforms
-        .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
-        .filter(platform => !platform.key.match('perl'))
-        .map(platform => {
-          return (
-            <div className="col-lg-6 col-md-12 platform-link mb-3" key={platform.key}>
-              <PlatformCell>
+    <div className="max-w-4xl">
+      <PlatformGrid>
+        {platforms
+          .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+          .filter(platform => !platform.key.match('perl'))
+          .map(platform => {
+            return (
+              <PlatformCell key={platform.key}>
                 <PlatformCellIcon>
                   <SmartLink to={platform.url}>
                     <PlatformIcon
                       size={82}
                       platform={platform.icon ?? platform.key}
                       format="lg"
-                      style={{maxWidth: 'none', border: 0, boxShadow: 'none'}}
+                      style={{border: 0, boxShadow: 'none', borderRadius: '0.25rem'}}
                     />
                   </SmartLink>
                 </PlatformCellIcon>
@@ -102,9 +108,9 @@ export function PlatformGridClient({noGuides = false, platforms}: Props) {
                   )}
                 </PlatformCellContent>
               </PlatformCell>
-            </div>
-          );
-        })}
+            );
+          })}
+      </PlatformGrid>
     </div>
   );
 }
