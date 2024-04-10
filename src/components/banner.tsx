@@ -8,10 +8,8 @@ import {useEffect, useState} from 'react';
 // we put a more robust solution in place.
 //
 const SHOW_BANNER = false;
-const BANNER_TEXT =
-  '';
-const BANNER_LINK_URL =
-  '';
+const BANNER_TEXT = '';
+const BANNER_LINK_URL = '';
 const BANNER_LINK_TEXT = '';
 const OPTIONAL_BANNER_IMAGE = null;
 
