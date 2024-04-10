@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 
-import {Note} from './note';
+import {Note} from './alert';
 import {SignedInCheck} from './signedInCheck';
 
 export function SignInNote() {
