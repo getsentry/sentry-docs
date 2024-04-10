@@ -22,7 +22,7 @@ import {capitilize} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
-  const paths = docs.map(doc => {
+  const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
   });
@@ -83,7 +83,7 @@ export default async function Page({params}) {
   }
 
   // get the MDX for the current doc and render it
-  let doc: any = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   try {
     doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
@@ -109,9 +109,15 @@ type MetadataProps = {
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
   const domain = 'https://docs.sentry.io';
-  let title = 'Home';
-  let description = '';
-  const images = [{url: `${domain}/meta.png`, width: 1200, height: 630}];
+  // enable og iamge preview on preview deployments
+  const previewDomain = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : domain;
+  let title =
+    'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
+  let description =
+    'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
+  const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
 
   const rootNode = await getDocsRootNode();
 
@@ -122,7 +128,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       title =
         pageNode.frontmatter.title +
         (guideOrPlatform ? ` | Sentry for ${capitilize(guideOrPlatform.name)}` : '');
-      description = pageNode.frontmatter.description;
+      description = pageNode.frontmatter.description ?? '';
     }
   }
 

@@ -1,5 +1,5 @@
 'use client';
-import {startTransition, useEffect, useMemo, useState} from 'react';
+import {startTransition, useMemo, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -28,38 +28,40 @@ export function PlatformSelector({
       })),
     ])
     .flat(2);
+  const currentPlatformKey = currentPlatform?.key;
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(currentPlatform?.name ?? '');
   const [searchValue, setSearchValue] = useState('');
   const router = useRouter();
-
-  useEffect(() => {
-    const url = platformsAndGuides.find(platform => platform.name === value)?.url;
-    if (url) {
-      router.push(url);
-    }
-  }, [value, platformsAndGuides, router]);
 
   const matches = useMemo(() => {
     if (!searchValue) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['name', 'aliases', 'sdk'];
+    const keys = ['title', 'aliases', 'sdk'];
     const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
-    const selectedPlatform = platformsAndGuides.find(lang => lang.name === value);
+    const selectedPlatform = platformsAndGuides.find(
+      lang => lang.key === currentPlatformKey
+    );
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
     return matches_;
-  }, [searchValue, value]);
+  }, [searchValue, currentPlatformKey]);
+
+  const onPlatformChange = (platformKey: string) => {
+    const url = platformsAndGuides.find(platform => platform.key === platformKey)?.url;
+    if (url) {
+      router.push(url);
+    }
+  };
 
   return (
     <RadixSelect.Root
-      value={value}
-      onValueChange={setValue}
+      value={currentPlatformKey}
+      onValueChange={onPlatformChange}
       open={open}
       onOpenChange={setOpen}
     >
@@ -81,8 +83,6 @@ export function PlatformSelector({
           aria-label="Platforms"
           position="popper"
           className={styles.popover}
-          sideOffset={4}
-          alignOffset={-16}
         >
           <div className={styles['combobox-wrapper']}>
             <div className={styles['combobox-icon']}>
@@ -111,7 +111,7 @@ export function PlatformSelector({
             {matches.map(platform => (
               <RadixSelect.Item
                 key={platform.key}
-                value={platform.name}
+                value={platform.key}
                 asChild
                 className={styles.item}
                 data-guide={searchValue === '' && platform.type === 'guide'}
@@ -124,8 +124,9 @@ export function PlatformSelector({
                         platform={platform.icon ?? platform.key}
                         size={16}
                         format="sm"
+                        className={styles['platform-icon']}
                       />
-                      {platform.title}
+                      {platform.title?.replace(/(.)\.(.)/g, '$1 $2')}
                     </span>
                   </RadixSelect.ItemText>
                 </ComboboxItem>
