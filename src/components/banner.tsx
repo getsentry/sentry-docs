@@ -7,12 +7,12 @@ import {useEffect, useState} from 'react';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
-  'Let’s par-tee - join us at Google Cloud Next for Sentry’s After Party at Topgolf on April 9 @ 7pm.';
+  '';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/sentry-google-cloud-next-2024/?promo=docs-banner';
-const BANNER_LINK_TEXT = 'RSVP here.';
+  '';
+const BANNER_LINK_TEXT = '';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //
