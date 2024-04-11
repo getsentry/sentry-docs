@@ -3,7 +3,9 @@
 import {useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
-import {makeKeywordsClickable} from './codeKeywords';
+import styles from './code-blocks.module.scss';
+
+import {makeKeywordsClickable} from '../codeKeywords';
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -44,16 +46,16 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   }
 
   return (
-    <div className="code-block">
-      <div className="code-actions">
-        <code className="filename">{filename}</code>
+    <div className={styles['code-block']}>
+      <div className={styles['code-actions']}>
+        <code className={styles.filename}>{filename}</code>
         {showCopyButton && (
-          <button className="copy" onClick={() => copyCode()}>
+          <button className={styles.copy} onClick={() => copyCode()}>
             <Clipboard size={16} />
           </button>
         )}
       </div>
-      <div className="copied" style={{opacity: showCopied ? 1 : 0}}>
+      <div className={styles.copied} style={{opacity: showCopied ? 1 : 0}}>
         Copied
       </div>
       <div ref={codeRef}>{makeKeywordsClickable(children)}</div>
