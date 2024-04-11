@@ -3,6 +3,8 @@ import Link from 'next/link';
 import {nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
+import styles from './styles.module.css';
+
 export function GitHubCTA() {
   const {path, rootNode} = serverContext();
   if (!rootNode) {
@@ -15,14 +17,16 @@ export function GitHubCTA() {
   }
 
   return (
-    <div className="github-cta">
-      <small>Help improve this content</small>
+    <div className={styles.cta}>
+      <small>
+        <strong>Help improve this content</strong>
+      </small>
       <br />
       <small>
         Our documentation is open source and available on GitHub. Your contributions are
         welcome, whether fixing a typo (drat!) or suggesting an update ("yeah, this would
         be better").
-        <div className="muted">
+        <div>
           <Link href={sourceUrl}>Suggest an edit to this page</Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
           <Link href="/contributing/">Contribute to Docs</Link> &nbsp;&nbsp;|&nbsp;&nbsp;
