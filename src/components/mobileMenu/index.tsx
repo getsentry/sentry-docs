@@ -1,3 +1,4 @@
+'use client';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import {Box, Button} from '@radix-ui/themes';

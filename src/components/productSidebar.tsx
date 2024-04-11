@@ -88,7 +88,7 @@ export function ProductSidebar({rootNode}: ChildProps) {
       <DynamicNav root="product/integrations" title="Integrations" tree={productTree} />
 
       <li className="mb-3" data-sidebar-branch>
-        <div className="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+        <div className="sidebar-title items-center mb-0" data-sidebar-link>
           <h6>Additional Resources</h6>
         </div>
         <ul className="list-unstyled" data-sidebar-tree>

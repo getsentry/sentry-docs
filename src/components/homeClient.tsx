@@ -43,7 +43,7 @@ export function HomeClient({platforms}: Props) {
             <Search path={pathname} platforms={[]} />
           </div>
           <div className="hidden lg:flex justify-end w-full space-x-2 items-center">
-            <NavLink href="/product/">API</NavLink>
+            <NavLink href="/api/">API</NavLink>
             <NavLink href="/changelog">Changelog</NavLink>
             <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
             <NavLink href="https://sentry.io/">Sign In</NavLink>

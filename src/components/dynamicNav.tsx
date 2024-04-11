@@ -150,7 +150,7 @@ export function DynamicNav({
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
 
-  const headerClassName = 'sidebar-title d-flex align-items-center';
+  const headerClassName = 'sidebar-title flex items-center';
   const header =
     parentNode && !noHeadingLink ? (
       <SmartLink

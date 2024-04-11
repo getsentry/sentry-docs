@@ -14,6 +14,18 @@ const PackageDetail = styled.div`
 
   > dl {
     margin: 0;
+    line-height: 1.8;
+  }
+
+  dt {
+    font-weight: 500;
+  }
+
+  dd a {
+    color: var(--accent-9);
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   > dl > dt,

@@ -40,7 +40,7 @@ export async function ApiSidebar() {
 
   const {path: pathParts} = serverContext();
   const currentPath = `/${pathParts.join('/')}/`;
-  const isActive = p => currentPath.indexOf(p) === 0;
+  const isActive = (p: string) => currentPath.indexOf(p) === 0;
 
   return (
     <ul className="list-unstyled" data-sidebar-tree>
@@ -62,7 +62,7 @@ export async function ApiSidebar() {
         exclude={endpoints.map(elem => elem.node?.path).filter(Boolean) as string[]}
       />
       <li className="mb-3" data-sidebar-branch>
-        <div className="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+        <div className="sidebar-title flex items-center mb-0" data-sidebar-link>
           <h6>Endpoints</h6>
         </div>
         <ul className="list-unstyled" data-sidebar-tree>

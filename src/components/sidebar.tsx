@@ -48,7 +48,7 @@ export function Sidebar({node, path}: Props) {
         <Fragment>
           <SidebarNavItem
             href={'/' + node.path}
-            className={activeClassName(node, 'sidebar-title d-flex align-items-center')}
+            className={activeClassName(node, 'sidebar-title flex items-center')}
             data-sidebar-link
             key={node.path}
           >
