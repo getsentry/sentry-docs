@@ -2,7 +2,9 @@
 
 import {ReactNode} from 'react';
 
-import styles from './styles.module.scss';
+// explicitly not usig CSS modules here
+// because there's some prerendered content that depends on these exact class names
+import './styles.scss';
 
 type AlertProps = {
   children?: ReactNode;
@@ -12,8 +14,8 @@ type AlertProps = {
 
 export function Alert({title, children, level = 'info'}: AlertProps) {
   return (
-    <div className={`${styles.alert} ${styles['alert-' + level]}`} role="alert">
-      {title && <h5 className={styles['alert-header']}>{title}</h5>}
+    <div className={`alert ${'alert-' + level}`} role="alert">
+      {title && <h5 className="alert-header">{title}</h5>}
       <div className="alert-body content-flush-bottom">{children}</div>
     </div>
   );
@@ -25,8 +27,8 @@ type NoteProps = {
 
 export function Note({children}: NoteProps) {
   return (
-    <div role="note" className={styles.alert}>
-      <div className={styles['alert-body']}>{children}</div>
+    <div role="note" className="alert">
+      <div className="alert-body">{children}</div>
     </div>
   );
 }
