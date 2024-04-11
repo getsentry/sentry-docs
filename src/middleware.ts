@@ -1421,14 +1421,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/cli/releases/',
   },
   {
-    from: '/product/cli/',
-    to: '/cli',
-  },
-  {
-    from: '/product/cli/:path/',
-    to: '/cli/:path/',
-  },
-  {
     from: '/workflow/alerts-notifications/',
     to: '/product/alerts/',
   },
