@@ -41,6 +41,16 @@ export function ProductSidebar({rootNode}: ChildProps) {
   const cliTree = toTree(cliNodes.filter(n => !!n.context));
 
   /**
+   * URL: /concepts
+   */
+  const conceptsNode = nodeForPath(rootNode, 'concepts');
+  if (!conceptsNode) {
+    return null;
+  }
+  const conceptsNodes: NavNode[] = getNavNodes([conceptsNode], docNodeToNavNode);
+  const conceptsTree = toTree(conceptsNodes.filter(n => !!n.context));
+
+  /**
    * URL: /account
    */
   // const accountNode = nodeForPath(rootNode, 'account');
@@ -66,6 +76,12 @@ export function ProductSidebar({rootNode}: ChildProps) {
     <ul className="list-unstyled" data-sidebar-tree>
       <DynamicNav root="cli" title="sentry-cli" tree={cliTree} collapse />
       <DynamicNav
+        root="concepts"
+        title="Concepts & Reference"
+        tree={conceptsTree}
+        collapse
+      />
+      <DynamicNav
         root="product"
         title="Product"
         tree={productTree}
@@ -74,13 +90,7 @@ export function ProductSidebar({rootNode}: ChildProps) {
           '/product/security/',
           '/product/accounts/',
           '/product/relay/',
-          '/product/data-management-settings/',
         ]}
-      />
-      <DynamicNav
-        root="product/data-management-settings"
-        title="Data Management"
-        tree={productTree}
       />
       <DynamicNav root="product/accounts" title="Account Management" tree={productTree} />
       <DynamicNav root="product/relay" title="Relay" tree={productTree} />
