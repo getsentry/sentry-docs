@@ -110,64 +110,27 @@ with sentry_sdk.metrics.timing(key="event_processing_time"):
 	process()
 ```
 
-
 ## Options
 
 You can use the following options to set/change the behavior of Metrics. As Metrics is still in the beta phase, these options are under the `_experiments` option.
 
-<ConfigKey name="metrics_summary_sample_rate">
-
-The sampling rate for metrics summaries.
-
-Default: `1.0`.
-
-```python
-sentry_sdk.init(
-	...
-    _experiments={
-		"metrics_summary_sample_rate": 0.5,
-	}
-)
-```
-
-</ConfigKey>
-
-<ConfigKey name="should_summarize_metric">
-
-A callback function that is called to decide if a summary should be generated for a metric with the given `key`. The `tags` are passed to the callback so they can be used when finding a decision. If the callback function returns `True`, a summary for the metrics with the given `key` is generated. If the callback function returns `False` no summary of the metric with the given `key` is generated.
-
-In this example only summaries for the metrics with the key `important.metric.key` will be generated:
-```python
-def should_summarize_metric(key, tags):
-	return key == "important.metric.key"
-
-sentry_sdk.init(
-	...
-    _experiments={
-		"should_summarize_metric": should_summarize_metric,
-	}
-)
-```
-
-</ConfigKey>
-
 <ConfigKey name="before_emit_metric">
 
-A callback function that is called before a metric is emmited. If the callback returns `True` the metric is emitted. If the callback returns `False` the metric is not emitted. The given `tags` can also be updated in the callback function.
+A callback function that is called before a metric is emitted. If the callback returns `True` the metric is emitted. If the callback returns `False` the metric is not emitted. The given `tags` can also be updated in the callback function.
 
 ```python
-def before_emit(key, tags):
-	if key == "removed-metric":
-		return False
-	tags["extra"] = "foo"
-	del tags["release"]
-	return True
+def before_emit(key, value, unit, tags):
+    if key == "removed-metric":
+        return False
+    tags["extra"] = "foo"
+    del tags["release"]
+    return True
 
 sentry_sdk.init(
-	...
+    ...
     _experiments={
-		"before_emit_metric": before_emit,
-	}
+        "before_emit_metric": before_emit,
+    }
 )
 ```
 
