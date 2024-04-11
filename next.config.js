@@ -1,6 +1,6 @@
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
-const { codecovWebpackPlugin } = require('@codecov/webpack-plugin');
+const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -22,7 +22,7 @@ const nextConfig = {
     );
 
     return config;
-  }
+  },
 };
 
 const withMDX = createMDX({
@@ -35,7 +35,7 @@ module.exports = withMDX(nextConfig);
 
 // Injected content via Sentry wizard below
 
-const { withSentryConfig } = require('@sentry/nextjs');
+const {withSentryConfig} = require('@sentry/nextjs');
 
 module.exports = withSentryConfig(
   module.exports,

@@ -30,23 +30,47 @@ const docNodeToNavNode = (node: DocNode): NavNode => ({
 });
 
 export function ProductSidebar({rootNode}: ChildProps) {
+  /**
+   * URL: /cli
+   */
+  const cliNode = nodeForPath(rootNode, 'cli');
+  if (!cliNode) {
+    return null;
+  }
+  const cliNodes: NavNode[] = getNavNodes([cliNode], docNodeToNavNode);
+  const cliTree = toTree(cliNodes.filter(n => !!n.context));
+
+  /**
+   * URL: /account
+   */
+  // const accountNode = nodeForPath(rootNode, 'account');
+  // if (!accountNode) {
+  // return null;
+  // }
+  // const accountNodes: NavNode[] = getNavNodes([accountNode], docNodeToNavNode);
+  // const accountTree = toTree(accountNodes.filter(n => !!n.context));
+
+  /**
+   * URL: /product
+   */
   const productNode = nodeForPath(rootNode, 'product');
   if (!productNode) {
     return null;
   }
-  const nodes: NavNode[] = getNavNodes([productNode], docNodeToNavNode);
-  const tree = toTree(nodes.filter(n => !!n.context));
+  const productNodes: NavNode[] = getNavNodes([productNode], docNodeToNavNode);
+  const productTree = toTree(productNodes.filter(n => !!n.context));
+
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (
     <ul className="list-unstyled" data-sidebar-tree>
+      <DynamicNav root="cli" title="sentry-cli" tree={cliTree} collapse />
       <DynamicNav
         root="product"
         title="Product"
-        tree={tree}
+        tree={productTree}
         exclude={[
           '/product/integrations/',
-          '/product/cli/',
           '/product/security/',
           '/product/accounts/',
           '/product/relay/',
@@ -56,13 +80,13 @@ export function ProductSidebar({rootNode}: ChildProps) {
       <DynamicNav
         root="product/data-management-settings"
         title="Data Management"
-        tree={tree}
+        tree={productTree}
       />
-      <DynamicNav root="product/accounts" title="Account Management" tree={tree} />
-      <DynamicNav root="product/relay" title="Relay" tree={tree} />
-      <DynamicNav root="product/cli" title="sentry-cli" tree={tree} />
-      <DynamicNav root="product/security" title="Security and Legal" tree={tree} />
-      <DynamicNav root="product/integrations" title="Integrations" tree={tree} />
+      <DynamicNav root="product/accounts" title="Account Management" tree={productTree} />
+      <DynamicNav root="product/relay" title="Relay" tree={productTree} />
+      <DynamicNav root="product/security" title="Security and Legal" tree={productTree} />
+      <DynamicNav root="product/integrations" title="Integrations" tree={productTree} />
+
       <li className="mb-3" data-sidebar-branch>
         <div className="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
           <h6>Additional Resources</h6>
@@ -85,7 +109,7 @@ export function ProductSidebar({rootNode}: ChildProps) {
         </ul>
       </li>
       {process.env.NODE_ENV !== 'production' && (
-        <DynamicNav root="_debug" title="Debug (Dev Only)" tree={tree} />
+        <DynamicNav root="_debug" title="Debug (Dev Only)" tree={productTree} />
       )}
     </ul>
   );

@@ -1410,15 +1410,15 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   },
   {
     from: '/learn/cli/configuration/',
-    to: '/product/cli/configuration/',
+    to: '/cli/configuration/',
   },
   {
     from: '/learn/cli/',
-    to: '/product/cli/',
+    to: '/cli/',
   },
   {
     from: '/learn/cli/releases/',
-    to: '/product/cli/releases/',
+    to: '/cli/releases/',
   },
   {
     from: '/workflow/alerts-notifications/',
