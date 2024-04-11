@@ -71,7 +71,6 @@ export function ProductSidebar({rootNode}: ChildProps) {
         tree={productTree}
         exclude={[
           '/product/integrations/',
-          '/cli/',
           '/product/security/',
           '/product/accounts/',
           '/product/relay/',
@@ -85,9 +84,9 @@ export function ProductSidebar({rootNode}: ChildProps) {
       />
       <DynamicNav root="product/accounts" title="Account Management" tree={productTree} />
       <DynamicNav root="product/relay" title="Relay" tree={productTree} />
-      <DynamicNav root="product/cli" title="sentry-cli" tree={productTree} />
       <DynamicNav root="product/security" title="Security and Legal" tree={productTree} />
       <DynamicNav root="product/integrations" title="Integrations" tree={productTree} />
+
       <li className="mb-3" data-sidebar-branch>
         <div className="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
           <h6>Additional Resources</h6>
