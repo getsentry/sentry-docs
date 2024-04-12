@@ -25,14 +25,18 @@ import {TableOfContents} from './tableOfContents';
 type Props = {
   children: ReactNode;
   frontMatter: Omit<FrontMatter, 'slug'>;
+  /** Whether to hide the table of contents & sdk details */
   notoc?: boolean;
   sidebar?: ReactNode;
+  /** Whether to take all the available width */
+  fullWidth?: boolean;
 };
 
 export function DocPage({
   children,
   frontMatter,
   notoc = false,
+  fullWidth = false,
   sidebar = <ServerSidebar />,
 }: Props) {
   const {rootNode, path} = serverContext();
@@ -115,13 +119,14 @@ export function DocPage({
             </div>
           </div>
         </aside>
-        <main className="mx-auto lg:mx-0">
+        <main className="flex w-full md:w-[calc(100%-var(--sidebar-width))] flex-1 mx-auto">
           <div
             className={[
-              'pt-6 px-6 prose max-w-[75ch] prose-slate prose-a:no-underline hover:prose-a:underline',
+              'mx-auto lg:mx-0 pt-6 px-6 prose max-w-full prose-slate prose-a:no-underline hover:prose-a:underline',
               'prose-code:font-normal marker:text-accent-purple prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px]',
+              fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
             <div className="pb-4">
@@ -152,13 +157,16 @@ export function DocPage({
               {hasGithub && <GitHubCTA />}
             </div>
           </div>
+
+          {hasToc && (
+            <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] hidden xl:block max-w-[250px]">
+              <div className="pt-16">
+                <PlatformSdkDetail />
+                <TableOfContents />
+              </div>
+            </aside>
+          )}
         </main>
-        {hasToc && (
-          <aside className="sticky mt-[130px] hidden lg:block">
-            <PlatformSdkDetail />
-            <TableOfContents />
-          </aside>
-        )}
       </section>
     </div>
   );
