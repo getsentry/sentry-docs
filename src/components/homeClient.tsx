@@ -27,7 +27,7 @@ export function HomeClient({platforms}: Props) {
   const pathname = usePathname() ?? '/';
   return (
     <div className="tw-app">
-      <Header pathname={pathname} platforms={[]} />
+      <Header pathname={pathname} searchPlatforms={[]} />
       <Banner />
       <div className="max-w-screen-lg px-4 mx-auto">
         <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between">
