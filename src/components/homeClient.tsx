@@ -12,13 +12,11 @@ import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import HeroImage from 'sentry-docs/imgs/home_illustration.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
-import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
 
-import {MobileMenu} from './mobileMenu';
+import {Header} from './header';
 import {NavLink} from './navlink';
 import {PlatformIcon} from './platformIcon';
-import {Search} from './search';
 import {SmartLink} from './smartLink';
 
 interface Props {
@@ -26,33 +24,10 @@ interface Props {
 }
 
 export function HomeClient({platforms}: Props) {
-  const pathname = usePathname() ?? undefined;
+  const pathname = usePathname() ?? '/';
   return (
     <div className="tw-app">
-      <header className="bg-white py-3 w-full z-50 border-b border-gray">
-        <nav className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center text-primary">
-          <a
-            href="/"
-            title="Sentry error monitoring"
-            className="flex flex-shrink-0 items-center text-2xl font-bold text-darkPurple hover:no-underline hover:text-darkPurple"
-          >
-            <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
-            Docs
-          </a>
-          <div className="hidden md:flex w-full">
-            <Search path={pathname} platforms={[]} />
-          </div>
-          <div className="hidden lg:flex justify-end w-full space-x-2 items-center">
-            <NavLink href="/api/">API</NavLink>
-            <NavLink href="/changelog">Changelog</NavLink>
-            <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
-            <NavLink href="https://sentry.io/">Sign In</NavLink>
-          </div>
-          <div className="lg:hidden ml-auto">
-            <MobileMenu />
-          </div>
-        </nav>
-      </header>
+      <Header pathname={pathname} platforms={[]} />
       <Banner />
       <div className="max-w-screen-lg px-4 mx-auto">
         <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between">

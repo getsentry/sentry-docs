@@ -1,7 +1,6 @@
 import {ReactNode} from 'react';
 import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {IconButton} from '@radix-ui/themes';
-import Image from 'next/image';
 
 import {
   extractPlatforms,
@@ -9,19 +8,17 @@ import {
   getCurrentPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter, Platform} from 'sentry-docs/types';
+import {isTruthy} from 'sentry-docs/utils';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
 import {ScrollActiveLink} from './focus-active-link';
 import {GitHubCTA} from './githubCTA';
-import {MobileMenu} from './mobileMenu';
-import {NavLink} from './navlink';
+import {Header} from './header';
 import {PlatformSdkDetail} from './platformSdkDetail';
 import {PlatformSelector} from './platformSelector';
-import {Search} from './search';
 import {ServerSidebar} from './serverSidebar';
 import {TableOfContents} from './tableOfContents';
 
@@ -69,32 +66,13 @@ export function DocPage({
 
   const pathname = serverContext().path.join('/');
 
+  const searchPlatforms = [currentPlatform?.name, currentGuide?.platform].filter(
+    isTruthy
+  );
+
   return (
     <div className="tw-app">
-      <header className="bg-white w-full z-50 border-b border-gray sticky top-0">
-        <nav className="mx-auto px-6 lg:px-8 flex items-center text-primary">
-          <a
-            href="/"
-            title="Sentry error monitoring"
-            className="flex flex-shrink-0 items-center text-2xl font-bold text-darkPurple hover:no-underline hover:text-darkPurple"
-          >
-            <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
-            Docs
-          </a>
-          <div className="hidden md:flex md:justify-center lg:justify-start w-full">
-            <Search path={pathname} platforms={[]} />
-          </div>
-          <div className="hidden lg:flex justify-end w-full space-x-2 items-center">
-            <NavLink href="/api/">API</NavLink>
-            <NavLink href="/changelog">Changelog</NavLink>
-            <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
-            <NavLink href="https://sentry.io/">Sign In</NavLink>
-          </div>
-          <div className="lg:hidden ml-auto">
-            <MobileMenu />
-          </div>
-        </nav>
-      </header>
+      <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
         <input
