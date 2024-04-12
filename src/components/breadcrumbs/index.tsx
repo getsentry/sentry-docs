@@ -20,7 +20,7 @@ export function Breadcrumbs() {
   }
 
   return (
-    <ul className="list-none flex gap-3 p-0" style={{margin: 0}}>
+    <ul className="list-none flex p-0 flex-wrap" style={{margin: 0}}>
       {nodes.map(n => {
         const to = n.path === '/' ? n.path : `/${n.path}/`;
         return (
