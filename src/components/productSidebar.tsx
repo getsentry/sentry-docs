@@ -41,6 +41,16 @@ export function ProductSidebar({rootNode}: ChildProps) {
   const cliTree = toTree(cliNodes.filter(n => !!n.context));
 
   /**
+   * URL: /pricing
+   */
+  const pricingNode = nodeForPath(rootNode, 'pricing');
+  if (!pricingNode) {
+    return null;
+  }
+  const pricingNodes: NavNode[] = getNavNodes([pricingNode], docNodeToNavNode);
+  const pricingTree = toTree(pricingNodes.filter(n => !!n.context));
+
+  /**
    * URL: /account
    */
   // const accountNode = nodeForPath(rootNode, 'account');
@@ -65,6 +75,7 @@ export function ProductSidebar({rootNode}: ChildProps) {
   return (
     <ul className="list-unstyled" data-sidebar-tree>
       <DynamicNav root="cli" title="sentry-cli" tree={cliTree} collapse />
+      <DynamicNav root="pricing" title="Pricing & Billing" tree={pricingTree} collapse />
       <DynamicNav
         root="product"
         title="Product"

@@ -1945,16 +1945,12 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/accounts/early-adopter-features/',
   },
   {
-    from: '/pricing/',
-    to: '/product/accounts/pricing/',
-  },
-  {
     from: '/learn/pricing/',
-    to: '/product/accounts/pricing/',
+    to: '/pricing/',
   },
   {
     from: '/product/pricing/',
-    to: '/product/accounts/pricing/',
+    to: '/pricing/',
   },
   {
     from: '/learn/quotas/',

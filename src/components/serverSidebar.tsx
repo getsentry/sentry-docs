@@ -29,6 +29,8 @@ export function ServerSidebar() {
     return <ProductSidebar rootNode={rootNode} />;
   } else if (path.indexOf('account') === 0) {
     return <ProductSidebar rootNode={rootNode} />;
+  } else if (path.indexOf('pricing') === 0) {
+    return <ProductSidebar rootNode={rootNode} />;
   } else if (path.indexOf('api') === 0) {
     if (!rootNode) {
       return <ApiSidebar />;
