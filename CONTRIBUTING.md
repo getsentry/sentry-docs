@@ -33,3 +33,11 @@ yarn migrate:dev
 ```
 
 To add new entries, visit `/changelog/_admin` you need to have a Google Account in the Sentry org to login.
+
+#### Seeding
+
+Call
+
+```
+npx prisma db seed
+```
