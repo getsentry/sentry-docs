@@ -123,9 +123,9 @@ export function DocPage({
           <div
             className={[
               'mx-auto lg:mx-0 pt-6 px-6 prose max-w-full prose-slate prose-a:no-underline hover:prose-a:underline',
-              'prose-code:font-normal marker:text-accent-purple prose-li:my-1',
+              'prose-code:font-normal prose-code:font-mono marker:text-accent-purple prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative',
-              'prose-blockquote:font-normal prose-blockquote:border-l-[3px]',
+              'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-medium',
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
@@ -134,12 +134,12 @@ export function DocPage({
             </div>
             <div>
               <h1 className="pl-8 lg:p-0 relative">
-                <button className="lg:hidden absolute left-0 cursor-pointer">
+                <button className="lg:hidden absolute left-0">
                   <label
                     htmlFor="navbar-menu-toggle"
                     aria-label="Close"
                     aria-hidden="true"
-                    className="inline-flex items-center"
+                    className="inline-flex items-center cursor-pointer"
                   >
                     <HamburgerMenuIcon
                       className="inline text-[var(--gray-10)]"
