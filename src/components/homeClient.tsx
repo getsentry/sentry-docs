@@ -81,7 +81,7 @@ export function HomeClient({platforms}: Props) {
             </div>
           </div>
         </Link>
-        <h2 className="text-2xl mt-12 md:mt-16 mb-6">Talk to us</h2>
+        <h2 className="text-2xl mt-12 md:mt-16 mb-6 font-medium">Talk to us</h2>
         <div className="flex flex-col md:flex-row gap-6">
           <Link
             href="https://discord.com/invite/sentry"
