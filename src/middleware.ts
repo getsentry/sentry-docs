@@ -2904,6 +2904,66 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     from: '/product/accounts/pricing/',
     to: '/pricing/',
   },
+  {
+    from: '/platforms/dotnet/compatibility/',
+    to: '/platforms/dotnet/',
+  },
+  {
+    from: '/clients/go/',
+    to: '/platforms/go/legacy-sdk/',
+  },
+  {
+    from: '/clients/node/',
+    to: '/platforms/node/legacy-sdk/',
+  },
+  {
+    from: '/clients/javascript/',
+    to: '/platforms/javascript/legacy-sdk/',
+  },
+  {
+    from: '/clients/ruby/',
+    to: '/platforms/ruby/',
+  },
+  {
+    from: '/clients/java/integrations/',
+    to: '/platforms/java/',
+  },
+  {
+    from: '/clients/java/modules/android/',
+    to: '/platforms/android',
+  },
+  {
+    from: '/clients/javascript/integrations/angular2/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/clients/javascript/integrations/angularjs/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/javascript/angular/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/javascript/ember/',
+    to: '/platforms/javascript/guides/ember/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/integrations/react-router/',
+    to: '/platforms/javascript/guides/react/configuration/integrations/react-router/',
+  },
+  {
+    from: '/node/event-processors/',
+    to: '/platforms/node/enriching-events/event-processors/',
+  },
+  {
+    from: '/platforms/node/guides/connect/event-processors/',
+    to: '/platforms/node/enriching-events/event-processors/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/uploading/multiple-origins/',
+    to: '/platforms/javascript/sourcemaps/troubleshooting_js/#multiple-origins',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
