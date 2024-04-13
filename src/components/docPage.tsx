@@ -119,7 +119,7 @@ export function DocPage({
             </div>
           </div>
         </aside>
-        <main className="flex w-full md:w-[calc(100%-var(--sidebar-width))] flex-1 mx-auto">
+        <main className="flex justify-center w-full md:w-[calc(100%-var(--sidebar-width))] flex-1 mx-auto">
           <div
             className={[
               'mx-auto lg:mx-0 pt-6 px-6 prose max-w-full prose-slate prose-a:no-underline hover:prose-a:underline',
