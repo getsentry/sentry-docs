@@ -27,10 +27,13 @@ const handleRedirects = (request: NextRequest) => {
   return undefined;
 };
 
-/** a string with a trailing slash */
-type PathWithTrailingSlash = `${string}/`;
+type Redirect = {
+  /** a string with a leading and a trailing slash */
+  from: `/${string}/`;
+  to: string;
+};
 
-const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
+const REDIRECTS: Redirect[] = [
   {
     from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/performance/retention-priorities/',
