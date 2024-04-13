@@ -2,6 +2,7 @@ import {Fragment} from 'react';
 
 import {DocNode, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+import {isTruthy} from 'sentry-docs/utils';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink} from './sidebarLink';
@@ -48,18 +49,16 @@ export async function ApiSidebar() {
         root="api"
         title="API Reference"
         tree={tree}
-        exclude={
-          endpoints
-            .map(elem => elem.node?.path)
-            .concat(guides.map(elem => elem.node?.path))
-            .filter(Boolean) as string[]
-        }
+        exclude={endpoints
+          .map(elem => elem.node?.path)
+          .concat(guides.map(elem => elem.node?.path))
+          .filter(isTruthy)}
       />
       <DynamicNav
         root="api/guides"
         title="Guides"
         tree={guides}
-        exclude={endpoints.map(elem => elem.node?.path).filter(Boolean) as string[]}
+        exclude={endpoints.map(elem => elem.node?.path).filter(isTruthy)}
       />
       <li className="mb-3" data-sidebar-branch>
         <div className="sidebar-title flex items-center mb-0" data-sidebar-link>
