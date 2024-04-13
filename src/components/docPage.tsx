@@ -25,11 +25,11 @@ import {TableOfContents} from './tableOfContents';
 type Props = {
   children: ReactNode;
   frontMatter: Omit<FrontMatter, 'slug'>;
+  /** Whether to take all the available width */
+  fullWidth?: boolean;
   /** Whether to hide the table of contents & sdk details */
   notoc?: boolean;
   sidebar?: ReactNode;
-  /** Whether to take all the available width */
-  fullWidth?: boolean;
 };
 
 export function DocPage({
