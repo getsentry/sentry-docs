@@ -32,6 +32,30 @@ type PathWithTrailingSlash = `${string}/`;
 
 const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
+    from: '/product/data-management-settings/dynamic-sampling/',
+    to: '/product/performance/retention-priorities/',
+  },
+  {
+    from: '/product/data-management-settings/dynamic-sampling/',
+    to: '/product/accounts/quotas/',
+  },
+  {
+    from: '/platforms/data-management/',
+    to: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+  },
+  {
+    from: '/platforms/data-management/',
+    to: '/product/data-management-settings/data-forwarding/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/troubleshooting/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/troubleshooting/',
+    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
+  },
+  {
     from: '/platforms/react-native/install/cocoapods/',
     to: '/platforms/react-native/manual-setup/manual-setup/',
   },
@@ -1120,10 +1144,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/javascript/sourcemaps/',
   },
   {
-    from: '/platforms/javascript/sourcemaps/troubleshooting/',
-    to: '/platforms/javascript/sourcemaps/',
-  },
-  {
     from: '/platforms/javascript/sourcemaps/availability/',
     to: '/platforms/javascript/sourcemaps/',
   },
@@ -1146,10 +1166,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
     to: '/platforms/javascript/sourcemaps/',
-  },
-  {
-    from: '/platforms/javascript/sourcemaps/troubleshooting/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
@@ -1944,10 +1960,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/accounts/quotas/',
   },
   {
-    from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/accounts/quotas/',
-  },
-  {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
     to: '/product/accounts/quotas/',
   },
@@ -2080,20 +2092,12 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/data-management-settings/data-forwarding/',
   },
   {
-    from: '/platforms/data-management/',
-    to: '/product/data-management-settings/data-forwarding/',
-  },
-  {
     from: '/data-management-settings/attachment-datascrubbing/',
     to: '/product/data-management-settings/scrubbing/attachment-scrubbing/',
   },
   {
     from: '/product/data-management-settings/advanced-datascrubbing/',
     to: '/product/data-management-settings/scrubbing/',
-  },
-  {
-    from: '/platforms/data-management/',
-    to: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management/advanced-datascrubbing/',
@@ -2237,10 +2241,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
-    to: '/product/performance/retention-priorities/',
-  },
-  {
-    from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/performance/retention-priorities/',
   },
   {
