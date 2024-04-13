@@ -2475,7 +2475,7 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/best-practices/sentry-testkit/',
   },
   {
-    from: 'platforms/javascript/configuration/webworkers/',
+    from: '/platforms/javascript/configuration/webworkers/',
     to: '/platforms/javascript/best-practices/web-workers/',
   },
   {
