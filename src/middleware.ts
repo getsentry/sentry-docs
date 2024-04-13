@@ -456,10 +456,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/java/scope/',
   },
   {
-    from: '/clients/java/modules/log4j2/',
-    to: '/platforms/java/guides/log4j2/',
-  },
-  {
     from: '/clients/java/modules/jul/',
     to: '/platforms/java/guides/jul/',
   },
@@ -482,10 +478,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/java/guides/springboot/config/',
     to: '/platforms/java/guides/spring-boot/',
-  },
-  {
-    from: '/clients/java/usage/',
-    to: '/platforms/java/usage/',
   },
   {
     from: '/clients/php/integrations/monolog/',
@@ -610,10 +602,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/dotnet/nlog/',
     to: '/platforms/dotnet/guides/nlog/',
-  },
-  {
-    from: '/clients/csharp/',
-    to: '/platforms/dotnet/legacy-sdk/',
   },
   {
     from: '/platforms/flutter/configuration/integrations/user-interaction-instrumentation/',
@@ -922,10 +910,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/workflow/releases/release-automation/github-actions/',
     to: '/product/releases/setup/release-automation/github-deployment-gates/',
-  },
-  {
-    from: '/workflow/releases/release-automation/github-actions/',
-    to: '/product/releases/setup/release-automation/github-actions/',
   },
   {
     from: '/product/releases/setup/manual-setup-releases/',
@@ -1315,7 +1299,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     from: '/clients/javascript/tips/',
     to: '/platforms/javascript/legacy-sdk/tips/',
   },
-
   {
     from: '/platforms/node/pluggable-integrations/',
     to: '/platforms/node/configuration/integrations/pluggable-integrations/',
@@ -2061,10 +2044,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/data-management-settings/filtering/',
   },
   {
-    from: '/product/data-management-settings/event-grouping/grouping-breakdown/',
-    to: '/product/data-management-settings/',
-  },
-  {
     from: '/data-management/rollups/',
     to: '/product/data-management-settings/event-grouping/',
   },
@@ -2505,10 +2484,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/python/legacy-sdk/',
   },
   {
-    from: '/clients/python/integrations/django/',
-    to: '/platforms/python/guides/django/',
-  },
-  {
     from: '/platforms/javascript/config/sourcemaps/',
     to: '/platforms/javascript/sourcemaps/',
   },
@@ -2541,24 +2516,8 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/python/integrations/gnu_backtrace/',
   },
   {
-    from: '/platforms/python/django/',
-    to: '/platforms/python/integrations/django/',
-  },
-  {
-    from: '/platforms/python/flask/',
-    to: '/platforms/python/integrations/flask/',
-  },
-  {
-    from: '/api/events/get-project-event-details/',
-    to: '/api/events/retrieve-an-event-for-a-project/',
-  },
-  {
     from: '/api/releases/post-organization-release-files/',
     to: '/api/releases/update-an-organization-release-file/',
-  },
-  {
-    from: '/api/releases/post-organization-releases/',
-    to: '/api/releases/create-a-new-release-for-an-organization/',
   },
   {
     from: '/api/releases/post-release-deploys/',
@@ -2729,14 +2688,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/javascript/guides/angular/',
   },
   {
-    from: '/platforms/javascript/ember/',
-    to: '/platforms/javascript/guides/ember/',
-  },
-  {
-    from: '/platforms/javascript/guides/react/integrations/react-router/',
-    to: '/platforms/javascript/guides/react/configuration/integrations/react-router/',
-  },
-  {
     from: '/node/event-processors/',
     to: '/platforms/node/enriching-events/event-processors/',
   },
@@ -2797,10 +2748,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/php/guides/laravel/configuration/laravel-options/',
   },
   {
-    from: '/platforms/elixir/usage/set-level/',
-    to: '/platforms/elixir/usage/',
-  },
-  {
     from: '/platforms/go/data-management/event-grouping/fingerprint-rules/',
     to: '/platforms/go/data-management/',
   },
@@ -2813,20 +2760,12 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/android/performance/',
   },
   {
-    from: '/platforms/android/performance/custom-instrumentation/',
-    to: '/platforms/android/performance/',
-  },
-  {
     from: '/platforms/elixir/usage/set-level/',
     to: '/platforms/elixir/usage/',
   },
   {
     from: '/platforms/elixir/usage/sdk-fingerprinting/',
     to: '/platforms/elixir/usage/',
-  },
-  {
-    from: '/platforms/elixir/enriching-events/scopes/',
-    to: '/platforms/elixir/enriching-events/',
   },
   {
     from: '/platforms/elixir/data-management/event-grouping/',
@@ -2907,62 +2846,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
-  },
-  {
-    from: '/clients/go/',
-    to: '/platforms/go/legacy-sdk/',
-  },
-  {
-    from: '/clients/node/',
-    to: '/platforms/node/legacy-sdk/',
-  },
-  {
-    from: '/clients/javascript/',
-    to: '/platforms/javascript/legacy-sdk/',
-  },
-  {
-    from: '/clients/ruby/',
-    to: '/platforms/ruby/',
-  },
-  {
-    from: '/clients/java/integrations/',
-    to: '/platforms/java/',
-  },
-  {
-    from: '/clients/java/modules/android/',
-    to: '/platforms/android',
-  },
-  {
-    from: '/clients/javascript/integrations/angular2/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/clients/javascript/integrations/angularjs/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/platforms/javascript/angular/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/platforms/javascript/ember/',
-    to: '/platforms/javascript/guides/ember/',
-  },
-  {
-    from: '/platforms/javascript/guides/react/integrations/react-router/',
-    to: '/platforms/javascript/guides/react/configuration/integrations/react-router/',
-  },
-  {
-    from: '/node/event-processors/',
-    to: '/platforms/node/enriching-events/event-processors/',
-  },
-  {
-    from: '/platforms/node/guides/connect/event-processors/',
-    to: '/platforms/node/enriching-events/event-processors/',
-  },
-  {
-    from: '/platforms/javascript/sourcemaps/uploading/multiple-origins/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/#multiple-origins',
   },
 ];
 
