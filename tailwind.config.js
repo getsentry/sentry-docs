@@ -44,6 +44,7 @@ module.exports = {
           'Arial',
           ...defaultTheme.fontFamily.sans,
         ],
+        mono: 'var(--font-family-monospace)',
       },
       colors: {
         primary: '#362d59',
