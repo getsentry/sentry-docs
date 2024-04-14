@@ -47,7 +47,15 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
             </SmartLink>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link href="https://sentry.io/changelog">Changelog</Nav.Link>
+            <Nav.Link
+              href={
+                process.env.NODE_ENV === 'production'
+                  ? 'https://sentry.io/changelog'
+                  : '/changelog/'
+              }
+            >
+              Changelog
+            </Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link
