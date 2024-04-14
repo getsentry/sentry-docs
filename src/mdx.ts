@@ -215,7 +215,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
   return allFrontMatter;
 }
 
-export async function getFileBySlug(slug: string) {
+export async function getFileBySlug(slug: string, showNotFoundSource = false) {
   const configPath = path.join(root, slug, 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
@@ -256,6 +256,7 @@ export async function getFileBySlug(slug: string) {
 
   const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
   const source = fs.readFileSync(sourcePath, 'utf8');
+  const notFoundSource = fs.readFileSync(path.join(root, 'docs/notFound.mdx'), 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
@@ -271,7 +272,7 @@ export async function getFileBySlug(slug: string) {
   const cwd = path.dirname(sourcePath);
 
   const result = await bundleMDX<Platform>({
-    source,
+    source: showNotFoundSource ? notFoundSource : source,
     cwd,
     mdxOptions(options) {
       // this is the recommended way to add custom remark/rehype plugins:

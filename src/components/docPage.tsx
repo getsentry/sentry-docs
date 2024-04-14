@@ -28,10 +28,10 @@ export function DocPage({
   notoc = false,
   sidebar = <ServerSidebar />,
 }: Props) {
-  const {rootNode, path} = serverContext();
+  const {rootNode, path, isOriginalPathBroken} = serverContext();
   const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
   const hasToc = (!notoc && !frontMatter.notoc) || !!platformOrGuide;
-  const hasGithub = !!path?.length && path[0] !== 'api';
+  const hasGithub = !!path?.length && path[0] !== 'api' && !isOriginalPathBroken;
 
   return (
     <div className="document-wrapper">
@@ -61,7 +61,7 @@ export function DocPage({
             </div>
             <div className="row">
               <div className={hasToc ? 'col-sm-8 col-md-12 col-lg-8 col-xl-9' : 'col-12'}>
-                <h1 className="mb-3">{frontMatter.title}</h1>
+                {!isOriginalPathBroken && <h1 className="mb-3">{frontMatter.title}</h1>}
                 <div id="main">
                   <CodeContextProvider>{children}</CodeContextProvider>
                 </div>

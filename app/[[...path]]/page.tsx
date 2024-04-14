@@ -31,7 +31,7 @@ export async function generateStaticParams() {
 }
 
 // Only render paths returned by generateStaticParams
-export const dynamicParams = false;
+export const dynamicParams = true;
 export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
@@ -57,35 +57,54 @@ export default async function Page({params}) {
     return notFound();
   }
 
+  let pageNode;
+  const paramsPaths = [...params.path];
+  while (paramsPaths.length !== 0) {
+    pageNode = nodeForPath(rootNode, paramsPaths);
+    if (!pageNode) {
+      paramsPaths.pop();
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  if (paramsPaths.length === 0) {
+    console.warn('no valid page node', params.path);
+    return notFound();
+  }
+
+  const isOriginalPathBroken = paramsPaths.length !== params.path.length;
+
   setServerContext({
     rootNode,
-    path: params.path,
+    path: paramsPaths,
+    isOriginalPathBroken,
   });
 
-  if (params.path[0] === 'api' && params.path.length > 1) {
+  if (paramsPaths[0] === 'api' && paramsPaths.length > 1) {
     const categories = await apiCategories();
-    const category = categories.find(c => c.slug === params.path[1]);
+    const category = categories.find(c => c.slug === paramsPaths[1]);
     if (category) {
-      if (params.path.length === 2) {
+      if (paramsPaths.length === 2) {
         return <ApiCategoryPage category={category} />;
       }
-      const api = category.apis.find(a => a.slug === params.path[2]);
+      const api = category.apis.find(a => a.slug === paramsPaths[2]);
       if (api) {
         return <ApiPage api={api} />;
       }
     }
   }
 
-  const pageNode = nodeForPath(rootNode, params.path);
   if (!pageNode) {
-    console.warn('no page node', params.path);
+    console.warn('no page node', paramsPaths);
     return notFound();
   }
 
   // get the MDX for the current doc and render it
   let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   try {
-    doc = await getFileBySlug(`docs/${pageNode.path}`);
+    doc = await getFileBySlug(`docs/${pageNode.path}`, isOriginalPathBroken);
   } catch (e) {
     if (e.code === 'ENOENT') {
       console.error('ENOENT', pageNode.path);
