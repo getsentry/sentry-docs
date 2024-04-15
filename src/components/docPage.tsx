@@ -103,7 +103,7 @@ export function DocPage({
               </label>
             </IconButton>
           </div>
-          <div className="md:flex flex-col items-stretch" id="sidebar">
+          <div className="md:flex flex-col items-stretch">
             <div className="platform-selector">
               <div className="mb-4">
                 <h6 className="mb-2 font-medium text-[0.8rem]">Language / Framework</h6>
