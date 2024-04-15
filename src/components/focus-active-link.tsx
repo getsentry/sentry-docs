@@ -12,7 +12,7 @@ export function ScrollActiveLink() {
     const activeLink = document.querySelector('.sidebar .toc .active');
     if (activeLink && !isVsibible(activeLink)) {
       // try to center the active link in the sidebar
-      activeLink.scrollIntoView({block: 'center'});
+      activeLink.scrollIntoView({block: 'center', behavior: 'smooth'});
     }
   }, []);
   // don't render anything, just exist as a client-side component for the useEffect
