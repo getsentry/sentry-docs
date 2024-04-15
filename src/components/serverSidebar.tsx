@@ -21,19 +21,10 @@ export function ServerSidebar(): JSX.Element | null {
     return null;
   }
 
-  let node = rootNode;
-  if (path[0] === 'contributing') {
-    const maybeNode = nodeForPath(rootNode, 'contributing');
-    if (maybeNode) {
-      node = maybeNode;
-    } else {
-      return null;
-    }
-  } else if (
-    ['product', 'platform-redirect', 'cli', 'account', 'pricing'].includes(path[0])
-  ) {
+  if (['product', 'platform-redirect', 'cli', 'account', 'pricing'].includes(path[0])) {
     return <ProductSidebar rootNode={rootNode} />;
-  } else if (path[0] === 'api') {
+  }
+  if (path[0] === 'api') {
     return (
       <Fragment>
         <ApiSidebar />
@@ -41,7 +32,8 @@ export function ServerSidebar(): JSX.Element | null {
         <ProductSidebar rootNode={rootNode} />
       </Fragment>
     );
-  } else if (path[0] === 'platforms') {
+  }
+  if (path[0] === 'platforms') {
     if (path.length === 1) {
       return <ProductSidebar rootNode={rootNode} />;
     }
@@ -98,6 +90,22 @@ export function ServerSidebar(): JSX.Element | null {
       </Fragment>
     );
   }
+  if (path[0] === 'contributing') {
+    const contribNode = nodeForPath(rootNode, 'contributing');
+    if (contribNode) {
+      const contribNodes: NavNode[] = getNavNodes([contribNode], docNodeToNavNode);
+      return (
+        <ul className="list-unstyled" data-sidebar-tree>
+          <DynamicNav
+            root="contributing"
+            title="Contributing to Docs"
+            tree={toTree(contribNodes)}
+          />
+        </ul>
+      );
+    }
+  }
+  // render the default sidebar if no special case is met
 
   // Must not send full DocNodes to a client component, or the entire doc tree
   // will be serialized.
@@ -108,7 +116,8 @@ export function ServerSidebar(): JSX.Element | null {
       children: n.children.map(nodeToSidebarNode),
     };
   };
-  return <Sidebar node={nodeToSidebarNode(node)} path={path} />;
+
+  return <Sidebar node={nodeToSidebarNode(rootNode)} path={path} />;
 }
 
 function getNavNodes<NavNode_>(
