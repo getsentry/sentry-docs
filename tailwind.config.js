@@ -18,7 +18,7 @@ module.exports = {
         'fade-in-right': 'fadeInRight 0.55s ease-in-out',
       },
       boxShadow: {
-        DEFAULT: '0px 4px 16px 0px rgba(31, 22, 51, 0.10)',
+        DEFAULT: 'var(--shadow-6)',
       },
       keyframes: () => ({
         fadeIn: {
