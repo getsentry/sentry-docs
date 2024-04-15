@@ -8,8 +8,8 @@ import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
 import remarkCodeTitles from 'sentry-docs/remark-code-title';
 
 import {ApiExamples} from './apiExamples';
-import {ApiSidebar} from './apiSidebar';
 import {DocPage} from './docPage';
+import {ApiSidebar} from './serverSidebar';
 import {SmartLink} from './smartLink';
 
 function Params({params}) {
