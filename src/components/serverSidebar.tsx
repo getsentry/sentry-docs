@@ -28,9 +28,6 @@ export function ServerSidebar() {
   ) {
     return <ProductSidebar rootNode={rootNode} />;
   } else if (path[0] === 'api') {
-    if (!rootNode) {
-      return <ApiSidebar />;
-    }
     return (
       <Fragment>
         <ApiSidebar />
