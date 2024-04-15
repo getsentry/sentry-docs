@@ -198,7 +198,7 @@ end
 ```javascript
   const SENTRY_HOST = "oXXXXXX.ingest.sentry.io"
   const SENTRY_PROJECT_IDS = ["123456"]
-  
+
   export const postAction = async ({ request }) => {
       try {
           const envelope = await request.text();
@@ -206,18 +206,18 @@ end
           const header = JSON.parse(piece);
           const dsn = new URL(header["dsn"]);
           const project_id = dsn.pathname?.replace("/", "");
-  
+
           if (dsn.hostname !== SENTRY_HOST) {
               throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
           }
-  
+
           if (!project_id || !SENTRY_PROJECT_IDS.includes(project_id)) {
               throw new Error(`Invalid sentry project id: ${project_id}`);
           }
-  
+
           const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
           await fetch(upstream_sentry_url, { method: "POST", body: envelope });
-  
+
           return json({}, { status: 200 });
       } catch (e) {
           console.error("error tunneling to sentry", e);
@@ -282,114 +282,6 @@ If you would like to copy and paste the snippet directly, here it is minified:
     window.Sentry = new Proxy({}, n);
   }
 </script>
-```
-
-## Using a Client directly
-
-To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
-This also helps to prevent tracking of any parent application errors in case your application is integrated
-inside of it. In this example we use `@sentry/browser` but it's also applicable to `@sentry/node`.
-
-<SignInNote />
-
-```javascript
-import {
-  BrowserClient,
-  defaultStackParser,
-  defaultIntegrations,
-  makeFetchTransport,
-  Hub,
-} from "@sentry/browser";
-
-const client = new BrowserClient({
-  dsn: "___PUBLIC_DSN___",
-  transport: makeFetchTransport,
-  stackParser: defaultStackParser,
-  integrations: defaultIntegrations,
-});
-
-// You have to bind the client to a hub, otherwise integrations will not run!
-const hub = new Hub(client);
-// Or, if you already have a hub you want to re-use, you can also do:
-// hub.bindClient(client);
-
-hub.captureException(new Error("example"));
-```
-
-You can now customize the hub to your liking, without affecting other hubs/clients.
-
-### Setting up Sentry in shared environments (e.g. Browser Extensions)
-
-When setting up Sentry in a shared environment where multiple Sentry instances may run, for example, in a browser extension or similar, you should **not use `Sentry.init()`**, as this will pollute the global state. If your browser extension uses `Sentry.init()`, and the website the extension is running on also uses Sentry, the extension may send events to the website's Sentry project, or vice versa.
-
-For such scenarios, you have to set up a client manually as seen in the example above.
-In addition, you should also avoid adding any integrations that use global state, like `Breadcrumbs` or `TryCatch`.
-As a rule of thumb, it's best to avoid using any integrations and to rely on manual capture of errors only in such scenarios.
-
-### Dealing with Integrations
-
-Integrations are setup on the `Client`, if you need to deal with multiple clients and hubs you have to make sure to also do the integration handling correctly.
-
-We do not recommend doing this if you are using Sentry in a browser extension or in similar scenarios.
-If you can't avoid using global integrations (e.g. in a micro frontend application), here is a working example of how to use multiple clients with multiple hubs running global integrations.
-
-<SignInNote />
-
-```javascript
-import * as Sentry from "@sentry/browser";
-
-// Very happy integration that'll prepend and append very happy stick figure to the message
-function happyIntegration() {
-  return {
-    name: 'Happy',
-    setupOnce() {
-      Sentry.addGlobalEventProcessor((event) => {
-        const self = Sentry.getClient().getIntegration(HappyIntegration);
-        // Run the integration ONLY when it was installed on the current Hub
-        if (self) {
-          event.message = `\\o/ ${event.message} \\o/`;
-        }
-        return event;
-      });
-    }
-  }
-}
-
-const client1 = new Sentry.BrowserClient({
-  dsn: "___PUBLIC_DSN___",
-  transport: Sentry.makeFetchTransport,
-  stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
-  beforeSend(event) {
-    console.log("client 1", event);
-    return null; // Returning `null` prevents the event from being sent
-  },
-});
-const hub1 = new Sentry.Hub(client1);
-
-const client2 = new Sentry.BrowserClient({
-  dsn: "___PUBLIC_DSN___", // Can be a different DSN
-  transport: Sentry.makeFetchTransport,
-  stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
-  beforeSend(event) {
-    console.log("client 2", event);
-    return null; // Returning `null` prevents the event from being sent
-  },
-});
-const hub2 = new Sentry.Hub(client2);
-
-hub1.run((currentHub) => {
-  // The `hub.run` method makes sure that `Sentry.getCurrentHub()` returns this hub during the callback
-  currentHub.captureMessage("a");
-  Sentry.getCurrentScope().setTag("a", "b");
-});
-
-hub2.run((currentHub) => {
-  // The `hub.run` method makes sure that `Sentry.getCurrentHub()` returns this hub during the callback
-  currentHub.captureMessage("x");
-  Sentry.getCurrentScope().setTag("c", "d");
-});
 ```
 
 ## Third Party Promise Libraries

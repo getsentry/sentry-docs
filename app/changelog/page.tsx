@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-import * as Sentry from '@sentry/nextjs';
 import type {Metadata} from 'next';
 
 import List from 'sentry-docs/components/changelog/list';
@@ -26,9 +25,6 @@ export function generateMetadata(): Metadata {
       'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
     alternates: {
       canonical: `https://sentry.io/changelog/`,
-    },
-    other: {
-      'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },
   };
 }
