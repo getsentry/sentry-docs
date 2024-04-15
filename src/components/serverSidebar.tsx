@@ -225,9 +225,6 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
           />
         </ul>
       </li>
-      {process.env.NODE_ENV !== 'production' && (
-        <DynamicNav root="_debug" title="Debug (Dev Only)" tree={productTree} />
-      )}
     </ul>
   );
 }
