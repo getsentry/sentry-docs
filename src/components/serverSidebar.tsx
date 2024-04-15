@@ -12,7 +12,6 @@ import {PlatformGuide} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
 
 import {DynamicNav, toTree} from './dynamicNav';
-import {Node as PlatformSidebarNode, PlatformSidebar} from './platformSidebar';
 import {Sidebar, SidebarNode} from './sidebar';
 import {SidebarLink} from './sidebarLink';
 
@@ -77,10 +76,7 @@ export function ServerSidebar(): JSX.Element | null {
       };
     };
 
-    const nodes: PlatformSidebarNode[] = getNavNodes(
-      [platformNode],
-      docNodeToPlatformSidebarNode
-    );
+    const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
 
     return (
       <Fragment>
@@ -115,7 +111,7 @@ export function ServerSidebar(): JSX.Element | null {
   return <Sidebar node={nodeToSidebarNode(node)} path={path} />;
 }
 
-export function getNavNodes<NavNode_>(
+function getNavNodes<NavNode_>(
   docNodes: DocNode[],
   docNodeToNavNode_: (doc: DocNode) => NavNode_ | undefined,
   nodes: NavNode_[] = []
@@ -331,6 +327,50 @@ export async function ApiSidebar() {
           })}
         </ul>
       </li>
+    </ul>
+  );
+}
+
+type PlatformSidebarNode = {
+  context: {
+    platform: {
+      name: string;
+    };
+    title: string;
+    sidebar_order?: number;
+    sidebar_title?: string;
+  };
+  path: string;
+};
+
+type PlatformSidebarProps = {
+  nodes: PlatformSidebarNode[];
+  platform: {
+    name: string;
+    title: string;
+  };
+  guide?: {
+    name: string;
+    title: string;
+  };
+};
+
+function PlatformSidebar({platform, guide, nodes}: PlatformSidebarProps) {
+  const platformName = platform.name;
+  const guideName = guide ? guide.name : null;
+  const tree = toTree(nodes.filter(n => !!n.context));
+  const pathRoot = guideName
+    ? `platforms/${platformName}/guides/${guideName}`
+    : `platforms/${platformName}`;
+  return (
+    <ul className="list-unstyled" data-sidebar-tree>
+      <DynamicNav
+        root={pathRoot}
+        tree={tree}
+        title={`Sentry for ${(guide || platform).title}`}
+        prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
+        exclude={[`/${pathRoot}/guides/`]}
+      />
     </ul>
   );
 }
