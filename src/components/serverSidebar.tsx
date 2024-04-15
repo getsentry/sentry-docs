@@ -16,22 +16,18 @@ export function ServerSidebar() {
   }
 
   let node = rootNode;
-  if (path.indexOf('contributing') === 0) {
+  if (path[0] === 'contributing') {
     const maybeNode = nodeForPath(rootNode, 'contributing');
     if (maybeNode) {
       node = maybeNode;
     } else {
       return null;
     }
-  } else if (path.indexOf('product') === 0 || path.indexOf('platform-redirect') === 0) {
+  } else if (
+    ['product', 'platform-redirect', 'cli', 'account', 'pricing'].includes(path[0])
+  ) {
     return <ProductSidebar rootNode={rootNode} />;
-  } else if (path.indexOf('cli') === 0) {
-    return <ProductSidebar rootNode={rootNode} />;
-  } else if (path.indexOf('account') === 0) {
-    return <ProductSidebar rootNode={rootNode} />;
-  } else if (path.indexOf('pricing') === 0) {
-    return <ProductSidebar rootNode={rootNode} />;
-  } else if (path.indexOf('api') === 0) {
+  } else if (path[0] === 'api') {
     if (!rootNode) {
       return <ApiSidebar />;
     }
@@ -42,7 +38,7 @@ export function ServerSidebar() {
         <ProductSidebar rootNode={rootNode} />
       </Fragment>
     );
-  } else if (path.indexOf('platforms') === 0) {
+  } else if (path[0] === 'platforms') {
     if (path.length === 1) {
       return <ProductSidebar rootNode={rootNode} />;
     }
