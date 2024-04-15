@@ -12,12 +12,11 @@ export default function Header({loading}) {
         <div
           className={`relative col-span-12 mt-32 lg:absolute lg:w-96 lg:right-1/4 lg:-bottom-2 ${loading ? 'animate-fade-in-right' : ''}`}
         >
-          <h1 className="justify-self-center text-white font-bold text-4xl text-center lg:text-left">
+          <h1 className="justify-self-center text-white font-bold text-4xl text-center lg:text-left mb-2">
             Sentry Changelog
           </h1>
           <h2 className="justify-self-center z-20 text-gold text-1xl text-center lg:text-left">
-            Stay up to date on everything big and small, from product updates to SDK
-            changes with the Sentry Changelog.
+            Stay up to date on everything from product updates to SDK changes
           </h2>
         </div>
       </div>
