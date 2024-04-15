@@ -59,7 +59,61 @@ The API function `last_event_id()` was removed. The last event ID is still retur
 
 ## Custom Instrumentation
 
-You can no longer mutate a manually-created transaction in a `configure_scope` block. Instead, you need to get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
+Hub-based APIs as well as some scope-based APIs like `configure_scope()` and `push_scope()` are now deprecated as a consequence of [reworking](/platforms/python/enriching-events/scopes/) the way the SDK saves and propagates data internally. Instead, SDK 2.0 introduces the concept of a global, isolation and current scope. In short:
+
+- The **global scope** holds data that doesn't change as long as your app is running, for instance the current release.
+- The **isolation scope** follows a single basic unit of your program such as a single request-response cycle or one task in a task queue and holds data pertaining to it. In most cases, the lifecycle of an isolation scope maps to the lifecycle of a transaction.
+- The **current scope** wraps a smaller part of the code, often something that's being tracked by a single span.
+
+<Alert level="warning" title="New scope-based APIs">
+
+The SDK will take care of deciding what data belongs on which scope as long as you use the top-level API, so for instance `sentry_sdk.set_tag()` as opposed to `scope.set_tag()`. We recommend you use the top-level API even if you're creating your own scopes since setting data on the wrong scope might lead to unexpected results.
+
+</Alert>
+
+The old APIs will continue to work in 2.0, but we recommend migrating to their new counterparts as soon as possible since they will be removed in the next major release.
+
+### Hub Cloning
+
+Creating a new isolation scope provides a similar level of isolation to what you'd previously get by using a hub clone:
+
+<SignInNote />
+
+```python diff
+- hub = Hub(Hub.current)
+- # do something
++ with isolation_scope() as scope:
++     # do something
+```
+
+### Scope Configuring
+
+In case of `configure_scope()`, you will need to modify either the isolation scope
+or the current scope, depending on whether the change you're making to the scope
+should affect the whole transaction (one request-response cycle, one execution of
+a task, and so on) or just a specific part of the code.
+
+If you want your scope change to affect the whole transaction, use the `isolation_scope`.
+
+<SignInNote />
+
+```python diff
+- with configure_scope() as scope:
+-     # do something with scope
++ scope = Scope.get_isolation_scope()
++ # do something with scope
+```
+
+If you want your scope change to affect a smaller unit of code such as a span, use the `current_scope`.
+
+```python diff
+- with configure_scope() as scope:
+-     # do something with scope
++ scope = Scope.get_current_scope()
++ # do something with scope
+```
+
+Additionally, you can no longer mutate a manually-created transaction in a `configure_scope` block. Instead, you need to get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
 
 <SignInNote />
 
@@ -73,8 +127,32 @@ transaction = sentry_sdk.transaction(...)
 
 +scope = sentry_sdk.Scope.get_current_scope()
 +scope.set_transaction_name("new-transaction-name")
-
 ```
+
+### Scope Pushing
+
+Scope pushing translates to forking a scope in `2.0`. Similarly as above, you either want to fork the current or the isolation scope, depending on how long the new scope should be active. If it should encompass the whole transaction, fork the isolation scope, otherwise fork the current scope.
+
+If you're wrapping a whole request-response cycle or a whole execution of a task, fork the `isolation_scope`:
+
+<SignInNote />
+
+```python diff
+- with push_scope() as scope:
+-     # do something
++ with isolation_scope() as scope:
++     # do something
+```
+
+If you only want to apply something to a smaller, localized part of the code, fork the `current_scope` with `new_scope()`:
+
+```python diff
+- with push_scope() as scope:
+-     # do something
++ with new_scope() as scope:
++     # do something
+```
+
 
 ## Self-Hosted
 
