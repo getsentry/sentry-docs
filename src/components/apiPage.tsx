@@ -136,7 +136,7 @@ export function ApiPage({api}: Props) {
           </div>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-1/2">
           {api.summary && <p>{api.summary}</p>}
 
