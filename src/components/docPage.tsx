@@ -49,12 +49,6 @@ export function DocPage({
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
-        <input
-          type="checkbox"
-          id="navbar-menu-toggle"
-          className="hidden"
-          defaultChecked={false}
-        />
         {sidebar}
         <main className="flex justify-center w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] flex-1 mx-auto">
           <div

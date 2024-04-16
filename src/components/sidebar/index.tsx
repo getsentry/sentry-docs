@@ -55,6 +55,12 @@ export function Sidebar() {
 
   return (
     <aside className={styles.sidebar}>
+      <input
+        type="checkbox"
+        id="navbar-menu-toggle"
+        className="hidden"
+        defaultChecked={false}
+      />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="flex justify-end">
         <IconButton variant="ghost" asChild>
@@ -347,6 +353,12 @@ export async function ApiSidebar({standalone = true}: {standalone?: boolean}) {
       <aside className={styles.sidebar}>
         <style>{':root { --sidebar-width: 300px; }'}</style>
         <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
+        <input
+          type="checkbox"
+          id="navbar-menu-toggle"
+          className="hidden"
+          defaultChecked={false}
+        />
         {children}
       </aside>
     ) : (
