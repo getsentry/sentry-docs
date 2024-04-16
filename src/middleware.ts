@@ -2056,67 +2056,79 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/error-monitoring/filtering/',
-    to: '/product/data-management-settings/filtering/',
-  },
-  {
-    from: '/data-management/rollups/',
-    to: '/product/data-management-settings/event-grouping/',
-  },
-  {
-    from: '/learn/rollups/',
-    to: '/product/data-management-settings/event-grouping/',
-  },
-  {
-    from: '/data-management/event-grouping/',
-    to: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/filtering/',
   },
   {
     from: '/product/data-management-settings/event-grouping/grouping-breakdown/',
-    to: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/',
+  },
+  {
+    from: '/data-management/rollups/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/learn/rollups/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/data-management/event-grouping/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/data-management-settings/event-grouping/grouping-breakdown/',
+    to: '/concepts/data-management/event-grouping/',
   },
   {
     from: '/platforms/unity/data-management/event-grouping/',
-    to: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/event-grouping/',
   },
   {
     from: '/platforms/php/data-management/event-grouping/stack-trace-rules/',
-    to: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/event-grouping/',
   },
   {
     from: '/product/data-management-settings/event-grouping/server-side-fingerprinting/',
-    to: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
   },
   {
     from: '/learn/data-forwarding/',
-    to: '/product/data-management-settings/data-forwarding/',
+    to: '/concepts/data-management/data-forwarding/',
   },
   {
     from: '/product/data-forwarding/',
-    to: '/product/data-management-settings/data-forwarding/',
+    to: '/concepts/data-management/data-forwarding/',
+  },
+  {
+    from: '/platforms/data-management/',
+    to: '/concepts/data-management/data-forwarding/',
   },
   {
     from: '/data-management-settings/attachment-datascrubbing/',
-    to: '/product/data-management-settings/scrubbing/attachment-scrubbing/',
+    to: '/concepts/data-management/scrubbing/attachment-scrubbing/',
   },
   {
     from: '/product/data-management-settings/advanced-datascrubbing/',
-    to: '/product/data-management-settings/scrubbing/',
+    to: '/concepts/data-management/scrubbing/',
+  },
+  {
+    from: '/platforms/data-management/',
+    to: '/concepts/data-management/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management/advanced-datascrubbing/',
-    to: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+    to: '/concepts/data-management/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management-settings/advanced-datascrubbing/',
-    to: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+    to: '/concepts/data-management/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management-settings/server-side-scrubbing/',
-    to: '/product/data-management-settings/scrubbing/server-side-scrubbing/',
+    to: '/concepts/data-management/scrubbing/server-side-scrubbing/',
   },
   {
     from: '/data-management-settings/event-pii-fields/',
-    to: '/product/data-management-settings/scrubbing/server-side-scrubbing/event-pii-fields/',
+    to: '/concepts/data-management/scrubbing/server-side-scrubbing/event-pii-fields/',
   },
   {
     from: '/product/discover/',
@@ -2424,47 +2436,47 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/search/',
-    to: '/product/reference/search/',
+    to: '/concepts/search/',
   },
   {
     from: '/product/search/',
-    to: '/product/reference/search/',
+    to: '/concepts/search/',
   },
   {
     from: '/learn/search/',
-    to: '/product/reference/search/',
+    to: '/concepts/search/',
   },
   {
     from: '/product/sentry-basics/search/',
-    to: '/product/reference/search/',
+    to: '/concepts/search/',
   },
   {
     from: '/product/sentry-basics/search/saved-searches/',
-    to: '/product/reference/search/saved-searches/',
+    to: '/concepts/search/saved-searches/',
   },
   {
     from: '/product/sentry-basics/search/searchable-properties/user-feedback/',
-    to: '/product/reference/search/searchable-properties/user-feedback/',
+    to: '/concepts/search/searchable-properties/user-feedback/',
   },
   {
     from: '/product/sentry-basics/search/searchable-properties/events/',
-    to: '/product/reference/search/searchable-properties/events/',
+    to: '/concepts/search/searchable-properties/events/',
   },
   {
     from: '/product/sentry-basics/search/searchable-properties/issues/',
-    to: '/product/reference/search/searchable-properties/issues/',
+    to: '/concepts/search/searchable-properties/issues/',
   },
   {
     from: '/product/sentry-basics/search/searchable-properties/',
-    to: '/product/reference/search/searchable-properties/',
+    to: '/concepts/search/searchable-properties/',
   },
   {
     from: '/product/sentry-basics/search/searchable-properties/releases/',
-    to: '/product/reference/search/searchable-properties/releases/',
+    to: '/concepts/search/searchable-properties/releases/',
   },
   {
     from: '/product/sentry-basics/search/searchable-properties/session-replay/',
-    to: '/product/reference/search/searchable-properties/session-replay/',
+    to: '/concepts/search/searchable-properties/session-replay/',
   },
   {
     from: '/platforms/javascript/configuration/micro-frontend-support/',

@@ -107,7 +107,7 @@ export function SidebarLinks(): JSX.Element | null {
     return null;
   }
 
-  if (['product', 'platform-redirect', 'cli', 'account', 'pricing'].includes(path[0])) {
+  if (['product', 'platform-redirect', 'cli', 'concepts', 'account', 'pricing'].includes(path[0])) {
     return <ProductSidebar rootNode={rootNode} />;
   }
   if (path[0] === 'api') {
@@ -244,6 +244,16 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
   const cliTree = toTree(cliNodes.filter(n => !!n.context));
 
   /**
+   * URL: /concepts
+   */
+  const conceptsNode = nodeForPath(rootNode, 'concepts');
+  if (!conceptsNode) {
+    return null;
+  }
+  const conceptsNodes: NavNode[] = getNavNodes([conceptsNode], docNodeToNavNode);
+  const conceptsTree = toTree(conceptsNodes.filter(n => !!n.context));
+
+  /**
    * URL: /pricing
    */
   const pricingNode = nodeForPath(rootNode, 'pricing');
@@ -271,6 +281,13 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
         root="cli"
         title="sentry-cli"
         tree={cliTree}
+        collapse
+        headerClassName={headerClassName}
+      />
+      <DynamicNav
+        root="concepts"
+        title="Concepts & Reference"
+        tree={conceptsTree}
         collapse
         headerClassName={headerClassName}
       />
