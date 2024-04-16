@@ -114,7 +114,7 @@ export function SidebarLinks(): JSX.Element | null {
   }
 
   if (
-    ['product', 'platform-redirect', 'cli', 'concepts', 'account', 'pricing'].includes(
+    ['product', 'platform-redirect', 'cli', 'concepts', 'account', 'pricing', 'security-legal-pii'].includes(
       path[0]
     )
   ) {
@@ -264,6 +264,16 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
   const conceptsTree = toTree(conceptsNodes.filter(n => !!n.context));
 
   /**
+   * URL: /security-legal-pii
+   */
+  const securityLegalPiiNode = nodeForPath(rootNode, 'security-legal-pii');
+  if (!securityLegalPiiNode) {
+    return null;
+  }
+  const securityLegalPiiNodes: NavNode[] = getNavNodes([securityLegalPiiNode], docNodeToNavNode);
+  const securityLegalPiiTree = toTree(securityLegalPiiNodes.filter(n => !!n.context));
+
+  /**
    * URL: /pricing
    */
   const pricingNode = nodeForPath(rootNode, 'pricing');
@@ -298,6 +308,13 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
         root="concepts"
         title="Concepts & Reference"
         tree={conceptsTree}
+        collapse
+        headerClassName={headerClassName}
+      />
+      <DynamicNav
+        root="security-legal-pii"
+        title="Security, Legal, & PII"
+        tree={securityLegalPiiTree}
         collapse
         headerClassName={headerClassName}
       />
