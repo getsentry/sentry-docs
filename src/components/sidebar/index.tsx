@@ -1,23 +1,98 @@
 import {Fragment, SVGAttributes} from 'react';
+import {Cross1Icon} from '@radix-ui/react-icons';
+import {IconButton} from '@radix-ui/themes';
 import Link from 'next/link';
 
 import {
   DocNode,
+  extractPlatforms,
+  getCurrentGuide,
+  getCurrentPlatform,
   getDocsRootNode,
   getGuide,
   getPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {FrontMatter, PlatformGuide} from 'sentry-docs/types';
+import {FrontMatter, Platform, PlatformGuide} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
 
-import './sidebar.scss';
+import styles from './style.module.scss';
 
 import {DynamicNav, toTree} from '../dynamicNav';
+import {ScrollActiveLink} from '../focus-active-link';
+import {PlatformSelector} from '../platformSelector';
 import {SidebarLink} from '../sidebarLink';
 
-export function ServerSidebar(): JSX.Element | null {
+const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
+
+export function Sidebar() {
+  const {rootNode, path} = serverContext();
+  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
+  const currentGuide = rootNode && getCurrentGuide(rootNode, path);
+
+  const platforms: Platform[] = !rootNode
+    ? []
+    : extractPlatforms(rootNode).map(platform => {
+        const platformForPath =
+          nodeForPath(rootNode, [
+            'platforms',
+            platform.name,
+            ...path.slice(currentGuide ? 4 : 2),
+          ]) ||
+          // try to go one level higher
+          nodeForPath(rootNode, [
+            'platforms',
+            platform.name,
+            ...path.slice(currentGuide ? 4 : 2, path.length - 1),
+          ]);
+
+        // link to the section of this platform's docs that matches the current path when applicable
+        return platformForPath
+          ? {...platform, url: '/' + platformForPath.path + '/'}
+          : platform;
+      });
+
+  return (
+    <aside className={styles.sidebar}>
+      <style>{':root { --sidebar-width: 300px; }'}</style>
+      <div className="flex justify-end">
+        <IconButton variant="ghost" asChild>
+          <label
+            htmlFor="navbar-menu-toggle"
+            className="lg:hidden mb-4 flex justify-end rounded-full p-3 cursor-pointer bg-[var(--white-a11)] shadow"
+            aria-label="Close"
+            aria-hidden="true"
+          >
+            <Cross1Icon
+              className="text-[var(--gray-10)]"
+              strokeWidth="2"
+              width="24"
+              height="24"
+            />
+          </label>
+        </IconButton>
+      </div>
+      <div className="md:flex flex-col items-stretch">
+        <div className="platform-selector">
+          <div className="mb-4">
+            <h6 className="mb-2 font-medium text-[0.8rem]">Language / Framework</h6>
+            <PlatformSelector
+              platforms={platforms}
+              currentPlatform={currentGuide || currentPlatform}
+            />
+          </div>
+        </div>
+        <div className={styles.toc}>
+          <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
+          <SidebarLinks />
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+export function SidebarLinks(): JSX.Element | null {
   const {path, rootNode} = serverContext();
   if (!rootNode) {
     return null;
@@ -97,7 +172,7 @@ export function ServerSidebar(): JSX.Element | null {
     if (contribNode) {
       const contribNodes: NavNode[] = getNavNodes([contribNode], docNodeToNavNode);
       return (
-        <ul className="list-unstyled" data-sidebar-tree>
+        <ul data-sidebar-tree>
           <DynamicNav
             root="contributing"
             title="Contributing to Docs"
@@ -181,7 +256,7 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (
-    <ul className="list-unstyled" data-sidebar-tree>
+    <ul data-sidebar-tree>
       <DynamicNav root="cli" title="sentry-cli" tree={cliTree} collapse />
       <DynamicNav root="pricing" title="Pricing & Billing" tree={pricingTree} collapse />
       <DynamicNav
@@ -207,10 +282,10 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
       <DynamicNav root="product/integrations" title="Integrations" tree={productTree} />
 
       <li className="mb-3" data-sidebar-branch>
-        <div className="sidebar-title items-center mb-0" data-sidebar-link>
+        <div className={`${styles['sidebar-title']} items-center mb-0`} data-sidebar-link>
           <h6>Additional Resources</h6>
         </div>
-        <ul className="list-unstyled" data-sidebar-tree>
+        <ul data-sidebar-tree>
           <SidebarLink to="https://help.sentry.io/" title="Support" path={fullPath} />
           <SidebarLink to="/platforms/" title="Platforms" path={fullPath} />
           <SidebarLink to="/api/" title="API Reference" path={fullPath} />
@@ -231,7 +306,7 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
   );
 }
 
-export async function ApiSidebar() {
+export async function ApiSidebar({standalone = true}: {standalone?: boolean}) {
   const rootNode = await getDocsRootNode();
   const apiRootNode = rootNode && nodeForPath(rootNode, 'api');
   if (!apiRootNode) {
@@ -267,64 +342,78 @@ export async function ApiSidebar() {
   const currentPath = `/${pathParts.join('/')}/`;
   const isActive = (p: string) => currentPath.indexOf(p) === 0;
 
+  function Wrapper({children}) {
+    return standalone ? (
+      <aside className={styles.sidebar}>
+        <style>{':root { --sidebar-width: 300px; }'}</style>
+        <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
+        {children}
+      </aside>
+    ) : (
+      <Fragment>{children}</Fragment>
+    );
+  }
+
   return (
-    <ul className="list-unstyled" data-sidebar-tree>
-      <DynamicNav
-        root="api"
-        title="API Reference"
-        tree={tree}
-        exclude={endpoints
-          .map(elem => elem.node?.path)
-          .concat(guides.map(elem => elem.node?.path))
-          .filter(isTruthy)}
-      />
-      <DynamicNav
-        root="api/guides"
-        title="Guides"
-        tree={guides}
-        exclude={endpoints.map(elem => elem.node?.path).filter(isTruthy)}
-      />
-      <li className="mb-3" data-sidebar-branch>
-        <div className="sidebar-title flex items-center mb-0" data-sidebar-link>
-          <h6>Endpoints</h6>
-        </div>
-        <ul className="list-unstyled" data-sidebar-tree>
-          {endpoints.map(({node, children}) => {
-            const path = node?.path;
-            const title = node?.context.title;
-            return (
-              path &&
-              title && (
-                <Fragment key={path}>
-                  <SidebarLink to={path} title={title} path={currentPath} />
-                  {isActive(path) && (
-                    <div style={{paddingLeft: '0.5rem'}}>
-                      {children
-                        .filter(({node: n}) => !!n)
-                        .map(({node: n}) => {
-                          const childPath = n?.path;
-                          const contextTitle = n?.context.title;
-                          return (
-                            childPath &&
-                            contextTitle && (
-                              <SidebarLink
-                                key={path}
-                                to={childPath}
-                                title={contextTitle}
-                                path={currentPath}
-                              />
-                            )
-                          );
-                        })}
-                    </div>
-                  )}
-                </Fragment>
-              )
-            );
-          })}
-        </ul>
-      </li>
-    </ul>
+    <Wrapper>
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="api"
+          title="API Reference"
+          tree={tree}
+          exclude={endpoints
+            .map(elem => elem.node?.path)
+            .concat(guides.map(elem => elem.node?.path))
+            .filter(isTruthy)}
+        />
+        <DynamicNav
+          root="api/guides"
+          title="Guides"
+          tree={guides}
+          exclude={endpoints.map(elem => elem.node?.path).filter(isTruthy)}
+        />
+        <li className="mb-3" data-sidebar-branch>
+          <div className="sidebar-title flex items-center mb-0" data-sidebar-link>
+            <h6>Endpoints</h6>
+          </div>
+          <ul data-sidebar-tree>
+            {endpoints.map(({node, children}) => {
+              const path = node?.path;
+              const title = node?.context.title;
+              return (
+                path &&
+                title && (
+                  <Fragment key={path}>
+                    <SidebarLink to={path} title={title} path={currentPath} />
+                    {isActive(path) && (
+                      <div style={{paddingLeft: '0.5rem'}}>
+                        {children
+                          .filter(({node: n}) => !!n)
+                          .map(({node: n}) => {
+                            const childPath = n?.path;
+                            const contextTitle = n?.context.title;
+                            return (
+                              childPath &&
+                              contextTitle && (
+                                <SidebarLink
+                                  key={path}
+                                  to={childPath}
+                                  title={contextTitle}
+                                  path={currentPath}
+                                />
+                              )
+                            );
+                          })}
+                      </div>
+                    )}
+                  </Fragment>
+                )
+              );
+            })}
+          </ul>
+        </li>
+      </ul>
+    </Wrapper>
   );
 }
 
@@ -360,7 +449,7 @@ function PlatformSidebar({platform, guide, nodes}: PlatformSidebarProps) {
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
   return (
-    <ul className="list-unstyled" data-sidebar-tree>
+    <ul data-sidebar-tree>
       <DynamicNav
         root={pathRoot}
         tree={tree}
@@ -391,7 +480,7 @@ export function DefaultSidebar({node, path}: DefaultSidebarProps) {
 
   const renderChildren = (children: SidebarNode[]) =>
     children && (
-      <ul className="list-unstyled" data-sidebar-tree>
+      <ul data-sidebar-tree>
         {children
           .filter(n => n.frontmatter.sidebar_title || n.frontmatter.title)
           .map(n => (
@@ -442,14 +531,17 @@ export function DefaultSidebar({node, path}: DefaultSidebarProps) {
   }
 
   return (
-    <ul className="list-unstyled" data-sidebar-tree>
+    <ul data-sidebar-tree>
       <li className="mb-3" data-sidebar-branch>
         <Fragment>
           <Link
             href={'/' + node.path}
+            data-active={node.path === path.join('/')}
             className={activeClassName(
               node,
-              'sidebar-title flex items-center justify-between gap-1'
+              [styles['sidebar-title'], 'flex items-center justify-between gap-1'].join(
+                ' '
+              )
             )}
             data-sidebar-link
             key={node.path}

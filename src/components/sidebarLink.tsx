@@ -54,11 +54,7 @@ export function SidebarLink({
         {title || children}
         {hasSubtree && <Chevron direction={showSubtree ? 'down' : 'right'} />}
       </SidebarNavItem>
-      {title && children && (
-        <ul className="list-unstyled" data-sidebar-tree>
-          {showSubtree && children}
-        </ul>
-      )}
+      {title && children && <ul data-sidebar-tree>{showSubtree && children}</ul>}
     </li>
   );
 }

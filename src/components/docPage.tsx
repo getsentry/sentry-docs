@@ -1,25 +1,17 @@
 import {ReactNode} from 'react';
-import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
-import {IconButton} from '@radix-ui/themes';
+import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 
-import {
-  extractPlatforms,
-  getCurrentGuide,
-  getCurrentPlatform,
-  nodeForPath,
-} from 'sentry-docs/docTree';
+import {getCurrentGuide, getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {FrontMatter, Platform} from 'sentry-docs/types';
+import {FrontMatter} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
 
 import {Breadcrumbs} from './breadcrumbs';
 import {CodeContextProvider} from './codeContext';
-import {ScrollActiveLink} from './focus-active-link';
 import {GitHubCTA} from './githubCTA';
 import {Header} from './header';
 import {PlatformSdkDetail} from './platformSdkDetail';
-import {PlatformSelector} from './platformSelector';
-import {ServerSidebar} from './sidebar';
+import {Sidebar} from './sidebar';
 import {TableOfContents} from './tableOfContents';
 
 type Props = {
@@ -37,33 +29,11 @@ export function DocPage({
   frontMatter,
   notoc = false,
   fullWidth = false,
-  sidebar = <ServerSidebar />,
+  sidebar = <Sidebar />,
 }: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
   const currentGuide = rootNode && getCurrentGuide(rootNode, path);
-
-  const platforms: Platform[] = !rootNode
-    ? []
-    : extractPlatforms(rootNode).map(platform => {
-        const platformForPath =
-          nodeForPath(rootNode, [
-            'platforms',
-            platform.name,
-            ...path.slice(currentGuide ? 4 : 2),
-          ]) ||
-          // try to go one level higher
-          nodeForPath(rootNode, [
-            'platforms',
-            platform.name,
-            ...path.slice(currentGuide ? 4 : 2, path.length - 1),
-          ]);
-
-        // link to the section of this platform's docs that matches the current path when applicable
-        return platformForPath
-          ? {...platform, url: '/' + platformForPath.path + '/'}
-          : platform;
-      });
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
@@ -85,40 +55,7 @@ export function DocPage({
           className="hidden"
           defaultChecked={false}
         />
-        <aside className="sidebar">
-          <div className="flex justify-end">
-            <IconButton variant="ghost" asChild>
-              <label
-                htmlFor="navbar-menu-toggle"
-                className="lg:hidden mb-4 flex justify-end rounded-full p-3 cursor-pointer bg-[var(--white-a11)] shadow"
-                aria-label="Close"
-                aria-hidden="true"
-              >
-                <Cross1Icon
-                  className="text-[var(--gray-10)]"
-                  strokeWidth="2"
-                  width="24"
-                  height="24"
-                />
-              </label>
-            </IconButton>
-          </div>
-          <div className="md:flex flex-col items-stretch">
-            <div className="platform-selector">
-              <div className="mb-4">
-                <h6 className="mb-2 font-medium text-[0.8rem]">Language / Framework</h6>
-                <PlatformSelector
-                  platforms={platforms}
-                  currentPlatform={currentGuide || currentPlatform}
-                />
-              </div>
-            </div>
-            <div className="toc">
-              <ScrollActiveLink />
-              <div>{sidebar}</div>
-            </div>
-          </div>
-        </aside>
+        {sidebar}
         <main className="flex justify-center w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] flex-1 mx-auto">
           <div
             className={[
