@@ -26,6 +26,8 @@ import {SidebarLink} from '../sidebarLink';
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
 
+export const sidebarToggleId = styles['navbar-menu-toggle'];
+
 export function Sidebar() {
   const {rootNode, path} = serverContext();
   const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
@@ -57,7 +59,7 @@ export function Sidebar() {
     <aside className={styles.sidebar}>
       <input
         type="checkbox"
-        id="navbar-menu-toggle"
+        id={sidebarToggleId}
         className="hidden"
         defaultChecked={false}
       />
@@ -65,7 +67,7 @@ export function Sidebar() {
       <div className="flex justify-end">
         <IconButton variant="ghost" asChild>
           <label
-            htmlFor="navbar-menu-toggle"
+            htmlFor={sidebarToggleId}
             className="lg:hidden mb-4 flex justify-end rounded-full p-3 cursor-pointer bg-[var(--white-a11)] shadow"
             aria-label="Close"
             aria-hidden="true"

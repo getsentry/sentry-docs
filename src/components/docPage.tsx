@@ -11,7 +11,7 @@ import {CodeContextProvider} from './codeContext';
 import {GitHubCTA} from './githubCTA';
 import {Header} from './header';
 import {PlatformSdkDetail} from './platformSdkDetail';
-import {Sidebar} from './sidebar';
+import {Sidebar, sidebarToggleId} from './sidebar';
 import {TableOfContents} from './tableOfContents';
 
 type Props = {
@@ -67,7 +67,7 @@ export function DocPage({
               <h1 className="pl-8 lg:p-0 relative">
                 <button className="lg:hidden absolute left-0">
                   <label
-                    htmlFor="navbar-menu-toggle"
+                    htmlFor={sidebarToggleId}
                     aria-label="Close"
                     aria-hidden="true"
                     className="inline-flex items-center cursor-pointer"
