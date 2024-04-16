@@ -107,7 +107,11 @@ export function SidebarLinks(): JSX.Element | null {
     return null;
   }
 
-  if (['product', 'platform-redirect', 'cli', 'concepts', 'account', 'pricing'].includes(path[0])) {
+  if (
+    ['product', 'platform-redirect', 'cli', 'concepts', 'account', 'pricing'].includes(
+      path[0]
+    )
+  ) {
     return <ProductSidebar rootNode={rootNode} />;
   }
   if (path[0] === 'api') {
