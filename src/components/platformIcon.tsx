@@ -985,12 +985,12 @@ export function PlatformIcon({
 
   if (withLanguageIcon && languageIcon !== icon && languageIcon !== 'default') {
     return (
-      <div {...otherProps} style={{ position: 'relative', ...style }}>
+      <div {...otherProps} style={{position: 'relative', ...style}}>
         <Image
           src={svg}
           width={size}
           height={size}
-          style={{ borderRadius: `${radius}px` }}
+          style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
         />
         <Image
@@ -1017,7 +1017,7 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{ borderRadius: `${radius}px`, ...style }}
+      style={{borderRadius: `${radius}px`, ...style}}
       alt={`${platform} icon`}
     />
   );
