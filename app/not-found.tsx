@@ -2,8 +2,6 @@ import 'prism-sentry/index.css';
 
 import {Header} from 'sentry-docs/components/header';
 
-import 'sentry-docs/styles/screen.scss';
-
 export default function NotFound() {
   return (
     <div className="tw-app">

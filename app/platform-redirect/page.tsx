@@ -6,8 +6,6 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
-import 'sentry-docs/styles/screen.scss';
-
 export default async function Page({
   searchParams: {next = '', platform},
 }: {
