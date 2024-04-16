@@ -1,4 +1,5 @@
-import {Fragment} from 'react';
+import {Fragment, SVGAttributes} from 'react';
+import Link from 'next/link';
 
 import {
   DocNode,
@@ -8,11 +9,10 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {PlatformGuide} from 'sentry-docs/types';
+import {FrontMatter, PlatformGuide} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
 
 import {DynamicNav, toTree} from './dynamicNav';
-import {Sidebar, SidebarNode} from './sidebar';
 import {SidebarLink} from './sidebarLink';
 
 export function ServerSidebar(): JSX.Element | null {
@@ -106,18 +106,7 @@ export function ServerSidebar(): JSX.Element | null {
     }
   }
   // render the default sidebar if no special case is met
-
-  // Must not send full DocNodes to a client component, or the entire doc tree
-  // will be serialized.
-  const nodeToSidebarNode = (n: DocNode): SidebarNode => {
-    return {
-      path: n.path,
-      frontmatter: n.frontmatter,
-      children: n.children.map(nodeToSidebarNode),
-    };
-  };
-
-  return <Sidebar node={nodeToSidebarNode(rootNode)} path={path} />;
+  return <DefaultSidebar node={rootNode} path={path} />;
 }
 
 function getNavNodes<NavNode_>(
@@ -380,6 +369,97 @@ function PlatformSidebar({platform, guide, nodes}: PlatformSidebarProps) {
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[`/${pathRoot}/guides/`]}
       />
+    </ul>
+  );
+}
+
+type SidebarNode = {
+  children: SidebarNode[];
+  frontmatter: FrontMatter;
+  path: string;
+};
+
+type DefaultSidebarProps = {
+  node: SidebarNode;
+  path: string[];
+};
+
+export function DefaultSidebar({node, path}: DefaultSidebarProps) {
+  const activeClassName = (n: SidebarNode, baseClassName = '') => {
+    const className = n.path === path.join('/') ? 'active' : '';
+    return `${baseClassName} ${className}`;
+  };
+
+  const renderChildren = (children: SidebarNode[]) =>
+    children && (
+      <ul className="list-unstyled" data-sidebar-tree>
+        {children
+          .filter(n => n.frontmatter.sidebar_title || n.frontmatter.title)
+          .map(n => (
+            <li className="toc-item" key={n.path} data-sidebar-branch>
+              <Link
+                href={'/' + n.path}
+                data-sidebar-link
+                className={activeClassName(n, 'flex items-center justify-between gap-1')}
+              >
+                {n.frontmatter.sidebar_title || n.frontmatter.title}
+                {n.children.length > 0 && <Chevron direction="down" />}
+              </Link>
+              {renderChildren(n.children)}
+            </li>
+          ))}
+      </ul>
+    );
+
+  const rotation = {
+    down: 0,
+    right: 270,
+  } as const;
+
+  function Chevron({
+    direction,
+    ...props
+  }: SVGAttributes<SVGElement> & {
+    direction: 'down' | 'right';
+  }) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        {...props}
+        style={{
+          transition: 'transform 200ms',
+          transform: `rotate(${rotation[direction]}deg)`,
+        }}
+      >
+        <path
+          fill="currentColor"
+          d="M12.53 5.47a.75.75 0 0 1 0 1.06l-4 4a.75.75 0 0 1-1.06 0l-4-4a.75.75 0 0 1 1.06-1.06L8 8.94l3.47-3.47a.75.75 0 0 1 1.06 0Z"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <ul className="list-unstyled" data-sidebar-tree>
+      <li className="mb-3" data-sidebar-branch>
+        <Fragment>
+          <Link
+            href={'/' + node.path}
+            className={activeClassName(
+              node,
+              'sidebar-title flex items-center justify-between gap-1'
+            )}
+            data-sidebar-link
+            key={node.path}
+          >
+            <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
+          </Link>
+          {renderChildren(node.children)}
+        </Fragment>
+      </li>
     </ul>
   );
 }
