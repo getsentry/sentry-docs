@@ -4,7 +4,7 @@ description: "Learn more about how to configure the SDK. These options are set w
 sidebar_order: 50
 ---
 
-Elixir and Erlang automatically log process crashes. To capture these errors in Sentry, you'll want to enable the Sentry SDK built-in [`:logger`](https://www.erlang.org/doc/man/logger.html) handler. The most common way is to configure the handler in your application's configuration, and then call `Logger.add_handlers/1` in the [`Application.start/2` callback](https://hexdocs.pm/elixir/Application.html#start/2) of your application.
+Elixir and Erlang automatically log process crashes. To capture these errors in Sentry, you'll want to enable the Elixir SDK's built-in [`:logger`](https://www.erlang.org/doc/man/logger.html) handler. The most common way to do this is by adding the handler in your application's configuration, and then calling `Logger.add_handlers/1` in the [`Application.start/2` callback](https://hexdocs.pm/elixir/Application.html#start/2) of your application.
 
 First, add the Sentry handler to your application's configuration. (You can use any handler identifier instead of `:my_sentry_handler`. ):
 
@@ -35,7 +35,7 @@ end
 
 ### Capturing Logged Messages
 
-If you also want to capture **logged messages** above a specific log level (and not just process crashes), you need to set `:capture_log_messages` and then you can use the `:level` option in the handler configuration:
+If you also want to capture **logged messages** above a specific log level (and not just process crashes), you'll need to set `:capture_log_messages`. Then you can use the `:level` option in the handler configuration:
 
 ```elixir {filename:config/prod.exs}
 config :my_app, :logger, [
@@ -45,7 +45,7 @@ config :my_app, :logger, [
 ]
 ```
 
-Now, messages will be reported to Sentry even if logged with `Logger.error/1`, for example:
+Now messages will be reported to Sentry even if logged with `Logger.error/1`, for example:
 
 ```elixir
 Logger.error("This will be reported to Sentry")
@@ -57,19 +57,19 @@ You can configure the `:logger` handler under the `:config` key, as shown above.
 
 <ConfigKey name="capture-log-messages">
 
-When this is `true`, the handler will report all logged messages to Sentry (provided they're not filtered by `:excluded_domains` and `:level`). Defaults to `false`, which will only send crash reports, which are messages with metadata that has the shape of an exit reason and a stacktrace.
+This is set to `false` by default and will only send crash reports, (which are messages with metadata that look like an exit reason and a stacktrace). When set to `true`, the handler will report all logged messages to Sentry (provided they're not filtered by `:excluded_domains` and `:level`).  
 
 </ConfigKey>
 
 <ConfigKey name="level">
 
-the minimum [`Logger` level](https://hexdocs.pm/logger/Logger.html#module-levels) to send events for. Defaults to `:error`. You can lower this to `:warning`, for example, to also report `Logger.warning/1` calls.
+This is the minimum [`Logger` level](https://hexdocs.pm/logger/Logger.html#module-levels) to send events for and is set to `:error` by default. You can lower it to `:warning`, for example, to also report `Logger.warning/1` calls. 
 
 </ConfigKey>
 
 <ConfigKey name="metadata">
 
-Use this to include non-Sentry logger metadata in reports. If it's a list of keys, metadata in those keys will be added in the `:extra` context, under the `:logger_metadata` key. If set to `:all`, all metadata will be included. Defaults to `[]`.
+Use this to include non-Sentry logger metadata in reports. It's set to to `[]` by default. If it's a list of keys, metadata in those keys will be added in the `:extra` context under the `:logger_metadata` key. If it's set to `:all`, all metadata will be included. 
 
 </ConfigKey>
 
@@ -81,6 +81,6 @@ This configuration option makes it so that messages with a domain in the configu
 
 <ConfigKey name="rate-limiting">
 
-Configures rate-limiting for reported logged messages to Sentry. This can help protect from reporting too many messages in a short time. By default, rate-limiting is disabled.
+This configures rate-limiting for reported logged messages to Sentry and is disabled by default. It can help limit the number of messages being reported in a short period of time. 
 
 </ConfigKey>
