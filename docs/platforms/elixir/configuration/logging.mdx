@@ -1,0 +1,86 @@
+---
+title: Logs & Process Crashes
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+sidebar_order: 50
+---
+
+Elixir and Erlang automatically log process crashes. To capture these errors in Sentry, you'll want to enable the Elixir SDK's built-in [`:logger`](https://www.erlang.org/doc/man/logger.html) handler. The most common way to do this is by adding the handler in your application's configuration, and then calling `Logger.add_handlers/1` in the [`Application.start/2` callback](https://hexdocs.pm/elixir/Application.html#start/2) of your application.
+
+First, add the Sentry handler to your application's configuration. (You can use any handler identifier instead of `:my_sentry_handler`. ):
+
+```elixir {filename:config/prod.exs}
+config :my_app, :logger, [
+  {:handler, :my_sentry_handler, Sentry.LoggerHandler, %{
+    config: %{
+      metadata: [:file, :line],
+      rate_limiting: [max_events: 10, duration: _1_second = 1_000],
+      capture_log_messages: true
+    }
+  }}
+]
+```
+
+Next, add the handler to the logger in your application's `Application.start/2` callback:
+
+```elixir {filename:my_app/lib/application.ex}
+@impl Application
+def start(_type, _args) do
+  children = [
+    # ...
+  ]
+
+  Logger.add_handlers(:my_app)
+end
+```
+
+### Capturing Logged Messages
+
+If you also want to capture **logged messages** above a specific log level (and not just process crashes), you'll need to set `:capture_log_messages`. Then you can use the `:level` option in the handler configuration:
+
+```elixir {filename:config/prod.exs}
+config :my_app, :logger, [
+  {:handler, :my_sentry_handler, Sentry.LoggerHandler, %{
+    config: %{capture_log_messages: true, level: :error}
+  }}
+]
+```
+
+Now messages will be reported to Sentry even if logged with `Logger.error/1`, for example:
+
+```elixir
+Logger.error("This will be reported to Sentry")
+```
+
+## Logger Handler Configuration
+
+You can configure the `:logger` handler under the `:config` key, as shown above. The configuration options are shown below.
+
+<ConfigKey name="capture-log-messages">
+
+This is set to `false` by default and will only send crash reports, (which are messages with metadata that look like an exit reason and a stacktrace). When set to `true`, the handler will report all logged messages to Sentry (provided they're not filtered by `:excluded_domains` and `:level`).  
+
+</ConfigKey>
+
+<ConfigKey name="level">
+
+This is the minimum [`Logger` level](https://hexdocs.pm/logger/Logger.html#module-levels) to send events for and is set to `:error` by default. You can lower it to `:warning`, for example, to also report `Logger.warning/1` calls. 
+
+</ConfigKey>
+
+<ConfigKey name="metadata">
+
+Use this to include non-Sentry logger metadata in reports. It's set to to `[]` by default. If it's a list of keys, metadata in those keys will be added in the `:extra` context under the `:logger_metadata` key. If it's set to `:all`, all metadata will be included. 
+
+</ConfigKey>
+
+<ConfigKey name="excluded-domains">
+
+This configuration option makes it so that messages with a domain in the configured list will not be sent. It's set to  `[:cowboy]` by default to avoid double-reporting events from `Sentry.PlugCapture`.
+
+</ConfigKey>
+
+<ConfigKey name="rate-limiting">
+
+This configures rate-limiting for reported logged messages to Sentry and is disabled by default. It can help limit the number of messages being reported in a short period of time. 
+
+</ConfigKey>
