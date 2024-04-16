@@ -12,8 +12,10 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter, PlatformGuide} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
 
-import {DynamicNav, toTree} from './dynamicNav';
-import {SidebarLink} from './sidebarLink';
+import './sidebar.scss';
+
+import {DynamicNav, toTree} from '../dynamicNav';
+import {SidebarLink} from '../sidebarLink';
 
 export function ServerSidebar(): JSX.Element | null {
   const {path, rootNode} = serverContext();

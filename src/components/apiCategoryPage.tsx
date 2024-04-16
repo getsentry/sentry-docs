@@ -6,7 +6,7 @@ import {unified} from 'unified';
 import {type APICategory} from 'sentry-docs/build/resolveOpenAPI';
 
 import {DocPage} from './docPage';
-import {ApiSidebar} from './serverSidebar';
+import {ApiSidebar} from './sidebar';
 import {SmartLink} from './smartLink';
 
 type Props = {

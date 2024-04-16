@@ -19,7 +19,7 @@ import {GitHubCTA} from './githubCTA';
 import {Header} from './header';
 import {PlatformSdkDetail} from './platformSdkDetail';
 import {PlatformSelector} from './platformSelector';
-import {ServerSidebar} from './serverSidebar';
+import {ServerSidebar} from './sidebar';
 import {TableOfContents} from './tableOfContents';
 
 type Props = {
