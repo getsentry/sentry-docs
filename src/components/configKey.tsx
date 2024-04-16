@@ -16,6 +16,9 @@ export function ConfigKey({
   children,
   platform,
 }: Props) {
+  if (platform === 'node' && name === 'configuration') {
+    return <NodeConfiguration />;
+  }
   // This is a literal copypaste of the HTML Gatsby outputs for regular
   // Markdown headings because we can't figure out how to make Gatsby
   // render component content like regular markdown/MDX content. We tried
