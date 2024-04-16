@@ -6,13 +6,15 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
 
-import {Breadcrumbs} from './breadcrumbs';
-import {CodeContextProvider} from './codeContext';
-import {GitHubCTA} from './githubCTA';
-import {Header} from './header';
-import {PlatformSdkDetail} from './platformSdkDetail';
-import {Sidebar, sidebarToggleId} from './sidebar';
-import {TableOfContents} from './tableOfContents';
+import './type.scss';
+
+import {Breadcrumbs} from '../breadcrumbs';
+import {CodeContextProvider} from '../codeContext';
+import {GitHubCTA} from '../githubCTA';
+import {Header} from '../header';
+import {PlatformSdkDetail} from '../platformSdkDetail';
+import {Sidebar, sidebarToggleId} from '../sidebar';
+import {TableOfContents} from '../tableOfContents';
 
 type Props = {
   children: ReactNode;
