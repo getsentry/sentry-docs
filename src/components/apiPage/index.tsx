@@ -7,10 +7,12 @@ import {mdxComponents} from 'sentry-docs/mdxComponents';
 import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
 import remarkCodeTitles from 'sentry-docs/remark-code-title';
 
-import {ApiExamples} from './apiExamples';
-import {DocPage} from './docPage';
-import {ApiSidebar} from './sidebar';
-import {SmartLink} from './smartLink';
+import './styles.scss';
+
+import {ApiExamples} from '../apiExamples';
+import {DocPage} from '../docPage';
+import {ApiSidebar} from '../sidebar';
+import {SmartLink} from '../smartLink';
 
 function Params({params}) {
   return (
