@@ -2,6 +2,8 @@
 
 import {useEffect, useState} from 'react';
 
+import styles from './style.module.scss';
+
 interface TocItem {
   depth: number;
   url: string;
@@ -15,7 +17,7 @@ function recursiveRender(items: TocItem[]) {
       return recursiveRender(i.children || []);
     }
     return (
-      <li className="toc-entry" key={i.url}>
+      <li className={styles['toc-entry']} key={i.url}>
         <a href={`${i.url}`}>{i.value}</a>
         {i.children && <ul>{recursiveRender(i.children)}</ul>}
       </li>
@@ -84,13 +86,13 @@ export function TableOfContents() {
   }, []);
 
   return (
-    <div className="doc-toc">
+    <div className={styles['doc-toc']}>
       {!!headings.length && (
-        <div className="doc-toc-title">
+        <div className={styles['doc-toc-title']}>
           <h6>On this page</h6>
         </div>
       )}
-      <ul className="section-nav">{recursiveRender(buildTocTree(headings))}</ul>
+      <ul className={styles['section-nav']}>{recursiveRender(buildTocTree(headings))}</ul>
     </div>
   );
 }
