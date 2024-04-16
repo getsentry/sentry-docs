@@ -96,6 +96,7 @@ export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProp
 }
 
 type Props = {
+  headerClassName: string;
   root: string;
   tree: EntityTree[];
   collapse?: boolean;
@@ -117,6 +118,7 @@ export function DynamicNav({
   prependLinks = [],
   suppressMissing = false,
   noHeadingLink = false,
+  headerClassName,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -150,7 +152,6 @@ export function DynamicNav({
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
 
-  const headerClassName = 'sidebar-title flex items-center';
   const header =
     parentNode && !noHeadingLink ? (
       <SmartLink
@@ -171,7 +172,7 @@ export function DynamicNav({
     <li className="mb-3" data-sidebar-branch>
       {header}
       {(!collapse || isActive) && entity.children && (
-        <ul className="list-unstyled" data-sidebar-tree>
+        <ul data-sidebar-tree>
           {prependLinks &&
             prependLinks.map(link => (
               <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />

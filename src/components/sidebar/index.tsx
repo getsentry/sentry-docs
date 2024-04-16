@@ -25,6 +25,7 @@ import {PlatformSelector} from '../platformSelector';
 import {SidebarLink} from '../sidebarLink';
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
+const headerClassName = `${styles['sidebar-title']} flex items-center`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
@@ -185,6 +186,7 @@ export function SidebarLinks(): JSX.Element | null {
             root="contributing"
             title="Contributing to Docs"
             tree={toTree(contribNodes)}
+            headerClassName={headerClassName}
           />
         </ul>
       );
@@ -265,8 +267,20 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
   const fullPath = '/' + path.join('/') + '/';
   return (
     <ul data-sidebar-tree>
-      <DynamicNav root="cli" title="sentry-cli" tree={cliTree} collapse />
-      <DynamicNav root="pricing" title="Pricing & Billing" tree={pricingTree} collapse />
+      <DynamicNav
+        root="cli"
+        title="sentry-cli"
+        tree={cliTree}
+        collapse
+        headerClassName={headerClassName}
+      />
+      <DynamicNav
+        root="pricing"
+        title="Pricing & Billing"
+        tree={pricingTree}
+        collapse
+        headerClassName={headerClassName}
+      />
       <DynamicNav
         root="product"
         title="Product"
@@ -278,16 +292,38 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
           '/product/relay/',
           '/product/data-management-settings/',
         ]}
+        headerClassName={headerClassName}
       />
       <DynamicNav
         root="product/data-management-settings"
         title="Data Management"
         tree={productTree}
+        headerClassName={headerClassName}
       />
-      <DynamicNav root="product/accounts" title="Account Management" tree={productTree} />
-      <DynamicNav root="product/relay" title="Relay" tree={productTree} />
-      <DynamicNav root="product/security" title="Security and Legal" tree={productTree} />
-      <DynamicNav root="product/integrations" title="Integrations" tree={productTree} />
+      <DynamicNav
+        root="product/accounts"
+        title="Account Management"
+        tree={productTree}
+        headerClassName={headerClassName}
+      />
+      <DynamicNav
+        root="product/relay"
+        title="Relay"
+        tree={productTree}
+        headerClassName={headerClassName}
+      />
+      <DynamicNav
+        root="product/security"
+        title="Security and Legal"
+        tree={productTree}
+        headerClassName={headerClassName}
+      />
+      <DynamicNav
+        root="product/integrations"
+        title="Integrations"
+        tree={productTree}
+        headerClassName={headerClassName}
+      />
 
       <li className="mb-3" data-sidebar-branch>
         <div className={`${styles['sidebar-title']} items-center mb-0`} data-sidebar-link>
@@ -379,15 +415,20 @@ export async function ApiSidebar({standalone = true}: {standalone?: boolean}) {
             .map(elem => elem.node?.path)
             .concat(guides.map(elem => elem.node?.path))
             .filter(isTruthy)}
+          headerClassName={headerClassName}
         />
         <DynamicNav
           root="api/guides"
           title="Guides"
           tree={guides}
           exclude={endpoints.map(elem => elem.node?.path).filter(isTruthy)}
+          headerClassName={headerClassName}
         />
         <li className="mb-3" data-sidebar-branch>
-          <div className="sidebar-title flex items-center mb-0" data-sidebar-link>
+          <div
+            className={`${styles['sidebar-title']} flex items-center mb-0`}
+            data-sidebar-link
+          >
             <h6>Endpoints</h6>
           </div>
           <ul data-sidebar-tree>
@@ -470,6 +511,7 @@ function PlatformSidebar({platform, guide, nodes}: PlatformSidebarProps) {
         title={`Sentry for ${(guide || platform).title}`}
         prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[`/${pathRoot}/guides/`]}
+        headerClassName={headerClassName}
       />
     </ul>
   );
