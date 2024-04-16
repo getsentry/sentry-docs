@@ -66,21 +66,7 @@ export function Sidebar() {
       />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="flex justify-end">
-        <IconButton variant="ghost" asChild>
-          <label
-            htmlFor={sidebarToggleId}
-            className="lg:hidden mb-4 flex justify-end rounded-full p-3 cursor-pointer bg-[var(--white-a11)] shadow"
-            aria-label="Close"
-            aria-hidden="true"
-          >
-            <Cross1Icon
-              className="text-[var(--gray-10)]"
-              strokeWidth="2"
-              width="24"
-              height="24"
-            />
-          </label>
-        </IconButton>
+        <SidebarCloseButton />
       </div>
       <div className="md:flex flex-col items-stretch">
         <div className="platform-selector">
@@ -98,6 +84,26 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+}
+
+function SidebarCloseButton() {
+  return (
+    <IconButton variant="ghost" asChild>
+      <label
+        htmlFor={sidebarToggleId}
+        className="lg:hidden mb-4 flex justify-end rounded-full p-3 cursor-pointer bg-[var(--white-a11)] shadow"
+        aria-label="Close"
+        aria-hidden="true"
+      >
+        <Cross1Icon
+          className="text-[var(--gray-10)]"
+          strokeWidth="2"
+          width="24"
+          height="24"
+        />
+      </label>
+    </IconButton>
   );
 }
 
@@ -414,10 +420,13 @@ export async function ApiSidebar({standalone = true}: {standalone?: boolean}) {
         <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
         <input
           type="checkbox"
-          id="navbar-menu-toggle"
+          id={sidebarToggleId}
           className="hidden"
           defaultChecked={false}
         />
+        <div className="flex justify-end">
+          <SidebarCloseButton />
+        </div>
         {children}
       </aside>
     ) : (
