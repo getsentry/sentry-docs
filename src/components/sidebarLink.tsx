@@ -1,6 +1,6 @@
 'use client';
 
-import {Children, useEffect, useState} from 'react';
+import {Children, useState} from 'react';
 import styled from '@emotion/styled';
 
 import {SmartLink} from './smartLink';
@@ -37,10 +37,6 @@ export function SidebarLink({
   const hasSubtree = Children.count(children) > 0;
 
   const [showSubtree, setShowSubtree] = useState(enableSubtree);
-
-  useEffect(() => {
-    setShowSubtree(enableSubtree);
-  }, [enableSubtree]);
 
   return (
     <li className="toc-item" data-sidebar-branch>
