@@ -1,3 +1,4 @@
+'use client';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import {Box, Button} from '@radix-ui/themes';
@@ -7,7 +8,12 @@ import {Search} from 'sentry-docs/components/search';
 
 import styles from './styles.module.scss';
 
-export function MobileMenu() {
+type Props = {
+  pathname: string;
+  searchPlatforms: string[];
+};
+
+export function MobileMenu({pathname, searchPlatforms}: Props) {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -27,7 +33,7 @@ export function MobileMenu() {
         <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
           <Box display={{xs: 'block', sm: 'none'}}>
             <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Search />
+              <Search path={pathname} searchPlatforms={searchPlatforms} />
             </DropdownMenu.Item>
 
             <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>

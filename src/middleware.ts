@@ -27,10 +27,37 @@ const handleRedirects = (request: NextRequest) => {
   return undefined;
 };
 
-/** a string with a trailing slash */
-type PathWithTrailingSlash = `${string}/`;
+type Redirect = {
+  /** a string with a leading and a trailing slash */
+  from: `/${string}/`;
+  to: string;
+};
 
-const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
+const REDIRECTS: Redirect[] = [
+  {
+    from: '/product/data-management-settings/dynamic-sampling/',
+    to: '/product/performance/retention-priorities/',
+  },
+  {
+    from: '/product/data-management-settings/dynamic-sampling/',
+    to: '/product/accounts/quotas/',
+  },
+  {
+    from: '/platforms/data-management/',
+    to: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
+  },
+  {
+    from: '/platforms/data-management/',
+    to: '/product/data-management-settings/data-forwarding/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/troubleshooting/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/troubleshooting/',
+    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
+  },
   {
     from: '/platforms/react-native/install/cocoapods/',
     to: '/platforms/react-native/manual-setup/manual-setup/',
@@ -456,10 +483,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/java/scope/',
   },
   {
-    from: '/clients/java/modules/log4j2/',
-    to: '/platforms/java/guides/log4j2/',
-  },
-  {
     from: '/clients/java/modules/jul/',
     to: '/platforms/java/guides/jul/',
   },
@@ -482,10 +505,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/java/guides/springboot/config/',
     to: '/platforms/java/guides/spring-boot/',
-  },
-  {
-    from: '/clients/java/usage/',
-    to: '/platforms/java/usage/',
   },
   {
     from: '/clients/php/integrations/monolog/',
@@ -610,10 +629,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/dotnet/nlog/',
     to: '/platforms/dotnet/guides/nlog/',
-  },
-  {
-    from: '/clients/csharp/',
-    to: '/platforms/dotnet/legacy-sdk/',
   },
   {
     from: '/platforms/flutter/configuration/integrations/user-interaction-instrumentation/',
@@ -924,10 +939,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/releases/setup/release-automation/github-deployment-gates/',
   },
   {
-    from: '/workflow/releases/release-automation/github-actions/',
-    to: '/product/releases/setup/release-automation/github-actions/',
-  },
-  {
     from: '/product/releases/setup/manual-setup-releases/',
     to: '/product/releases/associate-commits/',
   },
@@ -1136,10 +1147,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/javascript/sourcemaps/',
   },
   {
-    from: '/platforms/javascript/sourcemaps/troubleshooting/',
-    to: '/platforms/javascript/sourcemaps/',
-  },
-  {
     from: '/platforms/javascript/sourcemaps/availability/',
     to: '/platforms/javascript/sourcemaps/',
   },
@@ -1162,10 +1169,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
     to: '/platforms/javascript/sourcemaps/',
-  },
-  {
-    from: '/platforms/javascript/sourcemaps/troubleshooting/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
@@ -1315,7 +1318,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     from: '/clients/javascript/tips/',
     to: '/platforms/javascript/legacy-sdk/tips/',
   },
-
   {
     from: '/platforms/node/pluggable-integrations/',
     to: '/platforms/node/configuration/integrations/pluggable-integrations/',
@@ -1945,16 +1947,12 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/accounts/early-adopter-features/',
   },
   {
-    from: '/pricing/',
-    to: '/product/accounts/pricing/',
-  },
-  {
     from: '/learn/pricing/',
-    to: '/product/accounts/pricing/',
+    to: '/pricing/',
   },
   {
     from: '/product/pricing/',
-    to: '/product/accounts/pricing/',
+    to: '/pricing/',
   },
   {
     from: '/learn/quotas/',
@@ -1962,10 +1960,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   },
   {
     from: '/product/quotas/',
-    to: '/product/accounts/quotas/',
-  },
-  {
-    from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/accounts/quotas/',
   },
   {
@@ -2265,10 +2259,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/product/performance/retention-priorities/',
   },
   {
-    from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/performance/retention-priorities/',
-  },
-  {
     from: '/product/performance/performance-at-scale/',
     to: '/product/performance/retention-priorities/',
   },
@@ -2497,8 +2487,380 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/javascript/best-practices/sentry-testkit/',
   },
   {
-    from: 'platforms/javascript/configuration/webworkers/',
+    from: '/platforms/javascript/configuration/webworkers/',
     to: '/platforms/javascript/best-practices/web-workers/',
+  },
+  {
+    from: '/support/',
+    to: 'https://help.sentry.io/',
+  },
+  {
+    from: '/clients/python/',
+    to: '/platforms/python/legacy-sdk/',
+  },
+  {
+    from: '/platforms/javascript/config/sourcemaps/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    from: '/platforms/java/config/',
+    to: '/platforms/java/configuration/',
+  },
+  {
+    from: '/platforms/native/attachments/',
+    to: '/platforms/native/enriching-error-data/attachments/',
+  },
+  {
+    from: '/platforms/python/configuration/integrations/',
+    to: '/platforms/python/integrations/',
+  },
+  {
+    from: '/platforms/python/redis/',
+    to: '/platforms/python/integrations/redis/',
+  },
+  {
+    from: '/platforms/python/sqlalchemy/',
+    to: '/platforms/python/integrations/sqlalchemy/',
+  },
+  {
+    from: '/platforms/python/pure_eval/',
+    to: '/platforms/python/integrations/pure_eval/',
+  },
+  {
+    from: '/platforms/python/gnu_backtrace/',
+    to: '/platforms/python/integrations/gnu_backtrace/',
+  },
+  {
+    from: '/api/releases/post-organization-release-files/',
+    to: '/api/releases/update-an-organization-release-file/',
+  },
+  {
+    from: '/api/releases/post-release-deploys/',
+    to: '/api/releases/create-a-new-deploy-for-an-organization/',
+  },
+  {
+    from: '/api/projects/post-project-user-reports/',
+    to: '/api/projects/submit-user-feedback/',
+  },
+  {
+    from: '/api/projects/post-project-keys/',
+    to: '/api/projects/create-a-new-client-key/',
+  },
+  {
+    from: '/api/events/get-group-events-latest/',
+    to: '/api/events/retrieve-the-latest-event-for-an-issue/',
+  },
+  {
+    from: '/api/organizations/get-event-id-lookup/',
+    to: '/api/organizations/resolve-an-event-id/',
+  },
+  {
+    from: '/api/events/get-project-group-index/',
+    to: '/api/events/list-a-projects-issues/',
+  },
+  {
+    from: '/api/events/get-group-hashes/',
+    to: '/api/events/list-an-issues-hashes/',
+  },
+  {
+    from: '/api/projects/get-project-stats/',
+    to: '/api/projects/retrieve-event-counts-for-a-project/',
+  },
+  {
+    from: '/api/projects/get-project-index/',
+    to: '/api/projects/list-your-projects/',
+  },
+  {
+    from: '/api/organizations/get-organization-users/',
+    to: '/api/organizations/list-an-organizations-users/',
+  },
+  {
+    from: '/api/events/get-group-details/',
+    to: '/api/events/retrieve-an-issue/',
+  },
+  {
+    from: '/api/events/get-project-event-details/',
+    to: '/api/events/retrieve-an-event-for-a-project/',
+  },
+  {
+    from: '/api/events/get-group-tag-key-details/',
+    to: '/api/events/retrieve-tag-details/',
+  },
+  {
+    from: '/api/organizations/get-organization-projects/',
+    to: '/api/organizations/list-an-organizations-projects/',
+  },
+  {
+    from: '/api/releases/post-project-release-files/',
+    to: '/api/releases/upload-a-new-project-release-file/',
+  },
+  {
+    from: '/api/projects/get-project-users/',
+    to: '/api/projects/list-a-projects-users/',
+  },
+  {
+    from: '/api/projects/put-project-details/',
+    to: '/api/projects/update-a-project/',
+  },
+  {
+    from: '/api/projects/post-debug-files/',
+    to: '/api/projects/upload-a-new-file/',
+  },
+  {
+    from: '/api/organizations/get-organization-stats/',
+    to: '/api/organizations/retrieve-event-counts-for-an-organization/',
+  },
+  {
+    from: '/api/releases/post-organization-releases/',
+    to: '/api/releases/create-a-new-release-for-an-organization/',
+  },
+  {
+    from: '/api/projects/get-project-keys/',
+    to: '/api/projects/list-a-projects-client-keys/',
+  },
+  {
+    from: '/api/teams/get-organization-teams/',
+    to: '/api/teams/list-an-organizations-teams/',
+  },
+  {
+    from: '/api/teams/post-team-projects/',
+    to: '/api/teams/create-a-new-project/',
+  },
+  {
+    from: '/api/events/put-project-group-index/',
+    to: '/api/events/bulk-mutate-a-list-of-issues/',
+  },
+  {
+    from: '/api/events/delete-project-group-index/',
+    to: '/api/events/bulk-remove-a-list-of-issues/',
+  },
+  {
+    from: '/api/projects/delete-project-details/',
+    to: '/api/projects/delete-a-project/',
+  },
+  {
+    from: '/api/events/get-group-events/',
+    to: '/api/events/list-an-issues-events/',
+  },
+  {
+    from: '/api/organizations/get-organization-details/',
+    to: '/api/organizations/retrieve-an-organization/',
+  },
+  {
+    from: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
+    to: '/api/releases/retrieve-release-health-session-statistics/',
+  },
+  {
+    from: '/learn/context/',
+    to: '/platform-redirect/?next=/enriching-events/context/',
+  },
+  {
+    from: '/clients/java/config/',
+    to: '/platforms/java/configuration/',
+  },
+  {
+    from: '/clientdev/interfaces/http/',
+    to: 'https://develop.sentry.dev/sdk/event-payloads/request',
+  },
+  {
+    from: '/clients/csharp/',
+    to: '/platforms/dotnet/legacy-sdk/',
+  },
+  {
+    from: '/clients/go/',
+    to: '/platforms/go/legacy-sdk/',
+  },
+  {
+    from: '/clients/node/',
+    to: '/platforms/node/legacy-sdk/',
+  },
+  {
+    from: '/clients/javascript/',
+    to: '/platforms/javascript/legacy-sdk/',
+  },
+  {
+    from: '/clients/ruby/',
+    to: '/platforms/ruby/',
+  },
+  {
+    from: '/clients/java/integrations/',
+    to: '/platforms/java/',
+  },
+  {
+    from: '/clients/java/modules/android/',
+    to: '/platforms/android',
+  },
+  {
+    from: '/clients/javascript/integrations/angular2/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/clients/javascript/integrations/angularjs/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/javascript/angular/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/node/event-processors/',
+    to: '/platforms/node/enriching-events/event-processors/',
+  },
+  {
+    from: '/platforms/node/guides/connect/event-processors/',
+    to: '/platforms/node/enriching-events/event-processors/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/uploading/multiple-origins/',
+    to: '/platforms/javascript/sourcemaps/troubleshooting_js/#multiple-origins',
+  },
+  {
+    from: '/platforms/python/guides/celery/hints/',
+    to: '/platforms/python/integrations/celery/',
+  },
+  {
+    from: '/platforms/python/guides/chalice/integrations/',
+    to: '/platforms/python/integrations/chalice/',
+  },
+  {
+    from: '/platforms/unrealengine/',
+    to: '/platforms/unreal/',
+  },
+  {
+    from: '/platforms/minidump/crashpad/',
+    to: '/platforms/native/guides/crashpad/',
+  },
+  {
+    from: '/platforms/minidump/breakpad/',
+    to: '/platforms/native/guides/breakpad/',
+  },
+  {
+    from: '/platforms/rust/usage/sdk-fingerprinting/',
+    to: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+  },
+  {
+    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
+    to: '/platforms/java/guides/spring/data-management/',
+  },
+  {
+    from: '/platforms/android/usage/advanced-usage/',
+    to: '/platforms/android/usage/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/performance/included-instrumentation/',
+    to: '/platforms/javascript/guides/react/performance/instrumentation/',
+  },
+  {
+    from: '/platforms/php/guides/symfony/data-management/data-forwarding/',
+    to: '/platforms/php/guides/symfony/data-management/',
+  },
+  {
+    from: '/platforms/php/guides/laravel/configuration/transports/',
+    to: '/platforms/php/guides/laravel/configuration/laravel-options/',
+  },
+  {
+    from: '/platforms/go/data-management/event-grouping/fingerprint-rules/',
+    to: '/platforms/go/data-management/',
+  },
+  {
+    from: '/platforms/elixir/enriching-events/scopes/',
+    to: '/platforms/elixir/enriching-events/',
+  },
+  {
+    from: '/platforms/android/performance/custom-instrumentation/',
+    to: '/platforms/android/performance/',
+  },
+  {
+    from: '/platforms/elixir/usage/set-level/',
+    to: '/platforms/elixir/usage/',
+  },
+  {
+    from: '/platforms/elixir/usage/sdk-fingerprinting/',
+    to: '/platforms/elixir/usage/',
+  },
+  {
+    from: '/platforms/elixir/data-management/event-grouping/',
+    to: '/platforms/elixir/data-management/',
+  },
+  {
+    from: '/platforms/elixir/configuration/draining/',
+    to: '/platforms/elixir/configuration/',
+  },
+  {
+    from: '/clients/ruby/integrations/rails/',
+    to: '/platforms/ruby/guides/rails/',
+  },
+  {
+    from: '/platforms/java/configuration/integrations/',
+    to: '/platforms/java/integrations/',
+  },
+  {
+    from: '/platforms/apple/configuration/integrations/',
+    to: '/platforms/apple/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/integrations/custom/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/config/basics/',
+    to: '/platforms/javascript/guides/cordova/configuration/',
+  },
+  {
+    from: '/platforms/javascript/guides/electron/data-management/event-grouping/grouping-enhancements/',
+    to: '/platforms/javascript/guides/electron/data-management/',
+  },
+  {
+    from: '/platforms/javascript/guides/ember/configuration/other-versions/ember2/',
+    to: '/platforms/javascript/guides/ember/configuration/',
+  },
+  {
+    from: '/platforms/javascript/guides/ember/configuration/other-versions/',
+    to: '/platforms/javascript/guides/ember/configuration/',
+  },
+  {
+    from: '/platforms/javascript/guides/angular/components/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/javascript/legacy-sdk/integrations/',
+    to: '/platforms/javascript/legacy-sdk/',
+  },
+  {
+    from: '/platforms/javascript/guides/nextjs/manual/',
+    to: '/platforms/javascript/guides/nextjs/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/components/errorboundary/',
+    to: '/platforms/javascript/guides/react/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/components/profiler/',
+    to: '/platforms/javascript/guides/react/',
+  },
+  {
+    from: '/platforms/javascript/guides/remix/install/cdn/',
+    to: '/platforms/javascript/guides/remix/#install',
+  },
+  {
+    from: '/platforms/javascript/performance/capturing/group-transactions/',
+    to: '/platforms/javascript/performance/',
+  },
+  {
+    from: '/platforms/javascript/sourcemaps/tools/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    from: '/product/accounts/pricing/',
+    to: '/pricing/',
+  },
+  {
+    from: '/platforms/dotnet/compatibility/',
+    to: '/platforms/dotnet/',
   },
 ];
 

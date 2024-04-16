@@ -8,8 +8,8 @@ import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
 import remarkCodeTitles from 'sentry-docs/remark-code-title';
 
 import {ApiExamples} from './apiExamples';
-import {ApiSidebar} from './apiSidebar';
 import {DocPage} from './docPage';
+import {ApiSidebar} from './sidebar';
 import {SmartLink} from './smartLink';
 
 function Params({params}) {
@@ -125,9 +125,9 @@ export function ApiPage({api}: Props) {
     title: api.name,
   };
   return (
-    <DocPage frontMatter={frontMatter} notoc sidebar={<ApiSidebar />}>
-      <div className="row">
-        <div className="col-12">
+    <DocPage frontMatter={frontMatter} notoc sidebar={<ApiSidebar />} fullWidth>
+      <div className="flex">
+        <div className="w-full">
           <div className="api-block">
             <div className="api-block-header request">
               <span className="api-request-block-verb">{api.method.toUpperCase()}</span>{' '}
@@ -136,8 +136,8 @@ export function ApiPage({api}: Props) {
           </div>
         </div>
       </div>
-      <div className="row">
-        <div className="col-6">
+      <div className="flex flex-col md:flex-row">
+        <div className="w-full md:w-1/2">
           {api.summary && <p>{api.summary}</p>}
 
           {api.descriptionMarkdown && parseMarkdown(api.descriptionMarkdown)}
@@ -187,7 +187,7 @@ export function ApiPage({api}: Props) {
             </div>
           )}
         </div>
-        <div className="col-6">
+        <div className="w-full md:w-1/2">
           <ApiExamples api={api} />
         </div>
       </div>

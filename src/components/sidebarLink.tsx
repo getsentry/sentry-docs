@@ -1,6 +1,6 @@
 'use client';
 
-import {Children, useEffect, useState} from 'react';
+import {Children, useState} from 'react';
 import styled from '@emotion/styled';
 
 import {SmartLink} from './smartLink';
@@ -38,10 +38,6 @@ export function SidebarLink({
 
   const [showSubtree, setShowSubtree] = useState(enableSubtree);
 
-  useEffect(() => {
-    setShowSubtree(enableSubtree);
-  }, [enableSubtree]);
-
   return (
     <li className="toc-item" data-sidebar-branch>
       <SidebarNavItem
@@ -58,11 +54,7 @@ export function SidebarLink({
         {title || children}
         {hasSubtree && <Chevron direction={showSubtree ? 'down' : 'right'} />}
       </SidebarNavItem>
-      {title && children && (
-        <ul className="list-unstyled" data-sidebar-tree>
-          {showSubtree && children}
-        </ul>
-      )}
+      {title && children && <ul data-sidebar-tree>{showSubtree && children}</ul>}
     </li>
   );
 }

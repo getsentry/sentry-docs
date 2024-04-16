@@ -7,7 +7,7 @@ import {
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './app/changelog/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
@@ -18,7 +18,7 @@ module.exports = {
         'fade-in-right': 'fadeInRight 0.55s ease-in-out',
       },
       boxShadow: {
-        DEFAULT: '0px 4px 16px 0px rgba(31, 22, 51, 0.10)',
+        DEFAULT: 'var(--shadow-6)',
       },
       keyframes: () => ({
         fadeIn: {
@@ -44,6 +44,7 @@ module.exports = {
           'Arial',
           ...defaultTheme.fontFamily.sans,
         ],
+        mono: 'var(--font-family-monospace)',
       },
       colors: {
         primary: '#362d59',

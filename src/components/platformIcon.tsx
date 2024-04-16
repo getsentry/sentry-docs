@@ -995,6 +995,8 @@ export function PlatformIcon({
             height: '30%',
             width: '30%',
             borderRadius: '2px',
+            marginTop: 0,
+            marginBottom: 0,
             ...languageIconStyles,
           }}
           alt={`${platform} icon`}
@@ -1010,7 +1012,7 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{borderRadius: `${radius}px`, ...style}}
+      style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
       alt={`${platform} icon`}
     />
   );

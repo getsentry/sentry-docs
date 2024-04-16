@@ -63,10 +63,10 @@ function relativizeUrl(url: string) {
 type Props = {
   autoFocus?: boolean;
   path?: string;
-  platforms?: string[];
+  searchPlatforms?: string[];
 };
 
-export function Search({path, autoFocus, platforms = []}: Props) {
+export function Search({path, autoFocus, searchPlatforms = []}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -116,7 +116,9 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         inputQuery,
         {
           path,
-          platforms: platforms.map(platform => standardSDKSlug(platform)?.slug ?? ''),
+          platforms: searchPlatforms.map(
+            platform => standardSDKSlug(platform)?.slug ?? ''
+          ),
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
@@ -134,7 +136,7 @@ export function Search({path, autoFocus, platforms = []}: Props) {
         setResults(queryResults);
       }
     },
-    [path, platforms, showOffsiteResults, loading]
+    [path, searchPlatforms, showOffsiteResults, loading]
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
