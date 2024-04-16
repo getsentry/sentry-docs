@@ -96,7 +96,7 @@ export function DocPage({
           </div>
 
           {hasToc && (
-            <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] hidden xl:block w-[250px]">
+            <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden xl:block w-[250px]">
               <div className="pt-16">
                 <PlatformSdkDetail />
                 <TableOfContents />
