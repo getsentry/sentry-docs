@@ -1,0 +1,68 @@
+---
+title: OpenTelemetry Support
+description: "Using OpenTelemetry with Sentry Performance."
+sidebar_order: 20
+---
+
+The Sentry SDK uses [OpenTelemetry](https://opentelemetry.io/) under the hood. This means that any OpenTelemetry instrumentation that emits spans will automatically be picked up by Sentry - no further configuration needed!
+
+## Using Custom OpenTelemetry Instrumentation
+
+While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like this:
+
+```js
+const Sentry = require("@sentry/node");
+const {
+  GenericPoolInstrumentation,
+} = require("@opentelemetry/instrumentation-generic-pool");
+const { registerInstrumentations } = require("@opentelemetry/instrumentation");
+
+Sentry.init({
+  dsn: "__DSN__",
+});
+
+// Afterwards, you can add additional instrumentation:
+registerInsturmentations({
+  instrumentations: [new GenericPoolInstrumentation()],
+});
+```
+
+Any instrumentation added like this will be automatically picked up by Sentry.
+
+## Using a Custom OpenTelemetry Setup
+
+If you already have OpenTelemetry set up yourself, you can also use your existing setup.
+
+In this case, you need to set `skipOpenTelemetrySetup: true` in your `init({})` config, and ensure you setup all the
+components that Sentry needs yourself. In this case, you need to install `@sentry/opentelemetry`, and add the following:
+
+```js
+const Sentry = require("@sentry/node");
+const {
+  SentrySpanProcessor,
+  SentryPropagator,
+  SentryContextManager,
+  SentrySampler,
+} = require("@sentry/opentelemetry");
+
+Sentry.init({
+  dsn: "__DSN__",
+  skipOpenTelemetrySetup: true,
+});
+
+// This e.g. sets up @opentelemetry/sdk-trace-node
+const provider = manuallySetUpOpenTelemetry();
+
+// We need a custom span processor
+provider.addSpanProcessor(new SentrySpanProcessor());
+// We need a custom propagator and context manager
+provier.register({
+  propagator: new SentryPropagator(),
+  contextManager: new SentryContextManager(),
+});
+
+// We need our sampler to ensure the correct subset of traces is sent to Sentry
+const provider = new BasicTracerProvider({
+  sampler: new SentrySampler(Sentry.getClient()),
+});
+```

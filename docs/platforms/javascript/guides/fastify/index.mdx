@@ -1,0 +1,74 @@
+---
+title: Fastify
+description: "Learn about using Sentry with Fastify."
+---
+
+This guide explains how to setup Sentry in your Fastify application.
+
+Add `@sentry/node` as a dependency. Fastify support is currently available only in the beta of v8 of the Node SDK:
+
+```bash {tabTitle:npm}
+npm install --save @sentry/node@next
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/node@next
+```
+
+Sentry should be initialized as early in your app as possible. It is essential that you call `Sentry.init` before you require any other modules in your application - otherwise, auto-instrumentation of these modules will _not_ work:
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+
+// Ensure to call this before requiring any other modules!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+const { fastify } = require("fastify");
+const app = fastify();
+
+Sentry.setupFastifyErrorHandler(app);
+
+// Add your routes, etc.
+
+app.listen({ port: 3030 });
+```
+
+You can verify the Sentry integration by creating a route that will throw an error:
+
+```javascript
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
+```
+
+## Using Sentry SDK with ESM
+
+Instrumentation works out of the box for CommonJS (CJS) applications based on `require()` calls. This means that as long as your application is either natively in CJS, or compiled at build time to CJS (which is the case for most TypeScript apps, for example), everything will work without any further setup.
+
+Because of compatibility issues, today the Sentry SDK does not support ESM (based on `import`). We are working on a solution for this, and hope to support this soon.
+
+## Monitor Performance
+
+Enabling performance monitoring for your Fastify app is as easy as seting a `tracesSampleRate`. Performance data for your Fastify routes will be automatically captured.
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> to learn about all the things that the SDK automatically instruments for you.
+
+You can also manually capture performance data - see <PlatformLink to="/performance/instrumentation/custom-instrumentation">Custom Instrumentation</PlatformLink> for details.
