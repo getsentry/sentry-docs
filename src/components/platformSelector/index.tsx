@@ -1,5 +1,5 @@
 'use client';
-import {startTransition, useMemo, useState} from 'react';
+import {startTransition, useEffect, useMemo, useRef, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -57,6 +57,15 @@ export function PlatformSelector({
       router.push(url);
     }
   };
+
+  const activeElementRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    // run the scrollIntoView in the next frame to ensure the element is rendered
+    requestAnimationFrame(() => activeElementRef.current?.scrollIntoView());
+  }, [open]);
 
   return (
     <RadixSelect.Root
@@ -116,6 +125,7 @@ export function PlatformSelector({
                 className={styles.item}
                 data-guide={searchValue === '' && platform.type === 'guide'}
                 data-last-guide={platform.type === 'guide' && platform.isLastGuide}
+                ref={platform.key === currentPlatformKey ? activeElementRef : null}
               >
                 <ComboboxItem>
                   <RadixSelect.ItemText>
