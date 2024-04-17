@@ -30,9 +30,10 @@ export async function generateStaticParams() {
   return paths;
 }
 
-// Only render paths returned by generateStaticParams
+// To allow dynamic params to support custom not-found page
 export const dynamicParams = true;
-export const dynamic = 'force-static';
+// ref: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic
+export const dynamic = 'auto';
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
