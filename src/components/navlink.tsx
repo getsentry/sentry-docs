@@ -1,11 +1,10 @@
-import {AnchorHTMLAttributes} from 'react';
+import {HTMLAttributeAnchorTarget} from 'react';
 import {Button} from '@radix-ui/themes';
 import Link, {type LinkProps} from 'next/link';
 
-type NavLinkProps = LinkProps &
-  AnchorHTMLAttributes<any> & {
-    children: React.ReactNode;
-  };
+export type NavLinkProps = React.PropsWithChildren<LinkProps> & {
+  target?: HTMLAttributeAnchorTarget;
+};
 
 export function NavLink({children, ...props}: NavLinkProps) {
   return (
