@@ -1409,6 +1409,38 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     to: '/platforms/node/legacy-sdk/usage/',
   },
   {
+    from: '/platforms/node/usage/set-level/',
+    to: '/platforms/node/enriching-events/level/',
+  },
+  {
+    from: '/platforms/node/usage/sdk-fingerprinting/',
+    to: '/platforms/node/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/node/guides/:guide/usage/set-level/',
+    to: '/platforms/node/guides/:guide/enriching-events/level/',
+  },
+  {
+    from: '/platforms/node/guides/:guide/usage/sdk-fingerprinting/',
+    to: '/platforms/node/guides/:guide/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/usage/set-level/',
+    to: '/platforms/javascript/enriching-events/level/',
+  },
+  {
+    from: '/platforms/javascript/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/usage/set-level/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/level/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
+  },
+  {
     from: '/learn/cli/configuration/',
     to: '/product/cli/configuration/',
   },
