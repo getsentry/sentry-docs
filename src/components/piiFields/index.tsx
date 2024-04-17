@@ -1,32 +1,19 @@
-'use client';
-
-import styled from '@emotion/styled';
-
 import fields from 'sentry-docs/data/relay_event_pii.json';
-
-const Asterisk = styled.span`
-  margin-left: 5px;
-  font-size: 0.9em;
-  font-weight: normal;
-`;
-
-const Code = styled.code`
-  color: var(--codeColor);
-`;
+import styles from './style.module.scss';
 
 function PiiField({field}) {
   const asterisk_flag = field.additional_properties;
 
   return (
-    <dt>
-      <Code>{field.path}</Code>
+    <li style={{marginTop: '0.5rem'}}>
+      <code className={styles.code}>{field.path}</code>
       {asterisk_flag ? (
-        <Code>
+        <code className={styles.code}>
           <em>.other</em>
-        </Code>
+        </code>
       ) : null}
-      {asterisk_flag ? <Asterisk>*</Asterisk> : null}
-    </dt>
+      {asterisk_flag ? <span className={styles.asterisk}>*</span> : null}
+    </li>
   );
 }
 
@@ -35,7 +22,7 @@ export function PiiFields() {
   const hasStar = fields.some(field => field.additional_properties);
 
   return (
-    <dl>
+    <ul>
       {fields.map(field => (
         <PiiField key={field.path} field={field} />
       ))}
@@ -45,6 +32,6 @@ export function PiiFields() {
           schema.
         </dd>
       )}
-    </dl>
+    </ul>
   );
 }
