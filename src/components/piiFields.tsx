@@ -6,6 +6,12 @@ import fields from 'sentry-docs/data/relay_event_pii.json';
 
 const Asterisk = styled.span`
   margin-left: 5px;
+  font-size: 0.9em;
+  font-weight: normal;
+`;
+
+const Code = styled.code`
+  color: var(--codeColor);
 `;
 
 function PiiField({field}) {
@@ -13,11 +19,11 @@ function PiiField({field}) {
 
   return (
     <dt>
-      <code>{field.path}</code>
+      <Code>{field.path}</Code>
       {asterisk_flag ? (
-        <code>
+        <Code>
           <em>.other</em>
-        </code>
+        </Code>
       ) : null}
       {asterisk_flag ? <Asterisk>*</Asterisk> : null}
     </dt>
