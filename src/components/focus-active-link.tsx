@@ -19,6 +19,6 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
       activeLink.scrollIntoView({block: 'center', behavior: 'smooth'});
     }
   }, []);
-  // don't render anything, just exist as a client-side component for the useEffect
+  // don't render anything, just exist as a client-side component for the useEffect.
   return null;
 }
