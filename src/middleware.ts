@@ -2532,14 +2532,6 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
     from: 'platforms/javascript/configuration/webworkers/',
     to: '/platforms/javascript/best-practices/web-workers/',
   },
-  {
-    from: '/platforms/javascript/configuration/transports/',
-    to: '/platforms/javascript/best-practices/offline-caching/',
-  },
-  {
-    from: '/platforms/javascript/guides/:guide/configuration/transports/',
-    to: '/platforms/javascript/guides/:guide/best-practices/offline-caching/',
-  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
