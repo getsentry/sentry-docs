@@ -114,9 +114,15 @@ export function SidebarLinks(): JSX.Element | null {
   }
 
   if (
-    ['product', 'platform-redirect', 'cli', 'concepts', 'account', 'pricing', 'security-legal-pii'].includes(
-      path[0]
-    )
+    [
+      'product',
+      'platform-redirect',
+      'cli',
+      'concepts',
+      'account',
+      'pricing',
+      'security-legal-pii',
+    ].includes(path[0])
   ) {
     return <ProductSidebar rootNode={rootNode} />;
   }
@@ -270,7 +276,10 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
   if (!securityLegalPiiNode) {
     return null;
   }
-  const securityLegalPiiNodes: NavNode[] = getNavNodes([securityLegalPiiNode], docNodeToNavNode);
+  const securityLegalPiiNodes: NavNode[] = getNavNodes(
+    [securityLegalPiiNode],
+    docNodeToNavNode
+  );
   const securityLegalPiiTree = toTree(securityLegalPiiNodes.filter(n => !!n.context));
 
   /**
