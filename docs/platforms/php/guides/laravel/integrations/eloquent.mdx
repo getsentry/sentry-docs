@@ -1,0 +1,102 @@
+---
+title: Eloquent
+description: "Learn how to capture Laravel Eloquent model violations."
+---
+
+## Violation Reporters
+
+Laravel has a few options to make Eloquent behave more "strict" and throw exceptions when certain conditions are met. Usually you would not want these exceptions to be thrown in production, but you might still want to capture them in Sentry so you know they are happening.
+
+When you enable any of the `Model::handle*ViolationUsing` methods as described below it will not throw an exception anymore and it will only be reported to Sentry. If you also want to write to a log or do something else when a violation occurs you can pass a closure as the first argument to the `Integration::*ViolationReporter` method, for example:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Sentry\Laravel\Integration;
+
+Model::handleLazyLoadingViolationUsing(
+    Integration::lazyLoadingViolationReporter(function ($model, $relation) {
+        Log::warning('Lazy loading violation', ['model' => $model, 'relation' => $relation]);
+    })
+);
+```
+
+By default the reporters will suppress duplicate violations per request and will send them to Sentry after the request is finished. You can configure this behavior like this:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::handleLazyLoadingViolationUsing(
+    Integration::lazyLoadingViolationReporter(
+        reportAfterResponse: true, // set to false to send the violation immediately
+        suppressDuplicateReports: true, // set to false to send all violations, even if reported before in the same request
+    )
+);
+```
+
+### Lazy Loading
+
+<Note>
+
+Read more about preventing lazy loading in the [Laravel documentation](https://laravel.com/docs/11.x/eloquent-relationships#preventing-lazy-loading).
+
+</Note>
+
+To capture lazy loading violations you can add the following code to the `boot` method of your `AppServiceProvider`:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::preventLazyLoading();
+
+// Only supress lazy loading violations in production, let them be thrown in other environments
+if (app()->isProduction()) {
+  Model::handleLazyLoadingViolationUsing(
+      Integration::lazyLoadingViolationReporter()
+  );
+}
+```
+
+### Silently Discarding Attributes (Mass Assignment Protection)
+
+<Note>
+
+Read more about preventing silently discarding attributes in the [Laravel documentation](https://laravel.com/docs/11.x/eloquent#configuring-eloquent-strictness).
+
+</Note>
+
+To capture silently discarded attribute violations you can add the following code to the `boot` method of your `AppServiceProvider`:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::preventSilentlyDiscardingAttributes();
+
+// Only supress silently discarded attribute violations in production, let them be thrown in other environments
+if (app()->isProduction()) {
+  Model::handleDiscardedAttributeViolationUsing(
+      Integration::discardedAttributeViolationReporter()
+  );
+}
+```
+
+### Missing Attributes
+
+To capture missing attribute violations you can add the following code to the `boot` method of your `AppServiceProvider`:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::preventAccessingMissingAttributes();
+
+// Only supress missing attribute violations in production, let them be thrown in other environments
+if (app()->isProduction()) {
+  Model::handleMissingAttributeViolationUsing(
+      Integration::missingAttributeViolationReporter()
+  );
+}
+```
