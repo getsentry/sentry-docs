@@ -60,7 +60,7 @@ For more details, see the documentation for the specific bundler plugin you're u
 
 ### Tree Shaking With Next.js
 
-To tree shake Sentry debug code in Next.js projects, you can use webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/) in your Next.js configuration.
+To tree shake Sentry debug code in Next.js projects, use webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/) in your Next.js configuration like in the example below:
 
 ```javascript {filename:next.config.(js|mjs)}
 const nextConfig = {
@@ -87,32 +87,35 @@ For more information on custom webpack configurations in Next.js, see [Custom We
 
 ### Manual Tree Shaking
 
-To make optional code eligible for tree shaking, you can remove the code from your build output by replacing various flags in the Sentry SDK.
+If you want to tree shake optional code, remove the code from your build output by replacing various flags in the Sentry SDK.
 
-The following flags are available:
+**The following flags are available:**
 
 `__SENTRY_DEBUG__`
 
-Replacing this flag with `false` will tree shake all code in the SDK that is related to debug logging.
+Replacing this flag with `false` will tree shake any SDK code that's related to debug logging.
 
 `__SENTRY_TRACING__`
 
-Replacing this flag with `false` will tree shake all code in the SDK that is related to performance monitoring.
-**Attention:** `__SENTRY_TRACING__` must not be replaced with `false` when you're using any performance monitoring-related SDK features (e.g. `Sentry.startTransaction()`). This flag is intended to be used in combination with packages like `@sentry/next` or `@sentry/sveltekit`, which automatically include performance monitoring functionality.
+Replacing this flag with `false` will tree shake any SDK code that's related to performance monitoring.
+
+<Note>
+ `__SENTRY_TRACING__` must not be replaced with `false` when you're using any performance monitoring-related SDK features (for example,`Sentry.startTransaction()`). This flag is intended to be used in combination with packages like `@sentry/next` or `@sentry/sveltekit`, which automatically include the performance monitoring functionality.
+ </Note>
 
 <PlatformSection notSupported={["javascript.wasm", "javascript.cordova", "javascript.bun", "javascript.deno"]}>
 
 `__RRWEB_EXCLUDE_IFRAME__`
 
-Replacing this flag with `true` will tree shake all code in the SDK that is related capturing iframe content with Session Replay. This is only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. You can enable this flag if you don't have any iframes on your page you care to record.
+Replacing this flag with `true` will tree shake any SDK code related to capturing iframe content with Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you don't want to record any iframes.
 
 `__RRWEB_EXCLUDE_SHADOW_DOM__`
 
-Replacing this flag with `true` will tree shake all code in the SDK that's related to capturing shadow dom elements with Session Replay. This is only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you don't have any shadow dom elements on your page you want to record.
+Replacing this flag with `true` will tree shake any SDK code related to capturing shadow dom elements with Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you don't want to record any shadow dom elements.
 
 `__SENTRY_EXCLUDE_REPLAY_WORKER__`
 
-Replacing this flag with `true` will tree shake all code in the SDK that's related to the included compression web worker for Session Replay. This is only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you want to host a compression worker yourself - see <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">Using a Custom Compression Worker</PlatformLink> for details. **We do not recommend enabling this flag unless you provide a custom worker URL.**
+Replacing this flag with `true` will tree shake any SDK code that's related to the included compression web worker for Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you want to host a compression worker yourself. See <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">Using a Custom Compression Worker</PlatformLink> for details. **We don't recommend enabling this flag unless you provide a custom worker URL.**
 
 </PlatformSection>
 
