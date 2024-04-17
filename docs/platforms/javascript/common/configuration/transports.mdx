@@ -11,53 +11,57 @@ notSupported:
 
 The JavaScript SDK uses a `transport` to send events to Sentry. On modern browsers, most transports use the browsers' `fetch` API to send events. Transports will drop an event if it fails to send due to a lack of connection.
 
-### Offline Caching
+You can change the transport by setting the `transport` option in the `init` call. The SDK provides a few built-in transports, and you can also create your own.
 
-If your JavaScript application is designed to continue working offline,
-dropping events when no connection is available and missing
-offline events, could mean you're missing important information.
+## `makeBrowserOfflineTransport`
 
-To enable offline events caching, use `makeBrowserOfflineTransport` to wrap existing transports and queue events
-using the browsers' IndexedDB storage. Once your application comes back online, all events will be sent together.
+The `makeBrowserOfflineTransport` transport is a built-in transport that uses the `IndexedDB` API to store events when the browser is offline. When the browser comes back online, the transport sends the stored events to Sentry. <PlatformLink to="/best-pracises/offline-caching">Read more about how to use it.</PlatformLink>
 
-<PlatformContent includePath="configuration/offline" />
+## Custom transport
 
-Here are a few optional properties you can add to `transportOptions`:
+You can also provide a custom transport to Sentry. The transport must conform to the `Transport` interface:
 
 ```javascript
-transportOptions:{
-  /**
-   * Name of IndexedDb database to store events
-   * Default: 'sentry-offline'
-   */
-  dbName: string;
-  /**
-   * Name of IndexedDb object store to store events
-   * Default: 'queue'
-   */
-  storeName: string;
-  /**
-   * Maximum number of events to store
-   * Default: 30
-   */
-  maxQueueSize: number;
-  /**
-   * Flush the store shortly after startup.
-   * Default: false
-   */
-  flushAtStartup: boolean;
-  /**
-   * Called before an event is stored.
-   * Return false to drop the envelope rather than store it.
-   *
-   * @param envelope The envelope that failed to send.
-   * @param error The error that occurred.
-   * @param retryDelay The current retry delay in milliseconds.
-   */
-  shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+interface Transport {
+  send(request: Envelope): Promise<TransportMakeRequestResponse>;
+  flush(timeout?: number): Promise<boolean>;
 }
 ```
 
-#### Browser Support
+You can also use the `createTransport` utility from `@sentry/core` to help with some boilerplate:
 
-Offline caching is not supported in IE due to a lack of IndexedDB features.
+```javascript
+import { createTransport } from '@sentry/core';
+import * from '@sentry/browser';
+
+function makeFetchTransport(
+  options
+): Transport {
+  function makeRequest(request) {
+    const requestOptions: RequestInit = {
+      body: request.body,
+      method: 'POST',
+      referrerPolicy: 'origin',
+      headers: options.headers,
+      ...options.fetchOptions,
+    };
+
+    return fetch(options.url, requestOptions).then(response => {
+      return {
+        statusCode: response.status,
+        headers: {
+          'x-sentry-rate-limits': response.headers.get('X-Sentry-Rate-Limits'),
+          'retry-after': response.headers.get('Retry-After'),
+        },
+      };
+    });
+  }
+
+  return createTransport(options, makeRequest);
+}
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  transport: makeFetchTransport
+});
+```
