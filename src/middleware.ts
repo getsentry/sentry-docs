@@ -1318,15 +1318,15 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
 
   {
     from: '/platforms/node/pluggable-integrations/',
-    to: '/platforms/javascript/guides/node/configuration/integrations/pluggable-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/',
   },
   {
     from: '/platforms/node/default-integrations/',
-    to: '/platforms/javascript/guides/node/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/',
   },
   {
     from: '/platforms/node/integrations/default-integrations/',
-    to: '/platforms/javascript/guides/node/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/',
   },
   {
     from: '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
