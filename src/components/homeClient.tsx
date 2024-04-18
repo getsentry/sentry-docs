@@ -117,7 +117,7 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
       <div className="index-container pad-top">
         <div className="flex-row card-row footer-btns">
           <Link href="https://develop.sentry.dev/self-hosted/">Self-Hosted Sentry</Link>
-          <Link href="https://help.sentry.io/">Support</Link>
+          <Link href="https://sentry.zendesk.com/hc/en-us/">Support</Link>
         </div>
 
         <h3>Learn more...</h3>

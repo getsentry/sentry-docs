@@ -55,7 +55,11 @@ export function ProductSidebar({data}: ChildProps) {
           <h6>Additional Resources</h6>
         </div>
         <ul className="list-unstyled" data-sidebar-tree>
-          <SidebarLink to="https://help.sentry.io/" title="Support" path={fullPath} />
+          <SidebarLink
+            to="https://sentry.zendesk.com/hc/en-us/"
+            title="Support"
+            path={fullPath}
+          />
           <SidebarLink to="/platforms/" title="Platforms" path={fullPath} />
           <SidebarLink to="/api/" title="API Reference" path={fullPath} />
           <SidebarLink to="/contributing/" title="Contributing to Docs" path={fullPath} />
