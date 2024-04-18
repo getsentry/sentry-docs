@@ -82,7 +82,7 @@ export function PlatformSelector({
         setValue={v => startTransition(() => setSearchValue(v))}
       >
         <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
-          <RadixSelect.Value placeholder="Filter platforms" />
+          <RadixSelect.Value placeholder="Choose your platform" />
           <RadixSelect.Icon className={styles['select-icon']}>
             <CaretSortIcon />
           </RadixSelect.Icon>

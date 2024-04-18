@@ -362,24 +362,20 @@ function ProductSidebar({rootNode, collapseAll}: ProductSidebarProps) {
         headerClassName={headerClassName}
         collapse={collapseAll}
       />
-
-      <li className="mb-3" data-sidebar-branch>
-        <div className={`${styles['sidebar-title']} items-center mb-0`} data-sidebar-link>
-          <h6>Additional Resources</h6>
-        </div>
+      <li className="mb-3 additional-sidebar-links" data-sidebar-branch>
+        <hr />
         <ul data-sidebar-tree>
+          <SidebarLink to="https://about.codecov.io/" title="Codecov" path={fullPath} />
+          <SidebarLink to="https://discord.gg/sentry" title="Discord" path={fullPath} />
           <SidebarLink to="https://help.sentry.io/" title="Support" path={fullPath} />
-          <SidebarLink to="/platforms/" title="Platforms" path={fullPath} />
-          <SidebarLink to="/api/" title="API Reference" path={fullPath} />
-          <SidebarLink to="/contributing/" title="Contributing to Docs" path={fullPath} />
-          <SidebarLink
-            to="https://develop.sentry.dev"
-            title="Developer Documentation"
-            path={fullPath}
-          />
           <SidebarLink
             to="https://develop.sentry.dev/self-hosted/"
             title="Self-Hosting Sentry"
+            path={fullPath}
+          />
+          <SidebarLink
+            to="https://develop.sentry.dev"
+            title="Developer Documentation"
             path={fullPath}
           />
         </ul>
