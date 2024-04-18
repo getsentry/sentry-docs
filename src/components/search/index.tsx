@@ -183,7 +183,6 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
         <NavLink
           href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
           target="_blank"
-          rel="noreferrer"
           style={{textWrap: 'nowrap'}}
           className="hidden md:flex"
         >
