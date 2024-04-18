@@ -124,7 +124,7 @@ export function SidebarLinks(): JSX.Element | null {
       <Fragment>
         <ApiSidebar />
         <hr />
-        <ProductSidebar rootNode={rootNode} collapseAll />
+        <ProductSidebar rootNode={rootNode} />
       </Fragment>
     );
   }
@@ -181,7 +181,7 @@ export function SidebarLinks(): JSX.Element | null {
           nodes={nodes}
         />
         <hr />
-        <ProductSidebar rootNode={rootNode} collapseAll />
+        <ProductSidebar rootNode={rootNode} />
       </Fragment>
     );
   }
@@ -243,11 +243,9 @@ const docNodeToNavNode = (node: DocNode): NavNode => ({
 
 type ProductSidebarProps = {
   rootNode: DocNode;
-  /** Collapse all sections */
-  collapseAll?: boolean;
 };
 
-function ProductSidebar({rootNode, collapseAll}: ProductSidebarProps) {
+function ProductSidebar({rootNode}: ProductSidebarProps) {
   /**
    * URL: /cli
    */
