@@ -291,96 +291,58 @@ function ProductSidebar({rootNode, collapseAll}: ProductSidebarProps) {
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (
-    <ul data-sidebar-tree>
-      <DynamicNav
-        root="cli"
-        title="sentry-cli"
-        tree={cliTree}
-        collapse
-        headerClassName={headerClassName}
-      />
-      <DynamicNav
-        root="concepts"
-        title="Concepts & Reference"
-        tree={conceptsTree}
-        collapse
-        headerClassName={headerClassName}
-      />
-      <DynamicNav
-        root="pricing"
-        title="Pricing & Billing"
-        tree={pricingTree}
-        collapse
-        headerClassName={headerClassName}
-      />
-      <DynamicNav
-        root="product"
-        title="Product"
-        tree={productTree}
-        exclude={[
-          '/product/integrations/',
-          '/product/security/',
-          '/product/accounts/',
-          '/product/relay/',
-          '/product/data-management-settings/',
-        ]}
-        headerClassName={headerClassName}
-        collapse={collapseAll}
-      />
-      <DynamicNav
-        root="product/data-management-settings"
-        title="Data Management"
-        tree={productTree}
-        headerClassName={headerClassName}
-        collapse={collapseAll}
-      />
-      <DynamicNav
-        root="product/accounts"
-        title="Account Management"
-        tree={productTree}
-        headerClassName={headerClassName}
-        collapse={collapseAll}
-      />
-      <DynamicNav
-        root="product/relay"
-        title="Relay"
-        tree={productTree}
-        headerClassName={headerClassName}
-        collapse={collapseAll}
-      />
-      <DynamicNav
-        root="product/security"
-        title="Security and Legal"
-        tree={productTree}
-        headerClassName={headerClassName}
-        collapse={collapseAll}
-      />
-      <DynamicNav
-        root="product/integrations"
-        title="Integrations"
-        tree={productTree}
-        headerClassName={headerClassName}
-        collapse={collapseAll}
-      />
-      <li className="mb-3 additional-sidebar-links" data-sidebar-branch>
-        <hr />
-        <ul data-sidebar-tree>
-          <SidebarLink to="https://about.codecov.io/" title="Codecov" path={fullPath} />
-          <SidebarLink to="https://discord.gg/sentry" title="Discord" path={fullPath} />
-          <SidebarLink to="https://help.sentry.io/" title="Support" path={fullPath} />
-          <SidebarLink
-            to="https://develop.sentry.dev/self-hosted/"
-            title="Self-Hosting Sentry"
-            path={fullPath}
-          />
-          <SidebarLink
-            to="https://develop.sentry.dev"
-            title="Developer Documentation"
-            path={fullPath}
-          />
-        </ul>
-      </li>
-    </ul>
+    <div>
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="cli"
+          title="sentry-cli"
+          tree={cliTree}
+          collapse
+          headerClassName={headerClassName}
+        />
+        <DynamicNav
+          root="product"
+          title="Product Walkthroughs"
+          tree={productTree}
+          headerClassName={headerClassName}
+          collapse
+        />
+        <DynamicNav
+          root="concepts"
+          title="Concepts & Reference"
+          tree={conceptsTree}
+          collapse
+          headerClassName={headerClassName}
+        />
+        <DynamicNav
+          root="pricing"
+          title="Pricing & Billing"
+          tree={pricingTree}
+          collapse
+          headerClassName={headerClassName}
+        />
+      </ul>
+      <hr />
+      <ul data-sidebar-tree>
+        <li className="mb-3" data-sidebar-branch>
+          <ul data-sidebar-tree>
+            <SidebarLink to="https://about.codecov.io/" title="Codecov" path={fullPath} />
+            <SidebarLink to="https://discord.gg/sentry" title="Discord" path={fullPath} />
+            <SidebarLink to="https://help.sentry.io/" title="Support" path={fullPath} />
+            <SidebarLink
+              to="https://develop.sentry.dev/self-hosted/"
+              title="Self-Hosting Sentry"
+              path={fullPath}
+            />
+            <SidebarLink
+              to="https://develop.sentry.dev"
+              title="Developer Documentation"
+              path={fullPath}
+            />
+          </ul>
+        </li>
+      </ul>
+    </div>
   );
 }
 
