@@ -3,7 +3,6 @@ import Link from 'next/link';
 import {notFound} from 'next/navigation';
 
 import {Banner} from 'sentry-docs/components/banner';
-import {PlatformSelector} from 'sentry-docs/components/platformSelector';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
@@ -13,8 +12,7 @@ import SupportImage from 'sentry-docs/imgs/support.png';
 
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
-import {PlatformIcon} from './platformIcon';
-import {SmartLink} from './smartLink';
+import {PlatformFilter} from './platformFilter';
 
 const HIGHLIGHTED_PLATFORMS = [
   'javascript',
@@ -80,37 +78,9 @@ export async function Home() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 md:gap-2 py-8 md:items-end">
-          <div className="md:w-1/2 space-y-2">
-            <h2 className="text-2xl font-medium">Choose your SDK</h2>
-            <p className="m-0">If you use it, we probably support it.</p>
-          </div>
-          <div className="md:w-1/2 flex justify-end">
-            <PlatformSelector platforms={sortedPlatforms} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8">
-          {sortedPlatforms.map(platform => (
-            <SmartLink
-              to={platform.url}
-              className="text-black hover:no-underline"
-              key={platform.key}
-            >
-              <div className="flex gap-2 shadow hover:shadow-accent-purple/30 rounded p-2">
-                <div className="w-5 flex">
-                  <PlatformIcon
-                    size={20}
-                    platform={platform.icon ?? platform.key}
-                    format="lg"
-                  />
-                </div>
-                {platform.title}
-              </div>
-            </SmartLink>
-          ))}
-        </div>
+        <PlatformFilter platforms={sortedPlatforms} />
         <Link href="/product/sentry-basics/" className="hover:no-underline text-black">
-          <div className="flex flex-col md:flex-row shadow hover:shadow-accent-purple/30 p-6 rounded mt-9 gap-4">
+          <div className="flex flex-col md:flex-row shadow hover:shadow-accent-purple/30 p-6 rounded mt-16 gap-4">
             <Image src={RocketImage} height={64} alt="Rocket image" />
             <div className="hover:no-underline space-y-2">
               <h3 className="text-xl font-medium">What is Sentry?</h3>
