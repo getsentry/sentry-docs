@@ -25,7 +25,7 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
     return matches_;
   }, [filter]);
   return (
-    <div className="">
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-8 md:items-end">
         <div className="lg:col-span-2 space-y-2">
           <h2 className="text-2xl font-medium">Choose your SDK</h2>
