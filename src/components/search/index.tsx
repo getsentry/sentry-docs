@@ -180,6 +180,7 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
           onFocus={() => setInputFocus(true)}
           ref={inputRef}
         />
+        <span className={styles['or-separator']}>or</span>
         <NavLink
           href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
           target="_blank"
