@@ -1,0 +1,42 @@
+---
+title: Automatic Instrumentation
+description: "Learn what transactions are captured after tracing is enabled."
+sidebar_order: 10
+---
+
+By default, Sentry's Node.js SDK can automatically instrument HTTP calls.
+In order for this to work, you have to create transactions which the HTTP calls will be added to as spans.
+
+Read more about [Custom Instrumentation](./../custom-instrumentation/) to learn how to create transactions and add your own spans.
+
+<Note>
+
+If you're adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service's performance characteristics maintain expectations.
+
+Note, that calling `Sentry.autoDiscoverNodePerformanceMonitoringIntegrations` will degrade startup performance of your app due to file I/O operations.
+This is especially a concern in Serverless functions.
+We recommend manually adding <PlatformLink to="/performance/database" >database integrations</PlatformLink> of your choice manually (see example below).
+
+</Note>
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Automatically instrument Node.js libraries and frameworks
+    // (This function is slow because of file I/O, consider manually adding additional integrations instead)
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+    // Or manually add integrations of your choice. For example:
+    new Sentry.Integrations.Apollo(),
+    new Sentry.Integrations.Postgres(),
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```

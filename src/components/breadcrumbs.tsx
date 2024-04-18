@@ -18,7 +18,7 @@ export function Breadcrumbs() {
   }
 
   return (
-    <ul className="breadcrumb" style={{margin: 0}}>
+    <ul className="breadcrumb" style={{margin: '0px'}}>
       {nodes.map(n => {
         const to = n.path === '/' ? n.path : `/${n.path}/`;
         return (
