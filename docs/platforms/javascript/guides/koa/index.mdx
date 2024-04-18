@@ -1,0 +1,162 @@
+---
+title: Koa
+description: "Learn about using Sentry with Koa."
+sdk: sentry.javascript.node
+categories:
+  - server
+---
+
+Add `@sentry/node` as a dependency:
+
+```bash {tabTitle:npm}
+npm install --save @sentry/node @sentry/utils
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/node @sentry/utils
+```
+
+Initialize the Sentry SDK and install the on error hook:
+
+<SignInNote />
+
+```javascript
+import Koa from "koa";
+import * as Sentry from "@sentry/node";
+
+// or using CommonJS
+// const Koa = require('koa');
+// const Sentry = require('@sentry/node');
+
+const app = new Koa();
+
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
+
+app.on("error", (err, ctx) => {
+  Sentry.withScope((scope) => {
+    scope.setSDKProcessingMetadata({ request: ctx.request });
+    Sentry.captureException(err);
+  });
+});
+
+app.listen(3000);
+```
+
+## Monitor Performance
+
+Create and attach a transaction to each request:
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+const { stripUrlQueryAndFragment } = require("@sentry/utils");
+const Koa = require("koa");
+const app = new Koa();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+
+  integrations: [
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+  ],
+});
+
+const requestHandler = (ctx, next) => {
+  Sentry.runWithAsyncContext(() => {
+    const scope = Sentry.getCurrentScope();
+    scope.addEventProcessor((event) =>
+      Sentry.addRequestDataToEvent(event, ctx.request, {
+        include: {
+          user: false,
+        },
+      })
+    );
+
+    next();
+  });
+};
+
+// this tracing middleware creates a transaction per request
+const tracingMiddleWare = (ctx, next) => {
+  const reqMethod = (ctx.method || "").toUpperCase();
+  const reqUrl = ctx.url && stripUrlQueryAndFragment(ctx.url);
+
+  // connect to trace of upstream app
+  let traceparentData;
+  if (ctx.request.get("sentry-trace")) {
+    traceparentData = Sentry.extractTraceparentData(
+      ctx.request.get("sentry-trace")
+    );
+  }
+
+  const transaction = Sentry.startTransaction({
+    name: `${reqMethod} ${reqUrl}`,
+    op: "http.server",
+    ...traceparentData,
+  });
+
+  ctx.__sentry_transaction = transaction;
+
+  // We put the transaction on the scope so users can attach children to it
+  Sentry.getCurrentScope().setSpan(transaction);
+
+  ctx.res.on("finish", () => {
+    // Push `transaction.finish` to the next event loop so open spans have a chance to finish before the transaction closes
+    setImmediate(() => {
+      // if using koa router, a nicer way to capture transaction using the matched route
+      if (ctx._matchedRoute) {
+        const mountPath = ctx.mountPath || "";
+        transaction.setName(`${reqMethod} ${mountPath}${ctx._matchedRoute}`);
+      }
+      transaction.setHttpStatus(ctx.status);
+      transaction.finish();
+    });
+  });
+
+  next();
+};
+
+app.use(requestHandler);
+app.use(tracingMiddleWare);
+
+// usual error handler
+app.on("error", (err, ctx) => {
+  Sentry.withScope((scope) => {
+    scope.addEventProcessor((event) => {
+      return Sentry.addRequestDataToEvent(event, ctx.request);
+    });
+    Sentry.captureException(err);
+  });
+});
+// the rest of your app
+```
+
+### Subsequent Custom Child Spans
+
+The following example creates a span for a part of the code that contains an
+expensive operation and sends the result to Sentry. You will need to use the
+transaction stored in the context.
+
+```javascript
+const myMiddleware = async (ctx, next) => {
+  let span;
+  const transaction = ctx.__sentry_transaction;
+  if (transaction) {
+    span = transaction.startChild({
+      description: route,
+      op: "myMiddleware",
+    });
+  }
+  await myExpensiveOperation();
+  if (span) {
+    span.finish();
+  }
+  return next();
+};
+```

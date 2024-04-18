@@ -1320,95 +1320,127 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/node/pluggable-integrations/',
-    to: '/platforms/node/configuration/integrations/pluggable-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/pluggable-integrations/',
   },
   {
     from: '/platforms/node/default-integrations/',
-    to: '/platforms/node/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/default-integrations/',
   },
   {
     from: '/platforms/node/integrations/default-integrations/',
-    to: '/platforms/node/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/default-integrations/',
   },
   {
     from: '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
-    to: '/platforms/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+    to: '/platforms/javascript/guides/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
   },
   {
     from: '/platforms/node/gcp_functions/',
-    to: '/platforms/node/guides/gcp-functions/',
+    to: '/platforms/javascript/guides/gcp-functions/',
   },
   {
     from: '/clients/node/integrations/express/',
-    to: '/platforms/node/guides/express/',
+    to: '/platforms/javascript/guides/express/',
   },
   {
     from: '/platforms/node/express/',
-    to: '/platforms/node/guides/express/',
+    to: '/platforms/javascript/guides/express/',
   },
   {
     from: '/platforms/node/guides/express/integrations/default-integrations/',
-    to: '/platforms/node/guides/express/',
+    to: '/platforms/javascript/guides/express/',
   },
   {
     from: '/platforms/node/aws_lambda/',
-    to: '/platforms/node/guides/aws-lambda/',
+    to: '/platforms/javascript/guides/aws-lambda/',
   },
   {
     from: '/platforms/node/azure_functions/',
-    to: '/platforms/node/guides/azure-functions/',
+    to: '/platforms/javascript/guides/azure-functions/',
   },
   {
     from: '/platforms/node/guides/azure-functions/typescript/',
-    to: '/platforms/node/guides/azure-functions/',
+    to: '/platforms/javascript/guides/azure-functions/',
   },
   {
     from: '/clients/node/integrations/connect/',
-    to: '/platforms/node/guides/connect/',
+    to: '/platforms/javascript/guides/connect/',
   },
   {
     from: '/platforms/node/connect/',
-    to: '/platforms/node/guides/connect/',
+    to: '/platforms/javascript/guides/connect/',
   },
   {
     from: '/clients/node/integrations/koa/',
-    to: '/platforms/node/guides/koa/',
+    to: '/platforms/javascript/guides/koa/',
   },
   {
     from: '/platforms/node/koa/',
-    to: '/platforms/node/guides/koa/',
+    to: '/platforms/javascript/guides/koa/',
   },
   {
     from: '/platforms/node/guides/koa/typescript/',
-    to: '/platforms/node/guides/koa/',
+    to: '/platforms/javascript/guides/koa/',
   },
   {
     from: '/clients/node/config/',
-    to: '/platforms/node/legacy-sdk/config/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/config/',
   },
   {
     from: '/clients/node/coffeescript/',
-    to: '/platforms/node/legacy-sdk/coffeescript/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/coffeescript/',
   },
   {
     from: '/clients/node/sourcemaps/',
-    to: '/platforms/node/legacy-sdk/sourcemaps/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/sourcemaps/',
   },
   {
     from: '/clients/node/typescript/',
-    to: '/platforms/node/legacy-sdk/typescript/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/typescript/',
   },
   {
     from: '/platforms/node/typescript/',
-    to: '/platforms/node/legacy-sdk/typescript/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/typescript/',
   },
   {
     from: '/clients/node/integrations/',
-    to: '/platforms/node/legacy-sdk/integrations/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/integrations/',
   },
   {
     from: '/clients/node/usage/',
-    to: '/platforms/node/legacy-sdk/usage/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/usage/',
+  },
+  {
+    from: '/platforms/node/usage/set-level/',
+    to: '/platforms/javascript/guides/node/enriching-events/level/',
+  },
+  {
+    from: '/platforms/node/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/node/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/node/guides/:guide/usage/set-level/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/level/',
+  },
+  {
+    from: '/platforms/node/guides/:guide/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/usage/set-level/',
+    to: '/platforms/javascript/enriching-events/level/',
+  },
+  {
+    from: '/platforms/javascript/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/usage/set-level/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/level/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
   },
   {
     from: '/learn/cli/configuration/',
@@ -2861,6 +2893,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/features/component-tracking/',
+    to: '/platforms/javascript/guides/react/features/component-names/',
   },
 ];
 

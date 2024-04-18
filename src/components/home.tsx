@@ -6,7 +6,7 @@ import {HomeClient} from './homeClient';
 
 const HIGHLIGHTED_PLATFORMS = [
   'javascript',
-  'node',
+  'javascript.node',
   'python',
   'php',
   'ruby',
