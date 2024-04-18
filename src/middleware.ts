@@ -36,27 +36,15 @@ type Redirect = {
 const REDIRECTS: Redirect[] = [
   {
     from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/performance/retention-priorities/',
-  },
-  {
-    from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/accounts/quotas/',
+    to: '/product/performance/',
   },
   {
     from: '/platforms/data-management/',
-    to: '/product/data-management-settings/scrubbing/advanced-datascrubbing/',
-  },
-  {
-    from: '/platforms/data-management/',
-    to: '/product/data-management-settings/data-forwarding/',
+    to: '/conepts/data-management/',
   },
   {
     from: '/platforms/javascript/sourcemaps/troubleshooting/',
     to: '/platforms/javascript/sourcemaps/',
-  },
-  {
-    from: '/platforms/javascript/sourcemaps/troubleshooting/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
     from: '/platforms/react-native/install/cocoapods/',
