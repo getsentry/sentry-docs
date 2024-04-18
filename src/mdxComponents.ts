@@ -16,6 +16,7 @@ import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
 import {PiiFields} from './components/piiFields';
+import {PlatformCategorySection} from './components/platformCategorySection';
 import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
 import {PlatformLink} from './components/platformLink';
@@ -57,6 +58,7 @@ export function mdxComponents(
     PlatformLink,
     PlatformLinkWithLogo,
     PlatformSection,
+    PlatformCategorySection,
     PlatformOrGuideName,
     PlatformSdkPackageName,
     RelayMetrics,
