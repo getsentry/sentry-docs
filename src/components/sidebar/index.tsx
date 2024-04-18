@@ -124,7 +124,7 @@ export function SidebarLinks(): JSX.Element | null {
       <Fragment>
         <ApiSidebar />
         <hr />
-        <ProductSidebar rootNode={rootNode} />
+        <ProductSidebar rootNode={rootNode} collapseAll />
       </Fragment>
     );
   }
@@ -181,7 +181,7 @@ export function SidebarLinks(): JSX.Element | null {
           nodes={nodes}
         />
         <hr />
-        <ProductSidebar rootNode={rootNode} />
+        <ProductSidebar rootNode={rootNode} collapseAll />
       </Fragment>
     );
   }
@@ -241,7 +241,13 @@ const docNodeToNavNode = (node: DocNode): NavNode => ({
   path: '/' + node.path + '/',
 });
 
-function ProductSidebar({rootNode}: {rootNode: DocNode}) {
+type ProductSidebarProps = {
+  rootNode: DocNode;
+  /** Collapse all sections */
+  collapseAll?: boolean;
+};
+
+function ProductSidebar({rootNode, collapseAll}: ProductSidebarProps) {
   /**
    * URL: /cli
    */
@@ -319,36 +325,42 @@ function ProductSidebar({rootNode}: {rootNode: DocNode}) {
           '/product/data-management-settings/',
         ]}
         headerClassName={headerClassName}
+        collapse={collapseAll}
       />
       <DynamicNav
         root="product/data-management-settings"
         title="Data Management"
         tree={productTree}
         headerClassName={headerClassName}
+        collapse={collapseAll}
       />
       <DynamicNav
         root="product/accounts"
         title="Account Management"
         tree={productTree}
         headerClassName={headerClassName}
+        collapse={collapseAll}
       />
       <DynamicNav
         root="product/relay"
         title="Relay"
         tree={productTree}
         headerClassName={headerClassName}
+        collapse={collapseAll}
       />
       <DynamicNav
         root="product/security"
         title="Security and Legal"
         tree={productTree}
         headerClassName={headerClassName}
+        collapse={collapseAll}
       />
       <DynamicNav
         root="product/integrations"
         title="Integrations"
         tree={productTree}
         headerClassName={headerClassName}
+        collapse={collapseAll}
       />
 
       <li className="mb-3" data-sidebar-branch>
