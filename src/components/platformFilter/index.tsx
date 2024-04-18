@@ -43,12 +43,8 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8">
         {matches.length > 0 &&
           matches.map(platform => (
-            <SmartLink
-              to={platform.url}
-              className="text-black hover:no-underline"
-              key={platform.key}
-            >
-              <div className="flex gap-2 shadow hover:shadow-accent-purple/30 rounded p-2">
+            <SmartLink to={platform.url} key={platform.key}>
+              <div className="flex gap-2 shadow rounded p-2">
                 <div className="w-5 flex">
                   <PlatformIcon
                     size={20}

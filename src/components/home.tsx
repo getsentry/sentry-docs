@@ -79,10 +79,10 @@ export async function Home() {
         </div>
 
         <PlatformFilter platforms={sortedPlatforms} />
-        <Link href="/product/sentry-basics/" className="hover:no-underline text-black">
-          <div className="flex flex-col md:flex-row shadow hover:shadow-accent-purple/30 p-6 rounded mt-16 gap-4">
+        <Link href="/product/sentry-basics/">
+          <div className="flex flex-col md:flex-row shadow p-6 rounded mt-16 gap-4">
             <Image src={RocketImage} height={64} alt="Rocket image" />
-            <div className="hover:no-underline space-y-2">
+            <div className="space-y-2">
               <h3 className="text-xl font-medium">What is Sentry?</h3>
               <p>Sentry is an application monitoring platform—built by devs, for devs.</p>
             </div>
@@ -90,11 +90,8 @@ export async function Home() {
         </Link>
         <h2 className="text-2xl mt-12 md:mt-16 mb-6 font-medium">Talk to us</h2>
         <div className="flex flex-col md:flex-row gap-6">
-          <Link
-            href="https://discord.com/invite/sentry"
-            className="hover:no-underline text-black w-full"
-          >
-            <div className="flex flex-col md:flex-row shadow hover:shadow-accent-purple/30 p-6 rounded gap-4">
+          <Link href="https://discord.com/invite/sentry" className="w-full">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
               <Image src={ChatBubble} height={64} alt="Chat bubble image" />
               <div className="space-y-2">
                 <h3 className="text-xl font-medium">Sentry Discord</h3>
@@ -102,11 +99,8 @@ export async function Home() {
               </div>
             </div>
           </Link>
-          <Link
-            href="https://help.sentry.io/"
-            className="hover:no-underline text-black w-full"
-          >
-            <div className="flex flex-col md:flex-row shadow hover:shadow-accent-purple/30 p-6 rounded gap-4">
+          <Link href="https://help.sentry.io/" className="w-full">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
               <Image src={SupportImage} height={64} alt="Support image" />
               <div className="space-y-2">
                 <h3 className="text-xl font-medium">Support</h3>

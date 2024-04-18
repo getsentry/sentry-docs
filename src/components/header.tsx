@@ -20,7 +20,7 @@ export function Header({pathname, searchPlatforms}: Props) {
         <a
           href="/"
           title="Sentry error monitoring"
-          className="flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-darkPurple hover:no-underline hover:text-darkPurple"
+          className="flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-darkPurple"
         >
           <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
           Docs
