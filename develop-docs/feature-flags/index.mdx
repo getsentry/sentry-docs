@@ -73,7 +73,14 @@ SENTRY_FEATURES = {
 
 ### Add your feature to the FeatureManager
 
-If you plan to use [flagr in production](#enabling-your-feature-in-production)
+If you want to back your feature [flag via options](#building-your-options-based-feature)
+add the feature to the `FeatureManager` like so using the `OPTIONS` enum.:
+
+```python
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
+```
+
+If you plan to use [flagr in production](#building-your-feature-in-flagr)
 add the feature to the `FeatureManager` like so using the `REMOTE` enum.:
 
 ```python
@@ -207,15 +214,70 @@ Feature flags are declared in Sentry's codebase. For self-hosted users, those
 flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
 Flagr is used to configure flags in production.
 
-If you want to enable your feature for a subset of production users, you will
-need to set up your feature in Flagr. If you haven't already make sure that
-when you add your flag in sentry, you use the `REMOTE` enum. For example:
+If you want to enable your feature for a subset of production users, you have
+the choice of setting up your feature flag in Flagr, or using an option backed
+rollout via Options automator.
+
+- [Options based features](#building-your-options-based-feature) allow a feature
+to be rolled out to a specific subset of
+LA orgs, a percentage of EA orgs, and/or a percentage of all orgs. They don't 
+allow the flexibility of targetting that Flagr allows. These can be used in high
+scale situations.
+- [Flagr](#building-your-feature-in-flagr) is easy and quick to use, and is more
+flexible. However, it can't be used in high scale situations.
+
+
+## Building your options based feature
+Declare your feature in sentry/features/temporary.py or 
+sentry/features/permanent.py like so: 
+```python
+manager.add("organizations:your-new-flag", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
+```
+
+This automagically registers an `AutoRegisterOptionBackedRolloutFeatureHandler` 
+for you in getsentry, and also auto registers the relevant options. 
+
+To roll out your feature, you'll want to set the rollout options via options 
+automator. To figure out the options you need to configure, you can run the 
+following script in getsentry:
+```python
+./bin/generate_automator_feature_options.py --flag organizations:your-new-flag
+```
+
+It will then produce output like 
+
+```python
+Generating automator options for feature flag `organizations:your-new-flag`
+Add these to the appropriate file in options automator to roll out your feature
+For example, to roll out in the US, you can add them to https://github.com/getsentry/sentry-options-automator/blob/main/options/regions/us/app.yaml
+To roll out to all production regions, you can add them to https://github.com/getsentry/sentry-options-automator/blob/main/options/default/app.yaml
+Options:
+  organizations.your-new-flag.la-rollout: 0.0
+  organizations.your-new-flag.ea-rollout: 0.0
+  organizations.your-new-flag.ga-rollout: 0.0
+  organizations.your-new-flag.la-orgs: [
+    "codecov",
+    "sentry",
+    "sentry-sdks",
+    "sentry-test",
+    "sentry-st",
+    "sentry-emerging-tech",
+    "specto-dev",
+  ]
+```
+
+Open a pr in https://github.com/getsentry/sentry-options-automator to set 
+these options and you can roll out your feature flag. You can also customize
+which orgs will be in your la rollout by modifying `la-orgs`
+
+## Building your feature in Flagr
+
+If you haven't already make sure that when you add your flag in sentry, you use
+the `REMOTE` enum. For example:
 
 ```python
 default_manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.REMOTE)  # NOQA
 ```
-
-## Building your feature in Flagr
 
 Navigate to the [Flagr UI](https://flagr.getsentry.net/#/) and in the input box
 enter your feature name as the flag's *description*. Next, click the arrow on the
