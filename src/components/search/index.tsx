@@ -51,7 +51,7 @@ const search = new SentryGlobalSearch([
     platformBias: true,
     legacyBias: true,
   },
-  'help-center',
+  'zendesk_sentry_articles',
   'develop',
   'blog',
 ]);
