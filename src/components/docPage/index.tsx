@@ -62,7 +62,7 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
-            <div className="pb-4">
+            <div className="">
               <Breadcrumbs />
             </div>
             <div>
@@ -96,9 +96,9 @@ export function DocPage({
 
           {hasToc && (
             <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden xl:block w-[250px]">
-              <div className="pt-16">
-                <PlatformSdkDetail />
+              <div className="sidebar">
                 <TableOfContents />
+                <PlatformSdkDetail />
               </div>
             </aside>
           )}
