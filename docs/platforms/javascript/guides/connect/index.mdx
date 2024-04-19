@@ -30,34 +30,38 @@ import * as Sentry from "@sentry/node";
 // const connect = require('connect');
 // const Sentry = require('@sentry/node');
 
-// Must configure Sentry before doing anything else with it
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+const app = connect();
 
-function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
-}
+// Sentry must be initialized before doing anything else with it
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
 
-function onError(err, req, res, next) {
+  // Adding Performance Monitoring by setting tracesSampleRate
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+// The request handler must be the first middleware on the app
+app.use(Sentry.Handlers.requestHandler());
+// Performance Monitoring: creating a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+app.use(function(req, res){
+  res.end('Hello Connect!');
+});
+
+// The error handler must be before any other error middleware
+Sentry.Handlers.errorHandler(),
+
+app.use(function onError(err, req, res, next) {
   // The error id is attached to `res.sentry` to be returned
   // and optionally displayed to the user for support.
   res.statusCode = 500;
-  res.end(res.sentry + "\n");
-}
+  res.end(res.sentry + '\n');
+});
 
-connect(
-  // The request handler must be the first item
-  Sentry.Handlers.requestHandler(),
-
-  connect.bodyParser(),
-  connect.cookieParser(),
-  mainHandler,
-
-  // The error handler must be before any other error middleware
-  Sentry.Handlers.errorHandler(),
-
-  // Optional fallthrough error handler
-  onError
-).listen(3000);
+app.listen(3000);
 ```
 
 `requestHandler` accepts some options that let you control its behavior and decide what data should be included in the event sent to Sentry.

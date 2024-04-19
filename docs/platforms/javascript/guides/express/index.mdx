@@ -30,10 +30,22 @@ import * as Sentry from "@sentry/node";
 
 const app = express();
 
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+// Sentry must be initialized before doing anything else with it
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adding Performance Monitoring by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  integrations: [new expressIntegration({ app })],
+  // You can also specify the routes you want to trace by adding `router: someRouter` instead of `app`
+});
 
 // The request handler must be the first middleware on the app
 app.use(Sentry.Handlers.requestHandler());
+// Performance Monitoring: creating a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
 
 // All controllers should live here
 app.get("/", function rootHandler(req, res) {
@@ -121,45 +133,9 @@ app.use(
 
 ## Monitor Performance
 
-It’s possible to add tracing to all popular frameworks; however, we only provide pre-written handlers for Express.
+By setting `tracesSampleRate` and adding the tracing middleware with `expressIntegration` tracing with Sentry is enabled in Express.
 
-<SignInNote />
-
-```javascript
-const Sentry = require("@sentry/node");
-const express = require("express");
-const app = express();
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    // enable Express.js middleware tracing
-    new Sentry.Integrations.Express({
-      // to trace all requests to the default router
-      app,
-      // alternatively, you can specify the routes you want to trace:
-      // router: someRouter,
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-
-// RequestHandler creates a separate execution context, so that all
-// transactions/spans/breadcrumbs are isolated across requests
-app.use(Sentry.Handlers.requestHandler());
-// TracingHandler creates a trace for every incoming request
-app.use(Sentry.Handlers.tracingHandler());
-
-// the rest of your app
-
-app.use(Sentry.Handlers.errorHandler());
-app.listen(3000);
-```
-
-Spans are instrumented for the following operations within a transaction:
+Spans are created for the following operations:
 
 - HTTP requests made with `request`
 - `get` calls using native `http` and `https` modules
