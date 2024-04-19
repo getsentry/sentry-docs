@@ -59,7 +59,9 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/typography'),
-    require('@tailwindcss/forms'),
+    require('@tailwindcss/forms')({
+      strategy: 'class',
+    }),
     scopedPreflightStyles({
       // pretty minimalistic example. Same options as in the previous example are available
       isolationStrategy: isolateInsideOfContainer('.tw-app'),

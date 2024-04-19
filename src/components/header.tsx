@@ -20,12 +20,12 @@ export function Header({pathname, searchPlatforms}: Props) {
         <a
           href="/"
           title="Sentry error monitoring"
-          className="flex flex-shrink-0 items-center text-2xl font-medium text-darkPurple hover:no-underline hover:text-darkPurple"
+          className="flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-darkPurple"
         >
           <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
           Docs
         </a>
-        <div className="hidden md:flex md:justify-center w-full">
+        <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
           <Search path={pathname} searchPlatforms={searchPlatforms} />
         </div>
         <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">

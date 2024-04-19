@@ -1,45 +1,43 @@
 'use client';
 
-import {Fragment} from 'react';
 import styled from '@emotion/styled';
 
 import {SmartLink} from './smartLink';
 
 const PackageDetail = styled.div`
   font-size: 0.8em;
-  border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 4px;
 
-  > dl {
-    margin: 0;
-    line-height: 1.8;
-  }
-
-  dt {
+  h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    color: inherit;
     font-weight: 500;
+    margin-bottom: 0.25rem;
   }
 
-  dd a {
-    color: var(--accent-9);
+  li {
+    line-height: 1.5;
+    padding: 0.25em 0;
+    list-style-type: disc;
+    margin-left: 12px;
+  }
+
+  a {
+    position: relative;
+    line-height: 1.5;
+    display: block;
+    color: var(--desatPurple3);
+    opacity: 0.8;
+    transition: var(--transition-time) ease-out;
+
     &:hover {
-      text-decoration: underline;
+      opacity: 1;
+      color: var(--desatPurple3);
     }
-  }
-
-  > dl > dt,
-  > dl > dd {
-    margin-top: 0;
-    margin-bottom: 0;
-
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  > dl > dd {
-    margin-left: 0.5rem;
   }
 `;
 
@@ -60,24 +58,23 @@ export function PlatformSdkDetailClient({
 }: Props) {
   return (
     <PackageDetail>
-      <dl>
-        <dt>Package:</dt>
-        <dd>{url ? <SmartLink to={url}>{canonical}</SmartLink> : canonical}</dd>
-        <dt>Version:</dt>
-        <dd>{version}</dd>
-        <dt>Repository:</dt>
-        <dd>
-          <SmartLink to={repoUrl} target="_blank" />
-        </dd>
+      <h3>Package Details</h3>
+      <ul>
+        <li>Latest version: {version}</li>
+        <li>{url ? <SmartLink to={url}>{canonical}</SmartLink> : canonical}</li>
+        <li>
+          <SmartLink to={repoUrl} target="_blank">
+            Repository on GitHub
+          </SmartLink>
+        </li>
         {apiDocsUrl && (
-          <Fragment>
-            <dt>API Documentation:</dt>
-            <dd>
-              <SmartLink to={apiDocsUrl} target="_blank" />
-            </dd>
-          </Fragment>
+          <li>
+            <SmartLink to={apiDocsUrl} target="_blank">
+              API documentation
+            </SmartLink>
+          </li>
         )}
-      </dl>
+      </ul>
     </PackageDetail>
   );
 }

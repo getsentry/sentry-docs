@@ -18,6 +18,8 @@ export const capitilize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
+
 type Page = {
   context: {
     sidebar_order?: number;

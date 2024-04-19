@@ -1,4 +1,5 @@
 import fields from 'sentry-docs/data/relay_event_pii.json';
+
 import styles from './style.module.scss';
 
 function PiiField({field}) {

@@ -151,6 +151,7 @@ function nodeToPlatform(n: DocNode): Platform {
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    categories: n.frontmatter.categories,
   };
 }
 
@@ -164,6 +165,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     title: n.frontmatter.title,
     platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
+    categories: n.frontmatter.categories,
   };
 }
 

@@ -52,7 +52,7 @@ export function DocPage({
 
       <section className="px-0 flex relative">
         {sidebar}
-        <main className="main-content flex justify-center w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] flex-1 mx-auto">
+        <main className="main-content flex w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] flex-1 mx-auto">
           <div
             className={[
               'mx-auto lg:mx-0 pt-6 px-6 prose max-w-full prose-slate prose-a:no-underline hover:prose-a:underline',
@@ -62,28 +62,31 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
-            <div className="pb-4">
+            <div className="">
               <Breadcrumbs />
             </div>
             <div>
-              <h1 className="pl-8 lg:p-0 relative">
-                <button className="lg:hidden absolute left-0">
-                  <label
-                    htmlFor={sidebarToggleId}
-                    aria-label="Close"
-                    aria-hidden="true"
-                    className="inline-flex items-center cursor-pointer"
-                  >
-                    <HamburgerMenuIcon
-                      className="inline text-[var(--gray-10)]"
-                      strokeWidth="1.8"
-                      width="24"
-                      height="24"
-                    />
-                  </label>
-                </button>
-                {frontMatter.title}
-              </h1>
+              <hgroup>
+                <h1 className="pl-8 lg:p-0 relative">
+                  <button className="lg:hidden absolute left-0">
+                    <label
+                      htmlFor={sidebarToggleId}
+                      aria-label="Close"
+                      aria-hidden="true"
+                      className="inline-flex items-center cursor-pointer"
+                    >
+                      <HamburgerMenuIcon
+                        className="inline text-[var(--gray-10)]"
+                        strokeWidth="1.8"
+                        width="24"
+                        height="24"
+                      />
+                    </label>
+                  </button>
+                  {frontMatter.title}
+                </h1>
+                <h2>{frontMatter.description}</h2>
+              </hgroup>
               <div id="main">
                 <CodeContextProvider>{children}</CodeContextProvider>
               </div>
@@ -93,9 +96,9 @@ export function DocPage({
 
           {hasToc && (
             <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden xl:block w-[250px]">
-              <div className="pt-16">
-                <PlatformSdkDetail />
+              <div className="sidebar">
                 <TableOfContents />
+                <PlatformSdkDetail />
               </div>
             </aside>
           )}

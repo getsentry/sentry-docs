@@ -51,7 +51,7 @@ const search = new SentryGlobalSearch([
     platformBias: true,
     legacyBias: true,
   },
-  'help-center',
+  'zendesk_sentry_articles',
   'develop',
   'blog',
 ]);
@@ -180,10 +180,10 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
           onFocus={() => setInputFocus(true)}
           ref={inputRef}
         />
+        <span className={`${styles['or-separator']} hidden md:inline`}>or</span>
         <NavLink
           href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
           target="_blank"
-          rel="noreferrer"
           style={{textWrap: 'nowrap'}}
           className="hidden md:flex"
         >

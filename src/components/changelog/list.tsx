@@ -154,7 +154,7 @@ export default function Changelogs({
               value={searchValue}
               onChange={e => setSearchValue(e.target.value)}
               placeholder="Search..."
-              className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
+              className="form-input flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
             />
             <div className="flex space-x-4">
               <a
