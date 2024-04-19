@@ -30,21 +30,22 @@ import * as Sentry from "@sentry/node";
 
 const app = express();
 
-// Sentry must be initialized before doing anything else with it
+// Sentry must be initialized as early as possible
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // Adding Performance Monitoring by setting tracesSampleRate and adding integration
+  // Add Performance Monitoring by setting tracesSampleRate and adding integration
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-  integrations: [new expressIntegration({ app })],
-  // You can also specify the routes you want to trace by adding `router: someRouter` instead of `app`
+  integrations: [expressIntegration({ app })],
+  // It is possible to specify the routes that should be traced by passing a router instance to the `router` option:
+  // expressIntegration({ router: someRouterInstance })
 });
 
-// The request handler must be the first middleware on the app
+// The Sentry request handler middleware must be added before any other handlers
 app.use(Sentry.Handlers.requestHandler());
-// Performance Monitoring: creating a trace for every incoming request
+// Performance Monitoring: Create spans and traces for every incoming request
 app.use(Sentry.Handlers.tracingHandler());
 
 // All controllers should live here
@@ -52,13 +53,13 @@ app.get("/", function rootHandler(req, res) {
   res.end("Hello world!");
 });
 
-// The error handler must be before any other error middleware and after all controllers
+// The Sentry error handler middleware must be registered before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
 
 // Optional fallthrough error handler
 app.use(function onError(err, req, res, next) {
-  // The error id is attached to `res.sentry` to be returned
-  // and optionally displayed to the user for support.
+  // The ID of error events captured by the Sentry error middleware is attached to `res.sentry`.
+  // You can use this ID for debugging, or to correlate requests with errors in Sentry.
   res.statusCode = 500;
   res.end(res.sentry + "\n");
 });
@@ -133,7 +134,8 @@ app.use(
 
 ## Monitor Performance
 
-By setting `tracesSampleRate` and adding the tracing middleware with `expressIntegration` tracing with Sentry is enabled in Express.
+You can monitor the performance of your Express application by setting a `tracesSampleRate`, adding the `expressIntegration`, and registering the `tracingHandler` middleware.
+
 
 Spans are created for the following operations:
 

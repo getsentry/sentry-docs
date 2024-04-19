@@ -32,31 +32,31 @@ import * as Sentry from "@sentry/node";
 
 const app = connect();
 
-// Sentry must be initialized before doing anything else with it
+// Sentry must be initialized as early as possible
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // Adding Performance Monitoring by setting tracesSampleRate
+  // Add Performance Monitoring by setting tracesSampleRate
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
-// The request handler must be the first middleware on the app
+// The Sentry request handler middleware must be added before any other handlers
 app.use(Sentry.Handlers.requestHandler());
-// Performance Monitoring: creating a trace for every incoming request
+// Performance Monitoring: Create spans and traces for every incoming request
 app.use(Sentry.Handlers.tracingHandler());
 
 app.use(function(req, res){
   res.end('Hello Connect!');
 });
 
-// The error handler must be before any other error middleware
+// The Sentry error handler middleware must be registered before any other error middleware
 Sentry.Handlers.errorHandler(),
 
 app.use(function onError(err, req, res, next) {
-  // The error id is attached to `res.sentry` to be returned
-  // and optionally displayed to the user for support.
+  // The ID of error events captured by the Sentry error middleware is attached to `res.sentry`.
+  // You can use this ID for debugging, or to correlate requests with errors in Sentry.
   res.statusCode = 500;
   res.end(res.sentry + '\n');
 });
