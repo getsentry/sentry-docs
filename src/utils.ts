@@ -1,4 +1,3 @@
-import type {Transaction} from '@sentry/browser';
 import qs from 'query-string';
 
 export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
@@ -69,16 +68,6 @@ export const marketingUrlParams = (): URLQueryObject => {
 
   return marketingParams;
 };
-
-export function getCurrentTransaction(): Transaction | undefined {
-  try {
-    // getCurrentScope() may not be defined yet, as we are using the Loader Script
-    // so we guard defensively against all of these existing.
-    return window.Sentry.getCurrentScope().getTransaction();
-  } catch {
-    return undefined;
-  }
-}
 
 export function captureException(exception: unknown): void {
   try {

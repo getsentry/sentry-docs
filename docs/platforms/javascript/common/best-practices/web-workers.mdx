@@ -1,0 +1,103 @@
+---
+title: Web Workers
+description: "Learn how to use Sentry's Browser SDK in Web Workers API."
+keywords: ["webworkers"]
+sidebar_order: 9000
+supported:
+  - javascript
+notSupported:
+  - javascript.angular
+  - javascript.cordova
+  - javascript.electron
+  - javascript.ember
+  - javascript.gatsby
+  - javascript.nextjs
+  - javascript.react
+  - javascript.vue
+  - javascript.wasm
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.gcp-functions
+  - javascript.koa
+---
+
+Sentry's Browser SDK supports [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API). To capture unhandled errors from Web Workers:
+
+Install `@sentry/browser` using `yarn` or `npm`:
+
+```bash {tabTitle:npm}
+npm install --save @sentry/browser
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/browser
+```
+
+Then you can use it:
+
+<SignInNote />
+
+```javascript {filename:index.js}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+const worker = new Worker("worker.js");
+
+// Errors from `onmessage` callback of `worker.js`
+// will be captured.
+worker.postMessage("Hello!");
+```
+
+<Alert level="warning" title="Manual Capturing">
+
+To capture errors or messages manually, such as to use `captureMessage` or `captureException` inside Web Workers, Sentry should be initialized inside each Web Workers' own scope. Only unhandled errors will be captured and sent to Sentry without worker-level initialization.
+
+</Alert>
+
+#### Usage Without Worker-Level Initialization
+
+```javascript {filename:worker.js}
+import * as Sentry from "@sentry/browser";
+
+self.onmessage = (message) => {
+  // This will fail silently.
+  Sentry.captureMessage("Message received");
+
+  // This error will be captured.
+  throw new Error();
+};
+```
+
+#### Usage With Worker-Level Initialization
+
+<SignInNote />
+
+```javascript {filename:worker.js}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+self.onmessage = (message) => {
+  // This message will be captured
+  Sentry.captureMessage("Message received");
+
+  // This error will also be captured.
+  throw new Error();
+};
+```
+
+### Integrations
+
+Note, that if you use non-default integrations inside web workers, they may not function as expected. But non-default integrations that are enabled outside of a worker’s scope won’t be affected and will function as expected.
+
+### Source Maps
+
+Sentry's source maps integration is supported inside Web Workers, if provided. Learn more about providing your [source maps](/platforms/javascript/sourcemaps/) to Sentry.

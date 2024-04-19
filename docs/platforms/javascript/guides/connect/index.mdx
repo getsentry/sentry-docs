@@ -1,0 +1,122 @@
+---
+title: Connect
+description: "Learn about using Sentry with Connect."
+sdk: sentry.javascript.node
+categories:
+  - server
+---
+
+Add `@sentry/node` as a dependency:
+
+```bash {tabTitle:npm}
+npm install --save @sentry/node
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/node
+```
+
+<Break />
+
+Configure Sentry as a middleware:
+
+<SignInNote />
+
+```javascript
+import connect from "connect";
+import * as Sentry from "@sentry/node";
+
+// or using CommonJS
+// const connect = require('connect');
+// const Sentry = require('@sentry/node');
+
+const app = connect();
+
+// Sentry must be initialized as early as possible
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+// The Sentry request handler middleware must be added before any other handlers
+app.use(Sentry.Handlers.requestHandler());
+// Performance Monitoring: Create spans and traces for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+app.use(function(req, res){
+  res.end('Hello Connect!');
+});
+
+// The Sentry error handler middleware must be registered before any other error middleware
+Sentry.Handlers.errorHandler(),
+
+app.use(function onError(err, req, res, next) {
+  // The ID of error events captured by the Sentry error middleware is attached to `res.sentry`.
+  // You can use this ID for debugging, or to correlate requests with errors in Sentry.
+  res.statusCode = 500;
+  res.end(res.sentry + '\n');
+});
+
+app.listen(3000);
+```
+
+`requestHandler` accepts some options that let you control its behavior and decide what data should be included in the event sent to Sentry.
+
+Possible options are:
+
+```javascript
+// keys to be extracted from the request
+request?: boolean | string[]; // default: true = ['cookies', 'data', 'headers', 'method', 'query_string', 'url']
+
+// include server name in the event data?
+serverName?: boolean; // default: true
+
+// pattern for transaction name
+//   path == request.path (eg. "/foo")
+//   methodPath == request.method + request.path (eg. "GET|/foo")
+//   handler == function name (eg. "fooHandler")
+transaction?: boolean | 'path' | 'methodPath' | 'handler'; // default: true = 'methodPath'
+
+// keys to be extracted from req.user
+user?: boolean | string[]; // default: true = ['id', 'username', 'email']
+
+// include client ip address in the event data?
+ip?: boolean; // default: false
+
+// include node version in the event data?
+version?: boolean; // default: true
+
+// timeout for fatal route errors to be delivered
+flushTimeout?: number; // default: 2000
+```
+
+For example, if you want to skip the server name and add just user, you would use `requestHandler` like this:
+
+```javascript
+app.use(
+  Sentry.Handlers.requestHandler({
+    serverName: false,
+    user: ["email"],
+  })
+);
+```
+
+By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts a middleware error as its argument, decides whether an event should be sent to Sentry or not, and returns the appropriate boolean value.
+
+```javascript
+app.use(
+  Sentry.Handlers.errorHandler({
+    shouldHandleError(error) {
+      // Capture all 404 and 500 errors
+      if (error.status === 404 || error.status === 500) {
+        return true;
+      }
+      return false;
+    },
+  })
+);
+```
