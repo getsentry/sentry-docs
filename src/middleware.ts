@@ -20,10 +20,37 @@ export function middleware(request: NextRequest) {
 }
 
 const handleRedirects = (request: NextRequest) => {
-  const redirectTo = redirectMap.get(request.nextUrl.pathname);
+  const urlPath = request.nextUrl.pathname;
+
+  const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
     return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
   }
+
+  // If we don't find an exact match, we try to look for a :guide placeholder
+  const guidePlaceholer = '/guides/:guide/';
+  const guideRegex = /\/guides\/(\w+)\//g;
+  const match = guideRegex.exec(urlPath);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholer);
+  const guide = match[1];
+
+  const redirectToGuide = redirectMap.get(pathWithPlaceholder);
+  if (redirectToGuide) {
+    const finalRedirectToPath = redirectToGuide.replace(
+      guidePlaceholer,
+      `/guides/${guide}/`
+    );
+
+    return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
+      status: 301,
+    });
+  }
+
   return undefined;
 };
 
