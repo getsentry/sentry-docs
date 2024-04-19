@@ -1,0 +1,92 @@
+---
+title: Apple Privacy Manifest
+description: "Troubleshoot and resolve common issues with the Apple Privacy Manifest and Sentry React Native SDK."
+sidebar_order: 50
+---
+
+Sentry React Native SDKs provides errors reporting and performanceEntry monitoring for React Native applications. The SDKs automatically collect errors and crashes in your application and send them to Sentry. To do this, the SDKs need to access certain information about the device and the application. Some of the used APIs are considered sensitive by Apple and require the SDK to provide a privacy manifest. For more details read the [Data Privacy for Mobile](/product/security/mobile-privacy/).
+
+If you are using dynamically linked frameworks, Apple will automatically process the SDK's privacy manifest. If you are using statically linked frameworks, you need to provide the privacy manifest yourself. This guide will help you create the privacy manifest for your React Native and Expo applications.
+
+## Create Privacy Manifest in Xcode
+
+First you need to create a privacy manifest file in your Xcode project. The file should be named `PrivacyInfo.xcprivacy` and should be placed in the root of your Xcode project. Follow the [Privacy manifest files](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files#4284009) guide by Apple to create the file.
+
+```xml {filename:PrivacyInfo.xcprivacy}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
+```
+
+## Create Privacy Manifest in Expo
+
+Depending on the Expo application setup you might need to add the privacy manifest to the `app.json` file or using Xcode, if you are not using Continuous Native Generation ([CNG](https://docs.expo.dev/workflow/continuous-native-generation/)).
+
+```json {filename:app.json}
+{
+  "expo": {
+    "name": "My App",
+    "slug": "my-app",
+    "ios": {
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+- For more information about generating the privacy manifest using Expo, read the [Privacy manifests](https://docs.expo.dev/guides/apple-privacy/) guide by Expo.
+
+- The listed API's are required for the SDK to function corectly and there is no way to opt-out of them.
+
+- If you are using an older version of the SDK, you may need to update to version [5.19.3](https://github.com/getsentry/sentry-react-native/releases/tag/5.19.3) or later to automatically include the privacy manifest for dynamically linked frameworks.
+
+- To verify the privacy manifest is included in your app correctly build and submit your app to the App Store or TestFlight for external testing. If the manifest is missing, you will receive an email from Apple with the subject "The uploaded build for YourAppName has one or more issues".
