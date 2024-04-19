@@ -7,6 +7,7 @@ supported:
 ---
 
 If you're using [`@nx/angular`](https://nx.dev/packages/angular), you can use the Nx CLI together with one of our bundler plugins (such as Webpack or esbuild) to automatically upload source maps to Sentry when building your app (with `nx build`, for example).
+
 Due to `@nx/angular`'s architecture, you'll first need to configure an executor that allows registering bundler plugins.
 In the end, you'll be able to automatically upload source maps whenever you're creating a production build of your app.
 
@@ -14,22 +15,17 @@ Configure your app to upload source maps in three steps.
 
 ## 1. Configure `project.json`
 
-Before you register the Sentry bundler plugin, first ensure that you can register plugins (e.g. webpack or esbuild plugins) with your current executor (or Angular builder).
+Before you register the Sentry bundler plugin, first ensure that you can register plugins (such as webpack or esbuild plugins) with your current executor (or Angular builder).
 Typically, this is possible if you have access to a `webpack.config.js` or a similar configuration file.
 If this already is the case, skip to [step 2](#2-register-the-sentry-webpack-plugin).
 
-If you cannot yet register a plugin, you'll need to change the executor in your `project.json` to a custom executor that allows registering a plugin. For example one of these:
-
-- [`@nx/angular:webpack-browser`](https://nx.dev/nx-api/angular/executors/webpack-browser)
-- [`@nx/angular:browser-esbuild`](https://nx.dev/nx-api/angular/executors/browser-esbuild)
-
-For example, in your `project.json`, replace the default executor (`@angular-devkit/build-angular:browser`) with `@nx/angular:webpack-browser`:
+If you cannot yet register a plugin, you'll need to change the executor in your `project.json` to a custom executor (such as  [`@nx/angular:webpack-browser`](https://nx.dev/nx-api/angular/executors/webpack-browser) or [`@nx/angular:browser-esbuild`](https://nx.dev/nx-api/angular/executors/browser-esbuild)) that allows registering a plugin. For example, in your `project.json`, replace the default executor (`@angular-devkit/build-angular:browser`) with `@nx/angular:webpack-browser`:
 
 ```javascript {filename:project.json}
 {
   "targets": {
     "build": {
-      "builder": "@nx/angular:webpack-browser",
+      "executor": "@nx/angular:webpack-browser",
       "options": {
         "customWebpackConfig": {
           "path": "./webpack.config.js" // path to your webpack.config.js
@@ -121,7 +117,29 @@ yarn add -D  @sentry/esbuild-plugin
 pnpm add -D @sentry/esbuild-plugin
 ```
 
-Then, follow the [official Nx documentation](https://nx.dev/nx-api/angular/executors/browser-esbuild#examples) to register the Sentry esbuild plugin (`@sentry/esbuild-plugin`) in your `project.json` file.
+Then, follow the [official Nx documentation](https://nx.dev/nx-api/angular/executors/browser-esbuild#examples) to register the Sentry esbuild plugin (`@sentry/esbuild-plugin`) in your `project.json` file. For example:
+
+```json {filename:project.json}
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:browser-esbuild",
+      "options": {
+        "plugins": [
+          {
+            "path": "@sentry/esbuild-plugin",
+            "options": {
+              "org": "___ORG_SLUG___",
+              "project": "___PROJECT_SLUG___",
+              "authToken": "___SENTRY_AUTH_TOKEN___"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
 
 ## 3. Upload
 
