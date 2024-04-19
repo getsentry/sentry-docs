@@ -83,7 +83,7 @@ export function HomeClient({visiblePlatforms, totalPlatformCount, platforms}: Pr
           <h1>Welcome to Sentry Docs</h1>
           <center>
             <p>
-              Sentry is a developer-first error tracking and performance monitoring
+              Sentry is a developer-first <span style="font-weight:bold; color:#452650">error</span> tracking and <span style="font-weight:bold; color:#452650">performance</span> monitoring
               platform.
             </p>
           </center>
