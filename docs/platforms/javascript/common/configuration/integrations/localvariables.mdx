@@ -12,22 +12,32 @@ supported:
   - javascript.electron
 ---
 
-_Import name: `Sentry.localVariablesSyncIntegration`_
+_Import name: `Sentry.localVariablesIntegration`_
 
 This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
-The `onUnhandledRejectionIntegration` registers handlers to capture global unhandled promise rejections.
+This integration captures local variables to exception frames.
 
 ## Options
 
-### `exitEvenIfOtherHandlersAreRegistered`
+### `captureAllExceptions`
 
 _Type: `boolean`_
 
-If set to false, the SDK will _not_ exit if we detect that another uncaught exception handler is registered.
+Defaults to `true`. If enabled, local variables are captured for both caught and uncaught exceptions.
 
-### `onFatalError`
+- When false, only uncaught exceptions will have local variables
+- When true, both caught and uncaught exceptions will have local variables.
 
-_Type: `(firstError: Error, secondError: Error | undefined) => void`_
+Capturing local variables for all exceptions can be expensive since the debugger pauses for every throw to collect
+local variables.
 
-This method is called when an uncaught error would cause the process to exit. `secondError` will be set if the handler was called multiple times. This can happen either because `onFatalError` itself threw, or because an independent error happened somewhere else while `onFatalError` was running.
+To reduce the likelihood of this feature impacting app performance or throughput, this feature is rate-limited.
+Once the rate limit is reached, local variables will only be captured for uncaught exceptions until a timeout has
+been reached.
+
+### `maxExceptionsPerSecond`
+
+_Type: `number`_
+
+The maximum number of exceptions to capture local variables for per second before rate limiting is triggered.
