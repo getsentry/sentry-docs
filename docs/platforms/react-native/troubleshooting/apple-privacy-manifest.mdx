@@ -4,9 +4,17 @@ description: "Troubleshoot and resolve common issues with the Apple Privacy Mani
 sidebar_order: 50
 ---
 
+<Note>
+This guide requires [@sentry/react-native@5.19.3](https://github.com/getsentry/sentry-react-native/releases/tag/5.19.3) or newer.
+</Note>
+
 Sentry's SDKs provide error and performance monitoring for mobile applications running on Apple devices. To do this, the SDK needs to access certain information about the device and the application. Some of the APIs required for this are considered privacy-relevant by Apple. In order to submit apps to to app store, Apple requires all apps - and libraries used within these apps - to provide privacy manifest files stating which APIs are used under which allowed reasons. For more details, read Apple's guidelines on [Describing use of required reason API](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api).
 
 If you are using dynamically linked frameworks, Apple will automatically process the SDK's privacy manifest. If you are using statically linked libraries, which is the default for React Native applications, you need to provide the privacy manifest yourself. This guide will help you create the privacy manifest for your React Native and Expo applications.
+
+## Before you start
+
+Note that the application privacy manifest covers all data usages (via `NSPrivacyCollectedDataTypes`) and API usages (via `NSPrivacyAccessedAPITypes`) for the *whole application* and *all included libraries*. The examples below reflect the current requirements for the Sentry's SDKs alone. If you are using other libraries that access privacy-relevant APIs, you need to include them in the privacy manifest as well.
 
 ## Create Privacy Manifest in Xcode
 
@@ -18,7 +26,44 @@ First you need to create a privacy manifest file in your Xcode project. The file
 <plist version="1.0">
 <dict>
 	<key>NSPrivacyCollectedDataTypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeCrashData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePerformanceData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
@@ -61,6 +106,26 @@ Depending on the Expo application setup you might need to add the privacy manife
     "slug": "my-app",
     "ios": {
       "privacyManifests": {
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeCrashData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePerformanceData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherDiagnosticData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          }
+        ],
         "NSPrivacyAccessedAPITypes": [
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
