@@ -326,7 +326,7 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
           <ul data-sidebar-tree>
             <SidebarLink to="https://about.codecov.io/" title="Codecov" path={fullPath} />
             <SidebarLink to="https://discord.gg/sentry" title="Discord" path={fullPath} />
-            <SidebarLink to="https://help.sentry.io/" title="Support" path={fullPath} />
+            <SidebarLink to="https://sentry.zendesk.com/hc/en-us/" title="Support" path={fullPath} />
             <SidebarLink
               to="https://develop.sentry.dev/self-hosted/"
               title="Self-Hosting Sentry"

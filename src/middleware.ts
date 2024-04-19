@@ -2539,7 +2539,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://help.sentry.io/',
+    to: 'https://sentry.zendesk.com/hc/en-us/',
   },
   {
     from: '/clients/python/',

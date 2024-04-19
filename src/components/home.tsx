@@ -99,7 +99,7 @@ export async function Home() {
               </div>
             </div>
           </Link>
-          <Link href="https://help.sentry.io/" className="w-full">
+          <Link href="https://sentry.zendesk.com/hc/en-us/" className="w-full">
             <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
               <Image src={SupportImage} height={64} alt="Support image" />
               <div className="space-y-2">
@@ -114,7 +114,7 @@ export async function Home() {
         <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3">
           <FooterLink href="/product/security/">Security, Legal & PII</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
-          <FooterLink href="https://help.sentry.io/" external>
+          <FooterLink href="https://sentry.zendesk.com/hc/en-us/" external>
             Support
           </FooterLink>
           <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
