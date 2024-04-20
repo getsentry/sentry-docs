@@ -1,5 +1,3 @@
-'use client';
-
 import {ReactNode} from 'react';
 
 // explicitly not usig CSS modules here
