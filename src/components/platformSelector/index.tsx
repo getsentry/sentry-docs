@@ -27,7 +27,17 @@ export function PlatformSelector({
   platforms: Array<Platform>;
   currentPlatform?: Platform | PlatformGuide;
 }) {
+  // humanize the title for a more natural sorting
+  const humanizeTitle = (title: string) =>
+    title.replaceAll('.', ' ').replaceAll(/ +/g, ' ').trim();
   const platformsAndGuides = platforms
+    .slice()
+    .sort(
+      (a, b) =>
+        humanizeTitle(a.title ?? '').localeCompare(humanizeTitle(b.title ?? ''), 'en', {
+          sensitivity: 'base',
+        }) ?? 0
+    )
     .map(platform => [
       platform,
       ...platform.guides.map(guide => ({
@@ -214,7 +224,7 @@ function PlatformItem({
                       format="sm"
                       className={styles['platform-icon']}
                     />
-                    {platform.title?.replace(/(.)\.(.)/g, '$1 $2')}
+                    {platform.title}
                   </span>
                 </RadixSelect.ItemText>
               </ComboboxItem>
@@ -275,7 +285,10 @@ function GuideItem({guide, ref}: GuideItemProps) {
               format="sm"
               className={styles['platform-icon']}
             />
-            {guide.title?.replace(/(.)\.(.)/g, '$1 $2')}
+            {/* replace dots with zero width space + period to allow text wrapping before periods
+              without breaking words in weird places
+            */}
+            {guide.title?.replace(/\./g, '\u200B.') ?? guide.key}
           </span>
         </RadixSelect.ItemText>
       </ComboboxItem>
