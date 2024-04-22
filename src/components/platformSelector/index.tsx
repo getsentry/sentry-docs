@@ -107,9 +107,6 @@ export function PlatformSelector({
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-  console.log('storedPlatformKey', storedPlatformKey);
-  console.log('storedPlatform', storedPlatform);
-  console.log('platforms', platforms);
   useEffect(() => {
     // retrieve the selected platform from local storage
     setStoredPlatformKey(localStorage.getItem('active-platform'));
@@ -128,12 +125,10 @@ export function PlatformSelector({
       // /platforms/something
       path.length > '/platforms/'.length
   );
-  const value = currentPlatformKey ?? storedPlatformKey ?? undefined;
-  console.log('value', value);
   return (
     <div>
       <RadixSelect.Root
-        value={value}
+        value={currentPlatformKey ?? storedPlatformKey ?? undefined}
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
