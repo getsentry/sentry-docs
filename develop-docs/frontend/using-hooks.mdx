@@ -20,10 +20,9 @@ We don't prefer libraries that use or don't use hooks. Instead favor libraries
 with cleaner, simpler APIs, and smaller bundle sizes over ones with larger more
 complex APIs or larger bundle sizes.
 
-
 ### Using react's built-in hooks
 
-The `useState`, `useMemo`, `useCallback`, `useContext`, and `useRef` hooks are welcome
+The `useState`, `useMemo`, `useCallback`, `useContext`, `useReducer` and `useRef` hooks are welcome
 in any functional component. They are generally a good choice in presentational
 components that need a small amount of state, or access to react primitives like
 references and context. For example, a component with a slide-out or expandable
@@ -31,22 +30,16 @@ state.
 
 The `useEffect` hook is more complex and you need to be careful to track your
 dependencies and ensure that subscriptions are canceled through a cleanup
-callback. Complex chained applications of `useEffect` should be avoided and
-'controller' components should remain class-based at this time.
-
-Likewise, the `useReducer` hook overlaps with state-management which currently
-has an undecided future. We would like to avoid *yet another* state management
-pattern, so at this time avoid `useReducer`.
+callback.
 
 ### Using context
 
-As we plan our path away from Reflux, the `useContext` hook provides a simpler
-implementation option to share state and behavior. When you need to create new
+The `useContext` hook provides a simpler implemtation option to share state and 
+behavior compared to our previous uses of Reflux. When you need to create new
 sources of shared state, consider using context and `useContext` instead of Reflux.
 Additionally the [wormhole state management
 pattern](https://swizec.com/blog/wormhole-state-management) can be leveraged to 
 expose shared state and mutation functions.
-
 
 ### Using custom hooks
 
@@ -54,27 +47,11 @@ Custom hooks can be created to share reusable logic in the application. When cre
 the function name must follow the convention, starting with "use" (`useTheme`, for example) 
 and it's fine to call other hooks inside of custom hooks.
 
+Custom hooks are a great way to encapsulate logic, so your component(s) can remain focused 
+on presentation only. Read more about [Reusing Logic with Custom Hooks](https://react.dev/learn/reusing-logic-with-custom-hooks) on react.dev
+
 ### Be aware of the rules and caveats of hooks
 
 React hooks have [a few rules](https://reactjs.org/docs/hooks-rules.html). Be
 aware of the rules and limitations that hooks create. We use the ESLint rules to
 prevent most of the hook rules from being trespassed.
-
-Additionally, we recommend keeping your usage of the `useEffect` to a minimum.
-Using multiple `useEffect` callbacks indicates that you have a component that is
-highly stateful and that you should be using a class component instead.
-
-### Our foundations are still class-based
-
-Our foundational view components (`AsyncView` and `AsyncComponent`) are class-based and will be for a long time. Keep this in mind as you build views. You'll
-need additional wrapper components to access hooks or convert hook state into
-props for your `AsyncComponent`.
-
-### Don't rewrite for hooks
-
-While hooks can be ergonomic in new code we should *avoid* rewriting existing
-code to leverage hooks. Rewriting takes time, exposes us to risk and provides
-very little end-user value.
-
-If you need to rework a component to consume hooks from a library, then also
-consider converting from a class to a function component.
