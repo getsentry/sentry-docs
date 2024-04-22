@@ -113,9 +113,15 @@ export function SidebarLinks(): JSX.Element | null {
   }
 
   if (
-    ['product', 'platform-redirect', 'cli', 'concepts', 'account', 'organization', 'pricing'].includes(
-      path[0]
-    )
+    [
+      'product',
+      'platform-redirect',
+      'cli',
+      'concepts',
+      'account',
+      'organization',
+      'pricing',
+    ].includes(path[0])
   ) {
     return <ProductSidebar rootNode={rootNode} />;
   }
@@ -249,7 +255,7 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
   /**
    * URL: /account
    */
-  const accountNode = nodeForPath(rootNode, "account");
+  const accountNode = nodeForPath(rootNode, 'account');
   if (!accountNode) {
     return null;
   }
@@ -259,7 +265,7 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
   /**
    * URL: /organization
    */
-  const organizationNode = nodeForPath(rootNode, "organization");
+  const organizationNode = nodeForPath(rootNode, 'organization');
   if (!organizationNode) {
     return null;
   }
