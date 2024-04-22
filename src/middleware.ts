@@ -1127,23 +1127,23 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/ssl/',
-    to: '/product/security/ssl/',
+    to: '/security-legal-pii/security/ssl/',
   },
   {
     from: '/ip-ranges/',
-    to: '/product/security/ip-ranges/',
+    to: '/security-legal-pii/security/ip-ranges/',
   },
   {
     from: '/learn/security-policy-reporting/',
-    to: '/product/security-policy-reporting/',
+    to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
     from: '/error-reporting/security-policy-reporting/',
-    to: '/product/security-policy-reporting/',
+    to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
     from: '/platforms/javascript/security-policy-reporting/',
-    to: '/product/security-policy-reporting/',
+    to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
     from: '/platforms/javascript/troubleshooting/session-replay/',
@@ -2151,31 +2151,31 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/data-management-settings/attachment-datascrubbing/',
-    to: '/concepts/data-management/scrubbing/attachment-scrubbing/',
+    to: '/security-legal-pii/scrubbing/attachment-scrubbing/',
   },
   {
     from: '/product/data-management-settings/advanced-datascrubbing/',
-    to: '/concepts/data-management/scrubbing/',
+    to: '/security-legal-pii/scrubbing/',
   },
   {
     from: '/platforms/data-management/',
-    to: '/concepts/data-management/scrubbing/advanced-datascrubbing/',
+    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management/advanced-datascrubbing/',
-    to: '/concepts/data-management/scrubbing/advanced-datascrubbing/',
+    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management-settings/advanced-datascrubbing/',
-    to: '/concepts/data-management/scrubbing/advanced-datascrubbing/',
+    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management-settings/server-side-scrubbing/',
-    to: '/concepts/data-management/scrubbing/server-side-scrubbing/',
+    to: '/security-legal-pii/scrubbing/server-side-scrubbing/',
   },
   {
     from: '/data-management-settings/event-pii-fields/',
-    to: '/concepts/data-management/scrubbing/server-side-scrubbing/event-pii-fields/',
+    to: '/security-legal-pii/scrubbing/server-side-scrubbing/event-pii-fields/',
   },
   {
     from: '/product/discover/',
@@ -2908,6 +2908,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
+  },
+  {
+    from: '/product/session-replay/protecting-user-privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/platforms/javascript/guides/react/features/component-tracking/',

@@ -27,7 +27,17 @@ export function PlatformSelector({
   platforms: Array<Platform>;
   currentPlatform?: Platform | PlatformGuide;
 }) {
+  // humanize the title for a more natural sorting
+  const humanizeTitle = (title: string) =>
+    title.replaceAll('.', ' ').replaceAll(/ +/g, ' ').trim();
   const platformsAndGuides = platforms
+    .slice()
+    .sort(
+      (a, b) =>
+        humanizeTitle(a.title ?? '').localeCompare(humanizeTitle(b.title ?? ''), 'en', {
+          sensitivity: 'base',
+        }) ?? 0
+    )
     .map(platform => [
       platform,
       ...platform.guides.map(guide => ({
@@ -89,7 +99,7 @@ export function PlatformSelector({
     }
     // run the scrollIntoView in the next frame to ensure the element is rendered
     requestAnimationFrame(() => activeElementRef.current?.scrollIntoView());
-  }, [open]);
+  }, [open, activeElementRef.current]);
 
   return (
     <RadixSelect.Root
@@ -162,7 +172,7 @@ export function PlatformSelector({
                       platform.key === currentPlatformKey ||
                       platform.guides.some(g => g.key === currentPlatformKey),
                   }}
-                  activeElementRef={
+                  activeItemRef={
                     platform.key === currentPlatformKey ||
                     platform.guides.some(g => g.key === currentPlatformKey)
                       ? activeElementRef
@@ -181,15 +191,15 @@ export function PlatformSelector({
 }
 
 type PlatformItemProps = {
-  activeElementRef: Ref<HTMLDivElement>;
+  activeItemRef: Ref<HTMLDivElement>;
   platform: Platform & {isExpanded?: boolean};
   activeItemKey?: string;
   onPlatformExpand?: (platformKey: string) => void;
 };
 function PlatformItem({
   platform,
-  activeElementRef: activeItemRef,
-  activeItemKey: activeElementKey,
+  activeItemRef,
+  activeItemKey,
   onPlatformExpand: onExpand,
 }: PlatformItemProps) {
   return (
@@ -203,7 +213,7 @@ function PlatformItem({
               asChild
               className={styles.item}
               data-platform-with-guides
-              ref={activeElementKey === platform.key ? activeItemRef : null}
+              ref={activeItemRef}
             >
               <ComboboxItem>
                 <RadixSelect.ItemText>
@@ -214,7 +224,7 @@ function PlatformItem({
                       format="sm"
                       className={styles['platform-icon']}
                     />
-                    {platform.title?.replace(/(.)\.(.)/g, '$1 $2')}
+                    {platform.title}
                   </span>
                 </RadixSelect.ItemText>
               </ComboboxItem>
@@ -223,8 +233,8 @@ function PlatformItem({
               <button
                 className={styles['expand-button']}
                 disabled={
-                  activeElementKey === platform.key ||
-                  platform.guides.some(g => g.key === activeElementKey)
+                  activeItemKey === platform.key ||
+                  platform.guides.some(g => g.key === activeItemKey)
                 }
                 onClick={() => {
                   onExpand?.(platform.key);
@@ -244,8 +254,7 @@ function PlatformItem({
             isLastGuide: i === platform.guides.length - 1,
           }))
           .map(guide => {
-            const _ref = guide.key === activeElementKey ? activeItemRef : null;
-            return <GuideItem key={guide.key} guide={guide} ref={_ref} />;
+            return <GuideItem key={guide.key} guide={guide} />;
           })}
     </Fragment>
   );
@@ -253,9 +262,8 @@ function PlatformItem({
 
 type GuideItemProps = {
   guide: (PlatformGuide & {isLastGuide: boolean}) | Platform;
-  ref: Ref<HTMLDivElement>;
 };
-function GuideItem({guide, ref}: GuideItemProps) {
+function GuideItem({guide}: GuideItemProps) {
   return (
     <RadixSelect.Item
       key={guide.key}
@@ -264,7 +272,6 @@ function GuideItem({guide, ref}: GuideItemProps) {
       className={styles.item}
       data-guide
       data-last-guide={guide.type === 'guide' && guide.isLastGuide}
-      ref={ref}
     >
       <ComboboxItem>
         <RadixSelect.ItemText>
@@ -275,7 +282,10 @@ function GuideItem({guide, ref}: GuideItemProps) {
               format="sm"
               className={styles['platform-icon']}
             />
-            {guide.title?.replace(/(.)\.(.)/g, '$1 $2')}
+            {/* replace dots with zero width space + period to allow text wrapping before periods
+              without breaking words in weird places
+            */}
+            {guide.title?.replace(/\./g, '\u200B.') ?? guide.key}
           </span>
         </RadixSelect.ItemText>
       </ComboboxItem>
