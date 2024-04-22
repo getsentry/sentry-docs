@@ -99,7 +99,7 @@ export function PlatformSelector({
     }
     // run the scrollIntoView in the next frame to ensure the element is rendered
     requestAnimationFrame(() => activeElementRef.current?.scrollIntoView());
-  }, [open]);
+  }, [open, activeElementRef.current]);
 
   return (
     <RadixSelect.Root
@@ -213,7 +213,7 @@ function PlatformItem({
               asChild
               className={styles.item}
               data-platform-with-guides
-              ref={activeElementKey === platform.key ? activeItemRef : null}
+              ref={activeItemRef}
             >
               <ComboboxItem>
                 <RadixSelect.ItemText>
@@ -254,8 +254,7 @@ function PlatformItem({
             isLastGuide: i === platform.guides.length - 1,
           }))
           .map(guide => {
-            const _ref = guide.key === activeElementKey ? activeItemRef : null;
-            return <GuideItem key={guide.key} guide={guide} ref={_ref} />;
+            return <GuideItem key={guide.key} guide={guide}/>;
           })}
     </Fragment>
   );
@@ -263,9 +262,8 @@ function PlatformItem({
 
 type GuideItemProps = {
   guide: (PlatformGuide & {isLastGuide: boolean}) | Platform;
-  ref: Ref<HTMLDivElement>;
 };
-function GuideItem({guide, ref}: GuideItemProps) {
+function GuideItem({guide}: GuideItemProps) {
   return (
     <RadixSelect.Item
       key={guide.key}
@@ -274,7 +272,6 @@ function GuideItem({guide, ref}: GuideItemProps) {
       className={styles.item}
       data-guide
       data-last-guide={guide.type === 'guide' && guide.isLastGuide}
-      ref={ref}
     >
       <ComboboxItem>
         <RadixSelect.ItemText>
