@@ -254,7 +254,7 @@ function PlatformItem({
             isLastGuide: i === platform.guides.length - 1,
           }))
           .map(guide => {
-            return <GuideItem key={guide.key} guide={guide}/>;
+            return <GuideItem key={guide.key} guide={guide} />;
           })}
     </Fragment>
   );
