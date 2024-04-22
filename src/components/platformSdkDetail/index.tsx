@@ -2,7 +2,9 @@ import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
-import {PlatformSdkDetailClient} from './platformSdkDetailClient';
+import styles from './styles.module.scss';
+
+import {SmartLink} from '../smartLink';
 
 export async function PlatformSdkDetail() {
   const {rootNode, path} = serverContext();
@@ -25,13 +27,33 @@ export async function PlatformSdkDetail() {
     return null;
   }
 
+  const {
+    package_url: url,
+    canonical,
+    version,
+    repo_url: repoUrl,
+    api_docs_url: apiDocsUrl,
+  } = sdkData;
+
   return (
-    <PlatformSdkDetailClient
-      url={sdkData.package_url}
-      canonical={sdkData.canonical}
-      version={sdkData.version}
-      repoUrl={sdkData.repo_url}
-      apiDocsUrl={sdkData.api_docs_url}
-    />
+    <div className={styles.PackageDetail}>
+      <h3>Package Details</h3>
+      <ul>
+        <li>Latest version: {version}</li>
+        <li>{url ? <SmartLink to={url}>{canonical}</SmartLink> : canonical}</li>
+        <li>
+          <SmartLink to={repoUrl} target="_blank">
+            Repository on GitHub
+          </SmartLink>
+        </li>
+        {apiDocsUrl && (
+          <li>
+            <SmartLink to={apiDocsUrl} target="_blank">
+              API documentation
+            </SmartLink>
+          </li>
+        )}
+      </ul>
+    </div>
   );
 }
