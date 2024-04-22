@@ -1991,7 +1991,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/accounts/early-adopter/',
-    to: '/product/accounts/early-adopter-features/',
+    to: '/organization/early-adopter-features/',
   },
   {
     from: '/learn/pricing/',
@@ -2003,51 +2003,51 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/quotas/',
-    to: '/product/accounts/quotas/',
+    to: '/organization/quotas/',
   },
   {
     from: '/product/quotas/',
-    to: '/product/accounts/quotas/',
+    to: '/organization/quotas/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
-    to: '/product/accounts/quotas/',
+    to: '/organization/quotas/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/',
-    to: '/product/accounts/quotas/',
+    to: '/organization/quotas/',
   },
   {
     from: '/guides/manage-event-stream/',
-    to: '/product/accounts/quotas/manage-event-stream-guide/',
+    to: '/organization/quotas/manage-event-stream-guide/',
   },
   {
     from: '/learn/sso/',
-    to: '/product/accounts/sso/',
+    to: '/organization/authentication/sso/',
   },
   {
     from: '/product/sso/',
-    to: '/product/accounts/sso/',
+    to: '/organization/authentication/sso/',
   },
   {
     from: '/accounts/saml2/',
-    to: '/product/accounts/sso/saml2/',
+    to: '/organization/authentication/sso/saml2/',
   },
   {
     from: '/guides/getting-started/',
-    to: '/product/accounts/getting-started/',
+    to: '/organization/getting-started/',
   },
   {
     from: '/product/sentry-basics/guides/getting-started/',
-    to: '/product/accounts/getting-started/',
+    to: '/organization/getting-started/',
   },
   {
     from: '/learn/membership/',
-    to: '/product/accounts/membership/',
+    to: '/organization/membership/',
   },
   {
     from: '/product/membership/',
-    to: '/product/accounts/membership/',
+    to: '/organization/membership/',
   },
   {
     from: '/guides/migration/',
@@ -2916,6 +2916,82 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/react/features/component-tracking/',
     to: '/platforms/javascript/guides/react/features/component-names/',
+  },
+  {
+    from: '/product/accounts/early-adopter-features/',
+    to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/product/accounts/choose-your-data-center/',
+    to: '/organization/data-storage-location/',
+  },
+  {
+    from: '/product/accounts/membership/',
+    to: '/organization/membership/',
+  },
+  {
+    from: '/product/accounts/sso/',
+    to: '/organization/authentication/sso/',
+  },
+  {
+    from: '/product/accounts/sso/azure-sso/',
+    to: '/organization/authentication/sso/azure-sso/',
+  },
+  {
+    from: '/product/accounts/sso/okta-sso/',
+    to: '/organization/authentication/sso/okta-sso/',
+  },
+  {
+    from: '/product/accounts/sso/okta-sso/okta-scim/',
+    to: '/organization/authentication/sso/okta-sso/okta-scim/',
+  },
+  {
+    from: '/product/accounts/sso/ping-sso/',
+    to: '/organization/authentication/sso/ping-sso/',
+  },
+  {
+    from: '/product/accounts/sso/saml2/',
+    to: '/organization/authentication/sso/saml2/',
+  },
+  {
+    from: '/product/accounts/getting-started/',
+    to: '/organization/getting-started/',
+  },
+  {
+    from: '/product/accounts/require-2fa/',
+    to: '/organization/authentication/two-factor-authentication/',
+  },
+  {
+    from: '/product/accounts/quotas/',
+    to: '/organization/quotas/',
+  },
+  {
+    from: '/product/accounts/quotas/spike-protection/',
+    to: '/organization/quotas/spike-protection/',
+  },
+  {
+    from: '/product/accounts/quotas/spend-allocation/',
+    to: '/organization/quotas/spend-allocation/',
+  },
+  {
+    from: '/product/accounts/quotas/manage-event-stream-guide/',
+    to: '/organization/quotas/manage-event-stream-guide/',
+  },
+  {
+    from: '/product/accounts/quotas/manage-transaction-quota/',
+    to: '/organization/quotas/manage-transaction-quota/',
+  },
+  {
+    from: '/product/accounts/quotas/manage-replay-quota/',
+    to: '/organization/quotas/manage-replay-quota/',
+  },
+  {
+    from: '/product/accounts/quotas/manage-attachments-quota/',
+    to: '/organization/quotas/manage-attachments-quota/',
+  },
+  {
+    from: '/product/accounts/quotas/manage-cron-monitors/',
+    to: '/organization/quotas/manage-cron-monitors/',
   },
 ];
 

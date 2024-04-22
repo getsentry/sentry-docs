@@ -120,6 +120,7 @@ export function SidebarLinks(): JSX.Element | null {
       'concepts',
       'account',
       'pricing',
+      'organization',
       'security-legal-pii',
     ].includes(path[0])
   ) {
@@ -253,6 +254,26 @@ type ProductSidebarProps = {
 
 function ProductSidebar({rootNode}: ProductSidebarProps) {
   /**
+   * URL: /account
+   */
+  const accountNode = nodeForPath(rootNode, 'account');
+  if (!accountNode) {
+    return null;
+  }
+  const accountNodes: NavNode[] = getNavNodes([accountNode], docNodeToNavNode);
+  const accountTree = toTree(accountNodes.filter(n => !!n.context));
+
+  /**
+   * URL: /organization
+   */
+  const organizationNode = nodeForPath(rootNode, 'organization');
+  if (!organizationNode) {
+    return null;
+  }
+  const organizationNodes: NavNode[] = getNavNodes([organizationNode], docNodeToNavNode);
+  const organizationTree = toTree(organizationNodes.filter(n => !!n.context));
+
+  /**
    * URL: /cli
    */
   const cliNode = nodeForPath(rootNode, 'cli');
@@ -311,11 +332,18 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
     <div>
       <ul data-sidebar-tree>
         <DynamicNav
-          root="cli"
-          title="sentry-cli"
-          tree={cliTree}
-          collapse
+          root="account"
+          title="Configure Your Account"
+          tree={accountTree}
           headerClassName={headerClassName}
+          collapse
+        />
+        <DynamicNav
+          root="organization"
+          title="Configure Your Organization"
+          tree={organizationTree}
+          headerClassName={headerClassName}
+          collapse
         />
         <DynamicNav
           root="product"
@@ -325,16 +353,23 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
           collapse
         />
         <DynamicNav
-          root="concepts"
-          title="Concepts & Reference"
-          tree={conceptsTree}
+          root="pricing"
+          title="Pricing & Billing"
+          tree={pricingTree}
           collapse
           headerClassName={headerClassName}
         />
         <DynamicNav
-          root="pricing"
-          title="Pricing & Billing"
-          tree={pricingTree}
+          root="cli"
+          title="Sentry CLI"
+          tree={cliTree}
+          collapse
+          headerClassName={headerClassName}
+        />
+        <DynamicNav
+          root="concepts"
+          title="Concepts & Reference"
+          tree={conceptsTree}
           collapse
           headerClassName={headerClassName}
         />
