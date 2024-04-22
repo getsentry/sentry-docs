@@ -29,8 +29,8 @@ function mainHandler(req, res) {
 }
 
 function onError(err, req, res, next) {
-  // The error id is attached to `res.sentry` to be returned
-  // and optionally displayed to the user for support.
+  // The ID of error events captured by the Sentry error middleware is attached to `res.sentry`.
+  // You can use this ID for debugging, or to correlate requests with errors in Sentry.
   res.statusCode = 500;
   res.end(res.sentry + "\n");
 }
@@ -43,7 +43,7 @@ connect(
   connect.cookieParser(),
   mainHandler,
 
-  // The error handler must be before any other error middleware
+  // The Sentry error handler middleware must be registered before any other error middleware
   Raven.errorHandler(),
 
   // Optional fallthrough error handler
@@ -60,20 +60,20 @@ var Raven = require("raven");
 // Must configure Raven before doing anything else with it
 Raven.config("___DSN___").install();
 
-// The request handler must be the first middleware on the app
+// The Sentry request handler middleware must be added before any other handlers
 app.use(Raven.requestHandler());
 
 app.get("/", function mainHandler(req, res) {
   throw new Error("Broke!");
 });
 
-// The error handler must be before any other error middleware
+// The Sentry error handler middleware must be registered before any other error middleware
 app.use(Raven.errorHandler());
 
 // Optional fallthrough error handler
 app.use(function onError(err, req, res, next) {
-  // The error id is attached to `res.sentry` to be returned
-  // and optionally displayed to the user for support.
+  // The ID of error events captured by the Sentry error middleware is attached to `res.sentry`.
+  // You can use this ID for debugging, or to correlate requests with errors in Sentry.
   res.statusCode = 500;
   res.end(res.sentry + "\n");
 });
