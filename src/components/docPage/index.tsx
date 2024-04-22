@@ -52,7 +52,7 @@ export function DocPage({
 
       <section className="px-0 flex relative">
         {sidebar}
-        <main className="main-content flex w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] flex-1 mx-auto">
+        <main className="main-content flex w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] mt-[var(--header-height)] flex-1 mx-auto">
           <div
             className={[
               'mx-auto lg:mx-0 pt-6 px-6 prose max-w-full prose-slate prose-a:no-underline hover:prose-a:underline',

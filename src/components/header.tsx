@@ -13,7 +13,7 @@ type Props = {
 
 export function Header({pathname, searchPlatforms}: Props) {
   return (
-    <header className="bg-white h-[var(--header-height)] w-full z-50 border-b border-gray sticky top-0">
+    <header className="bg-white h-[var(--header-height)] w-full z-50 border-b border-gray fixed top-0">
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 80px; }'}</style>
       <nav className="mx-auto px-6 lg:px-8 py-2 flex items-center text-primary">
