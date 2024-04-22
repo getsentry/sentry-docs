@@ -172,7 +172,7 @@ export function PlatformSelector({
                       platform.key === currentPlatformKey ||
                       platform.guides.some(g => g.key === currentPlatformKey),
                   }}
-                  activeElementRef={
+                  activeItemRef={
                     platform.key === currentPlatformKey ||
                     platform.guides.some(g => g.key === currentPlatformKey)
                       ? activeElementRef
@@ -191,15 +191,15 @@ export function PlatformSelector({
 }
 
 type PlatformItemProps = {
-  activeElementRef: Ref<HTMLDivElement>;
+  activeItemRef: Ref<HTMLDivElement>;
   platform: Platform & {isExpanded?: boolean};
   activeItemKey?: string;
   onPlatformExpand?: (platformKey: string) => void;
 };
 function PlatformItem({
   platform,
-  activeElementRef: activeItemRef,
-  activeItemKey: activeElementKey,
+  activeItemRef,
+  activeItemKey,
   onPlatformExpand: onExpand,
 }: PlatformItemProps) {
   return (
@@ -233,8 +233,8 @@ function PlatformItem({
               <button
                 className={styles['expand-button']}
                 disabled={
-                  activeElementKey === platform.key ||
-                  platform.guides.some(g => g.key === activeElementKey)
+                  activeItemKey === platform.key ||
+                  platform.guides.some(g => g.key === activeItemKey)
                 }
                 onClick={() => {
                   onExpand?.(platform.key);
