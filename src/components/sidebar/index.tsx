@@ -70,7 +70,7 @@ export function Sidebar() {
       </div>
       <div className="md:flex flex-col items-stretch">
         <div className="platform-selector">
-          <div className="mb-4">
+          <div className="mb-3">
             <PlatformSelector
               platforms={platforms}
               currentPlatform={currentGuide || currentPlatform}

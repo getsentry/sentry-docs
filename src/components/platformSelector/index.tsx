@@ -12,13 +12,15 @@ import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/r
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
-import {useRouter} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 import {uniqByReference} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
+
+import {SidebarLink} from '../sidebarLink';
 
 export function PlatformSelector({
   platforms,
@@ -101,92 +103,136 @@ export function PlatformSelector({
     requestAnimationFrame(() => activeElementRef.current?.scrollIntoView());
   }, [open, activeElementRef.current]);
 
+  const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
+  const storedPlatform = platformsAndGuides.find(
+    platform => platform.key === storedPlatformKey
+  );
+  console.log('storedPlatformKey', storedPlatformKey);
+  console.log('storedPlatform', storedPlatform);
+  console.log('platforms', platforms);
+  useEffect(() => {
+    // retrieve the selected platform from local storage
+    setStoredPlatformKey(localStorage.getItem('active-platform'));
+  }, []);
+
+  useEffect(() => {
+    // persist the selected platform to local storage
+    if (currentPlatformKey) {
+      localStorage.setItem('active-platform', currentPlatformKey);
+    }
+  }, [currentPlatformKey]);
+
+  const path = usePathname();
+  const isPlatformPage = Boolean(
+    path?.startsWith('/platforms/') &&
+      // /platforms/something
+      path.length > '/platforms/'.length
+  );
+  const value = currentPlatformKey ?? storedPlatformKey ?? undefined;
+  console.log('value', value);
   return (
-    <RadixSelect.Root
-      value={currentPlatformKey}
-      onValueChange={onPlatformChange}
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <ComboboxProvider
+    <div>
+      <RadixSelect.Root
+        value={value}
+        onValueChange={onPlatformChange}
         open={open}
-        setOpen={setOpen}
-        includesBaseElement={false}
-        setValue={v => startTransition(() => setSearchValue(v))}
+        onOpenChange={setOpen}
       >
-        <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
-          <RadixSelect.Value placeholder="Choose your SDK" />
-          <RadixSelect.Icon className={styles['select-icon']}>
-            <CaretSortIcon />
-          </RadixSelect.Icon>
-        </RadixSelect.Trigger>
-        <RadixSelect.Content
-          role="dialog"
-          aria-label="Platforms"
-          position="popper"
-          className={styles.popover}
+        <ComboboxProvider
+          open={open}
+          setOpen={setOpen}
+          includesBaseElement={false}
+          setValue={v => startTransition(() => setSearchValue(v))}
         >
-          <div className={styles['combobox-wrapper']}>
-            <div className={styles['combobox-icon']}>
-              <MagnifyingGlassIcon />
+          <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
+            <RadixSelect.Value placeholder="Choose your SDK" />
+            <RadixSelect.Icon className={styles['select-icon']}>
+              <CaretSortIcon />
+            </RadixSelect.Icon>
+          </RadixSelect.Trigger>
+          <RadixSelect.Content
+            role="dialog"
+            aria-label="Platforms"
+            position="popper"
+            className={styles.popover}
+          >
+            <div className={styles['combobox-wrapper']}>
+              <div className={styles['combobox-icon']}>
+                <MagnifyingGlassIcon />
+              </div>
+              <Combobox
+                autoSelect
+                placeholder="Search platforms"
+                className={styles.combobox}
+                // Ariakit's Combobox manually triggers a blur event on virtually
+                // blurred items, making them work as if they had actual DOM
+                // focus. These blur events might happen after the corresponding
+                // focus events in the capture phase, leading Radix Select to
+                // close the popover. This happens because Radix Select relies on
+                // the order of these captured events to discern if the focus was
+                // outside the element. Since we don't have access to the
+                // onInteractOutside prop in the Radix SelectContent component to
+                // stop this behavior, we can turn off Ariakit's behavior here.
+                onBlurCapture={event => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+              />
             </div>
-            <Combobox
-              autoSelect
-              placeholder="Search platforms"
-              className={styles.combobox}
-              // Ariakit's Combobox manually triggers a blur event on virtually
-              // blurred items, making them work as if they had actual DOM
-              // focus. These blur events might happen after the corresponding
-              // focus events in the capture phase, leading Radix Select to
-              // close the popover. This happens because Radix Select relies on
-              // the order of these captured events to discern if the focus was
-              // outside the element. Since we don't have access to the
-              // onInteractOutside prop in the Radix SelectContent component to
-              // stop this behavior, we can turn off Ariakit's behavior here.
-              onBlurCapture={event => {
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-            />
-          </div>
-          <ComboboxList className={styles.listbox}>
-            {uniqByReference(
-              matches
-                // map guides to parent platforms
-                .map(x => (x.type === 'platform' ? x : x.platform))
-            ).map(platform => {
-              return (
-                <PlatformItem
-                  key={platform.key}
-                  platform={{
-                    ...platform,
-                    // only keep guides that are in the matches list
-                    guides: platform.guides.filter(g =>
-                      matches.some(m => m.key === g.key)
-                    ),
-                    isExpanded:
-                      // expand search results
-                      searchValue !== '' ||
-                      expandedPlatforms.has(platform.key) ||
-                      // expand current platform/parent of current guide
+            <ComboboxList className={styles.listbox}>
+              {uniqByReference(
+                matches
+                  // map guides to parent platforms
+                  .map(x => (x.type === 'platform' ? x : x.platform))
+              ).map(platform => {
+                return (
+                  <PlatformItem
+                    key={platform.key}
+                    platform={{
+                      ...platform,
+                      // only keep guides that are in the matches list
+                      guides: platform.guides.filter(g =>
+                        matches.some(m => m.key === g.key)
+                      ),
+                      isExpanded:
+                        // expand search results
+                        searchValue !== '' ||
+                        expandedPlatforms.has(platform.key) ||
+                        // expand current platform/parent of current guide
+                        platform.key === currentPlatformKey ||
+                        platform.key === storedPlatformKey ||
+                        platform.guides.some(
+                          g => g.key === currentPlatformKey || g.key === storedPlatformKey
+                        ),
+                    }}
+                    activeItemRef={
                       platform.key === currentPlatformKey ||
-                      platform.guides.some(g => g.key === currentPlatformKey),
-                  }}
-                  activeItemRef={
-                    platform.key === currentPlatformKey ||
-                    platform.guides.some(g => g.key === currentPlatformKey)
-                      ? activeElementRef
-                      : null
-                  }
-                  activeItemKey={currentPlatformKey}
-                  onPlatformExpand={onToggleExpand}
-                />
-              );
-            })}
-          </ComboboxList>
-        </RadixSelect.Content>
-      </ComboboxProvider>
-    </RadixSelect.Root>
+                      platform.guides.some(g => g.key === currentPlatformKey)
+                        ? activeElementRef
+                        : null
+                    }
+                    activeItemKey={currentPlatformKey}
+                    onPlatformExpand={onToggleExpand}
+                  />
+                );
+              })}
+            </ComboboxList>
+          </RadixSelect.Content>
+        </ComboboxProvider>
+      </RadixSelect.Root>
+      {!isPlatformPage && !currentPlatformKey && storedPlatform && (
+        <div className={styles.toc}>
+          <ul>
+            <SidebarLink
+              to={storedPlatform.url}
+              title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
+              path=""
+              className={styles['active-platform-title']}
+            />
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 

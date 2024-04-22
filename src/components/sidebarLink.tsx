@@ -19,6 +19,8 @@ interface SidebarLinkProps {
    * Children represent the additional links nested under this sidebar link
    */
   children?: React.ReactNode;
+  className?: string;
+
   /**
    * Indicates that the links are currently hidden. Overriden by isActive
    */
@@ -31,6 +33,7 @@ export function SidebarLink({
   children,
   path,
   collapsed = null,
+  className = '',
 }: SidebarLinkProps) {
   const isActive = path.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
@@ -39,7 +42,7 @@ export function SidebarLink({
   const [showSubtree, setShowSubtree] = useState(enableSubtree);
 
   return (
-    <li className="toc-item" data-sidebar-branch>
+    <li className={`toc-item ${className}`} data-sidebar-branch>
       <SidebarNavItem
         to={to}
         data-sidebar-link
