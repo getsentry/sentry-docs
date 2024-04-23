@@ -156,9 +156,10 @@ export function DynamicNav({
     parentNode && !noHeadingLink ? (
       <SmartLink
         to={`/${root}/`}
-        className={`${headerClassName} ${path.join('/') === root ? 'active' : ''}`}
+        className={headerClassName}
         activeClassName="active"
         data-sidebar-link
+        data-active-header={isActive}
       >
         <h6>{title}</h6>
       </SmartLink>
