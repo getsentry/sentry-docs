@@ -105,7 +105,9 @@ export function CodeTabs({children}: CodeTabProps) {
 
   // Save the selected tab for Tabgroup to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem(groupId, finalSelection);
+    if (possibleChoices.length > 1) {
+      localStorage.setItem(groupId, finalSelection);
+    }
   }, [finalSelection]);
 
   // Whenever local selection and the final selection are not in sync, the local
