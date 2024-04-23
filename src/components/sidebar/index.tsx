@@ -104,30 +104,53 @@ function SidebarCloseButton() {
   );
 }
 
+/** a root of `"some-root"` maps to the `/some-root/` url */
+const productSidebarItems = [
+  {
+    title: 'Configure Your Account',
+    root: 'account',
+  },
+  {
+    title: 'Configure Your Organization',
+    root: 'organization',
+  },
+  {
+    title: 'Product Walkthroughs',
+    root: 'product',
+  },
+  {
+    title: 'Pricing & Billing',
+    root: 'pricing',
+  },
+  {
+    title: 'Sentry CLI',
+    root: 'cli',
+  },
+  {
+    title: 'Concepts & Reference',
+    root: 'concepts',
+  },
+  {
+    title: 'Security, Legal, & PII',
+    root: 'security-legal-pii',
+  },
+  {
+    title: 'Sentry API',
+    root: 'api',
+  },
+];
+
 export function SidebarLinks(): JSX.Element | null {
   const {path, rootNode} = serverContext();
   if (!rootNode) {
     return null;
   }
-
-  if (
-    [
-      'product',
-      'platform-redirect',
-      'cli',
-      'concepts',
-      'account',
-      'pricing',
-      'organization',
-      'security-legal-pii',
-      'api',
-    ].includes(path[0])
-  ) {
-    return <ProductSidebar rootNode={rootNode} />;
+  if (productSidebarItems.some(el => el.root === path[0])) {
+    return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
   }
   if (path[0] === 'platforms') {
     if (path.length === 1) {
-      return <ProductSidebar rootNode={rootNode} />;
+      return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
     }
 
     const name = path[1];
@@ -178,7 +201,7 @@ export function SidebarLinks(): JSX.Element | null {
           nodes={nodes}
         />
         <hr />
-        <ProductSidebar rootNode={rootNode} />
+        <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
   }
@@ -239,154 +262,41 @@ const docNodeToNavNode = (node: DocNode): NavNode => ({
 });
 
 type ProductSidebarProps = {
+  items: {root: string; title: string}[];
   rootNode: DocNode;
 };
 
-function ProductSidebar({rootNode}: ProductSidebarProps) {
-  /**
-   * URL: /account
-   */
-  const accountNode = nodeForPath(rootNode, 'account');
-  if (!accountNode) {
-    return null;
-  }
-  const accountNodes: NavNode[] = getNavNodes([accountNode], docNodeToNavNode);
-  const accountTree = toTree(accountNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /organization
-   */
-  const organizationNode = nodeForPath(rootNode, 'organization');
-  if (!organizationNode) {
-    return null;
-  }
-  const organizationNodes: NavNode[] = getNavNodes([organizationNode], docNodeToNavNode);
-  const organizationTree = toTree(organizationNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /cli
-   */
-  const cliNode = nodeForPath(rootNode, 'cli');
-  if (!cliNode) {
-    return null;
-  }
-  const cliNodes: NavNode[] = getNavNodes([cliNode], docNodeToNavNode);
-  const cliTree = toTree(cliNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /concepts
-   */
-  const conceptsNode = nodeForPath(rootNode, 'concepts');
-  if (!conceptsNode) {
-    return null;
-  }
-  const conceptsNodes: NavNode[] = getNavNodes([conceptsNode], docNodeToNavNode);
-  const conceptsTree = toTree(conceptsNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /security-legal-pii
-   */
-  const securityLegalPiiNode = nodeForPath(rootNode, 'security-legal-pii');
-  if (!securityLegalPiiNode) {
-    return null;
-  }
-  const securityLegalPiiNodes: NavNode[] = getNavNodes(
-    [securityLegalPiiNode],
-    docNodeToNavNode
-  );
-  const securityLegalPiiTree = toTree(securityLegalPiiNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /pricing
-   */
-  const pricingNode = nodeForPath(rootNode, 'pricing');
-  if (!pricingNode) {
-    return null;
-  }
-  const pricingNodes: NavNode[] = getNavNodes([pricingNode], docNodeToNavNode);
-  const pricingTree = toTree(pricingNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /product
-   */
-  const productNode = nodeForPath(rootNode, 'product');
-  if (!productNode) {
-    return null;
-  }
-  const productNodes: NavNode[] = getNavNodes([productNode], docNodeToNavNode);
-  const productTree = toTree(productNodes.filter(n => !!n.context));
-
-  /**
-   * URL: /api
-   */
-  const apiNode = nodeForPath(rootNode, 'api');
-  if (!apiNode) {
-    return null;
-  }
-  const apiNodes: NavNode[] = getNavNodes([apiNode], docNodeToNavNode);
-  const apiTree = toTree(apiNodes.filter(n => !!n.context));
-
+function ProductSidebar({rootNode, items}: ProductSidebarProps) {
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
+
+  const itemTree = (item: string) => {
+    const node = nodeForPath(rootNode, item);
+    if (!node) {
+      return null;
+    }
+    const nodes: NavNode[] = getNavNodes([node], docNodeToNavNode);
+    return toTree(nodes.filter(n => !!n.context));
+  };
   return (
     <div>
       <ul data-sidebar-tree>
-        <DynamicNav
-          root="account"
-          title="Configure Your Account"
-          tree={accountTree}
-          headerClassName={headerClassName}
-          collapse
-        />
-        <DynamicNav
-          root="organization"
-          title="Configure Your Organization"
-          tree={organizationTree}
-          headerClassName={headerClassName}
-          collapse
-        />
-        <DynamicNav
-          root="product"
-          title="Product Walkthroughs"
-          tree={productTree}
-          headerClassName={headerClassName}
-          collapse
-        />
-        <DynamicNav
-          root="pricing"
-          title="Pricing & Billing"
-          tree={pricingTree}
-          collapse
-          headerClassName={headerClassName}
-        />
-        <DynamicNav
-          root="cli"
-          title="Sentry CLI"
-          tree={cliTree}
-          collapse
-          headerClassName={headerClassName}
-        />
-        <DynamicNav
-          root="concepts"
-          title="Concepts & Reference"
-          tree={conceptsTree}
-          collapse
-          headerClassName={headerClassName}
-        />
-        <DynamicNav
-          root="security-legal-pii"
-          title="Security, Legal, & PII"
-          tree={securityLegalPiiTree}
-          collapse
-          headerClassName={headerClassName}
-        />
-        <DynamicNav
-          root="api"
-          title="Sentry API"
-          tree={apiTree}
-          collapse
-          headerClassName={headerClassName}
-        />
+        {items.map(item => {
+          const tree = itemTree(item.root);
+
+          return (
+            tree && (
+              <DynamicNav
+                key={item.root}
+                root={item.root}
+                title={item.title}
+                tree={tree}
+                headerClassName={headerClassName}
+                collapse
+              />
+            )
+          );
+        })}
       </ul>
       <hr />
       <ul data-sidebar-tree>
