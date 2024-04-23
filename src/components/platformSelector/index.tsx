@@ -109,8 +109,9 @@ export function PlatformSelector({
     platform => platform.key === storedPlatformKey
   );
   useEffect(() => {
-    // retrieve the selected platform from local storage on page load
-    if (!currentPlatformKey) {
+    if (currentPlatformKey) {
+      localStorage.setItem('active-platform', currentPlatformKey);
+    } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
   }, []);
