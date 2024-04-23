@@ -1,6 +1,4 @@
 import {Fragment, SVGAttributes} from 'react';
-import {Cross1Icon} from '@radix-ui/react-icons';
-import {IconButton} from '@radix-ui/themes';
 import Link from 'next/link';
 
 import {
@@ -63,9 +61,6 @@ export function Sidebar() {
         defaultChecked={false}
       />
       <style>{':root { --sidebar-width: 300px; }'}</style>
-      <div className="flex justify-end">
-        <SidebarCloseButton />
-      </div>
       <div className="md:flex flex-col items-stretch">
         <div className="platform-selector">
           <div className="mb-3">
@@ -81,26 +76,6 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
-  );
-}
-
-function SidebarCloseButton() {
-  return (
-    <IconButton variant="ghost" asChild>
-      <label
-        htmlFor={sidebarToggleId}
-        className="lg:hidden mb-4 flex justify-end rounded-full p-3 cursor-pointer bg-[var(--white-a11)] shadow"
-        aria-label="Close"
-        aria-hidden="true"
-      >
-        <Cross1Icon
-          className="text-[var(--gray-10)]"
-          strokeWidth="2"
-          width="24"
-          height="24"
-        />
-      </label>
-    </IconButton>
   );
 }
 

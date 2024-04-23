@@ -1,5 +1,4 @@
 import {ReactNode} from 'react';
-import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 
 import {getCurrentGuide, getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -13,7 +12,7 @@ import {CodeContextProvider} from '../codeContext';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import {PlatformSdkDetail} from '../platformSdkDetail';
-import {Sidebar, sidebarToggleId} from '../sidebar';
+import {Sidebar} from '../sidebar';
 import {TableOfContents} from '../tableOfContents';
 
 type Props = {
@@ -67,24 +66,7 @@ export function DocPage({
             </div>
             <div>
               <hgroup>
-                <h1 className="pl-8 lg:p-0 relative">
-                  <button className="lg:hidden absolute left-0">
-                    <label
-                      htmlFor={sidebarToggleId}
-                      aria-label="Close"
-                      aria-hidden="true"
-                      className="inline-flex items-center cursor-pointer"
-                    >
-                      <HamburgerMenuIcon
-                        className="inline text-[var(--gray-10)]"
-                        strokeWidth="1.8"
-                        width="24"
-                        height="24"
-                      />
-                    </label>
-                  </button>
-                  {frontMatter.title}
-                </h1>
+                <h1>{frontMatter.title}</h1>
                 <h2>{frontMatter.description}</h2>
               </hgroup>
               <div id="main">
