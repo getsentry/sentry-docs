@@ -267,9 +267,6 @@ type ProductSidebarProps = {
 };
 
 function ProductSidebar({rootNode, items}: ProductSidebarProps) {
-  const {path} = serverContext();
-  const fullPath = '/' + path.join('/') + '/';
-
   const itemTree = (item: string) => {
     const node = nodeForPath(rootNode, item);
     if (!node) {
@@ -302,22 +299,22 @@ function ProductSidebar({rootNode, items}: ProductSidebarProps) {
       <ul data-sidebar-tree>
         <li className="mb-3" data-sidebar-branch>
           <ul data-sidebar-tree>
-            <SidebarLink to="https://about.codecov.io/" title="Codecov" path={fullPath} />
-            <SidebarLink to="https://discord.gg/sentry" title="Discord" path={fullPath} />
+            <SidebarLink to="https://about.codecov.io/" title="Codecov" path="" />
+            <SidebarLink to="https://discord.gg/sentry" title="Discord" path="" />
             <SidebarLink
               to="https://sentry.zendesk.com/hc/en-us/"
               title="Support"
-              path={fullPath}
+              path=""
             />
             <SidebarLink
               to="https://develop.sentry.dev/self-hosted/"
               title="Self-Hosting Sentry"
-              path={fullPath}
+              path=""
             />
             <SidebarLink
               to="https://develop.sentry.dev"
               title="Developer Documentation"
-              path={fullPath}
+              path=""
             />
           </ul>
         </li>
