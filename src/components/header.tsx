@@ -41,7 +41,9 @@ export function Header({pathname, searchPlatforms}: Props) {
           title="Sentry error monitoring"
           className="flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-darkPurple"
         >
-          <Image src={SentryLogoSVG} alt="Sentry's logo" width={64} className="h-16" />
+          <div className="h-full pb-[6px]">
+            <Image src={SentryLogoSVG} alt="Sentry's logo" width={40} className="h-16" />
+          </div>
           Docs
         </a>
         <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
