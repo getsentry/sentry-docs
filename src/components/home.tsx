@@ -64,7 +64,7 @@ export async function Home() {
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} />
       <Banner />
-      <div className="max-w-screen-xl px-4 mx-auto">
+      <div className="max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between pt-[120px]">
           <div className="flex flex-col justify-center items-start">
             <h1 className="text-[40px] font-medium mb-2">Welcome to Sentry Docs</h1>
@@ -110,8 +110,8 @@ export async function Home() {
           </Link>
         </div>
       </div>
-      <footer className="mt-20 py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t border-gray space-y-4">
-        <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3">
+      <footer className="mt-20 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
+        <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3 pt-10 border-t border-gray">
           <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
           <FooterLink href="https://sentry.zendesk.com/hc/en-us/" external>
