@@ -13,7 +13,7 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {FrontMatter, Platform, PlatformGuide} from 'sentry-docs/types';
+import {FrontMatter, Platform} from 'sentry-docs/types';
 
 import styles from './style.module.scss';
 
@@ -148,59 +148,22 @@ export function SidebarLinks(): JSX.Element | null {
   if (productSidebarItems.some(el => el.root === path[0])) {
     return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
   }
+  // /platforms/:platformName/guides/:guideName
   if (path[0] === 'platforms') {
-    if (path.length === 1) {
-      return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
-    }
-
-    const name = path[1];
-    const platformNode = nodeForPath(rootNode, ['platforms', name]);
-    if (!platformNode) {
-      return null;
-    }
-
-    const platform = getPlatform(rootNode, name);
-    let guide: PlatformGuide | undefined;
-    if (path.length >= 4 && path[2] === 'guides') {
-      guide = getGuide(platformNode, name, path[3]);
-      guide = getGuide(rootNode, name, path[3]);
-    }
-
-    const docNodeToPlatformSidebarNode = (n: DocNode) => {
-      if (n.frontmatter.draft) {
-        return undefined;
-      }
-      return {
-        context: {
-          platform: {
-            name,
-          },
-          title: n.frontmatter.title,
-          sidebar_order: n.frontmatter.sidebar_order,
-          sidebar_title: n.frontmatter.sidebar_title,
-        },
-        path: '/' + n.path + '/',
-      };
-    };
-
-    const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
-
+    const platformName = path[1];
+    const guideName = path[3];
     return (
       <Fragment>
-        <PlatformSidebar
-          platform={{
-            name,
-            title: platform?.title || '',
-          }}
-          guide={
-            guide && {
-              name: guide.name,
-              title: guide.title || '',
-            }
-          }
-          nodes={nodes}
-        />
-        <hr />
+        {platformName && (
+          <Fragment>
+            <PlatformSidebar
+              platformName={platformName}
+              guideName={guideName}
+              rootNode={rootNode}
+            />
+            <hr />
+          </Fragment>
+        )}
         <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
@@ -323,37 +286,46 @@ function ProductSidebar({rootNode, items}: ProductSidebarProps) {
   );
 }
 
-type PlatformSidebarNode = {
-  context: {
-    platform: {
-      name: string;
-    };
-    title: string;
-    sidebar_order?: number;
-    sidebar_title?: string;
-  };
-  path: string;
-};
-
 type PlatformSidebarProps = {
-  nodes: PlatformSidebarNode[];
-  platform: {
-    name: string;
-    title: string;
-  };
-  guide?: {
-    name: string;
-    title: string;
-  };
+  rootNode: DocNode;
+  platformName: string;
+  guideName?: string;
 };
 
-function PlatformSidebar({platform, guide, nodes}: PlatformSidebarProps) {
-  const platformName = platform.name;
-  const guideName = guide ? guide.name : null;
+function PlatformSidebar({rootNode, platformName, guideName}: PlatformSidebarProps) {
+  const docNodeToPlatformSidebarNode = (n: DocNode) => {
+    if (n.frontmatter.draft) {
+      return undefined;
+    }
+    return {
+      context: {
+        platform: {
+          platformName,
+        },
+        title: n.frontmatter.title,
+        sidebar_order: n.frontmatter.sidebar_order,
+        sidebar_title: n.frontmatter.sidebar_title,
+      },
+      path: '/' + n.path + '/',
+    };
+  };
+
+  const platformNode = nodeForPath(rootNode, ['platforms', platformName]);
+  if (!platformNode) {
+    return null;
+  }
+  const platform = getPlatform(rootNode, platformName);
+  if (!platform) {
+    return null;
+  }
+  const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
   const tree = toTree(nodes.filter(n => !!n.context));
-  const pathRoot = guideName
+  const guide = guideName && getGuide(rootNode, platformName, guideName);
+
+  const pathRoot = guide
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
+
   return (
     <ul data-sidebar-tree>
       <DynamicNav
