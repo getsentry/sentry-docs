@@ -287,8 +287,8 @@ function ProductSidebar({rootNode, items}: ProductSidebarProps) {
 }
 
 type PlatformSidebarProps = {
-  rootNode: DocNode;
   platformName: string;
+  rootNode: DocNode;
   guideName?: string;
 };
 
