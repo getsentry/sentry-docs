@@ -112,7 +112,7 @@ export async function Home() {
       </div>
       <footer className="mt-20 py-10 w-full z-50 max-w-7xl mx-auto px-2 md:px-6 border-t border-gray space-y-4">
         <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3">
-          <FooterLink href="/product/security/">Security, Legal & PII</FooterLink>
+          <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
           <FooterLink href="https://sentry.zendesk.com/hc/en-us/" external>
             Support
