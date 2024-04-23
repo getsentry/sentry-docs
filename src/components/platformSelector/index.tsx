@@ -88,9 +88,10 @@ export function PlatformSelector({
   }, [searchValue, currentPlatformKey]);
 
   const onPlatformChange = (platformKey: string) => {
-    const url = platformsAndGuides.find(platform => platform.key === platformKey)?.url;
-    if (url) {
-      router.push(url);
+    const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
+    if (platform_) {
+      localStorage.setItem('active-platform', platform_.key);
+      router.push(platform_.url);
     }
   };
 
@@ -108,16 +109,11 @@ export function PlatformSelector({
     platform => platform.key === storedPlatformKey
   );
   useEffect(() => {
-    // retrieve the selected platform from local storage
-    setStoredPlatformKey(localStorage.getItem('active-platform'));
-  }, []);
-
-  useEffect(() => {
-    // persist the selected platform to local storage
-    if (currentPlatformKey) {
-      localStorage.setItem('active-platform', currentPlatformKey);
+    // retrieve the selected platform from local storage on page load
+    if (!currentPlatformKey) {
+      setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey]);
+  }, []);
 
   const path = usePathname();
   const isPlatformPage = Boolean(
