@@ -1571,207 +1571,207 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/integrations/amazon-sqs/',
-    to: '/product/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-visualization/amazon-sqs/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/amazon-sqs/',
-    to: '/product/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-visualization/amazon-sqs/',
   },
   {
     from: '/product/integrations/amazon-sqs/',
-    to: '/product/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-visualization/amazon-sqs/',
   },
   {
     from: '/product/integrations/segment/',
-    to: '/product/integrations/data-visualization/segment/',
+    to: '/organization/integrations/data-visualization/segment/',
   },
   {
     from: '/workflow/integrations/splunk/',
-    to: '/product/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-visualization/splunk/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/splunk/',
-    to: '/product/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-visualization/splunk/',
   },
   {
     from: '/product/integrations/splunk/',
-    to: '/product/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-visualization/splunk/',
   },
   {
     from: '/workflow/integrations/gitlab/',
-    to: '/product/integrations/source-code-mgmt/gitlab/',
+    to: '/organization/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/workflow/integrations/global-integrations/gitlab/',
-    to: '/product/integrations/source-code-mgmt/gitlab/',
+    to: '/organization/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/product/integrations/gitlab/',
-    to: '/product/integrations/source-code-mgmt/gitlab/',
+    to: '/organization/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/workflow/integrations/azure-devops/',
-    to: '/product/integrations/source-code-mgmt/azure-devops/',
+    to: '/organization/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/azure-devops/',
-    to: '/product/integrations/source-code-mgmt/azure-devops/',
+    to: '/organization/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/workflow/integrations/global-integrations/azure-devops/',
-    to: '/product/integrations/source-code-mgmt/azure-devops/',
+    to: '/organization/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/product/integrations/azure-devops/',
-    to: '/product/integrations/source-code-mgmt/azure-devops/',
+    to: '/organization/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/integrations/azure-devops/',
-    to: '/product/integrations/source-code-mgmt/azure-devops/',
+    to: '/organization/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/workflow/integrations/github/',
-    to: '/product/integrations/source-code-mgmt/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/github/',
-    to: '/product/integrations/source-code-mgmt/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
   },
   {
     from: '/workflow/integrations/global-integrations/github/',
-    to: '/product/integrations/source-code-mgmt/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
   },
   {
     from: '/product/integrations/github/',
-    to: '/product/integrations/source-code-mgmt/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
   },
   {
     from: '/integrations/github-enterprise/',
-    to: '/product/integrations/source-code-mgmt/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
   },
   {
     from: '/integrations/github/',
-    to: '/product/integrations/source-code-mgmt/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
   },
   {
     from: '/workflow/integrations/bitbucket/',
-    to: '/product/integrations/source-code-mgmt/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/bitbucket/',
-    to: '/product/integrations/source-code-mgmt/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/workflow/integrations/global-integrations/bitbucket/',
-    to: '/product/integrations/source-code-mgmt/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/product/integrations/bitbucket/',
-    to: '/product/integrations/source-code-mgmt/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/integrations/bitbucket/',
-    to: '/product/integrations/source-code-mgmt/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/integrations/',
-    to: '/product/integrations/',
+    to: '/organization/integrations/',
   },
   {
     from: '/workflow/integrations/',
-    to: '/product/integrations/',
+    to: '/organization/integrations/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/',
-    to: '/product/integrations/',
+    to: '/organization/integrations/',
   },
   {
     from: '/workflow/integrations/global-integrations/',
-    to: '/product/integrations/',
+    to: '/organization/integrations/',
   },
   {
     from: '/workflow/legacy-integrations/',
-    to: '/product/integrations/',
+    to: '/organization/integrations/',
   },
   {
     from: '/workflow/global-integrations/',
-    to: '/product/integrations/',
+    to: '/organization/integrations/',
   },
   {
     from: '/workflow/integrations/rookout/',
-    to: '/product/integrations/debugging/rookout/',
+    to: '/organization/integrations/debugging/rookout/',
   },
   {
     from: '/workflow/integrations/global-integrations/rookout/',
-    to: '/product/integrations/debugging/rookout/',
+    to: '/organization/integrations/debugging/rookout/',
   },
   {
     from: '/product/integrations/rookout/',
-    to: '/product/integrations/debugging/rookout/',
+    to: '/organization/integrations/debugging/rookout/',
   },
   {
     from: '/product/integrations/gcp-cloud-run/',
-    to: '/product/integrations/cloud-monitoring/gcp-cloud-run/',
+    to: '/organization/integrations/cloud-monitoring/gcp-cloud-run/',
   },
   {
     from: '/product/integrations/aws-lambda/',
-    to: '/product/integrations/cloud-monitoring/aws-lambda/',
+    to: '/organization/integrations/cloud-monitoring/aws-lambda/',
   },
   {
     from: '/product/integrations/cloudflare-workers/',
-    to: '/product/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
   },
   {
     from: '/product/integrations/vanta/',
-    to: '/product/integrations/compliance/vanta/',
+    to: '/organization/integrations/compliance/vanta/',
   },
   {
     from: '/product/integrations/truto/',
-    to: '/product/integrations/compliance/truto/',
+    to: '/organization/integrations/compliance/truto/',
   },
   {
     from: '/integrations/discord/',
-    to: '/product/integrations/notification-incidents/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
   },
   {
     from: '/product/integrations/discord/',
-    to: '/product/integrations/notification-incidents/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
   },
   {
     from: '/product/accounts/early-adopter-features/discord/',
-    to: '/product/integrations/notification-incidents/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
   },
   {
     from: '/workflow/integrations/pagerduty/',
-    to: '/product/integrations/notification-incidents/pagerduty/',
+    to: '/organization/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/pagerduty/',
-    to: '/product/integrations/notification-incidents/pagerduty/',
+    to: '/organization/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/workflow/integrations/global-integrations/pagerduty/',
-    to: '/product/integrations/notification-incidents/pagerduty/',
+    to: '/organization/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/product/integrations/pagerduty/',
-    to: '/product/integrations/notification-incidents/pagerduty/',
+    to: '/organization/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/product/integrations/notification-incidents/amixr/',
-    to: '/product/integrations/notification-incidents/',
+    to: '/organization/integrations/notification-incidents/',
   },
   {
     from: '/product/integrations/msteams/',
-    to: '/product/integrations/notification-incidents/msteams/',
+    to: '/organization/integrations/notification-incidents/msteams/',
   },
   {
     from: '/product/integrations/threads/',
-    to: '/product/integrations/notification-incidents/threads/',
+    to: '/organization/integrations/notification-incidents/threads/',
   },
   {
     from: '/product/integrations/rootly/',
-    to: '/product/integrations/notification-incidents/rootly/',
+    to: '/organization/integrations/notification-incidents/rootly/',
   },
   {
     from: '/product/integrations/spikesh/',
