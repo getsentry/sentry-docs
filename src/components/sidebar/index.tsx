@@ -8,14 +8,12 @@ import {
   extractPlatforms,
   getCurrentGuide,
   getCurrentPlatform,
-  getDocsRootNode,
   getGuide,
   getPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter, Platform, PlatformGuide} from 'sentry-docs/types';
-import {isTruthy} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
@@ -122,18 +120,10 @@ export function SidebarLinks(): JSX.Element | null {
       'pricing',
       'organization',
       'security-legal-pii',
+      'api',
     ].includes(path[0])
   ) {
     return <ProductSidebar rootNode={rootNode} />;
-  }
-  if (path[0] === 'api') {
-    return (
-      <Fragment>
-        <ApiSidebar />
-        <hr />
-        <ProductSidebar rootNode={rootNode} />
-      </Fragment>
-    );
   }
   if (path[0] === 'platforms') {
     if (path.length === 1) {
@@ -326,6 +316,16 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
   const productNodes: NavNode[] = getNavNodes([productNode], docNodeToNavNode);
   const productTree = toTree(productNodes.filter(n => !!n.context));
 
+  /**
+   * URL: /api
+   */
+  const apiNode = nodeForPath(rootNode, 'api');
+  if (!apiNode) {
+    return null;
+  }
+  const apiNodes: NavNode[] = getNavNodes([apiNode], docNodeToNavNode);
+  const apiTree = toTree(apiNodes.filter(n => !!n.context));
+
   const {path} = serverContext();
   const fullPath = '/' + path.join('/') + '/';
   return (
@@ -380,6 +380,13 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
           collapse
           headerClassName={headerClassName}
         />
+        <DynamicNav
+          root="api"
+          title="Sentry API"
+          tree={apiTree}
+          collapse
+          headerClassName={headerClassName}
+        />
       </ul>
       <hr />
       <ul data-sidebar-tree>
@@ -406,131 +413,6 @@ function ProductSidebar({rootNode}: ProductSidebarProps) {
         </li>
       </ul>
     </div>
-  );
-}
-
-export async function ApiSidebar({standalone = true}: {standalone?: boolean}) {
-  const rootNode = await getDocsRootNode();
-  const apiRootNode = rootNode && nodeForPath(rootNode, 'api');
-  if (!apiRootNode) {
-    return null;
-  }
-
-  const nodes: {
-    context: {
-      title: string;
-    };
-    path: string;
-  }[] = [];
-  const addNodes = (ns: DocNode[]) => {
-    ns.forEach(n => {
-      nodes.push({
-        path: `/${n.path}/`,
-        context: {
-          title: n.frontmatter.title,
-        },
-      });
-      addNodes(n.children);
-    });
-  };
-  addNodes([apiRootNode]);
-
-  const tree = toTree(nodes);
-  const endpoints = tree[0].children.filter(
-    curr => curr.children.length > 1 && !curr.name.includes('guides')
-  );
-  const guides = tree[0].children.filter(curr => curr.name.includes('guides'));
-
-  const {path: pathParts} = serverContext();
-  const currentPath = `/${pathParts.join('/')}/`;
-  const isActive = (p: string) => currentPath.indexOf(p) === 0;
-
-  function Wrapper({children}) {
-    return standalone ? (
-      <aside className={styles.sidebar}>
-        <style>{':root { --sidebar-width: 300px; }'}</style>
-        <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
-        <input
-          type="checkbox"
-          id={sidebarToggleId}
-          className="hidden"
-          defaultChecked={false}
-        />
-        <div className="flex justify-end">
-          <SidebarCloseButton />
-        </div>
-        {children}
-      </aside>
-    ) : (
-      <Fragment>{children}</Fragment>
-    );
-  }
-
-  return (
-    <Wrapper>
-      <ul data-sidebar-tree>
-        <DynamicNav
-          root="api"
-          title="API Reference"
-          tree={tree}
-          exclude={endpoints
-            .map(elem => elem.node?.path)
-            .concat(guides.map(elem => elem.node?.path))
-            .filter(isTruthy)}
-          headerClassName={headerClassName}
-        />
-        <DynamicNav
-          root="api/guides"
-          title="Guides"
-          tree={guides}
-          exclude={endpoints.map(elem => elem.node?.path).filter(isTruthy)}
-          headerClassName={headerClassName}
-        />
-        <li className="mb-3" data-sidebar-branch>
-          <div
-            className={`${styles['sidebar-title']} flex items-center mb-0`}
-            data-sidebar-link
-          >
-            <h6>Endpoints</h6>
-          </div>
-          <ul data-sidebar-tree>
-            {endpoints.map(({node, children}) => {
-              const path = node?.path;
-              const title = node?.context.title;
-              return (
-                path &&
-                title && (
-                  <Fragment key={path}>
-                    <SidebarLink to={path} title={title} path={currentPath} />
-                    {isActive(path) && (
-                      <div style={{paddingLeft: '0.5rem'}}>
-                        {children
-                          .filter(({node: n}) => !!n)
-                          .map(({node: n}) => {
-                            const childPath = n?.path;
-                            const contextTitle = n?.context.title;
-                            return (
-                              childPath &&
-                              contextTitle && (
-                                <SidebarLink
-                                  key={path}
-                                  to={childPath}
-                                  title={contextTitle}
-                                  path={currentPath}
-                                />
-                              )
-                            );
-                          })}
-                      </div>
-                    )}
-                  </Fragment>
-                )
-              );
-            })}
-          </ul>
-        </li>
-      </ul>
-    </Wrapper>
   );
 }
 

@@ -11,7 +11,6 @@ import './styles.scss';
 
 import {ApiExamples} from '../apiExamples';
 import {DocPage} from '../docPage';
-import {ApiSidebar} from '../sidebar';
 import {SmartLink} from '../smartLink';
 
 function Params({params}) {
@@ -127,7 +126,7 @@ export function ApiPage({api}: Props) {
     title: api.name,
   };
   return (
-    <DocPage frontMatter={frontMatter} notoc sidebar={<ApiSidebar />} fullWidth>
+    <DocPage frontMatter={frontMatter} notoc fullWidth>
       <div className="flex">
         <div className="w-full">
           <div className="api-block">
