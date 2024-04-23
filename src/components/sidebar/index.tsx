@@ -307,7 +307,6 @@ function PlatformSidebar({rootNode, platformName, guideName}: PlatformSidebarPro
         root={pathRoot}
         tree={tree}
         title={`Sentry for ${(guide || platform).title}`}
-        prependLinks={[[`/${pathRoot}/`, 'Getting Started']]}
         exclude={[`/${pathRoot}/guides/`]}
         headerClassName={headerClassName}
       />
