@@ -46,7 +46,6 @@ export function Header({pathname, searchPlatforms}: Props) {
           <Search path={pathname} searchPlatforms={searchPlatforms} />
         </div>
         <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
-          <NavLink href="/api/">API</NavLink>
           <NavLink href="/changelog">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           <NavLink href="https://sentry.io/">Sign In</NavLink>

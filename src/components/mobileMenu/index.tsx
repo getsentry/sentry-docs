@@ -48,10 +48,6 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
               </DropdownMenu.Item>
               <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
             </Box>
-
-            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Link href="/product/">API</Link>
-            </DropdownMenu.Item>
             <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
               <Link href="/changelog">Changelog</Link>
             </DropdownMenu.Item>

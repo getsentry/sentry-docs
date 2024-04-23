@@ -102,16 +102,16 @@ const productSidebarItems = [
     root: 'cli',
   },
   {
-    title: 'Concepts & Reference',
-    root: 'concepts',
+    title: 'Sentry API',
+    root: 'api',
   },
   {
     title: 'Security, Legal, & PII',
     root: 'security-legal-pii',
   },
   {
-    title: 'Sentry API',
-    root: 'api',
+    title: 'Concepts & Reference',
+    root: 'concepts',
   },
 ];
 
