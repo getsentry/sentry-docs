@@ -19,21 +19,23 @@ export function Header({pathname, searchPlatforms}: Props) {
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 80px; }'}</style>
       <nav className="mx-auto px-6 lg:px-8 py-2 flex items-center text-primary">
-        <button className="lg:hidden">
-          <label
-            htmlFor={sidebarToggleId}
-            aria-label="Close"
-            aria-hidden="true"
-            className="inline-flex items-center cursor-pointer"
-          >
-            <HamburgerMenuIcon
-              className="inline text-[var(--gray-10)]"
-              strokeWidth="1.8"
-              width="22"
-              height="22"
-            />
-          </label>
-        </button>
+        {pathname !== '/' && (
+          <button className="lg:hidden">
+            <label
+              htmlFor={sidebarToggleId}
+              aria-label="Close"
+              aria-hidden="true"
+              className="inline-flex items-center cursor-pointer"
+            >
+              <HamburgerMenuIcon
+                className="inline text-[var(--gray-10)]"
+                strokeWidth="1.8"
+                width="22"
+                height="22"
+              />
+            </label>
+          </button>
+        )}
         <a
           href="/"
           title="Sentry error monitoring"
