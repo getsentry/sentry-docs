@@ -74,7 +74,7 @@ export function PlatformSelector({
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'sdk'];
+    const keys = ['title', 'aliases', 'sdk', 'keywords'];
     const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
