@@ -152,6 +152,7 @@ function nodeToPlatform(n: DocNode): Platform {
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
     categories: n.frontmatter.categories,
+    keywords: n.frontmatter.keywords,
   };
 }
 

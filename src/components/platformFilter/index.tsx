@@ -24,7 +24,7 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'sdk'];
+    const keys = ['title', 'aliases', 'sdk', 'keywords'];
     const matches_ = matchSorter(platformsAndGuides, filter, {keys});
     return matches_;
   }, [filter]);
