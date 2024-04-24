@@ -20,6 +20,13 @@ export const capitilize = (str: string) => {
 
 export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
 
+export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
+  const chunkSize = Math.ceil(arr.length / numChunks);
+  return Array.from({length: numChunks}, (_, i) =>
+    arr.slice(i * chunkSize, i * chunkSize + chunkSize)
+  );
+};
+
 type Page = {
   context: {
     sidebar_order?: number;
