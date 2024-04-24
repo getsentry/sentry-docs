@@ -16,7 +16,21 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  return handleRedirects(request);
+  const redirect = handleRedirects(request);
+  if (redirect) {
+    return redirect;
+  }
+
+  // Clone the request headers and forward the pathname to be consumed elsewhere using next/headers
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', request.nextUrl.pathname);
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+  return response;
 }
 
 const handleRedirects = (request: NextRequest) => {
