@@ -30,7 +30,7 @@ export function DocPage({
   frontMatter,
   notoc = false,
   fullWidth = false,
-  sidebar = <Sidebar />,
+  sidebar,
 }: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
@@ -52,7 +52,7 @@ export function DocPage({
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
-        {sidebar}
+        {sidebar ?? <Sidebar path={path} />}
         <main className="main-content flex w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] mt-[var(--header-height)] flex-1 mx-auto">
           <div
             className={[

@@ -6,11 +6,11 @@ import {
   extractPlatforms,
   getCurrentGuide,
   getCurrentPlatform,
+  getDocsRootNode,
   getGuide,
   getPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter, Platform} from 'sentry-docs/types';
 
 import styles from './style.module.scss';
@@ -25,8 +25,11 @@ const headerClassName = `${styles['sidebar-title']} flex items-center`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
-export function Sidebar() {
-  const {rootNode, path} = serverContext();
+type SidebarProps = {
+  path: string[];
+};
+export async function Sidebar({path}: SidebarProps) {
+  const rootNode = await getDocsRootNode();
   const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
   const currentGuide = rootNode && getCurrentGuide(rootNode, path);
 
@@ -91,7 +94,7 @@ export function Sidebar() {
         </div>
         <div className={styles.toc}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
-          <SidebarLinks />
+          <SidebarLinks path={path} />
         </div>
       </div>
     </aside>
@@ -134,8 +137,8 @@ const productSidebarItems = [
   },
 ];
 
-export function SidebarLinks(): JSX.Element | null {
-  const {path, rootNode} = serverContext();
+export async function SidebarLinks({path}: {path: string[]}) {
+  const rootNode = await getDocsRootNode();
   if (!rootNode) {
     return null;
   }
