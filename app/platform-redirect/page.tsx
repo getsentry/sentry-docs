@@ -28,9 +28,7 @@ export default async function Page({
     title: 'Platform Specific Content',
   };
 
-  // TODO(mjq): This is a hack to get the <ServerSidebar> component to use the
-  // <ProductSidebar>. The sidebar components should be rejigged so that
-  // <ProductSidebar> can be passed into DocPage's sidebar prop below.
+  // make the Sidebar aware of the current path
   setServerContext({rootNode, path: ['platform-redirect']});
 
   return (

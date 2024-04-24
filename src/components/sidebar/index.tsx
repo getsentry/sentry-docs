@@ -139,7 +139,10 @@ export function SidebarLinks(): JSX.Element | null {
   if (!rootNode) {
     return null;
   }
-  if (productSidebarItems.some(el => el.root === path[0])) {
+  if (
+    productSidebarItems.some(el => el.root === path[0]) ||
+    path[0] === 'platform-redirect'
+  ) {
     return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
   }
   // /platforms/:platformName/guides/:guideName
