@@ -104,11 +104,11 @@ export async function Sidebar({path}: SidebarProps) {
 /** a root of `"some-root"` maps to the `/some-root/` url */
 const productSidebarItems = [
   {
-    title: 'Configure Your Account',
+    title: 'Account Settings',
     root: 'account',
   },
   {
-    title: 'Configure Your Organization',
+    title: 'Organization Settings',
     root: 'organization',
   },
   {
