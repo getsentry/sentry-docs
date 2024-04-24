@@ -1,19 +1,16 @@
-import {DocNode, nodeForPath} from 'sentry-docs/docTree';
-import {serverContext} from 'sentry-docs/serverContext';
+import {DocNode} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
 
 import {SmartLink} from '../smartLink';
 
-export function Breadcrumbs() {
-  const {rootNode, path} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
+type BreadcrumbsProps = {
+  leafNode: DocNode;
+};
 
-  const pageNode = nodeForPath(rootNode, path);
+export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
   const nodes: DocNode[] = [];
-  for (let node: DocNode | undefined = pageNode; node; node = node.parent) {
+  for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
     if (node && !node.missing) {
       nodes.unshift(node);
     }

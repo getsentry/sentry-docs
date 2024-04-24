@@ -1,6 +1,6 @@
 import {ReactNode} from 'react';
 
-import {getCurrentGuide, getCurrentPlatform} from 'sentry-docs/docTree';
+import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
@@ -45,6 +45,8 @@ export function DocPage({
     isTruthy
   );
 
+  const leafNode = rootNode && nodeForPath(rootNode, path);
+
   return (
     <div className="tw-app">
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
@@ -61,9 +63,7 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
-            <div className="">
-              <Breadcrumbs />
-            </div>
+            {leafNode && <Breadcrumbs leafNode={leafNode} />}
             <div>
               <hgroup>
                 <h1>{frontMatter.title}</h1>
