@@ -121,7 +121,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
 
   const rootNode = await getDocsRootNode();
 
-  if (rootNode && params.path) {
+  if (params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);

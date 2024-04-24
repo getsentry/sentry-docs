@@ -7,9 +7,6 @@ import styles from './styles.module.css';
 
 export function GitHubCTA() {
   const {path, rootNode} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
   let sourceUrl = 'https://github.com/getsentry/sentry-docs/';
   const pageNode = nodeForPath(rootNode, path);
   if (pageNode && pageNode.sourcePath) {

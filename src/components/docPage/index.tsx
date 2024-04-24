@@ -33,8 +33,8 @@ export function DocPage({
   sidebar,
 }: Props) {
   const {rootNode, path} = serverContext();
-  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
-  const currentGuide = rootNode && getCurrentGuide(rootNode, path);
+  const currentPlatform = getCurrentPlatform(rootNode, path);
+  const currentGuide = getCurrentGuide(rootNode, path);
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
@@ -45,7 +45,7 @@ export function DocPage({
     isTruthy
   );
 
-  const leafNode = rootNode && nodeForPath(rootNode, path);
+  const leafNode = nodeForPath(rootNode, path);
 
   return (
     <div className="tw-app">

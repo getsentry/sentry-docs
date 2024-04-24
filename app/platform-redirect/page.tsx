@@ -12,7 +12,7 @@ export default async function Page({
   searchParams: {[key: string]: string | string[] | undefined};
 }) {
   const rootNode = await getDocsRootNode();
-  const platformList = (rootNode && extractPlatforms(rootNode)) ?? [];
+  const platformList = extractPlatforms(rootNode);
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {

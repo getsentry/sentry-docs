@@ -8,9 +8,6 @@ import {SmartLink} from '../smartLink';
 
 export function PlatformGrid({noGuides = false}) {
   const {rootNode} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
 
   const platforms = extractPlatforms(rootNode);
   return (

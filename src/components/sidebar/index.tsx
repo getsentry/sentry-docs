@@ -30,8 +30,8 @@ type SidebarProps = {
 };
 export async function Sidebar({path}: SidebarProps) {
   const rootNode = await getDocsRootNode();
-  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
-  const currentGuide = rootNode && getCurrentGuide(rootNode, path);
+  const currentPlatform = getCurrentPlatform(rootNode, path);
+  const currentGuide = getCurrentGuide(rootNode, path);
 
   const platforms: Platform[] = !rootNode
     ? []

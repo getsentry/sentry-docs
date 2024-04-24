@@ -21,9 +21,9 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-let getDocsRootNodeCache: Promise<DocNode | undefined> | undefined;
+let getDocsRootNodeCache: Promise<DocNode> | undefined;
 
-export function getDocsRootNode(): Promise<DocNode | undefined> {
+export function getDocsRootNode(): Promise<DocNode> {
   if (getDocsRootNodeCache) {
     return getDocsRootNodeCache;
   }
@@ -31,15 +31,11 @@ export function getDocsRootNode(): Promise<DocNode | undefined> {
   return getDocsRootNodeCache;
 }
 
-async function getDocsRootNodeUncached(): Promise<DocNode | undefined> {
+async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(await getDocsFrontMatter());
 }
 
-function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
-  if (frontmatter.length === 0) {
-    return undefined;
-  }
-
+function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
   const sortedDocs = frontmatter.sort((a, b) => {
     const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
     if (partDiff !== 0) {

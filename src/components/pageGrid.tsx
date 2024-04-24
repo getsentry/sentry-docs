@@ -15,9 +15,6 @@ type Props = {
 
 export function PageGrid({header}: Props) {
   const {rootNode, path} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
 
   const parentNode = nodeForPath(rootNode, path);
   if (!parentNode) {

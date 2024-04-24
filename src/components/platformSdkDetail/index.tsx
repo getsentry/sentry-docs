@@ -8,7 +8,7 @@ import {SmartLink} from '../smartLink';
 
 export async function PlatformSdkDetail() {
   const {rootNode, path} = serverContext();
-  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!platformOrGuide) {
     return null;
   }
