@@ -1,17 +1,13 @@
 import 'prism-sentry/index.css';
 
-import {headers} from 'next/headers';
-
 import {Breadcrumbs} from 'sentry-docs/components/breadcrumbs';
 import {Header} from 'sentry-docs/components/header';
 import {Sidebar} from 'sentry-docs/components/sidebar';
 import {DocNode, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {useServerPathname} from 'sentry-docs/serverContext';
 
 export default async function NotFound() {
-  const headersList = headers();
-  // the special `x-pathname` header is set by the middleware
-  const pathname = headersList.get('x-pathname');
-  const path = pathname?.split('/').filter(Boolean) ?? [];
+  const path = useServerPathname();
 
   const rootNode = (await getDocsRootNode())!;
 
