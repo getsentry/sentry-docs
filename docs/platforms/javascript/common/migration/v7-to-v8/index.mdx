@@ -1,0 +1,79 @@
+---
+title: Migrate from 7.x to 8.x
+sidebar_order: 8999
+description: "Learn about migrating from Sentry JavaScript SDK 7.x to 8.x"
+---
+
+The main goal of version 8 is to improve our performance monitoring APIs, integrations API, and ESM support. This
+version is breaking because we removed deprecated APIs, restructured npm package contents, and introduced new
+dependencies on OpenTelemetry.
+
+## Migration Codemod
+
+Before updating to `8.x` of the SDK, we recommend upgrading to the latest version of `7.x`. To fix all deprecations on `7.x`, you can use the `@sentry/migr8` codemod to automatically update your SDK usage. `@sentry/migr8` requires Node 18+.
+
+```bash
+npx @sentry/migr8@latest
+```
+
+This will let you select which updates to run, and automatically update your code. Make sure to still review all code changes!
+
+## Migration Guide
+
+Please see our [detailed migration guide](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#upgrading-from-7x-to-8x) for more information on migrating from `7.x` to `8.x`.
+
+{/* Make sure to update the PlatformSection below when new fully fleshed out migration guides are added */}
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+## Upgrading to `8.x`
+
+<PlatformContent includePath="migration/javascript-v8/intro" />
+
+We recommend you read through all the [Important Changes](#important-changes) as they affect all Next.js SDK users. The [Other Changes](#other-changes) linked below only affect users who have very custom instrumentation. There is also a [Troubleshooting](#troubleshooting) section for common issues.
+
+## Important Changes
+
+<PlatformContent includePath="migration/javascript-v8/important-changes" />
+
+## Other Changes
+
+<PlatformContent includePath="migration/javascript-v8/other-changes" />
+
+### Removal of `@sentry/replay` package
+
+The `@sentry/replay` package is no longer required. Instead you can import the relevant methods directly from your SDK. In addition to this, the integration is now functional instead of class based.
+
+```JavaScript diff
+-import { Replay } from '@sentry/replay';
+-
+ Sentry.init({
+   dsn: '___PUBLIC_DSN___',
+   integrations: [
+-    new Replay(),
++    new Sentry.replayIntegration(),
+   ],
+ });
+```
+
+<PlatformContent includePath="migration/javascript-v8/integrations-package-removal" />
+
+### Removal of `@sentry/hub`
+
+`@sentry/hub` has been removed and will no longer be published. All of the @sentry/hub exports have moved to `@sentry/core` or other related SDKs.
+
+<PlatformContent includePath="migration/javascript-v8/tracing-package-removal" />
+
+## Troubleshooting
+
+<PlatformContent includePath="migration/javascript-v8/troubleshooting" />
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.nextjs"]}>
+
+{/* TODO: Remove the generic summary */}
+
+<PlatformContent includePath="migration/javascript-v8/summary" />
+
+</PlatformSection>

@@ -1,12 +1,4 @@
----
-title: Migrate from Sentry JavaScript SDK 7.x to 8.x
-sidebar_order: 8999
-description: "Learn about migrating from Sentry JavaScript SDK 7.x to 8.x"
----
-
-The main goal of version 8 is to improve our performance monitoring APIs, integrations API, and ESM support. This
-version is breaking because we removed deprecated APIs, restructured npm package contents, and introduced new
-dependencies on OpenTelemetry.
+## Summary of Changes
 
 If you only use basic features of Sentry, or you simply copy & pasted the setup examples from our docs, here's what changed for you:
 
@@ -21,11 +13,15 @@ If you only use basic features of Sentry, or you simply copy & pasted the setup 
   - Opera 50
   - Samsung Internet 8.2
 
+For IE11 support please transpile your code to ES5 using babel or similar and add required polyfills.
+
 - Integrations are now functional instead of class based. For example, the import for session replay uses `Sentry.replayIntegration` instead of `new Sentry.Replay`.
+
+- The SDK's Performance API has been revamped. More details can be found in documentation about the [new Performance Monitoring APIs](./v8-new-performance-api/)
 
 - Initializing the Node SDK has been vastly simplified. You no longer need to use `autoDiscoverNodePerformanceMonitoringIntegrations` or use `Sentry.Handlers`, as these are now automatically included by the SDK without configuration. To make this work, you now have to ensure `Sentry.init` is initialized before any other code is imported and used.
 
-```ts
+```JavaScript
 // In v7, this was fine:
 const Sentry = require("@sentry/node");
 const express = require("express");
@@ -50,13 +46,3 @@ const app = express();
 
 Sentry.setupExpressErrorHandler(app);
 ```
-
-Before updating to `8.x` of the SDK, we recommend upgrading to the latest version of `7.x`. To fix all deprecations on `7.x`, you can use the `@sentry/migr8` codemod to automatically update your SDK usage. `@sentry/migr8` requires Node 18+.
-
-```bash
-npx @sentry/migr8@latest
-```
-
-This will let you select which updates to run, and automatically update your code. Make sure to still review all code changes!
-
-Please see our detailed migration guide for more information on migrating from `7.x` to `8.x`: [link](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#upgrading-from-7x-to-8x)

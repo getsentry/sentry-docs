@@ -1,0 +1,122 @@
+### Improved Source Map Uploading
+
+Under the hood, the Next.js SDK uses [Sentry Webpack Plugin](https://www.npmjs.com/package/@sentry/webpack-plugin) to upload sourcemaps and automatically associate add releases to your events. In `8.x`, the SDK now uses `2.x` of the Sentry Webpack Plugin which brings many improvements and bug fixes. Sourcemaps uploading with the Next.js SDK now uses <Link to="/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/">Debug IDs</Link>.
+
+### Removal of deprecated API
+
+The following previously deprecated API has been removed from the `@sentry/nextjs` package:
+
+- `nextRouterInstrumentation` has been removed in favour of `browserTracingIntegration`.
+
+```JavaScript {sentry.client.config.js} diff
+ import * as Sentry from '@sentry/nextjs';
+
+ Sentry.init({
+   dsn: '___PUBLIC_DSN___',
+   integrations: [
+-    new Sentry.Integrations.BrowserTracing({
+-      routingInstrumentation: Sentry.nextRouterInstrumentation
+-    }),
++    Sentry.browserTracingIntegration(),
+   ]
+ });
+
+```
+
+- `withSentryApi` has been removed in favour of `wrapApiHandlerWithSentry`.
+
+```JavaScript {pages/api/*} diff
+-import { withSentryApi } from "@sentry/nextjs";
++import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
+
+ const handler = (req, res) => {
+   res.status(200).json({ name: "John Doe" });
+ };
+
+-export default withSentryApi(handler, "/api/myRoute");
++export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
+```
+
+- `withSentryGetServerSideProps` has been removed in favour of `wrapGetServerSidePropsWithSentry`.
+
+```JavaScript {pages/index.js} diff
+-import { withSentryGetServerSideProps } from "@sentry/nextjs";
++import { wrapGetServerSidePropsWithSentry } from "@sentry/nextjs";
+
+ export async function _getServerSideProps() {
+   // Fetch data from external API
+ }
+
+-export const getServerSideProps = withSentryGetServerSideProps(_getServerSideProps);
++export const getServerSideProps = wrapGetServerSidePropsWithSentry(_getServerSideProps);
+```
+
+- `withSentryGetStaticProps` has been removed in favour of `wrapGetStaticPropsWithSentry`.
+
+```JavaScript {pages/index.js} diff
+-import { withSentryGetStaticProps } from "@sentry/nextjs";
++import { wrapGetStaticPropsWithSentry } from "@sentry/nextjs";
+
+ export async function _getStaticProps() {
+   // Fetch data from external API
+ }
+
+-export const getStaticProps = withSentryGetStaticProps(_getServerSideProps);
++export const getStaticProps = wrapGetStaticPropsWithSentry(_getServerSideProps);
+```
+
+- `withSentryServerSideGetInitialProps` has been removed in favour of `wrapGetInitialPropsWithSentry`.
+
+```JavaScript {pages/index.js} diff
+-import { withSentryServerSideGetInitialProps } from "@sentry/nextjs";
++import { wrapGetInitialPropsWithSentry } from "@sentry/nextjs";
+
+ async function getInitialProps() {
+   // Fetch data from external API
+   return { data }
+ }
+
+-Page.getInitialProps = withSentryServerSideGetInitialProps(getInitialProps);
++Page.getInitialProps = wrapGetInitialPropsWithSentry(getInitialProps);
+
+ export default function Page({ data }) {
+   return data
+ }
+```
+
+Similar to the above changes, the following API has been removed:
+
+- `withSentryServerSideAppGetInitialProps` has been removed in favour of `wrapAppGetInitialPropsWithSentry`.
+- `withSentryServerSideDocumentGetInitialProps` has been removed in favour of `wrapDocumentGetInitialPropsWithSentry`.
+- `withSentryServerSideErrorGetInitialProps` has been removed in favour of `wrapErrorGetInitialPropsWithSentry`.
+
+The `IS_BUILD` and `isBuild` exports have been removed. There is no replacement for these exports.
+
+### OpenTelemetry Instrumentation
+
+The Next.js SDK now leverages Next.js OpenTelemetry instrumentation for performance monitoring. This means that the SDK will automatically capture OpenTelemetry data for your Next.js application without any additional configuration.
+
+If you were previously using the `@sentry/opentelemetry-node`, it is no longer required and can be removed from your project. To migrate from using `@sentry/opentelemetry-node` to the Next.js SDK, follow these steps:
+
+1. Make sure you've updated your SDK initialization as per the [Updated SDK initialization](#updated-sdk-initialization) section above.
+
+2. Remove `instrumenter: "otel",` from your `Sentry.init` call for your server-side SDK initialization.
+
+```JavaScript {sentry.server.config.js} diff
+ import * as Sentry from '@sentry/nextjs';
+
+ Sentry.init({
+   dsn: '___PUBLIC_DSN___',
+-  instrumenter: 'otel',
+ });
+```
+
+3. Remove the `@sentry/opentelemetry-node` package and the `instrumentation.node.js|ts` file in your project. Make sure `instrumentation.js|ts` no longer imports the `instrumentation.node.js|ts` file.
+
+To customize your OpenTelemetry setup, see the docs on [OpenTelemetry instrumentation in `8.0`](./v8-opentelemetry/#custom-opentelemetry-setup).
+
+<Include name="migration/javascript-v8/node-other-changes" />
+
+<Include name="migration/javascript-v8/server-other-changes" />
+
+<Include name="migration/javascript-v8/browser-other-changes" />
