@@ -24,9 +24,7 @@ export default async function NotFound() {
     }
   }
 
-  const firstFoundPath = firstMatchingNode
-    ? firstMatchingNode.path.split('/').filter(Boolean)
-    : [];
+  const firstFoundPath = firstMatchingNode?.path.split('/').filter(Boolean) ?? [];
 
   return (
     <div className="tw-app">
