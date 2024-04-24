@@ -33,23 +33,42 @@ export function Sidebar() {
   const platforms: Platform[] = !rootNode
     ? []
     : extractPlatforms(rootNode).map(platform => {
-        const platformForPath =
+        const platformPageForCurrentPath =
           nodeForPath(rootNode, [
             'platforms',
             platform.name,
+            // take the :path in /platforms/:platformName/:path
+            // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
             ...path.slice(currentGuide ? 4 : 2),
           ]) ||
-          // try to go one level higher
+          // try to go one page higher, example: go to /usage/ from /usage/something
           nodeForPath(rootNode, [
             'platforms',
             platform.name,
             ...path.slice(currentGuide ? 4 : 2, path.length - 1),
           ]);
 
-        // link to the section of this platform's docs that matches the current path when applicable
-        return platformForPath
-          ? {...platform, url: '/' + platformForPath.path + '/'}
-          : platform;
+        return {
+          ...platform,
+          url: platformPageForCurrentPath
+            ? '/' + platformPageForCurrentPath.path + '/'
+            : platform.url,
+          guides: platform.guides.map(guide => {
+            const guidePageForCurrentPath = nodeForPath(rootNode, [
+              'platforms',
+              platform.name,
+              'guides',
+              guide.name,
+              ...path.slice(currentGuide ? 4 : 2),
+            ]);
+            return guidePageForCurrentPath
+              ? {
+                  ...guide,
+                  url: '/' + guidePageForCurrentPath.path + '/',
+                }
+              : guide;
+          }),
+        };
       });
 
   return (
