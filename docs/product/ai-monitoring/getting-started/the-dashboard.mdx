@@ -18,20 +18,24 @@ When you click one of the pipelines in the table, you can see details about that
 
 ![AI Monitoring for a specific pipeline](../img/details-view.png)
 
-The "Ask Sentry" pipeline has used 59 thousand tokens, and took 3.2 seconds on average.
+The "Ask Sentry" pipeline has used 59 thousand tokens, and taken 3.2 seconds on average.
 
-Additionally, we can see example traces which include this pipeline in the table at the bottom.
+<Note>
+An AI pipeline is different than simply calling an LLM. If you are creating AI pipelines by calling LLMs directly (without using a tool like Langchain),
+    consider using [Manual AI Instrumentation](/product/ai-monitoring/getting-started/#manually-instrumenting-ai-workloads)
+</Note>
 
 ## Where AI data shows up in the trace view
-
-![AI Monitoring trace example](../img/trace-view.png)
 
 The Sentry SDK will (if configured to include PII) add the prompts and responses to LLMs and other AI models to
 the spans in the Trace view.
 
-In the picture above, you can see that the `ai.chat_completions.create.langchain` span includes the input messages.
+![AI Monitoring trace example](../img/trace-view.png)
+
+In the picture above, you can see that the `ai.chat_completions.create.langchain` span
+has been decorated with its input messages and LLM responses.
 Other spans like `ai.chat_completions.create.openai` include the number of tokens used for that particular
 chat completion.
 
-You can use the existing Sentry Performance features to identify which parts of your AI pipeline are taking a long time,
-and which ones generated bad LLM output or used a lot of tokens.
+This view can include other data as well. If you call your LLM from a webserver, the trace will include details
+about the webserver through other integrations, and you'll get a holistic view of all the related parts.
