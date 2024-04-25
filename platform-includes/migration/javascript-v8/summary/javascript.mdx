@@ -1,0 +1,48 @@
+## Summary of Changes
+
+If you only use basic features of Sentry, or you simply copy & pasted the setup examples from our docs, here's what changed for you:
+
+- If you installed additional Sentry packages, such as`@sentry/profiling-node` alongside your Sentry SDK (e.g. `@sentry/react` or `@sentry/node`), make sure to upgrade all of them to version 8. In addition, the `@sentry/hub`, `@sentry/tracing`, `@sentry/integrations`, `@sentry/serverless`, and `@sentry/replay` package have all been removed.
+
+- Our SDKs now generate ES2018+ compatible code. This means we now only support Node 14.18 or higher and ES2018 compatible browsers. New minimum supported browsers:
+
+  - Chrome 63
+  - Edge 79
+  - Safari/iOS Safari 12
+  - Firefox 58
+  - Opera 50
+  - Samsung Internet 8.2
+
+For IE11 support please transpile your code to ES5 using babel or similar and add required polyfills.
+
+- Integrations are now functional instead of class based. For example, the import for session replay uses `Sentry.replayIntegration` instead of `new Sentry.Replay`.
+
+- The SDK's Performance API has been revamped. More details can be found in documentation about the [new Performance Monitoring APIs](./v8-new-performance-api/)
+
+- Initializing the Node SDK has been vastly simplified. You no longer need to use `autoDiscoverNodePerformanceMonitoringIntegrations` or use `Sentry.Handlers`, as these are now automatically included by the SDK without configuration. To make this work, you now have to ensure `Sentry.init` is initialized **before any other code is imported and used**.
+
+```JavaScript
+// In v7, this was fine:
+const Sentry = require("@sentry/node");
+const express = require("express");
+
+Sentry.init({
+  // ...
+});
+
+const app = express();
+
+// ...
+
+// In v8, in order to ensure express is instrumented,
+// you have to initialize before you import:
+const Sentry = require("@sentry/node");
+Sentry.init({
+  // ...
+});
+
+const express = require("express");
+const app = express();
+
+Sentry.setupExpressErrorHandler(app);
+```

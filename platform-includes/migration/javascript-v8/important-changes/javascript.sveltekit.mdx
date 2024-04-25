@@ -1,0 +1,95 @@
+### Supported versions
+
+Sentry SvelteKit SDK `8.x` supports Node `14.18.0` or higher
+
+If you need to support older versions of Node.js, please use Sentry SvelteKit SDK `7.x`.
+
+<Include name="migration/javascript-v8/compatible-browsers" />
+
+### Updated SDK initialization
+
+With `8.x` the Server-side Setup of the SvelteKit SDK now needs to be initialized before anything else runs in `hooks.server.js|ts`. Make sure to move `Sentry.init` to the top of the file.
+
+```JavaScript
+import * as Sentry from "@sentry/sveltekit";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+// rest of your code and imports
+```
+
+### Breaking `sentrySvelteKit()` changes
+
+Under the hood, the SvelteKit SDK uses [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin) to upload sourcemaps and automatically associate add releases to your events. In `8.x`, the SDK now uses `2.x` of the Sentry Vite Plugin which brings many improvements and bug fixes. Sourcemaps uploading with the SvelteKit SDK now uses <Link to="/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/">Debug IDs</Link>.
+
+To allow future upgrades of the Vite plugin without breaking stable and public APIs in `sentrySvelteKit`, we modified the `sourceMapsUploadOptions` to remove the hard dependency on the API of the plugin. While you previously could specify all [version 0.x Vite plugin options](https://www.npmjs.com/package/@sentry/vite-plugin/v/0.6.1), we now reduced them to a subset of [2.x options](https://www.npmjs.com/package/@sentry/vite-plugin/v/2.14.2#options).
+
+Previously configuring your options looked like this:
+
+```JavaScript {filename:vite.config.js}
+// SvelteKit SDK 7.x
+sentrySvelteKit({
+  sourceMapsUploadOptions: {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    release: '1.0.1',
+    injectRelease: true,
+    include: ['./build/*/**/*'],
+    ignore: ['**/build/client/**/*']
+  },
+}),
+```
+
+Now they look like this:
+
+```JavaScript {filename:vite.config.js}
+// SvelteKit SDK 8.x
+sentrySvelteKit({
+  sourceMapsUploadOptions: {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    release: {
+	    name: '1.0.1',
+	    inject: true
+    },
+    sourcemaps: {
+	    assets: ['./build/*/**/*'],
+	    ignore: ['**/build/client/**/*'],
+	    filesToDeleteAfterUpload: ['./build/**/*.map']
+    },
+  },
+}),
+```
+
+In the future, we might add additional [options](https://www.npmjs.com/package/@sentry/vite-plugin/v/2.14.2#options)
+from the Vite plugin but if you would like to specify some of them directly, you can do this by passing in an
+`unstable_sentryVitePluginOptions` object:
+
+```JavaScript {filename:vite.config.js}
+sentrySvelteKit({
+  sourceMapsUploadOptions: {
+    // ...
+    release: {
+	    name: '1.0.1',
+    },
+    unstable_sentryVitePluginOptions: {
+      release: {
+        setCommits: {
+          auto: true
+        }
+      }
+    }
+  },
+}),
+```
+
+Important: we DO NOT guarantee stability of `unstable_sentryVitePluginOptions`. They can be removed or updated at any
+time, including breaking changes within the same major version of the SDK.

@@ -46,6 +46,7 @@ import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
+import FastifySVG from 'platformicons/svg/fastify.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -172,6 +173,7 @@ import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
+import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -537,6 +539,10 @@ const formatToSVG = {
     sm: KoaSVG,
     lg: KoaSVGLarge,
   },
+  fastify: {
+    sm: FastifySVG,
+    lg: FastifySVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -831,6 +837,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-gcp-functions': 'gcp-functions',
   'javascript-ionic': 'ionic',
   'javascript-koa': 'koa',
+  'javascript-fastify': 'fastify',
   'javascript-nextjs': 'nextjs',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
