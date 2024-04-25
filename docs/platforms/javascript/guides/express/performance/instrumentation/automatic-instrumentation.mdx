@@ -1,0 +1,52 @@
+---
+title: Automatic Instrumentation
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+When integrating Sentry with an Express application, you can leverage provided middlewares to automatically instrument and monitor the performance of your application.
+
+<Note>
+
+If you’re adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service’s performance characteristics maintain expectations.
+
+</Note>
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+const express = require("express");
+const app = express();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enable Express.js middleware tracing
+    new Sentry.Integrations.Express({
+      // to trace all requests to the default router
+      app,
+      // alternatively, you can specify the routes you want to trace:
+      // router: someRouter,
+    }),
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+// RequestHandler creates a separate execution context, so that all
+// transactions/spans/breadcrumbs are isolated across requests
+app.use(Sentry.Handlers.requestHandler());
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+// the rest of your app
+
+// The Sentry error handler middleware must be registered before any other error middleware and after all controllers
+app.use(Sentry.Handlers.errorHandler());
+
+app.listen(3000);
+```

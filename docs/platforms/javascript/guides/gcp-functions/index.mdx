@@ -1,0 +1,82 @@
+---
+title: Google Cloud Functions
+description: "Learn about using Sentry with Google Cloud Functions."
+sdk: sentry.javascript.node
+categories:
+  - serverless
+---
+
+Add `@sentry/serverless` as a dependency to `package.json`:
+
+```bash
+  "@sentry/serverless": "^{{@inject packages.version('sentry.javascript.node') }}"
+```
+
+To set up Sentry for a Google Cloud Function:
+
+<SignInNote />
+
+```javascript {tabTitle:Http functions}
+const Sentry = require("@sentry/serverless");
+
+Sentry.GCPFunction.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+
+exports.helloHttp = Sentry.GCPFunction.wrapHttpFunction((req, res) => {
+  throw new Error("oh, hello there!");
+});
+```
+
+```javascript {tabTitle:Background functions}
+const Sentry = require("@sentry/serverless");
+
+Sentry.GCPFunction.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+
+exports.helloEvents = Sentry.GCPFunction.wrapEventFunction(
+  (data, context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
+```
+
+```javascript {tabTitle:CloudEvent functions}
+const Sentry = require("@sentry/serverless");
+
+Sentry.GCPFunction.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+
+exports.helloEvents = Sentry.GCPFunction.wrapCloudEventFunction(
+  (context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
+```
+
+<Alert level="warning" title="Note">
+
+Sentry JavaScript Serverless SDK does not support Cloud Functions for Firebase at the moment.
+
+</Alert>
+
+Check out Sentry's [GCP sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.
+
+## Behavior
+
+With the Google Cloud Functions integration enabled, the Node SDK will:
+
+- Automatically report all events from your Cloud Functions.
+- Allows you to <PlatformLink to="/configuration/sampling/#configuring-the-transaction-sample-rate">modify the transaction sample rate</PlatformLink> using <PlatformIdentifier name="traces-sample-rate" />.
+- Issue reports automatically include:
+  - A link to the Stackdriver logs
+  - Function details
+  - sys.argv for the function
+  - Function execution time
+  - Function version
+- Sentry holds the thread for up to two seconds to report errors. You can change flush time limit by defining a `flushTimeout` value in the handler options

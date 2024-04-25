@@ -46,6 +46,7 @@ import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
+import FastifySVG from 'platformicons/svg/fastify.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -172,6 +173,7 @@ import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
+import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -537,6 +539,10 @@ const formatToSVG = {
     sm: KoaSVG,
     lg: KoaSVGLarge,
   },
+  fastify: {
+    sm: FastifySVG,
+    lg: FastifySVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -762,7 +768,6 @@ const formatToSVG = {
 export const PLATFORM_TO_ICON = {
   android: 'android',
   apple: 'apple',
-  bun: 'bun',
   capacitor: 'capacitor',
   clojure: 'clojure',
   cocoa: 'apple',
@@ -777,7 +782,6 @@ export const PLATFORM_TO_ICON = {
   'csharp-aspnetcore': 'csharp',
   dart: 'dart',
   default: 'default',
-  deno: 'deno',
   dotnet: 'dotnet',
   'dotnet-aspnetcore': 'dotnet',
   'dotnet-aspnet': 'dotnet',
@@ -817,15 +821,25 @@ export const PLATFORM_TO_ICON = {
   'javascript-astro': 'astro',
   'javascript-angular': 'angularjs',
   'javascript-angularjs': 'angularjs',
+  'javascript-aws-lambda': 'awslambda',
+  'javascript-azure-functions': 'azure-functions',
   'javascript-backbone': 'backbone',
   'javascript-browser': 'javascript',
+  'javascript-bun': 'bun',
   'javascript-capacitor': 'capacitor',
+  'javascript-connect': 'connect',
   'javascript-cordova': 'cordova',
+  'javascript-deno': 'deno',
   'javascript-electron': 'electron',
   'javascript-ember': 'ember',
+  'javascript-express': 'express',
   'javascript-gatsby': 'gatsby',
+  'javascript-gcp-functions': 'gcp-functions',
   'javascript-ionic': 'ionic',
+  'javascript-koa': 'koa',
+  'javascript-fastify': 'fastify',
   'javascript-nextjs': 'nextjs',
+  'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
@@ -839,14 +853,6 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
-  node: 'nodejs',
-  'node-awslambda': 'awslambda',
-  'node-azurefunctions': 'azure-functions',
-  'node-connect': 'connect',
-  'node-express': 'express',
-  'node-gcpfunctions': 'gcp-functions',
-  'node-koa': 'koa',
-  'node-serverlesscloud': 'serverless',
   perl: 'perl',
   php: 'php',
   'php-laravel': 'laravel',
