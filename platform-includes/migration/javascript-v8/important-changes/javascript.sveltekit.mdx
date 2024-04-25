@@ -6,6 +6,24 @@ If you need to support older versions of Node.js, please use Sentry SvelteKit SD
 
 <Include name="migration/javascript-v8/compatible-browsers" />
 
+### Updated SDK initialization
+
+With `8.x` the Server-side Setup of the SvelteKit SDK now needs to be initialized before anything else runs in `hooks.server.js|ts`. Make sure to move `Sentry.init` to the top of the file.
+
+```JavaScript
+import * as Sentry from "@sentry/sveltekit";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+// rest of your code and imports
+```
+
 ### Breaking `sentrySvelteKit()` changes
 
 Under the hood, the SvelteKit SDK uses [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin) to upload sourcemaps and automatically associate add releases to your events. In `8.x`, the SDK now uses `2.x` of the Sentry Vite Plugin which brings many improvements and bug fixes. Sourcemaps uploading with the SvelteKit SDK now uses <Link to="/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/">Debug IDs</Link>.
