@@ -64,9 +64,10 @@ type Props = {
   autoFocus?: boolean;
   path?: string;
   searchPlatforms?: string[];
+  showChatBot?: boolean;
 };
 
-export function Search({path, autoFocus, searchPlatforms = []}: Props) {
+export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -180,15 +181,19 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
           onFocus={() => setInputFocus(true)}
           ref={inputRef}
         />
-        <span className={`${styles['or-separator']} hidden md:inline`}>or</span>
-        <NavLink
-          href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
-          target="_blank"
-          style={{textWrap: 'nowrap'}}
-          className="hidden md:flex"
-        >
-          Ask A Bot
-        </NavLink>
+        {showChatBot && (
+          <Fragment>
+            <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
+            <NavLink
+              href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
+              target="_blank"
+              style={{textWrap: 'nowrap'}}
+              className="hidden md:flex"
+            >
+              Ask A Bot
+            </NavLink>
+          </Fragment>
+        )}
       </div>
       {query.length >= 2 && inputFocus && (
         <div className={styles['sgs-search-results']}>

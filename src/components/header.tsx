@@ -3,17 +3,21 @@ import Image from 'next/image';
 
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
+import sidebarStyles from './sidebar/style.module.scss';
+
 import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
-import {sidebarToggleId} from './sidebar';
+
+const {sidebarToggleId} = sidebarStyles;
 
 type Props = {
   pathname: string;
   searchPlatforms: string[];
+  noSearch?: boolean;
 };
 
-export function Header({pathname, searchPlatforms}: Props) {
+export function Header({pathname, searchPlatforms, noSearch}: Props) {
   return (
     <header className="bg-white h-[var(--header-height)] w-full z-50 border-b border-gray fixed top-0">
       {/* define a header-height variable for consumption by other components */}
@@ -46,9 +50,11 @@ export function Header({pathname, searchPlatforms}: Props) {
           </div>
           Docs
         </a>
-        <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
-          <Search path={pathname} searchPlatforms={searchPlatforms} />
-        </div>
+        {!noSearch && (
+          <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
+            <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
+          </div>
+        )}
         <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
           <NavLink href="/changelog">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>

@@ -1,46 +1,45 @@
-import 'prism-sentry/index.css';
+'use client';
 
-import {headers} from 'next/headers';
+import {Button} from '@radix-ui/themes';
+import {usePathname} from 'next/navigation';
 
-import {Breadcrumbs} from 'sentry-docs/components/breadcrumbs';
 import {Header} from 'sentry-docs/components/header';
-import {Sidebar} from 'sentry-docs/components/sidebar';
-import {DocNode, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {Search} from 'sentry-docs/components/search';
 
-export default async function NotFound() {
-  const headersList = headers();
-  // the special `x-pathname` header is set by the middleware
-  const pathname = headersList.get('x-pathname');
-  const path = pathname?.split('/').filter(Boolean) ?? [];
-
-  const rootNode = (await getDocsRootNode())!;
-
-  let firstMatchingNode: DocNode | undefined;
-  for (let i = path.length; i >= 0; i--) {
-    const node = nodeForPath(rootNode, path.slice(0, i));
-    if (node) {
-      firstMatchingNode = node;
-      break;
-    }
-  }
-
-  const firstFoundPath = firstMatchingNode?.path.split('/').filter(Boolean) ?? [];
-
+export default function NotFound() {
+  const pathname = usePathname() ?? '/';
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} />
-      <section className="px-0 flex relative">
-        <Sidebar path={firstFoundPath} />
-        <main className="main-content flex w-full md:w-[calc(100%-var(--sidebar-width))] lg:ml-[var(--sidebar-width)] mt-[var(--header-height)] flex-1 mx-auto">
-          <div className="mx-auto lg:mx-0 pt-6 px-6 max-w-full">
-            {firstMatchingNode && <Breadcrumbs leafNode={firstMatchingNode} />}
-            <div className="prose prose-slate mt-8">
-              <h1 className="font-medium text-3xl mb-4">Page Not Found</h1>
-              <p className="text-lg">We couldn't find the page you were looking for.</p>
-            </div>
-          </div>
-        </main>
-      </section>
+      <Header pathname="/" searchPlatforms={[]} noSearch />
+      <main className="px-8 pt-28">
+        <h1 className="font-medium text-3xl mb-4">Page Not Found</h1>
+        <p className="text-lg">We couldn't find the page you were looking for :(</p>
+
+        <div className="max-w-md pt-8">
+          <p className="pb-4">Let's give it another shot:</p>
+          <Search autoFocus path={pathname} searchPlatforms={[]} showChatBot={false} />
+        </div>
+        <div className="pt-8 flex gap-4">
+          <Button variant="solid" size="3" asChild>
+            <a
+              href="https://github.com/getsentry/sentry-docs/issues/new/choose"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Report 404 on Github
+            </a>
+          </Button>
+          <Button variant="soft" size="3" asChild>
+            <a
+              href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ask a Bot
+            </a>
+          </Button>
+        </div>
+      </main>
     </div>
   );
 }
