@@ -31,7 +31,7 @@ export async function generateStaticParams() {
 }
 
 // Only render paths returned by generateStaticParams
-export const dynamicParams = true;
+export const dynamicParams = false;
 export const dynamic = 'auto';
 
 const mdxComponentsWithWrapper = mdxComponents(
