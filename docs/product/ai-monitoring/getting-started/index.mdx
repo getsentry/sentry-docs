@@ -4,7 +4,7 @@ sidebar_order: 0
 description: "Learn how to set up Sentry AI Monitoring"
 ---
 
-Sentry AI Monitoring is easiest to use with the Python SDK and one of our official integrations.
+Sentry AI Monitoring is easiest to use with the Python SDK and an official integration like OpenAI.
 
 ![AI Monitoring User Interface](../img/pipelines-view.png)
 
@@ -24,20 +24,27 @@ We will be adding AI integrations continuously. You can also instrument AI manua
 </Alert>
 
 
-## Manually instrumenting AI workloads
+## Pipelines and LLMs
 
-If you aren't using an orchestrator like Langchain or a known LLM provider like OpenAI, you can still use
-Sentry AI monitoring in two ways:
+Sentry expects that you have an orchestrator (like langchain) creating pipelines of one or more AI models (such as gpt-4)
+
+In the AI Monitoring dashboard, we show you a table of the AI pipelines, and pull the token usage from your AI models.
+
+If you are using OpenAI without langchain, you'll need to manually create "pipelines" with the `@ai_track` annotation.
+
+If you are using langchain without OpenAI, you might have to manually record token usage with `record_token_usage()`.
+
+Both of these manual helpers are documented below.
 
 ### Python SDK Decorators
 
 The [Python SDK](/platforms/python) includes an `@ai_track` decorator which will mark functions as AI-related and
-make them show up in the AI Monitoring dashboard.
+cause them to show up in the AI Monitoring dashboard.
 
 ```python
 
 import time
-from sentry_sdk.ai_analytics import ai_track, record_token_usage
+from sentry_sdk.ai_monitoring import ai_track, record_token_usage
 import sentry_sdk
 import requests
 
