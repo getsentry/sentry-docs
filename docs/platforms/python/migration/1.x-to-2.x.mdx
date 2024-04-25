@@ -55,7 +55,7 @@ The API function `last_event_id()` was removed. The last event ID is still retur
 
 ## Custom Instrumentation
 
-You no longer have to use `configure_scope` to mutate a transaction. Instead, you simply get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
+Hub-based APIs as well as some scope-based APIs (like `configure_scope()` and `push_scope()`) are now deprecated as a consequence of [reworking](/platforms/python/enriching-events/scopes/) the way the SDK saves and propagates data internally. Instead, SDK 2.0 introduces the concept of a global, isolation and current scope. In short:
 
 - The **global scope** holds data that doesn't change as long as your app is running (for example, the current release).
 - The **isolation scope** follows a single basic unit of your program, such as a single request-response cycle or one task in a task queue, and holds data pertaining to it. In most cases, the lifecycle of an isolation scope maps to the lifecycle of a transaction.
@@ -101,7 +101,7 @@ If you want your scope change to affect the whole transaction, use the isolation
 + # do something with scope
 ```
 
-Additionally, you can no longer mutate a manually-created transaction in a `configure_scope` block. Instead, you need to get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
+Additionally, you no longer have to use `configure_scope` to mutate a transaction. Instead, you simply get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
 
 ```python diff
 transaction = sentry_sdk.transaction(...)
