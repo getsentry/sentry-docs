@@ -1,0 +1,68 @@
+### Supported versions
+
+Sentry Serverless SDK for AWS Lambda `8.x` supports Node `14.18.0` or higher. In addition the SDK now supports AWS SDK v3.
+
+If you need to support older versions of Node.js, please use Sentry Serverless SDK for AWS Lambda `7.x`.
+
+### Updated SDK initialization
+
+With 8.x, the Sentry Serverless SDK for AWS Lambda has been completely overhauled. It is now powered by [OpenTelemetry](https://opentelemetry.io/) under the hood. You do not need to know or understand what OpenTelemetry is in order to use Sentry. We set up OpenTelemetry under the hood, no knowledge of it is required in order to get started, though if you use OpenTelemetry-native APIs to start spans, and Sentry will pick up everything automatically.
+
+If you want to customize the OpenTelemetry setup, see the docs about using [OpenTelemetry with `8.x`](./v8-opentelemetry)
+
+With this change, `@sentry/serverless` has been removed and will no longer be published. The AWS related code now lives in `@sentry/aws-serverless`.
+
+Here's an example of instrumentating you AWS Lambda with Sentry Serverless SDK `8.x`:
+
+```JavaScript
+const Sentry = require('@sentry/aws-serverless');
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1,
+});
+
+// async (recommended)
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  throw new Error('oh, hello there!');
+});
+
+// sync also works
+// exports.handler = Sentry.wrapHandler((event, context, callback) => {
+//   throw new Error('oh, hello there!');
+// });
+```
+
+To migrate your AWS Lambda handlers to Sentry Serverless SDK for AWS Lambda `8.x`, you need to make the following changes:
+
+1. Move your `Sentry.init` call so that it is called before any other `require`/`import` statements.
+
+Due to the way that auto instrumentation works in `8.x` of the Sentry Serverless SDK for AWS Lambda, it is required that you initialize Sentry before you require or import any other package. Any package that is required/imported before Sentry is initialized may not be correctly auto-instrumented.
+
+In addition, instead of using a a namespace import, `Sentry.AWSLambda`, directly import the methods from the SDK.
+
+```JavaScript diff
+const Sentry = require('@sentry/aws-serverless');
+
+- Sentry.AWSLambda.init({ dsn: '___PUBLIC_DSN___' });
++ Sentry.init({ dsn: '___PUBLIC_DSN___' });
+```
+
+2. Remove any performance related integrations
+
+All performance auto-instrumentation will be automatically enabled if the package is found. You do not need to add any integration yourself, and `autoDiscoverNodePerformanceMonitoringIntegrations()` has also been removed.
+
+We now support the following integrations out of the box with 0 configuration:
+
+- `httpIntegration`: Automatically instruments Node http and https standard libraries
+- `nativeNodeFetchIntegration`: Automatically instruments top level fetch and undici
+- `expressIntegration`: Automatically instruments Express.js
+- `graphqlIntegration`: Automatically instruments GraphQL
+- `mongoIntegration`: Automatically instruments MongoDB
+- `mongooseIntegration`: Automatically instruments Mongoose
+- `mysqlIntegration`: Automatically instruments MySQL
+- `mysql2Integration`: Automatically instruments MySQL2
+- `postgresIntegration`: Automatically instruments PostgreSQL
+- `prismaIntegration`: Automatically instruments Prisma
+
+We also automatically instrument AWS SDK v2 and AWS SDK v3.
