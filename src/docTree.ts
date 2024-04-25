@@ -49,7 +49,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
   });
 
   const rootNode: DocNode = {
-    path: '/',
+    path: '',
     slug: '',
     frontmatter: {
       title: 'Home',

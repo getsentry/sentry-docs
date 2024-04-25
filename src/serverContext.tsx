@@ -15,7 +15,7 @@ export const serverContext = cache(() => {
     path: [],
 
     rootNode: {
-      path: '/',
+      path: '',
       slug: '',
       frontmatter: {
         title: 'Home',
