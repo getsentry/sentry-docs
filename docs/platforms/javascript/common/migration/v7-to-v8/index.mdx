@@ -2,6 +2,10 @@
 title: Migrate from 7.x to 8.x
 sidebar_order: 8910
 description: "Learn about migrating from Sentry JavaScript SDK 7.x to 8.x"
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
 ---
 
 The main goal of version 8 is to improve our performance monitoring APIs, integrations API, and ESM support. This
@@ -10,13 +14,13 @@ dependencies on OpenTelemetry.
 
 ## Migration Codemod
 
-Before updating to `8.x` of the SDK, we recommend upgrading to the latest version of `7.x`. To fix all deprecations on `7.x`, you can use the `@sentry/migr8` codemod to automatically update your SDK usage. `@sentry/migr8` requires Node 18+.
+Before updating to `8.x` of the SDK, we recommend upgrading to the latest version of `7.x`. To fix most of the deprecations on `7.x`, you can use the [`@sentry/migr8`](https://www.npmjs.com/package/@sentry/migr8) codemod to automatically update your SDK usage. `@sentry/migr8` requires Node 18+.
 
 ```bash
 npx @sentry/migr8@latest
 ```
 
-Our migration tool will let you select which updates to run, and automatically update your code. In some cases, we cannot automatically change code for you. These will be marked with a `TODO(sentry)` comment instead. Make sure to review all code changes after running `@sentry/migr8`!
+Our migration tool will let you select which updates to run, and automatically update your code. In some cases, we cannot automatically change code for you. These will be marked with a `TODO(sentry)` comment instead. Make sure to review all code changes after running `@sentry/migr8`! For more details on the deprecations, see our docs on [Deprecations in 7.x](./v7-deprecations).
 
 ## Migration Guide
 
@@ -30,7 +34,7 @@ Please see our [detailed migration guide](https://github.com/getsentry/sentry-ja
 
 <PlatformContent includePath="migration/javascript-v8/intro" />
 
-We recommend you read through all the [Important Changes](#important-changes) as they affect all Next.js SDK users. The [Other Changes](#other-changes) linked below only affect users who have very custom instrumentation. There is also a [Troubleshooting](#troubleshooting) section for common issues.
+We recommend you read through all the [Important Changes](#important-changes) as they affect all Next.js SDK users. The [Other Changes](#other-changes) linked below only affect users who have more customized instrumentation. There is also a [Troubleshooting](#troubleshooting) section for common issues.
 
 ## Important Changes
 
@@ -42,9 +46,11 @@ We recommend you read through all the [Important Changes](#important-changes) as
 
 <PlatformContent includePath="migration/javascript-v8/integrations-package-removal" />
 
-### Removal of `@sentry/hub`
+### Deprecation of `Hub` and `getCurrentHub()`
 
-`@sentry/hub` has been removed and will no longer be published. All of the @sentry/hub exports have moved to `@sentry/core` or other related SDKs.
+The `Hub` has been a very important part of the Sentry SDK API up until now. Hubs were the SDK's "unit of concurrency" to keep track of data across threads and to scope data to certain parts of your code. Because it is overly complicated and confusing to power users, it is going to be replaced by a set of new APIs: the "new Scope API". For now `Hub` and `getCurrentHub` are still available, but it will be removed in the next major version.
+
+As such, `@sentry/hub` has been removed and will no longer be published. All of the @sentry/hub exports have moved to `@sentry/core` or other related SDKs.
 
 <PlatformContent includePath="migration/javascript-v8/tracing-package-removal" />
 

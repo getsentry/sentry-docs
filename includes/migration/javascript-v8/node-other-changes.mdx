@@ -10,3 +10,17 @@ Sentry.init({
   ],
 });
 ```
+
+### Removal of `Sentry.Handlers.trpcMiddleware()` in favor of `Sentry.trpcMiddleware()`
+
+The Sentry tRPC middleware got moved from `Sentry.Handlers.trpcMiddleware()` to `Sentry.trpcMiddleware()`.
+
+### Behaviour in combination with `onUncaughtException` handlers in Node.js
+
+Previously the SDK exited the process by default, even though additional `onUncaughtException` may have been registered,
+that would have prevented the process from exiting. You could opt out of this behaviour by setting the
+`exitEvenIfOtherHandlersAreRegistered: false` in the `onUncaughtExceptionIntegration` options. Up until now the value
+for this option defaulted to `true`.
+
+Going forward, the default value for `exitEvenIfOtherHandlersAreRegistered` will be `false`, meaning that the SDK will
+not exit your process when you have registered other `onUncaughtException` handlers.
