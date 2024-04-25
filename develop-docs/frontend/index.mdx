@@ -65,6 +65,29 @@ Both the `app/components/` and `app/views/` folders contain React components.
 - Put files into `app/components/` for anything else that _could_ be reused.
   - If the component accepts any prop beyond `RouteComponentProps` then it very likely belongs inside `app/components/`
 
+### Type declarations
+
+We do not follow any strict "prefer type over interface" rules for type declarations, so using either is at your discretion. That being said, there are [functional differences](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#differences-between-type-aliases-and-interfaces) between the two that you should be aware of so you can use them appropriately. 
+
+A simple guiding principle is to prefer interfaces when you require declaration merging. The reason for that is that type intersections are poor at detecting conflicts, produce unexpected or unwanted results and when used in combination with large types [perform worse than interfaces](https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections).
+
+Example:
+```typescript
+// This is valid and the outcome is a "never" type
+type A =
+{ color: "blue" } & 
+{ color: "red" };
+
+interface B {
+  color: "blue";
+}
+// Interface 'C' incorrectly extends interface 'B'.
+//   Types of property 'color' are incompatible.
+interface C extends B {
+  color: "red";
+}
+```
+
 ### Event handlers
 
 We use different prefixes to better distinguish event handlers from event callback props.
