@@ -6,18 +6,18 @@ description: "Learn about new Performance Monitoring APIs in Sentry JavaScript S
 
 The SDK `8.x` release introduces new APIs for performance monitoring. These APIs are designed to provide more control over how performance data is collected and reported to Sentry.
 
-These APIs are also available in `7.x` so you can incrementally moveover to the new APIs before upgrading to `8.x`.
+These APIs are also available in `7.x` so you can incrementally move over to the new APIs before upgrading to `8.x`.
 
 Previously, there were two key APIs for adding manual performance instrumentation to your applications:
 
 - `startTransaction()`
 - `span.startChild()`
 
-This showed the underlying data model that Sentry was originally based on, which is that there is a root Transaction which can have a nested tree of Spans.
+Those APIs were based on the original data model of Sentry. This model was based on a root Transaction that could contain a nested tree of Spans.
 
-In the new model, transactions are conceptually gone. Instead, you will always operate on spans, no matter where in the tree you are. Note that in the background, spans may still be grouped into a transaction for the Sentry UI. However, this happens transparently, and from an SDK perspective, all you have to think about are spans.
+In the new model, transactions are conceptually gone. Now, operations are always performed on spans, regardless of their position in the tree. Note that spans may still be grouped into a transaction for the Sentry UI. However, this happens in the background and, from the SDK's point of view, all you need to be concerned about are spans.
 
-Instead of manually starting & ending transactions and spans, the new model does not differentiate between these two. Instead, you always use the same APIs to start a new span, and it will automatically either create a new Root Span (which is just a regular span, only that it has no parent, and is thus conceptually roughly similar to a transaction) or a Child Span for whatever is the currently active span.
+The new model does not differentiate between a transaction or a span when manually starting or ending them. Instead, you always use the same APIs to start a new span. This will automatically create either a new Root Span (a regular span without a parent, conceptually similar to a transaction) or a Child Span, depending on what is the currently active span.
 
 There are three key APIs available to start spans:
 
@@ -27,7 +27,7 @@ There are three key APIs available to start spans:
 
 All three span APIs take `StartSpanOptions` as a first argument, which has the following shape:
 
-```ts
+```TypeScript
 interface StartSpanOptions {
   // The only required field - the name of the span
   name: string;
@@ -40,8 +40,8 @@ interface StartSpanOptions {
 
 ### `startSpan()`
 
-This is the most common API that should be used in most circumstances. It will start a new span, make it the active span
-for the duration of a given callback, and automatically end it when the callback ends. You can use it like this:
+This is the most common API that should be used in most circumstances. It will start a new span, making it the active span
+for the duration of a given callback, and automatically ends it when the callback ends. You can use it like this:
 
 ```js
 Sentry.startSpan(
@@ -82,8 +82,8 @@ Note that if an error is thrown inside of the callback, the span status will aut
 
 ### `startSpanManual()`
 
-This is a variation of `startSpan()` with the only change that it does not automatically end the span when the callback
-ends, but you have to call `span.end()` yourself:
+This is a variation of `startSpan()` with the only difference that it does not automatically end the span when the callback
+ends. When using this, you have to call `span.end()` yourself:
 
 ```js
 Sentry.startSpanManual(
@@ -201,12 +201,9 @@ In addition, a transaction has this API:
 
 ### Attributes vs. Data vs. Tags vs. Context
 
-In the old model, you had the concepts of **Data**, **Tags** and **Context** which could be used for different things.
-However, this has two main downsides: One, it is not always clear which of these should be used when. And two, not all
-of these are displayed the same way for transactions or spans.
+Previously, the model had the concepts of **Data**, **Tags**, and **Context**, which could be used for different things. However, this had two main downsides: Firstly, it was not always clear which concept should be used in a given situation. Secondly, these concepts were not displayed the same way for transactions or spans.  
 
-Because of this, in the new model, there are only **Attributes** to be set on spans anymore. Broadly speaking, they map
-to what Data used to be.
+To address these issues, the new model only has **Attributes** that can be set on spans. Broadly speaking, they map to what was formerly known as Data.
 
 If you still really _need_ to set tags or context, you can do so on the scope before starting a span:
 
@@ -236,7 +233,7 @@ of the span, as well as some other relevant data of the span. Some properties we
 In v7, the performance APIs `startSpan()` / `startInactiveSpan()` / `startSpanManual()` would receive an `undefined`
 span if tracing was disabled or the span was not sampled.
 
-In v8, aligning with OpenTelemetry, these will _always_ return a span - _but_ the span may eb a Noop-Span, meaning a
+In v8, aligning with OpenTelemetry, these will _always_ return a span - _but_ the span may be a Noop-Span, meaning a
 span that is never sent. This means you don't have to guard everywhere in your code anymore for the span to exist:
 
 ```TypeScript
