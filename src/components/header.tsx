@@ -9,7 +9,7 @@ import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
 
-const {sidebarToggleId} = sidebarStyles;
+export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
 type Props = {
   pathname: string;
