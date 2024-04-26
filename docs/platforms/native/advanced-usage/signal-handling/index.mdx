@@ -21,9 +21,9 @@ The topic of signal handling is vast, and this documentation can only guide you 
 Sentry's Native SDK comes with its own set of signal handlers. There may be conflicts if your application currently installs handlers for any [signals of interest](#signals-of-interest) (listed below) that can result in a crash. To avoid this, do the following:
 
 * Refrain from registering a conflicting signal handler in your application.
-* If you have to, register this handler after `sentry_init()` and let it invoke the previously installed handler (ours) after it finishes or you won't get a report.
-* If you or one of your dependencies register a handler for the signals listed below _before_ you call `sentry_init()`, we will reinstall the previous handler as soon as you call `sentry_close()`. Only the `inproc` backend invokes the previously installed handler at the end of its handler.
-* If you want to act on any crash and not consider specific signals, [register an `on_crash()` hook](https://docs.sentry.io/platforms/native/configuration/filtering/#using-on_crash).
+* If you have to, register your handler after `sentry_init()` and let it invoke Sentry's handler after it finishes, or you won't get a report.
+* If you or one of your dependencies register a handler for the signals listed below _before_ you call `sentry_init()`, we will reinstall that handler as soon as you call `sentry_close()`. Only the `inproc` backend invokes your installed handler at the end of Sentry's handler.
+* If you want to act on any crash and not consider specific signals, [register an `on_crash()` hook](https://docs.sentry.io/platforms/native/configuration/filtering/#using-on_crash) instead of registering a signal handler.
 
 ### Signals of Interest
 
@@ -34,7 +34,7 @@ In the context of the Native SDK, we are only interested in signals that will re
 * `SIGABRT`: Raised when `abort()` was called. This is the only signal handled on Windows (and only by the `crashpad` backend) because calling `abort()` bypasses Structured Exception Handling ([`SEH`](https://learn.microsoft.com/en-us/windows/win32/debug/structured-exception-handling)).
 * `SIGFPE`: An erroneous arithmetic operation that occurred in the CPU.
 * `SIGILL`: The process attempted to execute an illegal (often privileged) processor instruction.
-* `SIGTRAP`: Typically used to inform debuggers when execution hits a breakpoint instruction (`int 3`, `brk`, etc.), which instrumentation tools and sanitizers sometimes also issue.
+* `SIGTRAP`: This is typically used to inform debuggers when execution hits a breakpoint instruction (`int 3`, `brk`, etc.), which instrumentation tools and sanitizers sometimes also issue.
 
 If you use the `crashpad` backend, in addition to the above, on Linux, you will also get crash reports for:
 
