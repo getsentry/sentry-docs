@@ -16,7 +16,7 @@ Use the information in this page to help answer these questions:
 ## Addressing Concurrency Issues
 
 The short answer to the first two questions: make sure your `contextvars` work and
-that your hubs were cloned for each concurrency unit.
+that your isolation scope was cloned for each concurrency unit.
 
 Python supports several distinct solutions to concurrency, including threads and
 coroutines.
@@ -27,22 +27,21 @@ cases it works perfectly, but in a few situations some special care must be
 taken. This is specially true when working with a code base doing concurrency
 outside of the provided framework integrations.
 
-The general recommendation is to have one hub per "concurrency unit"
-(thread/coroutine/etc). The SDK ensures every thread has an independent hub via the `ThreadingIntegration`.
+The general recommendation is to have one isolation scope per "concurrency unit"
+(thread/coroutine/etc). The SDK ensures every thread has an independent scope via the `ThreadingIntegration`.
 If you do concurrency with `asyncio` coroutines, make sure to use the `AsyncioIntegration`
-that will clone the current hub in your `Task`s.
+which will clone the correct scope in your `Task`s.
 
-The general pattern of usage for cloning the hub is:
+The general pattern of usage for creating a new isolation scope is:
 
 ```python
-with Hub(Hub.current):
-    # in this block Hub.current refers to a new clone
-    # of the original hub, with the same client and
-    # the same initial scope data.
+with sentry_sdk.isolation_scope() as scope:
+    # In this block scope refers to a new fork of the original isolation scope,
+    # with the same client and the same initial scope data.
 ```
 
 See the <PlatformLink to="/integrations/default-integrations/#threading">Threading</PlatformLink> section
-for a more complete example that involves cloning the current hub.
+for a more complete example that involves forking the isolation scope.
 
 ## Context Variables vs Thread Locals
 
