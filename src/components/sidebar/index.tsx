@@ -76,7 +76,7 @@ export async function Sidebar({path}: SidebarProps) {
 
   return (
     <aside className={styles.sidebar}>
-      <input type="checkbox" id={sidebarToggleId} className="hidden" defaultChecked />
+      <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="md:flex flex-col items-stretch">
         <div className="platform-selector">
