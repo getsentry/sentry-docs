@@ -1,7 +1,13 @@
 import {getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
-import {FrontMatter, Platform, PlatformConfig, PlatformGuide} from './types';
+import {
+  FrontMatter,
+  Platform,
+  PlatformConfig,
+  PlatformGuide,
+  PlatformIntegration,
+} from './types';
 
 export interface DocNode {
   children: DocNode[];
@@ -137,8 +143,10 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
   const caseStyle = platformData?.case_style || n.frontmatter.caseStyle;
+  const guides = extractGuides(n);
+  const integrations = extractIntegrations(n);
+
   return {
-    guides: extractGuides(n),
     key: n.slug,
     name: n.slug,
     type: 'platform',
@@ -149,6 +157,8 @@ function nodeToPlatform(n: DocNode): Platform {
     fallbackPlatform: n.frontmatter.fallbackPlatform,
     categories: n.frontmatter.categories,
     keywords: n.frontmatter.keywords,
+    guides,
+    integrations,
   };
 }
 
@@ -238,3 +248,22 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   }
   return guidesNode.children.map(n => nodeToGuide(platformNode.slug, n));
 }
+
+const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
+  if (!p.frontmatter.showIntegrationsInSearch) {
+    return [];
+  }
+  const integrations = nodeForPath(p, 'integrations');
+  return (
+    integrations?.children.map(integ => {
+      return {
+        key: integ.slug,
+        name: integ.frontmatter.title,
+        icon: p.slug + '.' + integ.slug,
+        url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
+        platform: p.slug,
+        type: 'integration',
+      };
+    }) ?? []
+  );
+};

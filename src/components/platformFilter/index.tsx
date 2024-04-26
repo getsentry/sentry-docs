@@ -15,7 +15,11 @@ import {PlatformIcon} from '../platformIcon';
 
 export function PlatformFilter({platforms}: {platforms: Platform[]}) {
   const platformsAndGuides = platforms
-    .map(p => [p, p.guides.map(g => ({...g, platform: p}))])
+    .map(p => [
+      p,
+      p.guides.map(g => ({...g, platform: p})),
+      p.integrations.map(integ => ({...integ, platform: p})),
+    ])
     .flat(2);
   const [filter, setFilter] = useState('');
 
@@ -24,17 +28,18 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'sdk', 'keywords'];
+    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords'];
     const matches_ = matchSorter(platformsAndGuides, filter, {keys});
     return matches_;
   }, [filter]);
 
-  const platformColumns = splitToChunks(
+  const platformColumns: Platform[][] = splitToChunks(
     3,
     uniqByReference(matches.map(x => (x.type === 'platform' ? x : x.platform))).map(p => {
       return {
         ...p,
         guides: p.guides.filter(g => matches.some(m => m.key === g.key)),
+        integrations: p.integrations.filter(i => matches.some(m => m.key === i.key)),
       };
     })
   );
@@ -59,7 +64,7 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
           {platformColumns.map((column, i) => (
             <div key={i} className="flex flex-col gap-4">
               {column.map(platform =>
-                platform.guides.length === 0 ? (
+                platform.guides.length === 0 && platform.integrations.length === 0 ? (
                   <Link href={platform.url} key={platform.key}>
                     <div className={styles.StandalonePlatform}>
                       <PlatformIcon
@@ -131,7 +136,7 @@ function PlatformWithGuides({
       <Collapsible.Content
         className={classNames(styles.CollapsibleContent)}
         // scrollable if there are more than 8 (arbitrary limit) guides
-        data-scrollable={platform.guides.length >= 8}
+        data-scrollable={platform.guides.length >= 8 || platform.integrations.length >= 8}
       >
         {platform.guides.map((guide, i) => (
           <Link href={guide.url} key={guide.key}>
@@ -151,6 +156,27 @@ function PlatformWithGuides({
             </div>
           </Link>
         ))}
+        {platform.guides.length === 0 &&
+          platform.integrations.map((integ, i) => {
+            return (
+              <Link href={integ.url} key={integ.key}>
+                <div
+                  className={styles.Guide}
+                  style={{
+                    animationDelay: `${i * 5}ms`,
+                  }}
+                >
+                  <PlatformIcon
+                    size={20}
+                    format="lg"
+                    platform={integ.icon}
+                    className={styles.Platform}
+                  />
+                  {integ.name}
+                </div>
+              </Link>
+            );
+          })}
       </Collapsible.Content>
     </Collapsible.Root>
   );
