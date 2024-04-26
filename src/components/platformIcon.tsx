@@ -82,6 +82,7 @@ import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
+import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
@@ -209,6 +210,7 @@ import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
+import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
@@ -587,6 +589,10 @@ const formatToSVG = {
     sm: NodejsSVG,
     lg: NodejsSVGLarge,
   },
+  openai: {
+    sm: OpenaiSVG,
+    lg: OpenaiSVGLarge,
+  },
   perl: {
     sm: PerlSVG,
     lg: PerlSVGLarge,
@@ -853,6 +859,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
+  openai: 'openai',
   perl: 'perl',
   php: 'php',
   'php-laravel': 'laravel',
