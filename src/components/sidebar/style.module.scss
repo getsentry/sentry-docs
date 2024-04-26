@@ -1,15 +1,3 @@
-// the checkbox controls the sidebar visibility on mobile
-// otherwise it's always visible on desktop
-@media only screen and (max-width: 768px) {
-  .sidebar:has(> #navbar-menu-toggle:checked) {
-    display: flex;
-  }
-
-  .sidebar:has(> #navbar-menu-toggle:not(:checked)) {
-    display: none;
-  }
-}
-
 .sidebar {
   top: var(--header-height);
   bottom: 0;
@@ -25,15 +13,44 @@
   height: 100vh;
   overflow-y: auto;
 
-  @media only screen and (min-width: 700px) {
+  @media only screen and (min-width: 768px) {
     position: fixed;
     left: 0;
     top: var(--header-height, 80px);
-    width: 300px;
+    width: var(--sidebar-width);
     height: calc(100vh - var(--header-height, 80px));
     display: flex;
+
     &+ :global(.main-content) {
       margin-left: var(--sidebar-width);
+    }
+  }
+
+  // the checkbox controls the sidebar visibility on mobile
+  // otherwise it's always visible on desktop
+  @media only screen and (max-width: 1024px) {
+    &:has(> #navbar-menu-toggle:checked) {
+      display: flex;
+
+      &+ :global(.main-content) {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+      }
+    }
+
+    &:has(> #navbar-menu-toggle:not(:checked)) {
+      display: none;
+
+      &+ :global(.main-content) {
+        margin-left: 0;
+      }
+    }
+  }
+
+  // 0 margin on mobile for main content
+  @media only screen and (max-width: 768px) {
+    &:has(> #navbar-menu-toggle:checked)+ :global(.main-content) {
+      margin-left: 0;
     }
   }
 
