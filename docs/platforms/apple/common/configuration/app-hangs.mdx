@@ -18,6 +18,38 @@ The SDK reports an app hang immediately, but doesn’t report the exact duration
 
 Because the app hang detection integration uses SentryCrashIntegration to capture the stack trace when creating app hang events, SentryCrashIntegration has to be enabled for the integration to work.
 
+You can filter app hang events in beforeSend by checking the event exception type:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSend = { event in
+        if (event.exceptions?.first?.type == "App Hanging") {
+          // modify event here or return nil to discard the event
+        }
+        return event
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
+        if ([self.exceptions.count == 1 && event.exceptions.firstObject.type isEqualToString:@"App Hanging"]) {
+          // modify event here or return nil to discard the event
+        }
+        return event;
+    }
+}];
+```
+
 Starting with version 8.0.0, this feature has been enabled by default. To disable it:
 
 <SignInNote />
