@@ -128,7 +128,11 @@ function PlatformWithGuides({
           </button>
         </div>
       </Collapsible.Trigger>
-      <Collapsible.Content className={classNames(styles.CollapsibleContent)}>
+      <Collapsible.Content
+        className={classNames(styles.CollapsibleContent)}
+        // scrollable if there are more than 8 (arbitrary limit) guides
+        data-scrollable={platform.guides.length >= 8}
+      >
         <div className={styles.CollapsibleContentText}>
           {platform.guides.map(guide => (
             <Link href={guide.url} key={guide.key}>
