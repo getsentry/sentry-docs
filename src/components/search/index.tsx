@@ -101,7 +101,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   }, [autoFocus]);
 
   const searchFor = useCallback(
-    async (inputQuery, args = {}) => {
+    async (inputQuery: string, args: Parameters<typeof search.query>[1] = {}) => {
       setQuery(inputQuery);
       if (inputQuery.length === 2) {
         setShowOffsiteResults(false);
