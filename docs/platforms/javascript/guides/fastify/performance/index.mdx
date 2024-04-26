@@ -1,0 +1,80 @@
+---
+title: Performance Monitoring
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+---
+
+When integrating Sentry with a Fastify application, you can leverage provided middlewares to automatically instrument and monitor the performance of your application.
+
+<Note>
+
+If you’re adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service’s performance characteristics maintain expectations.
+
+</Note>
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+const { fastify } = require("fastify");
+const app = fastify();
+
+Sentry.setupFastifyErrorHandler(app);
+
+// the rest of your app
+
+app.listen({ port: 3030 });
+```
+
+You can also manually create spans in your app:
+
+```javascript
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+
+// make sure to only require `http` after Sentry has been initialized!
+const { fastify } = require("fastify");
+const http = require("http");
+
+const app = fastify();
+Sentry.setupFastifyErrorHandler(app);
+
+app.get("/my-route", function (req, res) {
+  try {
+    // this should generate an http span
+    request = http.get("http://sentry.io", (res) => {
+      console.log(`STATUS: ${res.statusCode}`);
+      console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+    });
+
+    // this error event should have trace context
+    foo();
+  } catch (err) {
+    Sentry.captureException(err);
+  }
+});
+
+app.listen({ port: 3030 });
+```
+
+## Automatic Instrumentation
+
+See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> to learn about all the things that the SDK automatically instruments for you.
+
+## Custom Instrumentation
+
+You can also manually start spans to instrument specific parts of your code. This is useful when you want to measure the performance of a specific operation or function.
+
+See <PlatformLink to="/performance/instrumentation/custom-instrumentation">Custom Instrumentation</PlatformLink> on how to manually start spans.
