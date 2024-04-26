@@ -76,7 +76,7 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
                     key={platform.key}
                     platform={platform}
                     // force expand if the filter is long enough to have few results
-                    forceExpand={filter.length >= 3}
+                    forceExpand={filter.length >= 2}
                   />
                 )
               )}
