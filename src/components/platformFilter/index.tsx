@@ -133,21 +133,24 @@ function PlatformWithGuides({
         // scrollable if there are more than 8 (arbitrary limit) guides
         data-scrollable={platform.guides.length >= 8}
       >
-        <div className={styles.CollapsibleContentText}>
-          {platform.guides.map(guide => (
-            <Link href={guide.url} key={guide.key}>
-              <div className={styles.Guide}>
-                <PlatformIcon
-                  size={20}
-                  platform={guide.icon ?? guide.key}
-                  format="lg"
-                  className={styles.PlatformIcon}
-                />
-                {guide.title}
-              </div>
-            </Link>
-          ))}
-        </div>
+        {platform.guides.map((guide, i) => (
+          <Link href={guide.url} key={guide.key}>
+            <div
+              className={styles.Guide}
+              style={{
+                animationDelay: `${i * 5}ms`,
+              }}
+            >
+              <PlatformIcon
+                size={20}
+                platform={guide.icon ?? guide.key}
+                format="lg"
+                className={styles.PlatformIcon}
+              />
+              {guide.title}
+            </div>
+          </Link>
+        ))}
       </Collapsible.Content>
     </Collapsible.Root>
   );

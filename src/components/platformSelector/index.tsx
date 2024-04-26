@@ -170,6 +170,9 @@ export function PlatformSelector({
                   event.preventDefault();
                   event.stopPropagation();
                 }}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
               />
             </div>
             <ComboboxList className={styles.listbox}>
