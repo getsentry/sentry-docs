@@ -3,7 +3,7 @@ export default function Header({loading}) {
     <div className="w-full mx-auto h-96 relative bg-darkPurple">
       <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 pt-8 grid grid-cols-12 items-center">
         <img
-          className={`justify-self-center col-span-10 z-20 hidden lg:block ${loading ? 'animate-fade-in-left' : ''}`}
+          className={`justify-self-center col-span-10 hidden lg:block ${loading ? 'animate-fade-in-left' : ''}`}
           src="https://docs.sentry.io/changelog/assets/hero.png"
           alt="Sentry Changelog"
           height={273}
@@ -15,8 +15,17 @@ export default function Header({loading}) {
           <h1 className="justify-self-center text-white font-bold text-4xl text-center lg:text-left mb-2">
             Sentry Changelog
           </h1>
-          <h2 className="justify-self-center z-20 text-gold text-1xl text-center lg:text-left">
-            Stay up to date on everything from product updates to SDK changes
+          <h2 className="justify-self-center text-gold text-1xl text-center lg:text-left">
+            Follow&nbsp;
+            <a
+              href="https://twitter.com/SentryChangelog"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              @SentryChangelog
+            </a>
+            &nbsp;to stay up to date on everything from product updates to SDK changes.
           </h2>
         </div>
       </div>
