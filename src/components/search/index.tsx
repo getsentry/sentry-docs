@@ -79,7 +79,9 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   const handleClickOutside = useCallback((ev: MouseEvent) => {
     // don't close the search results if the user is clicking the expand button
     if (
-      (ev.target as HTMLButtonElement).classList.contains('sgs-expand-results-button')
+      (ev.target as HTMLButtonElement).classList.contains(
+        styles['sgs-expand-results-button']
+      )
     ) {
       return;
     }
