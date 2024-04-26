@@ -991,9 +991,13 @@ export function PlatformIcon({
           height={size}
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
+          loading="eager"
+          priority
         />
         <Image
           src={languageSvg}
+          loading="eager"
+          priority
           style={{
             position: 'absolute',
             bottom: '-1px',
