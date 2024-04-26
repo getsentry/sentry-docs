@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {notFound} from 'next/navigation';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
@@ -16,11 +15,6 @@ import {PlatformFilter} from './platformFilter';
 
 export async function Home() {
   const rootNode = await getDocsRootNode();
-  if (!rootNode) {
-    console.warn('no root node');
-    return notFound();
-  }
-
   // this regex deals with names like .NET that would otherwise be sorted at the top
   const leadingNonAlphaRegex = /^[^\w]/;
   // sort the platforms alphabetically
