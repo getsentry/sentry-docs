@@ -195,3 +195,50 @@ replayIntegration({
 
 If you return `false` from this method for a given error, we will not check the error sample rate for this error.
 If you return `true`, we will continue to check the error sample rate as normal.
+
+
+### Connect Replays with Support Software
+
+Replays does not need to be connected to an application error, it can also be used to supplement your support software
+as well. Depending on the level of customization provided by your support widget, it is possible to send a replay to
+Sentry when your users open the support widget. Note that Sentry's [User Feedback](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
+provides this functionality by default! You can then send the ID of the replay along with the support ticket that your
+user submits. The ID can then be used to reference the replay inside of Sentry. Alternatively, you can search for
+replays by a user identifier such as email.
+
+The below is a hypothetical scenario of how you can connect Replay to your support widget.
+
+```javascript
+/**
+ * Initialize the Sentry SDK as normal.
+ *
+ * `replaysOnErrorSampleRate` needs to be > 0 so that replays are always buffering and only sent when necessary
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 0.5,
+  integrations: [Sentry.replayIntegration()],
+});
+
+/**
+ * Your widget will need to have an event/hook to trigger flushing the replay to
+ * Sentry.
+ /
+MySupportWidget.on('open', () => {
+  const replay = Sentry.getReplay();
+  // Send replay to Sentry
+  replay.flush();
+  // Retrieve the replay id that was saved and attach it to your support widget
+  const replayId = replay.getReplayId();
+  MySupportWidget.setTag('replayId', replayId);
+});
+
+/**
+ * Now determine if your support application allows you to use custom data to generate a link directly to the
+ * replay in Sentry. Replay URLs have the following format:
+ *
+ *   https://<org-slug>.sentry.io/replays/<replay-id>/
+ *
+ */
+```
