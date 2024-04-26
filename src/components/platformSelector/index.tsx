@@ -15,7 +15,7 @@ import {matchSorter} from 'match-sorter';
 import {usePathname, useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
-import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
 import {uniqByReference} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
@@ -47,6 +47,10 @@ export function PlatformSelector({
         // add a reference to the parent platform instead of its key
         platform,
       })),
+      ...platform.integrations.map(integration => ({
+        ...integration,
+        platform,
+      })),
     ])
     .flat(2);
 
@@ -74,7 +78,7 @@ export function PlatformSelector({
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'sdk', 'keywords'];
+    const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
     const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
@@ -245,6 +249,18 @@ function PlatformItem({
   activeItemKey,
   onPlatformExpand: onExpand,
 }: PlatformItemProps) {
+  const showCaret = (p: Platform) => p.guides.length > 0 || p.integrations.length > 0;
+
+  const markLastGuide = (guides: Array<PlatformGuide | PlatformIntegration>) =>
+    guides.map((guide, i) => ({
+      ...guide,
+      isLastGuide: i === guides.length - 1,
+    }));
+
+  const guides = platform.isExpanded
+    ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
+    : [];
+
   return (
     <Fragment>
       {/* This is a hack. The Label allows us to have a clickable button inside the item without triggering its selection */}
@@ -272,7 +288,7 @@ function PlatformItem({
                 </RadixSelect.ItemText>
               </ComboboxItem>
             </RadixSelect.Item>
-            {platform.guides.length > 0 && (
+            {showCaret(platform) && (
               <button
                 className={styles['expand-button']}
                 disabled={
@@ -290,21 +306,15 @@ function PlatformItem({
           </Fragment>
         </RadixSelect.Label>
       </RadixSelect.Group>
-      {platform.isExpanded &&
-        platform.guides
-          .map((guide, i) => ({
-            ...guide,
-            isLastGuide: i === platform.guides.length - 1,
-          }))
-          .map(guide => {
-            return <GuideItem key={guide.key} guide={guide} />;
-          })}
+      {guides.map(guide => {
+        return <GuideItem key={guide.key} guide={guide} />;
+      })}
     </Fragment>
   );
 }
 
 type GuideItemProps = {
-  guide: (PlatformGuide & {isLastGuide: boolean}) | Platform;
+  guide: (PlatformGuide | PlatformIntegration) & {isLastGuide: boolean};
 };
 function GuideItem({guide}: GuideItemProps) {
   return (
@@ -328,7 +338,7 @@ function GuideItem({guide}: GuideItemProps) {
             {/* replace dots with zero width space + period to allow text wrapping before periods
               without breaking words in weird places
             */}
-            {guide.title?.replace(/\./g, '\u200B.') ?? guide.key}
+            {(guide.title ?? guide.name ?? guide.key).replace(/\./g, '\u200B.')}
           </span>
         </RadixSelect.ItemText>
       </ComboboxItem>
