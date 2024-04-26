@@ -223,6 +223,7 @@ export function PlatformSelector({
               className={styles['active-platform-title']}
             />
           </ul>
+          <hr />
         </div>
       )}
     </div>
