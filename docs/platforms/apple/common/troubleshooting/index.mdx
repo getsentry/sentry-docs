@@ -4,6 +4,10 @@ description: "Troubleshoot and resolve common issues with the Cocoa SDK."
 sidebar_order: 9000
 ---
 
+## "Missing API declaration" after App Store review
+
+Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/apple/data-management/apple-privacy-manifest) guide.
+
 ## Wrong App Start Data
 
 Starting with iOS 15, the system might [pre-warm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. In such cases, we can't reliably measure the app start, so we drop it as of [sentry-cocoa 7.18.0](https://github.com/getsentry/sentry-cocoa/releases/tag/7.18.0). We are working on a fix for this. Follow the [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/1897) for more details.
@@ -45,3 +49,69 @@ Check your app for any procedure that cleans the cache of your app during runtim
 ## My app is not symbolicated and I use App Store Connect
 
 Since Xcode 14 App Store Connect doesn't make debug symbols available for download anymore, see [Xcode Release Notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations). Please use a different way of uploading the debug symbols by following the [documentation](/platforms/apple/dsym/).
+
+## Crash in `SentrySubClassFinder.actOnSubclassesOfViewControllerInImage`
+
+Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControllerInImage` with a stacktrace similar to the one below:
+
+```
+#0	0x0000000000000000 in 0x00000000 ()
+#1	0x00000001043eb498 in type metadata accessor for CapturedStructure? ()
+#2	0x00000001043eb3ac in type metadata completion function for RoomCaptureTools ()
+#3	0x000000018f9c7930 in swift::MetadataCacheEntryBase<(anonymous namespace)::SingletonMetadataCacheEntry, int>::doInitialization(swift::MetadataWaitQueue::Worker&, swift::MetadataRequest) ()
+#4	0x000000018f9b8cf8 in swift_getSingletonMetadata ()
+#5	0x00000001043eb360 in type metadata accessor for RoomCaptureTools ()
+#6	0x00000001043eb314 in ObjC metadata update function for RoomCaptureTools ()
+#7	0x000000018017d938 in realizeClassMaybeSwiftMaybeRelock(objc_class*, mutex_tt<false>&, bool) ()
+#8	0x0000000180183548 in look_up_class ()
+#9	0x00000001807e7cb8 in NSClassFromString ()
+#10	0x000000010514b4c0 in __69-[SentrySubClassFinder actOnSubclassesOfViewControllerInImage:block:]
+```
+
+Such a crash may be due to a [potential bug in Swift](https://github.com/apple/swift/issues/72657)
+that's triggered when trying to get a class definition that references a RoomPlan or
+ActivityKit class on an older iOS version that doesn't support RoomPlan or ActivityKit.
+For example, running the code below on iOS 15 with the Sentry Cocoa SDK enabled
+leads to the mentioned crash:
+
+```swift
+import RoomPlan
+
+@available(iOS 17.0, *)
+class RoomPlanWrapper {
+    private var finalResults: CapturedStructure?
+}
+```
+
+You can fix this by excluding the above class from swizzling by using `swizzleClassNameExcludes`,
+which is availabe with Sentry Cocoa SDK version `8.23.0` and above:
+
+```swift
+SentrySDK.start { options in
+    options.swizzleClassNameExcludes = ["RoomPlanWrapper"]
+}
+```
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+     options.swizzleClassNameExcludes = [NSSet setWithObjects: @"RoomPlanWrapper", nil];
+}];
+```
+
+If you can't upgrade the Sentry Cocoa SDK to version `8.23.0`, you can also disable swizzling, as shown below.
+However, this would also disable some useful features, such as automatic performance monitoring and network breadcrumbs.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.enableSwizzling = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.enableSwizzling = NO;
+}];
+```

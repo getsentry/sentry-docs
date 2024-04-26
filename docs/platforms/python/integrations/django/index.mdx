@@ -85,6 +85,8 @@ By adding `DjangoIntegration` explicitly to your `sentry_sdk.init()` call you ca
 <SignInNote />
 
 ```python
+import django.db.models.signals
+
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -95,7 +97,11 @@ sentry_sdk.init(
         DjangoIntegration(
             transaction_style='url',
             middleware_spans=True,
-            signals_spans=False,
+            signals_spans=True,
+            signals_denylist=[
+                django.db.models.signals.pre_init, 
+                django.db.models.signals.post_init,
+            ],
             cache_spans=False,
         ),
     ],
@@ -125,6 +131,12 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
   The default is `True`.
 
+- `signals_denylist`:
+
+  A list of signals to exclude from performance tracking. No spans will be created for these.
+
+  The default is `[]`.
+
 - `cache_spans`:
 
   Create spans and track performance of all read operations to configured caches. The spans also include information if the cache access was a hit or a miss. Set to `True` to enable.
@@ -133,8 +145,7 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
 ## Supported Versions
 
-- Django 1.8-1.11 (Python: 2.7+)
-- Django 2.x (Python: 3.5+)
-- Django 3.x (Python: 3.6+)
-- Django 4.x (Python: 3.8+)
-- Django 5.x (Python: 3.10+)
+- Django 1.11+
+- Python 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

@@ -1,0 +1,90 @@
+---
+title: Set Up Profiling
+description: "Learn more about how to configure our Profiling integration and start profiling your code."
+---
+
+By default, Sentry error events will not get a trace context unless you configure the scope with the transaction, as illustrated in the example below.
+
+<Note>
+
+If you're adopting Profiling in a high-throughput environment, we recommend testing prior to deployment to ensure that your service's performance characteristics maintain expectations.
+
+</Note>
+
+## Installation
+
+<Note>
+
+Node profiling is available starting in `@sentry/profiling-node` version `0.3.0`.
+You have to have the `@sentry/node` (minimum version `7.44.1`) package installed.
+
+</Note>
+
+```bash {tabTitle:npm}
+npm install --save @sentry/node @sentry/profiling-node
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/node @sentry/profiling-node
+```
+
+## Enabling Profiling
+
+To enable profiling, import @sentry/profiling-node, add ProfilingIntegration to your integrations, and set the profilesSampleRate.
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+});
+
+Sentry.startSpan(
+  {
+    op: "rootSpan",
+    name: "My root span",
+  },
+  () => {
+    // Any code executed inside this callback
+    // will now be automatically profiled.
+  }
+);
+```
+
+## How Does It Work?
+
+Under the hood, the Sentry profiler uses V8's [CpuProfiler](https://v8docs.nodesource.com/node-18.2/d2/d34/classv8_1_1_cpu_profiler.html) to collect stack samples. This means that sentry/profiling-node is written as a [native add-on](https://nodejs.org/docs/latest-v18.x/api/addons.html) for Node and won't run in environments like Deno or Bun. Profiling enhances tracing by providing profiles for individual transactions. This allows you to look at higher level performance information like transaction and span durations before diving deeper and looking at profiles.
+
+## Runtime Flags
+
+The default mode of the v8 CpuProfiler is [kEagerLogging](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374) which enables the profiler even when no profiles are active - this is good because it makes calls to startProfiling fast at the tradeoff for constant CPU overhead. The behavior can be controlled via the SENTRY_PROFILER_LOGGING_MODE environment variable with values of eager|lazy. If you opt to use the lazy logging mode, calls to startProfiling may be slow (depending on environment and node version, it can be in the order of a few hundred ms).
+
+Example of starting a server with lazy logging mode.
+
+```bash
+# Run profiler in lazy mode
+SENTRY_PROFILER_LOGGING_MODE=lazy node server.js
+```
+
+We recommend you have your own CPU resource-monitoring in place, because the actual resource use could be environment-dependent.
+
+## Precompiled Binaries
+
+Starting from version 0.1.0, @sentry/profiling-node package precompiles binaries for a number of common architectures. This minimizes the tooling required to run the package and avoids compiling the package from source in most cases, which speeds up installation. Currently we ship prebuilt binaries for the following architectures and Node versions
+
+- macOS x64: Node v16, v18, v20
+- Linux ARM64 (musl): Node v16, v18, v20
+- Linux x64 (glibc): Node v16, v18, v20
+- Windows x64: Node v16, v18, v20
+
+The set of common architectures should cover a wide variety of use cases, but if you have feedback or experience different behavior, please open an issue in the [Sentry JavaScript SDK](https://github.com/getsentry/sentry-javascript) repository.

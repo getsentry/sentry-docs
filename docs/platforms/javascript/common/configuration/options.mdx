@@ -40,11 +40,13 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-<PlatformSection notSupported={["javascript.electron"]}>
+<PlatformCategorySection supported={['server', 'serverless']}>
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable.
+</PlatformCategorySection>
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
-
-</PlatformSection>
+<PlatformCategorySection supported={['browser']}>
+By default the SDK will try to read this value from `window.SENTRY_RELEASE.id` if available.
+</PlatformCategorySection>
 
 <PlatformSection supported={["javascript.electron"]}>
 
@@ -96,6 +98,21 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
+<PlatformCategorySection supported={['server', 'serverless']}>
+<ConfigKey name="server-name">
+
+  This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+
+  Most SDKs will attempt to auto-discover this value.
+</ConfigKey>
+
+<ConfigKey name="ca-certs">
+
+A path to an alternative CA bundle file in PEM-format.
+
+</ConfigKey>
+</PlatformCategorySection>
+
 <ConfigKey name="ignore-errors">
 
 <Include name="platforms/configuration/options/ignore-errors.mdx" />
@@ -107,6 +124,8 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 <Include name="platforms/configuration/options/ignore-transactions.mdx" />
 
 </ConfigKey>
+
+<PlatformCategorySection supported={['browser']}>
 
 <ConfigKey name="deny-urls">
 
@@ -120,6 +139,8 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
+</PlatformCategorySection>
+
 <ConfigKey name="auto-session-tracking" notSupported={["javascript.electron"]}>
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
@@ -131,6 +152,16 @@ When set to `true`, the SDK will send session events to Sentry. This is supporte
 When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
 
 </ConfigKey>
+
+<PlatformCategorySection supported={['server', 'serverless']}>
+<ConfigKey name="frame-context-lines">
+The number of context lines for each frame when loading a file.
+
+#### Deprecated
+
+`frameContextLines` has moved to the <PlatformLink to="/configuration/integrations/default-integrations/#contextlines">`ContextLines` integration</PlatformLink>.
+</ConfigKey>
+</PlatformCategorySection>
 
 <ConfigKey name="initial-scope">
 
@@ -226,6 +257,23 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 
 </ConfigKey>
 
+<PlatformCategorySection supported={['server', 'serverless']}>
+<ConfigKey name="include-local-variables">
+
+Set this boolean to `true` to add stack local variables to stack traces.
+
+<Alert level="warning">
+
+Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we are currently unable to capture local variables for unhandled errors when using
+JavaScript modules (ESM).
+
+See the <PlatformLink to="/configuration/integrations/localvariables">integration options</PlatformLink> for a workaround.
+
+</Alert>
+
+</ConfigKey>
+</PlatformCategorySection>
+
 ## Integration Configuration
 
 For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
@@ -263,10 +311,10 @@ This function is called with an SDK-specific transaction event object, and can r
 <ConfigKey name="before-breadcrumb">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
-
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
 </ConfigKey>
+
 
 ## Transport Options
 
@@ -282,12 +330,23 @@ Switches out the transport used to send events. How this works depends on the SD
 
 Options used to configure the transport. This is an object with the following possible optional keys:
 
+<PlatformCategorySection supported={['server', 'serverless']}>
+- `headers`: An object containing headers to be sent with every request.
+- `proxy`: A proxy used for outbound requests. Can be http or https.
+- `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
+- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
+- `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser', 'desktop']}>
 - `headers`: An object containing headers to be sent with every request. Used by the SDK's fetch and XHR transports.
 - `fetchOptions`: An object containing options to be passed to the `fetch` call. Used by the SDK's fetch transport.
+</PlatformCategorySection>
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout" supported={["javascript.capacitor"]}>
+<ConfigKey name="shutdown-timeout" supported={["javascript.capacitor", "javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.gcp-functions", "javascript.koa", "javascript.fastify"
+]}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
@@ -312,6 +371,20 @@ A number between 0 and 1, controlling the percentage chance a given transaction 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
 </ConfigKey>
+
+<PlatformCategorySection supported={['server', 'serverless']}>
+<ConfigKey name="trace-propagation-targets">
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</ConfigKey>
+</PlatformCategorySection>
 
 <PlatformSection supported={["javascript.cordova", "javascript.capacitor"]}>
 

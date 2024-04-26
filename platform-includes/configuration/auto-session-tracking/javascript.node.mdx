@@ -1,0 +1,23 @@
+Release health on the server side is tracked in two different modes:
+
+- Single sessions that represent a node process; for example, a CLI application. In single sessions mode, the SDK creates a session for every node process. A session is started on `init` of the SDK, and ends when the process is exited.
+- Session aggregates represent requests. In session aggregates mode, sessions will be recorded differently and will represent the lifetime of requests. For the SDK to be able to capture request mode sessions, you must enable the `requestHandler` of the [Express middleware](/platforms/javascript/guides/express).
+
+```javascript
+// The Sentry request handler middleware must be added before any other handlers
+app.use(Sentry.Handlers.requestHandler());
+```
+
+The SDK automatically determines which mode release health will operate in. By default, the SDK runs in single sessions mode. However, if the `requestHandler` Express middleware is enabled, release health is automatically toggled to session aggregates mode. If the `requestHandler` Express middleware is not enabled, session aggregates mode will not be enabled and sessions will represent the health of the web server application process if, for example, a web server application is being run.
+
+We mark the session as crashed if an _unhandled error_ reached our `errorHandler` middleware.
+
+We mark the session as an error if the SDK captures an event that contains an exception (this includes manually captured exceptions).
+
+By default, the JavaScript SDKs are sending sessions, to disable this toggle the flag `autoSessionTracking` to `false`:
+
+```javascript
+Sentry.init({
+  autoSessionTracking: false, // default: true
+});
+```

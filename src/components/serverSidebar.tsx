@@ -15,7 +15,7 @@ export function productSidebar(rootNode: DocNode) {
   const nodes: NavNode[] = [
     {
       context: {
-        draft: productNode.frontmatter.draft,
+        draft: Boolean(productNode.frontmatter.draft),
         title: productNode.frontmatter.title,
         sidebar_order: productNode.frontmatter.sidebar_order,
         sidebar_title: productNode.frontmatter.sidebar_title,
@@ -27,7 +27,7 @@ export function productSidebar(rootNode: DocNode) {
     docNodes.forEach(n => {
       nodes.push({
         context: {
-          draft: n.frontmatter.draft,
+          draft: Boolean(n.frontmatter.draft),
           title: n.frontmatter.title,
           sidebar_order: n.frontmatter.sidebar_order,
           sidebar_title: n.frontmatter.sidebar_title,
@@ -142,7 +142,7 @@ export function ServerSidebar() {
   const nodeToSidebarNode = (n: DocNode): SidebarNode => {
     return {
       path: n.path,
-      frontmatter: n.frontmatter as {[key: string]: any},
+      frontmatter: n.frontmatter,
       children: n.children.map(nodeToSidebarNode),
     };
   };

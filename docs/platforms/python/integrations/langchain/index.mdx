@@ -1,0 +1,92 @@
+---
+title: Langchain
+description: "Learn about using Sentry for Langchain."
+---
+
+This integration connects Sentry with [Langchain](https://github.com/langchain-ai/langchain).
+The integration has been confirmed to work with Langchain 0.1.11.
+
+## Install
+
+Install `sentry-sdk` from PyPI and the appropriate langchain packages:
+
+```bash
+pip install --upgrade 'sentry-sdk' 'langchain-openai' 'langchain-core'
+```
+
+## Configure
+
+If you have the `langchain` package in your dependencies, the Langchain integration will be enabled automatically when you initialize the Sentry SDK.
+
+An additional dependency, `tiktoken`, is required to be installed if you want to calculate token usage for streaming chat responses.
+
+<SignInNote />
+
+```python
+from langchain_openai import ChatOpenAI
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    traces_sample_rate=1.0,
+    send_default_pii=True, # send personally-identifiable information like LLM responses to sentry
+)
+
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
+```
+
+## Verify
+
+Verify that the integration works by inducing an error:
+
+```python
+from langchain_openai import ChatOpenAI
+import sentry_sdk
+
+sentry_sdk.init(...)  # same as above
+
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0, api_key="bad API key")
+with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+    response = llm.invoke([("system", "What is the capital of paris?")])
+    print(response)
+```
+
+After running this script, a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event (about the bad API key) will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Langchain integration will connect Sentry with Langchain and automatically monitor all LLM, tool, and function calls.
+
+- All exceptions in the execution of the chain are reported.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII and, by default, does not include PII data. If you want include the data, then set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+By adding `LangchainIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LangchainIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.langchain import LangchainIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    integrations = [
+        LangchainIntegration(
+            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+## Supported Versions
+
+- Langchain: 0.1.11+
+- tiktoken: 0.6.0+
+- Python: 3.9+

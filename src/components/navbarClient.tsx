@@ -31,7 +31,7 @@ export function NavbarClient({platforms, currentPlatform}: Props) {
         <Search path={pathname} platforms={searchPlatforms} />
       </div>
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
-        <Nav className="justify-content-end" style={{flex: 1}}>
+        <Nav className="justify-content-end" style={{flex: '1 1 0%'}}>
           <NavbarPlatformDropdown
             platforms={platforms}
             currentPlatform={currentPlatform}

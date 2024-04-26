@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '706d29306108f4e055d604a0c39f848595ad07df';
+const SENTRY_API_SCHEMA_SHA = 'b518418531342a3cf4c729f849d33fb3591fa601';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -44,6 +44,24 @@ export type APIParameter = {
   };
 };
 
+type APIExample = {
+  summary: string;
+  value: any;
+};
+
+type APIResponse = {
+  description: string;
+  status_code: string;
+  content?: {
+    content_type: string;
+    schema: any;
+    example?: APIExample;
+    examples?: {[key: string]: APIExample};
+  };
+};
+
+type APIData = DeRefedOpenAPI['paths'][string][string];
+
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
@@ -51,7 +69,7 @@ export type API = {
   name: string;
   pathParameters: APIParameter[];
   queryParameters: APIParameter[];
-  responses: any;
+  responses: APIResponse[];
   slug: string;
   bodyContentType?: string;
   descriptionMarkdown?: string;
@@ -154,7 +172,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
   return categories;
 }
 
-function getBodyParameters(apiData): APIParameter[] {
+function getBodyParameters(apiData: APIData): APIParameter[] {
   const content = apiData.requestBody?.content;
   const contentType = content && Object.values(content)[0];
   const properties = contentType?.schema?.properties;
@@ -176,7 +194,7 @@ function getBodyParameters(apiData): APIParameter[] {
   }));
 }
 
-function getBodyContentType(apiData): string | undefined {
+function getBodyContentType(apiData: APIData): string | undefined {
   const content = apiData.requestBody?.content;
   const types = content && Object.keys(content);
   if (!types?.length) {

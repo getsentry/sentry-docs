@@ -4,7 +4,13 @@ import Script from 'next/script';
 export const metadata: Metadata = {
   title: 'Home',
   icons: {
-    icon: '/favicon.ico',
+    icon: 'https://docs.sentry.io/favicon.ico',
+  },
+  openGraph: {
+    images: 'https://docs.sentry.io/changelog/assets/og.png',
+  },
+  other: {
+    'zd-site-verification': 'ocu6mswx6pke3c6qvozr2e',
   },
 };
 
