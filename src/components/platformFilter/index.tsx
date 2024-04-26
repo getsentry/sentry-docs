@@ -72,7 +72,12 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
                     </div>
                   </Link>
                 ) : (
-                  <PlatformWithGuides key={platform.key} platform={platform} />
+                  <PlatformWithGuides
+                    key={platform.key}
+                    platform={platform}
+                    // force expand if the filter is long enough to have few results
+                    forceExpand={filter.length >= 3}
+                  />
                 )
               )}
             </div>
@@ -86,12 +91,18 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
   );
 }
 
-function PlatformWithGuides({platform}: {platform: Platform}) {
+function PlatformWithGuides({
+  platform,
+  forceExpand,
+}: {
+  forceExpand: boolean;
+  platform: Platform;
+}) {
   const [expanded, setExpanded] = useState(false);
   return (
     <Collapsible.Root
       className={styles.CollapsibleRoot}
-      open={expanded}
+      open={forceExpand || expanded}
       onOpenChange={setExpanded}
     >
       <Collapsible.Trigger asChild className={classNames(styles.CollapsibleTrigger)}>
