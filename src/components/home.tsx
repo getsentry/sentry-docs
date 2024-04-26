@@ -65,16 +65,22 @@ export async function Home() {
       <Header pathname="/" searchPlatforms={[]} />
       <Banner />
       <div className="max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        <div className="flex flex-col md:flex-row gap-6 py-8 mx-auto justify-between pt-[120px]">
+        <div className="flex flex-col md:flex-row gap-4 pb-10 mx-auto justify-between pt-24 lg:pt-[120px]">
           <div className="flex flex-col justify-center items-start">
-            <h1 className="text-[40px] font-medium mb-2">Welcome to Sentry Docs</h1>
+            <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
+              Welcome to Sentry Docs
+            </h1>
             <p className="max-w-[55ch]">
               Sentry is a developer-first error tracking and performance monitoring
               platform.
             </p>
           </div>
           <div className="self-center">
-            <Image src={HeroImage} height={390} alt="Sentry's hero image" />
+            <Image
+              src={HeroImage}
+              alt="Sentry's hero image"
+              className="max-h-[200px] w-full md:max-h-[390px]"
+            />
           </div>
         </div>
 
