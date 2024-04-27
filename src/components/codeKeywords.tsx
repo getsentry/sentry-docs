@@ -10,7 +10,7 @@ import {createPortal} from 'react-dom';
 import {ArrowDown} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
-import {AnimatePresence, motion} from 'framer-motion';
+import {AnimatePresence, motion, MotionProps} from 'framer-motion';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 
@@ -406,25 +406,36 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   );
 }
 
-const Keyword = styled(motion.span)`
+const KeywordSpan = styled(motion.span)`
   grid-row: 1;
   grid-column: 1;
 `;
 
-Keyword.defaultProps = {
-  initial: {position: 'absolute', opacity: 0, y: -10},
-  animate: {
+function Keyword({
+  initial = {opacity: 0, y: -10, position: 'absolute'},
+  animate = {
     position: 'relative',
     opacity: 1,
     y: 0,
     transition: {delay: 0.1},
   },
-  exit: {opacity: 0, y: 20},
-  transition: {
+  exit = {opacity: 0, y: 20},
+  transition = {
     opacity: {duration: 0.15},
     y: {duration: 0.25},
   },
-};
+  ...props
+}: MotionProps) {
+  return (
+    <KeywordSpan
+      initial={initial}
+      animate={animate}
+      exit={exit}
+      transition={transition}
+      {...props}
+    />
+  );
+}
 
 const KeywordDropdown = styled('span')`
   border-radius: 3px;
