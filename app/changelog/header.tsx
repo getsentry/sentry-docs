@@ -21,7 +21,7 @@ export default function Header({loading}) {
           </h2>
         </div>
       </div>
-      <div className="hero-bottom-left-down-slope absolute bottom-0 w-full h-10 bg-gray-200" />
+      <div className="hero-bottom-left-down-slope absolute -bottom-0.5 w-full h-10 bg-gray-200 border-none" />
     </div>
   );
 }
