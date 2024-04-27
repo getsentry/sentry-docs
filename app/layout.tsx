@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   icons: {
     icon: 'https://docs.sentry.io/favicon.ico',
   },
+  metadataBase: new URL('https://docs.sentry.io/'),
   openGraph: {
     images: 'https://docs.sentry.io/changelog/assets/og.png',
   },
