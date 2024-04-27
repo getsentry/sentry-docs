@@ -2,6 +2,8 @@ import 'prism-sentry/index.css';
 
 import type {Metadata} from 'next';
 
+import {HotReload} from 'sentry-docs/components/hotReload';
+
 import 'sentry-docs/styles/screen.scss';
 
 export const metadata: Metadata = {
@@ -9,5 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default function DocsLayout({children}: {children: React.ReactNode}) {
-  return <div>{children}</div>;
+  return (
+    <div>
+      {children}
+      <HotReload />
+    </div>
+  );
 }
