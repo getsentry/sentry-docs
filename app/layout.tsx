@@ -4,7 +4,8 @@ import Script from 'next/script';
 export const metadata: Metadata = {
   title: 'Home',
   icons: {
-    icon: 'https://docs.sentry.io/favicon.ico',
+    icon:
+      process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
   },
   openGraph: {
     images: 'https://docs.sentry.io/changelog/assets/og.png',
