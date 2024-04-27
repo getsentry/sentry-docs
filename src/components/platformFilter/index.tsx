@@ -31,7 +31,7 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
     const keys = ['title', 'aliases', 'name', 'sdk', 'keywords'];
     const matches_ = matchSorter(platformsAndGuides, filter, {keys});
     return matches_;
-  }, [filter]);
+  }, [filter, platformsAndGuides]);
 
   const platformColumns: Platform[][] = splitToChunks(
     3,

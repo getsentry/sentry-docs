@@ -89,7 +89,7 @@ export function PlatformSelector({
       matches_.push(selectedPlatform);
     }
     return matches_;
-  }, [searchValue, currentPlatformKey]);
+  }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
@@ -106,7 +106,7 @@ export function PlatformSelector({
     }
     // run the scrollIntoView in the next frame to ensure the element is rendered
     requestAnimationFrame(() => activeElementRef.current?.scrollIntoView());
-  }, [open, activeElementRef.current]);
+  }, [open]);
 
   const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
   const storedPlatform = platformsAndGuides.find(
@@ -118,7 +118,7 @@ export function PlatformSelector({
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, []);
+  }, [currentPlatformKey]);
 
   const path = usePathname();
   const isPlatformPage = Boolean(

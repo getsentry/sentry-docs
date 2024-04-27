@@ -108,7 +108,7 @@ export function CodeTabs({children}: CodeTabProps) {
     if (possibleChoices.length > 1) {
       localStorage.setItem(groupId, finalSelection);
     }
-  }, [finalSelection]);
+  }, [finalSelection, groupId, possibleChoices]);
 
   // Whenever local selection and the final selection are not in sync, the local
   // selection is updated from the final one.  This means that when the shared

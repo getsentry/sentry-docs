@@ -18,7 +18,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
       // try to center the active link in the sidebar
       activeLink.scrollIntoView({block: 'center', behavior: 'smooth'});
     }
-  }, []);
+  }, [activeLinkSelector]);
   // don't render anything, just exist as a client-side component for the useEffect.
   return null;
 }
