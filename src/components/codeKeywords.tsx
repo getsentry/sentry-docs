@@ -1,6 +1,7 @@
 import {
   Children,
   cloneElement,
+  ComponentProps,
   Fragment,
   ReactElement,
   useContext,
@@ -381,7 +382,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
       >
-        <KeywordIndicator isOpen={isOpen} />
+        <KeywordIndicatorComponent isOpen={isOpen} />
         <span
           style={{
             // We set inline-grid only when animating the keyword so they
@@ -468,9 +469,13 @@ const KeywordIndicator = styled(ArrowDown, {shouldForwardProp: p => p !== 'isOpe
   top: -1px;
 `;
 
-KeywordIndicator.defaultProps = {
-  size: '12px',
-};
+function KeywordIndicatorComponent({
+  isOpen,
+  size = '12px',
+  ...props
+}: ComponentProps<typeof KeywordIndicator>) {
+  return <KeywordIndicator isOpen={isOpen} size={size} {...props} />;
+}
 
 const PositionWrapper = styled('div')`
   z-index: 100;
