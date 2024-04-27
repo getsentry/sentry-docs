@@ -522,18 +522,27 @@ const Selections = styled('div')`
   min-width: 300px;
 `;
 
-const AnimatedContainer = styled(motion.div)``;
-
-AnimatedContainer.defaultProps = {
-  initial: {opacity: 0, y: 5},
-  animate: {opacity: 1, y: 0},
-  exit: {opacity: 0, scale: 0.95},
-  transition: {
+function AnimatedContainer({
+  initial = {opacity: 0, y: 5},
+  animate = {opacity: 1, y: 0},
+  exit = {opacity: 0, scale: 0.95},
+  transition = {
     opacity: {duration: 0.15},
     y: {duration: 0.3},
     scale: {duration: 0.3},
   },
-};
+  ...props
+}: MotionProps) {
+  return (
+    <motion.div
+      initial={initial}
+      animate={animate}
+      exit={exit}
+      transition={transition}
+      {...props}
+    />
+  );
+}
 
 const DropdownHeader = styled('div')`
   padding: 4px 8px;
