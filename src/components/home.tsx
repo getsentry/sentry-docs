@@ -119,6 +119,7 @@ export async function Home() {
 
 function FooterLink({
   children,
+  external,
   ...props
 }: NavLinkProps & {href: string; external?: boolean}) {
   const target = props.target ?? (props.href?.startsWith('http') ? '_blank' : undefined);
@@ -126,7 +127,7 @@ function FooterLink({
   return (
     <NavLink {...props} target={target}>
       {children}
-      {props.external && (
+      {external && (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="18"
