@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
+import Image from 'next/image';
 
 import styles from './banner.module.scss';
 
@@ -78,7 +79,7 @@ export function Banner({isModule = false}) {
             .join(' ')}
         >
           <div className={styles['promo-banner-message']}>
-            {OPTIONAL_BANNER_IMAGE ? <img src={OPTIONAL_BANNER_IMAGE} /> : ''}
+            {OPTIONAL_BANNER_IMAGE ? <Image src={OPTIONAL_BANNER_IMAGE} alt="" /> : ''}
             <span>
               {BANNER_TEXT}
               <a href={BANNER_LINK_URL}>{BANNER_LINK_TEXT}</a>
