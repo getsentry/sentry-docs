@@ -23,9 +23,15 @@ export interface FrontMatter {
    */
   keywords?: string[];
   /**
+   * relative links to use in the "next steps" section of the page grid
+   * takes precendence over children when present
+   */
+  next_steps?: string[];
+  /**
    * Set this to true to disable indexing (robots, algolia) of this content.
    */
   noindex?: boolean;
+
   /**
    * Specific guides that this page is not relevant to.
    */
@@ -45,8 +51,8 @@ export interface FrontMatter {
    * optional sidebar title
    */
   sidebar_title?: string;
-
   sourcePath?: string;
+
   /**
    * Specific guides that this page is relevant to.
    */

@@ -22,7 +22,7 @@ export function PageGrid({header}: Props) {
   }
 
   const children: DocNode[] = parentNode.frontmatter.next_steps?.length
-    ? (parentNode.frontmatter.next_steps as string[])
+    ? parentNode.frontmatter.next_steps
         .map(p => nodeForPath(rootNode, path.join(parentNode.path, p)))
         .filter(isTruthy) ?? []
     : parentNode.children;
