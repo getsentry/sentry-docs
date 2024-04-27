@@ -86,10 +86,14 @@ export function CodeTabs({children}: CodeTabProps) {
     }
   });
 
-  const [sharedSelection, setSharedSelection] = codeContext?.sharedCodeSelection ?? [];
+  // The groupId is used to store the selection in localStorage.
+  // It is a unique identifier based on the tab titles.
+  const groupId = 'Tabgroup:' + possibleChoices.slice().sort().join('|');
 
-  const sharedSelectionChoice = sharedSelection
-    ? possibleChoices.find(x => x === sharedSelection)
+  const [sharedSelections, setSharedSelections] = codeContext?.sharedCodeSelection ?? [];
+
+  const sharedSelectionChoice = sharedSelections
+    ? possibleChoices.find(x => x === sharedSelections[groupId])
     : null;
   const localSelectionChoice = localSelection
     ? possibleChoices.find(x => x === localSelection)
@@ -98,6 +102,11 @@ export function CodeTabs({children}: CodeTabProps) {
   // Prioritize sharedSelectionChoice over the local selection
   const finalSelection =
     sharedSelectionChoice ?? localSelectionChoice ?? possibleChoices[0];
+
+  // Save the selected tab for Tabgroup to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(groupId, finalSelection);
+  }, [finalSelection]);
 
   // Whenever local selection and the final selection are not in sync, the local
   // selection is updated from the final one.  This means that when the shared
@@ -117,7 +126,7 @@ export function CodeTabs({children}: CodeTabProps) {
           // see useEffect above.
           setLastScrollOffset(containerRef.current.getBoundingClientRect().y);
         }
-        setSharedSelection?.(choice);
+        setSharedSelections?.([groupId, choice]);
         setLocalSelection(choice);
       }}
     >

@@ -1,4 +1,3 @@
-import type {Transaction} from '@sentry/browser';
 import qs from 'query-string';
 
 /**
@@ -39,13 +38,13 @@ type Page = {
   };
 };
 
-export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] => {
-  return arr.sort((a, b) => {
-    a = extractor(a);
-    b = extractor(b);
+export const sortPages = <T>(arr: T[], extractor: (entity: T) => Page) => {
+  return arr.sort((entityA, entityB) => {
+    const pageA = extractor(entityA);
+    const pageB = extractor(entityB);
 
-    const aBase = a.context.sidebar_order ?? 10;
-    const bBase = b.context.sidebar_order ?? 10;
+    const aBase = pageA.context.sidebar_order ?? 10;
+    const bBase = pageB.context.sidebar_order ?? 10;
     const aso = aBase >= 0 ? aBase : 10;
     const bso = bBase >= 0 ? bBase : 10;
 
@@ -55,8 +54,8 @@ export const sortPages = (arr: any, extractor: (any) => Page = n => n): any[] =>
     if (bso > aso) {
       return -1;
     }
-    return (a.context.sidebar_title || a.context.title).localeCompare(
-      b.context.sidebar_title || b.context.title
+    return ((pageA.context.sidebar_title || pageA.context.title) ?? '').localeCompare(
+      (pageB.context.sidebar_title || pageB.context.title) ?? ''
     );
   });
 };
@@ -81,16 +80,6 @@ export const marketingUrlParams = (): URLQueryObject => {
 
   return marketingParams;
 };
-
-export function getCurrentTransaction(): Transaction | undefined {
-  try {
-    // getCurrentScope() may not be defined yet, as we are using the Loader Script
-    // so we guard defensively against all of these existing.
-    return window.Sentry.getCurrentScope().getTransaction();
-  } catch {
-    return undefined;
-  }
-}
 
 export function captureException(exception: unknown): void {
   try {

@@ -1,0 +1,113 @@
+---
+title: Set Up Metrics
+description: "Learn how to measure the data points you care about by configuring Metrics in your Ruby app."
+---
+
+<Include name="feature-stage-beta-metrics.mdx" />
+<Note>
+
+Metrics for Ruby are supported with Sentry Ruby SDK version `5.17.0` and above.
+
+</Note>
+
+Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
+
+First, turn on metrics usage in the SDK as follows:
+
+```ruby
+Sentry.init do |config|
+  # ...
+  config.metrics.enabled = true
+
+  # release and environment if set will be added to all metrics tags by default, recommended
+  config.release = '1.0.0'
+  config.environment = 'production'
+end
+```
+
+## Emit a Counter
+
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```ruby
+# increment a simple counter
+Sentry::Metrics.increment('button_click')
+
+# set a value, unit and tags
+Sentry::Metrics.increment('button_click', 2, unit: 'second', tags: { browser: 'firefox' })
+```
+
+## Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
+
+```ruby
+Sentry::Metrics.distribution('page_load', 15.0, unit: 'millisecond', tags: { page: '/home' })
+```
+
+## Emit a Set
+
+Sets are useful for looking at unique occurrences and counting the unique elements you added.
+
+To emit a set, do the following:
+
+```ruby
+Sentry::Metrics.set('user_view', 'jane', unit: 'username')
+```
+
+## Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```ruby
+# Add '15.0' to a gauge used for tracking the loading times for a page.
+Sentry::Metrics.gauge('page_load', 15.0, unit: 'millisecond')
+```
+
+## Emit a Timer
+
+Timers can be used to measure the execution time of a specific block of code. They're implemented like distributions, but measured in seconds.
+
+To emit a timer, do the following:
+
+```ruby
+# Measure the time of execution of the `process` method in milliseconds.
+Sentry::Metrics.timing('how_long_ms', unit: 'millisecond') do
+  process
+end
+```
+
+## Code Locations
+
+By default, the SDK will send code locations for unique metrics (defined by type, key and unit) once a day and with every startup/shutdown of your application.
+You can turn this off with the following:
+
+```ruby
+Sentry.init do |config|
+  # ...
+  config.metrics.enable_code_locations = false
+end
+```
+
+## Filtering and Modifying Tags
+
+You can filter some keys or update tags on the fly with the `before_emit` callback, which will be triggered before a metric is aggregated.
+
+```ruby
+Sentry.init do |config|
+  # ...
+  # the 'foo' metric will be filtered and the tags will be updated to add :bar and remove :baz
+  config.metrics.before_emit = lambda do |key, tags|
+    return nil if key == 'foo'
+    tags[:bar] = 42
+    tags.delete(:baz)
+    true
+  end
+end
+```

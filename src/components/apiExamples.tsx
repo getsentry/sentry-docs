@@ -9,16 +9,18 @@ import {Fragment, useState} from 'react';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
-function Example(props) {
-  const selectedTabView: number = props.selectedTabView;
-  const api: API = props.api;
-  const selectedResponse: number = props.selectedResponse;
+type ExampleProps = {
+  api: API;
+  selectedResponse: number;
+  selectedTabView: number;
+};
 
-  let exampleJson;
+function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
+  let exampleJson: any;
   if (api.responses[selectedResponse].content?.examples) {
-    exampleJson = Object.values(api.responses[selectedResponse].content?.examples).map(
-      (e: any) => e.value
-    )[0];
+    exampleJson = Object.values(
+      api.responses[selectedResponse].content?.examples ?? {}
+    ).map(e => e.value)[0];
   } else if (api.responses[selectedResponse].content?.example) {
     exampleJson = api.responses[selectedResponse].content?.example;
   }
@@ -43,7 +45,7 @@ function Example(props) {
         <code
           dangerouslySetInnerHTML={{
             __html: Prism.highlight(
-              JSON.stringify(api.responses[selectedResponse].content.schema, null, 2),
+              JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
               Prism.languages.json,
               'json'
             ),
@@ -54,7 +56,7 @@ function Example(props) {
   );
 }
 
-const strFormat = str => {
+const strFormat = (str: string) => {
   const s = str.trim();
   if (s.endsWith('.')) {
     return s;

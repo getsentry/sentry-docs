@@ -6,19 +6,32 @@ If you're using **Celery Beat** to run your periodic tasks, have a look at our [
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
 
+Use the `monitor` decorator to wrap your tasks:
+
 ```python
 import sentry_sdk
 from sentry_sdk.crons import monitor
 
 # Add the @monitor decorator to your task
 @monitor(monitor_slug='<monitor-slug>')
-def tell_the_world(msg):
-    # Scheduled task here...
-    print(msg)
-
-# monitor can also be used as a context manager
-def tell_the_world_contextmanager(msg):
-    with monitor(monitor_slug='<monitor-slug>'):
-        # Scheduled task here...
-        print(msg)
+def tell_the_world():
+    print('My scheduled task...')
 ```
+
+Alternatively, `monitor` can be used as a context manager:
+
+```python
+import sentry_sdk
+from sentry_sdk.crons import monitor
+
+def tell_the_world():
+    with monitor(monitor_slug='<monitor-slug>'):
+        print('My scheduled task...')
+```
+
+<Note>
+
+Since version `1.44.1` of the SDK you can use `monitor` to annotate asynchronous
+functions as well.
+
+</Note>

@@ -9,6 +9,10 @@ Sentry Crons allows you to monitor the uptime and performance of any scheduled, 
 
 Use the Celery integration to monitor your [Celery periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html) and get notified when a task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
 
+<Note>
+Please note that monitors will only be created on the task's first run.
+</Note>
+
 First, set up your Celery beat schedule:
 
 ```python
@@ -27,7 +31,11 @@ app.conf.beat_schedule = {
 }
 ```
 
-Initialize Sentry in the `celeryd_init` or `beat_init` signal. Make sure to set `monitor_beat_tasks=True` in `CeleryIntegration`:
+Next, we need to initialize Sentry. Where to do this depends on how you run beat:
+- If beat is running in your worker process (that is, you're running your worker with the `-B`/`--beat` option), initialize Sentry in either the `celeryd_init` or `beat_init` signal.
+- If beat is running in a separate process, you need to initialize Sentry in *both* the `celeryd_init` and `beat_init` signal.
+
+Make sure to also set `monitor_beat_tasks=True` in `CeleryIntegration`.
 
 <SignInNote />
 
@@ -38,7 +46,7 @@ from celery import signals
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 
-#@signals.beat_init.connect
+@signals.beat_init.connect   # omit this line if you're running beat directly within your worker process
 @signals.celeryd_init.connect
 def init_sentry(**kwargs):
     sentry_sdk.init(
@@ -58,7 +66,7 @@ Once Sentry Crons is set up, tasks in your Celery beat schedule will be auto-dis
 
 Start your Celery beat and worker services and see your tasks being monitored at [https://sentry.io/crons/](https://sentry.io/crons/).
 
-Currently, only the default scheduler of Celery Beat is officially supported. Other schedulers (like `RedBeat`) are not supported.
+In addition to the default Celery Beat scheduler, we also support [Redbeat](https://redbeat.readthedocs.io/en/latest).
 
 <Note>
 

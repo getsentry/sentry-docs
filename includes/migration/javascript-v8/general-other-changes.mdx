@@ -1,0 +1,153 @@
+### Deprecation of `Hub` and `getCurrentHub()`
+
+The `Hub` has been a very important part of the Sentry SDK API up until now. Hubs were the SDK's "unit of concurrency"
+to keep track of data across threads and to scope data to certain parts of your code. Because it is overly complicated
+and confusing to power users, it is going to be replaced by a set of new APIs: the "new Scope API". For now `Hub` and
+`getCurrentHub` are still available, but it will be removed in the next major version.
+
+See [Deprecate Hub](./v7-deprecations#deprecate-hub) for details on how to replace existing usage of the Hub APIs.
+
+### Removal of class-based integrations
+
+In v7, integrations are classes and can be added as e.g. `integrations: [new Sentry.Replay()]`. In v8, integrations will
+not be classes anymore, but instead functions. Both the use as a class, as well as accessing integrations from the
+`Integrations.XXX` hash, is deprecated in favor of using the new functional integrations. For example,
+`new Integrations.LinkedErrors()` becomes `linkedErrorsIntegration()`.
+
+For a list of integrations and their replacements, see [the `7.x` deprecation documentation](./v7-deprecations#deprecate-class-based-integrations).
+
+### Removal of `Sentry.configureScope` method
+
+The top level `Sentry.configureScope` function has been removed. Instead, you should use the `Sentry.getCurrentScope()`
+to access and mutate the current scope.
+
+```JavaScript diff
+- Sentry.configureScope((scope) => {
+-  scope.setTag("key", "value");
+- });
++ Sentry.getCurrentScope().setTag("key", "value");
+```
+
+### `tracingOrigins` has been replaced by `tracePropagationTargets`
+
+`tracingOrigins` is now removed in favor of the `tracePropagationTargets` option. The `tracePropagationTargets` option
+should be set in the `Sentry.init()` options, or in your custom `Client`s option if you create them.
+
+```TypeScript
+Sentry.init({
+  dsn: "__DSN__",
+  integrations: [Sentry.browserTracingIntegration()],
+  tracePropagationTargets: ["localhost", "example.com"],
+});
+```
+
+### Simplification of Metrics Configuration
+
+In `7.x`, you had to enable the metrics aggregator by setting the `_experiments` option to `{ metricsAggregator: true }`. In addition for browser environments you had to add the `metricsAggregatorIntegration` to the `integrations` array.
+
+```TypeScript
+// v7 - Server (Node/Deno/Bun)
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  _experiments: {
+    metricsAggregator: true,
+  },
+});
+
+// v7 - Browser
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.metricsAggregatorIntegration()],
+});
+
+Sentry.metrics.increment("my_metric");
+```
+
+In `8.x` no additional configuration is needed to use metrics APIs.
+
+```ts
+// v8
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+Sentry.metrics.increment("my_metric");
+```
+
+### Removal of Severity Enum
+
+In `7.x` we deprecated the `Severity` enum in favor of using the `SeverityLevel` type as this helps save bundle size, and
+this has been removed in `8.x`. You should now use the `SeverityLevel` type directly.
+
+```JavaScript diff
+- import { Severity } from '@sentry/types';
++ import { SeverityLevel } from '@sentry/types';
+
+- const level = Severity.error;
++ const level: SeverityLevel = "error";
+```
+
+#### Removal of `spanStatusfromHttpCode` in favour of `getSpanStatusFromHttpCode`
+
+In `8.x`, we are removing the `spanStatusfromHttpCode` function in favor of `getSpanStatusFromHttpCode`.
+
+```JavaScript diff
+- const spanStatus = spanStatusfromHttpCode(200);
++ const spanStatus = getSpanStatusFromHttpCode(200);
+```
+
+### `framesToPop` applies to parsed frames
+
+Errors with `framesToPop` property will have the specified number of frames removed from the top of the stack. This
+changes compared to the v7 where the property `framesToPop` was used to remove top n lines from the stack string.
+
+### Removal of `Span` class export from SDK packages
+
+In `8.x`, we are no longer exporting the `Span` class from SDK packages. Internally, this class is now called `SentrySpan`, and it is no longer meant to be used by users directly.
+
+### Removal of `lastEventId()` method
+
+The `lastEventId` function has been removed. See [below](./MIGRATION.md#deprecate-lasteventid) for more details.
+
+### Removal of `void` from transport return types
+
+The `send` method on the `Transport` interface now always requires a `TransportMakeRequestResponse` to be returned in
+the promise. This means that the `void` return type is no longer allowed.
+
+```TypeScript diff
+// v7
+ interface Transport {
+-  send(event: Event): Promise<void | TransportMakeRequestResponse>;
++  send(event: Event): Promise<TransportMakeRequestResponse>;
+ }
+```
+
+### `extraErrorDataIntegration` changes
+
+The `extraErrorDataIntegration` integration now looks at
+[`error.cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) by
+default.
+
+### `transactionContext` no longer passed to `tracesSampler`
+
+Instead of an `transactionContext` being passed to the `tracesSampler` callback, the callback will directly receive
+`name` and `attributes` going forward. Note that the `attributes` are only the attributes at span creation time, and
+some attributes may only be set later during the span lifecycle (and thus not be available during sampling).
+
+### `getClient()` always returns a client
+
+`getClient()` now always returns a client if `Sentry.init()` was called. For cases where this may be used to check if
+Sentry was actually initialized, using `getClient()` will thus not work anymore. Instead, you should use the new
+`Sentry.isInitialized()` utility to check this.
+
+### Removal of `addGlobalEventProcessor` in favour of `addEventProcessor`
+
+In `8.x`, we are removing the `addGlobalEventProcessor` function in favor of `addEventProcessor`.
+
+```JavaScript diff
+- Sentry.addGlobalEventProcessor((event) => {
++ Sentry.getGlobalScope().addEventProcessor((event) => {
+   delete event.extra;
+   return event;
+ });
+```

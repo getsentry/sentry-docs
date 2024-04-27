@@ -19,6 +19,9 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: {template: '%s | Sentry Changelog', default: 'Changelog'},
   metadataBase: new URL('https://sentry.io/changelog/'),
+  openGraph: {
+    images: 'https://docs.sentry.io/changelog/assets/hero.png',
+  },
 };
 
 export default function ChangelogLayout({children}: {children: ReactNode}) {

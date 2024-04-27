@@ -1,6 +1,5 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
-import * as Sentry from '@sentry/nextjs';
 import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import {unstable_cache} from 'next/cache';
@@ -36,9 +35,6 @@ export async function generateMetadata(
     },
     openGraph: {
       images: changelog?.image || (await parent).openGraph?.images,
-    },
-    other: {
-      'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },
   };
 }
