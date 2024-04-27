@@ -983,6 +983,7 @@ export function PlatformIcon({
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
+    // eslint-disable-next-line no-console
     console.log('svg is null');
   }
 

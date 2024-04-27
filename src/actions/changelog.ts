@@ -20,6 +20,7 @@ export async function unpublishChangelog(formData: FormData) {
       data: {published: false, publishedAt: null},
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('DELETE ACTION ERROR:', error);
     return {message: 'Unable to unpublish changelog'};
   }
@@ -42,6 +43,7 @@ export async function publishChangelog(formData: FormData) {
       data: {published: true, publishedAt: new Date().toISOString()},
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('DELETE ACTION ERROR:', error);
     return {message: 'Unable to publish changelog'};
   }
@@ -113,6 +115,7 @@ export async function editChangelog(formData: FormData) {
       data,
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('EDIT ACTION ERROR:', error);
     return {message: error};
   }
@@ -133,6 +136,7 @@ export async function deleteChangelog(formData: FormData) {
       where: {id},
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('DELETE ACTION ERROR:', error);
     return {message: 'Unable to delete changelog'};
   }
