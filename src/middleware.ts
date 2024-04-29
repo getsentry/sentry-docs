@@ -2122,10 +2122,6 @@ const REDIRECTS: Redirect[] = [
     to: '/concepts/data-management/filtering/',
   },
   {
-    from: '/product/data-management-settings/event-grouping/grouping-breakdown/',
-    to: '/concepts/data-management/',
-  },
-  {
     from: '/data-management/rollups/',
     to: '/concepts/data-management/event-grouping/',
   },
