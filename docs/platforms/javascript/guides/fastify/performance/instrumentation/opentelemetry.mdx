@@ -72,3 +72,21 @@ const provider = new BasicTracerProvider({
   sampler: new SentrySampler(Sentry.getClient()),
 });
 ```
+
+## Using an OpenTelemetry Tracer
+
+While using `Sentry.startSpan()` and related APIs remains the recommended way to create spans, you can also use native OpenTelemetry APIs to create spans.
+
+You can access the tracer Sentry uses via `client.tracer`, like this:
+
+```js
+const Sentry = require("@sentry/node");
+
+const tracer = Sentry.getClient()?.tracer;
+// Now you can use native APIs on the tracer:
+tracer.startActiveSpan("span name", () => {
+  // measure something
+});
+```
+
+You can also use any other tracer, all OpenTelemetry spans will be picked up by Sentry automatically.
