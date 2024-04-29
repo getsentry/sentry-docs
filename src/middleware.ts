@@ -62,6 +62,10 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/product/crons/getting-started/cli/',
+    to: '/cli/crons/',
+  },
+  {
     from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/performance/',
   },
