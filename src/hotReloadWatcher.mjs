@@ -2,7 +2,7 @@ import path from 'path';
 import {watch} from 'node:fs/promises';
 import {WebSocketServer} from 'ws';
 
-const watchedConent = new Set(['.mdx', '.md', '.png', '.jpg', '.jpeg', '.gif', '.svg']);
+const watchedContent = new Set(['.mdx', '.md', '.png', '.jpg', '.jpeg', '.gif', '.svg']);
 
 export const throttle = (fn, delay) => {
   let last = 0;
@@ -40,7 +40,7 @@ wss.on('connection', async function onConnect(ws) {
       recursive: true,
     });
     for await (const event of watcher) {
-      if (watchedConent.has(path.extname(event.filename))) {
+      if (watchedContent.has(path.extname(event.filename))) {
         sendReload();
       }
     }
