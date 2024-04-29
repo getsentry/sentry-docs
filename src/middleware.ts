@@ -3005,6 +3005,10 @@ const REDIRECTS: Redirect[] = [
     from: '/product/accounts/user-settings/',
     to: '/account/user-settings/',
   },
+  {
+    from: '/product/accounts/',
+    to: '/account/'
+  }
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
