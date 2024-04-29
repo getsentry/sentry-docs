@@ -3009,6 +3009,18 @@ const REDIRECTS: Redirect[] = [
     from: '/product/accounts/quotas/manage-cron-monitors/',
     to: '/organization/quotas/manage-cron-monitors/',
   },
+  {
+    from: '/product/accounts/migration/',
+    to: '/concepts/migration/',
+  },
+  {
+    from: '/product/accounts/auth-tokens/',
+    to: '/account/auth-tokens/',
+  },
+  {
+    from: '/product/accounts/user-settings/',
+    to: '/account/user-settings/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
