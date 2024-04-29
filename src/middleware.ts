@@ -1358,10 +1358,6 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/:guide/configuration/integrations/',
   },
   {
-    from: '/platforms/javascript/guides/:guide/configuration/integrations/default-integrations/',
-    to: '/platforms/javascript/guides/:guide/configuration/integrations/',
-  },
-  {
     from: '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
     to: '/platforms/javascript/guides/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
   },
