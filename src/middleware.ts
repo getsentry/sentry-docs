@@ -71,7 +71,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/data-management/',
-    to: '/conepts/data-management/',
+    to: '/concepts/data-management/',
   },
   {
     from: '/platforms/javascript/sourcemaps/troubleshooting/',
