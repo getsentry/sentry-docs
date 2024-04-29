@@ -3007,8 +3007,8 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/accounts/',
-    to: '/account/'
-  }
+    to: '/account/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
