@@ -2154,20 +2154,12 @@ const REDIRECTS: Redirect[] = [
     to: '/concepts/data-management/data-forwarding/',
   },
   {
-    from: '/platforms/data-management/',
-    to: '/concepts/data-management/data-forwarding/',
-  },
-  {
     from: '/data-management-settings/attachment-datascrubbing/',
     to: '/security-legal-pii/scrubbing/attachment-scrubbing/',
   },
   {
     from: '/product/data-management-settings/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/',
-  },
-  {
-    from: '/platforms/data-management/',
-    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management/advanced-datascrubbing/',
