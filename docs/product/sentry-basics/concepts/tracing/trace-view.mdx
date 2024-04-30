@@ -125,3 +125,26 @@ spans that you can then iterate over using the up or down arrows. You can also t
 the layout to your preference.
 
 We're going to continue adding features that enable you to perform efficient investigation into whatever issues you might be facing. If you have feedback or requests, please share it with us. We'd love to hear how we can make your life easier and your users happier.
+
+## Troubleshooting
+
+### Orphan Traces and Broken Subtraces
+
+In a fully instrumented system, a span in one service will connect to a transaction in a subsequent service. For a variety of reasons, a transaction in a service may not arrive in Sentry. When Sentry encounters these types of transactions within a trace, the transactions are linked with a dashed line since they can no longer be directly connected to the root, creating an orphan trace.
+
+In addition, broken subtraces can occur when Sentry receives an error for a trace, but the corresponding transaction does not exist. Such errors are linked using dashed lines and clicking on the row takes you to the corresponding **Issue Details** page.
+
+Also, in these cases you can click "Open In Discover" to see all the events in the trace.
+
+Broken subtraces may be caused by:
+
+- SDK sampling. Setting a sample rate that's too low may prevent the SDK from sending a transaction. We recommend [sending us all of your transaction data](/product/performance/retention-priorities/#deciding-on-your-sdk-sample-rate).
+- [Ad blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers) may prevent transactions in browsers being sent, but HTTP requests to backend projects will still create child transactions
+- [Rate-limiting](/product/accounts/quotas/#limiting-events) on a project may cause only some events to be sent to Sentry
+- [Project permissions](/product/accounts/membership/#restricting-access) may mean you do not have access to transactions in another project
+- [Differences in quota limits](/product/accounts/quotas/) between transactions and errors. When a quota limit is reached - for example, for transactions - an error is received, but corresponding transaction is not.
+- Exceeding the span limit. Transactions are associated via the child spans of the parent transaction, but if the number of spans exceed the limit, the association cannot be made
+
+### Multiple Roots
+
+Each trace ID should have only one root, a transaction without any parents. Automatic instrumentation should prevent multiple roots; however, if the trace ID of your transactions is being set using custom instrumentation, you may encounter multiple roots.
