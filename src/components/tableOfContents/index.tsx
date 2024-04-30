@@ -1,24 +1,32 @@
 'use client';
 
 import {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+
+import {isTruthy} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
 interface TocItem {
   depth: number;
+  element: Element;
+  isActive: boolean;
+  title: string;
   url: string;
-  value: string;
   children?: TocItem[];
 }
 
 function recursiveRender(items: TocItem[]) {
   return items.map(i => {
-    if (!i.value) {
+    if (!i.title) {
       return recursiveRender(i.children || []);
     }
     return (
-      <li className={styles['toc-entry']} key={i.url}>
-        <a href={`${i.url}`}>{i.value}</a>
+      <li
+        className={`${styles['toc-entry']} ${i.isActive ? styles.active : ''}`}
+        key={i.url}
+      >
+        <a href={`${i.url}`}>{i.title}</a>
         {i.children && <ul>{recursiveRender(i.children)}</ul>}
       </li>
     );
@@ -64,35 +72,75 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
 //
 // For now, calculate the table of contents on the client.
 export function TableOfContents() {
-  const [headings, setHeadings] = useState<TocItem[]>([]);
+  const [tocItems, setTocItems] = useState<TocItem[]>([]);
+
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const main = document.getElementById('main');
-      const elements = main?.querySelectorAll('h2, h3');
-      const tocItems: TocItem[] = [];
-      elements?.forEach(e => {
-        const title = e.textContent?.trim();
-        const {id} = e;
-        if (title && id) {
-          tocItems.push({
-            depth: e.tagName === 'H2' ? 2 : 3,
-            url: `#${id}`,
-            value: title,
-          });
-        }
-      });
-      setHeadings(tocItems);
+    if (typeof document === 'undefined') {
+      return () => {};
     }
+    const main = document.getElementById('main');
+    if (!main) {
+      throw new Error('#main element not found');
+    }
+    const tocItems_ = Array.from(main.querySelectorAll('h2, h3'))
+      .map(el => {
+        const title = el.textContent?.trim() ?? '';
+        if (!el.id) {
+          return null;
+        }
+        return {
+          depth: el.tagName === 'H2' ? 2 : 3,
+          url: `#${el.id} `,
+          title,
+          element: el,
+          isActive: false,
+        };
+      })
+      .filter(isTruthy);
+    setTocItems(tocItems_);
+    // account for the header height
+    const rootMarginTop = 100;
+    // element is consiered in view if it is in the top 1/3 of the screen
+    const rootMarginBottom = (2 / 3) * window.innerHeight - rootMarginTop;
+    const observerOptions = {
+      rootMargin: `${rootMarginTop}px 0px -${rootMarginBottom}px 0px`,
+      threshold: 1,
+    };
+    const observer = new IntersectionObserver(entries => {
+      const firstVisibleItem = entries.find(
+        item => item.isIntersecting && item.intersectionRatio === 1
+      );
+      const setActive = (tocItem: TocItem) => ({
+        ...tocItem,
+        isActive: tocItem.element.id === firstVisibleItem!.target.id,
+      });
+      if (firstVisibleItem) {
+        setTocItems(items => items.map(setActive));
+      }
+    }, observerOptions);
+    const headings = tocItems_.map(item => item.element);
+    headings.forEach(observer.observe);
+    return () => headings.forEach(observer.unobserve);
   }, []);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    // sync the first visible heading fragment to url hash without polluting the history
+    const firstVisible = tocItems.find(h => h.isActive);
+    if (firstVisible) {
+      router.replace(`#${firstVisible.element.id}`, {scroll: false});
+    }
+  }, [tocItems, router]);
 
   return (
     <div className={styles['doc-toc']}>
-      {!!headings.length && (
+      {!!tocItems.length && (
         <div className={styles['doc-toc-title']}>
           <h6>On this page</h6>
         </div>
       )}
-      <ul className={styles['section-nav']}>{recursiveRender(buildTocTree(headings))}</ul>
+      <ul className={styles['section-nav']}>{recursiveRender(buildTocTree(tocItems))}</ul>
     </div>
   );
 }
