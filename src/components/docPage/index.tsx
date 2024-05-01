@@ -60,6 +60,7 @@ export function DocPage({
               'prose-code:font-normal prose-code:font-mono marker:text-accent-purple prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-medium',
+              'prose-img:my-2',
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
