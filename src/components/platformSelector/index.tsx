@@ -126,11 +126,14 @@ export function PlatformSelector({
       // /platforms/something
       path.length > '/platforms/'.length
   );
+  const showStoredPlatform =
+    !isPlatformPage && storedPlatformKey && storedPlatform && path !== '/platforms/';
+
   return (
     <div>
       <RadixSelect.Root
         defaultValue={currentPlatformKey}
-        value={!open ? storedPlatformKey ?? undefined : undefined}
+        value={showStoredPlatform ? storedPlatformKey : undefined}
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
@@ -220,7 +223,7 @@ export function PlatformSelector({
           </RadixSelect.Content>
         </ComboboxProvider>
       </RadixSelect.Root>
-      {!isPlatformPage && storedPlatform && (
+      {showStoredPlatform && (
         <div className={styles.toc}>
           <ul>
             <SidebarLink
