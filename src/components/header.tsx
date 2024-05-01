@@ -24,7 +24,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
       <style>{':root { --header-height: 80px; }'}</style>
       <nav className="mx-auto px-6 lg:px-8 py-2 flex items-center text-primary">
         {pathname !== '/' && (
-          <button className="lg:hidden">
+          <button className="lg:hidden mr-3">
             <label
               htmlFor={sidebarToggleId}
               aria-label="Close"
