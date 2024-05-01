@@ -20,7 +20,9 @@ const ExpandedIndicator = styled(({isExpanded: _, ...props}) => (
   transition: transform 200ms ease-in-out;
   transform: rotate(${p => (p.isExpanded ? '180deg' : '0')});
   stroke-width: 3px;
-  float: right;
+  position: absolute;
+  right: 0;
+  top: 4px;
 `;
 
 const ExpandableBody = styled.div<ExpandedProps>`
@@ -40,7 +42,7 @@ export function Expandable({title, children}: Props) {
   return (
     <ExpandableWrapper>
       <p
-        className="m-0 font-medium cursor-pointer"
+        className="m-0 font-medium cursor-pointer relative pr-8"
         onClick={() => {
           setIsExpanded(!isExpanded);
         }}
