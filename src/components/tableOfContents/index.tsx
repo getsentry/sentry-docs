@@ -119,8 +119,8 @@ export function TableOfContents() {
       }
     }, observerOptions);
     const headings = tocItems_.map(item => item.element);
-    headings.forEach(observer.observe);
-    return () => headings.forEach(observer.unobserve);
+    headings.forEach(heading => observer.observe(heading));
+    return () => headings.forEach(heading => observer.unobserve(heading));
   }, []);
 
   const router = useRouter();
