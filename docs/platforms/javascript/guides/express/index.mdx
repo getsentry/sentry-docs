@@ -6,7 +6,19 @@ categories:
   - server
 ---
 
-Add `@sentry/node` as a dependency:
+<PlatformContent includePath="getting-started-primer" />
+
+This guide explains how to setup Sentry in your Express application.
+
+Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+<Note>
+This guide is for Version 8.0.0 and up of `@sentry/node`.
+</Note>
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime. This means that you have to add `@sentry/node` as a runtime dependency to your application:
 
 ```bash {tabTitle:npm}
 npm install --save @sentry/node
@@ -16,137 +28,32 @@ npm install --save @sentry/node
 yarn add @sentry/node
 ```
 
-Sentry should be initialized as early in your app as possible:
+## Configure
 
-<SignInNote />
+Sentry should be initialized as early in your app as possible. It is essential that you call `Sentry.init` before you require any other modules in your application - otherwise, auto-instrumentation of these modules will _not_ work.
 
-```javascript
-import express from "express";
-import * as Sentry from "@sentry/node";
+Once this is done, Sentry's Node SDK captures unhandled exceptions as well as tracing data for your application.
 
-// or using CommonJS
-// const express = require('express');
-// const Sentry = require('@sentry/node');
+<PlatformContent includePath="getting-started-config" />
 
-const app = express();
+If you set a `tracesSampleRate`, performance instrumentation will automatically be enabled for you. See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> to learn about all the things that the SDK automatically instruments for you.
 
-// Sentry must be initialized as early as possible
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+You can also manually capture performance data - see <PlatformLink to="/performance/instrumentation/custom-instrumentation">Custom Instrumentation</PlatformLink> for details.
 
-  // Add Performance Monitoring by setting tracesSampleRate and adding integration
-  // Set tracesSampleRate to 1.0 to capture 100% of transactions
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
-  integrations: [expressIntegration({ app })],
-  // It is possible to specify the routes that should be traced by passing a router instance to the `router` option:
-  // expressIntegration({ router: someRouterInstance })
-});
+<Include  name="node-esm-compatibility" />
 
-// The Sentry request handler middleware must be added before any other handlers
-app.use(Sentry.Handlers.requestHandler());
-// Performance Monitoring: Create spans and traces for every incoming request
-app.use(Sentry.Handlers.tracingHandler());
+<PlatformContent includePath="getting-started-sourcemaps" />
 
-// All controllers should live here
-app.get("/", function rootHandler(req, res) {
-  res.end("Hello world!");
-});
+## Verify
 
-// The Sentry error handler middleware must be registered before any other error middleware and after all controllers
-app.use(Sentry.Handlers.errorHandler());
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
 
-// Optional fallthrough error handler
-app.use(function onError(err, req, res, next) {
-  // The ID of error events captured by the Sentry error middleware is attached to `res.sentry`.
-  // You can use this ID for debugging, or to correlate requests with errors in Sentry.
-  res.statusCode = 500;
-  res.end(res.sentry + "\n");
-});
+<PlatformContent includePath="getting-started-verify" />
 
-app.listen(3000);
-```
+<Note>
 
-You can verify the Sentry integration by creating a route that will throw an error:
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
 
-```javascript
-app.get("/debug-sentry", function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
-});
-```
+</Note>
 
-`requestHandler` accepts some options that let you decide what data should be included in the event sent to Sentry.
-
-Possible options are:
-
-```javascript
-// keys to be extracted from req
-request?: boolean | string[]; // default: true = ['cookies', 'data', 'headers', 'method', 'query_string', 'url']
-
-// server name
-serverName?: boolean; // default: true
-
-// generate transaction name
-//   path == request.path (eg. "/foo")
-//   methodPath == request.method + request.path (eg. "GET|/foo")
-//   handler == function name (eg. "fooHandler")
-transaction?: boolean | 'path' | 'methodPath' | 'handler'; // default: true = 'methodPath'
-
-// keys to be extracted from req.user
-user?: boolean | string[]; // default: true = ['id', 'username', 'email']
-
-// client ip address
-ip?: boolean; // default: false
-
-// node version
-version?: boolean; // default: true
-
-// timeout for fatal route errors to be delivered
-flushTimeout?: number; // default: undefined
-```
-
-For example, if you want to skip the server name and add just user, you would use `requestHandler` like this:
-
-```javascript
-app.use(
-  Sentry.Handlers.requestHandler({
-    serverName: false,
-    user: ["email"],
-  })
-);
-```
-
-By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts middleware errors as its argument and decides, whether an error should be sent or not, by returning an appropriate boolean value.
-
-```javascript
-app.use(
-  Sentry.Handlers.errorHandler({
-    shouldHandleError(error) {
-      // Capture all 404 and 500 errors
-      if (error.status === 404 || error.status === 500) {
-        return true;
-      }
-      return false;
-    },
-  })
-);
-```
-
-## Monitor Performance
-
-You can monitor the performance of your Express application by setting a `tracesSampleRate`, adding the `expressIntegration`, and registering the `tracingHandler` middleware.
-
-
-Spans are created for the following operations:
-
-- HTTP requests made with `request`
-- `get` calls using native `http` and `https` modules
-- Middleware (Express.js only)
-
-### Troubleshooting
-
-When capturing errors locally, ensure that your project's data filter for filtering localhost events is toggled off:
-
-![](./img/express-data-filters.png)
-
-This ensures that errors produced by your browser (such as errors produced by HTTP methods) are properly captured.
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
