@@ -20,12 +20,13 @@ If you have the `openai` package in your dependencies, the OpenAI integration wi
 
 An additional dependency, `tiktoken`, is required if you want to calculate token usage for streaming chat responses.
 
+Learn more about [Sentry AI Monitoring here.](/product/ai-monitoring)
+
 <SignInNote />
 
 ```python
-from openai import OpenAI
-
 import sentry_sdk
+from openai import OpenAI
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
@@ -38,28 +39,34 @@ client = OpenAI()
 
 ## Verify
 
-Verify that the integration works by inducing an error. The error and performance transaction should appear in your Sentry project. 
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
+
 ```python
-from openai import OpenAI
 import sentry_sdk
+from sentry_sdk.ai.monitoring import ai_track
+from openai import OpenAI
 
 sentry_sdk.init(...)  # same as above
 
-client = OpenAI(api_key="a bad API key")
-with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
-    response = (
-        client.chat.completions.create(
-            model="some-model", messages=[{"role": "system", "content": "hello"}]
-        )
-        .choices[0]
-        .message.content
-    )
-    print(response)
+client = OpenAI(api_key="(your OpenAI key)")
+
+@ai_track("My AI pipeline")
+def my_pipeline():
+    with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+      print(
+          client.chat.completions.create(
+              model="gpt-3.5", messages=[{"role": "system", "content": "say hello"}]
+          )
+          .choices[0]
+          .message.content
+      )
 ```
 
-After running this script, a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event (about the bad API key) will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard.
 
-It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+The pipeline will have an associated OpenAI span for the `chat.completions.create` operation.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -69,7 +76,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 - The supported modules are currently `chat.completions.create` and `embeddings.create`.
 
-- Sentry is configured not to consider LLM and tokenizer inputs/outputs as PII. If you want to include them, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts despite `send_default_pii=True`, configure the integration with `include_prompts=False` like in the Options section.
+- Sentry considers LLM and tokenizer inputs/outputs as PII and, by default, does not include PII data. If you want include the data, then set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
 
 ## Options
 
