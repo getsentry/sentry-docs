@@ -3,6 +3,7 @@ import ActixSVG from 'platformicons/svg/actix.svg';
 import AiohttpSVG from 'platformicons/svg/aiohttp.svg';
 import AndroidSVG from 'platformicons/svg/android.svg';
 import AngularjsSVG from 'platformicons/svg/angularjs.svg';
+import AnthropicSVG from 'platformicons/svg/anthropic.svg';
 import ApacheairflowSVG from 'platformicons/svg/apache-airflow.svg';
 import ApachebeamSVG from 'platformicons/svg/apache-beam.svg';
 import ApachesparkSVG from 'platformicons/svg/apache-spark.svg';
@@ -131,6 +132,7 @@ import ActixSVGLarge from 'platformicons/svg_80x80/actix.svg';
 import AiohttpSVGLarge from 'platformicons/svg_80x80/aiohttp.svg';
 import AndroidSVGLarge from 'platformicons/svg_80x80/android.svg';
 import AngularjsSVGLarge from 'platformicons/svg_80x80/angularjs.svg';
+import AnthropicSVGLarge from 'platformicons/svg_80x80/anthropic.svg';
 import ApacheairflowSVGLarge from 'platformicons/svg_80x80/apache-airflow.svg';
 import ApachebeamSVGLarge from 'platformicons/svg_80x80/apache-beam.svg';
 import ApachesparkSVGLarge from 'platformicons/svg_80x80/apache-spark.svg';
@@ -276,6 +278,10 @@ const formatToSVG = {
   angularjs: {
     sm: AngularjsSVG,
     lg: AngularjsSVGLarge,
+  },
+  anthropic: {
+    sm: AnthropicSVG,
+    lg: AnthropicSVGLarge,
   },
   'apache-airflow': {
     sm: ApacheairflowSVG,
@@ -773,6 +779,7 @@ const formatToSVG = {
 
 export const PLATFORM_TO_ICON = {
   android: 'android',
+  anthropic: 'anthropic',
   apple: 'apple',
   capacitor: 'capacitor',
   clojure: 'clojure',
