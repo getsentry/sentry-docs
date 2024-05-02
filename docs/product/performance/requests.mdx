@@ -1,0 +1,124 @@
+---
+title: Requests
+sidebar_order: 55
+description: "Track the performance of your application's HTTP requests and drill into the domains serving those requests."
+---
+
+If you have performance monitoring enabled, you can track your application's HTTP requests in Sentry. Sentry monitors all outgoing HTTP requests and helps you track and investigate the domains that serve those requests.
+
+On the [**Requests** page](#requests-page), you get an overview of the domains that serve your application's outgoing requests. From there, you can check each individual domain's behavior on its [**Domain Summary** page](#domain-summary-page) and find sample events in the [Sample List](#sample-list).
+
+<div style={{"height":"0px","paddingBottom":"calc(56.8359% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/BACnYWFHTvhZU6YK1rpq?embed&show_copy_link=true"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="Performance -> Requests Module Walkthrough"
+  ></iframe>
+</div>
+
+## Prerequisites
+
+<Note>
+Network requests using non-HTTP protocols (FTP, WebSocket, etc.) are not supported at this time.
+</Note>
+
+Availability of HTTP request monitoring depends on the SDK your application uses. In most cases, Sentry's SDKs automatically enable HTTP request tracking. You can check your SDK's <PlatformLink to="/performance/instrumentation/automatic-instrumentation">automatic instrumentation documentation</PlatformLink> to see if it includes tracking HTTP requests.
+
+### Span Eligibility
+
+If the SDK you are using doesn't automatically instrument HTTP requests, you can use <PlatformLink to="/performance/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink>. For best results, follow these guidelines for your custom spans:
+
+- The `op` field is set to `"http.client"`.
+- The `description` field contains the HTTP method and the full URL of the request (e.g., `"GET http://my.service.io/some-data"`).
+- If the request is to a relative URL (e.g., `"GET /data.json"`), the `server.address` span data value should be set to the server address (e.g., `"my.service.io"`).
+- The `http.response.status_code` contains the HTTP response status code (e.g., `"200"`).
+
+See the [Span Data Conventions](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http) page for more information.
+
+## Requests Page
+
+The **Requests** page gives an overview of the domains that your application accesses via HTTP. You can use this page to see how those domains perform, including their average response duration and the rate of 3xx, 4xx, and 5xx HTTP response status codes.
+
+You can access the **Requests** page by clicking "Requests" in the sidebar, under "Performance". The **Performance** page also shows the most time-consuming outgoing HTTP request domains in the "Most Time-Consuming Domains" widget. From there, you can click "View All" to open the **Requests** page.
+
+At the top of the page, there are three graphs that summarize the overall behavior of outgoing HTTP requests: a requests per minute (throughput) chart, an average duration chart, and a chart that shows the percentage of 3xx, 4xx, and 5xx HTTP response status codes. You can click and drag to select a specific time range directly in a graph.
+
+The domains table below the charts shows a list of domains your application makes requests to. The domain names are parameterized, where `*` means that all subdomains of that domain are included. Each row also shows the project that issued the requests, throughput, average duration, HTTP response code rate, and total time your app spent making requests to the domain (time spent).
+
+By default, the table is sorted by most time spent, which serves as a proxy for the relative performance impact of a given domain. You can also sort by throughput, duration, and HTTP response status code rate by clicking on the relevant column header. The domain search bar also lets you search for specific domains.
+
+To view more details, click on a domain name to open its **Domain Summary** page.
+
+<Note>
+If Sentry cannot extract the domain of the outgoing HTTP request, it will group the requests in a special table row named "Unknown Domain". This can happen because of malformed URLs, or old JavaScript SDKs that don't support relative URLs. To fix this problem in JavaScript projects, please upgrade to version [7.111.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.111.0) or above.
+</Note>
+
+<div style={{"height":"0px","paddingBottom":"calc(56.8359% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/cViUuIfSy1qNF5pECFkX?embed&show_copy_link=true"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="Performance -> Requests Page"
+  ></iframe>
+</div>
+
+## Domain Summary Page
+
+To open a domain's **Domain Summary** page, click on the domain from the table on the **Requests** page, or click on the individual rows in the "Most Time-Consuming Domains" widget on the **Performance** page.
+
+At the top of the page, you'll see the same throughput, duration, and response status code charts. You'll also see a link to the domain's status page, if one is known.
+
+Below, you'll find a list of transactions that make requests to that domain, sorted by time spent.
+
+If you want to investigate a specific transaction, click on it to open the request samples panel.
+
+<div style={{"height":"0px","paddingBottom":"calc(56.8359% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/fR2KyVQhqYTkgBhc2WUA?embed&show_copy_link=true"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="Performance -> Requests -> Domain Summary"
+  ></iframe>
+</div>
+
+## Sample List
+
+Click on a transaction to open its sample list. The sample list side panel shows metrics on this domain's behavior within the selected transaction. You can choose to view a breakdown either by duration or by response code.
+
+### Duration Breakdown
+
+The duration breakdown shows the average duration of requests to the domain in the selected transaction. It also finds relevant samples to help you investigate the requests. Sentry tries to find samples that are faster than, slower than, and roughly equal to the average duration. The samples will also span the entire selected time range, if possible. Each sample is plotted on the duration chart and represented as a triangle.
+
+The samples are also listed in a table below the chart. Each sample has a link to the relevant trace, the HTTP status of the response, and the full URL of the request.
+
+### Response Code Breakdown
+
+The response code breakdown chart plots the top 5 most common response status codes over time. You can use this chart to diagnose response code behavior. You can use the response code range selector in the top right to narrow down the status codes. For example, if you select the "3XX" value, the breakdown chart will narrow down to only 3XX HTTP status codes. You can click on the status code badges in the top right of the breakdown chart to show and hide the corresponding status code chart line.
+
+The table below the chart shows a list of sample spans for the selected response code range. Each sample has a link to the relevant trace, the HTTP status of the response, and the full URL of the request.
+
+<div style={{"height":"0px","paddingBottom":"calc(56.8359% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/8sgDmcYEaVECd8eM3O52?embed&show_copy_link=true"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="Performance -> Requests -> Domains -> Samples"
+  ></iframe>
+</div>

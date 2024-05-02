@@ -1,0 +1,99 @@
+There are a few steps necessary in order to ensure that your OpenTelemetry setup is fully synced with your Sentry SDK. The following code snippet walks through the needed steps.
+
+<SignInNote />
+
+```javascript
+// Sentry dependencies
+const Sentry = require("@sentry/node");
+const {
+  getClient,
+  setupGlobalHub,
+  SentryPropagator,
+  SentrySampler,
+  SentrySpanProcessor,
+  setupEventContextTrace,
+  wrapContextManagerClass,
+  setOpenTelemetryContextAsyncContextStrategy,
+} = require("@sentry/opentelemetry");
+
+// OpenTelemetry dependencies
+const opentelemetry = require("@opentelemetry/sdk-node");
+const otelApi = require("@opentelemetry/api");
+const {
+  getNodeAutoInstrumentations,
+} = require("@opentelemetry/auto-instrumentations-node");
+const {
+  OTLPTraceExporter,
+} = require("@opentelemetry/exporter-trace-otlp-grpc");
+const {
+  AsyncLocalStorageContextManager,
+} = require("@opentelemetry/context-async-hooks");
+
+function setupSentry() {
+  setupGlobalHub();
+
+  // Make sure to call `Sentry.init` BEFORE initializing the OpenTelemetry SDK
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    // set the instrumenter to use OpenTelemetry instead of Sentry
+    instrumenter: "otel",
+    // ...
+  });
+
+  const client = getClient();
+  setupEventContextTrace(client);
+
+  // You can wrap whatever local storage context manager you want to use
+  const SentryContextManager = wrapContextManagerClass(
+    AsyncLocalStorageContextManager
+  );
+
+  const sdk = new opentelemetry.NodeSDK({
+    // Existing config
+    traceExporter: new OTLPTraceExporter(),
+    instrumentations: [getNodeAutoInstrumentations()],
+
+    // Sentry config
+    spanProcessor: new SentrySpanProcessor(),
+    textMapPropagator: new SentryPropagator(),
+    contextManager: new SentryContextManager(),
+    sampler: new SentrySampler(client),
+  });
+
+  // Ensure OpenTelemetry Context & Sentry Hub/Scope is synced
+  setOpenTelemetryContextAsyncContextStrategy();
+
+  sdk.start();
+}
+
+setupSentry();
+```
+
+Note that with this setup, you can _only_ use OpenTelemetry tracing for performance. `Sentry.startTransaction()` will _not_ work.
+You can either create spans via `tracer.startActiveSpan()`,
+or use the `startSpan()` / `startInactiveSpan()` methods exported from `@sentry/opentelemetry`,
+which are just thin wrappers around the OpenTelemetry API:
+
+```javascript
+import { startSpan, startInactiveSpan } from "@sentry/opentelemetry";
+
+startSpan({ name: "my span" }, (span) => {
+  // span is an OpenTelemetry Span!
+  span.setAttribute("my_attr", "value");
+  // span is automatically ended at the end of the callback
+});
+
+const span = startInactiveSpan({ name: "my span" });
+// do something
+span.end();
+```
+
+<Note>
+
+If you are using the [@sentry/opentelemetry-node](https://www.npmjs.com/package/@sentry/opentelemetry-node) package, you can continue to do so. Usage instructions are in the
+package's README. This package has a slightly easier setup process but
+provides a more limited connection between Sentry and OpenTelemetry than the
+instructions outlined above.
+
+</Note>

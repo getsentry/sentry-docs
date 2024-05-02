@@ -43,7 +43,11 @@ export default function Changelogs({
       return (
         searchContent.toLowerCase().includes(searchValue.toLowerCase()) &&
         (!selectedCategories.length ||
-          selectedCategories.some(category => changelog.categories.includes(category))) &&
+          selectedCategories.some(selectedCategory =>
+            changelog.categories.some(
+              changelogCategory => changelogCategory.id === selectedCategory.id
+            )
+          )) &&
         (!selectedMonth || selectedMonth === postMonthYear)
       );
     })
@@ -57,15 +61,16 @@ export default function Changelogs({
   });
 
   // iterate over all posts and create a list of months & years
-  const months = changelogs.reduce((allMonths: any, post: any) => {
-    const date = new Date(post.publishedAt) as Date;
+  const months = changelogs.reduce((allMonths, post) => {
+    // if no date is set, use the epoch (simulate behavior before this refactor)
+    const date = post.publishedAt instanceof Date ? post.publishedAt : new Date(0);
     const year = date.getFullYear();
     const month = date.toLocaleString('default', {
       month: 'long',
     });
     const dateMonthYear = `${month} ${year}`;
     return [...new Set([...allMonths, dateMonthYear])];
-  }, []);
+  }, [] as string[]);
 
   const monthsCopy = [...months];
 

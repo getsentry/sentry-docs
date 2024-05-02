@@ -68,11 +68,11 @@ function runRegex(
   arr: ChildrenItem[],
   str: string,
   regex: RegExp,
-  cb: (lastIndex: number, match: any[]) => React.ReactNode
+  cb: (lastIndex: number, match: RegExpExecArray) => React.ReactNode
 ): void {
   regex.lastIndex = 0;
 
-  let match;
+  let match: RegExpExecArray | null;
   let lastIndex = 0;
   // eslint-disable-next-line no-cond-assign
   while ((match = regex.exec(str)) !== null) {

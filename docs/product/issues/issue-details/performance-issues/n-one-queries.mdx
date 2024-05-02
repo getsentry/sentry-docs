@@ -1,10 +1,10 @@
 ---
 title: "N+1 Queries"
 sidebar_order: 10
-description: "Learn more about N+1 queries and how to diagnose and fix them."
+description: "Learn more about N+1 Queries and how to diagnose and fix them."
 ---
 
-_N+1 queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns or modifies all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
+_N+1 Queries_ are a performance problem in which the application makes database queries in a loop, instead of making a single query that returns or modifies all the information at once. Each database connection takes some amount of time, so querying the database in a loop can be many times slower than doing it just once. This problem often occurs when you use an object-relational mapping (ORM) tool in web frameworks like Django or Ruby on Rails.
 
 ## Detection Criteria
 
@@ -17,19 +17,19 @@ The detector for performance issues looks for a set of sequential, non-overlappi
 
 If Sentry is not detecting an N+1 issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
 
-You can configure detector thresholds for N+1 queries issues in **Project Settings > Performance**:
+You can configure detector thresholds for N+1 Queries issues in **Project Settings > Performance**:
 
-![N+1 Query detector threshold settings](/product/issues/issue-details/performance-issues/n-plus-one-queries-detector-settings.png)
+![N+1 Query detector threshold settings](./img/n-plus-one-queries-detector-settings.png)
 
 ## Span Evidence
 
-The evidence for an N+1 queries problem has four main aspects:
+The evidence for an N+1 Queries problem has four main aspects:
 
 - Transaction name
 - Parent span - This can be a view, a serializer, or another span that logically groups the queries.
 - Repeating span - This is the "N" of N+1 queries. This is the looped query that should have been part of a bulk query.
 
-![N+1 Query span evidence](/product/issues/issue-details/performance-issues/n-plus-one-span-evidence.png)
+![N+1 Query span evidence](./img/n-plus-one-span-evidence.png)
 
 ## Fingerprinting
 
@@ -50,7 +50,7 @@ def books(request):
 
 This code has a subtle performance problem. Each call to `book.author.name` makes a query to fetch the book's author. In total, this code makes 11 queries: one query to fetch the list of books, and 10 more queries to fetch the author of each book. This results in a characteristic query span waterfall:
 
-![N+1 queries in an example application](/product/issues/issue-details/performance-issues/n-plus-one-queries-before.png)
+![N+1 queries in an example application](./img/n-plus-one-queries-before.png)
 
 In order to fix this performance issue, you could use the `select_related` method in Django, like so:
 
@@ -65,7 +65,7 @@ def books(request):
 
 Django will `JOIN` the tables ahead of time, and preload the author information. That way, calling `book.author.name` does not need to make an extra query. Instead of a long waterfall, there is a single `SELECT` query:
 
-![Solved N+1 queries in an example application](/product/issues/issue-details/performance-issues/n-plus-one-queries-after.png)
+![Solved N+1 queries in an example application](./img/n-plus-one-queries-after.png)
 
 N+1s can also happen when modifying data. For example, instead of creating objects in a loop:
 

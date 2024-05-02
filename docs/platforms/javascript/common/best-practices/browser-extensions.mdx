@@ -1,0 +1,65 @@
+---
+title: Browser Extensions
+sidebar_order: 50
+description: Learn how to use Sentry in shared environments (for example in browser extensions or VSCode extensions).
+notSupported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.gcp-functions
+  - javascript.koa
+  - javascript.fastify
+keywords:
+  [
+    "BrowserClient",
+    "NodeClient",
+    "shared environment",
+    "browser extension",
+    "VSCode extension"
+  ]
+---
+
+When setting up Sentry in a shared environment where multiple Sentry instances may run, for example, in a browser extension or similar, you should **not use `Sentry.init()`**, as this will pollute the global state. If your browser extension uses `Sentry.init()`, and the website the extension is running on also uses Sentry, the extension may send events to the website's Sentry project, or vice versa.
+
+For such scenarios, you have to set up a client manually as seen in the example below.
+In addition, you should also avoid adding any integrations that use global state, like `Breadcrumbs` or `GlobalHandlers`. Furthermore, some default integrations that use the global state have to be filtered as in the example below.
+As a rule of thumb, it's best to avoid using any integrations and to rely on manual capture of errors only in such scenarios.
+
+<SignInNote />
+
+```javascript
+import {
+  BrowserClient,
+  defaultStackParser,
+  getDefaultIntegrations,
+  makeFetchTransport,
+  Scope,
+} from "@sentry/browser";
+
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter(defaultIntegration => {
+  return !['BrowserApiErrors', 'TryCatch', 'Breadcrumbs', 'GlobalHandlers'].includes(defaultIntegration.name);
+});
+
+const client = new BrowserClient({
+  dsn: "___PUBLIC_DSN___",
+  transport: makeFetchTransport,
+  stackParser: defaultStackParser,
+  integrations: integrations,
+});
+
+const scope = new Scope();
+scope.setClient(client);
+
+client.init() // initializing has to be done after setting the client on the scope
+
+// You can capture exceptions manually for this client like this:
+scope.captureException(new Error("example"));
+
+```
+
+If you notice that Sentry is not capturing error events from the browser extension,
+try disabling the Browser extension errors option in the Inbound Filters of your Sentry configuration.
+Read more about Inbound Filters in the product documentation under [Inbound filters](/product/data-management-settings/filtering/#inbound-data-filters).

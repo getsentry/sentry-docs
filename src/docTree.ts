@@ -1,16 +1,16 @@
-import {type FrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
+import {getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
-import {Platform, PlatformGuide} from './types';
+import {FrontMatter, Platform, PlatformConfig, PlatformGuide} from './types';
 
 export interface DocNode {
   children: DocNode[];
-  frontmatter: FrontMatter;
+  frontmatter: FrontMatter & PlatformConfig;
   missing: boolean;
   path: string;
   slug: string;
-  sourcePath: string;
   parent?: DocNode;
+  sourcePath?: string;
 }
 
 function slugWithoutIndex(slug: string): string[] {
@@ -57,13 +57,14 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     slug: '',
     frontmatter: {
       title: 'Home',
+      slug: 'home',
     },
     children: [],
     missing: false,
     sourcePath: 'src/components/home.tsx',
   };
 
-  const slugMap = {};
+  const slugMap: {[slug: string]: DocNode} = {};
   sortedDocs.forEach(doc => {
     const slugParts = slugWithoutIndex(doc.slug);
     const slug = slugParts.join('/');
@@ -71,7 +72,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     if (slugParts.length === 0) {
       rootNode.frontmatter = doc;
     } else if (slugParts.length === 1) {
-      const node = {
+      const node: DocNode = {
         path: slug,
         slug,
         frontmatter: doc,
@@ -84,7 +85,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
       slugMap[slug] = node;
     } else {
       const parentSlug = slugParts.slice(0, slugParts.length - 1).join('/');
-      let parent = slugMap[parentSlug];
+      let parent: DocNode | undefined = slugMap[parentSlug];
       if (!parent) {
         const grandparentSlug = slugParts.slice(0, slugParts.length - 2).join('/');
         const grandparent = slugMap[grandparentSlug];
@@ -94,7 +95,11 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
         parent = {
           path: parentSlug,
           slug: slugParts[slugParts.length - 2],
-          frontmatter: {},
+          frontmatter: {
+            slug: slugParts[slugParts.length - 2],
+            // not ideal
+            title: '',
+          },
           parent: grandparent,
           children: [],
           missing: true,
@@ -146,6 +151,7 @@ function nodeToPlatform(n: DocNode): Platform {
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    categories: n.frontmatter.categories,
   };
 }
 
@@ -159,6 +165,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     title: n.frontmatter.title,
     platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
+    categories: n.frontmatter.categories,
   };
 }
 

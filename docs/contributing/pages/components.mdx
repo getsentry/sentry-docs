@@ -24,8 +24,7 @@ This is an alert
 Attributes:
 
 - `title` (string)
-- `level` (string)
-- `dismiss` (boolean)
+- `level` (string: `'info' | 'warning' | 'danger' | 'success'`)
 
 Use this for these types of content:
 
@@ -65,6 +64,52 @@ var foo = "bar";
 ```
 ````
 
+You can bring attention to specific lines in a code block using the `{fromLineA-toLineB}` for ranges,
+or `{lineA,lineB}` for specific lines (or a combination of the two):
+
+```javascript {2} {tabTitle:Example}
+function foo() {
+  let lookat = "me";
+  return "bar";
+}
+```
+
+````markdown {tabTitle:Source}
+```javascript {2}
+function foo() {
+  let lookat = "me";
+  return "bar";
+}
+```
+````
+
+You can also highlight diffs using the `diff` language:
+
+````markdown {tabTitle:Example}
+```diff
+- minus one
++ plus one
+```
+````
+If you want to preserve syntax highlighting, you can add `diff` metadata to any code block
+then annotate the diff with `+` and `-`:
+
+```javascript {diff} {tabTitle:Example}
+function foo() {
+-  return "bar";
++  return "baz";
+}
+```
+
+````markdown {tabTitle:Source}
+```javascript {diff}
+function foo() {
+-  return "bar";
++  return "baz";
+}
+```
+````
+
 ## ConfigKey
 
 Render a heading with a configuration key in the correctly cased format for a given platform.
@@ -76,7 +121,7 @@ If content is specified, it will automatically hide the content when the given `
 </Note>
 
 ```markdown {tabTitle:Example}
-<ConfigKey name="send-default-pii" notSupported={["javascript", "node"]}>
+<ConfigKey name="send-default-pii" notSupported={["javascript"]}>
 
 Description of send-default-pii
 
@@ -86,7 +131,7 @@ Description of send-default-pii
 Attributes:
 
 - `name` (string)
-- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `platform` (string) - defaults to the `platform` value from the page context
 - `supported` (string[])
 - `notSupported` (string[])
 
@@ -141,13 +186,11 @@ Render an include based on the currently selected `platform` in context.
 Attributes:
 
 - `includePath` (string) - the subfolder within `/includes` to map to
-- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `platform` (string) - defaults to the `platform` value from the page context
 
 Some notes:
 
 - When the current platform comes from the page context and no matching include is found, the content will be hidden.
-
-- When the current platform comes from the page context path (not the querystring) the platform selector dropdown will be hidden.
 
 - Similar to `PlatformSection`, you can embed content in the block which will render _before_ the given include, but only when an include is available.
 
@@ -186,7 +229,7 @@ This will direct users to a page where they can choose the platform, and then to
 Render a section based on the currently selected `platform` in context. When the platform is not valid, the content will be hidden.
 
 ```markdown {tabTitle:Example}
-<PlatformSection notSupported={["javascript", "node"]}>
+<PlatformSection notSupported={["javascript"]}>
 
 Something that applies to all platforms, but not javascript or node.
 
@@ -195,7 +238,7 @@ Something that applies to all platforms, but not javascript or node.
 
 Attributes:
 
-- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `platform` (string) - defaults to the `platform` value from the page context
 - `supported` (string[])
 - `notSupported` (string[])
 - `noGuides` (boolean) - hide this on all guides (takes precedence over `supported`/`notSupported`)

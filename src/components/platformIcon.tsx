@@ -3,6 +3,7 @@ import ActixSVG from 'platformicons/svg/actix.svg';
 import AiohttpSVG from 'platformicons/svg/aiohttp.svg';
 import AndroidSVG from 'platformicons/svg/android.svg';
 import AngularjsSVG from 'platformicons/svg/angularjs.svg';
+import AnthropicSVG from 'platformicons/svg/anthropic.svg';
 import ApacheairflowSVG from 'platformicons/svg/apache-airflow.svg';
 import ApachebeamSVG from 'platformicons/svg/apache-beam.svg';
 import ApachesparkSVG from 'platformicons/svg/apache-spark.svg';
@@ -46,6 +47,7 @@ import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
+import FastifySVG from 'platformicons/svg/fastify.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -81,9 +83,11 @@ import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
+import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
+import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
 import PythonSVG from 'platformicons/svg/python.svg';
 import QtSVG from 'platformicons/svg/qt.svg';
@@ -128,6 +132,7 @@ import ActixSVGLarge from 'platformicons/svg_80x80/actix.svg';
 import AiohttpSVGLarge from 'platformicons/svg_80x80/aiohttp.svg';
 import AndroidSVGLarge from 'platformicons/svg_80x80/android.svg';
 import AngularjsSVGLarge from 'platformicons/svg_80x80/angularjs.svg';
+import AnthropicSVGLarge from 'platformicons/svg_80x80/anthropic.svg';
 import ApacheairflowSVGLarge from 'platformicons/svg_80x80/apache-airflow.svg';
 import ApachebeamSVGLarge from 'platformicons/svg_80x80/apache-beam.svg';
 import ApachesparkSVGLarge from 'platformicons/svg_80x80/apache-spark.svg';
@@ -171,6 +176,7 @@ import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
+import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -206,9 +212,11 @@ import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
+import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
+import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
 import PythonSVGLarge from 'platformicons/svg_80x80/python.svg';
 import QtSVGLarge from 'platformicons/svg_80x80/qt.svg';
@@ -270,6 +278,10 @@ const formatToSVG = {
   angularjs: {
     sm: AngularjsSVG,
     lg: AngularjsSVGLarge,
+  },
+  anthropic: {
+    sm: AnthropicSVG,
+    lg: AnthropicSVGLarge,
   },
   'apache-airflow': {
     sm: ApacheairflowSVG,
@@ -535,6 +547,10 @@ const formatToSVG = {
     sm: KoaSVG,
     lg: KoaSVGLarge,
   },
+  fastify: {
+    sm: FastifySVG,
+    lg: FastifySVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -579,6 +595,10 @@ const formatToSVG = {
     sm: NodejsSVG,
     lg: NodejsSVGLarge,
   },
+  openai: {
+    sm: OpenaiSVG,
+    lg: OpenaiSVGLarge,
+  },
   perl: {
     sm: PerlSVG,
     lg: PerlSVGLarge,
@@ -590,6 +610,10 @@ const formatToSVG = {
   postgresql: {
     sm: PostgresqlSVG,
     lg: PostgresqlSVGLarge,
+  },
+  powershell: {
+    sm: PowershellSVG,
+    lg: PowershellSVGLarge,
   },
   pyramid: {
     sm: PyramidSVG,
@@ -755,8 +779,8 @@ const formatToSVG = {
 
 export const PLATFORM_TO_ICON = {
   android: 'android',
+  anthropic: 'anthropic',
   apple: 'apple',
-  bun: 'bun',
   capacitor: 'capacitor',
   clojure: 'clojure',
   cocoa: 'apple',
@@ -771,7 +795,6 @@ export const PLATFORM_TO_ICON = {
   'csharp-aspnetcore': 'csharp',
   dart: 'dart',
   default: 'default',
-  deno: 'deno',
   dotnet: 'dotnet',
   'dotnet-aspnetcore': 'dotnet',
   'dotnet-aspnet': 'dotnet',
@@ -811,15 +834,25 @@ export const PLATFORM_TO_ICON = {
   'javascript-astro': 'astro',
   'javascript-angular': 'angularjs',
   'javascript-angularjs': 'angularjs',
+  'javascript-aws-lambda': 'awslambda',
+  'javascript-azure-functions': 'azure-functions',
   'javascript-backbone': 'backbone',
   'javascript-browser': 'javascript',
+  'javascript-bun': 'bun',
   'javascript-capacitor': 'capacitor',
+  'javascript-connect': 'connect',
   'javascript-cordova': 'cordova',
+  'javascript-deno': 'deno',
   'javascript-electron': 'electron',
   'javascript-ember': 'ember',
+  'javascript-express': 'express',
   'javascript-gatsby': 'gatsby',
+  'javascript-gcp-functions': 'gcp-functions',
   'javascript-ionic': 'ionic',
+  'javascript-koa': 'koa',
+  'javascript-fastify': 'fastify',
   'javascript-nextjs': 'nextjs',
+  'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
@@ -833,14 +866,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
-  node: 'nodejs',
-  'node-awslambda': 'awslambda',
-  'node-azurefunctions': 'azure-functions',
-  'node-connect': 'connect',
-  'node-express': 'express',
-  'node-gcpfunctions': 'gcp-functions',
-  'node-koa': 'koa',
-  'node-serverlesscloud': 'serverless',
+  openai: 'openai',
   perl: 'perl',
   php: 'php',
   'php-laravel': 'laravel',
@@ -887,6 +913,7 @@ export const PLATFORM_TO_ICON = {
   'python-sqlalchemy': 'sqlalchemy',
   'python-tornado': 'tornado',
   'python-tryton': 'tryton',
+  powershell: 'powershell',
   qt: 'qt',
   'react-native': 'react-native',
   ruby: 'ruby',

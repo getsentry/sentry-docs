@@ -9,10 +9,10 @@ import {useEffect, useState} from 'react';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  'Join us for Sentry Launch Week March 18-22 for product releases and exclusive demos.';
+  'Join the Sentry and Supabase teams on May 16th to learn about monitoring Supabase with Sentry.';
 const BANNER_LINK_URL =
-  'https://sentry.io/events/launch-week/?promo_name=docs-fy25q1launchweek';
-const BANNER_LINK_TEXT = 'See what’s new';
+  'https://sentry.io/resources/supabase-sentry-workshop/?promo_name=general-fy25q2-supabaseworkshop';
+const BANNER_LINK_TEXT = 'RSVP';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //

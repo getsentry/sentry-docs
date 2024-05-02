@@ -7,7 +7,19 @@ const ChecksumValue = styled.code`
   white-space: nowrap;
 `;
 
-export function JsBundleListClient({files}: {files: any[]}) {
+type File = {
+  checksums: {
+    name: string;
+    value: string;
+  }[];
+  name: string;
+};
+
+type Props = {
+  files: File[];
+};
+
+export function JsBundleListClient({files}: Props) {
   return (
     <table style={{display: 'block', overflow: 'scroll'}}>
       <thead>
@@ -32,7 +44,7 @@ export function JsBundleListClient({files}: {files: any[]}) {
               </td>
               <td style={{verticalAlign: 'middle', width: '100%'}}>
                 <ChecksumValue>
-                  {`sha384-${file.checksums.find(c => c.name === 'sha384-base64').value}`}
+                  {`sha384-${file.checksums.find(c => c.name === 'sha384-base64')?.value}`}
                 </ChecksumValue>
               </td>
             </tr>

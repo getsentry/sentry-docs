@@ -2,13 +2,15 @@ import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
 export const config = {
+  // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
     // Match all request paths except for the ones starting with:
     // - api (API routes)
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // - changelog
+    '/((?!api|_next/static|_next/image|favicon.ico|changelog).*)',
   ],
 };
 
@@ -18,10 +20,37 @@ export function middleware(request: NextRequest) {
 }
 
 const handleRedirects = (request: NextRequest) => {
-  const redirectTo = redirectMap.get(request.nextUrl.pathname);
+  const urlPath = request.nextUrl.pathname;
+
+  const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
     return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
   }
+
+  // If we don't find an exact match, we try to look for a :guide placeholder
+  const guidePlaceholer = '/guides/:guide/';
+  const guideRegex = /\/guides\/(\w+)\//g;
+  const match = guideRegex.exec(urlPath);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholer);
+  const guide = match[1];
+
+  const redirectToGuide = redirectMap.get(pathWithPlaceholder);
+  if (redirectToGuide) {
+    const finalRedirectToPath = redirectToGuide.replace(
+      guidePlaceholer,
+      `/guides/${guide}/`
+    );
+
+    return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
+      status: 301,
+    });
+  }
+
   return undefined;
 };
 
@@ -29,6 +58,14 @@ const handleRedirects = (request: NextRequest) => {
 type PathWithTrailingSlash = `${string}/`;
 
 const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
+  {
+    from: '/platforms/react-native/install/cocoapods/',
+    to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
+    from: '/platforms/react-native/install/',
+    to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
   {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',
     to: '/platforms/unity/usage/sdk-fingerprinting/',
@@ -1308,95 +1345,139 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
 
   {
     from: '/platforms/node/pluggable-integrations/',
-    to: '/platforms/node/configuration/integrations/pluggable-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/',
   },
   {
     from: '/platforms/node/default-integrations/',
-    to: '/platforms/node/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/',
   },
   {
     from: '/platforms/node/integrations/default-integrations/',
-    to: '/platforms/node/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/node/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/configuration/integrations/pluggable-integrations/',
+    to: '/platforms/javascript/guides/:guide/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/:guide/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/configuration/integrations/default-integrations/',
+    to: '/platforms/javascript/guides/:guide/configuration/integrations/',
   },
   {
     from: '/platforms/node/sourcemaps/troubleshooting_js/uploading-without-debug-ids/',
-    to: '/platforms/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
+    to: '/platforms/javascript/guides/node/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
   },
   {
     from: '/platforms/node/gcp_functions/',
-    to: '/platforms/node/guides/gcp-functions/',
+    to: '/platforms/javascript/guides/gcp-functions/',
   },
   {
     from: '/clients/node/integrations/express/',
-    to: '/platforms/node/guides/express/',
+    to: '/platforms/javascript/guides/express/',
   },
   {
     from: '/platforms/node/express/',
-    to: '/platforms/node/guides/express/',
+    to: '/platforms/javascript/guides/express/',
   },
   {
     from: '/platforms/node/guides/express/integrations/default-integrations/',
-    to: '/platforms/node/guides/express/',
+    to: '/platforms/javascript/guides/express/',
   },
   {
     from: '/platforms/node/aws_lambda/',
-    to: '/platforms/node/guides/aws-lambda/',
+    to: '/platforms/javascript/guides/aws-lambda/',
   },
   {
     from: '/platforms/node/azure_functions/',
-    to: '/platforms/node/guides/azure-functions/',
+    to: '/platforms/javascript/guides/azure-functions/',
   },
   {
     from: '/platforms/node/guides/azure-functions/typescript/',
-    to: '/platforms/node/guides/azure-functions/',
+    to: '/platforms/javascript/guides/azure-functions/',
   },
   {
     from: '/clients/node/integrations/connect/',
-    to: '/platforms/node/guides/connect/',
+    to: '/platforms/javascript/guides/connect/',
   },
   {
     from: '/platforms/node/connect/',
-    to: '/platforms/node/guides/connect/',
+    to: '/platforms/javascript/guides/connect/',
   },
   {
     from: '/clients/node/integrations/koa/',
-    to: '/platforms/node/guides/koa/',
+    to: '/platforms/javascript/guides/koa/',
   },
   {
     from: '/platforms/node/koa/',
-    to: '/platforms/node/guides/koa/',
+    to: '/platforms/javascript/guides/koa/',
   },
   {
     from: '/platforms/node/guides/koa/typescript/',
-    to: '/platforms/node/guides/koa/',
+    to: '/platforms/javascript/guides/koa/',
   },
   {
     from: '/clients/node/config/',
-    to: '/platforms/node/legacy-sdk/config/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/config/',
   },
   {
     from: '/clients/node/coffeescript/',
-    to: '/platforms/node/legacy-sdk/coffeescript/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/coffeescript/',
   },
   {
     from: '/clients/node/sourcemaps/',
-    to: '/platforms/node/legacy-sdk/sourcemaps/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/sourcemaps/',
   },
   {
     from: '/clients/node/typescript/',
-    to: '/platforms/node/legacy-sdk/typescript/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/typescript/',
   },
   {
     from: '/platforms/node/typescript/',
-    to: '/platforms/node/legacy-sdk/typescript/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/typescript/',
   },
   {
     from: '/clients/node/integrations/',
-    to: '/platforms/node/legacy-sdk/integrations/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/integrations/',
   },
   {
     from: '/clients/node/usage/',
-    to: '/platforms/node/legacy-sdk/usage/',
+    to: '/platforms/javascript/guides/node/legacy-sdk/usage/',
+  },
+  {
+    from: '/platforms/node/usage/set-level/',
+    to: '/platforms/javascript/guides/node/enriching-events/level/',
+  },
+  {
+    from: '/platforms/node/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/node/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/node/guides/:guide/usage/set-level/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/level/',
+  },
+  {
+    from: '/platforms/node/guides/:guide/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/usage/set-level/',
+    to: '/platforms/javascript/enriching-events/level/',
+  },
+  {
+    from: '/platforms/javascript/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/usage/set-level/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/level/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/usage/sdk-fingerprinting/',
+    to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
   },
   {
     from: '/learn/cli/configuration/',
@@ -2477,6 +2558,18 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
   {
     from: '/product/sentry-basics/search/searchable-properties/session-replay/',
     to: '/product/reference/search/searchable-properties/session-replay/',
+  },
+  {
+    from: '/platforms/javascript/configuration/micro-frontend-support/',
+    to: '/platforms/javascript/best-practices/micro-frontends/',
+  },
+  {
+    from: '/platforms/javascript/configuration/sentry-testkit/',
+    to: '/platforms/javascript/best-practices/sentry-testkit/',
+  },
+  {
+    from: 'platforms/javascript/configuration/webworkers/',
+    to: '/platforms/javascript/best-practices/web-workers/',
   },
 ];
 
