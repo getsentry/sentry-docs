@@ -24,6 +24,9 @@ const nextConfig = {
 
     return config;
   },
+  experimental: {
+    outputFileTracingIgnores: ['.git', '.next/cache'],
+  }
 };
 
 const withMDX = createMDX({
