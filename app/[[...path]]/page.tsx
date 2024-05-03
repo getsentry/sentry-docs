@@ -18,16 +18,19 @@ import {
 import {getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
-import {capitilize} from 'sentry-docs/utils';
+import {capitilize, isTruthy} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
-  const paths: {path: string[] | undefined}[] = docs.map(doc => {
+  const paths: ({path: string[] | undefined} | null)[] = docs.map(doc => {
     const path = doc.slug.split('/');
-    return {path};
+
+    const allowedPaths = ['cli', 'account'];
+
+    return allowedPaths.includes(path[0]) ? {path} : null;
   });
   paths.push({path: undefined}); // the home page
-  return paths;
+  return paths.filter(isTruthy);
 }
 
 // Only render paths returned by generateStaticParams
@@ -78,6 +81,9 @@ export default async function Page({params}) {
   }
 
   const pageNode = nodeForPath(rootNode, params.path);
+  // console.log('params.path', params.path);
+  // const {parent: _p, children: _c, ...node} = pageNode ?? {};
+  // console.log('pageNode', node);
   if (!pageNode) {
     // eslint-disable-next-line no-console
     console.warn('no page node', params.path);
