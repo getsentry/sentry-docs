@@ -25,7 +25,9 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    outputFileTracingIgnores: ['.git', '.next/cache'],
+    outputFileTracingExcludes: {
+      'platform-redirect.js': ['.git', '.next/cache'],
+    }
   }
 };
 
