@@ -21,10 +21,18 @@ function recursiveRender(items: TocItem[]) {
     if (!i.title) {
       return recursiveRender(i.children || []);
     }
+    const getMarkerLeft = (depth: number) => {
+      return depth === 2 ? '-1rem' : depth === 3 ? '-1.75rem' : '-2.5rem';
+    };
     return (
       <li
         className={`${styles['toc-entry']} ${i.isActive ? styles.active : ''}`}
         key={i.url}
+        style={
+          {
+            '--active-marker-left': getMarkerLeft(i.depth),
+          } as React.CSSProperties
+        }
       >
         <a href={`${i.url}`}>{i.title}</a>
         {i.children && <ul>{recursiveRender(i.children)}</ul>}
