@@ -68,6 +68,7 @@ import GrpcSVG from 'platformicons/svg/grpc.svg';
 import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
+import HuggingfaceSVG from 'platformicons/svg/huggingface.svg';
 import IonicSVG from 'platformicons/svg/ionic.svg';
 import IrisSVG from 'platformicons/svg/iris.svg';
 import JavaSVG from 'platformicons/svg/java.svg';
@@ -198,6 +199,7 @@ import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
+import HuggingfaceSVGLarge from 'platformicons/svg_80x80/huggingface.svg';
 import IonicSVGLarge from 'platformicons/svg_80x80/ionic.svg';
 import IrisSVGLarge from 'platformicons/svg_80x80/iris.svg';
 import JavaSVGLarge from 'platformicons/svg_80x80/java.svg';
@@ -529,6 +531,10 @@ const formatToSVG = {
     sm: HttpxSVG,
     lg: HttpxSVGLarge,
   },
+  huggingface: {
+    sm: HuggingfaceSVG,
+    lg: HuggingfaceSVGLarge,
+  },
   huey: {
     sm: HueySVG,
     lg: HueySVGLarge,
@@ -828,6 +834,7 @@ export const PLATFORM_TO_ICON = {
   'go-martini': 'martini',
   'go-negroni': 'go',
   godot: 'godot',
+  huggingface: 'huggingface',
   java: 'java',
   'java-appengine': 'app-engine',
   'java-android': 'android',
