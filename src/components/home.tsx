@@ -29,7 +29,7 @@ export async function Home() {
       <Header pathname="/" searchPlatforms={[]} />
       <Banner />
       <div className="max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        <div className="flex flex-col md:flex-row gap-4 pb-10 mx-auto justify-between pt-24 lg:pt-[120px]">
+        <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
           <div className="flex flex-col justify-center items-start">
             <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
               Welcome to Sentry Docs
@@ -58,7 +58,7 @@ export async function Home() {
             </div>
           </div>
         </Link>
-        <h2 className="text-2xl mt-12 md:mt-16 mb-6 font-medium">Talk to us</h2>
+        <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
         <div className="flex flex-col md:flex-row gap-6">
           <Link href="https://discord.com/invite/sentry" className="w-full">
             <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
@@ -80,7 +80,7 @@ export async function Home() {
           </Link>
         </div>
       </div>
-      <footer className="mt-20 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
+      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
         <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3 pt-10 border-t border-gray">
           <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
           <FooterLink href="/contributing">Contribute</FooterLink>
