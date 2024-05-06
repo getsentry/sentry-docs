@@ -4,7 +4,7 @@ sidebar_order: 9999
 description: "Learn how to manually instrument your code to use Sentrys Cache module. "
 ---
 
-To monitor your caches Sentry provides some auto instrumentation for popular caching setups. But in cache you use a custom caching solution that has not auto instrumentatin, you can manually instrument your caching solution to get a look into how your caching solution is performing.
+To monitor your caches Sentry provides some auto instrumentation for popular Python caching setups (like <PlatformLink to="/integrations/django/">Django</PlatformLink>, <PlatformLink to="/integrations/redis/">Redis</PlatformLink>, and memcached *(coming soon)*). But in cache you use a custom caching solution that has not auto instrumentatin, you can manually instrument your caching solution to get a look into how your caching solution is performing.
 
 You need to create a span when you put something into the cache and create a second span when you fetch something out of the cache. By adding some additional information to those cache Sentry will show you how your caching system is performing.
 
@@ -12,14 +12,33 @@ Always make sure that there is a transaction running when you create the spans. 
 
 For detailed information about data that can be set, see the [Cache Module Developer Specification](https://develop.sentry.dev/sdk/performance/modules/cache/).
 
-## When Putting Data Into the Cache:
+## Manual Instrumentation
 
-```
+If you use <PlatformLink to="/integrations/django/">Django</PlatformLink>, <PlatformLink to="/integrations/redis/">Redis</PlatformLink>,  memcached *(comming soon)* then you do not need manual instrumentation. See the linked docs on how to enable automatic cache instrumentation.
+
+If you have caching solution not mentioned above you need to do the following:
+
+### Initialize Sentry
+
+<PlatformContent includePath="getting-started-config" />
+
+### Add Span When Putting Data Into the Cache:
+
+If the cache you’re using isn’t supported by Opt-In instrumentation mentioned above, you can use the <PlatformLink to="/performance/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> instructions below to emit cache spans:
+
+1. Set the cache value with whatever cache library you happen to be using.
+2. Wrap the part of your application that uses the cached value with  `with sentry_sdk.start_span(...)`
+3. Set `op` to `cache.set`.
+4. Set `cache.item_size` to an integer representing the size of the cached item.
+
+(The steps described above are documented in the snippet.)
+
+```python
 import my_caching
 import sentry_sdk
 
 key = "myCacheKey123"
-value = "The value I want to cache!"
+value = "The value I want to cache."
 
 with sentry_sdk.start_span(op="cache.set") as span:
     # Set a key in your caching using your custom caching solution
@@ -37,9 +56,19 @@ with sentry_sdk.start_span(op="cache.set") as span:
 ```
 
 
-## When Retrieving Data From the Cache:
+### Add Span When Retrieving Data From the Cache:
 
-```
+If the cache you’re using isn’t supported by Opt-In instrumentation mentioned above, you can use the <PlatformLink to="/performance/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> instructions below to emit cache spans:
+
+1. Fetch the cached value from whatever cache library you happen to be using.
+2. Wrap the part of your application that uses the cached value with  `with sentry_sdk.start_span(...)`
+3. Set `op` to `cache.get`.
+4. Set `cache.hit` to a boolean value representing whether the value was successfully fetched from the cache or not.
+5. Set `cache.item_size` to an integer representing the size of the cached item.
+
+(The steps described above are documented in the snippet.)
+
+```python
 import my_caching
 import sentry_sdk
 
