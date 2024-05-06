@@ -26,6 +26,7 @@ import ChaliceSVG from 'platformicons/svg/chalice.svg';
 import ClickhouseSVG from 'platformicons/svg/clickhouse.svg';
 import ClojureSVG from 'platformicons/svg/clojure.svg';
 import CloudflareSVG from 'platformicons/svg/cloudflare.svg';
+import CohereSVG from 'platformicons/svg/cohere.svg';
 import ConnectSVG from 'platformicons/svg/connect.svg';
 import CordovaSVG from 'platformicons/svg/cordova.svg';
 import CppSVG from 'platformicons/svg/cpp.svg';
@@ -155,6 +156,7 @@ import ChaliceSVGLarge from 'platformicons/svg_80x80/chalice.svg';
 import ClickhouseSVGLarge from 'platformicons/svg_80x80/clickhouse.svg';
 import ClojureSVGLarge from 'platformicons/svg_80x80/clojure.svg';
 import CloudflareSVGLarge from 'platformicons/svg_80x80/cloudflare.svg';
+import CohereSVGLarge from 'platformicons/svg_80x80/cohere.svg';
 import ConnectSVGLarge from 'platformicons/svg_80x80/connect.svg';
 import CordovaSVGLarge from 'platformicons/svg_80x80/cordova.svg';
 import CppSVGLarge from 'platformicons/svg_80x80/cpp.svg';
@@ -370,6 +372,10 @@ const formatToSVG = {
   cloudflare: {
     sm: CloudflareSVG,
     lg: CloudflareSVGLarge,
+  },
+  cohere: {
+    sm: CohereSVG,
+    lg: CohereSVGLarge,
   },
   connect: {
     sm: ConnectSVG,
@@ -786,6 +792,7 @@ export const PLATFORM_TO_ICON = {
   cocoa: 'apple',
   'cocoa-objc': 'apple',
   'cocoa-swift': 'swift',
+  cohere: 'cohere',
   cordova: 'cordova',
   cloudflare: 'cloudflare',
   cpp: 'cpp',
