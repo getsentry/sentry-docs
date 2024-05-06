@@ -1999,7 +1999,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/user-settings/',
-    to: '/product/accounts/user-settings/',
+    to: '/account/user-settings/',
   },
   {
     from: '/product/accounts/early-adopter/',
