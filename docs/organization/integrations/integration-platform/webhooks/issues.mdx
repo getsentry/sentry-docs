@@ -15,7 +15,7 @@ Sentry integrations that have subscribed to issue webhooks can receive informati
 ### action
 
 - type: string
-- description: can be `created`, `resolved`, `assigned`, or `archived`
+- description: can be `created`, `resolved`, `assigned`, `archived` or `unresolved`
 
 ### data['issue']
 
@@ -38,6 +38,14 @@ Sentry integrations that have subscribed to issue webhooks can receive informati
 - description: the api url to the project the issue is a part of
 
 ## Payload
+
+Payload includes additional information about the issue. Some important fields to pay attention to are:
+
+### status
+Some issue webhooks are getting triggered on status change of an issue. An issue status can be `resolved`, `unresolved` or `ignored` (archived).
+
+### substatus
+Substatus of an issue is giving more details about a status, specially if one status can mean multiple things. For example, an issue status can change to `unresolved` because it is now `escalating` or because a resolved issue is `regressed`. Possible substatuses are: `archived_until_escalating`, `archived_until_condition_met`, `archived_forever`, `escalating`, `ongoing`, `regressed` and `new`.
 
 ```json
 {
@@ -81,6 +89,7 @@ Sentry integrations that have subscribed to issue webhooks can receive informati
       "status": "unresolved",
       "statusDetails": {},
       "subscriptionDetails": null,
+      "substatus": "escalating",
       "title": "ReferenceError: blooopy is not defined",
       "type": "error",
       "userCount": 1
