@@ -1,0 +1,70 @@
+---
+title: Manual Instrumentation for Cache Module
+sidebar_order: 9999
+description: "Learn how to manually instrument your code to use Sentrys Cache module. "
+---
+
+To monitor your caches Sentry provides some auto instrumentation for popular caching setups. But in cache you use a custom caching solution that has not auto instrumentatin, you can manually instrument your caching solution to get a look into how your caching solution is performing.
+
+You need to create a span when you put something into the cache and create a second span when you fetch something out of the cache. By adding some additional information to those cache Sentry will show you how your caching system is performing.
+
+Always make sure that there is a transaction running when you create the spans. If you are using a web framework then those transactions are created for you. See <PlatformLink to="/performance/">Performance Monitoring</PlatformLink> for more information.
+
+
+## When Putting Data Into the Cache:
+
+```
+import my_caching
+import sentry_sdk
+
+key = "myCacheKey123"
+value = "The value I want to cache!"
+
+with sentry_sdk.start_span(op="cache.set") as span:
+    # Set a key in your caching using your custom caching solution
+    my_caching.set(key, value)
+
+    # Describe the cache server you are accessing
+    span.set_data("network.peer.address", "cache.example.com/supercache")
+    span.set_data("network.peer.port", 9000)
+
+    # Add the key you want to set
+    span.set_data("cache.key", key)
+
+    # Add the size of the value you stored in the cache
+    span.set_data("cache.item_size", len(value))  # Warning: if value is very big this could use lots of memory
+```
+
+
+## When Retrieving Data From the Cache:
+
+```
+import my_caching
+import sentry_sdk
+
+key = "myCacheKey123"
+value = None
+
+with sentry_sdk.start_span(op="cache.get") as span:
+    # Get a key from your caching solution
+    value = my_caching.get(key)
+
+    # Describe the cache server you are accessing
+    span.set_data("network.peer.address", "cache.example.com/supercache")
+    span.set_data("network.peer.port", 9000)
+
+    # Add the key you just retrieved from the cache
+    span.set_data("cache.key", key)
+
+    if value is not None:
+        # If you retrieved a value, the cache was hit
+        span.set_data("cache.hit", True)
+
+        # Optionally also add the size of the value you retrieved
+        span.set_data("cache.item_size", len(value))
+    else
+        # If you could not retrieve a value, it was a miss
+        span.set_data("cache.hit", False)
+```
+
+That's it. If you have those spans in place head over to `Performance > Cache` on [Sentry.io](https://sentry.io) to see how your cache is doing.
