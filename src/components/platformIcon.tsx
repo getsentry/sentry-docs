@@ -75,6 +75,7 @@ import JavaSVG from 'platformicons/svg/java.svg';
 import JavascriptSVG from 'platformicons/svg/javascript.svg';
 import KoaSVG from 'platformicons/svg/koa.svg';
 import KotlinSVG from 'platformicons/svg/kotlin.svg';
+import LangchainSVG from 'platformicons/svg/langchain.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
@@ -206,6 +207,7 @@ import JavaSVGLarge from 'platformicons/svg_80x80/java.svg';
 import JavascriptSVGLarge from 'platformicons/svg_80x80/javascript.svg';
 import KoaSVGLarge from 'platformicons/svg_80x80/koa.svg';
 import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
+import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
@@ -567,6 +569,10 @@ const formatToSVG = {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
   },
+  langchain: {
+    sm: LangchainSVG,
+    lg: LangchainSVGLarge,
+  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -877,6 +883,7 @@ export const PLATFORM_TO_ICON = {
   ionic: 'ionic',
   kotlin: 'kotlin',
   'kotlin-android': 'android',
+  langchain: 'langchain',
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
