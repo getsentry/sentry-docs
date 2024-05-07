@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 
 const rotation = {
   down: 0,
-  right: 270,
+  right: -90,
 } as const;
 
 interface ChevronProps extends React.SVGAttributes<SVGElement> {
