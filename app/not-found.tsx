@@ -8,6 +8,7 @@ import {Search} from 'sentry-docs/components/search';
 
 export default function NotFound() {
   const pathname = usePathname() ?? '/';
+  const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${encodeURIComponent(window.location.href)}`;
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} noSearch />
@@ -21,11 +22,7 @@ export default function NotFound() {
         </div>
         <div className="pt-8 flex gap-4">
           <Button variant="solid" size="3" asChild>
-            <a
-              href="https://github.com/getsentry/sentry-docs/issues/new/choose"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={reportUrl} target="_blank" rel="noreferrer">
               Report 404 on Github
             </a>
           </Button>
