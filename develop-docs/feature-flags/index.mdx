@@ -5,7 +5,7 @@ title: 'Feature Flags'
 Feature flags are declared in Sentry's codebase (look for `SENTRY_FEATURES` in
 [`server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)).
 For self-hosted users, those flags are then configured via `sentry.conf.py`.
-For Sentry's SaaS deployment, Flagr is used to configure flags in production.
+For Sentry's SaaS deployment, options automator is used to configure flags in production.
 
 You can find a list of features available by looking at two files:
 
@@ -15,9 +15,9 @@ You can find a list of features available by looking at two files:
 They're declared on the `FeatureManager` like so:
 
 ```python
-# pass FeatureHandlerStrategy.REMOTE to use flagr:
-manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
-# pass FeatureHandlerStrategy.INTERNAL if you don't plan to use flagr:
+# pass FeatureHandlerStrategy.OPTIONS to use options automator:
+manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
+# pass FeatureHandlerStrategy.INTERNAL if you don't plan to use options automator:
 manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
 ```
 
@@ -80,22 +80,11 @@ add the feature to the `FeatureManager` like so using the `OPTIONS` enum.:
 default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
 ```
 
-If you plan to use [flagr in production](#building-your-feature-in-flagr)
-add the feature to the `FeatureManager` like so using the `REMOTE` enum.:
-
-```python
-default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.REMOTE)
-```
-
-If you don't plan to use flagr, use `FeatureHandlerStrategy.INTERNAL`, for example:
+If you don't plan to use options, use `FeatureHandlerStrategy.INTERNAL`, for example:
 
 ```python
 default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
 ```
-
-Flagr has significant latency, and is somewhat flakey. If you're working in
-high throughput areas like Ingest or Relay, Flagr is not fast enough or
-reliable enough. In these cases, you should use [options](/options/) instead.
 
 ### Add it to the Organization Model Serializer
 
@@ -196,33 +185,17 @@ SENTRY_FEATURES['organizations:test-feature'] = True
 Where `SENTRY_FEATURES` will correspond to the `SENTRY_FEATURES` from `step 2`.
 Set it to `True` if you'd like the feature to be available and `False` if not.
 
-### Flagr in development
-
-In general, you do not need to run flagr in development to test your feature
-flagging. If you do want to run flagr, you'll need to be running
-[getsentry](/sentry-vs-getsentry/):
-
-1. Set the environment variable: `export SENTRY_USE_FLAGR=true`
-2. [Start your devservices](/services/devservices/)
-
-Your local instance of flagr can be found at
-[localhost:18000](http://localhost:18000/#/)
-
 ## Enabling your feature in production
 
 Feature flags are declared in Sentry's codebase. For self-hosted users, those
 flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
 you have the choice of using an option backed rollout via Options Automator,
-or setting up your feature flag in Flagr.
+or by writing a custom feature flag handler.
 
 - [Options based features](#building-your-options-based-feature) allow a feature
 to be rolled out to a specific subset of LA orgs, a percentage of EA orgs,
-and/or a percentage of all orgs. They don't  allow the flexibility of targeting
-that Flagr allows. These can be used in high scale situations, and are generally
-preferred if you don't need the flexibility Flagr offers.
-- [Flagr](#building-your-feature-in-flagr) is easy and quick to use, and is more
-flexible. However, it can't be used in high scale situations.
-
+and/or a percentage of all orgs. These can be used in high scale situations, and are generally
+preferred over customer feature handlers.
 
 ## Building your options based feature
 Declare your feature in sentry/features/temporary.py or 
@@ -231,8 +204,8 @@ sentry/features/permanent.py like so:
 manager.add("organizations:your-new-flag", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
 ```
 
-This automagically registers an `AutoRegisterOptionBackedRolloutFeatureHandler` 
-for you in getsentry, and also auto registers the relevant options. 
+This automatically registers a feature handler for you in getsentry, and also
+auto registers the relevant options.
 
 To roll out your feature, you'll want to set the rollout options via options 
 automator. To figure out the options you need to configure, you can run the 
@@ -267,201 +240,6 @@ Open a pr in https://github.com/getsentry/sentry-options-automator to set
 these options and you can roll out your feature flag. You can also customize
 which orgs will be in your la rollout by modifying `la-orgs`
 
-## Building your feature in Flagr
-
-If you haven't already make sure that when you add your flag in sentry, you use
-the `REMOTE` enum. For example:
-
-```python
-default_manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.REMOTE)  # NOQA
-```
-
-Navigate to the [Flagr UI](https://flagr.getsentry.net/#/) and in the input box
-enter your feature name as the flag's *description*. Next, click the arrow on the
-right of the **Create New Flag** button and select **Create Simple Boolean
-Flag**. The flag's description is only used for easy finding of your flag on the
-Flagr homepage, but it is the `Flag Key` that the API uses to find your flag.
-
-![create a new feature flag](../img/flagrNewFlag.png)
-
-You should then see your newly created flag in the list below, click your flag
-and enter your feature name as the flag key, optionally enter notes about your
-flag here, then click **Save Flag**. At this point, both your flag key and
-description should be your new feature. It is very important that your flag key
-matches exactly what is in sentry as that is what is used to look your feature
-up.
-
-Each flag defaults to disabled, and your feature will not appear until you
-enable it, this is done via the toggle at the top right of the flag page.
-
-![fill out the flag description](../img/flagrDescription.png)
-
-In Flagr your feature needs a Variant and at least one Segment.
-
-### Variant
-
-Variants represent the possible variations of a flag. Because flagr is
-currently only used to toggle features, the only supported variant is `on`, and
-this value is case-insensitive.
-
-### Segment
-
-Segments represent the portions of our audience that your feature will be
-enabled for. Each segment can have multiple conditions **all** of which
-must be matched for a feature to be enabled.
-
-### Distribution
-
-Represents the distribution of variants in a segment, because we'll only have
-one variant this value should always be 100% for each segment.
-
-### Creating a segment constraint
-
-When creating a segment, without the distribution set, Flagr will respond as if
-the segment doesn't exist yet. This means that if you're creating or modifying a
-segment do not set the Distribution until you're ready for your feature to be
-enabled.
-
-Here are the properties that are being sent to Flagr as well as the types of
-their values.
-
-Each constraint requires a Property, Operator, and Value. Each segment can
-contain multiple constraints, all of which must be matched. A way to think about
-segments is that each segment is **OR**ed together, and each constraint is
-**AND**ed together
-
-### Properties
-
-Properties are a preset dictionary that get sent to flagr by sentry, these depend
-on the organization or project being passed to `features.has`
-
-| Property                        | Value Types  | Notes/Example config                                                                   |
-| :-----------------------------  | :----------- | :------------------------------------------------------------------------------------- |
-| `organization_id`               | `int`        |                                                                                        |
-| `organization_slug`             | `string`     | [Example](#releasing-a-feature-to-a-subset-of-organizations)                           |
-| `organization_is-early-adopter` | `bool`       | Users opt in from settings, [example](#releasing-a-feature-to-early-adopters)          |
-| `features`                      | `[string]`   | All active features for org                                                            |
-| `subscription_is-free`          | `bool`       | Whether the organization is on a free plan.                                            |
-| `subscription_is-trial-plan`    | `bool`       | Whether the organization is on any of the trial plans.                                 |
-| `subscription_plan-family`      | `string`     | [Example](#releasing-a-feature-to-organizations-with-specific-plans)                   |
-| `subscription_plan-tier`        | `string`     | [Example](#releasing-a-feature-to-organizations-with-specific-plans)                   |
-| `subscription_channel`          | `int`        |                                                                                        |
-| `project_slug`                  | `string`     | Only passed for projects                                                               |
-| `project_id`                    | `int`        | Only passed for projects                                                               |
-| `user_id`                       | `int`        |                                                                                        |
-| `user_email`                    | `string`     | The user's email address                                                               |
-| `user_domain`                   | `string`     | The domain of the user's email address.                                                |
-| `user_is-superuser`             | `bool`       |                                                                                        |
-| `user_is-staff`                 | `bool`       |                                                                                        |
-| `team_slugs`                    | `[string]`   | Use with an organization condition, [example](#releasing-a-feature-to-a-specific-team) |
-
-More properties can be added by updating `FlagrFeatureHandler.get_context`
-but be considerate of the performance of additional context. Properties
-cannot contain periods `.` as this is a special character used by flagr, in
-general use an underscore `_` instead.
-
-### Operators
-
-Operators are generally straightforward, for example, `==` means equal. There
-is the exception however of `CONTAINS` and `IN` which only operate on arrays,
-This means that if you want to check that for a substring you want to use the
-`=~` operator.
-
-```json
-property CONTAINS "foo"    =======> {"property": ["foo", "bar"]} -> True
-                                    {"property": "foobar"}       -> False
-
-property IN ["foo", "bar"] =======> {"property": ["foo", "bar"]} -> False
-                                    {"property": "foo"}          -> True
-
-property =~ "foo"          =======> {"property": ["foo", "bar"]} -> False
-                                    {"property": "foobar"}       -> True
-```
-
-### Values
-
-- Values that are strings must be wrapped in double-quotes `""`
-- Values that are arrays must be wrapped in square brackets `[]`
-- Values that are bools or ints should not be wrapped in quotes, for example,
-`true` or `1`
-
-### Saving
-
-New constraints must be saved by clicking **Add Constraint**, existing
-constraints are only updated after clicking the green **Save** button, the
-**Save Segment Settings** button does not include constraints.
-
-## Sample Flagr Configurations
-
-Here are some example flagr configurations for methods to release a feature to
-different audiences
-
-### Releasing a feature to a subset of organizations
-
-You can enable a feature for a specific list of organization slugs by setting
-the condition property to `organization_slug`, the operator to `IN`, and the
-value to an array of organizations, using square brackets `[]` for the array, and
-double quotes `"` for each organization.
-
-![enable organization subset](../img/flagrOrganizationSubset.png)
-
-### Releasing a feature to a specific team
-
-You can enable a feature for only a specific team within an organization
-by setting the condition property to `team_slugs`, the operator to
-`CONTAINS`, and the value to the slug of the team wrapped in double quotes `"`.
-**Also include a condition in the same segment to match organization**, with either
-`organization_slug` or `organization_id`. If this isn't included, any org that has the same team name will get the
-feature.
-
-![enable team subset](../img/flagrTeamSubset.png)
-
-### Releasing a feature to Early Adopters
-
-You can enable a feature to organizations that have opted in to be early
-adopters. To do this set the constraint property to
-`organization_is-early-adopter`, the operator to `==`, and the value to `true`.
-
-![enable early adopter subset](../img/flagrEarlyAdopterSubset.png)
-
-### Releasing a feature to organizations with specific plans
-
-Enabling a feature for customers on specific plans can be done by creating a
-segment using plan properties. There are a few plan related properties you can
-use:
-
-* `subscription_is-free` Whether or not the main account subscription is on a
-  free plan.
-* `subscription_channel` Which billing channel an organization is on. The values
-  of this can be found on the `Subscription` model.
-* `subscription_plan-family` This is the plan family of the main subscription.
-  One of `free`, `team` or `business` or None.
-* `subscription_plan-tier` This is the plan tier of the main subscription eg. `am1`.
-* `subscription_plan-trial-plan-family` Family for the plan trial, if one exists.
-* `subscription_plan-trial-plan-tier` Tier for the plan trial, if one exists.
-* `subscription_plan` This property is deprecated and should not be used in new
-  feature flags.
-
-_Note:_ Some customers may have both a regular plan for their main subscription
-_and_ a plan trial. If you need to target a plan tier, (e.g., `"am2"` you
-should create Flagr constraints for both the `subscription_plan-tier` property
-_and_ the `subscription_plan-trial-plan-tier` property.)
-
-![enable plan subset](../img/flagrPlanSubset.png)
-
-### Releasing to organizations incrementally
-
-When releasing a large or potentially disruptive feature you may want to enable
-it for a percentage of organizations incrementally. For example, on Monday it is
-available to 10% of users, and increasing the percentage of customers by 10%
-each day.
-
-When creating your segment set the rollout rate to 0, then on each day that you
-increase it, enter a larger value, and click *Save Segment Setting*.
-
-*Note:* You should not need to modify the distribution to incrementally release
-your feature.
-
 ## After launch (Graduation)
 
 After your feature has been mainlined and is available for all customers on
@@ -477,11 +255,6 @@ sentry.io, you have a few potential paths:
   handlers (see below).You should also enable the feature by default in
   [`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)
   in sentry to ensure that the feature is available for self-hosted deployments.
-
-Finally, if your feature was enabled through flagr, delete the feature from the
-Flagr UI. This is done by navigating to the flag configuration page then
-clicking **Delete Flag** at the bottom of the page.
-
 
 ## Getsentry feature handlers
 
