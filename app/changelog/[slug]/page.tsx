@@ -9,6 +9,7 @@ import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
+import ArticleFooter from 'sentry-docs/components/changelog/articleFooter';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 import prisma from 'sentry-docs/prisma';
 
@@ -114,6 +115,7 @@ export default async function ChangelogEntry({params}) {
               />
             </Suspense>
           </Article>
+          <ArticleFooter />
         </div>
       </div>
     </div>
