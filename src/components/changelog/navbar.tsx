@@ -1,21 +1,21 @@
 'use client';
 import {useEffect, useRef, useState} from 'react';
-import Image from 'next/image';
 
 import {NAV_ITEMS} from 'sentry-docs/constants';
 import Chevron from 'sentry-docs/icons/Chevron';
-import SentryWordmarkSVG from 'sentry-docs/logos/sentry-wordmark-dark.svg';
+
+import {SentryWordmarkLogo} from '../wordmarkLogo';
 
 import {Button} from './ui/Button';
 
 export function Navbar() {
   const [activeNavItem, setActiveNavItem] = useState<string | null>(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const dropdownRef = useRef<any>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  function handleLogoClick(e) {
+  function handleLogoClick(e: React.MouseEvent<SVGElement>) {
     e.preventDefault();
-    if (e?.type === 'click') {
+    if (e.type === 'click') {
       window.location.href = 'https://sentry.io/welcome';
     } else if (e?.type === 'contextmenu') {
       window.location.href = 'https://sentry.io/branding';
@@ -27,16 +27,17 @@ export function Navbar() {
     setIsMenuVisible(prev => !prev);
   }
 
-  function handleShowActiveNavItem(e) {
-    if (dropdownRef.current && !dropdownRef.current?.contains(e.target)) {
+  function handleShowActiveNavItem(e: MouseEvent) {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
       setActiveNavItem(null);
     }
   }
+  // handle click outside of nav items
   useEffect(() => {
-    document.addEventListener('mousedown', handleShowActiveNavItem);
+    document.addEventListener('click', handleShowActiveNavItem);
 
     return () => {
-      document.removeEventListener('mousedown', handleShowActiveNavItem);
+      document.removeEventListener('click', handleShowActiveNavItem);
     };
   }, []);
 
@@ -49,12 +50,11 @@ export function Navbar() {
             className="flex flex-shrink-0 flex-1 items-center mr-auto"
           >
             <a href="#">
-              <Image
-                src={SentryWordmarkSVG}
-                alt="Sentry's logo"
+              <SentryWordmarkLogo
+                width={150}
+                height={45}
                 onClick={handleLogoClick}
                 onContextMenu={handleLogoClick}
-                width={150}
               />
             </a>
           </div>
@@ -62,7 +62,7 @@ export function Navbar() {
             onClick={handleShowMenu}
             className="!bg-gray-200 !hover:bg-gray-200 lg:hidden flex"
           >
-            <span>Menu</span>{' '}
+            <span>Menu</span>
             <Chevron
               width={14}
               height={14}
@@ -91,8 +91,9 @@ export function Navbar() {
                     target={target}
                     href={to || ''}
                     className="w-full !justify-start"
-                    onClick={e => {
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
                       if (children && children.length) {
                         setActiveNavItem(prev => {
                           if (prev === id) {
@@ -137,7 +138,7 @@ export function Navbar() {
                                       variant={navSubSubItem.variant}
                                     >
                                       <span
-                                        className={`h-4 leading-4 ${navSubSubItem.withArrowBtn ? 'text-black' : 'text-lightPurple'}`}
+                                        className={`h-4 leading-4 ${navSubSubItem.withArrowBtn ? 'text-black' : 'text-accent-purple'}`}
                                       >
                                         {navSubSubItem.title}
                                       </span>

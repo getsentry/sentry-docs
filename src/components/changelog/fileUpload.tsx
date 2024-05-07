@@ -22,6 +22,7 @@ export function FileUpload({defaultFile = ''}) {
       {loading && <p>Loading...</p>}
       {file && (
         <Fragment>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={file} alt="Uploaded file" />
           <input type="hidden" name="image" value={file} />
         </Fragment>
