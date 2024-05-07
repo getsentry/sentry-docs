@@ -1011,6 +1011,7 @@ export function PlatformIcon({
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
+    // eslint-disable-next-line no-console
     console.log('svg is null');
   }
 
@@ -1026,9 +1027,11 @@ export function PlatformIcon({
           height={size}
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
+          loading="eager"
         />
         <Image
           src={languageSvg}
+          loading="eager"
           style={{
             position: 'absolute',
             bottom: '-1px',
@@ -1036,6 +1039,8 @@ export function PlatformIcon({
             height: '30%',
             width: '30%',
             borderRadius: '2px',
+            marginTop: 0,
+            marginBottom: 0,
             ...languageIconStyles,
           }}
           alt={`${platform} icon`}
@@ -1051,7 +1056,8 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{borderRadius: `${radius}px`, ...style}}
+      loading="eager"
+      style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
       alt={`${platform} icon`}
     />
   );

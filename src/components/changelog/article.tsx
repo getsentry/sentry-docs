@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import Image from 'next/image';
 
 import Date from './date';
 import Tag from './tag';
@@ -30,8 +31,9 @@ export default function Article({
   return (
     <article className={`bg-white rounded-lg shadow-lg mb-8 ${className}`}>
       {image && (
-        <img
+        <Image
           className="object-cover relative w-full h-64 rounded-lg rounded-b-none"
+          priority
           src={image}
           alt={title}
         />
