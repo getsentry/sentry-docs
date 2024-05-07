@@ -61,7 +61,7 @@ export function Navbar() {
             onClick={handleShowMenu}
             className="!bg-gray-200 !hover:bg-gray-200 lg:hidden flex"
           >
-            <span>Menu</span>{' '}
+            <span>Menu</span>
             <Chevron
               width={14}
               height={14}

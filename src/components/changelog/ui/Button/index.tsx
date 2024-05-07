@@ -1,6 +1,8 @@
 import {AnchorHTMLAttributes, ButtonHTMLAttributes, forwardRef, Ref} from 'react';
 import Link, {LinkProps} from 'next/link';
 
+import styles from './styles.module.scss';
+
 type CommonProps = {
   as?: 'button' | 'a';
   size?: 'sm' | 'default' | 'md' | 'lg' | 'xl';
@@ -15,14 +17,12 @@ type Props = ButtonProps | AnchorProps;
 export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props>(
   ({as = 'button', variant = 'primary', size = 'default', className, ...props}, ref) => {
     const variants = {
-      primary: 'btn text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300',
-      secondary:
-        'btn text-gray-700 border hover:border-indigo-600 disabled:border-indigo-300 disabled:text-gray-300',
+      primary: `${styles.btn} text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300`,
+      secondary: `${styles.btn} text-gray-700 border hover:border-indigo-600 disabled:border-indigo-300 disabled:text-gray-300`,
       danger: 'text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300',
-      ghost:
-        'btn focus:outline focus:outline-2 focus:outline-offset-2 hover:bg-gray-100 !outline-accent-purple',
-      outline: 'btn outline-btn',
-      solid: 'btn solid-btn',
+      ghost: `${styles.btn} focus:outline focus:outline-2 focus:outline-offset-2 hover:bg-gray-100 !outline-accent-purple`,
+      outine: [styles.btn, styles['outline-btn']].join(' '),
+      solid: [styles.btn, styles['solid-btn']].join(' '),
     };
 
     const sizes = {
