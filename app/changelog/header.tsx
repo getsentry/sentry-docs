@@ -1,14 +1,12 @@
-import Image from 'next/image';
-
 export default function Header({loading}) {
   return (
     <div className="w-full mx-auto h-96 relative bg-darkPurple">
       <div className="relative w-full lg:max-w-7xl mx-auto px-4 lg:px-8 pt-8 grid grid-cols-12 items-center">
-        <Image
+        {/* this needs to be a plain <img> next/image doesn't work here because of redirects we do */}
+        <img
           className={`justify-self-center col-span-10 hidden lg:block ${loading ? 'animate-fade-in-left' : ''}`}
           src="https://docs.sentry.io/changelog/assets/hero.png"
           alt="Sentry Changelog"
-          priority
           height={273}
           width={450}
         />
