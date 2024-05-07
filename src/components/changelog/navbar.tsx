@@ -28,15 +28,16 @@ export function Navbar() {
   }
 
   function handleShowActiveNavItem(e: MouseEvent) {
-    if (dropdownRef.current && !dropdownRef.current?.contains(e.target as Node)) {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
       setActiveNavItem(null);
     }
   }
+  // handle click outside of nav items
   useEffect(() => {
-    document.addEventListener('mousedown', handleShowActiveNavItem);
+    document.addEventListener('click', handleShowActiveNavItem);
 
     return () => {
-      document.removeEventListener('mousedown', handleShowActiveNavItem);
+      document.removeEventListener('click', handleShowActiveNavItem);
     };
   }, []);
 
@@ -92,6 +93,7 @@ export function Navbar() {
                     className="w-full !justify-start"
                     onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
                       if (children && children.length) {
                         setActiveNavItem(prev => {
                           if (prev === id) {
