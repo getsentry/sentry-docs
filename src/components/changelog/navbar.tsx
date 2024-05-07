@@ -11,11 +11,11 @@ import {Button} from './ui/Button';
 export function Navbar() {
   const [activeNavItem, setActiveNavItem] = useState<string | null>(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const dropdownRef = useRef<any>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  function handleLogoClick(e) {
+  function handleLogoClick(e: React.MouseEvent<SVGElement>) {
     e.preventDefault();
-    if (e?.type === 'click') {
+    if (e.type === 'click') {
       window.location.href = 'https://sentry.io/welcome';
     } else if (e?.type === 'contextmenu') {
       window.location.href = 'https://sentry.io/branding';
@@ -27,8 +27,8 @@ export function Navbar() {
     setIsMenuVisible(prev => !prev);
   }
 
-  function handleShowActiveNavItem(e) {
-    if (dropdownRef.current && !dropdownRef.current?.contains(e.target)) {
+  function handleShowActiveNavItem(e: MouseEvent) {
+    if (dropdownRef.current && !dropdownRef.current?.contains(e.target as Node)) {
       setActiveNavItem(null);
     }
   }
@@ -90,7 +90,7 @@ export function Navbar() {
                     target={target}
                     href={to || ''}
                     className="w-full !justify-start"
-                    onClick={e => {
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       e.stopPropagation();
                       if (children && children.length) {
                         setActiveNavItem(prev => {
