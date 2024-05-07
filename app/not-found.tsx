@@ -8,7 +8,8 @@ import {Search} from 'sentry-docs/components/search';
 
 export default function NotFound() {
   const pathname = usePathname() ?? '/';
-  const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${encodeURIComponent(window.location.href)}`;
+  const brokenUrl = `https://docs.sentry.io${pathname}`;
+  const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} noSearch />
