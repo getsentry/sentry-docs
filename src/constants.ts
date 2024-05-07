@@ -22,7 +22,7 @@ export const NAV_ITEMS: NavItemsProps[] = [
           {
             id: 'sessionReplay',
             title: 'Session Replay',
-            to: 'https://sentry.engineering/',
+            to: 'https://sentry.io/for/session-replay/',
             variant: 'ghost',
             type: 'a',
           },
