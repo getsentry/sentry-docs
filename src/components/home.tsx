@@ -107,7 +107,8 @@ export async function Home() {
           </FooterLink>
         </div>
         <p className="px-3 text-sm">
-          © 2023 • Sentry is a registered trademark of Functional Software, Inc.
+          © {new Date().getFullYear()} • Sentry is a registered trademark of Functional
+          Software, Inc.
         </p>
         <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
           <SentryWordmarkLogo height={50} fill="#ffffff" />
