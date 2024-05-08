@@ -58,7 +58,6 @@ export function Banner({isModule = false}) {
 
   const enablebanner = () => {
     setIsVisible(true);
-    document.body.classList.add('banner-active');
   };
 
   useEffect(() => {
@@ -95,7 +94,6 @@ export function Banner({isModule = false}) {
               const payload = JSON.stringify([...manifest, hash]);
               localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
               setIsVisible(false);
-              document.body.classList.remove('banner-active');
             }}
           >
             ×
