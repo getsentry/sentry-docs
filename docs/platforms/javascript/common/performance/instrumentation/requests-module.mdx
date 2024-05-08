@@ -1,0 +1,51 @@
+---
+title: Custom Instrumentation for Requests Module
+sidebar_order: 9999
+description: "Learn how to manually instrument your code to use Sentry's Requests module."
+---
+
+As a prerequisite to setting up [Requests](/product/performance/requests/) you’ll need to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Once this is done, the JavaScript SDK will automatically instrument outgoing HTTP requests. If that doesn't fit your use-case, you can also set up [custom instrumentation](#custom-instrumentation).
+
+## Custom Instrumentation
+
+For detailed information about which data can be set, see the [Requests Module Developer Specification](https://develop.sentry.dev/sdk/performance/modules/requests/).
+
+### Initialize Sentry
+
+<PlatformContent includePath="getting-started-config" />
+
+### Wrap The HTTP Requests in a Span
+
+NOTE: Refer to [HTTP Span Data Conventions](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http) for a full list of the span data attributes.
+
+Here is an example of an instrumented function that makes HTTP requests:
+
+```javascript
+async function makeRequest(method, url) {
+  return await Sentry.startSpan(
+    {op: 'http.client', name: `${method} ${url}`},
+    async span => {
+      const parsedURL = new URL(url, location.origin);
+
+      const response = await fetch(url, {
+        method,
+      });
+
+      span?.setAttribute('http.request.method', method);
+
+      span?.setAttribute('server.address', parsedURL.hostname);
+      span?.setAttribute('server.port', parsedURL.port || undefined);
+
+      span?.setAttribute('http.response.status_code', response.status);
+      span?.setAttribute(
+        'http.response_content_length',
+        Number(response.headers.get('content-length'))
+      );
+
+      // A good place to set other span attributes
+
+      return response;
+    }
+  );
+}
+```
