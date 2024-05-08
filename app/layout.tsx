@@ -15,7 +15,8 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: 'Home',
   icons: {
-    icon: 'https://docs.sentry.io/favicon.ico',
+    icon:
+      process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
   },
   metadataBase: new URL('https://docs.sentry.io/'),
   openGraph: {
