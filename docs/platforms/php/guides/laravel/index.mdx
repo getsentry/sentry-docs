@@ -2,12 +2,12 @@
 title: Laravel
 sdk: sentry.php.laravel
 sidebar_order: 0
-description: "Learn about using Sentry with Laravel."
+description: "Laravel is a PHP web application framework with expressive, elegant syntax. Learn how to set it up with Sentry."
 ---
 
 Laravel is supported using a native package: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-This guide is for Laravel 8.x, 9.x and 10.x. We also provide instructions for [other versions](/platforms/php/guides/laravel/other-versions/) as well as [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
+This guide is for Laravel 11.x. We also provide instructions for [other versions](/platforms/php/guides/laravel/other-versions/) as well as [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
 
 ## Install
 
@@ -17,17 +17,28 @@ Install the `sentry/sentry-laravel` package:
 composer require sentry/sentry-laravel
 ```
 
-Enable capturing unhandled exception to report to Sentry by making the following change to your `App/Exceptions/Handler.php`:
+Enable capturing unhandled exception to report to Sentry by making the following change to your `bootstrap/app.php`:
 
-```php {filename:App/Exceptions/Handler.php}
+```php {filename:bootstrap/app.php}
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
 use Sentry\Laravel\Integration;
 
-public function register(): void
-{
-    $this->reportable(function (Throwable $e) {
-        Integration::captureUnhandledException($e);
-    });
-}
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        //
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        Integration::handles($exceptions);
+    })->create();
 ```
 
 <Note>

@@ -1,0 +1,81 @@
+---
+title: Fastify
+description: "Learn about using Sentry with Fastify."
+sdk: sentry.javascript.node
+categories:
+  - server
+---
+
+<PlatformContent includePath="getting-started-primer" />
+
+This guide explains how to setup Sentry in your Fastify application.
+
+Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime. This means that you have to add `@sentry/node` as a runtime dependency to your application:
+
+```bash {tabTitle:npm}
+npm install --save @sentry/node@next
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/node@next
+```
+
+## Configure
+
+Sentry should be initialized as early in your app as possible. It is essential that you call `Sentry.init` before you require any other modules in your application - otherwise, auto-instrumentation of these modules will _not_ work.
+
+Once this is done, Sentry's Node SDK captures unhandled exceptions as well as tracing data for your application.
+
+<SignInNote />
+
+```javascript
+const Sentry = require("@sentry/node");
+
+// Ensure to call this before requiring any other modules!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+const { fastify } = require("fastify");
+const app = fastify();
+
+Sentry.setupFastifyErrorHandler(app);
+
+// Add your routes, etc.
+
+app.listen({ port: 3030 });
+```
+
+If you set a `tracesSampleRate`, performance instrumentation will automatically be enabled for you. See <PlatformLink to="/performance/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> to learn about all the things that the SDK automatically instruments for you.
+
+You can also manually capture performance data - see <PlatformLink to="/performance/instrumentation/custom-instrumentation">Custom Instrumentation</PlatformLink> for details.
+
+## Using Sentry SDK with ESM
+
+Instrumentation works out of the box for CommonJS (CJS) applications based on `require()` calls. This means that as long as your application is either natively in CJS, or compiled at build time to CJS (which is the case for most TypeScript apps, for example), everything will work without any further setup.
+
+Because of compatibility issues, today the Sentry SDK does not support ESM (based on `import`). We are working on a solution for this, and hope to support this soon.
+
+<PlatformContent includePath="getting-started-sourcemaps" />
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<Note>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.

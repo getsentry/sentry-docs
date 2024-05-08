@@ -10,18 +10,20 @@ import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
-import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {
+  getCurrentPlatformOrGuide,
+  getDocsRootNode,
+  nodeForPath,
+} from 'sentry-docs/docTree';
 import {getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {capitilize} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
   const docs = await getDocsFrontMatter();
-  const paths = docs.map(doc => {
-    let path = doc.slug.split('/');
-    if (path[path.length - 1] === 'index') {
-      path = path.slice(0, path.length - 1);
-    }
+  const paths: {path: string[] | undefined}[] = docs.map(doc => {
+    const path = doc.slug.split('/');
     return {path};
   });
   paths.push({path: undefined}); // the home page
@@ -51,6 +53,7 @@ export default async function Page({params}) {
   const docs = await getDocsFrontMatter();
   const rootNode = await getDocsRootNode();
   if (!rootNode) {
+    // eslint-disable-next-line no-console
     console.warn('no root node');
     return notFound();
   }
@@ -76,16 +79,18 @@ export default async function Page({params}) {
 
   const pageNode = nodeForPath(rootNode, params.path);
   if (!pageNode) {
+    // eslint-disable-next-line no-console
     console.warn('no page node', params.path);
     return notFound();
   }
 
   // get the MDX for the current doc and render it
-  let doc: any = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   try {
     doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
+      // eslint-disable-next-line no-console
       console.error('ENOENT', pageNode.path);
       return notFound();
     }
@@ -107,16 +112,26 @@ type MetadataProps = {
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
   const domain = 'https://docs.sentry.io';
-  let title = 'Home';
-  let description = '';
-  const images = [{url: `${domain}/meta.png`, width: 1200, height: 630}];
+  // enable og iamge preview on preview deployments
+  const previewDomain = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : domain;
+  let title =
+    'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
+  let description =
+    'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
+  const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
 
   const rootNode = await getDocsRootNode();
-  if (rootNode && params.path) {
+
+  if (params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {
-      title = pageNode.frontmatter.title;
-      description = pageNode.frontmatter.description;
+      const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+      title =
+        pageNode.frontmatter.title +
+        (guideOrPlatform ? ` | Sentry for ${capitilize(guideOrPlatform.name)}` : '');
+      description = pageNode.frontmatter.description ?? '';
     }
   }
 

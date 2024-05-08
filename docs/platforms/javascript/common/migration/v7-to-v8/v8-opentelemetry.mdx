@@ -1,0 +1,97 @@
+---
+title: OpenTelemetry Support
+sidebar_order: 8930
+description: "Learn OpenTelemetry support in SDK 8.x"
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+---
+
+In `8.x`, the Performance Monitoring APIs for the SDK been completely overhauled. It is now powered by [OpenTelemetry](https://opentelemetry.io/) under the hood.
+
+You do not need to know or understand what OpenTelemetry is in order to use Sentry. We set up OpenTelemetry under the hood, no knowledge of it is required in order to get started.
+
+If you want, you can use OpenTelemetry-native APIs to start spans, and Sentry will pick up everything automatically.
+
+### Accessing the OpenTelemetry Tracer
+
+You can access the tracer instance to add custom spans or context to your traces. This means you can rely on OpenTelemetry APIs to start spans, and Sentry will pick up everything automatically.
+
+```JavaScript
+const tracer = Sentry.getClient().tracer;
+
+const span1 = tracer.startSpan('work-1');
+// Do some work
+span1.end();
+```
+
+We recommend using the [performance monitoring APIs](./v8-new-performance-api.mdx) provided by Sentry, as they are more user-friendly and provide additional features.
+
+### Custom OpenTelemetry Instrumentation
+
+While we include some vetted OpenTelemetry instrumentation out of the box, you can also add your own instrumentation on top of that. You can do that by installing an instrumentation package and calling the `addOpenTelemetryInstrumentation` method:
+
+```JavaScript
+const { GenericPoolInstrumentation } = require('@opentelemetry/instrumentation-generic-pool');
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+});
+
+// Afterwards, you can add additional instrumentation:
+Sentry.addOpenTelemetryInstrumentation(new GenericPoolInstrumentation());
+```
+
+### Custom OpenTelemetry Setup
+
+The SDK also offers the ability to completely customize your OpenTelemetry setup.
+
+In this case, you need to set `skipOpenTelemetrySetup: true` in your `Sentry.init` config, and ensure you setup all the components that Sentry needs yourself.
+
+1. First, install the `@sentry/opentelemetry` package.
+
+```bash {tabTitle:npm}
+npm install --save @sentry/opentelemetry
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/opentelemetry
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/opentelemetry
+```
+
+```bash {tabTitle:bun}
+bun add @sentry/opentelemetry
+```
+
+2. Then add the `SentrySpanProcessor`, `SentryPropagator`, `SentryContextManager`, and `SentrySampler` to your OpenTelemetry SDK initialization.
+
+```JavaScript
+// Make sure Sentry is initialized before OpenTelemetry
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  // Make sure to set this to disable the automatic OpenTelemetry setup
+  skipOpenTelemetrySetup: true,
+});
+
+const { SentrySpanProcessor, SentryPropagator, SentryContextManager, SentrySampler } = require('@sentry/opentelemetry');
+
+// We need to add a span processor to send spans to Sentry
+provider.addSpanProcessor(new SentrySpanProcessor());
+
+// We need a custom propagator and context manager
+// This enables distributed tracing and context isolation
+provier.register({
+  propagator: new SentryPropagator(),
+  contextManager: new SentryContextManager(),
+});
+
+// Optionally, if you want to use the `tracesSamplingRate` or sampling related options from Sentry,
+// you also need to use a custom sampler when you set up your provider
+const provider = new BasicTracerProvider({
+  sampler: new SentrySampler(Sentry.getClient()),
+});
+```

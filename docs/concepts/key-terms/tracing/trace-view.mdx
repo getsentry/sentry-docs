@@ -1,0 +1,150 @@
+---
+title: "Trace View"
+sidebar_order: 30
+description: "Learn more about trace view, where you can drill down into the details of a single trace, allowing you to debug slow services, identify related errors, and find other bottlenecks."
+---
+
+The trace view is designed to be your one-stop-shop when debugging performance or errors. It gives you full context on what was happening when an error or performance issue occurred, all in one place. The waterfall trace view allows you to see everything that may have occurred during a trace, including errors, performance issues, and any profiles that may have been collected.
+
+In addition, the trace view allows you to drill down into the details of a single trace so you can visualize the high-level transactions and spans that took place within that trace. This makes debugging slow services, identifying related errors, and rooting out bottlenecks easier and faster, since you no longer have to navigate around multiple pages of the Sentry product.
+
+## Product Walkthrough: Trace View Page
+
+Sentry's default visualization of a trace is a waterfall-like structure, where the entries (transactions and spans) in the list are organized chronologically and through ancestry (child spans will fall under their parents). This allows you to follow the order of operations and drill into sub-operations.
+
+On the left side is a list of operations, and on the right is their duration and any events, such as errors, which may have occurred in that timeframe.
+
+By default, the waterfall view shows a list of transactions. If you need more granular data and want to see spans as well, click "+" to the left of a transaction to expand the waterfall. The waterfall view helps surface any performance issues or profiles collected during a given timeframe.
+
+<br />
+
+<div
+  style={{
+    height: "0px",
+    paddingBottom: "calc(66.66% + 41px)",
+    position: "relative",
+    width: "100%",
+  }}
+>
+  <iframe
+    src="https://demo.arcade.software/25H9paIDvBOQp5T3pFeW?embed&show_copy_link=true"
+    title="Trace Details — Performance — sentry — Sentry"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    allow="clipboard-write"
+    style={{
+      colorScheme: "light",
+      height: "100%",
+      left: "0px",
+      position: "absolute",
+      top: "0px",
+      width: "100%",
+    }}
+    title="Trace view -> Error"
+  ></iframe>
+</div>
+
+<br />
+### Helpful Tips
+
+Because debugging often involves multiple people or teams, we've made it easy to draw attention to specific areas of the trace and share a link that shows what you've highlighted with your colleagues. To do this, click on the row you'd like to draw attention to and share the resulting URL. Your colleague will see exactly what you want them to.
+
+Whatever you highlight will also be saved if you navigate away from the page and will still be there when you use your browser's back and forward buttons.
+
+If you're doing a comparison and want an easy way to go back and forth between highlighted areas of interest in your trace, you can pin the tabs. When a tab is pinned, the view will be persistent throughout your session.
+
+<br />
+<div
+  style={{
+    height: "0px",
+    paddingBottom: "calc(66.66% + 41px)",
+    position: "relative",
+    width: "100%",
+  }}
+>
+  <iframe
+    src="https://demo.arcade.software/yP3PFytK0ckfetjJTe52?embed&show_copy_link=true"
+    title="Sentry"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    allow="clipboard-write"
+    style={{
+      colorScheme: "light",
+      height: "100%",
+      left: "0px",
+      position: "absolute",
+      top: "0px",
+      width: "100%",
+    }}
+    title="Trace view - Tabbing"
+  ></iframe>
+</div>
+<br />
+Sometimes, duration gaps between entries can be small, but critical to your debugging
+effort. That's why the trace view enables you to zoom into certain areas of the trace,
+either by double clicking on row elements (which zooms into the row) or by using
+your scroll wheel.
+<br />
+<div
+  style={{
+    height: "0px",
+    paddingBottom: "calc(66.66% + 41px)",
+    position: "relative",
+    width: "100%",
+  }}
+>
+  <iframe
+    src="https://demo.arcade.software/U8JbMjFJR1KRiP4G4j4E?embed&show_copy_link=true"
+    title="Trace Details — Performance — sentry — Sentry"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    allow="clipboard-write"
+    style={{
+      colorScheme: "light",
+      height: "100%",
+      left: "0px",
+      position: "absolute",
+      top: "0px",
+      width: "100%",
+    }}
+    title="Trace view - Zooming"
+  ></iframe>
+</div>
+<br />
+The trace view has other features like search, which makes it easy to visualize matching
+spans that you can then iterate over using the up or down arrows. You can also tailor
+the layout to your preference.
+
+We're going to continue adding features that enable you to perform efficient investigation into whatever issues you might be facing. If you have feedback or requests, please share it with us. We'd love to hear how we can make your life easier and your users happier.
+
+## Troubleshooting
+
+### Orphan Traces and Broken Subtraces
+
+In a fully instrumented system, a span in one service will connect to a transaction in a subsequent service. For a variety of reasons, a transaction in a service may not arrive in Sentry. When Sentry encounters these types of transactions within a trace, the transactions are linked with a dashed line since they can no longer be directly connected to the root, creating an orphan trace.
+
+In addition, broken subtraces can occur when Sentry receives an error for a trace, but the corresponding transaction does not exist. Such errors are linked using dashed lines and clicking on the row takes you to the corresponding **Issue Details** page.
+
+Also, in these cases you can click "Open In Discover" to see all the events in the trace.
+
+Broken subtraces may be caused by:
+
+- SDK sampling. Setting a sample rate that's too low may prevent the SDK from sending a transaction. We recommend [sending us all of your transaction data](/product/performance/retention-priorities/#deciding-on-your-sdk-sample-rate).
+- [Ad blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers) may prevent transactions in browsers being sent, but HTTP requests to backend projects will still create child transactions
+- [Rate-limiting](/product/accounts/quotas/#limiting-events) on a project may cause only some events to be sent to Sentry
+- [Project permissions](/product/accounts/membership/#restricting-access) may mean you do not have access to transactions in another project
+- [Differences in quota limits](/product/accounts/quotas/) between transactions and errors. When a quota limit is reached - for example, for transactions - an error is received, but corresponding transaction is not.
+- Exceeding the span limit. Transactions are associated via the child spans of the parent transaction, but if the number of spans exceed the limit, the association cannot be made
+
+### Multiple Roots
+
+Each trace ID should have only one root, a transaction without any parents. Automatic instrumentation should prevent multiple roots; however, if the trace ID of your transactions is being set using custom instrumentation, you may encounter multiple roots.

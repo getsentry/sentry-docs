@@ -12,7 +12,7 @@ type Props = {
 
 export function PlatformLinkWithLogo({platform, label, url}: Props) {
   const {rootNode} = serverContext();
-  if (!rootNode || !platform) {
+  if (!platform) {
     return null;
   }
 

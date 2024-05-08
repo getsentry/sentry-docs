@@ -1,8 +1,9 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import Link from 'next/link';
+import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 
 import Article from 'sentry-docs/components/changelog/article';
 import Pagination from 'sentry-docs/components/changelog/pagination';
@@ -19,12 +20,32 @@ export default function Changelogs({
 }: {
   changelogs: ChangelogWithCategories[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [pageNumber, setPageNumber] = useState(1);
   const [searchValue, setSearchValue] = useState('');
-  const [selectedCategories, setSelectedCategory] = useState<Category[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedCategoriesIds, setSelectedCategoriesIds] = useState<string[]>(
+    searchParams?.get('categories')?.split(',') || []
+  );
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(
+    searchParams?.get('month') || null
+  );
 
-  const filtered = selectedCategories.length || searchValue || selectedMonth;
+  useEffect(() => {
+    const params: string[] = [];
+    if (selectedCategoriesIds.length > 0) {
+      params.push(`categories=${selectedCategoriesIds.join(',')}`);
+    }
+    if (selectedMonth) {
+      params.push(`month=${selectedMonth}`);
+    }
+    router.push(pathname + '?' + params.join('&'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategoriesIds, selectedMonth]);
+
+  const filtered = selectedCategoriesIds.length || searchValue || selectedMonth;
 
   const filteredChangelogs = changelogs
     .filter((changelog: ChangelogWithCategories) => {
@@ -42,8 +63,10 @@ export default function Changelogs({
       const searchContent = changelog.title + changelog.summary + categories;
       return (
         searchContent.toLowerCase().includes(searchValue.toLowerCase()) &&
-        (!selectedCategories.length ||
-          selectedCategories.some(category => changelog.categories.includes(category))) &&
+        (!selectedCategoriesIds.length ||
+          selectedCategoriesIds.some(catId =>
+            changelog.categories.some(changelogCategory => changelogCategory.id === catId)
+          )) &&
         (!selectedMonth || selectedMonth === postMonthYear)
       );
     })
@@ -57,15 +80,16 @@ export default function Changelogs({
   });
 
   // iterate over all posts and create a list of months & years
-  const months = changelogs.reduce((allMonths: any, post: any) => {
-    const date = new Date(post.publishedAt) as Date;
+  const months = changelogs.reduce((allMonths, post) => {
+    // if no date is set, use the epoch (simulate behavior before this refactor)
+    const date = post.publishedAt instanceof Date ? post.publishedAt : new Date(0);
     const year = date.getFullYear();
     const month = date.toLocaleString('default', {
       month: 'long',
     });
     const dateMonthYear = `${month} ${year}`;
     return [...new Set([...allMonths, dateMonthYear])];
-  }, []);
+  }, [] as string[]);
 
   const monthsCopy = [...months];
 
@@ -122,17 +146,19 @@ export default function Changelogs({
             return (
               <a
                 onClick={() => {
-                  if (selectedCategories.includes(category)) {
-                    setSelectedCategory(selectedCategories.filter(c => c !== category));
+                  if (selectedCategoriesIds.includes(category.id)) {
+                    setSelectedCategoriesIds(
+                      selectedCategoriesIds.filter(cat => cat !== category.id)
+                    );
                   } else {
-                    setSelectedCategory([...selectedCategories, category]);
+                    setSelectedCategoriesIds([...selectedCategoriesIds, category.id]);
                   }
                 }}
                 key={category.name}
               >
                 <Tag
                   text={category.name}
-                  active={selectedCategories.includes(category)}
+                  active={selectedCategoriesIds.includes(category.id)}
                   pointer
                 />
               </a>
@@ -149,14 +175,14 @@ export default function Changelogs({
               value={searchValue}
               onChange={e => setSearchValue(e.target.value)}
               placeholder="Search..."
-              className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
+              className="form-input flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
             />
             <div className="flex space-x-4">
               <a
                 className={`${filtered ? 'text-purple font-medium cursor-pointer' : 'text-gray-500 cursor-not-allowed'} hover:text-gray-700`}
                 onClick={() => {
                   setSearchValue('');
-                  setSelectedCategory([]);
+                  setSelectedCategoriesIds([]);
                   setSelectedMonth(null);
                 }}
               >
@@ -191,7 +217,6 @@ export default function Changelogs({
             <li key={index}>
               <a
                 className={`text-primary hover:text-purple-900 hover:font-extrabold ${selectedMonth === month ? 'underline' : ''}`}
-                href={`#${month}`}
                 onClick={e => {
                   e.preventDefault();
                   if (selectedMonth === month) {

@@ -10,9 +10,9 @@ type Node = {
   [key: string]: any;
   context: {
     [key: string]: any;
-    sidebar_order?: number | null;
-    sidebar_title?: string | null;
-    title?: string | null;
+    sidebar_order?: number;
+    sidebar_title?: string;
+    title?: string;
   };
   path: string;
 };
@@ -64,13 +64,17 @@ export const renderChildren = (
       ({name, node}) =>
         node && !!node.context.title && name !== '' && exclude.indexOf(node.path) === -1
     ),
-    ({node}) => node
+    ({node}) => node!
   ).map(({node, children: nodeChildren}) => {
+    // will not be null because of the filter above
+    if (!node) {
+      return null;
+    }
     return (
       <SidebarLink
         to={node.path}
         key={node.path}
-        title={node.context.sidebar_title || node.context.title}
+        title={node.context.sidebar_title || node.context.title!}
         collapsed={depth >= showDepth}
         path={path}
       >
@@ -92,6 +96,7 @@ export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProp
 }
 
 type Props = {
+  headerClassName: string;
   root: string;
   tree: EntityTree[];
   collapse?: boolean;
@@ -113,6 +118,7 @@ export function DynamicNav({
   prependLinks = [],
   suppressMissing = false,
   noHeadingLink = false,
+  headerClassName,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -146,12 +152,11 @@ export function DynamicNav({
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
 
-  const headerClassName = 'sidebar-title d-flex align-items-center';
   const header =
     parentNode && !noHeadingLink ? (
       <SmartLink
         to={`/${root}/`}
-        className={headerClassName}
+        className={`${headerClassName} ${path.join('/') === root ? 'active' : ''}`}
         activeClassName="active"
         data-sidebar-link
       >
@@ -167,7 +172,7 @@ export function DynamicNav({
     <li className="mb-3" data-sidebar-branch>
       {header}
       {(!collapse || isActive) && entity.children && (
-        <ul className="list-unstyled" data-sidebar-tree>
+        <ul data-sidebar-tree>
           {prependLinks &&
             prependLinks.map(link => (
               <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />

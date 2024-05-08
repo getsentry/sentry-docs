@@ -6,23 +6,32 @@ notSupported:
   - javascript.wasm
   - javascript.bun
   - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.koa
 excerpt: ""
 description: "Troubleshooting Session Replay-specific Issues"
 ---
 
-This guide aims to extend the <PlatformLink to="/troubleshooting/">main troubleshooting</PlatformLink> guide by covering Replay-specific scenarios.
-
-<PlatformSection notSupported={["javascript.deno", "javascript.bun", "javascript.wasm", "javascript.capacitor", "javascript.electron"]}>
-## My `canvas` elements aren't getting captured
+<Expandable title="My `canvas` elements aren't getting captured">
 
 Canvas is supported in SDK versions >= `7.98.0`. Please see the <PlatformLink to="/session-replay/#canvas-recording">canvas setup documention</PlatformLink> to get started with canvas recordings.
 
-## Replay is slowing down my `canvas`
+If you are on a supported SDK version and your `canvas` elements still aren't getting captured, check if you have images or videos loaded from foreign origins inside your `canvas`. Any data loaded from an origin without CORS approval is not considered secure and will throw a `SecurityError` when trying to use the replay canvas integration. To fix this issue, set `crossorigin="anonymous"` to your images or videos. This will allow images that are loaded from foreign origins to be used in `canvas` as if they have been loaded from the current origin. See the [CORS documention](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image#security_and_tainted_canvases) for more information about cross-origin access.
+
+</Expandable>
+
+<Expandable title="Replay is slowing down my `canvas`">
 
 The integration needs to enable `preserveDrawingBuffer` to export images from 3D and WebGL canvases. This can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, you'll need to <PlatformLink to="/session-replay/#canvas-recording-performance">enable manual snapshotting</PlatformLink> and call a `snapshot()` method inside of your re-paint loop.
-</PlatformSection>
+</Expandable>
 
-## My custom CSS/Images/Fonts/Media aren't appearing when I view the Replay
+<Expandable title="My custom CSS/images/fonts/media aren't appearing when I view the Replay">
 
 The replay 'video' is actually a video-like reproduction of the HTML on your website. This means that all the external resources your site uses (CSS/Images/Fonts), will be rendered by the corresponding &lt;style&gt;, &lt;img&gt; and &lt;video&gt; tags on your site. Add `sentry.io` to your CORS policy so the iframe hosted on sentry.io can fetch and display these resources.
 
@@ -33,8 +42,9 @@ Note that only static, publicly hosted videos (for example, `src="./my-video.mp4
 Due to [browser limitations](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use), SVGs containing `<use>` tags with links to your domain cannot be accessed from other origins, even if you add `sentry.io` to your CORS policy. This is a known issue and we are working on a solution.
 
 </Alert>
+</Expandable>
 
-## Why can't I see the full HTTP request body or all the headers?
+<Expandable title="Why can't I see the full HTTP request body or all the headers?">
 
 By default, Replay will capture basic information about all outgoing fetch and XHR requests in your application. This includes the URL, request and response body size, method, and status code.
 The intention is to limit the chance of collecting private data. You can <PlatformLink to="/session-replay/configuration/">configure the SDK to capture bodies and additional headers</PlatformLink>.
@@ -43,7 +53,9 @@ Another reason you might not see the body is if the format is not supported. We 
 
 More details about this feature can be found in the <PlatformLink to="/session-replay/configuration/">configuration page</PlatformLink>.
 
-## The SDK is slowing down my website.
+</Expandable>
+
+<Expandable title="The SDK is slowing down my website.">
 
 If you're experiencing slowdowns on your website, first make sure you're on the latest version of our SDK, which will have the most up-to-date bug fixes and performance improvements.
 
@@ -53,13 +65,17 @@ To mitigate these problems, SDK version 7.54.0 will [truncate console messages](
 
 If you're having any problems with the latest SDK version, we want to hear about it. Please open a [GitHub issue](https://github.com/getsentry/sentry-javascript/issues/new?assignees=&labels=Type%3A+Bug&projects=&template=bug.yml) and describe your situation.
 
-## Using Session Replay Increases the Bundle Size of My Application.
+</Expandable>
+
+<Expandable title="Using Session Replay increases the bundle size of my application.">
 
 Because of the complexity of the browser environment, there's a significant amount of code necessary in order for Session Replay to work. And while enabling Session Replay will add about 50 kb (gzipped) to your application bundle, we believe the benefits will outweigh the cost.
 
 We're always working on ways to reduce the bundle size. Additionally, there are steps you can take in order to reduce the size of Session Replay based on your specific use case. See [Tree Shaking](../../configuration/tree-shaking/) for more information.
 
-## How does Rage Click detection work?
+</Expandable>
+
+<Expandable title="How does Rage Click detection work?">
 
 The Replay SDK tries to detect cases where a user clicked on something, but nothing happened. This is called a "Dead Click" -- a click that seems to be "dead" and does nothing, from the user's perspective. This can happen if a bug prevents the UI from being correctly updated after a button is clicked.
 
@@ -84,24 +100,30 @@ Sentry.replayIntegration({
   ],
 });
 ```
+</Expandable>
 
-## I See the Message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."
+<Expandable title='I see the message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."'>
 
 The Sentry SDK attempts to minimize potential [performance overhead](/product/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
 
 If you're seeing the "A large number of mutations was detected" message while watching a replay, it means that your page could be optimized. For example, a dropdown list with thousands of entries could be refactored so that rows are virtualized where only the visible rows are rendered in the DOM. Another potential solution is to paginate the results fetch more data as the user scrolls through it. The SDK has a <PlatformLink to="/session-replay/configuration/#mutation-limits">configuration</PlatformLink> that allows you to configure the limits before recording stops.
+</Expandable>
 
-## Text in the iframe isn't masked
+<Expandable title="Text in the iframe isn't masked">
 
 Our masking logic doesn't run on iframe content that's provided using the `srcdoc` attribute, rather than loaded in via `src`.
 
 To hide this content, block the iframe, as described in our Session Replay <PlatformLink to="/session-replay/privacy/#blocking">Privacy</PlatformLink> docs.
 
-## Replay on My Browser Extension Doesn't Work
+</Expandable>
+
+<Expandable title="Replay on my browser extension doesn't work">
 
 This is not a supported use-case. The replay package is built to work on a website and not as an externally-loaded script via browser extension or other mechanism. In fact, Sentry's Session Replay product can help developers find out when a third-party Chrome extension causes otherwise hard to debug or reproduce issues with their website.
 
-## Response data for Apollo GraphQL Client network requests is not captured
+</Expandable>
+
+<Expandable title="Response data for Apollo GraphQL Client network requests is not captured">
 
 Apollo Client sends an abort signal via `AbortController` whenever a query completes, to clean up and cancel all in-flight queries.
 When this happens, the Replay can't capture the response body because the request is handled as aborted before Replay can access the response.
@@ -120,3 +142,5 @@ const httpLink = createHttpLink({
 ```
 
 With this configuration, Replay is able to capture response bodies from Apollo Client requests.
+
+</Expandable>

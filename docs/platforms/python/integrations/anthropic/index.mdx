@@ -1,0 +1,114 @@
+---
+title: Anthropic
+description: "Learn about using Sentry for Anthropic."
+---
+
+<Alert level="info" title="Beta">
+
+The support for **Anthropic** is in its beta phase.
+
+We are working on supporting different AI libraries (see [GitHub discussion](https://github.com/getsentry/sentry-python/discussions/3007)).
+
+If you want to try the beta features and are willing to give feedback, please let us know on [Discord](https://discord.com/invite/Ww9hbqr).
+
+</Alert>
+
+
+This integration connects Sentry with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) and works with Anthropic versions `0.16.0` and above.
+
+Once you've installed this SDK, you can use Sentry AI Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+
+Sentry AI Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here.](/product/ai-monitoring)
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `anthropic` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[anthropic]'
+```
+
+## Configure
+
+Add `AnthropicIntegration()` to your `integrations` in the `sentry_sdk.init` call:
+
+```python
+from anthropic import Anthropic
+
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    traces_sample_rate=1.0,
+    integrations=[AnthropicIntegration()],
+)
+
+client = Anthropic()
+```
+
+## Verify
+
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
+
+```python
+import sentry_sdk
+from sentry_sdk.ai.monitoring import ai_track
+from anthropic import Anthropic
+
+
+sentry_sdk.init(...)  # same as above
+
+client = Anthropic(api_key="(your Anthropic API key)")
+
+@ai_track("My AI pipeline")
+def my_pipeline():
+    with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+        print(
+            client.messages.create(
+                max_tokens=42,
+                model="some-model",
+                messages=[{"role": "system", "content": "Hello, Anthropic!"}]
+            )
+        )
+```
+
+After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard.
+
+The pipeline will have an associated Anthropic span for the `messages.create` operation.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The supported modules are currently `chat.messages.create` with `stream=True` and `stream=False`.
+
+- All exceptions leading to an `AnthropicError` are reported.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+The `AnthropicIntegration` takes an optional `include_prompts` parameter. If set to `False`, prompts are excluded from being sent to Sentry, despite `send_default_pii=True`.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.anthropic import AnthropicIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    integrations=[
+        AnthropicIntegration(
+            include_prompts=False, # Exclude prompts from being sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+## Supported Versions
+
+- Anthropic: 0.16.0+
+- Python: 3.7+

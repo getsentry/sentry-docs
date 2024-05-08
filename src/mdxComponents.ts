@@ -1,4 +1,4 @@
-import {Alert} from './components/alert';
+import {Alert, Note} from './components/alert';
 import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
@@ -11,11 +11,11 @@ import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
-import {Note} from './components/note';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
 import {PiiFields} from './components/piiFields';
+import {PlatformCategorySection} from './components/platformCategorySection';
 import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
 import {PlatformLink} from './components/platformLink';
@@ -57,6 +57,7 @@ export function mdxComponents(
     PlatformLink,
     PlatformLinkWithLogo,
     PlatformSection,
+    PlatformCategorySection,
     PlatformOrGuideName,
     PlatformSdkPackageName,
     RelayMetrics,

@@ -2,12 +2,12 @@
 title: "Grouping Issues"
 sidebar_order: 60
 noindex: true
-description: "Learn more about how Sentry groups issues together as well as different approaches for updating how events group into issues."
+description: "Learn more about how Sentry groups issues together as well as different ways to change how events are grouped."
 ---
 
 Have you ever had a set of similar-looking issues like this?
 
-![Issues Dashboard](/product/issues/grouping-and-fingerprints/issues-dashboard.png)
+![Issues Dashboard](./img/issues-dashboard.png)
 
 Ever wonder why some events group into a single issue but others group into separate issues?
 
@@ -23,7 +23,7 @@ A fingerprint is a way to uniquely identify an event. Sentry sets a fingerprint 
 ## Why are similar-looking issues not grouping together?
 
 Even if a set of issues in the Issues Stream looks similar, if they are separate then there is something that still differs. In this example, it's the function name at the top of the stack trace:
-![Issues Dashboard](/product/issues/grouping-and-fingerprints/issue-stacktraces-comparison.png)
+![Issues Dashboard](./img/issue-stacktraces-comparison.png)
 
 ## Changing How Events are Grouped
 
@@ -52,13 +52,13 @@ See below for more details on each approach.
 This allows two or more existing issues to be combined, such that any future event which would have fallen into one of the issues will then be added to the merged issue.
 
 Before merge
-![Before Merge](/product/issues/grouping-and-fingerprints/before-merge-1.png)
+![Before Merge](./img/before-merge-1.png)
 
 After merge, we see that `testTypeIssue7` and `testTypeIssue8` were merged together.
-![After Merge](/product/issues/grouping-and-fingerprints/after-merge-1.png)
+![After Merge](./img/after-merge-1.png)
 
 You can also do this from inside a single issue. Click the Similar Issues tab
-![Similar Issues](/product/issues/grouping-and-fingerprints/similar-issues-1.png)
+![Similar Issues](./img/similar-issues-1.png)
 
 **Warning:** This will not affect the creation of future issues. In other words, any future event which would have created a new issue will still do so, regardless of similarity. Only events from the merged issues will be included in the new combined issue.
 
@@ -74,30 +74,30 @@ In order to use fingerprint rules, there are two steps.
 #### 1. Identify Match Logic
 
 Let's say you want the following two issues to group together:
-![ConnectionTimeouts](/product/issues/grouping-and-fingerprints/connection-timeouts-2.png)
+![ConnectionTimeouts](./img/connection-timeouts-2.png)
 
 You can do it based on the error **type**:
-![ConnectionTimeoutType](/product/issues/grouping-and-fingerprints/connection-timeout-type.png)
+![ConnectionTimeoutType](./img/connection-timeout-type.png)
 
 Or you can do it based on the **message**:
-![ConnectionTimeoutMessage](/product/issues/grouping-and-fingerprints/connection-timeout-message.png)
+![ConnectionTimeoutMessage](./img/connection-timeout-message.png)
 
 #### 2. Add Rules to Project Settings
 
 Here's how to set the match based on the error **type** in **[Project] > Settings > Issue Grouping > Fingerprint Rules**:
-![ConnectionTimeoutTypeExample](/product/issues/grouping-and-fingerprints/connection-timeout-type-example.png)
+![ConnectionTimeoutTypeExample](./img/connection-timeout-type-example.png)
 
 Now all `ConnectTimeout` events will get a fingerprint of `connect-timeout-type` and will get grouped into a single issue, regardless of stack trace. Note that this only applies to future events.
 
 Here's how to set the match based on the error **message**. Note the use of `*` to allow the message to match on any `host` value.
 
-![ConnectionTimeoutMessageExample](/product/issues/grouping-and-fingerprints/connection-timeout-message-example.png)
+![ConnectionTimeoutMessageExample](./img/connection-timeout-message-example.png)
 
-You can also do this based on the file path of the erroring function, or on the function name itself. See [Fingerprint Rules](/product/data-management-settings/event-grouping/fingerprint-rules/).
+You can also do this based on the file path of the erroring function, or on the function name itself. See [Fingerprint Rules](/concepts/data-management/event-grouping/fingerprint-rules/).
 
 ### Stack Trace Rules
 
-Sometimes two stack traces are the same function execution path but differ by one or more frames corresponding to code in middleware, third-party libraries, or the framework itself. Sentry will automatically try to detect and ignore such frames, but this is also configurable. See [Stack Trace Rules](/product/data-management-settings/event-grouping/stack-trace-rules/).
+Sometimes two stack traces are the same function execution path but differ by one or more frames corresponding to code in middleware, third-party libraries, or the framework itself. Sentry will automatically try to detect and ignore such frames, but this is also configurable. See [Stack Trace Rules](/concepts/data-management/event-grouping/stack-trace-rules/).
 
 ### SDK-side Fingerprinting
 

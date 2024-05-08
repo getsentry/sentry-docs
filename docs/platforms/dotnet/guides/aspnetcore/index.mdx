@@ -4,7 +4,7 @@ sdk: sentry.dotnet.aspnetcore
 description: "Learn about Sentry's .NET integration with ASP.NET Core."
 ---
 
-Sentry provides an integration with _ASP.NET Core_ through the [Sentry.AspNetCore NuGet package](https://www.nuget.org/packages/Sentry.AspNetCore).
+Sentry provides an integration with ASP.NET Core through the [Sentry.AspNetCore NuGet package](https://www.nuget.org/packages/Sentry.AspNetCore).
 
 <Note>
 
@@ -254,6 +254,22 @@ This parameter controls whether integrations should capture HTTP request bodies.
 - `Always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
 If the request bodies should be captured, all requests will have the `EnableRewind` method invoked. This is done so that the request data can be read later, in case an error happens while processing the request.
+
+### CaptureBlockingCalls
+
+When set to `true`, the SDK will detect blocking calls in async methods (like `Task.Wait()` and `Task.Result`) and report these to Sentry as errors. Blocking calls can lead to [Threadpool starvation](https://learn.microsoft.com/en-nz/archive/blogs/vancem/diagnosing-net-core-threadpool-starvation-with-perfview-why-my-service-is-not-saturating-all-cores-or-seems-to-stall).
+
+Check out the MVC Sample for an example of [how to use this feature](https://github.com/getsentry/sentry-dotnet/blob/d1e5efcdf3af763ad49f11cd2426cc14a315a901/samples/Sentry.Samples.AspNetCore.Mvc/Controllers/HomeController.cs#L17-L36).
+
+In that sample you can also see an example of [how to suppress blocking detection](https://github.com/getsentry/sentry-dotnet/blob/d1e5efcdf3af763ad49f11cd2426cc14a315a901/samples/Sentry.Samples.AspNetCore.Mvc/Controllers/HomeController.cs#L45-L48) for specific code blocks.
+
+This feature makes use of the `Ben.BlockingDetector` library and so has [the same caveats](https://github.com/getsentry/Ben.BlockingDetector?tab=readme-ov-file#caveats):
+
+> 1. For async methods with occurrences of **`.ConfigureAwait(false)`**, detection won't alert for blocking Monitor calls after occurrences in the case where the returned Task wasn't already completed
+> 2. Won't alert for blocking calls that don't block, like on precompleted Tasks (such as a single small `Body.Write`)
+> 3. Won't alert for blocking that happens in syscalls (like `File.Read(...)` and `Thread.Sleep`)
+>
+> It will detect CLR-initiated waits lock, `ManualResetEventSlim`, `Semaphore\{Slim\}`, `Task.Wait`, `Task.Result` etc. if they do block.
 
 ### IncludeActivityData
 

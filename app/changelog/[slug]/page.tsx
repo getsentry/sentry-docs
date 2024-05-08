@@ -1,6 +1,5 @@
 import {Fragment, Suspense} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
-import * as Sentry from '@sentry/nextjs';
 import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import {unstable_cache} from 'next/cache';
@@ -10,6 +9,7 @@ import {getServerSession} from 'next-auth/next';
 import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import Article from 'sentry-docs/components/changelog/article';
+import ArticleFooter from 'sentry-docs/components/changelog/articleFooter';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 import prisma from 'sentry-docs/prisma';
 
@@ -36,9 +36,6 @@ export async function generateMetadata(
     },
     openGraph: {
       images: changelog?.image || (await parent).openGraph?.images,
-    },
-    other: {
-      'sentry-trace': `${Sentry.getActiveSpan()?.toTraceparent()}`,
     },
   };
 }
@@ -118,6 +115,7 @@ export default async function ChangelogEntry({params}) {
               />
             </Suspense>
           </Article>
+          <ArticleFooter />
         </div>
       </div>
     </div>

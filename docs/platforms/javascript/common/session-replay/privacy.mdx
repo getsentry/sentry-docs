@@ -6,6 +6,14 @@ notSupported:
   - javascript.wasm
   - javascript.bun
   - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.koa
 description: "Configuring Session Replay to maintain user and data privacy."
 ---
 
@@ -17,7 +25,7 @@ There are several ways to deal with personally identifiable information (PII). B
 
 Masking replaces the text content with something else. The default masking behavior is to replace each character with a `*`. Elements with class name `sentry-mask` or the attribute `data-sentry-mask` will be blocked. In this example, the relevant HTML code is: `<table class="sentry-mask">...</table>`:
 
-![Replay PII Scrubbing example](/platforms/javascript/common/session-replay/privacy/masking.png)
+![Replay PII Scrubbing example](./img/masking.png)
 
 You can configure what to mask or unmask via the following [configuration](#privacy-configuration):
 
@@ -32,7 +40,7 @@ replayIntegration({
 
 Blocking replaces the element with a placeholder that has the same dimensions. The recording will show an empty space in place of the content. Elements with class name `sentry-block` or the attribute `data-sentry-block` will be blocked. In this example, the relevant HTML code is: `<table data-sentry-block>...</table>`:
 
-![Blocking example](/platforms/javascript/common/session-replay/privacy/blocking.png)
+![Blocking example](./img/blocking.png)
 
 You can configure what to block or unblock via the following [configuration](#privacy-configuration):
 
@@ -47,7 +55,7 @@ replayIntegration({
 
 Ignoring only applies to form inputs. Events will be ignored on the input element so that the replay doesn't show what occurs inside of the input. Any event on an input element with class name `sentry-ignore` or the attribute `data-sentry-ignore` will be ignored. Notice how the results in the table below show input changes, but no visible text:
 
-![Ignoring Example](/platforms/javascript/common/session-replay/privacy/ignoring.gif)
+![Ignoring Example](./img/ignoring.gif)
 
 You can configure what to ignore via the following [configuration](#privacy-configuration):
 
@@ -64,7 +72,7 @@ replayIntegration({
 ## Network Request and Response Bodies and Headers
 
 Collecting request and response bodies is an opt-in feature. That's because the best way to avoid getting PII into Sentry is by not adding URLs of endpoints that may contain PII.
-Additionally, Sentry attempts to [scrub](/product/data-management-settings/scrubbing/server-side-scrubbing/) certain types of sensitive data from request and response bodies, if you accidentally opt-in to a URL that includes this type of data. This mechanism happens on our ingestion service, before data hits our disks. This is a best effort approach which pattern-matches the content with things like credit card information, social security numbers, and [passwords](https://github.com/search?q=repo%3Agetsentry%2Frelay%20PASSWORD_KEY_REGEX&type=code).
+Additionally, Sentry attempts to [scrub](/security-legal-pii/scrubbing/server-side-scrubbing/) certain types of sensitive data from request and response bodies, if you accidentally opt-in to a URL that includes this type of data. This mechanism happens on our ingestion service, before data hits our disks. This is a best effort approach which pattern-matches the content with things like credit card information, social security numbers, and [passwords](https://github.com/search?q=repo%3Agetsentry%2Frelay%20PASSWORD_KEY_REGEX&type=code).
 
 More details about this feature can be found in the [configuration page](/platforms/javascript/session-replay/configuration/#network-details).
 
@@ -108,13 +116,13 @@ Sentry.replayIntegration({
 });
 ```
 
-We also have [server-side PII scrubbing](/product/data-management-settings/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
+We also have [server-side PII scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) for this data. It looks for certain patterns such as American social security numbers, credit cards, and private keys.
 
 ### Example: Scrubbing URLs
 
 By default, URLs are stored in both recording and replay events.
 
-To scrub the URL in a recording event, use the above `beforeAddRecordingEvent`. 
+To scrub the URL in a recording event, use the above `beforeAddRecordingEvent`.
 
 To scrub the URL in a replay event, use `addEventProcessor`:
 

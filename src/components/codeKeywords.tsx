@@ -1,6 +1,7 @@
 import {
   Children,
   cloneElement,
+  ComponentProps,
   Fragment,
   ReactElement,
   useContext,
@@ -10,7 +11,7 @@ import {createPortal} from 'react-dom';
 import {ArrowDown} from 'react-feather';
 import {usePopper} from 'react-popper';
 import styled from '@emotion/styled';
-import {AnimatePresence, motion} from 'framer-motion';
+import {AnimatePresence, motion, MotionProps} from 'framer-motion';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 
@@ -68,11 +69,11 @@ function runRegex(
   arr: ChildrenItem[],
   str: string,
   regex: RegExp,
-  cb: (lastIndex: number, match: any[]) => React.ReactNode
+  cb: (lastIndex: number, match: RegExpExecArray) => React.ReactNode
 ): void {
   regex.lastIndex = 0;
 
-  let match;
+  let match: RegExpExecArray | null;
   let lastIndex = 0;
   // eslint-disable-next-line no-cond-assign
   while ((match = regex.exec(str)) !== null) {
@@ -381,7 +382,7 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
       >
-        <KeywordIndicator isOpen={isOpen} />
+        <KeywordIndicatorComponent isOpen={isOpen} />
         <span
           style={{
             // We set inline-grid only when animating the keyword so they
@@ -406,25 +407,36 @@ function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   );
 }
 
-const Keyword = styled(motion.span)`
+const KeywordSpan = styled(motion.span)`
   grid-row: 1;
   grid-column: 1;
 `;
 
-Keyword.defaultProps = {
-  initial: {position: 'absolute', opacity: 0, y: -10},
-  animate: {
+function Keyword({
+  initial = {opacity: 0, y: -10, position: 'absolute'},
+  animate = {
     position: 'relative',
     opacity: 1,
     y: 0,
     transition: {delay: 0.1},
   },
-  exit: {opacity: 0, y: 20},
-  transition: {
+  exit = {opacity: 0, y: 20},
+  transition = {
     opacity: {duration: 0.15},
     y: {duration: 0.25},
   },
-};
+  ...props
+}: MotionProps) {
+  return (
+    <KeywordSpan
+      initial={initial}
+      animate={animate}
+      exit={exit}
+      transition={transition}
+      {...props}
+    />
+  );
+}
 
 const KeywordDropdown = styled('span')`
   border-radius: 3px;
@@ -457,9 +469,13 @@ const KeywordIndicator = styled(ArrowDown, {shouldForwardProp: p => p !== 'isOpe
   top: -1px;
 `;
 
-KeywordIndicator.defaultProps = {
-  size: '12px',
-};
+function KeywordIndicatorComponent({
+  isOpen,
+  size = '12px',
+  ...props
+}: ComponentProps<typeof KeywordIndicator>) {
+  return <KeywordIndicator isOpen={isOpen} size={size} {...props} />;
+}
 
 const PositionWrapper = styled('div')`
   z-index: 100;
@@ -506,18 +522,27 @@ const Selections = styled('div')`
   min-width: 300px;
 `;
 
-const AnimatedContainer = styled(motion.div)``;
-
-AnimatedContainer.defaultProps = {
-  initial: {opacity: 0, y: 5},
-  animate: {opacity: 1, y: 0},
-  exit: {opacity: 0, scale: 0.95},
-  transition: {
+function AnimatedContainer({
+  initial = {opacity: 0, y: 5},
+  animate = {opacity: 1, y: 0},
+  exit = {opacity: 0, scale: 0.95},
+  transition = {
     opacity: {duration: 0.15},
     y: {duration: 0.3},
     scale: {duration: 0.3},
   },
-};
+  ...props
+}: MotionProps) {
+  return (
+    <motion.div
+      initial={initial}
+      animate={animate}
+      exit={exit}
+      transition={transition}
+      {...props}
+    />
+  );
+}
 
 const DropdownHeader = styled('div')`
   padding: 4px 8px;

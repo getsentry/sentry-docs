@@ -1,0 +1,22 @@
+You can add individual spans to a transaction by calling the `StartChild` method on a transaction. 
+This method returns a new `SentrySpan` object that you can use to record the duration of the operation that the span represents. 
+When you're done with the operation, you can call the `Finish` method on the span to mark it as finished.
+
+```powershell
+# Transaction can be started by providing, at minimum, the name and the operation
+$transaction = Start-SentryTransaction 'test-transaction-name' 'test-transaction-operation'
+
+# Transactions can have child spans (and those spans can have child spans as well)
+$span = $transaction.StartChild("test-child-operation")
+# ...
+# (Perform the operation represented by the span/transaction)
+# ...
+$span.Finish() # Mark the span as finished
+
+$span = $transaction.StartChild("another-span")
+# ...
+$span.Finish()
+
+
+$transaction.Finish() # Mark the transaction as finished and send it to Sentry
+```

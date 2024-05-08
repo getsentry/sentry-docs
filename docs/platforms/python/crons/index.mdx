@@ -1,16 +1,81 @@
 ---
 title: Set Up Crons
-description: "Learn how to enable Cron Monitoring in your app"
-sidebar_order: 5000
+description: "Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job in your application."
+sidebar_order: 5750
 ---
 
-Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job. Once implemented, it'll allow you to get alerts and metrics to help you solve errors, detect timeouts, and prevent disruptions to your service.
+Once implemented, it'll allow you to get alerts and metrics to help you solve errors, detect timeouts, and prevent disruptions to your service.
 
 ## Requirements
 
 <PlatformContent includePath="crons/requirements" />
 
 <PlatformContent includePath="crons/setup" />
+
+## Configuring Cron Monitors
+
+You can create and update your monitors programmatically with code rather than [creating and configuring them in Sentry.io](https://sentry.io/crons/create/). If the monitor doesn't exist in Sentry yet, it will be created.
+
+To create or update a monitor, use `monitor` as outlined above and pass in your monitor configuration as `monitor_config`. This requires SDK version `1.45.0` or higher.
+
+```python
+# All keys except `schedule` are optional
+monitor_config = {
+    "schedule": {"type": "crontab", "value": "0 0 * * *"},
+    "timezone": "Europe/Vienna",
+    # If an expected check-in doesn't come in `checkin_margin`
+    # minutes, it'll be considered missed
+    "checkin_margin": 10,
+    # The check-in is allowed to run for `max_runtime` minutes
+    # before it's considered failed
+    "max_runtime": 10,
+    # It'll take `failure_issue_threshold` consecutive failed
+    # check-ins to create an issue
+    "failure_issue_threshold": 5,
+    # It'll take `recovery_threshold` OK check-ins to resolve
+    # an issue
+    "recovery_threshold": 5,
+}
+
+@monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config)
+def tell_the_world():
+    print('My scheduled task...')
+```
+
+If you're using [manual check-ins](#check-ins), you can pass your `monitor_config` to the `capture_checkin` call:
+
+```python
+check_in_id = capture_checkin(
+    monitor_slug='<monitor-slug>',
+    status=MonitorStatus.IN_PROGRESS,
+    monitor_config=monitor_config,
+)
+```
+
+## Manual Check-Ins
+
+Check-in monitoring allows you to track a job's progress by capturing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+
+If you use the `monitor` decorator/context manager, the SDK will create check-ins for the wrapped code automatically.
+
+```python
+from sentry_sdk.crons import capture_checkin
+from sentry_sdk.crons.consts import MonitorStatus
+
+check_in_id = capture_checkin(
+    monitor_slug='<monitor-slug>',
+    status=MonitorStatus.IN_PROGRESS,
+)
+
+# Execute your task here...
+
+capture_checkin(
+    monitor_slug='<monitor-slug>',
+    check_in_id=check_in_id,
+    status=MonitorStatus.OK,
+)
+```
+
 
 ## Alerts
 
@@ -24,6 +89,6 @@ To receive alerts about these events:
 
 Example: `The event's tags match monitor.slug equals my-monitor-slug-here`
 
-![Cron completed alert filter](/platforms/python/crons/crons-alerts-example.png)
+<Include name="common-imgs/crons-alerts-example" />
 
 Learn more in [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/).

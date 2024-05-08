@@ -1,0 +1,84 @@
+---
+title: Set Up
+sidebar_order: 0
+description: "Learn how to set up Sentry AI Monitoring"
+---
+
+Sentry AI Monitoring is easiest to use with the Python SDK and an official integration like OpenAI.
+
+![AI Monitoring User Interface](../img/pipelines-view.png)
+
+
+To start sending AI data to Sentry, make sure you've created a Sentry project for your AI-enabled repository and follow one of the guides below:
+
+## Official AI Integrations
+
+- [OpenAI](/platforms/python/integrations/openai/)
+- [Langchain](/platforms/python/integrations/langchain/)
+
+<Alert level="note" title="Don't see your platform?">
+
+We'll be adding AI integrations continuously. You can also instrument AI manually with the Sentry Python SDK.
+
+</Alert>
+
+
+## Pipelines and LLMs
+
+The Sentry AI Monitoring feature relies on the fact that you have an orchestrator (like langchain) creating pipelines of one or more AI models (such as gpt-4). In the AI Monitoring dashboard, we show you a table of the AI pipelines and pull the token usage from your AI models.
+
+If you're using OpenAI without langchain, you'll need to manually create pipelines with the `@ai_track` annotation. If you're using langchain without OpenAI, you might have to manually record token usage with `record_token_usage()`. Both manual helpers are documented below.
+
+### Python SDK Decorators
+
+The [Python SDK](/platforms/python) includes an `@ai_track` decorator which will mark functions as AI-related and
+cause them to show up in the AI Monitoring dashboard.
+
+```python
+
+import time
+from sentry_sdk.ai_monitoring import ai_track, record_token_usage
+import sentry_sdk
+import requests
+
+@ai_track(description="AI tool")
+def some_workload_function():
+    """
+    This function is an example of calling arbitrary code with @ai_track so that it shows up in the Sentry trace
+    """
+    time.sleep(5)
+
+@ai_track(description="LLM")
+def some_llm_call():
+    """
+    This function is an example of calling an LLM provider that isn't officially supported by Sentry.
+    """
+    with sentry_sdk.start_span(op="ai.chat_completions.create.examplecom", description="Example.com LLM") as span:
+        result = requests.get('https://example.com/api/llm-chat?question=say+hello').json()
+        # this annotates the tokens used by the LLM so that they show up in the graphs in the dashboard
+        record_token_usage(span, total_tokens=result["usage"]["total_tokens"])
+        return result["text"]
+
+@ai_track(description="My AI pipeline")
+def some_pipeline():
+    """
+    The topmost level function with @ai_track gets the operation "ai.pipeline", which makes it show up
+    in the table of AI pipelines in the Sentry AI Monitoring dashboard.
+    """
+    client = OpenAI()
+    some_workload_function()
+    some_llm_call()
+    response = (
+        client.chat.completions.create(
+            model="some-model", messages=[{"role": "system", "content": "say hello"}]
+        )
+        .choices[0]
+        .message.content
+    )
+    print(response)
+
+with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+    some_pipeline()
+
+```
+

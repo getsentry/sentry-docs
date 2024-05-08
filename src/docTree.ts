@@ -1,16 +1,22 @@
-import {type FrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
+import {getDocsFrontMatter} from 'sentry-docs/mdx';
 
 import {platformsData} from './platformsData';
-import {Platform, PlatformGuide} from './types';
+import {
+  FrontMatter,
+  Platform,
+  PlatformConfig,
+  PlatformGuide,
+  PlatformIntegration,
+} from './types';
 
 export interface DocNode {
   children: DocNode[];
-  frontmatter: FrontMatter;
+  frontmatter: FrontMatter & PlatformConfig;
   missing: boolean;
   path: string;
   slug: string;
-  sourcePath: string;
   parent?: DocNode;
+  sourcePath?: string;
 }
 
 function slugWithoutIndex(slug: string): string[] {
@@ -21,9 +27,9 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-let getDocsRootNodeCache: Promise<DocNode | undefined> | undefined;
+let getDocsRootNodeCache: Promise<DocNode> | undefined;
 
-export function getDocsRootNode(): Promise<DocNode | undefined> {
+export function getDocsRootNode(): Promise<DocNode> {
   if (getDocsRootNodeCache) {
     return getDocsRootNodeCache;
   }
@@ -31,15 +37,11 @@ export function getDocsRootNode(): Promise<DocNode | undefined> {
   return getDocsRootNodeCache;
 }
 
-async function getDocsRootNodeUncached(): Promise<DocNode | undefined> {
+async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(await getDocsFrontMatter());
 }
 
-function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
-  if (frontmatter.length === 0) {
-    return undefined;
-  }
-
+function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
   const sortedDocs = frontmatter.sort((a, b) => {
     const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
     if (partDiff !== 0) {
@@ -57,13 +59,14 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     slug: '',
     frontmatter: {
       title: 'Home',
+      slug: 'home',
     },
     children: [],
     missing: false,
     sourcePath: 'src/components/home.tsx',
   };
 
-  const slugMap = {};
+  const slugMap: {[slug: string]: DocNode} = {};
   sortedDocs.forEach(doc => {
     const slugParts = slugWithoutIndex(doc.slug);
     const slug = slugParts.join('/');
@@ -71,7 +74,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
     if (slugParts.length === 0) {
       rootNode.frontmatter = doc;
     } else if (slugParts.length === 1) {
-      const node = {
+      const node: DocNode = {
         path: slug,
         slug,
         frontmatter: doc,
@@ -84,7 +87,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
       slugMap[slug] = node;
     } else {
       const parentSlug = slugParts.slice(0, slugParts.length - 1).join('/');
-      let parent = slugMap[parentSlug];
+      let parent: DocNode | undefined = slugMap[parentSlug];
       if (!parent) {
         const grandparentSlug = slugParts.slice(0, slugParts.length - 2).join('/');
         const grandparent = slugMap[grandparentSlug];
@@ -94,7 +97,11 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode | undefined {
         parent = {
           path: parentSlug,
           slug: slugParts[slugParts.length - 2],
-          frontmatter: {},
+          frontmatter: {
+            slug: slugParts[slugParts.length - 2],
+            // not ideal
+            title: '',
+          },
           parent: grandparent,
           children: [],
           missing: true,
@@ -136,8 +143,10 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
   const caseStyle = platformData?.case_style || n.frontmatter.caseStyle;
+  const guides = extractGuides(n);
+  const integrations = extractIntegrations(n);
+
   return {
-    guides: extractGuides(n),
     key: n.slug,
     name: n.slug,
     type: 'platform',
@@ -146,6 +155,10 @@ function nodeToPlatform(n: DocNode): Platform {
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    categories: n.frontmatter.categories,
+    keywords: n.frontmatter.keywords,
+    guides,
+    integrations,
   };
 }
 
@@ -159,6 +172,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     title: n.frontmatter.title,
     platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
+    categories: n.frontmatter.categories,
   };
 }
 
@@ -178,6 +192,17 @@ export function getCurrentPlatform(
     return undefined;
   }
   return getPlatform(rootNode, path[1]);
+}
+
+export function getCurrentGuide(
+  rootNode: DocNode,
+  path: string[]
+): PlatformGuide | undefined {
+  if (path.length >= 4 && path[2] === 'guides') {
+    return getGuide(rootNode, path[1], path[3]);
+  }
+
+  return undefined;
 }
 
 export function getCurrentPlatformOrGuide(
@@ -223,3 +248,22 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   }
   return guidesNode.children.map(n => nodeToGuide(platformNode.slug, n));
 }
+
+const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
+  if (!p.frontmatter.showIntegrationsInSearch) {
+    return [];
+  }
+  const integrations = nodeForPath(p, 'integrations');
+  return (
+    integrations?.children.map(integ => {
+      return {
+        key: integ.slug,
+        name: integ.frontmatter.title,
+        icon: p.slug + '.' + integ.slug,
+        url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
+        platform: p.slug,
+        type: 'integration',
+      };
+    }) ?? []
+  );
+};

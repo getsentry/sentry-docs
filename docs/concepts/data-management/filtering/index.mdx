@@ -1,0 +1,121 @@
+---
+title: Inbound Filters
+sidebar_order: 5
+description: "Learn about the different methods for filtering data in your project."
+---
+
+Sentry provides several methods to filter data in your project. Using sentry.io to filter events is a simple method since you don't have to [configure and deploy your SDK to filter projects](/platform-redirect/?next=/configuration/filtering/).
+
+## Inbound Data Filters
+
+Inbound data filters allow you to determine which errors, if any, Sentry should ignore. Explore these by navigating to **[Project] > Project Settings > Inbound Filters.**
+
+These filters are exclusively applied at ingest time and not later in processing. This, for instance, lets you discard an error by error message when the error is ingested through the JSON API. On the other hand, this filter doesn't apply to ingested minidumps. Filtered events do not consume quota, as discussed in [What Counts Toward My Quota](/account/quotas/#what-counts-toward-my-quota-an-overview).
+
+Inbound filters include:
+
+- Common browser extension errors
+- Transactions coming from health checks and ping requests
+- Events coming from legacy browsers
+- Events coming from localhost
+- Errors from known web crawlers
+- React hydration errors
+- ChunkLoadErrors
+- Events from certain IP addresses
+- Events with certain error messages
+- Events from specific release versions of your code
+
+### Legacy Browser Filters
+
+The legacy browser filters allow you to filter out certain legacy versions of browsers that are known to cause problems.
+
+Legacy browser filters were updated in Feb 2024 and will be periodically evaluated to include additional legacy versions.
+
+If you had a legacy browser filter on before the update, the old filter will appear in your settings as "Deprecated". Deprecated legacy browser filters still work. However, if you turn them off, you won’t be able to turn them on again and will need to use the new filters instead.
+
+### Browser Extension Errors
+
+Some browser extensions are known to cause errors. You can filter these out using the browser extension filter, which checks the error message and event source to see if it's a known error coming from a browser extension. To see the full list of errors filtered out by the browser extension filter, see the [source code in relay](https://github.com/getsentry/relay/blob/master/relay-filter/src/browser_extensions.rs#L9-L76).
+
+### Web Crawler Errors
+
+Due to their nature, web crawlers often encounter errors that normal users won't see. You can use the web crawler filter to filter out errors from web crawlers, determined by the event's user-agent, from the following sites: Baidu, Yahoo, Sogou, Facebook, Alexa, Slack, Google Indexing, Pingdom, Lytics, AWS Security Scanner, Hubspot, Bytedance, and other generic bots and spiders. Errors from Slack's Slackbot web crawler will not be filtered.
+
+### Transactions Coming from Health Check
+
+In essence, the health check filter serves the purpose of excluding transactions that are generated as a part of health check procedures.
+
+By applying this filter, you effectively bypass transactions that, while crucial for app stability assessment, hold limited value for you beyond their designated function.
+
+We consider a transaction to be a health check if its name matches one of the following glob patterns:
+
+- `*healthcheck*`
+- `*heartbeat*`
+- `*/health`
+- `*/healthy`
+- `*/healthz`
+- `*/_health`
+- `*/[_health]`
+- `*/live`
+- `*/livez`
+- `*/ready`
+- `*/readyz`
+- `*/ping`
+
+<hr />
+
+<Alert title="Note" level="warning">
+
+Filters do not apply to [sessions](/product/releases/health/#session). Error messages from minidumps also do not yet apply.
+
+</Alert>
+
+Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the Inbound Data Filters view.
+
+![](./img/builtin-inbound-filters.png)
+
+## How Custom Filtering Works
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+Inbound data filters are not case-sensitive.
+
+### Error Message
+
+To use inbound data filters for error messages, keep the following in mind:
+
+- You can provide multiple patterns, one per line. The filter applies if any of the patterns match.
+- On error events, the filter matches the entire error description in the format `{exception.type}: {exception.value}`. We do not recommend matching the full error description including the colon, and suggest you match with wildcards. For example, to match any "ConnectionError", use the filter `*ConnectionError*`. The wildcard matcher can be used at the beginning or end of the string.
+- On message events, the filter matches the fully formatted message.
+- Transactions are never matched by this filter.
+
+To ensure you’re adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the "title" field near the end of the file.
+
+### Releases
+
+To filter releases, keep the following in mind:
+
+- The filter matches the full release name provided during SDK initialization. If you provide the recommended package prefix, the release is in the format `package@version`, for example: `my-example@1.4.0-beta.1`.
+- Globbing rules apply and there is no special casing for SemVer. This allows for matching prefixes, such as `my-example@1.*`.
+- The filter never applies to events without a release.
+
+### Glob Matching
+
+The error messages and releases filters use glob patterns. Globs are case insensitive and allow you to specify wildcards to match variable input. For example, `*panic*` matches any error that contains the words "panic", "PANIC" or "PaNiC".
+
+Some symbols, such as the `*` character, receive special meaning as meta characters. To match a literal asterisk, escape it with a backslash: `\*`. Inbound data filters use the following meta characters:
+
+- `?` matches any single character.
+- `*` matches zero or more characters.
+- `\` escapes the next character making it literal. If it precedes a non-meta character, the backslash is ignored.
+- `[`, `]`, `{`, and `}` are reserved meta characters.
+- `!` works for negation, but only within brackets, such as in `[!1-4]` to match any character that is not `[1-4]`.
+
+Generally, `bash`'s out-of-the-box behavior for globbing is close to what Sentry supports:
+
+```bash
+touch 1.2.3
+touch 1.2.4
+echo 1.2.*
+echo 1.2.[!3]
+```

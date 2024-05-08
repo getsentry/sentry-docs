@@ -31,7 +31,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     guide = `${platform}.${path[3]}`;
   }
 
-  let doc: any = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   if (guide) {
     try {
       doc = await getFileBySlug(`platform-includes/${includePath}/${guide}`);
@@ -50,7 +50,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     const rootNode = await getDocsRootNode();
-    const platformObject = rootNode && getPlatform(rootNode, platform);
+    const platformObject = getPlatform(rootNode, platform);
     if (platformObject?.fallbackPlatform) {
       try {
         doc = await getFileBySlug(

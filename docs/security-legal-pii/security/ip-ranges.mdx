@@ -1,0 +1,124 @@
+---
+title: "IP Ranges"
+sidebar_order: 5
+description: "Learn how Sentry's SaaS product uses IP Ranges for API usage, event ingestion, outbound requests, and more."
+---
+
+<Alert title="Note" level="warning">
+
+The contents of this page apply only to Sentry's SaaS product. It **does not**
+apply to self-hosted or single tenant.
+
+</Alert>
+
+## Dashboard and API
+
+Sentry's dashboard and API are both served from different domains, depending
+on your organization's data storage location. The IP addresses are:
+
+```
+sentry.io 35.186.247.156/32
+us.sentry.io 35.186.247.156/32
+de.sentry.io 34.36.122.224/32, 34.36.87.148/32
+```
+
+## Event Ingestion
+
+Sentry's Event Ingestion respects two domains within a Data Source Name (DSN):
+
+1. The [organization subdomain](https://forum.sentry.io/t/organization-subdomains-in-dsns/9360)
+2. Sentry's apex domain
+
+Sentry's apex domain (`sentry.io`) accepts events from the same IP address as the Dashboard and API:
+
+```
+35.186.247.156/32
+```
+
+Sentry's organization subdomains (`o<number>.ingest.sentry.io` and `o<number>.us.ingest.sentry.io`) accept events from a separate IP address:
+
+```
+34.120.195.249/32
+```
+
+Sentry's organization subdomains in the EU (`o<number>.ingest.de.sentry.io`) accept events from:
+
+```
+34.120.62.213/32
+130.211.36.74/32
+```
+
+Sentry's legacy ingestion hostname (`app.getsentry.com`) accepts events from a separate IP address:
+
+```
+34.96.102.34/32
+```
+
+Organizations in the EU Data Storage Location are unable to ingest events via
+`sentry.io` or `app.getsentry.com`. You can use
+`o<number>.ingest.de.sentry.io` instead.
+
+
+## Outbound Requests
+
+In some circumstances the Hosted Sentry infrastructure might send HTTP requests your way. Primarily this is relevant to [_JavaScript Source Maps_](/platforms/javascript/sourcemaps/), but also affects things like webhooks and other integrations.
+
+Sentry uses the following IP addresses to make outbound requests:
+
+US Data Storage Location
+```
+35.184.238.160/32
+104.155.159.182/32
+104.155.149.19/32
+130.211.230.102/32
+```
+
+EU Data Storage Location
+```
+34.141.31.19/32
+34.141.4.162/32
+35.234.78.236/32
+```
+
+## Allowing Access via Nginx
+
+To allow access to source maps with Nginx for instance, you can use this location example. This example assumes your source maps live in `/static/dist`:
+
+```nginx
+location ~ ^/static/dist/(.+)\.map$ {
+    alias /your/path/site/static/dist/$1.map;
+
+    allow 35.184.238.160/32;
+    allow 104.155.159.182/32;
+    allow 104.155.149.19/32;
+    allow 130.211.230.102/32;
+    deny all;
+}
+```
+
+## Allowing Access via Apache
+
+To allow access to source maps with Apache you can use this example. It can either go into your _.htaccess_ or global config. This example assumes your source maps live in `/static/dist`:
+
+```apacheconf
+<FilesMatch "\.map$">
+    Order deny,allow
+    Deny from all
+    Allow from 35.184.238.160/32
+    Allow from 104.155.159.182/32
+    Allow from 104.155.149.19/32
+    Allow from 130.211.230.102/32
+</FilesMatch>
+```
+
+## Email Delivery
+
+All email is delivered from [SendGrid](https://sendgrid.com/) from the following dedicated, static IP addresses:
+
+```
+167.89.86.73
+167.89.84.75
+167.89.84.14
+```
+
+These IP addresses are only for Sentry use.

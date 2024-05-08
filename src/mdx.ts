@@ -9,10 +9,9 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
-// Rehype packages
 import rehypeSlug from 'rehype-slug';
-// Remark packages
 import remarkGfm from 'remark-gfm';
+import remarkMdxImages from 'remark-mdx-images';
 
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
@@ -23,8 +22,10 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
-import remarkTocHeadings from './remark-toc-headings';
+import remarkImageSize from './remark-image-size';
+import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
+import {FrontMatter, Platform, PlatformConfig} from './types';
 
 const root = process.cwd();
 
@@ -32,7 +33,7 @@ function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 const isSupported = (
-  frontmatter: any,
+  frontmatter: FrontMatter,
   platformName: string,
   guideName?: string
 ): boolean => {
@@ -54,8 +55,6 @@ const isSupported = (
   }
   return true;
 };
-
-export type FrontMatter = {[key: string]: any};
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
@@ -85,10 +84,18 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     });
   });
 
+  // Remove a trailing /index, since that is also removed from the path by Next.
+  frontMatter.forEach(fm => {
+    const trailingIndex = '/index';
+    if (fm.slug.endsWith(trailingIndex)) {
+      fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
+    }
+  });
+
   return frontMatter;
 }
 
-export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
+export function getAllFilesFrontMatter(folder: string = 'docs') {
   const docsPath = path.join(root, folder);
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
@@ -105,7 +112,7 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     const source = fs.readFileSync(file, 'utf8');
     const {data: frontmatter} = matter(source);
     allFrontMatter.push({
-      ...frontmatter,
+      ...(frontmatter as FrontMatter),
       slug: formatSlug(fileName),
       sourcePath: path.join(folder, fileName),
     });
@@ -122,11 +129,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     .readdirSync(platformsPath)
     .filter(p => !fs.statSync(path.join(platformsPath, p)).isFile());
   platformNames.forEach(platformName => {
-    let platformFrontmatter: FrontMatter = {};
+    let platformFrontmatter: PlatformConfig = {};
     const configPath = path.join(platformsPath, platformName, 'config.yml');
     if (fs.existsSync(configPath)) {
-      // @ts-ignore
-      platformFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+      platformFrontmatter = yaml.load(
+        fs.readFileSync(configPath, 'utf8')
+      ) as PlatformConfig;
     }
 
     const commonPath = path.join(platformsPath, platformName, 'common');
@@ -134,13 +142,13 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       return;
     }
 
-    const commonFileNames = getAllFilesRecursively(commonPath).filter(
+    const commonFileNames: string[] = getAllFilesRecursively(commonPath).filter(
       p => path.extname(p) === '.mdx'
     );
     const commonFiles = commonFileNames.map(commonFileName => {
       const source = fs.readFileSync(commonFileName, 'utf8');
       const {data: frontmatter} = matter(source);
-      return {commonFileName, frontmatter};
+      return {commonFileName, frontmatter: frontmatter as FrontMatter};
     });
 
     commonFiles.forEach(f => {
@@ -175,11 +183,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       .readdirSync(guidesPath)
       .filter(g => !fs.statSync(path.join(guidesPath, g)).isFile());
     guideNames.forEach(guideName => {
-      let guideFrontmatter: FrontMatter = {};
+      let guideFrontmatter: FrontMatter | null = null;
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
       if (fs.existsSync(guideConfigPath)) {
-        // @ts-ignore
-        guideFrontmatter = yaml.load(fs.readFileSync(guideConfigPath, 'utf8'));
+        guideFrontmatter = yaml.load(
+          fs.readFileSync(guideConfigPath, 'utf8')
+        ) as FrontMatter;
       }
 
       commonFiles.forEach(f => {
@@ -209,10 +218,10 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
 
 export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug, 'config.yml');
-  let configFrontmatter: {[key: string]: any} | undefined;
+
+  let configFrontmatter: PlatformConfig | undefined;
   if (fs.existsSync(configPath)) {
-    // @ts-ignore
-    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8')) as PlatformConfig;
   }
 
   let mdxPath = path.join(root, `${slug}.mdx`);
@@ -246,13 +255,8 @@ export async function getFileBySlug(slug: string) {
     }
   }
 
-  const source = fs.existsSync(mdxPath)
-    ? fs.readFileSync(mdxPath, 'utf8')
-    : fs.existsSync(mdxIndexPath)
-      ? fs.readFileSync(mdxIndexPath, 'utf8')
-      : fs.existsSync(mdPath)
-        ? fs.readFileSync(mdPath, 'utf8')
-        : fs.readFileSync(mdIndexPath, 'utf8');
+  const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
@@ -262,12 +266,14 @@ export async function getFileBySlug(slug: string) {
     'esbuild'
   );
 
-  const toc = [];
+  const toc: TocNode[] = [];
 
-  const result = await bundleMDX({
+  // cwd is how mdx-bundler knows how to resolve relative paths
+  const cwd = path.dirname(sourcePath);
+
+  const result = await bundleMDX<Platform>({
     source,
-    // mdx imports can be automatically source from the components directory
-    cwd: root,
+    cwd,
     mdxOptions(options) {
       // this is the recommended way to add custom remark/rehype plugins:
       // The syntax might look weird, but it protects you in case we add/remove
@@ -278,6 +284,8 @@ export async function getFileBySlug(slug: string) {
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
         remarkFormatCodeBlocks,
+        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        remarkMdxImages,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -334,7 +342,20 @@ export async function getFileBySlug(slug: string) {
       options.loader = {
         ...options.loader,
         '.js': 'jsx',
+        '.png': 'file',
+        '.gif': 'file',
+        '.jpg': 'file',
+        '.jpeg': 'file',
+        // inline svgs
+        '.svg': 'dataurl',
       };
+      // Set the `outdir` to a public location for this bundle.
+      // this where this images will be copied
+      options.outdir = path.join(root, 'public', 'mdx-images');
+
+      // Set write to true so that esbuild will output the files.
+      options.write = true;
+
       return options;
     },
   });

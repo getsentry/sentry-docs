@@ -15,38 +15,58 @@ All configuration for Symfony is done in `config/packages/sentry.yaml`.
 sentry:
     dsn: "___PUBLIC_DSN___"
     register_error_listener: true
+    register_error_handler: true
     options:
-        attach_stacktrace: true
-        before_breadcrumb: "sentry.callback.before_breadcrumb"
-        before_send: "sentry.callback.before_send"
-        capture_silenced_errors: false
-        context_lines: 5
-        default_integrations: true
-        enable_compression: true
-        environment: "%kernel.environment%"
-        error_types: "E_ALL & ~E_NOTICE"
-        http_proxy: "10.0.0.12:3456"
-        in_app_exclude:
-            - "%kernel.build_dir%"
-            - "%kernel.cache_dir%"
-            - "%kernel.project_dir%/vendor"
         integrations:
             - "sentry.integration.my_custom_integration"
-        logger: "php"
-        max_breadcrumbs: 50
-        max_value_length: 2048
         prefixes:
             - "/local_dir/"
-        release: "abcde12345"
         sample_rate: 1
-        traces_sample_rate: 0
+        enable_tracing: true
+        traces_sample_rate: 1
         traces_sampler: "sentry.callback.traces_sampler"
-        send_attempts: 3
-        send_default_pii: false
-        server_name: "www.example.com"
+        attach_stacktrace: true
+        attach_metric_code_locations: true
+        context_lines: 5
+        environment: "%kernel.environment%"
+        logger: "php"
+        spotlight: true
+        spotlight_url: "http://localhost:8969"
+        release: "5.0.x-dev"
+        server_name: "localhost"
+        ignore_exceptions:
+            - "Symfony\\Component\\HttpKernel\\Exception\\BadRequestHttpException"
+        ignore_transactions:
+            - "GET /helath"
+        before_send: "sentry.callback.before_send"
+        before_send_transaction: "sentry.callback.before_send_transaction"
+        trace_propagation_targets:
+          - 'example.com'
         tags:
             tag1: "value1"
             tag2: "value2"
+        error_types: "E_ALL & ~E_NOTICE"
+        max_breadcrumbs: 50
+        before_breadcrumb: "sentry.callback.before_breadcrumb"
+        in_app_exclude:
+            - '%kernel.cache_dir%'
+        in_app_include:
+            - '%kernel.project_dir%'
+        send_default_pii: true
+        max_value_length: 1024
+        transport: "sentry.transport"
+        transport: "sentry.http_client"
+        http_proxy: "proxy.example.com:8080"
+        http_proxy_authentication: "user:password"
+        http_connect_timeout: 15
+        http_timeout: 10
+        http_ssl_verify_peer: true
+        http_compression: true
+        capture_silenced_errors: true
+        max_request_body_size: "medium"
+        class_serializers:
+            App\User: "App\\Sentry\\Serializer\\UserSerializer"
+        
 ```
 
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
@@ -105,30 +125,4 @@ class Sentry
         };
     }
 }
-```
-
-## Exclude Some Exceptions
-
-This example shows how to ignore not found exceptions, but you can ignore any exception you want.
-
-1. Declare the integrations:
-
-{/* <!-- prettier-ignore --> */}
-```yaml {filename:config/packages/sentry.yaml}
-sentry:
-    options:
-        integrations:
-            - 'Sentry\Integration\IgnoreErrorsIntegration'
-```
-
-2. Configure the list of ignored exceptions:
-
-{/* <!-- prettier-ignore --> */}
-```yaml {filename:config/services.yaml}
-services:
-    Sentry\Integration\IgnoreErrorsIntegration:
-        arguments:
-            $options:
-                ignore_exceptions:
-                    - Symfony\Component\HttpKernel\Exception\NotFoundHttpException
 ```

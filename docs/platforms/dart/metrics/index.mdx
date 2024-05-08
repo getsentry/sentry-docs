@@ -1,0 +1,103 @@
+---
+title: Set Up Metrics
+description: "Learn how to measure the data points you care about by configuring Metrics in your Dart app."
+---
+
+<Include name="feature-stage-beta-metrics.mdx" />
+<Note>
+
+Metrics are supported with Sentry Dart SDK version `7.19.0` and above.
+
+</Note>
+
+Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
+
+## Enabling the Metrics Feature
+
+Here's how to add Metrics to your application:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.enableMetrics = true;
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+```
+
+## Emit a Counter
+
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```dart
+Sentry.metrics().increment(
+    'button_login_click', // key
+    value: 1,
+    unit: null,
+    tags: {'provider': 'e-mail'},
+);
+```
+
+## Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
+
+```dart
+Sentry.metrics().distribution(
+    'image_download_duration', // key
+    value: 150,
+    unit: DurationSentryMeasurementUnit.milliSecond,
+    tags: {'type': 'thumbnail'},
+);
+```
+
+## Emit a Set
+
+Sets are useful for looking at unique occurrences and counting the unique elements you added.
+
+To emit a set, do the following:
+
+```dart
+Sentry.metrics().set(
+    'user_view', // key
+    stringValue: 'jane',
+    unit: CustomSentryMeasurementUnit('username'),
+    tags: {'page': 'home'},
+);
+```
+
+## Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```dart
+Sentry.metrics().gauge(
+    'page_load', // key
+    value: 15,
+    unit: DurationSentryMeasurementUnit.milliSecond,
+    tags: {'page': '/home'},
+);
+```
+
+## Emit a Timer
+
+Timers can be used to measure the execution time of a specific block of code. They're implemented like distributions, but measured in seconds.
+
+To emit a timer, do the following:
+
+```dart
+Sentry.metrics().timing('load_user_profile', function: () {
+  //db.load(); ...
+});
+```

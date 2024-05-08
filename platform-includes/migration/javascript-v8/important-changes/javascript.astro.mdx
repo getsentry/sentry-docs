@@ -1,0 +1,42 @@
+### Supported versions
+
+Sentry Astro SDK `8.x` supports:
+
+- Astro version `3.0.0` or higher
+- Node `14.18.0` or higher
+
+If you need to support older versions of Node.js, please use Sentry Astro SDK `7.x`.
+
+<Include name="migration/javascript-v8/compatible-browsers" />
+
+### Server-side SDK initialization
+
+With 8.x, `@sentry/astro` on the server has been completely overhauled. It is now powered by [OpenTelemetry](https://opentelemetry.io/) under the hood. You do not need to know or understand what OpenTelemetry is in order to use Sentry. We set up OpenTelemetry under the hood, no knowledge of it is required in order to get started, though if you use OpenTelemetry-native APIs to start spans, and Sentry will pick up everything automatically.
+
+We now support the following integrations out of the box with 0 configuration:
+
+- `httpIntegration`: Automatically instruments Node http and https standard libraries
+- `nativeNodeFetchIntegration`: Automatically instruments top level fetch and undici
+- `graphqlIntegration`: Automatically instruments GraphQL
+- `mongoIntegration`: Automatically instruments MongoDB
+- `mongooseIntegration`: Automatically instruments Mongoose
+- `mysqlIntegration`: Automatically instruments MySQL
+- `mysql2Integration`: Automatically instruments MySQL2
+- `postgresIntegration`: Automatically instruments PostgreSQL
+- `prismaIntegration`: Automatically instruments Prisma
+
+### Removal of `trackHeaders` option for Astro middleware
+
+Instead of opting-in via the middleware config, you can configure if headers should be captured via `requestDataIntegration` options, which defaults to `true` but can be disabled like this:
+
+```JavaScript
+Sentry.init({
+  integrations: [
+    Sentry.requestDataIntegration({
+      include: {
+        headers: false,
+      },
+    }),
+  ],
+});
+```
