@@ -3009,6 +3009,26 @@ const REDIRECTS: Redirect[] = [
     from: '/product/accounts/',
     to: '/account/',
   },
+  {
+    from: '/account/getting-started/',
+    to: '/organization/getting-started/',
+  },
+  {
+    from: '/account/membership/',
+    to: '/organization/membership/',
+  },
+  {
+    from: '/account/early-adopter-features/',
+    to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/account/quotas/',
+    to: '/organization/quotas/',
+  },
+  {
+    from: '/account/sso/',
+    to: '/organization/authentication/sso/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
