@@ -105,8 +105,10 @@ export function CodeTabs({children}: CodeTabProps) {
 
   // Save the selected tab for Tabgroup to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem(groupId, finalSelection);
-  }, [finalSelection]);
+    if (possibleChoices.length > 1) {
+      localStorage.setItem(groupId, finalSelection);
+    }
+  }, [finalSelection, groupId, possibleChoices]);
 
   // Whenever local selection and the final selection are not in sync, the local
   // selection is updated from the final one.  This means that when the shared
@@ -137,7 +139,7 @@ export function CodeTabs({children}: CodeTabProps) {
   return (
     <Container ref={containerRef}>
       <TabBar>{buttons}</TabBar>
-      <div className="tab-content" data-sentry-mask>
+      <div className="relative" data-sentry-mask>
         {code}
       </div>
     </Container>
