@@ -198,6 +198,10 @@ export function PlatformSelector({
                       guides: platform.guides.filter(g =>
                         matches.some(m => m.key === g.key)
                       ),
+
+                      integrations: platform.integrations.filter(i =>
+                        matches.some(m => m.key === i.key)
+                      ),
                       isExpanded:
                         // expand search results
                         searchValue !== '' ||
