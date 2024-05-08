@@ -6,12 +6,24 @@ import {DocNode} from 'sentry-docs/docTree';
 
 interface ServerContext {
   path: string[];
-  rootNode?: DocNode;
+  rootNode: DocNode;
 }
 
 export const serverContext = cache(() => {
   const context: ServerContext = {
     path: [],
+
+    rootNode: {
+      path: '/',
+      slug: '',
+      frontmatter: {
+        title: 'Home',
+        slug: 'home',
+      },
+      children: [],
+      missing: false,
+      sourcePath: 'src/components/home.tsx',
+    },
   };
   return context;
 });

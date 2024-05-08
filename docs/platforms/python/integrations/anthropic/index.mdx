@@ -16,6 +16,10 @@ If you want to try the beta features and are willing to give feedback, please le
 
 This integration connects Sentry with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) and works with Anthropic versions `0.16.0` and above.
 
+Once you've installed this SDK, you can use Sentry AI Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+
+Sentry AI Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here.](/product/ai-monitoring)
+
 ## Install
 
 Install `sentry-sdk` from PyPI with the `anthropic` extra:
@@ -45,29 +49,35 @@ client = Anthropic()
 
 ## Verify
 
-Verify that the integration works by adding in a bug (such as a bad API key) to your code. This will cause a new error event to be sent to Sentry:
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
 
 ```python
-from anthropic import Anthropic
 import sentry_sdk
+from sentry_sdk.ai.monitoring import ai_track
+from anthropic import Anthropic
+
 
 sentry_sdk.init(...)  # same as above
 
-client = Anthropic(api_key="invalid-key")
-with sentry_sdk.start_transaction(op="ai-inference", name="AI inference"):
-    response = (
-        client.messages.create(
-            max_tokens=42,
-            model="some-model",
-            messages=[{"role": "system", "content": "Hello, Anthropic!"}]
+client = Anthropic(api_key="(your Anthropic API key)")
+
+@ai_track("My AI pipeline")
+def my_pipeline():
+    with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+        print(
+            client.messages.create(
+                max_tokens=42,
+                model="some-model",
+                messages=[{"role": "system", "content": "Hello, Anthropic!"}]
+            )
         )
-    )
-    print(response)
 ```
 
-Executing this script initiates a transaction, which will show up in the Performance section of [sentry.io](https://sentry.io). Furthermore, it also sends Sentry an error event (about the bad API key), which will be linked to the transaction.
+After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard.
 
-It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+The pipeline will have an associated Anthropic span for the `messages.create` operation.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Behavior
 
@@ -75,7 +85,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 - All exceptions leading to an `AnthropicError` are reported.
 
-- Sentry is configured not to consider LLM and tokenizer inputs/outputs as PII. If you want to include them, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts despite `send_default_pii=True`, configure the integration with `include_prompts=False`, as shown in [Options](#options).
+- Sentry considers LLM and tokenizer inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
 
 ## Options
 

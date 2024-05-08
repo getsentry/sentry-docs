@@ -1,0 +1,108 @@
+---
+title: Huggingface Hub
+description: "Learn about using Sentry for Huggingface Hub."
+---
+
+<Alert level="info" title="Beta">
+
+The support for **Huggingface Hub** is in its beta phase.
+
+We are working on supporting different AI libraries (see [GitHub discussion](https://github.com/getsentry/sentry-python/discussions/3007)).
+
+If you want to try the beta features and are willing to give feedback, please let us know on [Discord](https://discord.com/invite/Ww9hbqr).
+
+</Alert>
+
+This integration connects Sentry with the [Huggingface Hub Python SDK](https://github.com/huggingface/huggingface_hub) and has been confirmed to work with Huggingface Hub version 0.21.4.
+
+Once you've installed this SDK, you can use Sentry AI Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+
+Sentry AI Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here.](/product/ai-monitoring)
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `huggingface_hub` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[huggingface_hub]'
+```
+
+## Configure
+
+If you have the `huggingface_hub` package in your dependencies, the Huggingface Hub integration will be enabled automatically when you initialize the Sentry SDK.
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from huggingface_hub import InferenceClient
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    traces_sample_rate=1.0,
+)
+
+client = InferenceClient("some-model")
+
+```
+
+## Verify
+
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
+
+```python
+import sentry_sdk
+from sentry_sdk.ai.monitoring import ai_track
+from huggingface_hub import InferenceClient
+
+sentry_sdk.init(...)  # same as above
+
+client = InferenceClient(token="(your Huggingface Hub API token)", model="HuggingFaceH4/zephyr-7b-beta")
+
+@ai_track("My AI pipeline")
+def my_pipeline():
+    with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+        print(client.text_generation(prompt="say hello", details=True))
+
+```
+
+After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard. The pipeline will have an associated Huggingface Hub span for the `text_generation` operation.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Huggingface Hub integration will connect Sentry with all supported Huggingface Hub methods automatically.
+
+- All exceptions in supported SDK methods are reported to Sentry automatically.
+
+- Currently, the only supported module is `InferenceClient.text_generation`.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+After adding `HuggingfaceHubIntegration` to your `sentry_sdk.init()` call explicitly, you'll be able to set options to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.huggingface_hub import HuggingfaceHubIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    integrations = [
+        HuggingfaceHubIntegration(
+            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+## Supported Versions
+
+- huggingface_hub: 0.21.4+
+- Python: 3.9+

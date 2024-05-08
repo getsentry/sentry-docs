@@ -17,6 +17,7 @@ export default function DocImage({
   // Next.js Image component only supports images from the public folder
   // or from a remote server with properly configured domain
   if (src.startsWith('http')) {
+    // eslint-disable-next-line @next/next/no-img-element
     return <img src={src} {...props} />;
   }
 

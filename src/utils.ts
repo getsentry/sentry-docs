@@ -18,6 +18,15 @@ export const capitilize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
+
+export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
+  const chunkSize = Math.ceil(arr.length / numChunks);
+  return Array.from({length: numChunks}, (_, i) =>
+    arr.slice(i * chunkSize, i * chunkSize + chunkSize)
+  );
+};
+
 type Page = {
   context: {
     sidebar_order?: number;
@@ -77,4 +86,8 @@ export function captureException(exception: unknown): void {
   } catch {
     // ignore
   }
+}
+
+export function isTruthy<T>(value: T | undefined | null): value is T {
+  return value !== undefined && value !== null;
 }

@@ -22,7 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           id={name}
           name={name}
           required={required}
-          className={`mt-1 border-gray-200 shadow-sm sm:text-sm ${className}`}
+          className={`form-input mt-1 border-gray-200 shadow-sm sm:text-sm ${className}`}
           {...props}
           ref={ref}
         />
