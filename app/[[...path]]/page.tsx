@@ -53,6 +53,7 @@ export default async function Page({params}) {
   const docs = await getDocsFrontMatter();
   const rootNode = await getDocsRootNode();
   if (!rootNode) {
+    // eslint-disable-next-line no-console
     console.warn('no root node');
     return notFound();
   }
@@ -78,6 +79,7 @@ export default async function Page({params}) {
 
   const pageNode = nodeForPath(rootNode, params.path);
   if (!pageNode) {
+    // eslint-disable-next-line no-console
     console.warn('no page node', params.path);
     return notFound();
   }
@@ -88,6 +90,7 @@ export default async function Page({params}) {
     doc = await getFileBySlug(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
+      // eslint-disable-next-line no-console
       console.error('ENOENT', pageNode.path);
       return notFound();
     }
@@ -121,7 +124,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
 
   const rootNode = await getDocsRootNode();
 
-  if (rootNode && params.path) {
+  if (params.path) {
     const pageNode = nodeForPath(rootNode, params.path);
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
