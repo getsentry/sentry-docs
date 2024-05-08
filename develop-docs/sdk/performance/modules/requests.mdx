@@ -2,4 +2,50 @@
 title: 'Requests Module'
 ---
 
-to be defined ...
+The SDK should auto-instrument all outgoing HTTP requests, regardless of the library that issues the requests. Each outgoing request should result in a span.
+
+## Span Conventions
+
+### Span Attributes
+
+| Attribute | Description |
+|:--|:--|
+| `op` | Always `http.client` |
+| `description` | A string including the HTTP request method, and the URL. e.g., `"GET https://example.com/data.json"` | The HTTP method must be one of the [known HTTP request methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods) |
+
+### Span Data
+
+Refer to [HTTP Span Data Conventions](/sdk/performance/span-data-conventions/#http) for a full list of the span data attributes. Note these caveats:
+
+- the `server.address` span data attribute is only required if the URL is relative
+
+## Instrumentation
+
+The SDK should create a span when the HTTP request is complete, and attach all the relevant available data.
+
+**Example**
+
+Consider the website `example.com`. This code, running on the page:
+
+```javascript
+fetch("/data.json")
+```
+
+Should result in the following span, assuming the request was successful:
+
+```json
+{
+  "description": "GET /data.json?user=1",
+  "op": "http.client",
+  "data": {
+    "http.query": "user=1",
+    "http.request_method": "GET",
+    "http.response.status_code": 200,
+    "http.fragment": "",
+    "server.address": "example.com"
+    ... other span properties
+  }
+}
+```
+
+NOTE: Refer to [HTTP Span Data Conventions](/sdk/performance/span-data-conventions/#http) for a full list of properties you can attach to an `http.client` span.
