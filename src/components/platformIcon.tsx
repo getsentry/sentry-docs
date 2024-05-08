@@ -3,6 +3,7 @@ import ActixSVG from 'platformicons/svg/actix.svg';
 import AiohttpSVG from 'platformicons/svg/aiohttp.svg';
 import AndroidSVG from 'platformicons/svg/android.svg';
 import AngularjsSVG from 'platformicons/svg/angularjs.svg';
+import AnthropicSVG from 'platformicons/svg/anthropic.svg';
 import ApacheairflowSVG from 'platformicons/svg/apache-airflow.svg';
 import ApachebeamSVG from 'platformicons/svg/apache-beam.svg';
 import ApachesparkSVG from 'platformicons/svg/apache-spark.svg';
@@ -25,6 +26,7 @@ import ChaliceSVG from 'platformicons/svg/chalice.svg';
 import ClickhouseSVG from 'platformicons/svg/clickhouse.svg';
 import ClojureSVG from 'platformicons/svg/clojure.svg';
 import CloudflareSVG from 'platformicons/svg/cloudflare.svg';
+import CohereSVG from 'platformicons/svg/cohere.svg';
 import ConnectSVG from 'platformicons/svg/connect.svg';
 import CordovaSVG from 'platformicons/svg/cordova.svg';
 import CppSVG from 'platformicons/svg/cpp.svg';
@@ -66,12 +68,14 @@ import GrpcSVG from 'platformicons/svg/grpc.svg';
 import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
+import HuggingfaceSVG from 'platformicons/svg/huggingface.svg';
 import IonicSVG from 'platformicons/svg/ionic.svg';
 import IrisSVG from 'platformicons/svg/iris.svg';
 import JavaSVG from 'platformicons/svg/java.svg';
 import JavascriptSVG from 'platformicons/svg/javascript.svg';
 import KoaSVG from 'platformicons/svg/koa.svg';
 import KotlinSVG from 'platformicons/svg/kotlin.svg';
+import LangchainSVG from 'platformicons/svg/langchain.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
@@ -131,6 +135,7 @@ import ActixSVGLarge from 'platformicons/svg_80x80/actix.svg';
 import AiohttpSVGLarge from 'platformicons/svg_80x80/aiohttp.svg';
 import AndroidSVGLarge from 'platformicons/svg_80x80/android.svg';
 import AngularjsSVGLarge from 'platformicons/svg_80x80/angularjs.svg';
+import AnthropicSVGLarge from 'platformicons/svg_80x80/anthropic.svg';
 import ApacheairflowSVGLarge from 'platformicons/svg_80x80/apache-airflow.svg';
 import ApachebeamSVGLarge from 'platformicons/svg_80x80/apache-beam.svg';
 import ApachesparkSVGLarge from 'platformicons/svg_80x80/apache-spark.svg';
@@ -153,6 +158,7 @@ import ChaliceSVGLarge from 'platformicons/svg_80x80/chalice.svg';
 import ClickhouseSVGLarge from 'platformicons/svg_80x80/clickhouse.svg';
 import ClojureSVGLarge from 'platformicons/svg_80x80/clojure.svg';
 import CloudflareSVGLarge from 'platformicons/svg_80x80/cloudflare.svg';
+import CohereSVGLarge from 'platformicons/svg_80x80/cohere.svg';
 import ConnectSVGLarge from 'platformicons/svg_80x80/connect.svg';
 import CordovaSVGLarge from 'platformicons/svg_80x80/cordova.svg';
 import CppSVGLarge from 'platformicons/svg_80x80/cpp.svg';
@@ -194,12 +200,14 @@ import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
+import HuggingfaceSVGLarge from 'platformicons/svg_80x80/huggingface.svg';
 import IonicSVGLarge from 'platformicons/svg_80x80/ionic.svg';
 import IrisSVGLarge from 'platformicons/svg_80x80/iris.svg';
 import JavaSVGLarge from 'platformicons/svg_80x80/java.svg';
 import JavascriptSVGLarge from 'platformicons/svg_80x80/javascript.svg';
 import KoaSVGLarge from 'platformicons/svg_80x80/koa.svg';
 import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
+import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
@@ -276,6 +284,10 @@ const formatToSVG = {
   angularjs: {
     sm: AngularjsSVG,
     lg: AngularjsSVGLarge,
+  },
+  anthropic: {
+    sm: AnthropicSVG,
+    lg: AnthropicSVGLarge,
   },
   'apache-airflow': {
     sm: ApacheairflowSVG,
@@ -364,6 +376,10 @@ const formatToSVG = {
   cloudflare: {
     sm: CloudflareSVG,
     lg: CloudflareSVGLarge,
+  },
+  cohere: {
+    sm: CohereSVG,
+    lg: CohereSVGLarge,
   },
   connect: {
     sm: ConnectSVG,
@@ -517,6 +533,10 @@ const formatToSVG = {
     sm: HttpxSVG,
     lg: HttpxSVGLarge,
   },
+  huggingface: {
+    sm: HuggingfaceSVG,
+    lg: HuggingfaceSVGLarge,
+  },
   huey: {
     sm: HueySVG,
     lg: HueySVGLarge,
@@ -548,6 +568,10 @@ const formatToSVG = {
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
+  },
+  langchain: {
+    sm: LangchainSVG,
+    lg: LangchainSVGLarge,
   },
   laravel: {
     sm: LaravelSVG,
@@ -773,12 +797,14 @@ const formatToSVG = {
 
 export const PLATFORM_TO_ICON = {
   android: 'android',
+  anthropic: 'anthropic',
   apple: 'apple',
   capacitor: 'capacitor',
   clojure: 'clojure',
   cocoa: 'apple',
   'cocoa-objc': 'apple',
   'cocoa-swift': 'swift',
+  cohere: 'cohere',
   cordova: 'cordova',
   cloudflare: 'cloudflare',
   cpp: 'cpp',
@@ -814,6 +840,7 @@ export const PLATFORM_TO_ICON = {
   'go-martini': 'martini',
   'go-negroni': 'go',
   godot: 'godot',
+  huggingface: 'huggingface',
   java: 'java',
   'java-appengine': 'app-engine',
   'java-android': 'android',
@@ -856,6 +883,7 @@ export const PLATFORM_TO_ICON = {
   ionic: 'ionic',
   kotlin: 'kotlin',
   'kotlin-android': 'android',
+  langchain: 'langchain',
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
@@ -983,6 +1011,7 @@ export function PlatformIcon({
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
+    // eslint-disable-next-line no-console
     console.log('svg is null');
   }
 
@@ -998,9 +1027,11 @@ export function PlatformIcon({
           height={size}
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
+          loading="eager"
         />
         <Image
           src={languageSvg}
+          loading="eager"
           style={{
             position: 'absolute',
             bottom: '-1px',
@@ -1008,6 +1039,8 @@ export function PlatformIcon({
             height: '30%',
             width: '30%',
             borderRadius: '2px',
+            marginTop: 0,
+            marginBottom: 0,
             ...languageIconStyles,
           }}
           alt={`${platform} icon`}
@@ -1023,7 +1056,8 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{borderRadius: `${radius}px`, ...style}}
+      loading="eager"
+      style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
       alt={`${platform} icon`}
     />
   );

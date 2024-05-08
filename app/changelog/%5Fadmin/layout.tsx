@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function Layout({children}: {children: ReactNode}) {
   const session = await getServerSession(GET);
   let content = (
-    <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto bg-gray-200 pt-16 grid grid-cols-12">
+    <div className="relative min-h-[calc(100vh-8rem)] w-full mx-auto bg-gray-200 pt-16">
       {children}
       <div className="fixed top-3 right-4 z-50">
         <Suspense fallback={null}>

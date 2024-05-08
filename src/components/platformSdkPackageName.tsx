@@ -17,7 +17,7 @@ type PlatformSdkPackageNameProps = {
 export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameProps) {
   const fallbackName = fallback || 'Sentry';
   const {rootNode, path} = serverContext();
-  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!platformOrGuide) {
     return <code>{fallbackName} </code>;
   }
