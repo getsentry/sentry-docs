@@ -1,8 +1,18 @@
 <!-- Use this checklist to make sure your PR is ready for merge. You may delete any sections you don't need. -->
 
+## Deadline      
+All PRs now require approval from the docs team before you can publish. To help us prioritize incoming PRs, let us know when you need to publish this by. If you don't enter a date here, we assume publishing this PR is not urgent.
+
+- [ ] Urgent deadline (GA date, etc.): <!-- ENTER DATE HERE -->
+- [ ] Other deadline: <!-- ENTER DATE HERE -->
+- [ ] None: Not urgent, can wait up to a few weeks
+
+## SLA
+Someone from the [Sentry docs team](https://github.com/orgs/getsentry/teams/docs) will review your PR within 1 week. Do not merge your PR without approval.
+
 ## Pre-merge checklist
 
-*If you work at Sentry, you're able to merge your own PR without review, but please don't unless there's a good reason.*
+*Make sure you've checked the following before merging your changes:*
 
 - [ ] Checked Vercel preview for correctness, including links
 - [ ] PR was reviewed and approved by any necessary SMEs
