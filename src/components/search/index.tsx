@@ -98,6 +98,32 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
     if (autoFocus) {
       inputRef.current?.focus();
     }
+    // setup Cmd/Ctrl+K to focus the search input
+    const handleCmdK = (ev: KeyboardEvent) => {
+      if (ev.key === 'k' && (ev.metaKey || ev.ctrlKey)) {
+        ev.preventDefault();
+        inputRef.current?.focus();
+        setInputFocus(true);
+      }
+    };
+    // set up esc to clear the search query and blur the search input if it's empty
+    const handleEsc = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') {
+        if (inputRef.current?.value) {
+          setQuery('');
+          return;
+        }
+        setInputFocus(false);
+        setShowOffsiteResults(false);
+        inputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleCmdK);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleCmdK);
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, [autoFocus]);
 
   const searchFor = useCallback(
