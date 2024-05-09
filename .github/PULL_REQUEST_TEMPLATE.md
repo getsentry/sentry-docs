@@ -1,5 +1,9 @@
 <!-- Use this checklist to make sure your PR is ready for merge. You may delete any sections you don't need. -->
 
+## Description of changes
+
+*Describe your changes here. If your PR relates to or resolves an issue, add a link to that too.*
+
 ## Deadline      
 All PRs now require approval from the docs team before you can publish. To help us prioritize incoming PRs, let us know when you need to publish this by. If you don't enter a date here, we assume publishing this PR is not urgent.
 
@@ -17,10 +21,6 @@ Someone from the [Sentry docs team](https://github.com/orgs/getsentry/teams/docs
 - [ ] Checked Vercel preview for correctness, including links
 - [ ] PR was reviewed and approved by any necessary SMEs
 - [ ] PR was reviewed and approved by a member of the [Sentry docs team](https://github.com/orgs/getsentry/teams/docs)
-
-## Description of changes
-
-*Describe your changes here. If your PR relates to or resolves an issue, add a link to that too.*
 
 ## Legal Boilerplate
 
