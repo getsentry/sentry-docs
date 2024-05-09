@@ -199,16 +199,21 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   return (
     <div className={styles.search} ref={ref}>
       <div className={styles['search-bar']}>
-        <input
-          type="search"
-          placeholder="Search Docs"
-          aria-label="Search"
-          className={styles['search-input']}
-          value={query}
-          onChange={({target: {value}}) => searchFor(value)}
-          onFocus={() => setInputFocus(true)}
-          ref={inputRef}
-        />
+        <div className={styles['input-wrapper']}>
+          <input
+            type="text"
+            placeholder="Search Docs"
+            aria-label="Search"
+            className={styles['search-input']}
+            value={query}
+            onChange={({target: {value}}) => searchFor(value)}
+            onFocus={() => setInputFocus(true)}
+            ref={inputRef}
+          />
+          <kbd className={styles['search-hotkey']} data-focused={inputFocus}>
+            {inputFocus ? 'esc' : '⌘K'}
+          </kbd>
+        </div>
         {showChatBot && (
           <Fragment>
             <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
