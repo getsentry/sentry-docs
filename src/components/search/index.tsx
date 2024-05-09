@@ -57,7 +57,7 @@ const search = new SentryGlobalSearch([
 ]);
 
 function relativizeUrl(url: string) {
-  return url.replace(/^.*:\/\/docs\.sentry\.io/, '');
+  return url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
 }
 
 type Props = {
