@@ -11,14 +11,8 @@ With 8.x, @sentry/node has been completely overhauled. It is now powered by [Ope
 Here's an example of instrumentating a Koa application with Sentry Node SDK `8.x`:
 
 ```JavaScript
-const Sentry = require('@sentry/node');
-
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  tracesSampleRate: 1,
-});
-
 const Koa = require('koa');
+const Sentry = require('@sentry/node');
 const app = new Koa();
 
 // add routes etc. here
@@ -30,20 +24,16 @@ app.listen(3000);
 
 To migrate your Koa app to Sentry Node SDK `8.x`, you need to make the following changes:
 
-1. Move your `Sentry.init` call so that it is called before any other `require`/`import` statements.
+1. Create an external file called `instrument.js` and move your `Sentry.init` call to it.
 
 Due to the way that auto instrumentation works in `8.x` of the Sentry Node SDK, it is required that you initialize Sentry before you require or import any other package. Any package that is required/imported before Sentry is initialized may not be correctly auto-instrumented.
 
-```JavaScript diff
- const Sentry = require('@sentry/node');
--const Koa = require('koa');
+```JavaScript {filename: instrument.js}
+const Sentry = require('@sentry/node');
 
- Sentry.init({
-   // ...
- });
-
-+const Koa = require('koa');
- const app = new Koa();
+Sentry.init({
+  // ...
+});
 ```
 
 2. Remove any performance related integrations
@@ -68,13 +58,32 @@ We now support the following integrations out of the box with 0 configuration:
 Previously you had to a custom `app.on("error")` error handler to add Sentry instrumentation to your Express app. In `8.x`, you only need to use `Sentry.setupKoaErrorHandler(app)`, you can remove all other handlers.
 
 ```JavaScript diff
-const Koa = require('koa');
-const app = new Koa();
+ const Koa = require('koa');
+ const Sentry = require('@sentry/node');
 
-// add routes etc. here
+ const app = new Koa();
 
-Sentry.setupKoaErrorHandler(app);
+-app.on('error', (err, ctx) => {
+-  Sentry.withScope(scope => {
+-    scope.setSDKProcessingMetadata({request: ctx.request});
+-    Sentry.captureException(err);
+-  });
+-});
++Sentry.setupKoaErrorHandler(app);
 ```
+
+4. Add `--require` to your Node.js call
+
+Using [--require](https://nodejs.org/api/cli.html#-r---require-module) is the easiest way to guarantee that Sentry is imported and initialized before any other modules in your application.
+
+```bash
+node --require ./instrument.js app.js
+```
+<Alert level="warning" title="Alternative">
+
+If you cannot run node with [--require](https://nodejs.org/api/cli.html#-r---require-module), [add a top-level import of `instrument.js` in your application](/platforms/javascript/guides/koa/initialize-sentry/add-as-toplevel-import).
+
+</Alert>
 
 ### Ensure Request Isolation
 
