@@ -62,6 +62,62 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/organization/integrations/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
+  },
+  {
+    from: '/organization/integrations/gitlab/',
+    to: '/organization/integrations/source-code-mgmt/gitlab/',
+  },
+  {
+    from: '/organization/integrations/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+  },
+  {
+    from: '/organization/integrations/rookout/',
+    to: '/organization/integrations/debugging/rookout/',
+  },
+  {
+    from: '/organization/integrations/split/',
+    to: '/organization/integrations/feature-flag/split/',
+  },
+  {
+    from: '/organization/integrations/teamwork/',
+    to: '/organization/integrations/issue-tracking/teamwork/',
+  },
+  {
+    from: '/organization/integrations/jira/',
+    to: '/organization/integrations/issue-tracking/jira/',
+  },
+  {
+    from: '/organization/integrations/linear/',
+    to: '/organization/integrations/issue-tracking/linear/',
+  },
+  {
+    from: '/organization/integrations/clickup/',
+    to: '/organization/integrations/issue-tracking/clickup/',
+  },
+  {
+    from: '/organization/integrations/project-mgmt/shortcut/',
+    to: '/organization/integrations/issue-tracking/shortcut/',
+  },
+  {
+    from: '/organization/integrations/slack/',
+    to: '/organization/integrations/notification-incidents/slack/',
+  },
+  {
+    from: '/organization/integrations/pagerduty/',
+    to: '/organization/integrations/notification-incidents/pagerduty/',
+  },
+  {
+    from: '/organization/integrations/vanta/',
+    to: '/organization/integrations/compliance/vanta/',
+  },
+  {
+    from: '/organization/integrations/jam/',
+    to: '/organization/integrations/session-replay/jam/',
+  },
+  {
     from: '/product/crons/getting-started/cli/',
     to: '/cli/crons/',
   },
