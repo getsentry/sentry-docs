@@ -98,6 +98,32 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
     if (autoFocus) {
       inputRef.current?.focus();
     }
+    // setup Cmd/Ctrl+K to focus the search input
+    const handleCmdK = (ev: KeyboardEvent) => {
+      if (ev.key === 'k' && (ev.metaKey || ev.ctrlKey)) {
+        ev.preventDefault();
+        inputRef.current?.focus();
+        setInputFocus(true);
+      }
+    };
+    // set up esc to clear the search query and blur the search input if it's empty
+    const handleEsc = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') {
+        if (inputRef.current?.value) {
+          setQuery('');
+          return;
+        }
+        setInputFocus(false);
+        setShowOffsiteResults(false);
+        inputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleCmdK);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleCmdK);
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, [autoFocus]);
 
   const searchFor = useCallback(
@@ -173,16 +199,21 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   return (
     <div className={styles.search} ref={ref}>
       <div className={styles['search-bar']}>
-        <input
-          type="search"
-          placeholder="Search Docs"
-          aria-label="Search"
-          className={styles['search-input']}
-          value={query}
-          onChange={({target: {value}}) => searchFor(value)}
-          onFocus={() => setInputFocus(true)}
-          ref={inputRef}
-        />
+        <div className={styles['input-wrapper']}>
+          <input
+            type="text"
+            placeholder="Search Docs"
+            aria-label="Search"
+            className={styles['search-input']}
+            value={query}
+            onChange={({target: {value}}) => searchFor(value)}
+            onFocus={() => setInputFocus(true)}
+            ref={inputRef}
+          />
+          <kbd className={styles['search-hotkey']} data-focused={inputFocus}>
+            {inputFocus ? 'esc' : '⌘K'}
+          </kbd>
+        </div>
         {showChatBot && (
           <Fragment>
             <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
