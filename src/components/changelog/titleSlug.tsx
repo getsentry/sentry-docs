@@ -34,7 +34,7 @@ export function TitleSlug({defaultTitle = '', defaultSlug = ''}) {
           type="text"
           label="Slug"
           name="slug"
-          className="w-full mb-2"
+          className="form-input w-full mb-2"
           required
           value={slug}
           onChange={e => {

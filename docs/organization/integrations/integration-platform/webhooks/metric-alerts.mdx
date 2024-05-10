@@ -1,0 +1,141 @@
+---
+title: Metric Alerts
+sidebar_order: 3
+description: "Learn more about Sentry's integration platform metric alert webhooks."
+---
+
+Sentry integrations which have been made available as [alert rule actions](/organization/integrations/integration-platform/#alerts) can receive metric alert webhooks.
+
+The gif below shows how to set up an internal integration that can receive Sentry alerts.
+
+<div style={{"height":"0px","paddingBottom":"calc(56.88524590163935% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/v7uhzmdV6Q5PDzoVPAE6?embed&show_copy_link=true"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="Create Internal Integration &amp; Alert Rule"
+  ></iframe>
+</div>
+
+## Sentry-Hook-Resource Header
+
+`'Sentry-Hook-Resource': 'metric_alert'`
+
+## Attributes
+
+### action
+
+- type: string
+- description: will be one of (`critical`, `warning`, `resolved`)
+
+### data['metric_alert']
+
+- type: object
+- description: the incident that triggered the alert rule
+
+### data['metric_alert']['alert_rule']
+
+- type: object
+- description: the alert rule
+
+### data['metric_alert']['alert_rule']['triggers']
+
+- type: array of objects
+- description: the thresholds to trigger the alert
+
+### data['metric_alert']['alert_rule']['triggers'][0]['actions']
+
+- type: array of objects
+- description: the actions that will be performed when a trigger's threshold has been met
+
+### data['description_text']
+
+- type: string
+- description: a human-readable description of the alert
+
+### data['description_title']
+
+- type: string
+- description: a human-readable title for the alert
+
+### data['web_url']
+
+- type: string
+- description: the api url for the incident
+
+<Note>
+
+The following field is for [alert rule action UI components](/organization/integrations/integration-platform/ui-components/alert-rule-action) only.
+
+</Note>
+
+### data['metric_alert']['alert_rule']['triggers'][0]['actions'][0]['settings']
+
+- type: object
+- description: the saved configuration for routing the alert within the external service
+
+## Payload
+
+<Note>
+
+Note: The webhook payload stack frame order lists the oldest frame to the most recent (where the exception happened).
+
+</Note>
+
+```json
+{
+  "action": "resolved",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "description_text": "1000 events in the last 10 minutes\\nFilter: level:error",
+    "description_title": "Resolved: Too many errors",
+    "metric_alert": {
+      "alert_rule": {
+        "aggregate": "count()",
+        "created_by": null,
+        "dataset": "events",
+        "date_created": "2020-09-13T12:26:40.000000Z",
+        "date_modified": "2020-09-13T12:26:40.000000Z",
+        "environment": null,
+        "id": "7",
+        "include_all_projects": false,
+        "name": "Too many errors",
+        "organization_id": "5",
+        "projects": ["bar"],
+        "query": "level:error",
+        "resolution": 1,
+        "resolve_threshold": null,
+        "status": 0,
+        "threshold_period": 1,
+        "threshold_type": 0,
+        "time_window": 10,
+        "triggers": []
+      },
+      "date_closed": null,
+      "date_created": "2020-09-13T12:26:40.000000Z",
+      "date_detected": "2020-09-13T12:26:40.000000Z",
+      "date_started": "2020-09-13T12:26:40.000000Z",
+      "id": "4",
+      "identifier": "1",
+      "organization_id": "5",
+      "projects": ["bar"],
+      "status": 2,
+      "status_method": 3,
+      "title": "Sacred Marmot",
+      "type": 2
+    },
+    "web_url": "https://sentry.io/organizations/baz/alerts/1/"
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
