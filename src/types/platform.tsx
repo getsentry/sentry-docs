@@ -8,6 +8,7 @@ export interface Platform extends PlatformConfig {
    * The set of guides associated with this platform
    */
   guides: PlatformGuide[];
+  integrations: PlatformIntegration[];
   /**
    * The platform identifier. This is based on the directory name of where
    * the platform is within the file system.
@@ -23,6 +24,7 @@ export interface Platform extends PlatformConfig {
    * Used to discriminate a platform from a guide
    */
   type: 'platform';
+
   /**
    * The relative URL to the docs for this platform
    */
@@ -35,7 +37,8 @@ export interface Platform extends PlatformConfig {
  * Guide inherits most fields from {@link Platform} object, but it is not quite
  * the same thing as a platform.
  */
-export interface PlatformGuide extends Omit<Platform, 'guides' | 'type'> {
+export interface PlatformGuide
+  extends Omit<Platform, 'guides' | 'integrations' | 'type'> {
   /**
    * The key is the fully qualified name of the guide: `${platformKey}.${guideName}`
    */
@@ -56,6 +59,11 @@ export interface PlatformGuide extends Omit<Platform, 'guides' | 'type'> {
    * The relative URL to the docs for this guide
    */
   url: string;
+}
+
+export interface PlatformIntegration extends Omit<PlatformGuide, 'type'> {
+  icon: string;
+  type: 'integration';
 }
 
 /**
@@ -109,9 +117,14 @@ export interface PlatformConfig {
    */
   sdk?: string;
   /**
+   * Whether to show integrations in the search results on the home page.
+   */
+  showIntegrationsInSearch?: boolean;
+  /**
    * Is this a first-party or third-party SDK?
    */
   supportLevel?: PlatformSupportLevel;
+
   /**
    * The human readable name of the platform.
    */

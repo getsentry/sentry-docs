@@ -26,7 +26,7 @@ const isSupported = (
 
 export function PlatformCategorySection({supported = [], noGuides, children}: Props) {
   const {rootNode, path} = serverContext();
-  const currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
 
   if (!currentPlatformOrGuide) {
     return null;

@@ -50,7 +50,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     const rootNode = await getDocsRootNode();
-    const platformObject = rootNode && getPlatform(rootNode, platform);
+    const platformObject = getPlatform(rootNode, platform);
     if (platformObject?.fallbackPlatform) {
       try {
         doc = await getFileBySlug(
