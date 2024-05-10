@@ -10,16 +10,28 @@ With 8.x, @sentry/node has been completely overhauled. It is now powered by [Ope
 
 Here's an example of instrumentating a Koa application with Sentry Node SDK `8.x`:
 
-```JavaScript
+```javascript {tabTitle:CommonJS}
 const Koa = require('koa');
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 const app = new Koa();
-
-// add routes etc. here
 
 Sentry.setupKoaErrorHandler(app);
 
-app.listen(3000);
+// Add your routes, etc.
+
+app.listen(3030);
+```
+
+```javascript {tabTitle:ESM}
+import Koa from 'koa';
+import * as Sentry from "@sentry/node";
+const app = new Koa();
+
+Sentry.setupKoaErrorHandler(app);
+
+// Add your routes, etc.
+
+app.listen(3030)
 ```
 
 To migrate your Koa app to Sentry Node SDK `8.x`, you need to make the following changes:
@@ -28,8 +40,16 @@ To migrate your Koa app to Sentry Node SDK `8.x`, you need to make the following
 
 Due to the way that auto instrumentation works in `8.x` of the Sentry Node SDK, it is required that you initialize Sentry before you require or import any other package. Any package that is required/imported before Sentry is initialized may not be correctly auto-instrumented.
 
-```JavaScript {filename: instrument.js}
+```JavaScript {tabTitle:CommonJS} {filename: instrument.js}
 const Sentry = require('@sentry/node');
+
+Sentry.init({
+  // ...
+});
+```
+
+```JavaScript diff {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
 
 Sentry.init({
   // ...
@@ -57,10 +77,9 @@ We now support the following integrations out of the box with 0 configuration:
 
 Previously you had to a custom `app.on("error")` error handler to add Sentry instrumentation to your Express app. In `8.x`, you only need to use `Sentry.setupKoaErrorHandler(app)`, you can remove all other handlers.
 
-```JavaScript diff
+```JavaScript diff {tabTitle:CommonJS}
  const Koa = require('koa');
  const Sentry = require('@sentry/node');
-
  const app = new Koa();
 
 -app.on('error', (err, ctx) => {
@@ -72,16 +91,37 @@ Previously you had to a custom `app.on("error")` error handler to add Sentry ins
 +Sentry.setupKoaErrorHandler(app);
 ```
 
-4. Add `--require` to your Node.js call
+```JavaScript diff {tabTitle:ESM}
+ import Koa from 'koa';
+ import * as Sentry from "@sentry/node";
+ const app = new Koa();
 
-Using [--require](https://nodejs.org/api/cli.html#-r---require-module) is the easiest way to guarantee that Sentry is imported and initialized before any other modules in your application.
+-app.on('error', (err, ctx) => {
+-  Sentry.withScope(scope => {
+-    scope.setSDKProcessingMetadata({request: ctx.request});
+-    Sentry.captureException(err);
+-  });
+-});
++Sentry.setupKoaErrorHandler(app);
+```
+
+
+4. Add `--require` or `--import` to your Node.js call
+
+Using [--require](https://nodejs.org/api/cli.html#-r---require-module) or [--import](https://nodejs.org/api/cli.html#--importmodule) is the easiest way to guarantee that Sentry is imported and initialized before any other modules in your application.
 
 ```bash
+# If you are using CommonJS (CJS)
 node --require ./instrument.js app.js
+
+# If you are using ECMAScript Modules (ESM)
+# Note: This is only available for Node v18.19.0 onwards.
+node --import ./instrument.mjs app.mjs
 ```
+
 <Alert level="warning" title="Alternative">
 
-If you cannot run node with [--require](https://nodejs.org/api/cli.html#-r---require-module), [add a top-level import of `instrument.js` in your application](/platforms/javascript/guides/koa/initialize-sentry/add-as-toplevel-import).
+If you cannot run node with [--require](https://nodejs.org/api/cli.html#-r---require-module) or [--import](https://nodejs.org/api/cli.html#--importmodule), [add a top-level import of `instrument.js` in your application](/platforms/javascript/guides/koa/initialize-sentry/add-as-toplevel-import).
 
 </Alert>
 
@@ -89,8 +129,20 @@ If you cannot run node with [--require](https://nodejs.org/api/cli.html#-r---req
 
 For any non-HTTP scenarios (e.g. websockets or a scheduled job), you'll have to manually ensure request isolation by wrapping the function with `Sentry.withIsolationScope()`. Previously we recommended you use `Sentry.runWithAsyncContext` for this but that has been removed in `8.x`.
 
-```JavaScript
+```javascript {tabTitle:CommonJS}
 const Sentry = require('@sentry/node');
+
+function myScheduledJob() {
+  return Sentry.withIsolationScope(async () => {
+    await doSomething();
+    await doSomethingElse();
+    return { status: 'DONE' };
+  });
+}
+```
+
+```javascript {tabTitle:ESM}
+import * as Sentry from "@sentry/node";
 
 function myScheduledJob() {
   return Sentry.withIsolationScope(async () => {
