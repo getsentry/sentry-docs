@@ -14,28 +14,47 @@ Sentry metrics are numerical values that allow you to pinpoint and solve issues 
 
 Metrics at Sentry come in different flavors, in order to help you track your data in the most efficient and cost-effective way. The metric types we currently support are:
 
-- **Counters:** Tracks a value that can only be incremented (for example, button clicks)
-- **Distributions:** Tracks a list of values which can be aggregated over time like `max`, `min`, `avg` (for example, page load times)
-- **Gauges:** Tracks a value that can go up or down (for example, available disk space, memory used)
-- **Sets:** Tracks a set of values on which can be aggregations over time such as `count_unique` (for example, number of unique users)
+| Metric type      | Description                                                                                                                                                                                                                                                                   | Example                                            | Aggregations                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
+| **Counter**      | Represent cumulative or incremental values that continuously increase over time. They measure the total count or accumulation of events or occurrences.                                                                                                                       | The number of requests processed or button clicks. | `sum`                                                  |
+| **Distribution** | Represent the distribution or frequency of values within a specified range or histogram. They provide insights into how data points are distributed across different intervals, allowing for more detailed analysis of the variability and spread of values within a dataset. | Page load time, request latency.               | `min`, `max`, `avg`, `sum`                             |
+| **Gauge**        | Represent a single, instantaneous value at a specific point in time. They measure the current state of a system or resource. Gauge metrics can increase or decrease over time and are often used for monitoring the real-time performance and health of systems.              | CPU utilization, memory usage, disk space.         | `last`, `avg`, `min`, `max`                            |
+| **Set**          | Represent a collection of distinct objects or elements, where each element is unique and does not have any specific order. Unlike other metric types that measure numerical quantities or distributions, set metrics focus on tracking discrete entities or states.           | Unique users, devices, DB queries executed.        | `count_unique`                                         |
 
 Each metric also needs to have a unit associated with it, so that you know what you're dealing with. Examples of units are seconds, milliseconds, bytes, or even potatoes if you like.
 
 ## Augmenting Metrics with Tags
 
-Metrics are powerful on their own, but you can enrich them further by adding dimensions in the form of Tags. These are key/value string pairs (for example, `platform:ios`) that are associated with metrics to provide contextual information, and are often used to filter and group them during analysis.
+Metrics are powerful on their own, but you can enrich them further by adding dimensions in the form of Tags. They allow metrics to be categorized, organized, and filtered based on these different dimensions, providing more granularity and flexibility in analyzing and querying your data. They consist of key-value pairs, where the key represents the tag name and the value represents the tag value, for example `platform:ios` or `platform:android`. You can create your own custom tags to track attributes that help organize your data for your specific use case. Some other common examples of useful tags are browser name, region, language, or customer.
 
-Sentry adds certain common tags by default such as, `transaction`, `environment`, and `release`, but you can also create your own custom tags to track attributes that help organize your data for your specific use case. Some common examples of useful tags are browser name, region, language, or customer.
+Sentry adds certain common tags by default in order to help you get started and improve your product experience: `transaction`, `environment`, and `release`. This allows you to immediately analyse and segment your metrics data based on these useful dimensions, that you also find on events such as errors or transactions. 
 
 ## Limits and Restrictions
 
 ### Cardinality
 
-In metrics, "cardinality" refers to the number of unique time series generated by tags associated with a metric. The more tags combinations you create, the higher the cardinality.
+In metrics, "cardinality" refers to the number of unique time-series generated by tags associated with a metric. The more unique tag combinations you create, the higher the cardinality.
 
-For instance, imagine you are tracking daily logins. You create a metric named `login` and add tags like `platform` (with values `ios`, `android`, `web`) to indicate where logins occur. Then you decide to add a new tag called `user_id`, which will have a different value for each user. In metrics, adding a `user_id` tag, which identifies the user logging in, can greatly increase cardinality as user IDs accumulate. Considering that each user might log in from various platforms, this multiplies the number of unique time series needed to analyze the data. For example, with 100,000 user IDs and 3 platform values, you would potentially require 300,000 time series.
+For instance, imagine you are tracking daily logins. You create a metric named `login` and add tags like `platform` (with values `ios`, `android`, `web`) to indicate where logins occur. This will result in 3 distinct time-series:
+- metric `login`, tag `platform:ios`
+- metric `login`, tag `status:android`
+- metric `login`, tag `status:web`
 
-To manage cardinality, use tags with fixed sets of values. Instead of `user_id`, consider using tags like `country` (with specific country names) to categorize login locations or `user_segment` (e.g.  `business`, `internal users`) to segment your login data based on user categories that are meaningful for your analysis. This approach helps limit cardinality and optimizes metric analysis.
+Then you decide to add a new tag called `region` which can be either be `US` or `EU`. If all combinations of tag values actually occurs, this will result in up to **6 time-series:**
+- metric `login`, tag `status:200`, tag `region:US`
+- metric `login`, tag `status:200`, tag `region:EU`
+- metric `login`, tag `status:400`, tag `region:US`
+- metric `login`, tag `status:400`, tag `region:EU`
+- metric `login`, tag `status:500`, tag `region:US`
+- metric `login`, tag `status:500`, tag `region:EU`
+
+Generically, the maximum cardinality for a metric is the product of tag cardinalities, in our example 3(platform) x 2(region) = 6. 
+
+![Cardinality](./img/cardinality.png)
+
+To maintain reasonable cardinality, use tags with a fixed or predictable set of values. Adding a tag such as `user_id`, which will have a different value for each user and can also grow significantly over time, will result in a substantial increase in overall cardinality. Considering that each user might log in from various platforms, this multiplies the number of unique time series needed to analyze the data. For example, with 100,000 user IDs and 3 platform values, you would potentially require 300,000 time series.
+
+Metrics are useful for analysing your data in aggregate. If you have more than 10 users, is it really useful to track the number of logins for each user from each platform? Probably not. Instead what might be really interesting is to look at something like a `plan_tier` (e.g. `free`, `team`, `business`,`internal users`) to segment your login data based on user categories that are meaningful for your analysis. This approach helps limit cardinality and optimizes metric analysis. Instead if you reallly are interested in individual user actions, consider using (transactions)[/product/performance/transaction-summary/#what-is-a-transaction] instead of metrics. 
 
 <Note>
 
