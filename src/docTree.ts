@@ -11,7 +11,7 @@ import {
 
 export interface DocNode {
   children: DocNode[];
-  frontmatter: FrontMatter & PlatformConfig;
+  frontmatter: FrontMatter & PlatformConfig & Pick<PlatformGuide, 'fallbackGuide'>;
   missing: boolean;
   path: string;
   slug: string;
@@ -173,6 +173,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
     categories: n.frontmatter.categories,
+    fallbackGuide: n.frontmatter.fallbackGuide,
   };
 }
 
