@@ -10,48 +10,72 @@ With 8.x, @sentry/node has been completely overhauled. It is now powered by [Ope
 
 Here's an example of instrumentating an Express application with Sentry Node SDK `8.x`:
 
-```JavaScript
-const Sentry = require('@sentry/node');
-
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  tracesSampleRate: 1,
-});
-
+```javascript {tabTitle:CommonJS}
+require('./instrument');
 const express = require('express');
+const Sentry = require('@sentry/node');
 const app = express();
 
-// add routes etc. here
+// Add routes etc. here
 
+// Add this after all routes and other middlewares are defined
 Sentry.setupExpressErrorHandler(app);
 
 app.listen(3000);
 ```
 
+```javascript {tabTitle:ESM}
+import './instrument';
+import express from "express";
+import * as Sentry from "@sentry/node";
+const app = express();
+
+// Add your routes, etc.
+
+// Add this after all routes and other middlewares are defined
+Sentry.setupExpressErrorHandler(app);
+
+app.listen(3000)
+```
+
 To migrate your Express app to Sentry Node SDK `8.x`, you need to make the following changes:
 
-1. Move your `Sentry.init` call so that it is called before any other `require`/`import` statements.
+1. Create an external file called `instrument.js` and move your `Sentry.init` call to it.
 
 Due to the way that auto instrumentation works in `8.x` of the Sentry Node SDK, it is required that you initialize Sentry before you require or import any other package. Any package that is required/imported before Sentry is initialized may not be correctly auto-instrumented.
 
-```JavaScript diff
- const Sentry = require('@sentry/node');
--const express = require('express');
+```JavaScript {tabTitle:CommonJS} {filename: instrument.js}
+const Sentry = require('@sentry/node');
 
- Sentry.init({
-   // ...
- });
+Sentry.init({
+  // ...
+});
+```
 
-+const express = require('express');
- const app = express();
+```JavaScript diff {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  // ...
+});
 ```
 
 2. Remove any performance related integrations
 
 All performance auto-instrumentation will be automatically enabled if the package is found. You do not need to add any integration yourself, and `autoDiscoverNodePerformanceMonitoringIntegrations()` has also been removed. This means you no longer need to explicitly add `Sentry.expressIntegration`.
 
-```JavaScript diff
+```JavaScript diff {tabTitle:CommonJS} {filename: instrument.js}
  const Sentry = require('@sentry/node');
+
+ Sentry.init({
+   dsn: "___PUBLIC_DSN___",
+   tracesSampleRate: 1.0,
+-  integrations: [Sentry.expressIntegration({ app })],
+ });
+```
+
+```JavaScript diff {tabTitle:ESM} {filename: instrument.mjs}
+ import * as Sentry from "@sentry/node";
 
  Sentry.init({
    dsn: "___PUBLIC_DSN___",
@@ -73,19 +97,37 @@ We now support the following integrations out of the box with 0 configuration:
 - `postgresIntegration`: Automatically instruments PostgreSQL
 - `prismaIntegration`: Automatically instruments Prisma
 
-3. Add Sentry error handler
+3. Require `instrument.js` before any other module in your application
+
+```JavaScript diff {tabTitle:CommonJS}
++require('./instrument');
+ const express = require('express');
+ const Sentry = require('@sentry/node');
+ const app = express();
+```
+
+```JavaScript diff {tabTitle:ESM}
++import './instrument';
+ import express from "express";
+ import * as Sentry from "@sentry/node";
+ const app = express();
+```
+
+<Alert level="warning" title="Running with ESM">
+
+If you run your application with ESM, you need to import the Sentry Initialization file before importing any other modules. See <PlatformLink to="/install/esm">running Sentry with ESM</PlatformLink>.
+If you are unsure how you are running your application, see <PlatformLink to="/install">Installation Methods</PlatformLink> for more information.
+
+</Alert>
+
+4. Add Sentry error handler to your Express app
 
 Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.tracingHandler()`, and `Sentry.Handlers.errorHandler()` to add Sentry instrumentation to your Express app. In `8.x`, you only need to use `Sentry.setupExpressErrorHandler(app)`, you can remove all other handlers.
 
-```JavaScript diff
- const Sentry = require('@sentry/node');
-
- Sentry.init({
-   dsn: "___PUBLIC_DSN___",
-   tracesSampleRate: 1.0,
- });
-
+```JavaScript diff {tabTitle:CommonJS}
+ require('./instrument');
  const express = require('express');
+ const Sentry = require('@sentry/node');
  const app = express();
 
 -app.use(Sentry.Handlers.requestHandler());
@@ -99,12 +141,43 @@ Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.t
  app.listen(3000);
 ```
 
+```JavaScript diff {tabTitle:ESM}
+ import './instrument';
+ import express from "express";
+ import * as Sentry from "@sentry/node";
+ const app = express();
+
+-app.use(Sentry.Handlers.requestHandler());
+-app.use(Sentry.Handlers.tracingHandler());
+
+// add routes etc. here
+
+-app.use(Sentry.Handlers.errorHandler());
++Sentry.setupExpressErrorHandler(app);
+
+ app.listen(3000);
+```
+
+
+
 ### Ensure Request Isolation
 
 For any non-HTTP scenarios (e.g. websockets or a scheduled job), you'll have to manually ensure request isolation by wrapping the function with `Sentry.withIsolationScope()`. Previously we recommended you use `Sentry.runWithAsyncContext` for this but that has been removed in `8.x`.
 
-```JavaScript
+```javascript {tabTitle:CommonJS}
 const Sentry = require('@sentry/node');
+
+function myScheduledJob() {
+  return Sentry.withIsolationScope(async () => {
+    await doSomething();
+    await doSomethingElse();
+    return { status: 'DONE' };
+  });
+}
+```
+
+```javascript {tabTitle:ESM}
+import * as Sentry from "@sentry/node";
 
 function myScheduledJob() {
   return Sentry.withIsolationScope(async () => {

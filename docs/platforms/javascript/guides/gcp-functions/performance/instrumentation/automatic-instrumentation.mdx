@@ -4,39 +4,44 @@ description: "Learn what transactions are captured after tracing is enabled."
 sidebar_order: 10
 ---
 
-By default, Sentry's Node.js SDK can automatically instrument HTTP calls.
-In order for this to work, you have to create transactions which the HTTP calls will be added to as spans.
+When performance is enabled through `tracesSampleRate`, `enableTracing` or a `tracesSampler` function, the Sentry SDK will automatically capture spans for the following:
 
-Read more about [Custom Instrumentation](./../custom-instrumentation/) to learn how to create transactions and add your own spans.
+- HTTP requests made with:
+  - `http`
+  - `https`
+  - `fetch`
 
-<Note>
+These are automatically set up for you without any further configuration.
 
-If you're adopting Performance in a high-throughput environment, we recommend testing prior to deployment to ensure that your service's performance characteristics maintain expectations.
+The following instrumentation can be manually enabled by adding the corresponding integration to the `integrations` array in the `init` method:
 
-Note, that calling `Sentry.autoDiscoverNodePerformanceMonitoringIntegrations` will degrade startup performance of your app due to file I/O operations.
-This is especially a concern in Serverless functions.
-We recommend manually adding <PlatformLink to="/performance/database" >database integrations</PlatformLink> of your choice manually (see example below).
+- DB queries made with:
+  - `mysql`
+  - `mysql2`
+  - `pg`
+  - `graphql` (including Apollo Server)
+  - `mongo`
+  - `mongoose`
+  - `ioredis`
+  - `prisma`
 
-</Note>
-
-<SignInNote />
+You can add these as follows:
 
 ```javascript
-const Sentry = require("@sentry/node");
+const Sentry = require("@sentry/aws-serverless");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    // Automatically instrument Node.js libraries and frameworks
-    // (This function is slow because of file I/O, consider manually adding additional integrations instead)
-    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
-    // Or manually add integrations of your choice. For example:
-    new Sentry.Integrations.Apollo(),
-    new Sentry.Integrations.Postgres(),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
   tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.prismaIntegration(),
+    Sentry.mysqlIntegration(),
+    Sentry.mysql2Integration(),
+    Sentry.pgIntegration(),
+    Sentry.graphqlIntegration(),
+    Sentry.mongoIntegration(),
+    Sentry.mongooseIntegration(),
+    Sentry.ioredisIntegration(),
+  ],
 });
 ```
