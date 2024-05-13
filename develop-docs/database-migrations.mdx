@@ -377,6 +377,41 @@ Renaming columns is dangerous and will result in downtime. The reason this occur
   - Drop the old column from the database.
   - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
 
+## Siloed Database Management
+
+The local database for siloed servers is separate from the database used for monolith operations. The siloed databases are named `region` and `control` matching the silo modes. Within django, the `default` connection is for the region database, and the `control` connection is for the `control` database. The same database names are used by both sentry and getsentry.
+
+### Cloning a monolith database
+
+```bash
+# Copy your existing application data into the split databases.
+bin/split-silo-database --database sentry --reset
+
+# When working with getsentry run the following from getsentry root directory
+bin/split-silo-database --database getsentry --reset
+```
+
+There is a script in both sentry & getsentry that are functionally equivalent. If you are working on getsentry, you need to use the getsentry script to ensure that all of your tables end up in the correct siloed database.
+
+The `split-silo-database` scripts use silo annotations on models to selectively dump your monolith database into the siloed databases.
+
+### Apply Migrations to siloed databases
+
+You have two options for maintaining siloed databases:
+
+1. Run migrations on your monolith database, and use `split-silo-database` to rebuild your siloed databases.
+2. Run migrations for siloed databases.
+
+To run migrations on the siloed databases, run migrations in region and control mode.
+
+```bash
+# Run migrations for region mode
+SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=REGION SENTRY_REGION=us getsentry upgrade
+
+# Run migrations for control
+SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=CONTROL getsentry upgrade
+```
+
 ## Migration Deployment
 
 <Alert title="Employees Only" level="warning">

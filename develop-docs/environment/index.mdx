@@ -43,13 +43,79 @@ A superuser account should have been created for you during bootstrap - `admin@s
 You can create other users with `sentry createuser`.
 
 <Alert title="Note" level="info">
-
   When asked for the root address of the server, make sure that you use
   [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000), as both
   protocol _and_ port are required in order for DNS and some pages' URLs to be
   displayed correctly.
-
 </Alert>
+
+## Running siloed instances
+
+By default `sentry devserver` will run a monolith mode application server. You can also run ``devserver`` with siloed application instances. Before you do, you need to <Link to="/database-migrations/#cloning-a-monolith-database">create split silo databases</Link>.
+
+The devserver command supports  `--silo` option that lets you create siloed instances. Any workers, consumers, or celery-beat processes will be started with the same silo mode.
+
+```shell
+# Start control silo servers
+sentry devserver --silo=control --celery-beat --workers
+
+# Start region silo servers
+sentry devserver --silo=region --celery-beat --workers --ingest
+```
+Siloed servers have the following port assignments:
+
+- 8000 - Webpack
+- 8010 - Region silo webserver
+- 8001 - Control silo webserver
+
+In the above setup your local environment will use org slug domains, and send requests to `us.dev.getsentry.net` (region silo) and `dev.getsentry.net` (control silo). All requests will be proxied by webpack and forwarded to the appropriate server based on hostname.
+
+### Ngrok and siloed servers
+
+To combine ngrok and local development servers you’ll need to reserve two domains in ngrok, and create a configuration file for ngrok:
+
+```yaml
+version: '2'
+authtoken: <YOUR-NGROK-AUTHTOKEN>
+tunnels:
+  control-silo:
+    proto: http
+    hostname: $yourname.ngrok.dev
+    host_header: 'rewrite'
+    addr: 8000
+  region-silo:
+    proto: http
+    hostname: us.$yourname.ngrok.dev
+    addr: 8010
+    host_header: 'rewrite'
+```
+
+Then run all the required servers
+
+```shell
+# Run a control silo with ngrok
+sentry devserver --silo=control --ngrok $yourname.ngrok.dev
+
+# Run a region silo without ngrok
+sentry devserver --silo=region --ngrok $yourname.ngrok.dev
+
+# Run ngrok
+ngrok start --all --config regions.yml
+```
+
+This setup will result in both the region and control servers responding to different domains, and CORS will work similar to production.
+
+### Siloed Django Shell
+
+If you want to use a repl with silo modes active:
+
+```shell
+# Start a control silo shell
+SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=CONTROL getsentry django shell
+
+# Start a region silo shell
+SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=REGION SENTRY_REGION=us getsentry django shell
+```
 
 ## Running the Getsentry Development Server
 
