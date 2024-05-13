@@ -11,6 +11,7 @@ With 8.x, @sentry/node has been completely overhauled. It is now powered by [Ope
 Here's an example of instrumentating a Connect application with Sentry Node SDK `8.x`:
 
 ```javascript {tabTitle:CommonJS}
+require('./instrument');
 const connect = require('connect');
 const Sentry = require('@sentry/node');
 const app = connect();
@@ -23,6 +24,7 @@ app.listen(3000);
 ```
 
 ```javascript {tabTitle:ESM}
+import './instrument';
 import connect from 'connect';
 import * as Sentry from "@sentry/node";
 const app = connect();
@@ -73,11 +75,35 @@ We now support the following integrations out of the box with 0 configuration:
 - `postgresIntegration`: Automatically instruments PostgreSQL
 - `prismaIntegration`: Automatically instruments Prisma
 
-3. Add Sentry error handler
+3. Require `instrument.js` before any other module in your application
+
+```JavaScript diff {tabTitle:CommonJS}
++require('./instrument');
+ const connect = require('connect');
+ const Sentry = require('@sentry/node');
+ const app = connect();
+```
+
+```JavaScript diff {tabTitle:ESM}
++import './instrument';
+ import connect from 'connect';
+ import * as Sentry from "@sentry/node";
+ const app = connect();
+```
+
+<Alert level="warning" title="Running with ESM">
+
+If you run your application with ESM, you need to import the Sentry Initialization file before importing any other modules. See <PlatformLink to="/install/esm">running Sentry with ESM</PlatformLink>.
+If you are unsure how you are running your application, see <PlatformLink to="/install">Installation Methods</PlatformLink> for more information.
+
+</Alert>
+
+4. Add Sentry error handler
 
 Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.tracingHandler()`, and `Sentry.Handlers.errorHandler()` to add Sentry instrumentation to your Connect app. In `8.x`, you only need to use `Sentry.setupConnectErrorHandler(app)`, you can remove all other handlers.
 
 ```JavaScript diff {tabTitle:CommonJS}
+ require('./instrument');
  const connect = require('connect');
  const Sentry = require('@sentry/node');
  const app = connect();
@@ -94,6 +120,7 @@ Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.t
 ```
 
 ```JavaScript diff {tabTitle:ESM}
+ import './instrument';
  import connect from 'connect';
  import * as Sentry from "@sentry/node";
  const app = connect();
@@ -108,25 +135,6 @@ Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.t
 
  app.listen(3000);
 ```
-
-4. Add `--require` or `--import` to your Node.js call
-
-Using [--require](https://nodejs.org/api/cli.html#-r---require-module) or [--import](https://nodejs.org/api/cli.html#--importmodule) is the easiest way to guarantee that Sentry is imported and initialized before any other modules in your application.
-
-```bash
-# If you are using CommonJS (CJS)
-node --require ./instrument.js app.js
-
-# If you are using ECMAScript Modules (ESM)
-# Note: This is only available for Node v18.19.0 onwards.
-node --import ./instrument.mjs app.mjs
-```
-
-<Alert level="warning" title="Alternative">
-
-If you cannot run node with [--require](https://nodejs.org/api/cli.html#-r---require-module) or [--import](https://nodejs.org/api/cli.html#--importmodule), [add a top-level import of `instrument.js` in your application](/platforms/javascript/guides/connect/initialize-sentry/add-as-toplevel-import).
-
-</Alert>
 
 ### Ensure Request Isolation
 
