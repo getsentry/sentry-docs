@@ -10,40 +10,52 @@ With 8.x, @sentry/node has been completely overhauled. It is now powered by [Ope
 
 Here's an example of instrumentating a Connect application with Sentry Node SDK `8.x`:
 
-```JavaScript
-const Sentry = require('@sentry/node');
-
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  tracesSampleRate: 1,
-});
-
+```javascript {tabTitle:CommonJS}
+require('./instrument');
 const connect = require('connect');
+const Sentry = require('@sentry/node');
 const app = connect();
 
-// add routes etc. here
+// Add routes etc. here
 
 Sentry.setupConnectErrorHandler(app);
 
 app.listen(3000);
 ```
 
+```javascript {tabTitle:ESM}
+import './instrument';
+import connect from 'connect';
+import * as Sentry from "@sentry/node";
+const app = connect();
+
+// Add your routes, etc. here
+
+Sentry.setupConnectErrorHandler(app);
+
+app.listen(3030);
+```
+
 To migrate your Connect app to Sentry Node SDK `8.x`, you need to make the following changes:
 
-1. Move your `Sentry.init` call so that it is called before any other `require`/`import` statements.
+1. Create an external file called `instrument.js` and move your `Sentry.init` call to it.
 
 Due to the way that auto instrumentation works in `8.x` of the Sentry Node SDK, it is required that you initialize Sentry before you require or import any other package. Any package that is required/imported before Sentry is initialized may not be correctly auto-instrumented.
 
-```JavaScript diff
- const Sentry = require('@sentry/node');
--const connect = require('connect');
+```JavaScript {tabTitle:CommonJS} {filename: instrument.js}
+const Sentry = require('@sentry/node');
 
- Sentry.init({
-   // ...
- });
+Sentry.init({
+  // ...
+});
+```
 
-+const connect = require('connect');
- const app = connect();
+```JavaScript diff {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  // ...
+});
 ```
 
 2. Remove any performance related integrations
@@ -63,19 +75,54 @@ We now support the following integrations out of the box with 0 configuration:
 - `postgresIntegration`: Automatically instruments PostgreSQL
 - `prismaIntegration`: Automatically instruments Prisma
 
-3. Add Sentry error handler
+3. Require `instrument.js` before any other module in your application
+
+```JavaScript diff {tabTitle:CommonJS}
++require('./instrument');
+ const connect = require('connect');
+ const Sentry = require('@sentry/node');
+ const app = connect();
+```
+
+```JavaScript diff {tabTitle:ESM}
++import './instrument';
+ import connect from 'connect';
+ import * as Sentry from "@sentry/node";
+ const app = connect();
+```
+
+<Alert level="warning" title="Running with ESM">
+
+If you run your application with ESM, you need to import the Sentry Initialization file before importing any other modules. See <PlatformLink to="/install/esm">running Sentry with ESM</PlatformLink>.
+If you are unsure how you are running your application, see <PlatformLink to="/install">Installation Methods</PlatformLink> for more information.
+
+</Alert>
+
+4. Add Sentry error handler
 
 Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.tracingHandler()`, and `Sentry.Handlers.errorHandler()` to add Sentry instrumentation to your Connect app. In `8.x`, you only need to use `Sentry.setupConnectErrorHandler(app)`, you can remove all other handlers.
 
-```JavaScript diff
- const Sentry = require('@sentry/node');
-
- Sentry.init({
-   dsn: "___PUBLIC_DSN___",
-   tracesSampleRate: 1.0,
- });
-
+```JavaScript diff {tabTitle:CommonJS}
+ require('./instrument');
  const connect = require('connect');
+ const Sentry = require('@sentry/node');
+ const app = connect();
+
+-app.use(Sentry.Handlers.requestHandler());
+-app.use(Sentry.Handlers.tracingHandler());
+
+// add routes etc. here
+
+-app.use(Sentry.Handlers.errorHandler());
++Sentry.setupConnectErrorHandler(app);
+
+ app.listen(3000);
+```
+
+```JavaScript diff {tabTitle:ESM}
+ import './instrument';
+ import connect from 'connect';
+ import * as Sentry from "@sentry/node";
  const app = connect();
 
 -app.use(Sentry.Handlers.requestHandler());
@@ -93,8 +140,20 @@ Previously you had to use `Sentry.Handlers.requestHandler()`, `Sentry.Handlers.t
 
 For any non-HTTP scenarios (e.g. websockets or a scheduled job), you'll have to manually ensure request isolation by wrapping the function with `Sentry.withIsolationScope()`. Previously we recommended you use `Sentry.runWithAsyncContext` for this but that has been removed in `8.x`.
 
-```JavaScript
+```javascript {tabTitle:CommonJS}
 const Sentry = require('@sentry/node');
+
+function myScheduledJob() {
+  return Sentry.withIsolationScope(async () => {
+    await doSomething();
+    await doSomethingElse();
+    return { status: 'DONE' };
+  });
+}
+```
+
+```javascript {tabTitle:ESM}
+import * as Sentry from "@sentry/node";
 
 function myScheduledJob() {
   return Sentry.withIsolationScope(async () => {
