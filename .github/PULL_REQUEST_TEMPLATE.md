@@ -12,7 +12,7 @@ All PRs now require approval from the docs team before you can publish. To help 
 - [ ] None: Not urgent, can wait up to a few weeks
 
 ## SLA
-Someone from the [Sentry docs team](https://github.com/orgs/getsentry/teams/docs) will review your PR within 1 week. Do not merge your PR without approval.
+Someone from the [Sentry docs team](https://github.com/orgs/getsentry/teams/docs) will review your PR within 72 hours. Please do not merge your PR without approval.
 
 ## Pre-merge checklist
 
