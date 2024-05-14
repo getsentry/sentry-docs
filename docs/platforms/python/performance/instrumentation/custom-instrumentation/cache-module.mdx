@@ -1,6 +1,6 @@
 ---
-title: Manual Instrumentation for Cache Module
-sidebar_order: 9999
+title: Instrument Caches
+sidebar_order: 1000
 description: "Learn how to manually instrument your code to use Sentrys Cache module. "
 ---
 A cache can be used to speed up data retrieval, thereby improving application performance. Because instead of getting data from a potentially slow data layer, your application will be getting data from memory (in a best case scenario). Caching can speed up read-heavy workloads for applications like Q&A portals, gaming, media sharing, and social networking.
@@ -23,13 +23,13 @@ If you're using anything other than <PlatformLink to="/integrations/django/">Dja
 
 <PlatformContent includePath="getting-started-config" />
 
-### Add Span When Putting Data Into the Cache:
+### Add Span When Putting Data Into the Cache
 
 If the cache you’re using isn’t supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
 
 1. Set the cache value with whatever cache library you happen to be using.
 2. Wrap the part of your application that uses the cached value with  `with sentry_sdk.start_span(...)`
-3. Set `op` to `cache.set`.
+3. Set `op` to `cache.set_item`.
 4. Set `cache.item_size` to an integer representing the size of the cached item.
 
 (The steps described above are documented in the snippet.)
@@ -41,7 +41,7 @@ import sentry_sdk
 key = "myCacheKey123"
 value = "The value I want to cache."
 
-with sentry_sdk.start_span(op="cache.set") as span:
+with sentry_sdk.start_span(op="cache.set_item") as span:
     # Set a key in your caching using your custom caching solution
     my_caching.set(key, value)
 
@@ -63,7 +63,7 @@ If the cache you’re using isn’t supported by auto instrumentation mentioned 
 
 1. Fetch the cached value from whatever cache library you happen to be using.
 2. Wrap the part of your application that uses the cached value with  `with sentry_sdk.start_span(...)`
-3. Set `op` to `cache.get`.
+3. Set `op` to `cache.get_item`.
 4. Set `cache.hit` to a boolean value representing whether the value was successfully fetched from the cache or not.
 5. Set `cache.item_size` to an integer representing the size of the cached item.
 
@@ -76,7 +76,7 @@ import sentry_sdk
 key = "myCacheKey123"
 value = None
 
-with sentry_sdk.start_span(op="cache.get") as span:
+with sentry_sdk.start_span(op="cache.get_item") as span:
     # Get a key from your caching solution
     value = my_caching.get(key)
 
