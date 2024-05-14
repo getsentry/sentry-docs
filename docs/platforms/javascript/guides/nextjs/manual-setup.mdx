@@ -22,9 +22,55 @@ pnpm add @sentry/nextjs
 
 If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
 
+## Extend your Next.js Configuration
+
+Use `withSentryConfig` to extend the default Next.js options. This will apply instrumentation to your application.
+
+Include the following in your `next.config.js` or `next.config.mjs`:
+
+<SignInNote />
+
+```JavaScript {tabTitle:CJS} {filename:next.config.js}
+const { withSentryConfig } = require("@sentry/nextjs");
+
+const nextConfig = {
+  // Your existing Next.js configuration
+};
+
+// Make sure adding Sentry options is the last code to run before exporting
+module.exports = withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // An auth token is required for uploading source maps.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  silent: false, // Can be used to suppress logs
+});
+```
+
+```JavaScript {tabTitle:ESM} {filename:next.config.mjs}
+import { withSentryConfig } from "@sentry/nextjs";
+
+const nextConfig = {
+  // Your existing Next.js configuration
+};
+
+// Make sure adding Sentry options is the last code to run before exporting
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // An auth token is required for uploading source maps.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  silent: false, // Can be used to suppress logs
+});
+```
+
 ## Create Initialization Config Files
 
-Create three files in the root directory of your project, `sentry.client.config.js`, `sentry.server.config.js` and `sentry.edge.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
+Create three files in the root directory of your Next.js application: `sentry.client.config.js`, `sentry.server.config.js` and `sentry.edge.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
 
 Please note that there are slight differences between these files since they run in different places (browser, server, edge), so copy them carefully!
 
@@ -56,8 +102,6 @@ Sentry.init({
 });
 ```
 
-<SignInNote />
-
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
@@ -76,8 +120,6 @@ Sentry.init({
   // that it will also get attached to your source maps
 });
 ```
-
-<SignInNote />
 
 ```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -98,7 +140,25 @@ Sentry.init({
 });
 ```
 
-You can include your DSN directly in these three files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
+We recommend you include your DSN directly in these three files. Alternatively you can pass the DSN via a _public_ environment variable like `NEXT_PUBLIC_SENTRY_DSN`.
+
+While the client initialization code will be injected into your application's client bundle by `withSentryConfig` which we set up earlier,
+the configuration for the server and edge runtime needs to be imported from a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation).
+You can set this file up by adding a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you are using one) and adding the following content:
+
+```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+```
+
+Make sure that the `import` statements point to your newly created `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)` files.
 
 ## Report React Component Render Errors
 
@@ -251,72 +311,6 @@ CustomErrorComponent.getInitialProps = async (contextData) => {
 export default CustomErrorComponent;
 ```
 
-## Extend your Next.js Configuration
-
-Use `withSentryConfig` to extend the default Next.js usage of webpack. This will do two things:
-
-- Automatically call SDK initialization code, at server start up and client page load.
-- Generate and upload source maps to Sentry, so that your stack traces contain readable code.
-
-Include the following in your `next.config.js` or `next.config.mjs`:
-
-<SignInNote />
-
-```JavaScript {filename:next.config.(js|mjs)}
-// This file sets a custom webpack configuration to use your Next.js app
-// with Sentry.
-// https://nextjs.org/docs/api-reference/next.config.js/introduction
-
-const { withSentryConfig } = require("@sentry/nextjs");
-
-// your existing module.exports or default export
-const nextConfig = {
-
-  // Optional build-time configuration options
-  sentry: {
-    // See the sections below for information on the following options:
-    //   'Configure Source Maps':
-    //     - disableServerWebpackPlugin
-    //     - disableClientWebpackPlugin
-    //     - hideSourceMaps
-    //     - widenClientFileUpload
-    //   'Configure Legacy Browser Support':
-    //     - transpileClientSDK
-    //   'Configure Serverside Auto-instrumentation':
-    //     - autoInstrumentServerFunctions
-    //     - excludeServerRoutes
-    //   'Configure Tunneling to avoid Ad-Blockers':
-    //     - tunnelRoute
-    //   'Disable the Sentry SDK Debug Logger to Save Bundle Size':
-    //     - disableLogger
-  },
-};
-
-const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry webpack plugin. Keep in mind that
-  // the following options are set automatically, and overriding them is not
-  // recommended:
-  //   release, url, configFile, stripPrefix, urlPrefix, include, ignore
-
-  org: "___ORG_SLUG___",
-  project: "___PROJECT_SLUG___",
-
-  // An auth token is required for uploading source maps.
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-
-  silent: true, // Suppresses all logs
-
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options.
-};
-
-// Make sure adding Sentry options is the last code to run before exporting
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
-
-// If you're using a next.config.mjs file:
-// export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
-```
-
 ## Instrument Next.js Server Actions
 
 _Requires `@sentry/nextjs` SDK version `7.81.0` or newer._
@@ -358,127 +352,122 @@ export default function ServerComponent() {
 
 ## Configure Source Maps
 
-By default, `withSentryConfig` will add an instance of `SentryWebpackPlugin` to the webpack plugins, for both server and client builds. This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
+By default, `withSentryConfig` will add a custom Webpack plugin to your configuration that runs for both server and client builds.
+This means that when you run a production build (`next build`), sourcemaps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
 
-To configure the plugin, pass a `sentryWebpackPluginOptions` argument to `withSentryConfig`, as seen in the example above. All available options are documented [here](https://github.com/getsentry/sentry-webpack-plugin#options).
+For the SDK to be able to upload source maps to Sentry, you need to provide an auth token.
+You can pass an auth token directly via the `authToken` option:
 
-### Disable `SentryWebpackPlugin`
+<SignInNote />
 
-If you choose to handle source map generation and uploading separately, the plugin can be disabled for either the server or client build process. To do this, add a `sentry` object to `nextConfig` above, and set the relevant options there:
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  // Specify the organization and project to upload source maps to
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    disableServerWebpackPlugin: true,
-    disableClientWebpackPlugin: true,
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  // Specify the organization and project to upload source maps to
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
+```
+
+Alternatively, you can set the `SENTRY_AUTH_TOKEN` environment variable:
+
+<Alert level="danger">
+
+Do not commit your auth token to version control.
+
+</Alert>
+
+<SignInNote />
+
+```sh {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+### Disable Source Maps
+
+You can disable the custom sourcemap plugin as follows:
+
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  sourcemaps: {
+    disable: true,
   },
-};
+});
 ```
 
-Note that you'll also have to explicitly set a `release` value in your `Sentry.init()`.
-
-If you disable the plugin for both server and client builds, it's safe to omit the `sentryWebpackPluginOptions` parameter from your `withSentryConfig` call:
-
-```javascript {filename:next.config.(js|mjs)}
-module.exports = withSentryConfig(nextConfig);
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  sourcemaps: {
+    disable: true,
+  },
+});
 ```
-
-In that case you can also skip the `sentry-cli` configuration step below.
 
 ### Use `hidden-source-map`
 
-_(New in version 6.17.1, will default to `true` in 8.0.0 and beyond.)_
-
 Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    hideSourceMaps: true,
-  },
-};
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  hideSourceMaps: true,
+});
 ```
 
-Note that this only applies to client-side builds, and requires the `SentryWebpackPlugin` to be enabled. This option will default to `true` starting in version 8.0.0. See https://webpack.js.org/configuration/devtool/ for more information.
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  hideSourceMaps: true,
+});
+```
 
 ### Widen the Upload Scope
 
-If you find that there are in-app frames in your client-side stack traces that aren't getting source-mapped even when most others are, it's likely because they are from files in `static/chunks/` rather than `static/chunks/pages/`. By default, such files aren't uploaded because the majority of the files in `static/chunks/` only contain Next.js or third-party code, and are named in such a way that it's hard to distinguish between relevant files (ones containing your code) and irrelevant ones.
+If you find that there are some frames in your client-side stack traces that aren't getting source-mapped even when most others are, the issue might be that those frames are from files in `static/chunks/` rather than `static/chunks/pages/`. By default, such files aren't uploaded because the majority of the files in `static/chunks/` only contain Next.js or third-party code.
 
-To upload all of the files in `static/chunks/` anyway, add a `sentry` object to `nextConfig` above, and set the `widenClientFileUpload` option to `true`:
+To upload all of the files and source maps, including ones from third-party packages, set the `widenClientFileUpload` option to `true`:
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    widenClientFileUpload: true,
-  },
-};
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  widenClientFileUpload: true,
+});
 ```
 
-## Configure `sentry-cli`
-
-The `SentryWebpackPlugin` uses the `Sentry CLI` to manage releases and source maps, which can be configured in one of two ways - using a configuration file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](/product/cli/configuration/).
-
-If you choose to combine the two approaches, the environment variables will take precedence over values set in the configuration file. One common approach is to set sensitive data (like tokens) in the environment and include everything else in the configuration file added to your VCS.
-
-The URL, organization, and project properties identify your organization and project, and the auth token authenticates your user account.
-
-### Use Configuration Files for Source Map Upload
-
-You can commit all the properties to your VCS, except the auth token. You can accomplish this by using the `.sentryclirc` file and including your auth token:
-
-<OrgAuthTokenNote />
-
-```ini {filename:.sentryclirc}
-[auth]
-token=___ORG_AUTH_TOKEN___
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  widenClientFileUpload: true,
+});
 ```
-
-Don't forget to ignore `.sentryclirc` in your version control system to prevent it from being leaked!
-
-### Use Environment Variables
-
-Alternatively, the source map upload can be configured using environment variables.
-
-| Property    | Environment variable |
-| ----------- | -------------------- |
-| `url`       | `SENTRY_URL`         |
-| `org`       | `SENTRY_ORG`         |
-| `project`   | `SENTRY_PROJECT`     |
-| `authToken` | `SENTRY_AUTH_TOKEN`  |
-
-## Configure Legacy Browser Support
-
-_(New in version 7.8.0)_
-
-The `@sentry/nextjs` SDK is designed to run in browsers which support ES6 (and certain ES6+ language features like object spread). If you need to support older browsers, and have configured Next.js to down-compile your code, you can apply the same down-compilation to the injected SDK code by using the `transpileClientSDK` option in your Next.js config:
-
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    transpileClientSDK: true,
-  },
-};
-```
-
-(This assumes you are using [the `next.config.(js|mjs)` setup shown above](#extend-nextjs-configuration).)
 
 ## Configure Tunneling to avoid Ad-Blockers
 
-_(New in version 7.26.0)_
-
-You might notice that Sentry events are sometimes blocked by Ad-Blockers.
-Ad-blockers can be circumvented by using **tunneling**.
+You might notice that Sentry events are sometimes blocked by ad blockers.
+Ad blockers can be circumvented by using **tunneling**.
 
 The Sentry Next.js SDK provides an easy way to set up tunneling for your application.
-Use the `tunnelRoute` option in the `sentry` object in your `next.config.js` or `next.config.mjs` to provide a route the SDK will use to tunnel events to Sentry:
+Use the `tunnelRoute` option to provide the SDK a route to use to tunnel events to Sentry:
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    tunnelRoute: "/monitoring-tunnel",
-  },
-};
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  tunnelRoute: "/monitoring-tunnel",
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  tunnelRoute: "/monitoring-tunnel",
+});
 ```
 
 Setting this option will add an API endpoint to your application that is used to forward Sentry events to the Sentry servers.
@@ -501,23 +490,23 @@ The SDK will automatically instrument API routes and server-side [Next.js data f
 
 ### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
 
-_(New in version 7.14.0)_
-
 To disable the automatic instrumentation of API route handlers and server-side data fetching functions, set the `autoInstrumentServerFunctions` to `false`.
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    autoInstrumentServerFunctions: false,
-  },
-};
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  autoInstrumentServerFunctions: false,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  autoInstrumentServerFunctions: false,
+});
 ```
 
 With this option, under the hood, the SDK is using a webpack loader to wrap all your API route handlers and data fetching methods.
 
 ### Opt In to Auto-instrumentation on Specific Routes
-
-_(New in version 7.14.0)_
 
 If the automatic instrumentation doesn't work for your use case, you can turn it off globally and choose to only wrap specific API route handlers or data fetching functions instead.
 
@@ -555,51 +544,68 @@ For data fetching methods, use the following functions:
 
 ### Opt Out of Auto-instrumentation on Specific Routes
 
-_(New in version 7.20.0)_
+If you want auto-instrumentation to apply by default, but want to exclude certain routes, use the `excludeServerRoutes` option:
 
-If you want auto-instrumentation to apply by default, but want to exclude certain routes, use the `excludeServerRoutes` option in the `sentry` object in your Next.js configuration file:
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  excludeServerRoutes: [
+    "/some/excluded/route",
+    "/excluded/route/with/[parameter]",
+    /^\/route\/beginning\/with\/some\/prefix/,
+    /\/routeContainingASpecificPathSegment\/?/,
+  ],
+});
+```
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    excludeServerRoutes: [
-      "/some/excluded/route",
-      "/excluded/route/with/[parameter]",
-      /^\/route\/beginning\/with\/some\/prefix/,
-      /\/routeContainingASpecificPathSegment\/?/,
-    ],
-  },
-};
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  excludeServerRoutes: [
+    "/some/excluded/route",
+    "/excluded/route/with/[parameter]",
+    /^\/route\/beginning\/with\/some\/prefix/,
+    /\/routeContainingASpecificPathSegment\/?/,
+  ],
+});
 ```
 
 Excluded routes can be specified either as regexes or strings. When using a string, make sure that it matches the route exactly, and has a leading slash but no trailing one.
 
 ### Opt Out of Auto-instrumentation on Middleware
 
-_(New in version 7.31.0)_
-
 To disable the automatic instrumentation of Next.js middleware, set the `autoInstrumentMiddleware` option to `false`.
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    autoInstrumentMiddleware: false,
-  },
-};
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  autoInstrumentMiddleware: false,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  autoInstrumentMiddleware: false,
+});
 ```
 
 ### Instrumentation of Vercel Cron Jobs
 
-_(New in version 7.52.0)_
-
 You can set the `automaticVercelMonitors` option to automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs).
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    automaticVercelMonitors: true,
-  },
-};
+<Note>
+
+Automatic instrumentation of Vercel cron jobs currently only works for the Pages Router. App Router route handlers are not yet supported.
+
+</Note>
+
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  automaticVercelMonitors: true,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  automaticVercelMonitors: true,
+});
 ```
 
 ### Opt Out of Sentry SDK bundling in Client or Server side
@@ -610,15 +616,17 @@ You cannot delete the respective config files because the SDK requires you to ha
 
 ## Disable the Sentry SDK Debug Logger to Save Bundle Size
 
-_(New in version 7.50.0)_
-
 Set the `disableLogger` option to `true` to strip the Sentry SDK debug logger out of your client bundles, saving bundle size.
 Please note that this will effectively override and disable the `debug` option in your `Sentry.init()` calls.
 
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  sentry: {
-    disableLogger: true,
-  },
-};
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  disableLogger: true,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  disableLogger: true,
+});
 ```
