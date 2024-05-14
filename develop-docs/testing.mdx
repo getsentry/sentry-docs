@@ -186,6 +186,106 @@ Now all SQL executed during tests will be printed to stdout. It's recommended
 to narrow down the output by using pytest's `-k` selector. Also note that
 you'll need to pass `-s` to see stdout.
 
+### Silo modes
+
+The test suite is aware of [silo modes](/architecture/#silo-modes) and by default tests will run in `REGION` mode. To have tests run in `CONTROL` mode, you can use `control_silo_test` annotation. To have tests run in all silo modes you can use `all_silo_test`:
+
+```python
+from sentry.testutils.silo import all_silo_test, control_silo_test
+
+@control_silo_test
+class UserDetailsTest(TestCase):
+    ...
+
+@all_silo_test
+class AllSiloUserDetailsTest(TestCase):
+    ...
+```
+
+You’ll often need to create or update user records when writing tests for region silo code. If you use the user model directly you’ll encounter failures related to incorrect silo boundaries. To avoid those errors you can temporarily swap the current silo assignment.
+
+```python
+from sentry.silo import SiloMode
+from sentry.testutils.silo import assume_test_silo_mode_of
+
+with assume_test_silo_mode_of(UserOption):
+    UserOption.objects.clear_local_cache()
+```
+
+The `assume_test_silo_mode_of(model)` will temporarily switch the active silo mode to match the silo mode of the model passed in. If you'd like to explicitly name the silo mode you can use `assume_test_silo_mode(SiloMode.CONTROL)` to switch into control mode.
+
+
+### Flushing outbox messages
+
+In tests if you create or update records that use asynchronous outbox messages, you can force outbox delivery and processing in tests using `outbox_runner`:
+
+```python
+from sentry.testutils.outbox import outbox_runner
+
+with outbox_runner():
+    member = OrganizationMember(
+        organization=self.organization,
+        email="foo@example.com"
+    )
+    member.token = member.generate_token()
+    member.save()
+```
+
+The above code will update a member and flush the relevant outbox messages to be delivered synchronizing data in control silo tables. You can also use `outbox_runner` in isolation to flush outbox driven state like audit logs:
+
+```python
+response = self.get_success_response(
+    self.project.organization.slug, self.project.slug, status_code=302
+)
+# Flush outboxes for audit logs
+with outbox_runner():
+    pass
+
+with assume_test_silo_mode_of(AuditLogEntry):
+    assert (
+        AuditLogEntry.objects.get(
+            organization_id=self.project.organization_id,
+            event=audit_log.get_event_id("PROJECT_EDIT"),
+        ).data.get("old_slug")
+        == self.project.slug
+    )
+```
+
+### Transaction Safety
+
+By default the test suite will validate a few data consistency and safety constraints. The disallowed operations are:
+
+1. Transactions cannot span database connections. We do not allow a transaction to contain changes on a different database connection. For example a model on the `default` and `crons` database connections cannot participate in a transaction.
+2. Transactions cannot include RPC calls. Because RPC calls can span the network, they cannot participate in a transaction.
+3. Any model using outboxes cannot be modified with `QuerySet.update()` or other update operations that would not generate outboxes.
+
+### Disabling transaction safety
+
+While the transaction safety tooling provides a good foundation, there are scenarios where we need to bypass these checks. An example of this is performing a read-only RPC call within a transaction, or mutating a record to reproduce invalid states. 
+To bypass an outbox consistency check use `unguarded_write`:
+
+```python
+from sentry.silo import unguarded_write
+
+with unguarded_write(using=router.db_for_write(User)):
+    user.update(name="sara")
+
+```
+
+To bypass a RPC-within-transaction check use `in_test_hide_transaction_boundary`:
+
+```python
+from sentry.db.postgres.transactions import in_test_hide_transaction_boundary
+
+with in_test_hide_transaction_boundary():
+    users = user_service.get_many(filter={"user_ids": list(owners)})
+```
+
+<Alert type="warning">
+Bypassing safety checks is not recommended and usage can cause consistency
+issues and data loss.
+</Alert>
+
 ## Acceptance Tests
 
 Our acceptance tests leverage selenium and chromedriver to simulate a user using the
