@@ -1,7 +1,7 @@
 import {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 
-import {getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
+import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
 import {getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -37,6 +37,21 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
       doc = await getFileBySlug(`platform-includes/${includePath}/${guide}`);
     } catch (e) {
       // It's fine - keep looking.
+    }
+  }
+
+  if (!doc) {
+    const rootNode = await getDocsRootNode();
+    const guideObject = getCurrentGuide(rootNode, path);
+
+    if (guideObject?.fallbackGuide) {
+      try {
+        doc = await getFileBySlug(
+          `platform-includes/${includePath}/${guideObject.fallbackGuide}`
+        );
+      } catch (e) {
+        // It's fine - keep looking.
+      }
     }
   }
 
