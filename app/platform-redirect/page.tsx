@@ -16,10 +16,10 @@ export default async function Page({
   }
   const rootNode = await getDocsRootNode();
   // get rid of irrelevant platforms for the `next` path
-  const platformList = extractPlatforms(rootNode).filter(platform => {
+  const platformList = extractPlatforms(rootNode).filter(platform_ => {
     return !!nodeForPath(rootNode, [
       'platforms',
-      platform.key,
+      platform_.key,
       ...next.split('/').filter(Boolean),
     ]);
   });
