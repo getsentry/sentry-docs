@@ -2078,6 +2078,10 @@ const REDIRECTS: Redirect[] = [
     to: '/organization/quotas/',
   },
   {
+    from: '/learn/sensitive-data/',
+    to: '/security-legal-pii/scrubbing/',
+  },
+  {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
     to: '/organization/quotas/',
   },
@@ -2959,6 +2963,10 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/accounts/pricing/',
+    to: '/pricing/',
+  },
+  {
+    from: '/accounts/pricing/',
     to: '/pricing/',
   },
   {
