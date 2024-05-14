@@ -27,7 +27,7 @@ For more information read [Path of an event through Relay](https://getsentry.git
 ![](https://mermaid.ink/svg/pako:eNp9UsFugzAM_ZUop1Uq4o6mXtbLNO3UXSbSgwluQUCC4qQaovz7QqArbdWdEtvPz_azey51jjzhRwNtwb62QgkFbZt-a2eY_9SlBFtqtWdRtGFnQpUTkwaoQDqzOut7dSzVzzAIVWcTJoa2jFVMVhuMz8xgDZ1Q4QmACg4VpC_v6ohk2cdorfZCBXcAlCESSa3INWhSwXeorOnmALsEBPdpd-BA0BpsjZZIFOHJp45DkcumGSXWaLor6WQzC1RRYGQP-YGU4IQXuieQu6LPiLom00HXBd-D8xnh_21drSmoXAbRLLifeDQnxV8zs3kJQLIGoVkJPi7Br_dGrECQzpmzOgvSRZHltkKZi4Nu0m72JP3AVaEd4djd25-16IWvuUc3UOb-SPuRR3BbYOMxif_meABXW8GFGjwUnNW7TkmeWONwzV2be0G3JfhpGp4coCbvxbz0t_k5HX64_-EXvdQVKA)
 [diagram source](https://mermaid.live/edit#pako:eNp9UsFugzAM_ZUop1Uq4o6mXtbLNO3UXSbSgwluQUCC4qQaovz7QqArbdWdEtvPz_azey51jjzhRwNtwb62QgkFbZt-a2eY_9SlBFtqtWdRtGFnQpUTkwaoQDqzOut7dSzVzzAIVWcTJoa2jFVMVhuMz8xgDZ1Q4QmACg4VpC_v6ohk2cdorfZCBXcAlCESSa3INWhSwXeorOnmALsEBPdpd-BA0BpsjZZIFOHJp45DkcumGSXWaLor6WQzC1RRYGQP-YGU4IQXuieQu6LPiLom00HXBd-D8xnh_21drSmoXAbRLLifeDQnxV8zs3kJQLIGoVkJPi7Br_dGrECQzpmzOgvSRZHltkKZi4Nu0m72JP3AVaEd4djd25-16IWvuUc3UOb-SPuRR3BbYOMxif_meABXW8GFGjwUnNW7TkmeWONwzV2be0G3JfhpGp4coCbvxbz0t_k5HX64_-EXvdQVKA)
 
-## Multi-Region 
+## Multi-Region
 
 Sentry's saas offering is a multi-region deployment of Sentry that is built from the same source code as self-hosted and single-tenant deployments. 
 
@@ -50,6 +50,7 @@ In addition to the goals we had several constraints:
 - A single Sentry Organization has all of their data located within a single Storage Region. This requirement comes from the need to do cross-project operations in Business plans.
 - The solution should support ~1000 regions. While these values are larger than we are likely to use it serves as a useful stress test for the solution.
 
+
 ### Silo Modes
 
 In order to offer customers data residency we needed to co-locate the bulk of an organization’s data together. The data our customers collect and send to Sentry needs to be located within the customer’s chosen region. While customer events need to be stored in the preferred region, there is also data in Sentry that is shared between organizations, and thus between regions. This data needs to be centrally stored outside of any region.
@@ -60,14 +61,19 @@ These constraints led our design to having multiple 'silo modes'.
     ☝ The term ‘silo’ was chosen as other applicable terms (region, zone, partition, cluster) are all taken.
 </Alert>
 
- Our architecture includes two silo modes:
+Our architecture includes two silo modes:
 
 1. **Control Silo** Contains all of the globally shared data and services. This data is shared between organizations and thus between regions.
 2. **Region Silo** Region silos contain organization data. Each region has independent infrastructure, and holds at least one organization.
 
-In addition to the siloed modes, there also exists a **Monolith** mode. In monolith mode both control and region silo modes can be accessed.
+In addition to the siloed modes, there also exists a **Monolith** mode. In monolith mode both control and region silo modes can be accessed. Models, endpoints and tasks are silo-aware and should a siloed resource be used in the wrong silo context an error is raised.
 
-Models, endpoints and tasks are silo-aware and should a siloed resource be used in the wrong silo context an error is raised.
+### Multi-region architecture
+
+![multi-region architecture](https://mermaid.ink/svg/pako:eNp1UctqwzAQ_JVFpxSSH_ChUOoUeiiEuD5JOajS2hbIktGjJYT8e1dumjotvS2zs_NgT0x5jaxinfUfapAhwWstnHDZ8KfgXUKnoX0-wGZzDzmGsphnFa8j5lAuhIv5rQ9yGgoReNvAHnvj3UE4IEhOpmANuhSO8LC7ik49X9Fi52PqA8a7H_6FgJqvti1s3-kUaplkoVCwhaOKwB8pbvAWGmP9rKGK5RL9Y66K9zdjGeBWnRoCpwSLPpiLOGG_JTEXTVrc9pn5F8J_fdiajRhGaTQ95FSuBEsDjihYRaPGTmabBBPuTFSZk2-OTrEqhYxrlictE9ZGUuaRVZ20kVDUJvnw8vXk-dfnT1dDqnk)
+[diagram source](https://mermaid.live/edit#pako:eNp1UctqwzAQ_JVFpxSSH_ChUOoUeiiEuD5JOajS2hbIktGjJYT8e1dumjotvS2zs_NgT0x5jaxinfUfapAhwWstnHDZ8KfgXUKnoX0-wGZzDzmGsphnFa8j5lAuhIv5rQ9yGgoReNvAHnvj3UE4IEhOpmANuhSO8LC7ik49X9Fi52PqA8a7H_6FgJqvti1s3-kUaplkoVCwhaOKwB8pbvAWGmP9rKGK5RL9Y66K9zdjGeBWnRoCpwSLPpiLOGG_JTEXTVrc9pn5F8J_fdiajRhGaTQ95FSuBEsDjihYRaPGTmabBBPuTFSZk2-OTrEqhYxrlictE9ZGUuaRVZ20kVDUJvnw8vXk-dfnT1dDqnk)
+
+Each region silo can be scaled independently, and is isolated from other regions. Within each region exists separate, dedicated infrastructure and applications as outlined in the [application overview](/architecture/#high-level-overview).
 
 ### Silo Configuration
 
