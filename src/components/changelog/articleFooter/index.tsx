@@ -14,7 +14,7 @@ export default function ArticleFooter() {
         <Button
           as="a"
           href="https://sentry.io/signup"
-          className="w-full md:w-auto justify-center uppercase rounded-3xl"
+          className="w-full md:w-auto justify-center uppercase rounded-3xl !text-white"
         >
           Get Started
         </Button>
