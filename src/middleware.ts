@@ -2078,6 +2078,10 @@ const REDIRECTS: Redirect[] = [
     to: '/organization/quotas/',
   },
   {
+    from: '/learn/sensitive-data/',
+    to: '/security-legal-pii/scrubbing/',
+  },
+  {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
     to: '/organization/quotas/',
   },
