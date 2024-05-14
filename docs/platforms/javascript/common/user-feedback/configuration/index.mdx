@@ -23,6 +23,25 @@ The following options can be configured for the integration in `feedbackIntegrat
 | `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"`        | The color theme to use. `"system"` will follow your OS color scheme.                                                                                                                                                                       |
 | `id`           | `string`                                   | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
 
+### Auto-Inject vs. Manual Injection
+
+If you have `autoInject: true` a button will be inserted into the page that triggers the form to pop up so the user can enter their feedback. If instead you want to control when this injection happens, call the `feedback.createWidget()` method to get a reference to an `Actor` object, and then call `appendToDom()` to insert it into the page.
+
+```javascript
+const feedback = feedbackIntegration({
+  // Disable injecting the default widget
+  autoInject: false,
+});
+
+const widget = feedback.createWidget();
+widget.appendToDom();
+
+// Later, when it's time to clean up:
+widget.removeFromDom();
+```
+
+Read more about how to [use your own UI](#bring-your-own-button) below.
+
 ### User and Form
 
 | Key                | Type                     | Default                               | Description                                                                                                            |
@@ -214,7 +233,7 @@ feedback.attachTo(document.querySelector("#your-button"), {
 });
 ```
 
-Alternatively, you can call `feedback.createWidget()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user. Here is an example using JSX to define a button:
+Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user. Here is an example using JSX to define a button:
 
 ```typescript
 import { BrowserClient, Feedback, getClient } from "@sentry/react";
