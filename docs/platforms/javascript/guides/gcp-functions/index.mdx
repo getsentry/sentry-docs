@@ -6,10 +6,14 @@ categories:
   - serverless
 ---
 
-Add `@sentry/serverless` as a dependency to `package.json`:
+<Note>
+  This guide is for version 8.0.0 and up of `@sentry/google-cloud-serverless`.
+</Note>
+
+Add `@sentry/google-cloud-serverless` as a dependency to `package.json`:
 
 ```bash
-  "@sentry/serverless": "^{{@inject packages.version('sentry.javascript.node') }}"
+  "@sentry/google-cloud-serverless": "^{{@inject packages.version('sentry.javascript.node') }}"
 ```
 
 To set up Sentry for a Google Cloud Function:
@@ -17,27 +21,31 @@ To set up Sentry for a Google Cloud Function:
 <SignInNote />
 
 ```javascript {tabTitle:Http functions}
-const Sentry = require("@sentry/serverless");
+const Sentry = require("@sentry/google-cloud-serverless");
 
-Sentry.GCPFunction.init({
+Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Add Performance Monitoring by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
-exports.helloHttp = Sentry.GCPFunction.wrapHttpFunction((req, res) => {
+exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
   throw new Error("oh, hello there!");
 });
 ```
 
 ```javascript {tabTitle:Background functions}
-const Sentry = require("@sentry/serverless");
+const Sentry = require("@sentry/google-cloud-serverless");
 
-Sentry.GCPFunction.init({
+Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
 });
 
-exports.helloEvents = Sentry.GCPFunction.wrapEventFunction(
+exports.helloEvents = Sentry.wrapEventFunction(
   (data, context, callback) => {
     throw new Error("oh, hello there!");
   }
@@ -45,14 +53,14 @@ exports.helloEvents = Sentry.GCPFunction.wrapEventFunction(
 ```
 
 ```javascript {tabTitle:CloudEvent functions}
-const Sentry = require("@sentry/serverless");
+const Sentry = require("@sentry/google-cloud-serverless");
 
-Sentry.GCPFunction.init({
+Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
 });
 
-exports.helloEvents = Sentry.GCPFunction.wrapCloudEventFunction(
+exports.helloEvents = Sentry.wrapCloudEventFunction(
   (context, callback) => {
     throw new Error("oh, hello there!");
   }

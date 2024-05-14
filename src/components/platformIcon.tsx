@@ -815,12 +815,13 @@ export const PLATFORM_TO_ICON = {
   dart: 'dart',
   default: 'default',
   dotnet: 'dotnet',
-  'dotnet-aspnetcore': 'dotnet',
+  'dotnet-aspnetcore': 'dotnetcore',
   'dotnet-aspnet': 'dotnet',
-  'dotnet-awslambda': 'awslambda',
+  'dotnet-aws-lambda': 'awslambda',
   'dotnet-blazor': 'blazor',
   'dotnet-csharp': 'csharp',
-  'dotnet-gcpfunctions': 'gcp-functions',
+  'dotnet-google-cloud-functions': 'gcp-functions',
+  'dotnet-azure-functions-worker': 'azure-functions',
   'dotnet-maui': 'maui',
   'dotnet-uno': 'uno',
   'dotnet-xamarin': 'xamarin',
@@ -887,6 +888,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
+  'native-wasm': 'wasm',
   openai: 'openai',
   perl: 'perl',
   php: 'php',
@@ -899,8 +901,10 @@ export const PLATFORM_TO_ICON = {
   'python-airflow': 'apache-airflow',
   'python-ariadne': 'ariadne',
   'python-asyncpg': 'postgresql',
-  'python-awslambda': 'awslambda',
+  'python-aws-lambda': 'awslambda',
   'python-azurefunctions': 'azure-functions',
+  'python-gcp-functions': 'gcp-functions',
+  'python-anthropic': 'anthropic',
   'python-beam': 'apache-beam',
   'python-boto3': 'aws',
   'python-bottle': 'bottle',
@@ -918,11 +922,13 @@ export const PLATFORM_TO_ICON = {
   'python-grpc': 'grpc',
   'python-httpx': 'httpx',
   'python-huey': 'huey',
+  'python-huggingface_hub': 'huggingface',
+  'python-langchain': 'langchain',
   'python-loguru': 'loguru',
+  'python-openai': 'openai',
   'python-pylons': 'python',
   'python-pymongo': 'mongodb',
   'python-pyramid': 'pyramid',
-  'python-pythonawslambda': 'awslambda',
   'python-quart': 'quart',
   'python-redis': 'redis',
   'python-rq': 'redis',
@@ -1011,6 +1017,7 @@ export function PlatformIcon({
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
+    // eslint-disable-next-line no-console
     console.log('svg is null');
   }
 
@@ -1026,9 +1033,11 @@ export function PlatformIcon({
           height={size}
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
+          loading="eager"
         />
         <Image
           src={languageSvg}
+          loading="eager"
           style={{
             position: 'absolute',
             bottom: '-1px',
@@ -1036,6 +1045,8 @@ export function PlatformIcon({
             height: '30%',
             width: '30%',
             borderRadius: '2px',
+            marginTop: 0,
+            marginBottom: 0,
             ...languageIconStyles,
           }}
           alt={`${platform} icon`}
@@ -1051,7 +1062,8 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      style={{borderRadius: `${radius}px`, ...style}}
+      loading="eager"
+      style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
       alt={`${platform} icon`}
     />
   );
