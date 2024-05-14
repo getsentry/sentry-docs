@@ -10,20 +10,19 @@ supported:
   - javascript.koa
 ---
 
-When running your application in ESM mode, you can't use `require()` to load modules. Instead, you have to use the  `--import` command line options to load a module before the application starts:
-
-Adjust the Node.js call for your application to use the [--import](https://nodejs.org/api/cli.html#--importmodule) parameter and point it at `instrument.js`, which contains your `Sentry.init()` code:
+When running your application in ESM mode, you need to pass an [--import](https://nodejs.org/api/cli.html#--importmodule) command line option to register the SDK's ESM module loader so that it can properly instrument libraries.
 
 ```bash
-# Note: This is only available for Node v18.19.0 onwards.
-node --import ./instrument.mjs app.mjs
+node --import @sentry/node/import app.mjs
 ```
 
-We do not support ESM in Node versions before 18.19.0.
+<Alert level="warning">
+  We do not support ESM in Node versions before 18.19.0.
+</Alert>
 
 ## When to use this
 
 Most node applications today are either written in CommonJS (CJS), or compiled to CJS before running them.
-CommonJS uses `require()` to load modules. Our recommended installation method when using CommonJS is to require the `instrument.js` file at the top of your application. However, if your application is run in ESM mode, this will not work. In this case, you can follow the [ESM docs](./esm).
+CommonJS uses `require()` to load modules. Our recommended installation method when using CommonJS is to require the `instrument.js` file at the top of your application. However, if your application is run in ESM mode, this will not work without running your application with `--import @sentry/node/import`.
 
-Note that even if your application is written in ESM (using `import`), it may still be _run_ in CJS. For example, almost all applications written in TypeScript are compiled to CJS before running them. In this case, you should follow the CommonJS instructions.
+Note that even if your application is written in ESM (using `import`), it may still be _run_ in CJS. For example, almost all applications written in TypeScript are compiled to CJS before running them. In this case, you should follow the [CommonJS instructions](../commonjs).
