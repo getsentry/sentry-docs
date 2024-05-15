@@ -269,13 +269,7 @@ Sentry's ingestion model was not designed for nested transactions within a servi
 
 In practice, SDKs have no way of preventing transactions from becoming nested. The end result is possibly surprising to users, as each transaction starts a new tree. The only way to relate those trees is through the `trace_id`.
 
-Sentry's billing model is per event, be it an error event or a transaction event. That means that a transaction within a transaction generates two billable events.
-
-In SDKs, having a transaction within a transaction will cause inner spans to be "swallowed" by the innermost transaction surrounding them. In these situations, the code creating the spans will only add them to one of the two transactions, causing instrumentation gaps in the other.
-
-Sentry's UI is not designed to deal with nested transactions in a useful way. When looking at any one transaction it is as if all the other transactions in the trace did not exist (no other transaction is directly represented on the tree view). There is a trace view feature to visualize all transactions that share a `trace_id`, but the trace view only gives an overview of the trace by showing transactions and no child spans. There is no way to navigate to the trace view without first visiting some transaction.
-
-There is also user confusion about what one would expect in the UI for a situation such as this one (pseudocode):
+For example, there is confusion about what one would expect in the UI for a situation such as this one (pseudocode):
 
 ```python
 # if do_a_database_query returns 10 results, is the user
@@ -289,6 +283,12 @@ with transaction("index-page"):
             with transaction("create-thumbnail", {"resource": result["id"]}):
                 create_thumbnail(result)
 ```
+
+Sentry's billing model is per event, be it an error event or a transaction event. That means that a transaction within a transaction generates two billable events.
+
+In SDKs, having a transaction within a transaction will cause inner spans to be "swallowed" by the innermost transaction surrounding them. In these situations, the code creating the spans will only add them to one of the two transactions, causing instrumentation gaps in the other.
+
+To visualize all transactions that share a `trace_id`, a user can visit the Trace View page in **Sentry > Performance**. This page gives an overview of the trace by displaying transactions using hierarchical UI and allows users to load child spans. To learn more about the Trace View, check out our [docs](https://docs.sentry.io/concepts/key-terms/tracing/trace-view/). 
 
 ### Spans Cannot Exist Outside of a Transaction
 
