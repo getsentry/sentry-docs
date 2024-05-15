@@ -1,0 +1,26 @@
+<SignInNote />
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+import { BaseExceptionFilter, HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+
+    // Add Performance Monitoring by setting tracesSampleRate
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+  });
+
+  const app = await NestFactory.create(AppModule);
+  const { httpAdapter } = app.get(HttpAdapterHost);
+
+  Sentry.setupNestErrorHandler(app, new BaseExceptionFilter(httpAdapter));
+
+  await app.listen(3000);
+}
+
+bootstrap();
+```
