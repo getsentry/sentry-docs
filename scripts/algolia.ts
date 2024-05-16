@@ -45,7 +45,7 @@ if (!ALGOLIA_API_KEY) {
   throw new Error('`ALGOLIA_API_KEY` env var must be configured in repo secrets');
 }
 if (!DOCS_INDEX_NAME) {
-  throw new Error('`ALGOLIA_INDEX_NAME` env var must be configured in repo secrets');
+  throw new Error('`DOCS_INDEX_NAME` env var must be configured in repo secrets');
 }
 
 const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
