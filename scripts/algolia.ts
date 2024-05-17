@@ -14,8 +14,9 @@
  *
  * If you want to run it locally,
  *   1. Make sure you have the required env vars set up
- *   2. be careful to change to `ALGOLIA_INDEX_PREFIX` to value different from `sentry-`
- *      to avoid nuking the production index
+ *   2. Be careful to change to `DOCS_INDEX_NAME` to a value different
+ *      from the productoin docs index name (specified in the `@sentry-internal/global-search`)
+ *      to avoid accidental deletions
  *   3. Run a production build of the app before running this script
  */
 
@@ -35,7 +36,7 @@ const staticHtmlFilesPath = join(process.cwd(), '.next', 'server', 'app');
 
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID;
 const ALGOLIA_API_KEY = process.env.ALGOLIA_API_KEY;
-const ALGOLIA_INDEX_PREFIX = process.env.ALGOLIA_INDEX_PREFIX;
+const DOCS_INDEX_NAME = process.env.DOCS_INDEX_NAME;
 
 if (!ALGOLIA_APP_ID) {
   throw new Error('`ALGOLIA_APP_ID` env var must be configured in repo secrets');
@@ -43,13 +44,12 @@ if (!ALGOLIA_APP_ID) {
 if (!ALGOLIA_API_KEY) {
   throw new Error('`ALGOLIA_API_KEY` env var must be configured in repo secrets');
 }
-if (!ALGOLIA_INDEX_PREFIX) {
-  throw new Error('`ALGOLIA_INDEX_PREFIX` env var must be configured in repo secrets');
+if (!DOCS_INDEX_NAME) {
+  throw new Error('`DOCS_INDEX_NAME` env var must be configured in repo secrets');
 }
 
-const indexName = `${ALGOLIA_INDEX_PREFIX}docs`;
 const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
-const index = client.initIndex(indexName);
+const index = client.initIndex(DOCS_INDEX_NAME);
 
 indexAndUpload();
 async function indexAndUpload() {
@@ -62,9 +62,9 @@ async function indexAndUpload() {
   console.log(
     '🔥 Found %d existing Algolia records in `%s`',
     existingRecordIds.length,
-    indexName
+    DOCS_INDEX_NAME
   );
-  console.log('🔥 Saving new records to `%s`...', indexName);
+  console.log('🔥 Saving new records to `%s`...', DOCS_INDEX_NAME);
   const saveResult = await index.saveObjects(records, {
     batchSize: 10000,
     autoGenerateObjectIDIfNotExist: true,
@@ -82,7 +82,7 @@ async function indexAndUpload() {
   console.log(
     '🔥 Deleted %d stale records from `%s`',
     deleteResult.objectIDs.length,
-    indexName
+    DOCS_INDEX_NAME
   );
 }
 
