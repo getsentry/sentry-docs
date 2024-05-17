@@ -3,18 +3,26 @@ import {redirect} from 'next/navigation';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {SmartLink} from 'sentry-docs/components/smartLink';
-import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
-
-import 'sentry-docs/styles/screen.scss';
 
 export default async function Page({
   searchParams: {next = '', platform},
 }: {
   searchParams: {[key: string]: string | string[] | undefined};
 }) {
+  if (Array.isArray(next)) {
+    next = next[0];
+  }
   const rootNode = await getDocsRootNode();
-  const platformList = (rootNode && extractPlatforms(rootNode)) ?? [];
+  // get rid of irrelevant platforms for the `next` path
+  const platformList = extractPlatforms(rootNode).filter(platform_ => {
+    return !!nodeForPath(rootNode, [
+      'platforms',
+      platform_.key,
+      ...next.split('/').filter(Boolean),
+    ]);
+  });
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {
@@ -30,9 +38,7 @@ export default async function Page({
     title: 'Platform Specific Content',
   };
 
-  // TODO(mjq): This is a hack to get the <ServerSidebar> component to use the
-  // <ProductSidebar>. The sidebar components should be rejigged so that
-  // <ProductSidebar> can be passed into DocPage's sidebar prop below.
+  // make the Sidebar aware of the current path
   setServerContext({rootNode, path: ['platform-redirect']});
 
   return (

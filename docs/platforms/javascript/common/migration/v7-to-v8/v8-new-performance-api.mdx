@@ -1,0 +1,254 @@
+---
+title: New Performance Monitoring APIs
+sidebar_order: 8920
+description: "Learn about new Performance Monitoring APIs in Sentry JavaScript SDK 8.x"
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+---
+
+The SDK `8.x` release introduces new APIs for performance monitoring. These APIs are designed to provide more control over how performance data is collected and reported to Sentry.
+
+These APIs are also available in `7.x` so you can incrementally move over to the new APIs before upgrading to `8.x`.
+
+Previously, there were two key APIs for adding manual performance instrumentation to your applications:
+
+- `startTransaction()`
+- `span.startChild()`
+
+Those APIs were based on the original data model of Sentry. This model was based on a root Transaction that could contain a nested tree of Spans.
+
+In the new model, transactions are conceptually gone. Now, operations are always performed on spans, regardless of their position in the tree. Note that spans may still be grouped into a transaction for the Sentry UI. However, this happens in the background and, from the SDK's point of view, all you need to be concerned about are spans.
+
+The new model does not differentiate between a transaction or a span when manually starting or ending them. Instead, you always use the same APIs to start a new span. This will automatically create either a new Root Span (a regular span without a parent, conceptually similar to a transaction) or a Child Span, depending on what is the currently active span.
+
+There are three key APIs available to start spans:
+
+- `startSpan()`
+- `startSpanManual()`
+- `startInactiveSpan()`
+
+All three span APIs take `StartSpanOptions` as a first argument, which has the following shape:
+
+```TypeScript
+interface StartSpanOptions {
+  // The only required field - the name of the span
+  name: string;
+  attributes?: SpanAttributes;
+  op?: string;
+  scope?: Scope;
+  forceTransaction?: boolean;
+}
+```
+
+### `startSpan()`
+
+This is the most common API that should be used in most circumstances. It will start a new span, making it the active span
+for the duration of a given callback, and automatically ends it when the callback ends. You can use it like this:
+
+```js
+Sentry.startSpan(
+  {
+    name: "my-span",
+    attributes: {
+      attr1: "my-attribute",
+      attr2: 123,
+    },
+  },
+  (span) => {
+    // do something that you want to measure
+    // once this is done, the span is automatically ended
+  }
+);
+```
+
+You can also pass an async function:
+
+```js
+Sentry.startSpan(
+  {
+    name: "my-span",
+    attributes: {},
+  },
+  async (span) => {
+    // do something that you want to measure
+    await waitOnSomething();
+    // once this is done, the span is automatically ended
+  }
+);
+```
+
+Since `startSpan()` will make the created span the active span, any automatic or manual instrumentation that creates
+spans inside of the callback will attach new spans as children of the span we just started.
+
+Note that if an error is thrown inside of the callback, the span status will automatically be set to be errored.
+
+### `startSpanManual()`
+
+This is a variation of `startSpan()` with the only difference that it does not automatically end the span when the callback
+ends. When using this, you have to call `span.end()` yourself:
+
+```js
+Sentry.startSpanManual(
+  {
+    name: "my-span",
+  },
+  (span) => {
+    // do something that you want to measure
+
+    // Now manually end the span ourselves
+    span.end();
+  }
+);
+```
+
+In most cases, `startSpan()` should be all you need for manual instrumentation. But if you find yourself in a place
+where the automatic ending of spans, for whatever reason, does not work for you, you can use `startSpanManual()`
+instead.
+
+This function will _also_ set the created span as the active span for the duration of the callback, and will _also_
+update the span status to be errored if there is an error thrown inside of the callback.
+
+### `startInactiveSpan()`
+
+In contrast to the other two methods, this does not take a callback and this does not make the created span the active
+span. You can use this method if you want to create loose spans that do not need to have any children:
+
+```js
+Sentry.startSpan({ name: "outer" }, () => {
+  const inner1 = Sentry.startInactiveSpan({ name: "inner1" });
+  const inner2 = Sentry.startInactiveSpan({ name: "inner2" });
+
+  // do something
+
+  // manually end the spans
+  inner1.end();
+  inner2.end();
+});
+```
+
+No span will ever be created as a child span of an inactive span.
+
+### Creating a child span of a specific span
+
+You can use the `withActiveSpan` helper to create a span as a child of a specific span:
+
+```js
+Sentry.withActiveSpan(parentSpan, () => {
+  Sentry.startSpan({ name: "my-span" }, (span) => {
+    // span will be a direct child of parentSpan
+  });
+});
+```
+
+### Creating a transaction
+
+While in most cases, you shouldn't have to think about creating a span vs. a transaction (just call `startSpan()` and
+we'll do the appropriate thing under the hood), there may still be times where you _need_ to ensure you create a
+transaction (for example, if you need to see it as a transaction in the Sentry UI). For these cases, you can pass
+`forceTransaction: true` to the start-span APIs, e.g.:
+
+```js
+const transaction = Sentry.startInactiveSpan({
+  name: "transaction",
+  forceTransaction: true,
+});
+```
+
+## The Span schema
+
+Previously, spans & transactions had a bunch of properties and methods to be used. Most of these have been removed in
+favor of a slimmer, more straightforward API, which is also aligned with OpenTelemetry Spans. You can refer to the table
+below to see which things used to exist, and how they can/should be mapped going forward:
+
+The `spanToJSON`, `getRootSpan`, `setHttpStatus`, `spanToTraceHeader`, and `spanToTraceContext` are all exported by the SDK to be used.
+
+| Old name                   | Replace with                                                |
+| -------------------------- | ----------------------------------------------------------- |
+| `span.traceId`             | `span.spanContext().traceId`                                |
+| `span.spanId`              | `span.spanContext().spanId`                                 |
+| `span.parentSpanId`        | `spanToJSON(span).parent_span_id`                           |
+| `span.status`              | `spanToJSON(span).status`                                   |
+| `span.sampled`             | `spanIsSampled(span)`                                       |
+| `span.startTimestamp`      | `span.startTime` - note that this has a different format!   |
+| `span.tags`                | use attributes, or set tags on the scope                    |
+| `span.data`                | `spanToJSON(span).data`                                     |
+| `span.transaction`         | `getRootSpan(span)`                                         |
+| `span.instrumenter`        | Removed                                                     |
+| `span.finish()`            | `span.end()`                                                |
+| `span.end()`               | Same                                                        |
+| `span.setTag()`            | `span.setAttribute()`, or set tags on the scope             |
+| `span.setData()`           | `span.setAttribute()`                                       |
+| `span.setStatus()`         | `span.setStatus` - note that this has a different signature |
+| `span.setHttpStatus()`     | `setHttpStatus(span, status)`                               |
+| `span.setName()`           | `span.updateName()`                                         |
+| `span.startChild()`        | Call `Sentry.startSpan()` independently                     |
+| `span.isSuccess()`         | `spanToJSON(span).status === 'ok'`                          |
+| `span.toTraceparent()`     | `spanToTraceHeader(span)`                                   |
+| `span.toContext()`         | Removed                                                     |
+| `span.updateWithContext()` | Removed                                                     |
+| `span.getTraceContext()`   | `spanToTraceContext(span)`                                  |
+
+In addition, a transaction has this API:
+
+| Old name                    | Replace with                                     |
+| --------------------------- | ------------------------------------------------ |
+| `name`                      | `spanToJSON(span).description`                   |
+| `trimEnd`                   | Removed                                          |
+| `parentSampled`             | `spanIsSampled(span)` & `spanContext().isRemote` |
+| `metadata`                  | Use attributes instead or set on scope           |
+| `setContext()`              | Set context on scope instead                     |
+| `setMeasurement()`          | `Sentry.setMeasurement()`                        |
+| `setMetadata()`             | Use attributes instead or set on scope           |
+| `getDynamicSamplingContext` | `getDynamicSamplingContextFromSpan(span)`        |
+
+### Attributes vs. Data vs. Tags vs. Context
+
+Previously, the model had the concepts of **Data**, **Tags**, and **Context**, which could be used for different things. However, this had two main downsides: Firstly, it was not always clear which concept should be used in a given situation. Secondly, these concepts were not displayed the same way for transactions or spans.
+
+To address these issues, the new model only has **Attributes** that can be set on spans. Broadly speaking, they map to what was formerly known as Data.
+
+If you still really _need_ to set tags or context, you can do so on the scope before starting a span:
+
+```JavaScript
+Sentry.withScope((scope) => {
+  scope.setTag("my-tag", "tag-value");
+  Sentry.startSpan({ name: "my-span" }, (span) => {
+    // do something here
+    // span will have the tags from the containing scope
+  });
+});
+```
+
+## Other Notable Changes
+
+In addition to generally changing the performance APIs, there are also some smaller changes that this brings with it.
+
+### Changed `SamplingContext` for `tracesSampler()`
+
+Currently, `tracesSampler()` can receive an arbitrary `SamplingContext` passed as argument. While this is not defined
+anywhere in detail, the shape of this context will change in v8. Going forward, this will mostly receive the attributes
+of the span, as well as some other relevant data of the span. Some properties we used to (sometimes) pass there, like
+`req` for node-based SDKs or `location` for browser tracing, will not be passed anymore.
+
+### No more `undefined` spans
+
+In v7, the performance APIs `startSpan()` / `startInactiveSpan()` / `startSpanManual()` would receive an `undefined`
+span if tracing was disabled or the span was not sampled.
+
+In v8, aligning with OpenTelemetry, these will _always_ return a span - _but_ the span may be a Noop-Span, meaning a
+span that is never sent. This means you don't have to guard everywhere in your code anymore for the span to exist:
+
+```TypeScript
+Sentry.startSpan((span: Span | undefined) => {
+  // previously, in order to be type safe, you had to use optional chaining or similar
+  span?.setAttribute("attr", 1);
+});
+
+// In v8, the signature changes to:
+Sentry.startSpan((span: Span) => {
+  // no need to guard anymore!
+  span.setAttribute("attr", 1);
+});
+```

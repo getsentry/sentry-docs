@@ -1,21 +1,21 @@
 ---
 title: Troubleshooting
-description: "Troubleshoot and resolve edge cases."
+description: "If you need help solving issues with your Sentry JavaScript SDK integration, you can read the edge cases documented below."
 keywords: ["adblocker", "blocked", "tunnel", "non-Error exception", "404"]
 excerpt: ""
 notSupported: ["javascript.capacitor"]
 sidebar_order: 9000
 ---
 
-If you need help solving issues with your Sentry JavaScript SDK integration, you can read the edge cases documented below. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.
-
-## Updating to a New Sentry SDK Version
+<Expandable title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
 Check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn everything you need
 to know to get up and running again with the latest Sentry features.
 
-## Debugging Additional Data
+</Expandable>
+
+<Expandable title="Debugging additional data">
 
 You can view the JSON payload of an event to see how Sentry stores additional data in the event. The shape of the data may not exactly match the description.
 
@@ -23,11 +23,17 @@ You can view the JSON payload of an event to see how Sentry stores additional da
 
 For more details, see the [full documentation on Event Payload](https://develop.sentry.dev/sdk/event-payloads/).
 
-## Max JSON Payload Size
+</Expandable>
+
+<Expandable title="Max JSON payload size">
 
 `maxValueLength` has a default value of 250, but you can adjust this value according to your needs if your messages are longer. Please note that not every single value is affected by this option.
 
-## CORS Attributes and Headers
+</Expandable>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="CORS attributes and headers">
 
 To gain visibility into a JavaScript exception thrown from scripts originating from different origins, do two things:
 
@@ -61,20 +67,31 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
  Access-Control-Allow-Origin: *
 ```
+</Expandable>
 
-## Unexpected OPTIONS request
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="Unexpected OPTIONS request">
 
 If your application started to misbehave because of performing additional OPTIONS requests, it is most likely an issue with unwanted `sentry-trace` request headers, which can happen when you are using too generic a configuration for our Tracing Integration in the Browser SDK.
 
 To fix this, change the `tracePropagationTargets` option during SDK initialization. For more details, see [Automatic Instrumentation](/platforms/javascript/performance/instrumentation/automatic-instrumentation/#tracePropagationTargets) in our Performance Monitoring documentation.
+</Expandable>
+</PlatformCategorySection>
 
-## `instrument.js` Line Numbers for Console Log statements
+<PlatformCategorySection supported={['browser']}>
+<Expandable title="`instrument.js` Line Numbers for Console Log statements">
 
 If `instrument.js` displays in your console while debugging, add Sentry to your [Framework Ignore List](https://developer.chrome.com/docs/devtools/settings/ignore-list/#skip-extensions) by adding this pattern: `/@sentry/`
 
 Chrome then ignores the SDK stack frames when debugging.
+</Expandable>
+</PlatformCategorySection>
 
-## Dealing with Ad-Blockers
+<PlatformCategorySection supported={['browser']}>
+<Expandable title="Dealing with Ad-Blockers">
 
 When you are using our CDN, ad-blocking or script-blocking extensions may prevent our SDK from being fetched and initialized properly. Because of this, any call to the SDKs API will fail and may cause your application to behave unexpectedly.
 
@@ -83,19 +100,14 @@ Additionally, even when the SDK is downloaded and initialized correctly, Sentry 
 Furthermore, some browsers, like [Brave](https://brave.com/), have built-in ad-blockers that may block requests sent to our endpoint. Even if users deactivate your domain from blocking, Brave might continue to block [requests made from service workers](https://github.com/getsentry/sentry/issues/47912#issuecomment-1573714875).
 
 You can work around our CDN bundles being blocked by [using our NPM packages](#using-the-npm-package) and bundling our SDK with your app. However, the endpoint blockage can only be resolved by using a tunnel as explained below.
+</Expandable>
 
-### Using the `tunnel` Option
+<Expandable title="Using the `tunnel` Option">
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
 <Note>
-  The Sentry Next.js SDK has a separate option to make setting up tunnels very
-  straight-forward, allowing you to skip the setup below. See{" "}
-  <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">
-    {" "}
-    Configure Tunneling to avoid Ad-Blockers{" "}
-  </PlatformLink>{" "}
-  to learn how to set up tunneling on Next.js.
+  The Sentry Next.js SDK has a separate option to make setting up tunnels very straight-forward, allowing you to skip the setup below. See <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">Configure Tunneling to avoid Ad-Blockers</PlatformLink> to learn how to set up tunneling on Next.js.
 </Note>
 
 </PlatformSection>
@@ -246,7 +258,7 @@ curl https://browser.sentry-cdn.com/5.20.1/bundle.min.js -o sentry.browser.5.20.
 
 The last option is to use `Proxy` guard, which will make sure that your code won't break, even when you call our SDK, which was blocked. `Proxy` is supported by all browser except Internet Explorer, though there are no extensions in this browser. Also if `Proxy` is not in any of your user's browser, it will be silently skipped, so you don't have to worry about it breaking anything.
 
-Place this snippet immediately **above** the `<script>` tag containing our CDN bundle. The snippet in a readable format presents like this:
+Place this snippet immediately **above** the `<Expandable>` tag containing our CDN bundle. The snippet in a readable format presents like this:
 
 ```javascript
 if ("Proxy" in window) {
@@ -284,13 +296,20 @@ If you would like to copy and paste the snippet directly, here it is minified:
 </script>
 ```
 
-## Third Party Promise Libraries
+</Expandable>
+
+
+</PlatformCategorySection>
+
+<Expandable title="Third party promise libraries">
 
 When you include and configure Sentry, our JavaScript SDK automatically attaches global handlers to _capture_ uncaught exceptions and unhandled promise rejections. You can disable this default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 You may also need to manage your configuration if you are using a third-party library to implement promises. Also, remember that browsers often implement security measures that can block error reporting when serving script files from different origins.
 
-## Events With "Non-Error Exception"
+</Expandable>
+
+<Expandable title="Events with 'Non-Error Exception'">
 
 If you’re seeing errors with the message “Non-Error exception (or promise rejection) captured with keys: x, y, z.”, this happens when you a) call `Sentry.captureException()` with a plain object, b) throw a plain object, or c) reject a promise with a plain object.
 
@@ -298,7 +317,11 @@ You can see the contents of the non-Error object in question in the `__serialize
 
 To get better insight into these error events, we recommend finding where the plain object is being passed or thrown to Sentry based on the contents of the `__serialized__` data, and then turning the plain object into an Error object.
 
-## Capturing Resource 404s
+</Expandable>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="Capturing resource 404s">
 
 By default, Sentry does not capture errors when a resource (like an image or a css file) fails to load. If you would like it to do so, you can use the following code. (Note: We recommend loading Sentry as early as possible in any case, but this method in particular will only work if Sentry is loaded before other resources.)
 
@@ -325,14 +348,21 @@ document.body.addEventListener(
 ```
 
 Remember to pass in `true` as the second parameter to `addEventListener()`. Without it, the event handler won't be called, since it's being added to the event target's ancestor rather than the event target itself, and unlike JavaScript runtime errors, `error` events resulting from load failures don't bubble, and therefore must be captured during the `capture` phase. For more information, see [the W3C spec](https://www.w3.org/TR/2003/NOTE-DOM-Level-3-Events-20031107/events.html#Events-phases).
+</Expandable>
+</PlatformCategorySection>
 
-## Supporting Older Browsers
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="Supporting older browsers">
 
 Starting with version 7.0.0, the Sentry JavaScript SDK uses ES6 syntax, along with a few other ES6+ language features, like object spread. If you are down-compiling your code in order to target older browsers that don't support such syntax, you'll need to include the Sentry SDK in that process.
 
 <PlatformContent includePath="troubleshooting/older-browser-support" />
 
-## Build Errors With Vite
+</Expandable>
+</PlatformCategorySection>
+
+<Expandable title="Build errors with vite">
 
 If you're using the [Vite Bundler](https://vitejs.dev/) and a Sentry NPM package, and you see the following error:
 
@@ -353,7 +383,12 @@ export default defineConfig({
    plugins: [react()]
 })
 ```
+</Expandable>
 
-## Missing module `diagnostics_channel`
+<Expandable title="Missing module `diagnostics_channel`">
 
 <Include name="diagnostics-channel-build-error-troubleshooting.mdx" />
+
+</Expandable>
+
+If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

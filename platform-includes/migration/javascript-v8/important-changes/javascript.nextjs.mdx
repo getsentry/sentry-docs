@@ -1,0 +1,116 @@
+### Supported versions
+
+Sentry Next.js SDK `8.x` supports:
+
+- Next.js version `13.2.0` or higher
+- Webpack `5.0.0` or higher
+- Node `14.18.0` or higher
+
+If you need to support older versions of Node.js or Next.js, please use Sentry Next.js SDK `7.x`.
+
+<Include name="migration/javascript-v8/compatible-browsers" />
+
+### Updated SDK initialization
+
+With `8.x` the Next.js SDK will no longer support the use of `sentry.server.config.js|ts` and `sentry.edge.config.js|ts` files. Instead, please initialize the Sentry Next.js SDK for the server-side in a Next.js [instrumentation hook](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation). Usage of `sentry.client.config.ts|js` is still supported and encouraged for initializing the client-side SDK.
+
+To start using the Next.js built-in hooks, follow these steps:
+
+1. First, enable the Next.js instrumentation hook by setting the [`experimental.instrumentationHook`](https://nextjs.org/docs/app/api-reference/next-config-js/instrumentationHook) to true in your `next.config.js`.
+
+```JavaScript {filename:next.config.js} {2-4}
+module.exports = {
+  experimental: {
+    instrumentationHook: true,
+  },
+}
+```
+
+2. Next, create a `instrumentation.ts|js` file in the root directory of your project (or in the src folder if you have have one).
+
+3. Now, export a register function from the `instrumentation.ts|js` file and call `Sentry.init()` inside of it:
+
+```JavaScript {filename:instrumentation.js}
+import * as Sentry from '@sentry/nextjs';
+
+export function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // this is your Sentry.init call from `sentry.server.config.js|ts`
+    Sentry.init({
+      dsn: '___PUBLIC_DSN___',
+      // Your Node.js Sentry configuration...
+    });
+  }
+
+  // This is your Sentry.init call from `sentry.edge.config.js|ts`
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    Sentry.init({
+      dsn: '___PUBLIC_DSN___',
+      // Your Edge Runtime Sentry configuration...
+    });
+  }
+}
+```
+
+4. Last, you can delete the `sentry.server.config.js|ts` and `sentry.edge.config.js|ts` files. Please remember to keep your `sentry.client.config.ts|js` file for client-side SDK initialization.
+
+<Alert level="warning">
+
+If you are using a [Next.js custom server](https://nextjs.org/docs/pages/building-your-application/configuring/custom-server), the `instrumentation.ts|js` hook is not called by Next.js so SDK instrumentation will not work as expected. See the [troubleshooting section](#nextjs-custom-server) for more information.
+
+</Alert>
+
+With 8.x, `@sentry/nextjs` on the server has been completely overhauled. It is now powered by [OpenTelemetry](https://opentelemetry.io/) under the hood. You do not need to know or understand what OpenTelemetry is in order to use Sentry. We set up OpenTelemetry under the hood. If you use OpenTelemetry-native APIs to start spans, Sentry will pick up everything automatically.
+
+We now support the following integrations out of the box with 0 configuration:
+
+- `httpIntegration`: Automatically instruments Node http and https standard libraries
+- `nativeNodeFetchIntegration`: Automatically instruments top level fetch and undici
+- `graphqlIntegration`: Automatically instruments GraphQL
+- `mongoIntegration`: Automatically instruments MongoDB
+- `mongooseIntegration`: Automatically instruments Mongoose
+- `mysqlIntegration`: Automatically instruments MySQL
+- `mysql2Integration`: Automatically instruments MySQL2
+- `postgresIntegration`: Automatically instruments PostgreSQL
+- `prismaIntegration`: Automatically instruments Prisma
+
+### Updated `withSentryConfig` Usage
+
+With `8.x` of the Sentry Next.js SDK, `withSentryConfig` will no longer accept 3 arguments. The second argument (holding options for the Sentry Webpack plugin) and the third argument (holding options for SDK build-time configuration) should now be passed as one:
+
+```JavaScript {filename:next.config.js} diff
+const nextConfig = {
+  // Your Next.js options...
+};
+
+-module.exports = withSentryConfig(
+-  nextConfig,
+-  {
+-    // Your Sentry Webpack Plugin Options...
+-  },
+-  {
+-    // Your Sentry SDK options...
+-  },
+-);
++module.exports = withSentryConfig(nextConfig, {
++  // Your Sentry Webpack Plugin Options...
++  // AND your Sentry SDK options...
++});
+```
+
+As part of this change the SDK will no longer support passing Next.js options with a `sentry` property to `withSentryConfig`. Please use the second argument of `withSentryConfig` to configure the SDK instead.
+
+```JavaScript {filename:next.config.js} diff
+ const nextConfig = {
+   // Your Next.js options...
+-
+-  sentry: {
+-    // Your Sentry SDK options...
+-  },
+ };
+
+ module.exports = withSentryConfig(nextConfig, {
+   // Your Sentry Webpack Plugin Options...
++  // AND your Sentry SDK options...
+ });
+```

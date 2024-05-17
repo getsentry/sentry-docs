@@ -1,18 +1,19 @@
 ---
 title: Set Up User Feedback
-description: "Learn more about collecting user feedback when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
+description: "Learn how to enable User Feedback in your app."
 sidebar_order: 6000
 ---
 
-<Include name="feature-stage-beta-user-feedback.mdx" />
-
 The User Feedback feature allows you to collect user feedback from anywhere inside your application, without requiring an error event to occur. This requires a minimum SDK version of [7.85.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.85.0). The [Crash-Report Modal](#crash-report-modal) feature still exists to handle user feedback associated with an error event.
+
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.koa"]}>
 
 ## User Feedback Widget
 
 The embeddable JavaScript widget allows users to submit feedback from anywhere inside your application. The [Crash-Report Modal](#crash-report-modal) collects reactive feedback tied to an error event.
 
-![An example image of the User Feedback Widget on a demo site](./img/user-feedback-widget.png)
+![An example feedback image of the User Feedback Widget on a demo site](./img/user-feedback-widget.png)
+
 
 ### Pre-requisites
 
@@ -26,15 +27,23 @@ The embeddable JavaScript widget allows users to submit feedback from anywhere i
 
 To set up the integration, add the following to your Sentry initialization. There are many options you can pass to the integration constructor. See the [configuration documentation](/platforms/javascript/user-feedback/configuration/) for more details.
 
-### Session Replay
-
-The User Feedback Widget integrates easily with <PlatformLink to="/session-replay/">Session Replay</PlatformLink>. First, make sure that the Session Replay integration is configured correctly and that `replaysOnErrorSampleRate` is greater than 0. When this is done, the Replay SDK will buffer up to 30 seconds worth of events until the user *opens* the User Feedback Widget. If the user submits feedback, you'll be able to view the Feedback (including the replay), inside of Sentry's web application.
-
 <SignInNote />
 
 <PlatformContent includePath="user-feedback/setup" />
 
 By default, this will insert the widget into the bottom right corner of your website. You're free to customize nearly every aspect of the widget, including replacing it completely with your own UI.
+
+On SDK version 8.0.0 and above, users can send screenshots with their feedback. If you're self-hosting, you also need release 24.4.2 and above. You can configure this using the `enableScreenshot` option, by default it is set to `true`. Screenshots aren't supported on mobile devices, so the screenshot button will be hidden automatically in this case.
+
+<Alert level="">
+  Screenshots use your [attachments quota](/product/accounts/quotas/manage-attachments-quota). All plans come with 1GB of attachments, which is approxiamately 2500 screenshots.
+</Alert>
+
+### Session Replay
+
+The User Feedback widget integrates easily with <PlatformLink to="/session-replay/">Session Replay</PlatformLink>. First, make sure that the Session Replay integration is configured correctly and that `replaysOnErrorSampleRate` is greater than 0. When this is done, the Replay SDK will buffer up to 30 seconds of the user's session until the user *opens* the User Feedback widget. If the user submits feedback, you'll be able to view the feedback (including the replay), in sentry.io.
+
+</PlatformSection>
 
 ## User Feedback API
 

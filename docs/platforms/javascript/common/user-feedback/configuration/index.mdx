@@ -4,9 +4,13 @@ sidebar_order: 6100
 description: "Learn about the general User Feedback configuration fields."
 ---
 
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.koa"]}>
+
 ## User Feedback Widget
 
-The User Feedback Widget offers many customization options, and if the available options are insufficient, you can [use your own UI](#bring-your-own-widget). The following image shows which elements are customizable. The configuration keys on the left side of the image correspond to [text customization](#text-customization) and the configuration keys on the right side of the image are for [theme customizations](#theme-customization).
+The User Feedback Widget offers many customization options, and if the available options are insufficient, you can [use your own UI](#bring-your-own-widget).
+
+The following configuration options apply to version 8.0.0 and above of the JavaScript SDK. The Feedback Widget in version 7 of the SDK was a beta release and is now deprecated.
 
 ![An image showing the available customization options for the User Feedback Widget](./img/user-feedback-widget-customization.png)
 
@@ -14,34 +18,59 @@ The User Feedback Widget offers many customization options, and if the available
 
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
-| key            | type                                       | default    | description                                                                                                                                                                                                                              |
-| -------------- | ------------------------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `autoInject`   | `boolean`                                  | `true`     | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.openDialog()` directly, or only want to show the widget on certain views. |
-| `showBranding` | `boolean`                                  | `true`     | Displays the Sentry logo inside of the form                                                                                                                                                                                              |
-| `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"` | The color theme to use. `"system"` will follow your OS color scheme.                                                                                                                                                                     |
+| Key            | Type                                       | Default           | Description                                                                                                                                                                                                                                |
+| -------------- | ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autoInject`   | `boolean`                                  | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
+| `showBranding` | `boolean`                                  | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
+| `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"`        | The color theme to use. `"system"` will follow your OS color scheme.                                                                                                                                                                       |
+| `id`           | `string`                                   | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
+
+### Auto-Inject vs. Manual Injection
+
+If you have `autoInject: true` a button will be inserted into the page that triggers the form to pop up so the user can enter their feedback. If instead you want to control when this injection happens, call the `feedback.createWidget()` method to get a reference to an `Actor` object, and then call `appendToDom()` to insert it into the page.
+
+```javascript
+const feedback = feedbackIntegration({
+  // Disable injecting the default widget
+  autoInject: false,
+});
+
+const widget = feedback.createWidget();
+widget.appendToDom();
+
+// Later, when it's time to clean up:
+widget.removeFromDom();
+```
+
+Read more about how to [use your own UI](#bring-your-own-button) below.
 
 ### User and Form
 
-| key               | type                     | default                               | description                                                                                                                 |
-| ----------------- | ------------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `showName`        | `boolean`                | `true`                                | Displays the name field on the Feedback form, however will still capture the name (if available) from Sentry SDK context.   |
-| `showEmail`       | `boolean`                | `true`                                | Displays the email field on the Feedback form, however will still capture the email (if available) from Sentry SDK context. |
-| `isNameRequired`  | `boolean`                | `false`                               | Requires the name field on the Feedback form to be filled in.                                                               |
-| `isEmailRequired` | `boolean`                | `false`                               | Requires the email field on the Feedback form to be filled in.                                                              |
-| `useSentryUser`   | `Record<string, string>` | `{ email: 'email', name: 'username'}` | Map of the `email` and `name` fields to the corresponding Sentry SDK user fields that were called with `Sentry.setUser`.    |
+| Key                | Type                     | Default                               | Description                                                                                                            |
+| ------------------ | ------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `showName`         | `boolean`                | `true`                                | Displays the name field on the Feedback form.                                                                          |
+| `showEmail`        | `boolean`                | `true`                                | Displays the email field on the Feedback form.                                                                         |
+| `enableScreenshot` | `boolean`                | `true`                                | Allows the user to send a screenshot attachment with their feedback. For self-hosted, release 24.4.2 is also required. |
+| `isNameRequired`   | `boolean`                | `false`                               | Requires the name field on the Feedback form to be filled in.                                                          |
+| `isEmailRequired`  | `boolean`                | `false`                               | Requires the email field on the Feedback form to be filled in.                                                         |
+| `useSentryUser`    | `Record<string, string>` | `{ email: 'email', name: 'username'}` | Sets the `email` and `name` fields to the corresponding Sentry SDK user fields that were called with `Sentry.setUser`. |
 
-By default, the Feedback integration will attempt to fill in the name/email fields if you have set a user context via [`Sentry.setUser`](https://docs.sentry.io/platforms/javascript/enriching-events/identify-user/). By default, it expects the email and name fields to be `email` and `username`. Below is an example configuration with non-default user fields.
+#### User Context
+
+If you have set a user context by calling [`Sentry.setUser`](/platforms/javascript/enriching-events/identify-user/) then those values will be used as defaults for the `name` and `email` fields. If those fields are hidden from the user, then the default values will still be sent along with the feedback message.
+
+Below is an example configuration with non-default user fields.
 
 ```javascript
 Sentry.setUser({
-  email: "foo@example.com",
   fullName: "Jane Doe",
+  email: "foo@example.com",
 });
 
 feedbackIntegration({
   useSentryUser: {
-    email: "email",
     name: "fullName",
+    email: "email",
   },
 });
 ```
@@ -50,20 +79,25 @@ feedbackIntegration({
 
 Most text that you see in the default Feedback widget can be customized.
 
-| key                  | default                                | description                                                        |
-| -------------------- | -------------------------------------- | ------------------------------------------------------------------ |
-| `buttonLabel`        | `Report a Bug`                         | The label of the injected button.                                  |
-| `submitButtonLabel`  | `Send Bug Report`                      | The label of the submit button used in the feedback form.          |
-| `cancelButtonLabel`  | `Cancel`                               | The label of the cancel button used in the feedback form.          |
-| `formTitle`          | `Report a Bug`                         | The title at the top of the feedback form.                         |
-| `nameLabel`          | `Name`                                 | The label of the name input field.                                 |
-| `namePlaceholder`    | `Your Name`                            | The placeholder for the name input field.                          |
-| `emailLabel`         | `Email`                                | The label of the email input field.                                |
-| `emailPlaceholder`   | `your.email@example.org`               | The placeholder for the email input field.                         |
-| `messageLabel`       | `Description`                          | The label for the feedback description input field.                |
-| `messagePlaceholder` | `What's the bug? What did you expect?` | The placeholder for the feedback description input field.          |
-| `successMessageText` | `Thank you for your report!`           | The message to be displayed after a succesful feedback submission. |
-| `isRequiredText`     | `(required)`                           | The text displayed next to a required field.       |
+The following options can be configured for the integration in `feedbackIntegration({})`:
+
+| Key                           | Default                                  | Description                                                                    |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `triggerLabel`                | `"Report a Bug"`                         | The label of the injected button that opens up the feedback form when clicked. |
+| `formTitle`                   | `"Report a Bug"`                         | The title at the top of the feedback form.                                     |
+| `submitButtonLabel`           | `"Send Bug Report"`                      | The label of the submit button used in the feedback form.                      |
+| `cancelButtonLabel`           | `"Cancel"`                               | The label of cancel buttons used in the feedback form.                         |
+| `confirmButtonLabel`          | `"Confirm"`                              | The label of confirm buttons used in the feedback form.                        |
+| `addScreenshotButtonLabel`    | `"Add a screenshot"`                     | The label of the button to add a screenshot to the form.                       |
+| `removeScreenshotButtonLabel` | `"Remove screenshot"`                    | The label of the button to remove the screenshot from the form.                |
+| `nameLabel`                   | `"Name"`                                 | The label of the name input field.                                             |
+| `namePlaceholder`             | `"Your Name"`                            | The placeholder for the name input field.                                      |
+| `emailLabel`                  | `"Email"`                                | The label of the email input field.                                            |
+| `emailPlaceholder`            | `"your.email@example.org"`               | The placeholder for the email input field.                                     |
+| `isRequiredLabel`             | `"(required)"`                           | The label shown next to an input field that is required.                       |
+| `messageLabel`                | `"Description"`                          | The label for the feedback description input field.                            |
+| `messagePlaceholder`          | `"What's the bug? What did you expect?"` | The placeholder for the feedback description input field.                      |
+| `successMessageText`          | `"Thank you for your report!"`           | The message displayed after a successful feedback submission.                  |
 
 Example of customization:
 
@@ -75,70 +109,101 @@ feedbackIntegration({
 });
 ```
 
-### Theme Customization
+### CSS Customization
 
-Colors can be customized via the Feedback class constructor or by defining CSS variables on the injected button. If you use the default button it will have a property `id="sentry-feedback`, meaning you can use the `#sentry-feedback` selector to define CSS variables to override.
+You can customize placement of the feedback components on your page, as well as the fonts and theme colors for light and dark mode.
 
-| key                       | css variable                   | light                                     | dark                                      | description                                                                                           |
-| ------------------------- | ------------------------------ | ----------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `background`              | `--background`                 | `#ffffff`                                 | `#29232f`                                 | Background color of the widget (injected button and form)                                             |
-| `backgroundHover`         | `--background-hover`           | `#f6f6f7`                                 | `#352f3b`                                 | Background color of the injected button when in a hover state                                         |
-| `foreground`              | `--foreground`                 | `#2b2233`                                 | `#ebe6ef`                                 | Foreground color, e.g. text color                                                                     |
-| `error`                   | `--error`                      | `#df3338`                                 | `#f55459`                                 | Color used for error related components (e.g. text color when there was an error submitting feedback) |
-| `success`                 | `--success`                    | `#268d75`                                 | `#2da98c`                                 | Color used for success-related components (e.g. text color when feedback is submitted successfully)   |
-| `border`                  | `--border`                     | `1.5px solid rgba(41, 35, 47, 0.13)`      | `1.5px solid rgba(235, 230, 239, 0.15)`   | The border style used for the widget (injected button and form)                                       |
-| `borderRadius`            | `--border-radius`              | `12px`                                    | `12px`                                    | Border radius style used for the widget (injected button and success message)                         |
-| `boxShadow`               | `--box-shadow`                 | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | The box shadow style used for the widget (injected button and form)                                   |
-| `submitBackground`        | `--submit-background`          | `rgba(88, 74, 192, 1)`                    | `rgba(88, 74, 192, 1)`                    | Background color for the submit button                                                                |
-| `submitBackgroundHover`   | `--submit-background-hover`    | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Background color when hovering over the submit button                                                 |
-| `submitBorder`            | `--submit-border`              | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Border style for the submit button                                                                    |
-| `submitOutlineFocus`      | `--submit-outline-focus`       | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Outline color for the submit button, in the focused state                                             |
-| `submitForeground`        | `--submit-foreground`          | `#ffffff`                                 | `#ffffff`                                 | Foreground color for the submit button                                                                |
-| `submitForegroundHover`   | `--submit-foreground-hover`    | `#ffffff`                                 | `#ffffff`                                 | Foreground color for the submit button when hovering                                                  |
-| `cancelBackground`        | `--cancel-background`          | `transparent`                             | `transparent`                             | Background color for the cancel button                                                                |
-| `cancelBackgroundHover`   | `--cancel-background-hover`    | `var(--background-hover)`                 | `var(--background-hover)`                 | Background color when hovering over the cancel button                                                 |
-| `cancelBorder`            | `--cancel-border`              | `var(--border)`                           | `var(--border)`                           | Border style for the cancel button                                                                    |
-| `cancelOutlineFocus`      | `--cancel-outline-focus`       | `var(--input-outline-focus)`              | `var(--input-outline-focus)`              | Outline color for the cancel button, in the focused state                                             |
-| `cancelForeground`        | `--cancel-foreground`          | `var(--foreground)`                       | `var(--foreground)`                       | Foreground color for the cancel button                                                                |
-| `cancelForegroundHover`   | `--cancel-foreground-hover`    | `var(--foreground)`                       | `var(--foreground)`                       | Foreground color for the cancel button when hovering                                                  |
-| `inputBackground`         | `--input-background`           | `inherit`                                 | `inherit`                                 | Background color for form inputs                                                                      |
-| `inputForeground`         | `--input-foreground`           | `inherit`                                 | `inherit`                                 | Foreground color for form inputs                                                                      |
-| `inputBorder`             | `--input-border`               | `var(--border)`                           | `var(--border)`                           | Border styles for form inputs                                                                         |
-| `inputOutlineFocus`       | `--input-outline-focus`        | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Outline color for form inputs when focused                                                            |
-| `formBorderRadius`        | `--form-border-radius`         | `20px`                                    | `20px`                                    | Border radius style for the form                                                                      |
-| `formContentBorderRadius` | `--form-content-border-radius` | `6px`                                     | `6px`                                     | Border radius style for form content (for example: inputs, buttons)                                   |
+In all cases, you can set CSS variables to override any value. By default, the `<div>` container has the attribute `id="sentry-feedback"`, so you can use the `#sentry-feedback` selector to define CSS variables to override defaults.
 
-Here is an example of customizing only the background color for the light theme using the Feedback constructor configuration:
+The example below shows how to customize the background color for the light and dark themes by overriding CSS variables:
+
+```css
+#sentry-feedback {
+  --trigger-background: #cccccc;
+}
+@media (prefers-color-scheme: dark) {
+  #sentry-feedback {
+    --trigger-background: #222222;
+  }
+}
+```
+
+Alternatively, you can also do the same thing by setting theme values in JavaScript:
 
 ```javascript
 feedbackIntegration({
   themeLight: {
     background: "#cccccc",
   },
+  themeDark: {
+    background: "#222222",
+  },
 });
 ```
 
-Or the same example above, but using the CSS variables method:
+The following values are only available as CSS variables, and apply to both dark and light themes.
 
-```css
+| CSS Variable    | Default                                            | Description                                                                   |
+| --------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `--font-family` | `"system-ui, 'Helvetica Neue', Arial, sans-serif"` | The default font-family to use.                                               |
+| `--font-size`   | `14px`                                             | The font size.                                                                |
+| `--z-index`     | `100000`                                           | The z-index of the widget.                                                    |
+| `--inset`       | `auto 0 0 auto`                                    | By default, the widget has fixed position, and is in the bottom right corner. |
+| `--page-margin` | `16px`                                             | The margin from the edge of the screen that the widget should be positioned.  |
+
+Colors can be customized by by defining CSS variables that override the default values, or by passing `themeLight` and/or `themeDark` to `feedbackIntegration({})`.
+
+| CSS Variable          | Configuration Key  | Default Light Mode                        | Default Dark Mode                         | Description                                                                                             |
+| --------------------- | ------------------ | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `--foreground`        | `foreground`       | `#2b2233`                                 | `#ebe6ef`                                 | Foreground (text) color.                                                                                |
+| `--background`        | `background`       | `#ffffff`                                 | `#29232f`                                 | Background color of the widget (injected button and form).                                              |
+| `--accent-foreground` | `accentForeground` | `#ffffff`                                 | `#ffffff`                                 | Foreground color for the submit button.                                                                 |
+| `--accent-background` | `accentBackground` | `rgba(88, 74, 192, 1)`                    | `rgba(88, 74, 192, 1)`                    | Background color for the submit button.                                                                 |
+| `--success-color`     | `successColor`     | `#268d75`                                 | `#2da98c`                                 | Color used for success-related components (such as text color when feedback is submitted successfully). |
+| `--error-color`       | `errorColor`       | `#df3338`                                 | `#f55459`                                 | Color used for error related components (such as text color when there's an error submitting feedback). |
+| `--box-shadow`        | `boxShadow`        | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | Box shadow style used for the widget (injected button and form).                                        |
+| `--outline`           | `outline`          | `1px auto var(--accent-background)`       | `1px auto var(--accent-background)`       | Outline for form inputs when focused.                                                             |
+
+#### Theme priority
+
+CSS variables take priority over configuration values in `feedbackIntegration()`. In this example, the configuration makes it seem like the text could be either `white` or `black`, but because there is a CSS variable set, the text will always be `red`.
+
+```html
+<script>
+feedbackIntegration({
+  themeLight: {
+    foreground: 'black',
+  },
+  themeDark: {
+    foreground: 'white',
+  }
+});
+</script>
+
+<style>
 #sentry-feedback {
-  --background: #cccccc;
+  --foreground: 'red'; /* overrides both `white` and `black` colors */
 }
+</style>
 ```
 
-### Additional UI Customization
+#### Custom ID selector
 
-Similar to theme customization above, these are additional CSS variables that can be overridden. These aren't supported in the constructor.
+It’s possible to set the `id` configuration value to something other than the default `sentry-feedback` and use that as a selector when overriding CSS variables.
 
-| Variable        | Default                                 | Description                                                                       |
-| --------------- | --------------------------------------- | --------------------------------------------------------------------------------- |
-| `--bottom`      | `1rem`                                  | By default the widget has a position of fixed, and is in the bottom right corner. |
-| `--right`       | `1rem`                                  | By default the widget has a position of fixed, and is in the bottom right corner. |
-| `--top`         | `auto`                                  | By default the widget has a position of fixed, and is in the bottom right corner. |
-| `--left`        | `auto`                                  | By default the widget has a position of fixed, and is in the bottom right corner. |
-| `--z-index`     | `100000`                                | The z-index of the widget                                                         |
-| `--font-family` | `"'Helvetica Neue', Arial, sans-serif"` | Default font-family to use                                                        |
-| `--font-size`   | `14px`                                  | Font size                                                                         |
+```html
+<script>
+feedbackIntegration({
+  id: 'feedback-theme' // The default is 'sentry-feedback'
+});
+</script>
+
+<style>
+#feedback-theme { /* Target the custom id */
+  --foreground: 'red';
+}
+</style>
+```
 
 ### Event Callbacks
 
@@ -170,7 +235,7 @@ feedback.attachTo(document.querySelector("#your-button"), {
 });
 ```
 
-Alternatively, you can call `feedback.openDialog()`:
+Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user. Here is an example using JSX to define a button:
 
 ```typescript
 import { BrowserClient, Feedback, getClient } from "@sentry/react";
@@ -185,7 +250,11 @@ function MyFeedbackButton() {
   }
 
   return (
-    <button type="button" onClick={() => feedback.openDialog()}>
+    <button type="button" onClick={() => {
+      const form = await feedback.createForm();
+      form.appendToDom();
+      form.show();
+    }}>
       Give me feedback
     </button>
   );
@@ -233,6 +302,8 @@ document
     event.preventDefault();
   });
 ```
+
+</PlatformSection>
 
 ## Crash-Report Modal
 
