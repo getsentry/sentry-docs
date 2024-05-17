@@ -1,0 +1,67 @@
+---
+title: "Metrics"
+sidebar_order: 5
+description: "Learn how Sentry's command line interface can be used for sending metrics."
+---
+Metrics help you track and visualize the data points you care about, making it easier to monitor your application's health and identify issues.
+Learn more about [Metrics](/product/metrics).
+
+## Requirements
+- [Install](/product/cli/installation) the Sentry CLI (min v2.32.0).
+
+## Configuration
+
+The Sentry CLI uses your project's DSN to authorize sending metrics. To set it up, export the `SENTRY_DSN` environment variable:
+
+<SignInNote />
+```bash
+export SENTRY_DSN=___PUBLIC_DSN___
+```
+
+Alternatively, you can add it to your `~/.sentryclirc` config file:
+
+```ini {filename:~/.sentryclirc}
+[auth]
+dsn = ___PUBLIC_DSN___
+```
+
+## Sending metrics
+You can send metrics using the CLI's `send-metric` command. You need to provide at least the `--name` or `-n` parameter to identify the metric.
+When emitting a metric that doesn't exist, the metric will be created for you. If it already exists, it will be updated.
+All metric types support custom units and tags provided with the `-u` and `-t` parameters respectively:
+
+```bash
+sentry-cli send-metric increment -n "MyMetric" -u "MyUnit" -t "tag1:val1","tag2:val2"
+```
+
+The metric's name, unit, and tags will undergo normalization to only include supported characters.
+Learn more about [Limits and Restrictions](/product/metrics/#limits-and-restrictions).
+
+### Counters
+To increment a counter metric by one, you only need to provide the `--name` or `-n` parameter.
+A counter metric can also be incremented by a custom value using the `-v` parameter:
+
+```bash
+sentry-cli send-metric increment -n "MyMetric" -v 3.14
+```
+
+### Gauges
+To emit a gauge metric, you always need to provide the name and value:
+
+```bash
+sentry-cli send-metric gauge -n "MyMetric" -v 3.14
+```
+
+### Distributions
+Similar to gauges, you need to provide the name and value to emit a distribution metric:
+
+```bash
+sentry-cli send-metric distribution -n "MyMetric" -v 3.14
+```
+
+### Sets
+To emit a set metric, you need to provide the name and value where the value can be any number or string:
+
+```
+sentry-cli send-metric set -n "MyMetric" -v "3a48b19"
+```
