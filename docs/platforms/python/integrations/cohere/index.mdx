@@ -1,0 +1,112 @@
+---
+title: Cohere
+description: "Learn about using Sentry for Cohere."
+---
+
+<Alert level="info" title="Beta">
+
+The support for **Cohere** is in its beta phase.
+
+We are working on supporting different AI libraries (see [GitHub discussion](https://github.com/getsentry/sentry-python/discussions/3007)).
+
+If you want to try the beta features and are willing to give feedback, please let us know on [Discord](https://discord.com/invite/Ww9hbqr).
+
+</Alert>
+
+This integration connects Sentry with the [Cohere Python SDK](https://github.com/cohere-ai/cohere-python).
+The integration has been confirmed to work with Cohere 5.3.3.
+
+Once you've installed this SDK, you can use Sentry LLM Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+
+Sentry LLM Monitoring will automatically collect information about prompts, tokens, and models from providers like Cohere. Learn more about it [here](/product/llm-monitoring).
+
+## Install
+
+Install `sentry-sdk` and `cohere` from PyPI:
+
+```bash
+pip install --upgrade 'sentry-sdk' 'cohere'
+```
+
+## Configure
+
+If you have the `cohere` package in your dependencies, the integration will be enabled automatically when you initialize the Sentry SDK.
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from cohere import Client
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    traces_sample_rate=1.0,
+)
+
+client = Client()
+```
+
+## Verify
+
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your LLM monitoring dashboard.
+
+
+```python
+import sentry_sdk
+from sentry_sdk.ai.monitoring import ai_track
+from cohere import Client
+
+sentry_sdk.init(...)  # same as above
+
+client = Client(api_key="(your Cohere API key)")
+
+@ai_track("My AI pipeline")
+def my_pipeline():
+    with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
+      print(
+          client.chat(
+              model="command", message="say hello"
+          )
+      )
+```
+
+After running this script, a pipeline will be created in the [LLM Monitoring](/product/llm-monitoring) section of the Sentry dashboard. The pipeline will have an associated Cohere span for the `chat.completions.create` operation.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Cohere integration will connect Sentry with all supported Cohere methods automatically.
+
+- All exceptions caused by Cohere methods are reported to Sentry.
+
+- The supported modules are currently `chat` and `embed`.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII and doesn't include PII data by default. If you want to include that data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+By adding `CohereIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `CohereIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.cohere import CohereIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    integrations = [
+        CohereIntegration(
+            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+## Supported Versions
+
+- Cohere: 5.0+
+- Python: 3.9+
