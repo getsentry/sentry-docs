@@ -1,0 +1,27 @@
+---
+title: Troubleshooting
+description: "Learn how to troubleshoot your profiling setup."
+sidebar_order: 5000
+---
+
+### Profiles are not showing up
+
+If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
+
+- Ensure that performance monitoring <PlatformLink to="/performance/">is enabled</PlatformLink>.
+- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
+- If the automatic instrumentation is not sending performance data, try using <PlatformLink to="/performance/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink>.
+- Enable <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> in the SDK and check the logs.
+- If the transactions happen too soon after `Sentry.Init()`, they may not be captured yet.
+  This is because the `ProfilingIntegration()` from `Sentry.Profiling` NuGet package initializes asynchronously by default.
+  If you'd like to initialize it synchronously, set the desired timeout constructor argument, e.g. `new ProfilingIntegration(TimeSpan.FromMilliseconds(500))` to wait up to 500 ms for the profiler to start up.
+  Note: this doesn't apply to iOS and Mac Catalyst which use native profiling and are initialized synchronously.
+- Maybe you're trying to capture profiles on a platform that is currently **not** supported, notably:
+  - .NET Framework; we only support .NET 6.0, .NET 7.0 and .NET 8.0
+  - Native AOT - this is only supported for iOS and Mac Catalyst (alongside the standard Mono AOT)
+  - Android - currently not supported at all
+
+### `Unknown` frames
+
+Some frames will show up as `unknown` in the UI. This is because the SDK does not have information about the stack frame.
+Usually, these are anonymous helper JIT-generated methods and present among `System` stack frames.

@@ -1,0 +1,79 @@
+---
+title: Set Up Profiling
+description: "Learn how to enable profiling in your app if it is not already set up."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/preface" />
+
+With [profiling](/product/profiling/), Sentry allows you to collect and analyze performance profiles from real user devices in production to give you a complete picture of how your application performs in a variety of environments.
+
+<Note>
+
+Sentry profiling for .NET is available in _Alpha_ on .NET 6.0+ (tested on .NET 7.0 & .NET 8.0 as well) for:
+
+- Windows
+- Linux
+- macOS
+- iOS
+- Mac Catalyst
+
+</Note>
+
+## Enable Profiling
+
+To enable profiling, set the `ProfilesSampleRate`.
+Additionally, for all platforms except iOS/Mac Catalyst, you need to add a dependency on the `Sentry.Profiling` NuGet package.
+
+```shell {tabTitle:.NET CLI}
+dotnet add package Sentry.Profiling
+```
+
+Profiling depends on Sentry’s performance monitoring product being enabled beforehand. To enable performance monitoring in the SDK, set the `TracesSampleRate` option to the desired value.
+
+```csharp {tabTitle:Windows/Linux/macOS}
+SentrySdk.Init(options =>
+{
+    // ... usual setup options omitted for clarity (see Getting Started) ...
+
+    // Sample rate for your transactions, e.g. value 0.1 means we want to report 10% of transactions.
+    // Setting 1.0 means all transactions are profiled.
+    // We recommend adjusting this value in production.
+    options.TracesSampleRate = 1.0;
+
+    // Sample rate for profiling, applied on top of othe TracesSampleRate,
+    // e.g. 0.2 means we want to profile 20 % of the captured transactions.
+    // We recommend adjusting this value in production.
+    options.ProfilesSampleRate = 1.0;
+
+    // Requires NuGet package: Sentry.Profiling
+    // Note: By default, the profiler is initialized asynchronously. This can be tuned by passing a desired initialization timeout to the constructor.
+    options.AddIntegration(new ProfilingIntegration(
+        // During startup, wait up to 500ms to profile the app startup code. This could make launching the app a bit slower so comment it out if your prefer profiling to start asynchronously
+        TimeSpan.FromMilliseconds(500)
+    ));
+});
+```
+
+```csharp {tabTitle:iOS/MacCatalyst}
+SentrySdk.Init(options =>
+{
+    // ... usual setup options omitted for clarity (see Getting Started) ...
+
+    // Sample rate for your transactions, e.g. value 0.1 means we want to report 10% of transactions.
+    // Setting 1.0 means all transactions are profiled.
+    // We recommend adjusting this value in production.
+    options.TracesSampleRate = 1.0;
+
+    // Sample rate for profiling, applied on top of othe TracesSampleRate,
+    // e.g. 0.2 means we want to profile 20 % of the captured transactions.
+    // We recommend adjusting this value in production.
+    options.ProfilesSampleRate = 1.0;
+});
+```
+
+###
+
+Check out the <PlatformLink to="/performance/">performance setup documentation</PlatformLink> for more detailed information on how to configure sampling.
+Setting the traces sample rate to 1.0 means all transactions will be captured.
+Setting the profiles sample rate to 1.0 means all captured transactions will be profiled.

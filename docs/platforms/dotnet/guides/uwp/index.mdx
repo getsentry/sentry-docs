@@ -1,0 +1,96 @@
+---
+title: UWP
+description: "Learn more about how Sentry's .NET SDK works with Universal Windows Platform (UWP) applications."
+---
+
+Sentry's .NET SDK works with Universal Windows platform applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+
+## Configuration
+
+In addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must configure the UWP specific `Application.UnhandledException` and `Application.Suspending` events.
+
+<Note>
+
+The SDK should be initialized in the constructor of your application class (usually `App.xaml.cs`). Do not initialize the SDK in the `OnLaunched` event of the application or the `Hub` will not be initialized correctly.
+
+</Note>
+
+<SignInNote />
+
+```csharp
+// Add these to your existing using statements.
+using Sentry;
+using Sentry.Protocol;
+using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
+
+sealed partial class App : Application
+{
+    public App()
+    {
+        // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
+        SentrySdk.Init(o =>
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+
+            // Enable Global Mode since this is a client app.
+            o.IsGlobalModeEnabled = true;
+
+            // TODO:Any other Sentry options you need go here.
+        });
+
+        // Hook the UWP UnhandledException event before initializing the app component.
+        this.UnhandledException += OnUnhandledException;
+
+        // Initialize the app component, and hook the Suspending event.
+        this.InitializeComponent();
+        this.Suspending += OnSuspending;
+
+        // Add any other code you may need last.
+    }
+
+    // Update your OnSuspending handler as shown
+
+    private async void OnSuspending(object sender, SuspendingEventArgs e)
+    {
+        var deferral = e.SuspendingOperation.GetDeferral();
+
+        // Flush Sentry events when suspending
+        await SentrySdk.FlushAsync(TimeSpan.FromSeconds(2));
+
+        // TODO: Save any other application state and stop any background activity.
+
+        deferral.Complete();
+    }
+
+    // Add this OnUnhandledException handler.
+
+    // Use these attributes to ensure all types of exceptions are handled.
+    [SecurityCritical]
+    [HandleProcessCorruptedStateExceptions]
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        // Get a reference to the exception, because the Exception property is cleared when accessed.
+        var exception = e.Exception;
+        if (exception != null)
+        {
+            // Tell Sentry this was an unhandled exception
+            exception.Data[Mechanism.HandledKey] = false;
+            exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
+
+            // Capture the exception
+            SentrySdk.CaptureException(exception);
+
+            // Flush the event immediately
+            SentrySdk.FlushAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
+        }
+    }
+}
+```

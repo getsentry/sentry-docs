@@ -1,0 +1,34 @@
+```java
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
+import io.sentry.Hint
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
+  @Override
+  public SentryEvent execute(SentryEvent event, Hint hint) {
+    if (event.getThrowable() instanceof SQLException) {
+      event.setFingerprints(Arrays.asList("database-connection-error"));
+    }
+    return event;
+  }
+}
+```
+
+```kotlin
+import io.sentry.SentryEvent
+import io.sentry.SentryOptions
+import io.sentry.Hint
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendCallback : SentryOptions.BeforeSendCallback {
+  override fun execute(event: SentryEvent, hint: Hint): SentryEvent? {
+    if (event.throwable is SQLException) {
+      event.fingerprints = listOf("database-connection-error")
+    }
+    event
+  }
+}
+```

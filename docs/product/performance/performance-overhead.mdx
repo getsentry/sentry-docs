@@ -1,0 +1,49 @@
+---
+title: Performance Overhead
+sidebar_order: 95
+description: "Learn more about how enabling Performance Monitoring in Sentry impacts the performance of your application."
+---
+
+Enabling performance in Sentry SDKs adds some overhead, but should have minimal impact on the performance of your application.
+
+Performance monitoring works by instrumenting important parts of typical applications such as:
+
+- Database calls
+- Incoming and outgoing HTTP requests
+- Background worker tasks
+- Browser page loads and navigations
+- Component lifecycle in UI frameworks
+- Web Vitals
+
+To perform this instrumentation, Sentry SDKs wrap or monkeypatch specific functions within popular libraries or frameworks and measure the execution time of these operations. These are then packaged and serialized into a payload containing a [Transaction](/product/performance/transaction-summary/#what-is-a-transaction) (containing Spans) that is transmitted to event ingestion servers via the internet.
+
+The SDKs also make sure to propagate some headers on outgoing requests so that [Distributed Tracing](/product/sentry-basics/tracing/) can work effectively.
+
+<Note>
+
+For most applications, the performance overhead of enabling performance in production is imperceptible to end users.
+
+</Note>
+
+## Will Performance break my application?
+
+Each SDK has limits on the data structures used to record all the above data. If your application is doing too many things, we will simply hit those limits and thus avoid scenarios where the SDK itself takes up too much CPU time or grows memory usage unboundedly. We will also capture Outcomes (statistics) whenever these scenarios occur to be transparent about what events we are dropping for what reason.
+
+### Backpressure Management
+
+Some of our backend SDKs manage backpressure internally by reducing the dynamic sampling rate when the system is in an unhealthy state. This ensures better system stability and lower SDK overhead under heavy load.
+
+The latest versions of the following SDKs support backpressure management:
+
+- Python
+- Ruby
+- Java
+
+We will gradually roll this feature out to other backend languages in the future.
+
+### Hosting Environment
+
+Some hosting environments have mechanisms in place that negatively influence SDK overhead:
+
+- AWS Lambdas completely freeze any code execution when a response is sent. This means that the SDKs generally will block the response from being finished until it has flushed all of the recorded telemetry data to Sentry. This might cause non-trivial overhead in some situations. Here, it might be beneficial to run a Sentry Relay instance physically close to your lambdas to decrease latency.
+- SDKs that are designed to run on the Vercel Edge Runtime will stall responses to requests until the SDK has flushed all of the telemetry for that request to Sentry. This is a limitation imposed by the Edge Runtime, since it doesn't allow for I/O operations to be shared or persisted across request handler invocations, meaning the SDK cannot flush its data asynchronously.

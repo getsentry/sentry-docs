@@ -1,0 +1,53 @@
+## Add More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `expensive_operation` function called from the code snippet in the previous section. But this time we are using the `trace` function to create a new span and set it as the current span which removes a lot of boilerplate.
+
+You can choose the values of `op` and `description`.
+
+```php
+function expensive_operation(): void
+{
+    $spanContext = \Sentry\Tracing\SpanContext::make()
+        ->setOp('some_operation')
+        ->setDescription('This is a description');
+
+    \Sentry\trace(function () {
+        // Do the expensive operation...
+    }, $spanContext);
+}
+```
+
+You can also do this manually if you want to have more control over the span creation:
+
+```php
+function expensive_operation(): void
+{
+    $parent = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span = null;
+
+    // Check if we have a parent span (this is the case if we started a transaction earlier)
+    if ($parent !== null) {
+        $context = \Sentry\Tracing\SpanContext::make()
+            ->setOp('some_operation')
+            ->setDescription('This is a description');
+        $span = $parent->startChild($context);
+
+        // Set the current span to the span we just started
+        \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+    }
+
+    try {
+        // Do the expensive operation...
+    } finally {
+        // We only have a span if we started a span earlier
+        if ($span !== null) {
+            $span->finish();
+
+            // Restore the current span back to the parent span
+            \Sentry\SentrySdk::getCurrentHub()->setSpan($parent);
+        }
+    }
+}
+```
+
+This code checks for the existence of a parent span and if there is one, a new span is created and set as the current span. Then we call the expensive operation. Finally, we finish the span and restore the current span to the parent span.

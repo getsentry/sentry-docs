@@ -1,0 +1,70 @@
+---
+title: OpenTelemetry Support
+sdk: sentry.java.opentelemetry-agent
+description: "Using OpenTelemetry with Sentry Performance."
+sidebar_order: 20
+---
+
+There are multiple ways to configure your [OpenTelemetry SDK](https://opentelemetry.io/) and send traces and spans to Sentry. They're described below.
+
+## Using `sentry-opentelemetry-agent` With Auto Initialization
+
+If you use `sentry-opentelemetry-agent`, it will look for `SENTRY_DSN` and `SENTRY_PROPERTIES_FILE` environment variables to be defined, and then initialize Sentry automatically. You'll just need to configure your `DSN` and `tracesSampleRate`.
+
+### Install
+
+<PlatformContent includePath="performance/opentelemetry-install/with-java-agent/with-auto-init" />
+
+### Usage
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-java-agent/with-auto-init" />
+
+### Debugging
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-java-agent/with-auto-init/debugging" />
+
+### Turn Off Exporter Error Messages
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-java-agent/exporter-messages" />
+
+## Using `sentry-opentelemetry-agent` Without Auto-Initialization
+
+You may also disable automatic initialization of Sentry in `sentry-opentelemetry-agent` by setting `SENTRY_AUTO_INIT=false` as an environment variable. Doing this will mean you'll either have to use another Sentry integration that performs initialization, (for example Spring Boot), or initialize Sentry manually.
+
+### Install
+
+<PlatformContent includePath="performance/opentelemetry-install/with-java-agent/without-auto-init" />
+
+### Usage
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-java-agent/without-auto-init" />
+
+### Debugging
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-java-agent/without-auto-init/debugging" />
+
+### Turn Off Exporter Error Messages
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-java-agent/exporter-messages" />
+
+## Using OpenTelemetry Without Any Java Agent
+
+If the Java Agent approach isn't for you, you can manually initialize OpenTelemetry. We have a separate dependency for this use case that allows you to reuse classes used by `sentry-opentelemetry-agent`.
+
+### Install
+
+<PlatformContent includePath="performance/opentelemetry-install/without-java-agent" />
+
+### Usage
+
+You'll have to configure both OpenTelemetry and Sentry to see transactions in Sentry and have errors linked to transactions created by OpenTelemetry.
+
+<PlatformContent includePath="performance/opentelemetry-setup/without-java-agent" />
+
+## OpenTelemetry and Sentry
+
+With Sentry’s OpenTelemetry SDK, an OpenTelemetry `Span` becomes a Sentry `Transaction` or `Span`. The first `Span` sent through the Sentry `SpanProcessor` is a `Transaction`, and any child `Span` gets attached to the first `Transaction` upon checking the parent `Span` context. This is true for the OpenTelemetry root `Span` and any top level `Span` in the system. For example, a request sent from frontend to backend will create an OpenTelemetry root `Span` with a corresponding Sentry `Transaction`. The backend request will create a new Sentry `Transaction` for the OpenTelemetry `Span`. The Sentry `Transaction` and `Span` are linked as a trace for navigation and error tracking purposes.
+
+## Additional Configuration
+
+If you need more fine grained control over Sentry, take a look at the <PlatformLink to="/configuration/">Configuration page</PlatformLink>. In case you'd like to filter out transactions before sending them to Sentry (to get rid of health checks, for example), you may find the <PlatformLink to="/configuration/filtering/#filtering-transaction-events">Filtering page</PlatformLink> helpful.

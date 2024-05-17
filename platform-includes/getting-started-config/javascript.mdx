@@ -1,0 +1,105 @@
+Once this is done, Sentry's JavaScript SDK captures all unhandled exceptions, transactions, and Session Replays, based on the sample rates set.
+
+Note that configuration differs slightly depending on how you installed the Sentry SDK. Make sure to follow the instructions in the correct tab, depending on if you installed the Sentry SDK via NPM, using the Loader Script, or via CDN.
+
+<SignInNote />
+
+```javascript {tabTitle: npm}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Alternatively, use `process.env.npm_package_version` for a dynamic release version
+  // if your build tool supports it.
+  release: "my-project-name@2.3.12",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+```html {tabTitle: Loader}
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      dsn: "___PUBLIC_DSN___",
+
+      // Alternatively, use `process.env.npm_package_version` for a dynamic release version
+      // if your build tool supports it.
+      release: "my-project-name@2.3.12",
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+      ],
+
+      // Set tracesSampleRate to 1.0 to capture 100%
+      // of transactions for performance monitoring.
+      // We recommend adjusting this value in production
+      tracesSampleRate: 1.0,
+
+      // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+      tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+      // Capture Replay for 10% of all sessions,
+      // plus for 100% of sessions with an error
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+    });
+  };
+</script>
+```
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+
+    // Alternatively, use `process.env.npm_package_version` for a dynamic release version
+    // if your build tool supports it.
+    release: "my-project-name@2.3.12",
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+
+    // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture Replay for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+</script>
+```

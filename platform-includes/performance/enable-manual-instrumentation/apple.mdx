@@ -1,0 +1,39 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+```swift {tabTitle:Swift}
+import Sentry;
+
+// Transaction can be started by providing the name and the operation
+let transaction = SentrySDK.startTransaction(
+  name: "transaction-name",
+  operation: "transaction-operation"
+)
+
+// Transactions can have child spans, and those spans can have child spans as well.
+let span = transaction.startChild(operation: "child-operation")
+
+// ...
+// Perform your operations
+// ...
+
+span.finish(); // Remember that only finished spans will be sent with the transaction
+transaction.finish(); // Finishing the transaction will send it to Sentry
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+// Transaction can be started by providing, at minimum, the name and the operation
+id<Span> transaction = [SentrySDK startTransactionWithName:@"transaction-name"
+                                                 operation:@"transaction-operation"];
+
+// Transactions can have child spans (and those spans can have child spans as well)
+id<Span> span = [transaction startChildWithOperation:@"child-operation"];
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+[span finish]; // Remember that only finished spans will be sent with the transaction
+[transaction finish]; // Finishing the transaction will send it to Sentry
+```

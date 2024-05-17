@@ -1,0 +1,698 @@
+[
+  {
+    "type": "Histogram",
+    "name": "buffer.dequeue_attempts",
+    "description": "Number of attempts needed to dequeue spooled envelopes from disk.\n\nAs long as there are enough permits in the [`crate::utils::BufferGuard`], this number should\nalways be one.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.disk_size",
+    "description": "The file size of the buffer db on disk, in bytes.\n\nThis metric is computed by multiplying `page_count * page_size`.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.envelopes_disk_count",
+    "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelopes_mem",
+    "description": "The estimated number of envelope bytes buffered in memory.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.envelopes_mem_count",
+    "description": "The number of envelopes waiting for project states in memory.\n\nThis number is always <= `EnvelopeQueueSize`.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_read",
+    "description": "Number of _envelopes_ the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_written",
+    "description": "Number of _envelopes_ the envelope buffer spools to disk.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.message.duration",
+    "description": "Timing in milliseconds for processing a message in the buffer service.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.reads",
+    "description": "Number times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.writes",
+    "description": "Number times the envelope buffer spools to disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "dynamic_sampling_decision",
+    "description": "Counter for dynamic sampling decision.\n\nThis metric is tagged with:\n- `decision`: \"drop\" if dynamic sampling drops the envelope, else \"keep\".",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.accepted",
+    "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.corrupted",
+    "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.item_size",
+    "description": "The number of bytes received by Relay for each individual envelope item type.\n\nMetric is tagged by the item type.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.opentelemetry",
+    "description": "Number of Events with an OpenTelemetry Context\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event.processing_time",
+    "description": "Time in milliseconds spent in synchronous processing of envelopes.\n\nThis timing covers the end-to-end processing in the CPU pool and comprises:\n\n- `event_processing.deserialize`\n- `event_processing.pii`\n- `event_processing.serialization`\n\nWith Relay in processing mode, this also includes the following timings:\n\n- `event_processing.process`\n- `event_processing.filtering`\n- `event_processing.rate_limiting`",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.protocol",
+    "description": "Number of events that hit any of the store-like endpoints: Envelope, Store, Security,\nMinidump, Unreal.\n\nThe events are counted before they are rate limited, filtered, or processed in any way.\n\nThis metric is tagged with:\n- `version`: The event protocol version number defaulting to `7`.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.queue_size",
+    "description": "The number of envelopes in the queue.\n\nThe queue holds all envelopes that are being processed at a particular time in Relay:\n\n- When Relay receives a Request, it ensures the submitted data is wrapped in a single\nenvelope.\n- The envelope receives some preliminary processing to determine if it can be processed or\nif it must be rejected.\n- Once this determination has been made, the HTTP request that created the envelope\nterminates and, if the request is to be further processed, the envelope enters a queue.\n- After the envelope finishes processing and is sent upstream, the envelope is considered\nhandled and it leaves the queue.\n\nThe queue size can be configured with `cache.event_buffer_size`.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.queue_size.pct",
+    "description": "The number of envelopes in the queue as a percentage of the maximum number of envelopes that\ncan be stored in the queue.\n\nThe value ranges from `0` when the queue is empty to `1` when the queue is full and no\nadditional events can be added. The queue size can be configured using `event.queue_size`.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.rejected",
+    "description": "Number of envelopes rejected in the current time slot.\n\nThis includes envelopes being rejected because they are malformed or any other errors during\nprocessing (including filtered events, invalid payloads, and rate limits).\n\nTo check the rejection reason, check `events.outcomes`, instead.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.spans",
+    "description": "The number of spans per processed transaction event.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `sdk`: The name of the Sentry SDK sending the transaction. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event.total_time",
+    "description": "Total time in milliseconds an envelope spends in Relay from the time it is received until it\nfinishes processing and has been submitted to the upstream.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.transaction",
+    "description": "The number of transaction events processed by the source of the transaction name.\n\nThis metric is tagged with:\n- `platform`: The event's platform, such as `\"javascript\"`.\n- `source`: The source of the transaction name on the client. See the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `contains_slashes`: Whether the transaction name contains `/`. We use this as a heuristic\nto represent URL transactions.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.transaction_name_changes",
+    "description": "The number of transaction events processed grouped by transaction name modifications.\nThis metric is tagged with:\n- `source_in`: The source of the transaction name before normalization.\nSee the [transaction source\ndocumentation](https://develop.sentry.dev/sdk/event-payloads/properties/transaction_info/)\nfor all valid values.\n- `change`: The mechanism that changed the transaction name.\nEither `\"none\"`, `\"pattern\"`, `\"rule\"`, or `\"both\"`.\n- `source_out`: The source of the transaction name after normalization.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event.wait_time",
+    "description": "Time spent between the start of request handling and processing of the envelope.\n\nThis includes streaming the request body, scheduling overheads, project config fetching,\nbatched requests and congestions in the internal processor. This does not include delays in\nthe incoming request (body upload) and skips all envelopes that are fast-rejected.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.deserialize",
+    "description": "Time in milliseconds spent deserializing an event from JSON bytes into the native data\nstructure on which Relay operates.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.filtering",
+    "description": "Time in milliseconds spent running inbound data filters on an event.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.normalization",
+    "description": "Time in milliseconds spent running normalization on an event. Normalization\nhappens before envelope filtering and metric extraction.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.pii",
+    "description": "Time in milliseconds spent in data scrubbing for the current event. Data scrubbing happens\nlast before serializing the event back to JSON.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.rate_limiting",
+    "description": "Time in milliseconds spent checking for organization, project, and DSN rate limits.\n\nNot all events reach this point. After an event is rate limited for the first time, the rate\nlimit is cached. Events coming in after this will be discarded earlier in the request queue\nand do not reach the processing queue.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.serialization",
+    "description": "Time spent converting the event from its in-memory reprsentation into a JSON string.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "events.outcomes",
+    "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n- `to`: Describes the destination of the outcome. Can be either 'kafka' (when in\nprocessing mode) or 'http' (when outcomes are enabled in an external relay).\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "global_config.fetch",
+    "description": "Number of global config fetches from upstream. Only 2XX responses are\nconsidered and ignores send errors (e.g. auth or network errors).\n\nThis metric is tagged with:\n- `success`: whether deserializing the global config succeeded.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "global_config.requests.duration",
+    "description": "Total time spent to send a request and receive the response from upstream.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "health.message.duration",
+    "description": "Timing in milliseconds for handling and responding to a health check request.\n\nThis metric is tagged with:\n- `type`: The type of the health check, `liveness` or `readiness`.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "health.system_memory.total",
+    "description": "The total system memory.\n\nRelay uses the same value for its memory health check.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "health.system_memory.used",
+    "description": "The currently used memory by the entire system.\n\nRelay uses the same value for its memory health check.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "http_queue.size",
+    "description": "The number of upstream requests queued up for sending.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for _15_\nseconds of inactivity or _75_ seconds of activity. If all connections are busy, they are\nqueued, which is reflected in this metric.\n\nThis metric is tagged with:\n- `priority`: The queueing priority of the request, either `\"high\"` or `\"low\"`. The\npriority determines precedence in executing requests.\n\nThe number of concurrent connections can be configured with:\n- `limits.max_concurrent_requests` for the overall number of connections\n- `limits.max_concurrent_queries` for the number of concurrent high-priority requests",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.in_flight_count",
+    "description": "The number of messages waiting to be sent to, or acknowledged by, the broker.\n\nSee <https://docs.confluent.io/platform/7.5/clients/librdkafka/html/rdkafka_8h.html#ad4b3b7659cf9a79d3353810d6b625bb7>.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "kafka.message_size",
+    "description": "Size of emitted kafka message in bytes, tagged by message type.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.connects",
+    "description": "The number of connection attempts, including successful and failed attempts, and name resolution failures.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.disconnects",
+    "description": "The number of disconnections, whether triggered by the broker, the network, the load balancer, or something else.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.int_latency",
+    "description": "Maximum internal producer queue latency, in microseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf.messages",
+    "description": "The number of messages awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf.requests",
+    "description": "The number of requests awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf_latency",
+    "description": "Maximum internal request queue latency, in microseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_count",
+    "description": "The current number of messages in producer queues.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_count_max",
+    "description": "The maximum number of messages allowed in the producer queues.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_size",
+    "description": "The current total size of messages in producer queues.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.message_size_max",
+    "description": "The maximum total size of messages allowed in the producer queues.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "metrics.aggregator.message.duration",
+    "description": "Timing in milliseconds for processing a message in the aggregator service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "metrics.buckets",
+    "description": "The total number of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.batches_per_partition",
+    "description": "The number of batches emitted per partition.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "metrics.buckets.cost",
+    "description": "The total storage cost of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Set",
+    "name": "metrics.buckets.created.unique",
+    "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric for which the bucket was created.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.delay",
+    "description": "The reporting delay at which a bucket arrives in Relay.\n\nA positive delay indicates the bucket arrives after its stated timestamp. Large delays\nindicate backdating, particularly all delays larger than `bucket_interval + initial_delay`.\nNegative delays indicate that the bucket is dated into the future, likely due to clock drift\non the client.\n\nThis metric is tagged with:\n- `backdated`: A flag indicating whether the metric was reported within the `initial_delay`\ntime period (`false`) or after the initial delay has expired (`true`).",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.dropped",
+    "description": "Incremented every time a bucket is dropped.\n\nThis should only happen when a project state is invalid during graceful shutdown.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.flushed",
+    "description": "The total number of metric buckets flushed in a cycle across all projects.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.flushed_per_project",
+    "description": "The number of metric buckets flushed in a cycle for each project.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This histogram\nis logged for each project that is being flushed. The count of the histogram values is\nequivalent to the number of projects being flushed.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.invalid_timestamp",
+    "description": "Distribution of invalid bucket timestamps observed, relative to the time of observation.\n\nThis is a temporary metric to better understand why we see so many invalid timestamp errors.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.merge.hit",
+    "description": "Incremented every time two buckets or two metrics are merged.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.merge.miss",
+    "description": "Incremented every time a bucket is created.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.buckets.parsing_failed",
+    "description": "Number of times that parsing a metrics bucket item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.partition_keys",
+    "description": "Distribution of flush buckets over partition keys.\n\nThe distribution of buckets should be even.\nIf it is not, this metric should expose it.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "metrics.buckets.per_batch",
+    "description": "The number of buckets in a batch emitted.\n\nThis corresponds to the number of buckets that will end up in an envelope.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "metrics.buckets.scan_duration",
+    "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "metrics.buckets.size",
+    "description": "The average number of elements in a bucket when flushed.\n\nThis metric is tagged with:\n- `metric_type`: \"c\", \"d\", \"g\" or \"s\".\n- `namespace`: The namespace of the metric.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.agg.items",
+    "description": "Incremnted for every metric meta item added to the metric meta aggregator.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.agg.update",
+    "description": "Incremented every time the meta aggregator emitted an update that needs to be stored or\nsent upstream.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.parsing_failed",
+    "description": "Number of times that parsing a metric meta item from an envelope failed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.meta.redis.update",
+    "description": "Incremented every time a redis key is updated to store or update metadata.",
+    "features": [
+      "redis"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.transaction_name",
+    "description": "Count extraction of transaction names. Tag with the decision to drop / replace / use original.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "outcomes.aggregator.flush_time",
+    "description": "The time it takes the outcome aggregator to flush aggregated outcomes.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "processing.event.produced",
+    "description": "Number of messages placed on the Kafka queues.\n\nWhen Relay operates as Sentry service and an Envelope item is successfully processed, each\nEnvelope item results in a dedicated message on one of the ingestion topics on Kafka.\n\nThis metric is tagged with:\n- `event_type`: The kind of message produced to Kafka.\n- `namespace` (only for metrics): The namespace that the metric belongs to.\n- `is_segment` (only for event_type span): `true` the span is the root of a segment.\n- `has_parent` (only for event_type span): `false` if the span is the root of a trace.\n- `platform` (only for event_type span): The platform from which the span was spent.\n- `metric_type` (only for event_type metric): The metric type, counter, distribution,\ngauge or set.\n- `metric_encoding` (only for event_type metric): The encoding used for distribution and\nset metrics.\n\nThe message types can be:\n\n- `event`: An error or transaction event. Error events are sent to `ingest-events`,\ntransactions to `ingest-transactions`, and errors with attachments are sent to\n`ingest-attachments`.\n- `attachment`: An attachment file associated with an error event, sent to\n`ingest-attachments`.\n- `user_report`: A message from the user feedback dialog, sent to `ingest-events`.\n- `session`: A release health session update, sent to `ingest-sessions`.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "processing.produce.error",
+    "description": "Number of producer errors occurred after an envelope was already enqueued for sending to\nKafka.\n\nThese errors include, for example, _\"MessageTooLarge\"_ errors when the broker does not\naccept the requests over a certain size, which is usually due to invalid or inconsistent\nbroker/producer configurations.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "processor.message.duration",
+    "description": "Timing in milliseconds for processing a message in the internal CPU pool.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "producer.enqueue.error",
+    "description": "Number of messages that failed to be enqueued in the Kafka producer's memory buffer.\n\nThese errors include, for example, _\"UnknownTopic\"_ errors when attempting to send a\nmessage a topic that does not exist.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.eviction",
+    "description": "Number of evicted stale projects from the cache.\n\nRelay scans the in-memory project cache for stale entries in a regular interval configured\nby `cache.eviction_interval`.\n\nThe cache duration for project states can be configured with the following options:\n\n- `cache.project_expiry`: The time after which a project state counts as expired. It is\nautomatically refreshed if a request references the project after it has expired.\n- `cache.project_grace_period`: The time after expiry at which the project state will still\nbe used to ingest events. Once the grace period expires, the cache is evicted and new\nrequests wait for an update.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "project_cache.garbage.queue_size",
+    "description": "The number of items currently in the garbage disposal queue.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.hit",
+    "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_cache.message.duration",
+    "description": "Timing in milliseconds for handling a project cache message.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.miss",
+    "description": "Number of times a project lookup failed.\n\nA cache entry is created immediately and the project state requested from the upstream.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_cache.size",
+    "description": "Number of project states currently held in the in-memory project cache.\n\nThe cache duration for project states can be configured with the following options:\n\n- `cache.project_expiry`: The time after which a project state counts as expired. It is\nautomatically refreshed if a request references the project after it has expired.\n- `cache.project_grace_period`: The time after expiry at which the project state will still\nbe used to ingest events. Once the grace period expires, the cache is evicted and new\nrequests wait for an update.\n\nThere is no limit to the number of cached projects.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_cache.task.duration",
+    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the processor does.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.attempts",
+    "description": "Number of attempts required to fetch the config for a given project key.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.decompression",
+    "description": "Time in milliseconds required to decompress a project config from redis.\n\nNote that this also times the cases where project config is uncompressed,\nin which case the timer should be very close to zero.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.eviction.duration",
+    "description": "Total time in milliseconds spent evicting outdated and unused projects happens.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.flush_all_metric_meta",
+    "description": "Number of full metric data flushes.\n\nA full flush takes all contained items of the aggregator and flushes them upstream,\nat best this happens once per freshly loaded project.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.get",
+    "description": "Number of times a project state is looked up from the cache.\n\nThis includes lookups for both cached and new projects. As part of this, updates for\noutdated or expired project caches are triggered.\n\nRelated metrics:\n- `project_cache.hit`: For successful cache lookups, even for outdated projects.\n- `project_cache.miss`: For failed lookups resulting in an update.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.no_cache",
+    "description": "Number of times a project config was requested with `.no-cache`.\n\nThis effectively counts the number of envelopes or events that have been sent with a\ncorresponding DSN. Actual queries to the upstream may still be deduplicated for these\nproject state requests.\n\nA maximum of 1 such requests per second is allowed per project key. This metric counts only\npermitted requests.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.pending",
+    "description": "Number of projects in the in-memory project cache that are waiting for their state to be\nupdated.\n\nSee `project_cache.size` for more description of the project cache.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.received",
+    "description": "Number of project states **returned** from the upstream for each batch request.\n\nIf multiple batches are updated concurrently, this metric is reported multiple times.\n\nSee `project_cache.size` for more description of the project cache.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.redis.requests",
+    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.request",
+    "description": "Number of project state HTTP requests.\n\nRelay updates projects in batches. Every update cycle, Relay requests\n`limits.max_concurrent_queries` batches of `cache.batch_size` projects from the upstream.\nThe duration of these requests is reported via `project_state.request.duration`.\n\nNote that after an update loop has completed, there may be more projects pending updates.\nThis is indicated by `project_state.pending`.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.request.batch_size",
+    "description": "Number of project states **requested** from the upstream for each batch request.\n\nIf multiple batches are updated concurrently, this metric is reported multiple times.\n\nThe batch size can be configured with `cache.batch_size`. See `project_cache.size` for more\ndescription of the project cache.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.request.duration",
+    "description": "Total time in milliseconds spent fetching queued project configuration updates requests to\nresolve.\n\nRelay updates projects in batches. Every update cycle, Relay requests\n`limits.max_concurrent_queries * cache.batch_size` projects from the upstream. This metric\nmeasures the wall clock time for all concurrent requests in this loop.\n\nNote that after an update loop has completed, there may be more projects pending updates.\nThis is indicated by `project_state.pending`.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_upstream.completed",
+    "description": "Number of times an upstream request for a project config is completed.\n\nCompletion can be because a result was returned or because the config request was\ndropped after there still was no response after a timeout.  This metrics has tags\nfor `result` and `attempts` indicating whether it was succesful or a timeout and how\nmany attempts were made respectively.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_upstream.failed",
+    "description": "Number of times an upstream request for a project config failed.\n\nFailure can happen, for example, when there's a network error. Refer to\n[`UpstreamRequestError`](crate::services::upstream::UpstreamRequestError) for all cases.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "replay.recording.process",
+    "description": "Time in milliseconds spent on parsing, normalizing and scrubbing replay recordings.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "requests",
+    "description": "Number of HTTP requests reaching Relay.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "requests.duration",
+    "description": "Total duration in milliseconds for handling inbound web requests until the HTTP response is\nreturned to the client.\n\nThis does **not** correspond to the full event ingestion time. Requests for events that are\nnot immediately rejected due to bad data or cached rate limits always return `200 OK`. Full\nvalidation and normalization occur asynchronously, which is reported by\n`event.processing_time`.\n\nThis metric is tagged with:\n- `method`: The HTTP method of the request.\n- `route`: Unique dashed identifier of the endpoint.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "requests.timestamp_delay",
+    "description": "The delay between the timestamp stated in a payload and the receive time.\n\nSDKs cannot transmit payloads immediately in all cases. Sometimes, crashes require that\nevents are sent after restarting the application. Similarly, SDKs buffer events during\nnetwork downtimes for later transmission. This metric measures the delay between the time of\nthe event and the time it arrives in Relay. The delay is measured after clock drift\ncorrection is applied.\n\nOnly payloads with a delay of more than 1 minute are captured.\n\nThis metric is tagged with:\n\n- `category`: The data category of the payload. Can be one of: `event`, `transaction`,\n`security`, or `session`.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "responses.status_codes",
+    "description": "Number of completed HTTP requests.\n\nThis metric is tagged with:\n\n- `status_code`: The HTTP status code number.\n- `method`: The HTTP method used in the request in uppercase.\n- `route`: Unique dashed identifier of the endpoint.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "scrubbing.attachments.duration",
+    "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "scrubbing.minidumps.duration",
+    "description": "Time spent on minidump scrubbing.\n\nThis is the total time spent on parsing and scrubbing the minidump.  Even if no PII\nscrubbing rules applied the minidump will still be parsed and the rules evaluated on\nthe parsed minidump, this duration is reported here with status of \"n/a\".\n\nThis metric is tagged with:\n\n- `status`: Scrubbing status: \"ok\" means successful scrubbed, \"error\" means there\nwas an error during scrubbing and finally \"n/a\" means scrubbing was successful\nbut no scurbbing rules applied.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "server.starting",
+    "description": "Number of Relay server starts.\n\nThis can be used to track unwanted restarts due to crashes or termination.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "service.back_pressure",
+    "description": "A number of messages queued in a services inbound message channel.\n\nThis metric is emitted once per second for every running service. Without backlogs, this\nnumber should be close to `0`. If this number is monotonically increasing, the service is\nnot able to process the inbound message volume.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "transactions_from_spans",
+    "description": "Counts how many transactions were created from segment spans.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Histogram",
+    "name": "upstream.envelope.body_size",
+    "description": "Size of queries (projectconfig queries, i.e. the request payload, not the response) sent by\nRelay over HTTP in bytes.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "upstream.metrics.body_size",
+    "description": "Size of batched global metrics requests sent by Relay over HTTP in bytes.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "upstream.network_outage",
+    "description": "The state of Relay with respect to the upstream connection.\nPossible values are `0` for normal operations and `1` for a network outage.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "upstream.query.body_size",
+    "description": "Size of envelopes sent over HTTP in bytes.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "upstream.requests.duration",
+    "description": "Total time spent to send request to upstream Relay and handle the response.\n\nThis metric is tagged with:\n\n- `result`: What happened to the request, an enumeration with the following values:\n* `success`: The request was sent and returned a success code `HTTP 2xx`\n* `response_error`: The request was sent and it returned an HTTP error.\n* `payload_failed`: The request was sent but there was an error in interpreting the response.\n* `send_failed`: Failed to send the request due to a network error.\n* `rate_limited`: The request was rate limited.\n* `invalid_json`: The response could not be parsed back into JSON.\n- `route`: The endpoint that was called on the upstream.\n- `status-code`: The status code of the request when available, otherwise \"-\".\n- `retries`: Number of retries bucket 0, 1, 2, few (3 - 10), many (more than 10).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "upstream.retries",
+    "description": "Counts the number of retries for each upstream http request.\n\nThis metric is tagged with:\n\n- `result`: What happened to the request, an enumeration with the following values:\n* `success`: The request was sent and returned a success code `HTTP 2xx`\n* `response_error`: The request was sent and it returned an HTTP error.\n* `payload_failed`: The request was sent but there was an error in interpreting the response.\n* `send_failed`: Failed to send the request due to a network error.\n* `rate_limited`: The request was rate limited.\n* `invalid_json`: The response could not be parsed back into JSON.\n- `route`: The endpoint that was called on the upstream.\n- `status-code`: The status code of the request when available, otherwise \"-\".",
+    "features": []
+  }
+]

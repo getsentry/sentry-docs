@@ -1,0 +1,59 @@
+---
+title: SQLAlchemy
+description: "Learn about importing the SQLAlchemy integration and how it captures queries from SQLAlchemy as breadcrumbs."
+---
+
+The SQLAlchemy integration captures queries from [SQLAlchemy](https://www.sqlalchemy.org/) as breadcrumbs and spans.
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `sqlalchemy` extra.
+
+```bash
+pip install --upgrade 'sentry-sdk[sqlalchemy]'
+```
+
+## Configure
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+```
+
+The SQLAlchemy integration is enabled automatically if you have the `sqlalchemy` package installed.
+
+## Verify
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+
+def main():
+    sentry_sdk.init(...)  # same as above
+
+    engine = create_engine(DATABASE_URL, echo=True)
+    statement = text("SELECT 'Hello World'")
+
+    with engine.connect() as conn:
+        with sentry_sdk.start_transaction(name="testing_sentry"):
+            result = conn.execute(statement)
+
+main()
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create a span for the `SELECT` statement.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+- SQLAlchemy: 1.2+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

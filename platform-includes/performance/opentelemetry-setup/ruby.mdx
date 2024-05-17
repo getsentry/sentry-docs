@@ -1,0 +1,35 @@
+Initialize Sentry for tracing and set the `instrumenter` to `:otel`:
+
+<SignInNote />
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.traces_sample_rate = 1.0
+  # set the instrumenter to use OpenTelemetry instead of Sentry
+  config.instrumenter = :otel
+end
+```
+
+This disables all Sentry instrumentation and relies on the chosen OpenTelemetry tracers for creating spans.
+
+Next, configure OpenTelemetry as you need and hook in the Sentry span processor and propagator:
+
+```ruby {filename:config/initializers/otel.rb}
+OpenTelemetry::SDK.configure do |c|
+  c.use_all
+  c.add_span_processor(Sentry::OpenTelemetry::SpanProcessor.instance)
+end
+
+OpenTelemetry.propagation = Sentry::OpenTelemetry::Propagator.new
+```
+
+Note that if you need extra Sentry features such as tags / user, you will need to re-order the middleware as below to
+make sure Sentry's scope management works properly.
+
+```ruby {filename:config/initializers/otel.rb}
+Rails.application.config.middleware.move_after(
+  Sentry::Rails::CaptureExceptions,
+  OpenTelemetry::Instrumentation::Rack::Middlewares::TracerMiddleware
+)
+```

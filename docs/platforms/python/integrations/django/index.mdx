@@ -1,0 +1,151 @@
+---
+title: Django
+caseStyle: snake_case
+supportLevel: production
+description: "Learn about using Sentry with Django."
+---
+
+Sentry's [Django](https://www.djangoproject.com/) integration adds support for the Django framework. It enables automatic reporting of errors and exceptions as well as performance monitoring. In order to get started using the integration, you should have a [Sentry account](https://sentry.io) and a project set up.
+
+<Note>
+
+If you're using Python 3.7, Django applications with `channels` 2.0 will be correctly instrumented. Older versions of Python will require the installation of [aiocontextvars](https://pypi.org/project/aiocontextvars/).
+
+</Note>
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `django` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[django]'
+```
+
+## Configure
+
+To configure the Sentry SDK, initialize it in your `settings.py` file:
+
+<SignInNote />
+
+```python {filename:settings.py}
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+```
+
+## Verify
+
+The snippet below includes an intentional error that will be captured by Sentry when triggered. This will allow you to make sure that everything is working as soon as you set it up:
+
+```python
+from django.urls import path
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+urlpatterns = [
+    path('sentry-debug/', trigger_error),
+    # ...
+]
+```
+
+## Behavior
+
+<Include name="python-uwsgi-warning.mdx" />
+
+### Issue Reporting
+
+- If you use `django.contrib.auth` and you've set `send_default_pii=True` in your call to `init`, user data (such as current user id, email address, username) will be attached to error events.
+- Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
+- Logs emitted by any logger will be recorded as breadcrumbs by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
+
+### Performance Monitoring
+
+The following parts of your Django project are monitored:
+
+- Middleware stack
+- Signals
+- Database queries
+- Redis commands
+- Access to Django caches
+
+<Note>
+
+The parameter `enable_tracing` needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
+
+</Note>
+
+## Options
+
+By adding `DjangoIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `DjangoIntegration` to change its behavior:
+
+<SignInNote />
+
+```python
+import django.db.models.signals
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # ...
+    integrations=[
+        DjangoIntegration(
+            transaction_style='url',
+            middleware_spans=True,
+            signals_spans=True,
+            signals_denylist=[
+                django.db.models.signals.pre_init, 
+                django.db.models.signals.post_init,
+            ],
+            cache_spans=False,
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `DjangoIntegration()`:
+
+- `transaction_style`:
+
+  How to name transactions showing up in Sentry performance monitoring.
+
+  - `"/myproject/myview/<foo>"` if you set `transaction_style="url"`.
+  - `"myproject.myview"` if you set `transaction_style="endpoint"`.
+
+  The default is `"url"`.
+
+- `middleware_spans`:
+
+  Create spans and track performance of all middleware in your Django project. Set to `False` to disable.
+
+  The default is `True`.
+
+- `signals_spans`:
+
+  Create spans and track performance of all synchronous [Django signals](https://docs.djangoproject.com/en/dev/topics/signals/) receiver functions in your Django project. Set to `False` to disable.
+
+  The default is `True`.
+
+- `signals_denylist`:
+
+  A list of signals to exclude from performance tracking. No spans will be created for these.
+
+  The default is `[]`.
+
+- `cache_spans`:
+
+  Create spans and track performance of all read operations to configured caches. The spans also include information if the cache access was a hit or a miss. Set to `True` to enable.
+
+  The default is `False`.
+
+## Supported Versions
+
+- Django 1.11+
+- Python 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

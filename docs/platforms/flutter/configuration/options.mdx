@@ -1,0 +1,357 @@
+---
+title: Basic Options
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+sidebar_order: 1
+---
+
+SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
+initialized.
+
+<PlatformContent includePath="configuration/config-intro" />
+
+## Common Options
+
+The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
+
+<ConfigKey name="dsn">
+
+The _DSN_ tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+
+In runtimes without a process environment (such as the browser) that fallback does not apply.
+
+Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+
+</ConfigKey>
+
+<ConfigKey name="debug">
+
+Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+
+</ConfigKey>
+
+<ConfigKey name="diagnostic-level">
+
+Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
+
+- `debug`: **default** The most verbose mode
+- `info`: Informational messages
+- `warning`: Warning that something might not be right
+- `error`: Only SDK internal errors are printed
+- `fatal`: Only critical errors are printed
+
+</ConfigKey>
+
+<ConfigKey name="dist">
+
+Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
+
+</ConfigKey>
+
+<ConfigKey name="release">
+
+Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+
+</ConfigKey>
+
+<ConfigKey name="environment">
+
+Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</ConfigKey>
+
+<ConfigKey name="sample-rate">
+
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+
+</ConfigKey>
+
+<ConfigKey name="max-breadcrumbs">
+
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+
+</ConfigKey>
+
+<ConfigKey name="max-cache-items">
+
+The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+
+</ConfigKey>
+
+<ConfigKey name="attach-stacktrace">
+
+When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
+
+This option is turned off by default.
+
+Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+</ConfigKey>
+
+<ConfigKey name="send-default-pii">
+
+If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
+
+<Note>
+
+If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
+
+</Note>
+
+This option is turned off by default.
+
+If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</ConfigKey>
+
+<ConfigKey name="server-name">
+
+This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+
+Most SDKs will attempt to auto-discover this value.
+
+</ConfigKey>
+
+<ConfigKey name="auto-session-tracking">
+
+When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
+
+</ConfigKey>
+
+<ConfigKey name="consider-in-app-frames-by-default">
+
+Configures whether stack trace frames are considered as in app frames by default.
+You can use this to essentially make `inAppIncludes` or `inAppExcludes` an allow or deny list.
+This value is used only if Sentry can not find the origin of the frame.
+
+- If `considerInAppFramesByDefault` is set to `true`, you only need to maintain `inAppExcludes`.
+- Conversely, if `considerInAppFramesByDefault` is set to `false`, you only need to maintain `inAppIncludes`.
+
+</ConfigKey>
+
+<ConfigKey name="in-app-include">
+
+A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+
+Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+
+</ConfigKey>
+
+<ConfigKey name="in-app-exclude">
+
+A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
+
+This option can be overridden using <PlatformIdentifier name="in-app-include" />.
+
+</ConfigKey>
+
+<ConfigKey name="attach-screenshot">
+
+Takes a screenshot of the application when an error happens and includes it as an attachment.
+Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+
+</ConfigKey>
+
+<ConfigKey name="screenshot-quality">
+
+The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`.
+
+</ConfigKey>
+
+<ConfigKey name="attach-view-hierarchy">
+
+Renders a JSON representation of the entire view hierarchy of the application when an error happens and includes it as an attachment.
+Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
+
+</ConfigKey>
+
+<ConfigKey name="idle-timeout">
+
+The idle time, measured in ms, to wait until a transaction will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+
+The default is `3000`.
+
+</ConfigKey>
+
+<ConfigKey name="send-client-reports">
+
+Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
+
+_(New in version 6.6.0)_
+
+</ConfigKey>
+
+<ConfigKey name="capture-failed-requests">
+
+Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
+
+_(New in version 7.0.0)_
+
+</ConfigKey>
+
+## Integration Configuration
+
+For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
+
+<ConfigKey name="integrations">
+
+In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
+
+</ConfigKey>
+
+## Hooks
+
+These options can be used to hook the SDK in various ways to customize the reporting of events.
+
+<ConfigKey name="before-send">
+
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+</ConfigKey>
+
+<ConfigKey name="before-breadcrumb">
+
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</ConfigKey>
+
+## Transport Options
+
+Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
+
+<ConfigKey name="transport">
+
+Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+
+</ConfigKey>
+
+## Experimental Features
+
+<ConfigKey name="experimental">
+
+An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
+
+</ConfigKey>
+
+## Hybrid SDK Options
+
+<ConfigKey name="autoInitializeNativeSdk">
+
+Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
+
+You should follow the [guide to native initialization](/platforms/flutter/native-init/) if you chose to use this option.
+
+</ConfigKey>
+
+<ConfigKey name="enableNativeCrashHandling">
+
+Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoSessionTracking">
+
+Set this boolean to `false` to disable the [release health](/product/releases/health/) feature.
+
+</ConfigKey>
+
+<ConfigKey name="sessionTrackingIntervalMillis">
+
+Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
+
+</ConfigKey>
+
+<ConfigKey name="enableNdkScopeSync">
+
+Set this boolean to `false` to disable the scope sync from Java to NDK on Android.
+
+</ConfigKey>
+
+<ConfigKey name="attachThreads">
+
+Set this boolean to `true` to automatically attach all threads to all logged events on Android.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoPerformanceTracing">
+
+Set this boolean to `false` to disable auto [performance monitoring](/product/performance/) tracking.
+
+</ConfigKey>
+
+<ConfigKey name="enableWatchdogTerminationTracking">
+
+<Note>
+  Available since version 8.0.0 of Sentry Apple SDK. It was named
+  `enableOutOfMemoryTracking` before the 8.0.0 release.
+</Note>
+
+Set this boolean to `false` to disable [watchdog termination](/platforms/apple/guides/ios/configuration/watchdog-terminations/) tracking on iOS.
+
+</ConfigKey>
+
+<ConfigKey name="enableScopeSync">
+
+Set this boolean to `false` to disable sync of `Scope` data to Android and iOS SDKs.
+
+</ConfigKey>
+
+<ConfigKey name="reportPackages">
+
+Set this boolean to `false` to disable reporting all the package dependencies.
+
+</ConfigKey>
+
+<ConfigKey name="anrEnabled">
+
+Set this boolean to `true` to enable ANR (Application Not Responding) detection on Android.
+
+</ConfigKey>
+
+<ConfigKey name="anrTimeoutInterval">
+
+Set this to change the default interval of the ANR detection. The default is `5` seconds.
+
+</ConfigKey>
+
+<ConfigKey name="reportSilentFlutterErrors">
+
+Set this boolean to `true` to enable reporting [FlutterErrorDetails.silent](https://api.flutter.dev/flutter/foundation/FlutterErrorDetails/silent.html) errors automatically.
+
+</ConfigKey>
+
+<ConfigKey name="autoAppStart">
+
+Set this boolean to `false` to disable automatic app start tracking.
+
+</ConfigKey>
+
+<ConfigKey name="enableAutoNativeBreadcrumbs">
+
+Set this boolean to `false` to disable automatic breadcrumbs on the Native platforms.
+
+</ConfigKey>
+
+<ConfigKey name="enableUserInteractionBreadcrumbs">
+
+Set this boolean to `false` to disable automatic User Interactions breadcrumbs.
+
+</ConfigKey>
+
+<ConfigKey name="enableUserInteractionTracing">
+
+Set this boolean to `false` to disable automatic User Interactions tracing.
+
+</ConfigKey>
+
+<ConfigKey name="proguardUuid">
+
+Sets the Proguard UUID for Android platform
+
+</ConfigKey>

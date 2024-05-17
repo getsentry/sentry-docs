@@ -1,0 +1,107 @@
+---
+title: Migration Guide
+sidebar_order: 8000
+description: "Migrate between versions of Sentry's SDK for Dart."
+---
+
+## Migrating From `sentry` `6.18.x` to `sentry` `7.0.0`
+
+API changes:
+
+- Sentry's Dart SDK version 7.0.0 and above requires Dart `2.17.0`.
+- Sentry's `sentry_file` package version 7.0.0 and above requires Dart `2.19.0`.
+- Methods that used to take a `dynamic hint` optional parameter now take `Hint? hint` instead.
+- The following deprecated fields have been removed from the `SentryDevice` class and replaced:
+  - `screenResolution` replaced with `screenHeightPixels` and `screenWidthPixels`.
+  - `timezone` replaced with `SentryCulture#timezone`.
+  - `language` replaced with `SentryCulture#locale`.
+  - `theme` replaced with `SentryOperatingSystem#theme`.
+- The following deprecated field has been removed from the `Contexts#dart_context` databag and replaced:
+  - `isolate` replaced with `SentryThread#name`.
+- The following fields have been removed from the `Scope` class and replaced:
+  - `user(SentryUser? user)` replaced with `setUser(SentryUser? user)`.
+  - `attachements` replaced with `attachments`.
+- Classes or methods that used to take the below optional parameters, have been moved to the `SentryOptions` class and replaced:
+  - `captureFailedRequests` replaced with `SentryOptions#captureFailedRequests`.
+  - `sendDefaultPii` replaced with `SentryOptions#sendDefaultPii`.
+  - `maxRequestBodySize` replaced with `SentryOptions#maxRequestBodySize`.
+  - `networkTracing` replaced with `SentryOptions#tracesSampleRate` or `SentryOptions#tracesSampler`.
+  - `recordBreadcrumbs` replaced with `SentryOptions#recordHttpBreadcrumbs`.
+- The following `SentryMeasurementUnits` are now strongly typed:
+  - `DurationSentryMeasurementUnit`
+  - `InformationSentryMeasurementUnit`
+  - `FractionSentryMeasurementUnit`
+  - `CustomSentryMeasurementUnit`
+  - `NoneSentryMeasurementUnit`
+
+Behavior changes:
+
+- Sentry's Dart SDK version 7.0.0 and above supports Dart `3.0.0`.
+- When an unhandled error happens and there's a running transaction, the transaction status will be set to `internal_error`.
+- The `captureFailedRequests` feature is now enabled by default.
+- The `enableStructuredDataTracing` feature is now enabled by default.
+- The `enableUserInteractionTracing` feature is now enabled by default.
+
+## Migrating From `sentry` `6.5.x` to `sentry` `6.6.x`
+
+- `SentryOptions#sendClientReports` is now enabled by default. To disable it, use the code snippet below:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init((options) => options.sendClientReports = false;
+}
+```
+
+- The `Scope.user` setter was deprecated in favor of `Scope.setUser`, and it will be removed in a future update.
+
+- The `Scope.attachements` getter was deprecated in favor of `attachments`, and it will be removed in a future update.
+
+- The following `Scope` methods now return `Future<void>` instead of `void`:
+  - `setContexts`
+  - `removeContexts`
+  - `setUser`
+  - `addBreadcrumb`
+  - `clearBreadcrumbs`
+  - `setExtra`
+  - `removeExtra`
+  - `setTag`
+  - `removeTag`
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `6.6.0` of `sentry`, [Sentry's version >= v21.9.0](https://github.com/getsentry/self-hosted/releases) is required or you have to manually disable sending client reports via the `sendClientReports` option. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+## Migrating From `sentry` `5.1.x` to `sentry` `6.0.0`
+
+- `Sentry.currentHub` was removed. Please use the static methods on `Sentry`
+- `SentryOptions.cacheDirSize` was renamed to `SentryOptions.maxCacheItems`
+- `EventProcessor` was changed from a callback to an interface
+- The data type from the following options was changed from `int` to `Duration`. The old options are still present but deprecated and will be removed in a future version.
+  - `SentryOptions.autoSessionTrackingIntervalMillis` to `SentryOptions.autoSessionTrackingInterval`
+  - `SentryOptions.anrTimeoutIntervalMillis` to `SentryOptions.anrTimeoutInterval`
+- The `beforeSend` callback now accepts async code. The method signature changed from `SentryEvent? Function(SentryEvent event, {dynamic hint});` to `FutureOr<SentryEvent?> Function(SentryEvent event, {dynamic hint});`. While this is technically a breaking change, your code probably is still valid.
+- Sentry accepts multiple exceptions and multiple threads. If you haven't set exceptions, there's no need to do anything.
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `6.0.0` of the `sentry`, [Sentry's version >= v20.6.0](https://github.com/getsentry/self-hosted/releases) is required. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+## Migrating From `sentry` `4.0.x` to `sentry` `5.0.0`
+
+- Sentry's Dart SDK version 5.0.0 and above requires Dart 1.12.0
+- Fix: Prefix classes with Sentry
+  - A couple of classes were often conflicting with user's code.
+    As a result, this change renames the following classes:
+    - `App` -> `SentryApp`
+    - `Browser` -> `SentryBrowser`
+    - `Device` -> `SentryDevice`
+    - `Gpu` -> `SentryGpu`
+    - `Integration` -> `SentryIntegration`
+    - `Message` -> `SentryMessage`
+    - `OperatingSystem` -> `SentryOperatingSystem`
+    - `Orientation` -> `SentryOrientation`
+    - `Request` -> `SentryRequest`
+    - `User` -> `SentryUser`
+- Return type of `Sentry.close()` changed from `void` to `Future<void>` and `Integration.close()` changed from `void` to `FutureOr<void>`

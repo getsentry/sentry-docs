@@ -1,0 +1,123 @@
+## Uploading Source Maps in a Remix Project
+
+If you installed the Remix SDK with the <PlatformLink to="/#install">Sentry Wizard</PlatformLink>, source maps upload was **already configured for you**.
+Whenever you run the `build` script in your `package.json` source maps will be uploaded automatically.
+
+If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
+
+### Using Vite Plugin (Recommended)
+
+Starting from version 2.2.0, Remix supports [Vite](https://vitejs.dev/) as a build tool, and from Remix version 2.7.0 it's stable and the recommended way to build your application.
+
+If you use Vite to build your project, you can use the [Vite plugin](/platforms/javascript/sourcemaps/uploading/vite/) to upload source maps to Sentry.
+
+First, install the plugin if you haven't already done so:
+
+```bash
+npm install --save-dev @sentry/vite-plugin
+```
+
+Then, add the plugin to your Vite configuration:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from 'vite'
+import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryVitePlugin } from '@sentry/vite-plugin'
+
+export default defineConfig({
+  plugins: [
+    remix({
+      // ... your Remix plugin options
+    }),
+    sentryVitePlugin({
+      // If you use .sentryclirc or environment variables,
+      // you don't need to specify these options
+      authToken: '___SENTRY_AUTH_TOKEN___',
+      org: '___SENTRY_ORG_SLUG___',
+      project: '___SENTRY_PROJECT_SLUG___',
+    })
+  ],
+  build: {
+    sourcemap: true,
+    // ... rest of your Vite build options
+  }
+
+  // ... rest of your Vite config
+})
+```
+
+To see the full list of options, refer to the [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+
+### Using `sentry-upload-sourcemaps` Script
+
+If you're not using Vite to build your project, you can use the `sentry-upload-sourcemaps` script to upload source maps to Sentry.
+
+The Sentry Remix SDK provides a script to automatically create a release and upload source maps after you've built your project.
+Under the hood, it uses the [Sentry CLI](/product/cli/).
+
+This script requires setting an auth token, which can either be done through a `.sentryclirc` file in the root of your project or through environment variables:
+
+<OrgAuthTokenNote />
+
+```ini {filename:.sentryclirc}
+# Do not commit this file to your repository!
+# Sentry Auth tokens should be treated as a secret.
+[auth]
+token=___ORG_AUTH_TOKEN___
+```
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Next, adjust your `package.json`'s production build command to include the `sentry-upload-sourcemaps` script:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "build": "remix build --sourcemap && sentry-upload-sourcemaps --org ___ORG_SLUG___ --project ___PROJECT_SLUG___"
+  }
+}
+```
+
+Alternatively, you can run the script directly with `npx`:
+
+```bash {tabTitle:Bash}
+npx sentry-upload-sourcemaps --org ___ORG_SLUG___ --project ___PROJECT_SLUG___
+
+# For usage details run
+npx sentry-upload-sourcemaps --help
+```
+
+<Alert>
+
+To generate source maps with your Remix project, you need to call `remix build` with the `--sourcemap` option.
+
+Please refer to the [Remix CLI docs](https://remix.run/docs/en/main/other-api/dev#options) for more information.
+
+</Alert>
+
+### Remove Remix Source Maps
+
+Remix validly discourages hosting source maps in production. After uploading the maps to Sentry, we suggest you delete the `.map` files.
+The `sentry-upload-sourcemaps` script will automatically try to delete all generated source maps after they're uploaded (unless the `--deleteAfterUpload` flag is provided).
+
+If you want to be extra sure they're deleted, you can use the following shell script:
+
+```bash {tabTitle:Bash}
+find ./public/build -type f -name '*.map' -delete
+find ./build -type f -name '*.map' -delete
+```
+
+```bash {tabTitle:Zsh}
+rm ./public/**/*.map
+rm ./build/**/*.map
+```
+
+Please note that these commands might vary for the operating system or shell you use.
+
+<Note>
+
+By default, if Sentry can't find the uploaded files it needs, it will attempt to download them from the URLs in the stack trace. To disable this, turn off "Enable JavaScript source fetching" in either your organization's "Security & Privacy" settings or your project's general settings.
+
+</Note>

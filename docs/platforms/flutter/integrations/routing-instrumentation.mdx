@@ -1,0 +1,277 @@
+---
+title: Routing Instrumentation
+description: "Learn more about the Sentry Routing Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.flutter
+categories:
+  - mobile
+---
+
+Sentry's routing instrumentation for Flutter automatically tracks and reports page navigation events in your app.
+It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navigation) and the [GoRouter](https://pub.dev/packages/go_router) package.
+
+<Note>
+
+The routing instrumentation feature is shipped with Sentry's Flutter SDK automatically.
+
+</Note>
+
+## Prerequisites
+
+Before starting, ensure:
+
+1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring is set up. Learn more [here](/platforms/flutter/performance/).
+
+## Configure
+
+### 1. Add `SentryNavigationObserver`
+
+Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
+
+```dart {tabTitle: Flutter Routing}
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+return MaterialApp(
+  title: 'My Widget',
+  home: MyWidget(),
+  navigatorObservers: [
+    SentryNavigatorObserver()
+  ],
+);
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final router = GoRouter(
+  routes: ...,
+  observers: [SentryNavigatorObserver()],
+);
+```
+
+### 2. Define Route Names
+
+By default the application's main route name is `"/"`.
+The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
+For transactions to be created when navigation changes, you need to provide route names:
+
+- Flutter routing: use `RouteSettings` and set the name in the constructor.
+- GoRouter: use the `name` parameter to set the route name.
+
+```dart {tabTitle: Flutter Routing}
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Setting the route name is required
+MaterialPageRoute(
+  builder: (BuildContext context) => MyWidget(),
+  settings: RouteSettings(name: 'My Widget'),
+)
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final GoRouter _router = GoRouter(
+  observers: [SentryNavigatorObserver()],
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/',
+      name: 'Home',
+      builder: (BuildContext context, GoRouterState state) {
+        return const HomeScreen();
+      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: 'mywidget',
+          name: 'MyWidget',
+          builder: (BuildContext context, GoRouterState state) {
+            return const MyWidget();
+          },
+        ),
+      ],
+    ),
+  ],
+);
+```
+
+## Time to Initial Display
+
+Time to initial display (TTID) provides insight into how long it takes your Widget to launch and draw their first frame. This is measured by adding a span for navigation to a Widget. The SDK then sets the span operation to `ui.load.initial-display` and the span description to the Widget's route name, followed by initial display (for example, `MyWidget initial display`).
+There are two ways to set up TTID:
+
+### Default Versus Manual Setup
+
+The default setup is enabled automatically, but only provides an approximation of TTID. To set a more accurate TTID, manually wrap the desired widget with `SentryDisplayWidget`, as shown below:
+
+
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryDisplayWidget(
+  child: MyWidget(),
+)
+```
+
+### Combining the Two Approaches
+
+If you have some Widgets that need accurate measurements while the rest can be automatically approximated, you can use a combination of both the default and the manual method.
+
+## Time to Full Display
+
+Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content. This is measured by adding a span for each navigation to a Widget. The SDK then sets the span operation to `ui.load.full-display` and the span description to the Widget's route name, followed by full display (for example, `MyWidget full display`).
+
+TTFD is disabled by default. To enable TTFD measurements, follow these steps:
+
+1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration:
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.enableTimeToFullDisplayTracing = true,
+    appRunner: () => runApp(MyApp()),
+  );
+}
+```
+
+2. Report the span manually:
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryFlutter.reportFullyDisplayed();
+```
+
+If the span finishes through the API, its status will be set to `SpanStatus.OK`.
+
+If the span doesn't finish after 30 seconds, it will be finished by the SDK automatically, and its status will be set to `SpanStatus.DEADLINE_EXCEEDED`. In this case, its duration will match the TTID span.
+
+## Verify
+
+### 1. Implement a Test Widget:
+
+Set up a new widget that executes an expensive operation.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:sentry/sentry.dart';
+
+/// Widget that executes an expensive operation
+class MyWidget extends StatefulWidget {
+  const MyWidget({super.key});
+
+  @override
+  MyWidgetState createState() => MyWidgetState();
+}
+
+class MyWidgetState extends State<MyWidget> {
+  static const delayInSeconds = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _doComplexOperation();
+  }
+
+  /// Attach child spans to the routing transaction
+  /// or the transaction will not be sent to Sentry.
+  Future<void> _doComplexOperation() async {
+    final activeTransaction = Sentry.getSpan();
+    final childSpan = activeTransaction?.startChild('complex operation',
+    description: 'running a $delayInSeconds seconds operation');
+    await Future.delayed(const Duration(seconds: delayInSeconds));
+    childSpan?.finish();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ...
+  }
+}
+```
+
+### 2. Navigate to the Widget:
+
+Use the navigator to transition to your widget. This should create and send a transaction named after the widget's route.
+
+```dart {tabTitle: Flutter Routing}
+import 'package:flutter/material.dart';
+import 'my_widget.dart';
+
+/// Push to a new screen
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: 'MyWidget'),
+    builder: (context) => MyWidget(),
+  ),
+);
+```
+
+```dart {tabTitle: GoRouter}
+import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+context.push('/mywidget')
+```
+
+Log into [sentry.io](https://sentry.io) and open your project's performance page to see the transaction `MyWidget`.
+
+## Additional Configuration
+
+### Auto Finish Time
+
+Adjust the duration before a routing transaction automatically finishes. The default is 3 seconds.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Change how long navigation transactions idle before being finished
+SentryNavigatorObserver(
+  autoFinishAfter: Duration(seconds: 5)
+)
+```
+
+When configuring the `autoFinishAfter` parameter, consider the following behaviours:
+
+- Started child spans will be attached to the navigation transaction - for example the `MyWidget` transaction.
+- If child spans finish after the `autoFinishAfter` time, the transaction extends and finishes when all child spans finished.
+- If child spans finish before the `autoFinishAfter` time, the transaction's end time will be set to the last child end time.
+
+### Breadcrumb Tracking Only
+
+Set `enableAutoTransactions` to `false` if you only want to track navigation breadcrumbs.
+Enabled by default.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Only track navigation breadcrumbs
+SentryNavigatorObserver(
+  enableAutoTransactions: false,
+)
+```
+
+### Override Transaction Name
+
+Set `setRouteNameAsTransaction` to `true` to override the transaction name with the route name.
+An existing transaction in the scope 'CustomTransaction' will be renamed to 'MyWidget' for example.
+Disabled by default.
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+/// Override transaction name with route name
+SentryNavigatorObserver(
+  setRouteNameAsTransaction: true,
+)
+```

@@ -1,0 +1,107 @@
+---
+title: MAUI
+sdk: sentry.dotnet.maui
+description: "Learn about Sentry's .NET integration with .NET Multi-platform App UI (MAUI)."
+---
+
+Sentry has an integration for the [.NET Multi-platform App UI (MAUI)](https://dotnet.microsoft.com/apps/maui) through the [Sentry.Maui NuGet package](https://www.nuget.org/packages/Sentry.Maui).
+
+## Overview of the features
+
+- Easy MAUI integration by calling `UseSentry` on your `MauiAppBuilder`
+- All the features of our main [.NET SDK](/platforms/dotnet), for your managed code
+- Native crash reporting for Android, leveraging our [Android SDK](/platforms/android)
+- Native crash reporting for iOS and Mac Catalyst, leveraging our [Cocoa SDK for iOS](/platforms/apple/guides/ios)
+- Managed crash reporting (unhandled exceptions), on all MAUI platforms (iOS, Android, Windows, Mac Catalyst, and Tizen)
+- Line numbers for your .NET stack traces when PDBs are uploaded to Sentry
+- Automatic breadcrumbs for MAUI app lifecycle and UI events
+- Detailed device and runtime information passed on every event
+- Automatic session tracking enabled, to support [release health](/product/releases/)
+
+## Installation
+
+Add the Sentry dependency to your .NET MAUI application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Maui -v {{@inject packages.version('sentry.dotnet.maui') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Maui -Version {{@inject packages.version('sentry.dotnet.maui') }}
+```
+
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the MAUI related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
+
+### Configure
+
+In your `MauiProgram.cs` file, call `UseSentry` on your `MauiAppBuilder`, and include any options you would like to set. The `Dsn` is the only required parameter.
+
+<SignInNote />
+
+```csharp
+public static MauiApp CreateMauiApp()
+{
+    var builder = MauiApp.CreateBuilder();
+    builder
+        .UseMauiApp<App>()
+
+        // Add this section anywhere on the builder:
+        .UseSentry(options =>
+        {
+            // The DSN is the only required setting.
+            options.Dsn = "___PUBLIC_DSN___";
+
+            // Use debug mode if you want to see what the SDK is doing.
+            // Debug messages are written to stdout with Console.Writeline,
+            // and are viewable in your IDE's debug console or with 'adb logcat', etc.
+            // This option is not recommended when deploying your application.
+            options.Debug = true;
+
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
+
+            // Other Sentry options can be set here.
+        })
+
+        // ... the remainder of your MAUI app setup
+
+    return builder.Build();
+}
+```
+
+## Options
+
+As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
+
+Below, the options that are specific to `Sentry.Maui` will be described.
+
+### IncludeTextInBreadcrumbs
+
+This option controls whether elements that implement the `IText` interface (such as `Button`, `Label`, `Entry`, and others) will have their text included on breadcrumbs. This option is disabled by default.
+
+<Alert level="warning">
+
+Use caution when enabling, as such values may contain personally identifiable information (PII).
+
+</Alert>
+
+### IncludeTitleInBreadcrumbs
+
+This option contols whether elements that implement the `ITitledElement` interface (such as `Window`, `Page`, and others) will have their titles included on breadcrumbs. This option is disabled by default.
+
+<Alert level="warning">
+
+Use caution when enabling, as such values may contain personally identifiable information (PII).
+
+</Alert>
+
+### IncludeBackgroundingStateInBreadcrumbs
+
+Controls whether the breadcrumb sent for the `Window.Backgrounding` event will include state data from `BackgroundingEventArgs.State`. This option is disabled by default.
+
+<Alert level="warning">
+
+Use caution when enabling, as such values may contain personally identifiable information (PII).
+
+</Alert>

@@ -1,0 +1,128 @@
+---
+title: Symfony Options
+description: "Learn about Sentry's integration with Symfony and its options."
+sidebar_order: 1
+---
+
+In addition to the [configuration available in the PHP SDK](../options/), there are some Symfony-specific options.
+
+All configuration for Symfony is done in `config/packages/sentry.yaml`.
+
+<SignInNote />
+
+{/* <!-- prettier-ignore --> */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    dsn: "___PUBLIC_DSN___"
+    register_error_listener: true
+    register_error_handler: true
+    options:
+        integrations:
+            - "sentry.integration.my_custom_integration"
+        prefixes:
+            - "/local_dir/"
+        sample_rate: 1
+        enable_tracing: true
+        traces_sample_rate: 1
+        traces_sampler: "sentry.callback.traces_sampler"
+        attach_stacktrace: true
+        attach_metric_code_locations: true
+        context_lines: 5
+        environment: "%kernel.environment%"
+        logger: "php"
+        spotlight: true
+        spotlight_url: "http://localhost:8969"
+        release: "5.0.x-dev"
+        server_name: "localhost"
+        ignore_exceptions:
+            - "Symfony\\Component\\HttpKernel\\Exception\\BadRequestHttpException"
+        ignore_transactions:
+            - "GET /helath"
+        before_send: "sentry.callback.before_send"
+        before_send_transaction: "sentry.callback.before_send_transaction"
+        trace_propagation_targets:
+          - 'example.com'
+        tags:
+            tag1: "value1"
+            tag2: "value2"
+        error_types: "E_ALL & ~E_NOTICE"
+        max_breadcrumbs: 50
+        before_breadcrumb: "sentry.callback.before_breadcrumb"
+        in_app_exclude:
+            - '%kernel.cache_dir%'
+        in_app_include:
+            - '%kernel.project_dir%'
+        send_default_pii: true
+        max_value_length: 1024
+        transport: "sentry.transport"
+        transport: "sentry.http_client"
+        http_proxy: "proxy.example.com:8080"
+        http_proxy_authentication: "user:password"
+        http_connect_timeout: 15
+        http_timeout: 10
+        http_ssl_verify_peer: true
+        http_compression: true
+        capture_silenced_errors: true
+        max_request_body_size: "medium"
+        class_serializers:
+            App\User: "App\\Sentry\\Serializer\\UserSerializer"
+        
+```
+
+The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
+left empty, it disables Sentry reporting. Because Sentry enables the bundle in all environments, it's recommended to
+disable it in the `test` and `dev` environments.
+
+All the possible configurations under the `options` key map directly to the correspondent options from the base SDK;
+you can read more about those in the [general configuration docs](../options/).
+
+Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
+values that you can use in some cases.
+
+## `environment`
+
+The `environment` option defaults to the same environment of your Symfony application.
+
+## `in_app_exclude`
+
+The `in_app_exclude` option is used to mark files as non belonging to your app's source code in events' stack traces.
+In this bundle it has three default values:
+
+- `%kernel.build_dir%`, to exclude Symfony's build dir
+- `%kernel.cache_dir%`, to exclude Symfony's cache dir
+- `%kernel.project_dir%/vendor`, to exclude Composer's dependencies
+
+## Callables
+
+The `before_breadcrumb`, `before_send`, `before_send_transaction` and `traces_sampler` options accept a `callable`; so, you cannot provide it directly through
+a YAML file. The bundle accepts a service reference, which you can build in your DIC container like this:
+
+{/* <!-- prettier-ignore --> */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        before_send: 'sentry.callback.before_send'
+
+services:
+    sentry.callback.before_send:
+        class: 'App\Service\Sentry'
+        factory: [ '@App\Service\Sentry', 'getBeforeSend' ]
+```
+
+The service needed for the `before_breadcrumb` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public function getBeforeSend(): callable
+    {
+        return function(\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
+            return $event;
+        };
+    }
+}
+```

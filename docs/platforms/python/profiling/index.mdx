@@ -1,0 +1,52 @@
+---
+title: Set Up Profiling
+description: "Learn how to enable profiling in your app if it is not already set up."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/preface" />
+<PlatformContent includePath="profiling/index/why-profiling" />
+
+## Enable Profiling
+
+<Note>
+
+Python profiling is stable as of SDK version `1.18.0`.
+
+</Note>
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+def profiles_sampler(sampling_context):
+    # ...
+    # return a number between 0 and 1 or a boolean
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+
+    # To set a uniform sample rate
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production,
+    profiles_sample_rate=1.0,
+
+    # Alternatively, to control sampling dynamically
+    profiles_sampler=profiles_sampler
+)
+```
+
+<Note>
+
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+
+For Profiling to work, you have to first enable Sentry’s performance monitoring via `traces_sample_rate` (like in the example above). Read our <PlatformLink to="/performance/">performance setup documentation</PlatformLink> to learn how to configure sampling. If you set your sample rate to 1.0, all transactions will be captured.
+
+</Note>
+
+### Upgrading from older SDK versions
+
+Profiling was experimental in SDK versions `1.17.0` and older. Learn how to upgrade <PlatformLink to="/profiling/troubleshooting/#ipgrading-from-older-sdk-versions">here</PlatformLink>.

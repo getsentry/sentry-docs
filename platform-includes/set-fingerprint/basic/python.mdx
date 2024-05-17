@@ -1,0 +1,12 @@
+```python
+from sentry_sdk import push_scope, capture_exception
+
+def make_request(method, path, options):
+    try:
+        return session.request(method, path, **options)
+    except RequestError as err:
+        with push_scope() as scope:
+            # group errors together based on their request and response
+            scope.fingerprint = [method, path, str(err.status_code)]
+            capture_exception(err)
+```

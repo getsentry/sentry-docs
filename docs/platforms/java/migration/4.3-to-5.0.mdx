@@ -1,0 +1,41 @@
+---
+title: Migrating Version 4.3 to 5.0
+sidebar_order: 998
+description: "Learn about migrating from version 4.3.0 to 5.0.0"
+---
+
+## Migrating from `io.sentry:sentry` `4.3.0` to `io.sentry:sentry` `5.0.0`
+
+`Sentry#startTransaction` by default does not bind created transaction to the scope. To start transaction with binding to the scope, use one of the new overloaded `startTransaction` methods taking `bindToScope` parameter and set it to `true`. Bound transaction can be retrieved with `Sentry#getSpan`.
+
+All SDK methods have been annotated with [JetBrains Annotations](https://github.com/JetBrains/java-annotations): `@Nullable` and `@NotNull`. Kotlin compiler respects these annotations and as a result, in Kotlin code, some fields that were recognized as not-null, are now nullable, and the other way around.
+
+`SentryBaseEvent#getOriginThrowable` has been deprecated in favor of `SentryBaseEvent#getThrowable`, and `SentryBaseEvent#getThrowable` now returns the unwrapped throwable.
+
+The `ShutdownHookIntegration` now flushes the SDK instead of closing it.
+
+`SentryOptions#getCacheDirSize` has been deprecated in favor of `SentryOptions#getMaxCacheItems`.
+
+`InvalidDsnException` has been removed. It is replaced by `IllegalArgumentException`.
+
+`EventProcessor` interface has a new `default` method which could break the instantiation when using trailing lambdas.
+
+_Old_:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+_New_:
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
+        return event
+    }
+})
+```
+
+### Spring Boot
+
+The property `sentry.enable-tracing` is deprecated. To enable tracing simply set `sentry.traces-sample-rate` or create a bean implementing `TracesSamplerCallback`.

@@ -1,0 +1,56 @@
+---
+title: Filtering
+sidebar_order: 60
+description: "Learn more about how to configure your SDK to filter events reported to Sentry."
+---
+
+When you add Sentry to your app, you get a lot of valuable information about errors and performance. And lots of information is good -- as long as it's the right information, at a reasonable volume.
+
+The Sentry SDKs have several configuration options to help you filter out events.
+
+We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/event-payloads/).
+
+## Filtering Error Events
+
+Configure your SDK to filter error events by using the <PlatformIdentifier name="before-send" /> callback method and configuring, enabling, or disabling integrations.
+
+### Using <PlatformIdentifier name="before-send" />
+
+All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `null`, based on custom logic and the data available on the event.
+
+<PlatformContent includePath="configuration/before-send/" />
+
+Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
+
+### Using Hints
+
+Hints are available in two places:
+
+1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
+2. `eventProcessors`
+
+Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
+
+For events, hints contain properties such as `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
+
+For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
+
+<PlatformContent includePath="configuration/before-send-fingerprint">
+
+In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
+
+</PlatformContent>
+
+#### Hints for Events
+
+`originalException`
+
+The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+
+`syntheticException`
+
+When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
+
+#### Hints for Breadcrumbs
+
+<PlatformContent includePath="configuration/breadcrumb-hints" />

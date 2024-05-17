@@ -1,0 +1,24 @@
+Performance Monitoring is available for the Sentry's Go SDK version ≥ 0.9.0.
+
+```go
+func main() {
+	err := sentry.Init(sentry.ClientOptions{
+		// ...
+
+		EnableTracing: true,
+		// Specify a fixed sample rate:
+		// We recommend adjusting this value in production
+		TracesSampleRate: 1.0,
+		// Or provide a custom sample rate:
+		TracesSampler: sentry.TracesSampler(func(ctx sentry.SamplingContext) float64 {
+			// As an example, this does not send some
+			// transactions to Sentry based on their name.
+			if ctx.Span.Name == "GET /health" {
+				return 0.0
+			}
+
+			return 1.0
+		}),
+	})
+}
+```

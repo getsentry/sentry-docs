@@ -1,0 +1,24 @@
+```ruby
+class RPCError < StandardError
+  attr_reader :code, :function_name, :message
+
+  def initialize(code, function_name, message)
+    @code = code
+    @function_name = function_name
+    @message = message
+  end
+end
+
+Sentry.init do |config|
+  # ...
+  config.before_send = lambda do |event, hint|
+    exception = hint[:exception]
+
+    if exception.is_a?(RPCError)
+      event.fingerprint = ["{{default}}", exception.code, exception.function_name]
+    end
+
+    event
+  end
+end
+```

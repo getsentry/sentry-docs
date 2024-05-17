@@ -1,0 +1,54 @@
+## Setting and Retrieving the Current Transaction
+
+In cases where you want to attach spans to an already ongoing transaction, you can use `getTransaction()` on the current hub. This property will return a `\Sentry\Tracing\Transaction` in cases where there is a transaction set; otherwise, it returns `null`.
+
+```php
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
+
+if ($transaction !== null) {
+    $context = \Sentry\Tracing\SpanContext::make();
+        ->setOp('some_operation');
+    $span = $transaction->startChild($context);
+
+    // ...
+
+    $span->finish();
+}
+```
+
+You can also set the current transaction after you started one:
+
+```php
+$transactionContext = \Sentry\Tracing\TransactionContext::make()
+    ->setName('Example Transaction');
+    ->setOp('http.server');
+
+$transaction = \Sentry\startTransaction($transactionContext);
+
+// A transaction is a span so we set it using `setSpan`
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+```
+
+## Setting and Retrieving the Current Span
+
+In cases where you want to attach spans to an already ongoing span, you can use `getSpan()` on the current hub. This property will return a `\Sentry\Tracing\Span` in cases where there is a span set; otherwise, it returns `null`. You can also set the current span after you started one and restore it back to the parent after your span ends.
+
+```php
+$parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+
+if ($parentSpan !== null) {
+    $context = \Sentry\Tracing\SpanContext::make()
+        ->setOp('some_operation');
+    $span = $parentSpan->startChild($context);
+
+    // Set the span we just started as the current span
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+
+    // ...
+
+    $span->finish();
+
+    // Restore the span back to the parent span
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
+}
+```

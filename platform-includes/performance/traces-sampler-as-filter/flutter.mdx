@@ -1,0 +1,30 @@
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryFlutter.init(
+  (options) => {
+    // Determine traces sample rate based on the sampling context
+    options.tracesSampler = (samplingContext) {
+      final ctx = samplingContext.customSamplingContext;
+      // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+      final parentSampled =
+          samplingContext.transactionContext.parentSampled;
+      if (parentSampled != null) {
+        return parentSampled ? 1.0 : 0.0;
+      }
+
+      if (/* make a decision based on `samplingContext` */) {
+        // Drop this transaction, by setting its sample rate to 0%
+        return 0.0;
+      } else if (/* ... */) {
+        // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+        return 0.1;
+      }
+      // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+      return null;
+    },
+  },
+  appRunner: () => runApp(MyApp()),
+);
+```

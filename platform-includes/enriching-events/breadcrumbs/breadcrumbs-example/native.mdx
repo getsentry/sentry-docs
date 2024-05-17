@@ -1,0 +1,21 @@
+```c
+#include <sentry.h>
+
+sentry_value_t crumb = sentry_value_new_breadcrumb("default", "Authenticated user");
+sentry_value_set_by_key(crumb, "category", sentry_value_new_string("auth"));
+sentry_value_set_by_key(crumb, "level", sentry_value_new_string("info"));
+sentry_add_breadcrumb(crumb);
+
+// to add `data` to a breadcrumb you must create a wrapping `object` which maps
+// to the expected dictionary structure:
+sentry_value_t http_data = sentry_value_new_object();
+sentry_value_set_by_key(http_data, "url", sentry_value_new_string("https://example.com/api/1.0/users"));
+sentry_value_set_by_key(http_data, "method", sentry_value_new_string("GET"));
+sentry_value_set_by_key(http_data, "status_code", sentry_value_new_int32(200));
+sentry_value_set_by_key(http_data, "reason", sentry_value_new_string("OK"));
+
+sentry_value_t http_crumb = sentry_value_new_breadcrumb("http", NULL);
+sentry_value_set_by_key(http_crumb, "category", sentry_value_new_string("xhr"));
+sentry_value_set_by_key(http_crumb, "data", http_data);
+sentry_add_breadcrumb(http_crumb);
+```

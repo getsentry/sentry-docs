@@ -1,0 +1,394 @@
+---
+title: Troubleshooting
+description: "If you need help solving issues with your Sentry JavaScript SDK integration, you can read the edge cases documented below."
+keywords: ["adblocker", "blocked", "tunnel", "non-Error exception", "404"]
+excerpt: ""
+notSupported: ["javascript.capacitor"]
+sidebar_order: 9000
+---
+
+<Expandable title="Updating to a new Sentry SDK version">
+
+If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
+Check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn everything you need
+to know to get up and running again with the latest Sentry features.
+
+</Expandable>
+
+<Expandable title="Debugging additional data">
+
+You can view the JSON payload of an event to see how Sentry stores additional data in the event. The shape of the data may not exactly match the description.
+
+![Red box highlighting where to find the JSON connected to an event](./img/event_JSON.png)
+
+For more details, see the [full documentation on Event Payload](https://develop.sentry.dev/sdk/event-payloads/).
+
+</Expandable>
+
+<Expandable title="Max JSON payload size">
+
+`maxValueLength` has a default value of 250, but you can adjust this value according to your needs if your messages are longer. Please note that not every single value is affected by this option.
+
+</Expandable>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="CORS attributes and headers">
+
+To gain visibility into a JavaScript exception thrown from scripts originating from different origins, do two things:
+
+1. Add a crossorigin=”anonymous” script attribute
+
+```bash
+ <script src="http://another-domain.com/app.js" crossorigin="anonymous"></script>
+```
+
+The script attribute tells the browser to fetch the target file “anonymously.” Potentially user-identifying information like cookies or HTTP credentials won’t be transmitted by the browser to the server when requesting this file.
+
+2. Add a Cross-Origin HTTP header
+
+```bash
+Access-Control-Allow-Origin: *
+```
+
+Cross-Origin Resource Sharing (CORS) is a set of APIs (mostly HTTP headers) that dictate how files ought to be downloaded and served across origins.
+
+By setting `Access-Control-Allow-Origin: *`, the server is indicating to browsers that any origin can fetch this file. Alternatively, you can restrict it to a known origin you control:
+
+```bash
+ Access-Control-Allow-Origin: https://www.example.com
+```
+
+Most community CDNs properly set an `Access-Control-Allow-Origin` header.
+
+```bash
+ $ curl --head https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.js | \
+ grep -i "access-control-allow-origin"
+
+ Access-Control-Allow-Origin: *
+```
+</Expandable>
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="Unexpected OPTIONS request">
+
+If your application started to misbehave because of performing additional OPTIONS requests, it is most likely an issue with unwanted `sentry-trace` request headers, which can happen when you are using too generic a configuration for our Tracing Integration in the Browser SDK.
+
+To fix this, change the `tracePropagationTargets` option during SDK initialization. For more details, see [Automatic Instrumentation](/platforms/javascript/performance/instrumentation/automatic-instrumentation/#tracePropagationTargets) in our Performance Monitoring documentation.
+</Expandable>
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+<Expandable title="`instrument.js` Line Numbers for Console Log statements">
+
+If `instrument.js` displays in your console while debugging, add Sentry to your [Framework Ignore List](https://developer.chrome.com/docs/devtools/settings/ignore-list/#skip-extensions) by adding this pattern: `/@sentry/`
+
+Chrome then ignores the SDK stack frames when debugging.
+</Expandable>
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+<Expandable title="Dealing with Ad-Blockers">
+
+When you are using our CDN, ad-blocking or script-blocking extensions may prevent our SDK from being fetched and initialized properly. Because of this, any call to the SDKs API will fail and may cause your application to behave unexpectedly.
+
+Additionally, even when the SDK is downloaded and initialized correctly, Sentry endpoints that need to receive captured data may be blocked as well. This prevents any error reports, sessions health, or performance data from being delivered, making it effectively unavailable in [sentry.io](https://sentry.io).
+
+Furthermore, some browsers, like [Brave](https://brave.com/), have built-in ad-blockers that may block requests sent to our endpoint. Even if users deactivate your domain from blocking, Brave might continue to block [requests made from service workers](https://github.com/getsentry/sentry/issues/47912#issuecomment-1573714875).
+
+You can work around our CDN bundles being blocked by [using our NPM packages](#using-the-npm-package) and bundling our SDK with your app. However, the endpoint blockage can only be resolved by using a tunnel as explained below.
+</Expandable>
+
+<Expandable title="Using the `tunnel` Option">
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+<Note>
+  The Sentry Next.js SDK has a separate option to make setting up tunnels very straight-forward, allowing you to skip the setup below. See <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">Configure Tunneling to avoid Ad-Blockers</PlatformLink> to learn how to set up tunneling on Next.js.
+</Note>
+
+</PlatformSection>
+
+A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your application. Because you control this server, there is no risk of any requests sent to it being blocked. When the endpoint lives under the same origin (although it does not have to in order for the tunnel to work), the browser will not treat any requests to the endpoint as a third-party request. As a result, these requests will have different security measures applied which, by default, don't trigger ad-blockers. A quick summary of the flow can be found below.
+
+![Tunnel Flow](./img/tunnel.png)
+
+Starting with version `6.7.0` of the JavaScript SDK, you can use the `tunnel` option to tell the SDK to deliver events to the configured URL, instead of using the DSN. This allows the SDK to remove `sentry_key` from the query parameters, which is one of the main reasons ad-blockers prevent sending events in the first place. This option also stops the SDK from sending preflight requests, which was one of the requirements that necessitated sending the `sentry_key` in the query parameters.
+
+To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests.
+
+<SignInNote />
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "/tunnel",
+});
+```
+
+Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here's an example for your server component:
+
+```csharp
+
+// This functionality is now built-in to the Sentry.AspNetCore package.
+// See https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/#tunnel
+// docs for more information.
+
+// This example shows how you could implement it yourself:
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Text.Json;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+
+// Change host appropriately if you run your own Sentry instance.
+const string host = "sentry.io";
+// Set knownProjectIds to a list with your Sentry project IDs which you
+// want to accept through this proxy.
+var knownProjectIds = new HashSet<string>() {  };
+
+var client = new HttpClient();
+WebHost.CreateDefaultBuilder(args).Configure(a =>
+    a.Run(async context =>
+    {
+        context.Request.EnableBuffering();
+        using var reader = new StreamReader(context.Request.Body);
+        var header = await reader.ReadLineAsync();
+        var headerJson = JsonSerializer.Deserialize<Dictionary<string, object>>(header);
+        if (headerJson.TryGetValue("dsn", out var dsnString)
+            && Uri.TryCreate(dsnString.ToString(), UriKind.Absolute, out var dsn))
+        {
+            var projectId = dsn.AbsolutePath.Trim('/');
+            if (knownProjectIds.Contains(projectId) && string.Equals(dsn.Host, host, StringComparison.OrdinalIgnoreCase)) {
+              context.Request.Body.Position = 0;
+              await client.PostAsync($"https://{dsn.Host}/api/{projectId}/envelope/",
+                  new StreamContent(context.Request.Body));
+            }
+        }
+    })).Build().Run();
+```
+
+```ruby
+require 'net/http'
+
+class HomeController < ApplicationController
+
+  SENTRY_HOST = "oXXXXXX.ingest.sentry.io"
+  SENTRY_PROJECT_IDS = ["123456"]
+
+  def tunnel
+    envelope = request.body.read
+    piece = envelope.split("\n").first
+    header = JSON.parse(piece)
+    dsn = URI.parse(header['dsn'])
+    project_id = dsn.path.tr('/', '')
+
+    raise "Invalid sentry hostname: #{dsn.hostname}" if dsn.hostname != SENTRY_HOST
+    raise "Invalid sentry project id: #{project_id}" unless SENTRY_PROJECT_IDS.include?(project_id)
+
+    upstream_sentry_url = "https://#{SENTRY_HOST}/api/#{project_id}/envelope/"
+    Net::HTTP.post(URI(upstream_sentry_url), envelope)
+
+    head(:ok)
+  rescue => e
+    # handle exception in your preferred style,
+    # e.g. by logging or forwarding to server Sentry project
+    Rails.logger.error('error tunneling to sentry')
+  end
+
+end
+```
+
+```javascript
+  const SENTRY_HOST = "oXXXXXX.ingest.sentry.io"
+  const SENTRY_PROJECT_IDS = ["123456"]
+
+  export const postAction = async ({ request }) => {
+      try {
+          const envelope = await request.text();
+          const piece = envelope.split("\n")[0];
+          const header = JSON.parse(piece);
+          const dsn = new URL(header["dsn"]);
+          const project_id = dsn.pathname?.replace("/", "");
+
+          if (dsn.hostname !== SENTRY_HOST) {
+              throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
+          }
+
+          if (!project_id || !SENTRY_PROJECT_IDS.includes(project_id)) {
+              throw new Error(`Invalid sentry project id: ${project_id}`);
+          }
+
+          const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
+          await fetch(upstream_sentry_url, { method: "POST", body: envelope });
+
+          return json({}, { status: 200 });
+      } catch (e) {
+          console.error("error tunneling to sentry", e);
+          return json({ error: "error tunneling to sentry" }, { status: 500 });
+      }
+  };
+```
+
+If your use-case is related to the SDK package itself being blocked, any of the following solutions will help you resolve this issue.
+
+### Using the NPM Package
+
+The best way to deal with script-blocking extensions is to use the SDK package directly through the `npm` and bundle it with your application. This way, you can be sure that the code will be always be there as you expect it to be.
+
+### Self-hosting CDN bundles
+
+The second way is to download the SDK from our CDN and host it yourself. This way, the SDK will still be separated from the rest of your code, but you'll be certain that it won't be blocked since its origin will be the same as the origin of your website.
+
+You can easily fetch it using `curl` or any other similar tool:
+
+```bash
+curl https://browser.sentry-cdn.com/5.20.1/bundle.min.js -o sentry.browser.5.20.1.min.js -s
+```
+
+### Using the JavaScript Proxy API
+
+The last option is to use `Proxy` guard, which will make sure that your code won't break, even when you call our SDK, which was blocked. `Proxy` is supported by all browser except Internet Explorer, though there are no extensions in this browser. Also if `Proxy` is not in any of your user's browser, it will be silently skipped, so you don't have to worry about it breaking anything.
+
+Place this snippet immediately **above** the `<Expandable>` tag containing our CDN bundle. The snippet in a readable format presents like this:
+
+```javascript
+if ("Proxy" in window) {
+  var handler = {
+    get: function (_, key) {
+      return new Proxy(function (cb) {
+        if (key === "flush" || key === "close") return Promise.resolve();
+        if (typeof cb === "function") return cb(window.Sentry);
+        return window.Sentry;
+      }, handler);
+    },
+  };
+  window.Sentry = new Proxy({}, handler);
+}
+```
+
+If you would like to copy and paste the snippet directly, here it is minified:
+
+```html
+<script>
+  if ("Proxy" in window) {
+    var n = {
+      get: function (o, e) {
+        return new Proxy(function (n) {
+          return "flush" === e || "close" === e
+            ? Promise.resolve()
+            : "function" == typeof n
+              ? n(window.Sentry)
+              : window.Sentry;
+        }, n);
+      },
+    };
+    window.Sentry = new Proxy({}, n);
+  }
+</script>
+```
+
+</Expandable>
+
+
+</PlatformCategorySection>
+
+<Expandable title="Third party promise libraries">
+
+When you include and configure Sentry, our JavaScript SDK automatically attaches global handlers to _capture_ uncaught exceptions and unhandled promise rejections. You can disable this default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
+
+You may also need to manage your configuration if you are using a third-party library to implement promises. Also, remember that browsers often implement security measures that can block error reporting when serving script files from different origins.
+
+</Expandable>
+
+<Expandable title="Events with 'Non-Error Exception'">
+
+If you’re seeing errors with the message “Non-Error exception (or promise rejection) captured with keys: x, y, z.”, this happens when you a) call `Sentry.captureException()` with a plain object, b) throw a plain object, or c) reject a promise with a plain object.
+
+You can see the contents of the non-Error object in question in the `__serialized__` entry of the “Additional Data” section.
+
+To get better insight into these error events, we recommend finding where the plain object is being passed or thrown to Sentry based on the contents of the `__serialized__` data, and then turning the plain object into an Error object.
+
+</Expandable>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="Capturing resource 404s">
+
+By default, Sentry does not capture errors when a resource (like an image or a css file) fails to load. If you would like it to do so, you can use the following code. (Note: We recommend loading Sentry as early as possible in any case, but this method in particular will only work if Sentry is loaded before other resources.)
+
+```javascript
+document.body.addEventListener(
+  "error",
+  (event) => {
+    if (!event.target) return;
+
+    if (event.target.tagName === "IMG") {
+      Sentry.captureMessage(
+        `Failed to load image: ${event.target.src}`,
+        "warning"
+      );
+    } else if (event.target.tagName === "LINK") {
+      Sentry.captureMessage(
+        `Failed to load css: ${event.target.href}`,
+        "warning"
+      );
+    }
+  },
+  true // useCapture - necessary for resource loading errors
+);
+```
+
+Remember to pass in `true` as the second parameter to `addEventListener()`. Without it, the event handler won't be called, since it's being added to the event target's ancestor rather than the event target itself, and unlike JavaScript runtime errors, `error` events resulting from load failures don't bubble, and therefore must be captured during the `capture` phase. For more information, see [the W3C spec](https://www.w3.org/TR/2003/NOTE-DOM-Level-3-Events-20031107/events.html#Events-phases).
+</Expandable>
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable title="Supporting older browsers">
+
+Starting with version 7.0.0, the Sentry JavaScript SDK uses ES6 syntax, along with a few other ES6+ language features, like object spread. If you are down-compiling your code in order to target older browsers that don't support such syntax, you'll need to include the Sentry SDK in that process.
+
+<PlatformContent includePath="troubleshooting/older-browser-support" />
+
+</Expandable>
+</PlatformCategorySection>
+
+<Expandable title="Build errors with vite">
+
+If you're using the [Vite Bundler](https://vitejs.dev/) and a Sentry NPM package, and you see the following error:
+
+```
+Error: Could not resolve './{}.js' from node_modules/@sentry/utils/esm/index.js
+```
+
+This might be because the [`define`](https://vitejs.dev/config/shared-options.html#define) option in your Vite config is string-replacing some variable used by the Sentry SDK, like `global`, which causes build errors. Vite recommends using `define` for CONSTANTS only, and not putting `process` or `global` into the options. To fix this build error, remove or update your `define` option, as shown below:
+
+```diff {filename:vite.config.ts}
+export default defineConfig({
+   build: {
+     sourcemap: true
+   },
+-  define: {
+-    global: {}
+-  },
+   plugins: [react()]
+})
+```
+</Expandable>
+
+<Expandable title="Missing module `diagnostics_channel`">
+
+<Include name="diagnostics-channel-build-error-troubleshooting.mdx" />
+
+</Expandable>
+
+If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

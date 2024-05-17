@@ -1,0 +1,118 @@
+---
+title: Basic Options
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+sidebar_order: 1
+---
+
+SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
+initialized.
+
+<PlatformContent includePath="configuration/config-intro" />
+
+## Common Options
+
+The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
+
+<ConfigKey name="dsn">
+
+The _DSN_ tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+
+In runtimes without a process environment (such as the browser) that fallback does not apply.
+
+Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+
+</ConfigKey>
+
+<ConfigKey name="release">
+
+Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+
+</ConfigKey>
+
+<ConfigKey name="environment">
+
+Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</ConfigKey>
+
+<ConfigKey name="sample-rate">
+
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+
+</ConfigKey>
+
+<ConfigKey name="max-breadcrumbs">
+
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+
+</ConfigKey>
+
+<ConfigKey name="server-name">
+
+This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+
+Most SDKs will attempt to auto-discover this value.
+
+</ConfigKey>
+
+## Hooks
+
+These options can be used to hook the SDK in various ways to customize the reporting of events.
+
+<ConfigKey name="before-send">
+
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+</ConfigKey>
+
+<ConfigKey name="after-send-event">
+
+This function is called with an event and the result of sending that event. This is useful to log send results, instrument Sentry calls, and so on.
+
+</ConfigKey>
+
+## Transport Options
+
+Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
+
+<ConfigKey name="send-result">
+
+Controls whether to report events to Sentry _synchronously_ (if set to `:sync`) or _asynchronously_ (if set to `:none`). Defaults to `:none`.
+
+</ConfigKey>
+
+<ConfigKey name="send-max-attempts">
+
+The maximum number of attempts to send an event to Sentry. Defaults to `4`.
+
+</ConfigKey>
+
+<ConfigKey name="client">
+
+The HTTP client to use for sending events to Sentry. This must be a module that implements the [`Sentry.HTTPClient`](https://hexdocs.pm/sentry/Sentry.HTTPClient.html) behaviour. Defaults to `Sentry.HackneyClient`, which is based on the [Hackney](https://hexdocs.pm/hackney) HTTP client.
+
+</ConfigKey>
+
+<ConfigKey name="hackney-opts">
+
+Options to be passed to Hackney. Only applied if `client` is set to `Sentry.HackneyClient`. Defaults to `[pool: :sentry_pool]`.
+
+</ConfigKey>
+
+<ConfigKey name="hackney-pool-max-connections">
+
+The maximum number of connections to keep in the pool. Only applied if `client` is set to `Sentry.HackneyClient`. Defaults to `50`.
+
+</ConfigKey>
+
+<ConfigKey name="hackney-pool-timeout">
+
+The maximum time to wait (in milliseconds) for a connection to become available. Only applied if `client` is set to `Sentry.HackneyClient`. Defaults to `5000`.
+
+</ConfigKey>

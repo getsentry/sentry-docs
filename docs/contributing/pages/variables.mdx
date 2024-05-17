@@ -1,0 +1,49 @@
+---
+title: Markdown Variables
+noindex: true
+---
+
+A transformation is exposed to both Markdown and MDX files which supports processing variables in a Django/Jekyll-style way.
+The variables available are globally scoped and configured within `remark-variables.js`.
+
+For example:
+
+```markdown {tabTitle:Replacment}
+JavaScript SDK: {{@inject packages.version("sentry.javascript.browser") }}
+```
+
+```markdown {tabTitle:Source}
+JavaScript SDK: {{\@inject packages.version("sentry.javascript.browser") }}
+```
+
+In this case, we expose `packages` as an accessor in the package registry, which is why there's a `packages.version` function available. Additionally, we expose a default context variable of `page`, which contains the frontmatter of the given markdown node. For example, `{{\@inject page.title }}`.
+
+When a variable call is invalid (or errors), or doesn't match something in the known scope, it will produce an error message in the output in development mode. It will force the build to fail in production.
+
+To escape an expression add a leading `\` to the `@inject`.
+
+## `packages`
+
+The `packages` helper is an instance of `PackageRegistry` and exposes several methods.
+
+### `packages.version`
+
+Returns the latest version of the given package.
+
+```text {tabTitle:Source}
+{{\@inject packages.version("sentry.javascript.browser") }}
+```
+
+You may also optionally specify a fallback for if the package isn't found (or there's an upstream error):
+
+```text {tabTitle:Source}
+{{\@inject packages.version("sentry.javascript.browser", "1.0.0") }}
+```
+
+### `packages.checksum`
+
+Returns the checksum of a given file in a package.
+
+```text {tabTitle:Source}
+{{\@inject packages.checksum("sentry.javascript.browser", "bundle.min.js", "sha384") }}
+```

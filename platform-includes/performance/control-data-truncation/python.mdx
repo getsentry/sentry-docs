@@ -1,0 +1,30 @@
+Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `base_url`, `endpoint`, and `parameters`:
+
+```python
+import sentry_sdk
+
+# ...
+
+base_url = "https://empowerplant.io"
+endpoint = "/api/0/projects/ep/setup_form"
+parameters = {
+    "user_id": 314159265358979323846264338327,
+    "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
+    "product_name": PlantToHumanTranslator,
+    "product_id": 161803398874989484820458683436563811772030917980576,
+}
+
+with sentry_sdk.start_span(op="request", transaction="setup form") as span:
+    span.set_tag("base_url", base_url)
+    span.set_tag("endpoint", endpoint)
+    span.set_data("parameters", parameters)
+    make_request(
+        "{base_url}/{endpoint}/".format(
+            base_url=base_url,
+            endpoint=endpoint,
+        ),
+        data=parameters
+    )
+
+    # ...
+```

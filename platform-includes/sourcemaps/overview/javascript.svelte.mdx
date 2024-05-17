@@ -1,0 +1,99 @@
+## Upload Source Maps for a Svelte Project
+
+<Note>
+
+This guide assumes you are using the `@sentry/svelte` SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
+### Using the Sentry Wizard
+
+The easiest way to configure uploading source maps is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source maps upload manually, follow the guide for your bundler or build tool below.
+
+### Manually Configuring Source Maps Upload
+
+To generate source maps with your Svelte project, you need to set the source map [compiler options](https://svelte.dev/docs#compile-time-svelte-compile) in your Svelte config:
+
+```JavaScript {filename:svelte.config.js}
+import sveltePreprocess from "svelte-preprocess";
+
+const config = {
+  compilerOptions: {
+    enableSourcemap: true,
+  },
+  preprocess: sveltePreprocess({
+    sourceMap: true,
+  }),
+};
+
+export default config;
+```
+
+If you're using Vite in you Svelte project, you can use Sentry's Vite plugin for convenience:
+
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with a `.env.sentry-build-plugin` file in the working directory when building your project.
+You likely want to add the auth token as an environment variable to your CI/CD environment.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Configure Vite to emit source maps and use the Sentry Vite plugin:
+
+<SignInNote />
+
+```JavaScript {filename:vite.config.js}
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
+  plugins: [
+    svelte(),
+
+    // Put the Sentry vite plugin after all other plugins
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+<Note>
+
+The Sentry Vite plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your implementation.
+
+</Note>
+
+### Other Bundlers
+
+If you're using a bundler other than Vite, check out our general guide on how to <PlatformLink to="/sourcemaps/uploading/">upload source maps</PlatformLink>, or refer to your bundler's documentation.
+
+<Note>
+
+By default, if Sentry can't find the uploaded files it needs, it will attempt to download them from the URLs in the stack trace. To disable this, turn off "Enable JavaScript source fetching" in either your organization's "Security & Privacy" settings or your project's general settings.
+
+</Note>

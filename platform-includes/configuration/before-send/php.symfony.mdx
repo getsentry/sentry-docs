@@ -1,0 +1,37 @@
+In the Symfony config, a service can be used to modify the event or return a completely new one. If you return `null`, the event will be discarded.
+
+{/*<!-- prettier-ignore -->*/}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        before_send: 'sentry.callback.before_send'
+
+services:
+    sentry.callback.before_send:
+        class: 'App\Service\Sentry'
+        factory: [ '@App\Service\Sentry', 'getBeforeSend' ]
+```
+
+The service needed for the `before_send` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public function getBeforeSend(): callable
+    {
+        return function (\Sentry\Event $event): ?\Sentry\Event {
+            return $event;
+        };
+    }
+}
+```
+
+<Note>
+
+Learn more in [Callables in Symfony Options](/platforms/php/guides/symfony/configuration/symfony-options/#callables).
+
+</Note>

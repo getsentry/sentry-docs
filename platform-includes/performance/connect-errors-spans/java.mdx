@@ -1,0 +1,81 @@
+## Connect Errors with Spans
+
+Sentry errors can be linked with transactions and spans.
+
+<PlatformSection supported={["java"]} notSupported={["android", "java.spring", "java.spring-boot"]}>
+
+<Note>
+
+We have dedicated performance features for our [Spring](/platforms/java/guides/spring/) and [Spring Boot](/platforms/java/guides/spring-boot/) integrations. In addition, errors are linked with spans automatically using either of these integrations.
+
+</Note>
+
+</PlatformSection>
+
+Errors reported to Sentry while transaction or span **bound to the scope** is running are linked automatically:
+
+```java {tabTitle:Java}
+import io.sentry.Sentry;
+import io.sentry.ISpan;
+import io.sentry.ITransaction;
+import io.sentry.TransactionOptions;
+
+TransactionOptions txOptions = new TransactionOptions();
+txOptions.setBindToScope(true);
+ITransaction span = Sentry.startTransaction(item.getTransactionName(), "task", txOptions);
+try {
+  processItem();
+} catch (Exception e) {
+  Sentry.captureException(e);
+} finally {
+  span.finish();
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+import io.sentry.TransactionOptions;
+
+val span = Sentry.startTransaction(item.getTransactionName(), "task", TransactionOptions().apply { isBindToScope = true })
+try {
+  processItem()
+} catch (e: Exception) {
+  Sentry.captureException(e)
+} finally {
+  span.finish()
+}
+```
+
+Exceptions may be thrown within spans that can finish before exception gets reported to Sentry. To attach span information to this exception, you must link it by calling setThrowable method:
+
+```java {tabTitle:Java}
+import io.sentry.Sentry;
+import io.sentry.ISpan;
+
+ISpan span = Sentry.getSpan();
+if (span == null) {
+  span = Sentry.startTransaction(item.getTransactionName(), "task");
+}
+try {
+  processItem();
+} catch (Exception e) {
+  span.setThrowable(e);
+  throw e;
+} finally {
+  span.finish();
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+
+val span = Sentry.getSpan()?: Sentry.startTransaction(item.getTransactionName(), "task")
+try {
+  processItem()
+} catch (e: Exception) {
+  span.throwable = e
+  throw e
+} finally {
+  span.finish()
+}
+```

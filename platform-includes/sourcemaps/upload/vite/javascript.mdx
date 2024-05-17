@@ -1,0 +1,73 @@
+<Note>
+
+This guide assumes you are using a Sentry SDK on version `7.47.0` or higher.
+
+If you are on an older version and you want to upload source maps we recommend upgrading your SDK to the newest version.
+
+</Note>
+
+You can use the Sentry Vite plugin to automatically create releases and upload source maps to Sentry when bundling your app.
+
+## Automatic Setup
+
+The easiest way to configure uploading source maps with Vite is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source maps upload with Vite manually, follow the steps below.
+
+## Manual Setup
+
+Install the Sentry Vite plugin:
+
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+### Configuration
+
+To upload source maps you have to configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file in the working directory when building your project.
+We recommend you add the auth token to your CI/CD environment as an environment variable.
+
+Learn more about configuring the plugin in our [Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Example:
+
+<SignInNote />
+
+```javascript {filename:vite.config.js}
+import { defineConfig } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
+  plugins: [
+    // Put the Sentry vite plugin after all other plugins
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+<Note>
+
+The Sentry Vite plugin doesn't upload source maps in watch-mode/development-mode.
+We recommend running a production build to test your configuration.
+
+</Note>

@@ -1,0 +1,72 @@
+---
+title: JavaScript Core
+description: "Upload source maps for React Native JavaScript Core application."
+---
+
+Sentry's React Native SDK works out of the box with applications using JavaScript Core (JSC) engine. To see readable stack traces in the product source maps need to be uploaded to Sentry. This guide explains how to manually upload source maps from JSC engine.
+
+## Set Up Automatic Upload
+
+<Include name="react-native-sourcemaps-wizard-instructions.mdx" />
+
+## Manual Upload
+
+To manually upload source maps, first, you need to generate the source maps and bundle. Then compile the Hermes bytecode bundle, and finally upload the source map to Sentry.
+
+Start by adding Sentry React Native Metro Plugin to your `metro.config.js`:
+
+```javascript {filename="metro.config.js"}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config);
+```
+
+Generate the React Native Packager (Metro) bundle and source maps:
+
+```bash {tabTitle:Android}
+npx react-native bundle \
+  --dev false \
+  --minify true \
+  --platform android \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output index.android.bundle \
+  --sourcemap-output index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+npx react-native bundle \
+  --dev false \
+  --minify true \
+  --platform ios \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+Make sure `sentry-cli` is configured for your project and set up your environment variables:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Upload the bundle and source map to Sentry:
+
+```bash {tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+  --strip-prefix /path/to/project/root \
+  index.android.bundle index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+  --strip-prefix /path/to/project/root \
+  main.jsbundle main.jsbundle.map
+```

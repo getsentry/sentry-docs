@@ -1,0 +1,60 @@
+### Supported versions
+
+Sentry Node SDK `8.x` supports Node `14.18.0` or higher
+
+If you need to support older versions of Node.js, please use Sentry Node SDK `7.x`.
+
+### Updated SDK initialization
+
+With 8.x, @sentry/node has been completely overhauled. It is now powered by [OpenTelemetry](https://opentelemetry.io/) under the hood. You do not need to know or understand what OpenTelemetry is in order to use Sentry. We set up OpenTelemetry under the hood. If you use OpenTelemetry-native APIs to start spans, Sentry will pick up everything automatically.
+
+Here's an example of instrumentating your Azure Function with Sentry Node SDK `8.x`:
+
+```JavaScript
+const Sentry = require('@sentry/node');
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1,
+});
+
+module.exports = async function (context, req) {
+  return Sentry.withIsolationScope(async () => {
+    getCurrentScope().setSDKProcessingMetadata({ request: ctx.request });
+    try {
+      await notExistFunction();
+    } catch (e) {
+      Sentry.captureException(e);
+      await Sentry.flush(2000);
+    }
+
+    context.res = {
+      status: 200,
+      body: "Hello from Azure Cloud Function!",
+    };
+  });
+};
+```
+
+To migrate your Google Cloud Function handlers to Sentry Serverless SDK for Azure Functions `8.x`, you need to make the following changes:
+
+1. Move your `Sentry.init` call so that it is called before any other `require`/`import` statements.
+
+Due to the way that auto instrumentation works in `8.x` of the Sentry Serverless SDK for Azure Functions, it is required that you initialize Sentry before you require or import any other package. Any package that is required/imported before Sentry is initialized may not be correctly auto-instrumented.
+
+2. Remove any performance related integrations
+
+All performance auto-instrumentation will be automatically enabled if the package is found. You do not need to add any integration yourself, and `autoDiscoverNodePerformanceMonitoringIntegrations()` has also been removed.
+
+We now support the following integrations out of the box with 0 configuration:
+
+- `httpIntegration`: Automatically instruments Node http and https standard libraries
+- `nativeNodeFetchIntegration`: Automatically instruments top level fetch and undici
+- `expressIntegration`: Automatically instruments Express.js
+- `graphqlIntegration`: Automatically instruments GraphQL
+- `mongoIntegration`: Automatically instruments MongoDB
+- `mongooseIntegration`: Automatically instruments Mongoose
+- `mysqlIntegration`: Automatically instruments MySQL
+- `mysql2Integration`: Automatically instruments MySQL2
+- `postgresIntegration`: Automatically instruments PostgreSQL
+- `prismaIntegration`: Automatically instruments Prisma

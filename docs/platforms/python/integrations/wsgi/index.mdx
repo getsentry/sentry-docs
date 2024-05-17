@@ -1,0 +1,75 @@
+---
+title: WSGI
+description: "Learn about the WSGI integration and how it adds support for WSGI applications."
+---
+
+If you use a WSGI framework not directly supported by the SDK, or wrote a raw WSGI app, you can use this generic WSGI middleware. It captures errors and attaches a basic amount of information for incoming requests.
+
+<Note>
+
+If you use an WSGI framework, please use our specific integrations for [Flask](/platforms/python/integrations/flask/), [Bottle](/platforms/python/integrations/bottle/), [Falcon](/platforms/python/integrations/falcon/), [Pyramid](/platforms/python/integrations/pyramid/), and [Tryton](/platforms/python/integrations/tryton/) instead of this WSGI middleware as those are easier to use and capture more useful information.
+
+</Note>
+
+## Install
+
+```bash
+pip install --upgrade 'sentry-sdk'
+```
+
+## Configure
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+
+from my_wsgi_app import app
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+
+app = SentryWsgiMiddleware(app)
+```
+
+## Verify
+
+This minimal WSGI application will create a transaction and send it to Sentry. The error will also be sent to Sentry and associated with the transaction:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+
+sentry_sdk.init(...)  # same as above
+
+def app(env, start_response):
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    response_body = 'Hello World'
+    1/0  # this raises an error
+    return [response_body.encode()]
+
+app = SentryWsgiMiddleware(app)
+
+# Run the application in a mini WSGI server.
+from wsgiref.simple_server import make_server
+make_server('', 8000, app).serve_forever()
+```
+
+## Behavior
+
+<Include name="python-uwsgi-warning.mdx" />
+
+- Request data is attached to all events: **HTTP method, URL, headers**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+- The WSGI middleware does not behave like a regular integration. It is not initialized through an extra parameter to `init` and is not attached to a client. When capturing or supplementing events, it just uses the currently active scopes.
+
+## Supported Versions
+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

@@ -1,0 +1,77 @@
+---
+title: Transports
+sidebar_order: 30
+description: "Transports let you change the way in which events are delivered to Sentry."
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.wasm
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+---
+
+The JavaScript SDK uses a `transport` to send events to Sentry. On modern browsers, most transports use the browsers' `fetch` API to send events. Transports will drop an event if it fails to send due to a lack of connection.
+
+You can change the transport by setting the `transport` option in the `init` call. The SDK provides a few built-in transports, and you can also create your own.
+
+## `makeBrowserOfflineTransport`
+
+The `makeBrowserOfflineTransport` transport is a built-in transport that uses the `IndexedDB` API to store events when the browser is offline. When the browser comes back online, the transport sends the stored events to Sentry. <PlatformLink to="/best-practices/offline-caching/">Read more about how to use it.</PlatformLink>
+
+## Custom transport
+
+You can also provide a custom transport to Sentry. The transport must conform to the `Transport` interface:
+
+```javascript
+interface Transport {
+  send(request: Envelope): Promise<TransportMakeRequestResponse>;
+  flush(timeout?: number): Promise<boolean>;
+}
+```
+
+You can also use the `createTransport` utility from `@sentry/core` to help with some boilerplate:
+
+```javascript
+import { createTransport } from '@sentry/core';
+import * from '@sentry/browser';
+
+function makeFetchTransport(
+  options
+): Transport {
+  function makeRequest(request) {
+    const requestOptions: RequestInit = {
+      body: request.body,
+      method: 'POST',
+      referrerPolicy: 'origin',
+      headers: options.headers,
+      ...options.fetchOptions,
+    };
+
+    return fetch(options.url, requestOptions).then(response => {
+      return {
+        statusCode: response.status,
+        headers: {
+          'x-sentry-rate-limits': response.headers.get('X-Sentry-Rate-Limits'),
+          'retry-after': response.headers.get('Retry-After'),
+        },
+      };
+    });
+  }
+
+  return createTransport(options, makeRequest);
+}
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  transport: makeFetchTransport
+});
+```

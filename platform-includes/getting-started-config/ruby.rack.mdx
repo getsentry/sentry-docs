@@ -1,0 +1,48 @@
+### With Rackup
+
+Add `use Sentry::Rack::CaptureExceptions` to your `config.ru` or other rackup file:
+
+<SignInNote />
+
+```Ruby {filename:config.ru}
+require 'sentry-ruby'
+
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  # enable performance monitoring
+  config.enable_tracing = true
+  # get breadcrumbs from logs
+  config.breadcrumbs_logger = [:sentry_logger, :http_logger]
+end
+
+use Sentry::Rack::CaptureExceptions
+```
+
+### Without Rackup
+
+<Alert level="warning">
+
+If you're not using Rackup to run your app, then Sentry initialization code **must**
+be placed before your code requires Sinatra:
+
+</Alert>
+
+```Ruby {filename:app.rb}
+require 'sentry-ruby'
+
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  # enable performance monitoring
+  config.enable_tracing = true
+  # get breadcrumbs from logs
+  config.breadcrumbs_logger = [:sentry_logger, :http_logger]
+end
+
+# in a non-rackup environment you must initialize the Sentry SDK before requiring sinatra
+require 'sinatra'
+use Sentry::Rack::CaptureExceptions
+
+get "/" do
+  raise "foo"
+end
+```

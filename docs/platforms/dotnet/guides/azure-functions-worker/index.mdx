@@ -1,0 +1,50 @@
+---
+title: Azure Functions
+sdk: sentry.dotnet.azurefunctions.worker
+description: "Learn about Sentry's .NET integration with Azure Functions (Isolated Worker)."
+---
+
+Sentry provides an integration with Azure Functions through the [Sentry.Azure.Functions.Worker NuGet package](https://www.nuget.org/packages/Sentry.Azure.Functions.Worker).
+All triggers are supported.
+
+## Install
+
+Add the Sentry dependency to your Azure Functions application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Azure.Functions.Worker -v {{@inject packages.version('sentry.dotnet.azure.functions.worker') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Azure.Functions.Worker -Version {{@inject packages.version('sentry.dotnet.azure.functions.worker') }}
+```
+
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the Azure Functions related features, through this package you'll also get access to the `ILogger<T>` integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
+
+## Configure
+
+Sentry integration with Azure Functions (when using the Isolated Worker Process execution mode) is done by calling `.UseSentry()` and specifying the options. E.g.:
+
+<SignInNote />
+
+```csharp
+using Sentry.Azure.Functions.Worker;
+
+var host = new HostBuilder()
+    .ConfigureFunctionsWorkerDefaults((host, builder) =>
+    {
+        builder.UseSentry(host, options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.EnableTracing = true;
+            // When configuring for the first time, to see what the SDK is doing:
+            // options.Debug = true;
+        });
+    })
+    .Build();
+await host.RunAsync();
+```
+
+## Samples
+
+- [Integration with Azure Functions](https://github.com/getsentry/sentry-dotnet/tree/main/src/Sentry.Azure.Functions.Worker) sample demonstrates Sentry with Azure Functions Isolated Worker SDK. (**C#**)

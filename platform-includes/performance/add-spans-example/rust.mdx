@@ -1,0 +1,37 @@
+For example, if you want to create a transaction for a user interaction in your application:
+
+```rust
+// Let's say this method is called in a background thread when a user clicks on the checkout button of your shop
+fn perform_checkout() {
+    // This will create a new Transaction for you
+    let tx_ctx = sentry::TransactionContext::new(
+        "checkout",
+        "perform-checkout",
+    );
+    let transaction = sentry::start_transaction(tx_ctx);
+
+    // Validate the cart
+    let validation_span = transaction.start_child(
+        "validation",
+        "validating shopping cart",
+    );
+
+    validate_shopping_cart() //Some long process, maybe a sync http request.
+
+    validation_span.finish();
+
+    // Process the order
+    let process_span = transaction.start_child(
+        "process",
+        "processing shopping cart",
+    )
+
+    process_shopping_cart() //Another time consuming process.
+
+    process_span.finish();
+
+    transaction.finish();
+}
+```
+
+This example will send a transaction named `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `validate_shopping_cart()` took and a `process` span that measures `process_shopping_cart()`. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.

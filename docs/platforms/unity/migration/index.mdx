@@ -1,0 +1,58 @@
+---
+title: Migration Guide
+description: "Learn more about migrating to the current version."
+sidebar_order: 8000
+---
+
+## Migrating to 0.28.0
+
+### Breaking Changes
+
+The base classes for the Scriptable Objects used for programmatic configuration have been updated:
+
+- `Sentry.Unity.ScriptableOptionsConfiguration` has been changed to `SentryRuntimeOptionsConfiguration`
+- `Sentry.Unity.Editor.ScriptableOptionsConfiguration` has been changed to `SentryBuildtimeOptionsConfiguration`
+
+If you make use of the programmatic configuration, you'll need to update your implementation with these base classes.
+
+## Migrating to 0.11.0
+
+### Programmatic Configuration Changes
+
+You no longer need to to call `SentryUnity.Init`. Instead, you can let the SDK self-initialize and modify the options taken from the Sentry Unity editor configuration window by providing a `ScriptableOptionsConfiguration` object.
+
+- Open the Sentry Unity editor configuration window.
+- Go to the `Options Config` tab.
+- Click `Create options configuration`.
+  - This will prompt you to pick a location for your version of the scriptable options configuration script.
+  - It will also create an instance of the ScriptableOptionsConfiguration and set in it the configuration window.
+- Add your code to the newly created script.
+
+Learn more in our [options documentation](/platforms/unity/configuration/options/).
+
+## Migrating From 0.7.0 or Earlier
+
+Starting from version 0.7.0, the SDK is [aliasing](https://blog.sentry.io/2022/02/24/alias-an-approach-to-net-assembly-conflict-resolution) its dependencies. We do this to avoid creating conflicts with other packages. This also means that if you were relying on our dependencies for certain types like `System.Text.Json`, then you'll have to import them into your project yourself going forward.
+
+## Migrating From 0.3.0 or Earlier
+
+The Sentry SDK deprecated the use of JSON files to store options and now uses scriptable objects instead. If you're migrating from version 0.3.0 or older, make sure to upgrade to version 0.15.0 first. It's the last version that supports options stored in JSON format. When you open the Sentry configuration editor window in version 0.15.0, your JSON file will be automatically converted into a scriptable object. This support will be dropped in version 0.16.0 and later.
+
+## Migrating From `sentry.unity.lite` to `sentry.unity`
+
+<Note>
+
+The Sentry Unity Lite SDK is deprecated for mobile, desktop, WebGL, and console players.
+Customers using Unity 5.x can still use the Sentry Unity Lite as it continues to be compatible with sentry.io.
+
+The updated Sentry Unity SDK requires Unity version 2019.4 or higher with .NET Standard 2.0 scripting profile.
+
+</Note>
+
+<SignInNote />
+
+1. Remove the old `Sentry.cs` and `SentrySdk.cs` files from your project.
+2. Remove the old initialization code `gameObject.AddComponent<SentrySdk>().Dsn = "___PUBLIC_DSN___";`.
+3. Install the new [Sentry Unity SDK](/platforms/unity/).
+4. Calls to the API such as `SentrySdk.CaptureMessage("Test event");` will continue to work and don't require any change.
+5. Browse the documentation to learn more about the new capabilities of the SDK such as [enriching events](/platforms/unity/enriching-events/), [performance monitoring](/platforms/unity/performance/) and [configuration](/platforms/unity/configuration/).

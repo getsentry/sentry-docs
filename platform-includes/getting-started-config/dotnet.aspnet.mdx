@@ -1,0 +1,58 @@
+Add Sentry to `Global.asax.cs` as shown here:
+
+```csharp
+using System;
+using System.Configuration;
+using System.Web.Mvc;
+using System.Web.Routing;
+using Sentry;
+using Sentry.AspNet;
+
+namespace AspNetMvc
+{
+    public class MvcApplication : System.Web.HttpApplication
+    {
+        private IDisposable _sentry;
+
+        protected void Application_Start()
+        {
+            // Set up the Sentry SDK
+            _sentry = SentrySdk.Init(o =>
+            {
+                // We store the DSN inside Web.config; make sure to use your own DSN!
+                o.Dsn = ConfigurationManager.AppSettings["SentryDsn"];
+
+                // Get ASP.NET integration
+                o.AddAspNet();
+
+                // This option will enable Sentry's tracing features. You still need to start transactions and spans.
+                o.EnableTracing = true;
+
+                // Example sample rate for your transactions: captures 10% of transactions
+                o.TracesSampleRate = 0.1;
+            });
+        }
+
+        // Global error catcher
+        protected void Application_Error() => Server.CaptureLastError();
+
+
+        protected void Application_End()
+        {
+            // Close the Sentry SDK (flushes queued events to Sentry)
+            _sentry?.Dispose();
+        }
+
+        protected void Application_BeginRequest()
+        {
+            // Start a transaction that encompasses the current request
+            Context.StartSentryTransaction();
+        }
+
+        protected void Application_EndRequest()
+        {
+            Context.FinishSentryTransaction();
+        }
+    }
+}
+```

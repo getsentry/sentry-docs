@@ -1,0 +1,290 @@
+---
+title: Troubleshooting
+description: "Troubleshoot and resolve common issues with the Android SDK."
+sidebar_order: 9000
+---
+
+## Excluding Unwanted Resources from APK/AAB
+
+The Sentry Android SDK bundles some resources transitively from the Sentry Java SDK that are not required for Android apps. It's not possible to exclude these resources when publishing the SDK, but you can add the following snippet to your `app/build.gradle` file to reduce the final APK size by a bit:
+
+```kotlin
+android {
+  packagingOptions {
+    resources {
+      excludes += "META-INF/native-image/io.sentry/sentry/native-image.properties"
+    }
+  }
+}
+```
+
+## Sentry Android SDK Causes ANR
+
+Since version `6.1.1` of the Sentry SDK for Android, you can opt-out of some additional device context.
+
+```xml {tabTitle:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.additional-context" android:value="false" />
+</application>
+```
+
+```java {tabTitle:MyFile.java}
+options.setCollectAdditionalContext(false);
+```
+
+[More context in the PR](https://github.com/getsentry/sentry-java/pull/2100) that added this option.
+
+The motivation for it is that some of the Android API's the Sentry SDK relies on to add additional context, can be slow in some devices.
+For example, the following stack traces:
+
+```
+  #00  pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+  #00  pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+  #00  pc 0000000000669f3c  /apex/com.android.art/lib64/libart.so (art::GoToRunnable(art::Thread*)+460)
+  #00  pc 0000000000669d2c  /apex/com.android.art/lib64/libart.so (art::JniMethodEnd(unsigned int, art::Thread*)+28)
+  at android.os.BinderProxy.transactNative (Native method)
+  at android.os.BinderProxy.transact (BinderProxy.java:568)
+  at android.net.IConnectivityManager$Stub$Proxy.getActiveNetwork (IConnectivityManager.java:2435)
+  at android.net.ConnectivityManager.getActiveNetwork (ConnectivityManager.java:1033)
+  at io.sentry.android.core.internal.util.ConnectivityChecker.getConnectionType (ConnectivityChecker.java:101)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.setDeviceIO (DefaultAndroidEventProcessor.java:375)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.getDevice (DefaultAndroidEventProcessor.java:285)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.setDevice (DefaultAndroidEventProcessor.java:173)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.setCommons (DefaultAndroidEventProcessor.java:140)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.process (DefaultAndroidEventProcessor.java:130)
+  at io.sentry.SentryClient.processEvent (SentryClient.java:206)
+  at io.sentry.SentryClient.captureEvent (SentryClient.java:88)
+  at io.sentry.Hub.captureEvent (Hub.java:89)
+  at io.sentry.Sentry.captureEvent (Sentry.java:262)
+  at io.sentry.HubAdapter.captureEvent (HubAdapter.java:29)
+  at io.sentry.IHub.captureEvent (IHub.java:39)
+  at io.sentry.IHub$-CC.$default$captureEvent (IHub.java)
+  at io.sentry.HubAdapter.captureEvent (HubAdapter.java:29)
+```
+
+```
+  #00  pc 0000000000086f8c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+  #00  pc 00000000001b27a4  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+  #00  pc 000000000067e9d0  /apex/com.android.art/lib64/libart.so (art::GoToRunnable(art::Thread*)+480)
+  #00  pc 000000000067e7ac  /apex/com.android.art/lib64/libart.so (art::JniMethodEnd(unsigned int, art::Thread*)+28)
+  at android.os.BinderProxy.transactNative (Native method)
+  at android.os.BinderProxy.transact (BinderProxy.java:605)
+  at android.app.IActivityManager$Stub$Proxy.registerReceiverWithFeature (IActivityManager.java:6380)
+  at android.app.ContextImpl.registerReceiverInternal (ContextImpl.java:1696)
+  at android.app.ContextImpl.registerReceiver (ContextImpl.java:1650)
+  at android.app.ContextImpl.registerReceiver (ContextImpl.java:1638)
+  at android.content.ContextWrapper.registerReceiver (ContextWrapper.java:686)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.getBatteryIntent (DefaultAndroidEventProcessor.java:434)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.setDeviceIO (DefaultAndroidEventProcessor.java:326)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.getDevice (DefaultAndroidEventProcessor.java:285)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.setDevice (DefaultAndroidEventProcessor.java:173)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.setCommons (DefaultAndroidEventProcessor.java:140)
+  at io.sentry.android.core.DefaultAndroidEventProcessor.process (DefaultAndroidEventProcessor.java:130)
+  at io.sentry.SentryClient.processEvent (SentryClient.java:206)
+  at io.sentry.SentryClient.captureEvent (SentryClient.java:88)
+  at io.sentry.Hub.captureEvent (Hub.java:89)
+  at io.sentry.Sentry.captureEvent (Sentry.java:262)
+  at io.sentry.HubAdapter.captureEvent (HubAdapter.java:29)
+```
+
+## Incorrect Line Numbers in Kotlin
+
+Stack trace elements referring to Kotlin inline functions from files different than the call site may refer to the wrong line numbers.
+
+This is due to a [missing feature in the JVM](https://youtrack.jetbrains.com/issue/KT-8628/Line-numbers-are-incorrect-in-exception-stack-trace). `.class` files with inline functions contain code from many source files, and when the JVM generates a stack trace, it doesn't replace the class and line where the error occurred with the original file and line number. So, when an exception is thrown in an inline function, the line number for the stack trace of the Exception may be wrong.
+
+Let's show an example. Here is an Activity with an inline function throwing an Exception.
+
+```
+class MyActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        erroringFunction() // Line 10
+    }
+
+    inline fun erroringFunction() {
+        throw RuntimeException() // Line 14
+    }
+}
+ // Line 17
+```
+
+The stack trace of the Exception points to the line 18 of the `MyActivity.kt` class.
+
+```
+java.lang.RuntimeException
+	at io.sentry.samples.android.MyActivity.onCreate(MyActivity.kt:18)
+	at android.app.Activity.performCreate(Activity.java:8305)
+	at android.app.Activity.performCreate(Activity.java:8284)
+	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1417)
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3626)
+	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3782)
+	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2307)
+	at android.os.Handler.dispatchMessage(Handler.java:106)
+	at android.os.Looper.loopOnce(Looper.java:201)
+	at android.os.Looper.loop(Looper.java:288)
+	at android.app.ActivityThread.main(ActivityThread.java:7872)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+```
+
+## NDK
+
+If you're using a version of `sentry-android` before 5.0, due to current limitations in how `sentry-native` works, it cannot identify native libraries loaded directly from `.apk` files. Instead, it needs to have access to the extracted libraries on the file system.
+This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
+when using an Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
+[`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
+
+If you're using [Android App Bundle](https://developer.android.com/guide/app-bundle), set `android.bundle.enableUncompressedNativeLibs=false` along with the `extractNativeLibs` configuration option.
+
+In addition, `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally. As a result, the Android SDK won't work out of the box on devices with a newer Android OS because they have their own conflicting pointer tagging.
+
+<Note>
+
+If you're using a version of `sentry-android` before 3.1, you must manually disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option because `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally. As a result, this option won't work out of the box on devices with a newer Android OS because they have their own conflicting pointer tagging. This is fixed in `sentry-android` versions 3.1 and above.
+
+</Note>
+
+**Example AndroidManifest.xml**:
+
+```xml {filename:AndroidManifest.xml}
+<application
+    android:allowNativeHeapPointerTagging="false"
+    android:extractNativeLibs="true">
+</application>
+```
+
+**Example gradle.properties**:
+
+```properties {filename:gradle.properties}
+android.bundle.enableUncompressedNativeLibs=false
+```
+
+## Sentry Android Gradle Plugin Build Issues
+
+### Proguard Mapping Upload Issues
+
+You can set the debug log flag as an environment variable, which is picked up by the [Sentry CLI](/product/cli/).
+In addition, set the `--stacktrace` flag:
+
+```
+export SENTRY_LOG_LEVEL=debug && ./gradlew app:uploadSentryProguardMappingsRelease --stacktrace
+```
+
+With this information, it might be more clear what's happening. If not, please consider reporting these issues on [GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/issues), so we can keep track of them.
+
+### Auto-instrumentation Issues
+
+The [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) uses bytecode manipulation to automatically measure the performance of your application. This process requires looking at the dependencies of the application, which can potentially break the build process if there are libraries which have been compiled/minified with a non-default java compiler, like R8/D8.
+
+The culprit is usually our [File I/O instrumentation](/platforms/android/integrations/file-io/), which can be disabled as follows:
+
+```groovy
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.FILE_IO
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.FILE_IO)
+  }
+}
+```
+
+If disabling the file I/O instrumentation feature doesn't help, you can also disable the entire bytecode manipulation logic through the `tracingInstrumentation.enabled` flag:
+
+```groovy
+sentry {
+  tracingInstrumentation {
+    enabled = false
+  }
+}
+```
+
+```kotlin
+sentry {
+  tracingInstrumentation {
+    enabled.set(false)
+  }
+}
+```
+
+Please consider reporting these issues on [GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/issues), so we can keep track of them.
+
+### Auto-installation Issues
+
+The [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) offers the automated installation feature of the Sentry Android SDK and the Fragment, Timber, and OkHttp integrations. Because we modify the dependency tree, this might lead to potential issues with Gradle's configuration and build phases.
+
+#### `StackOverflowError` During Sync or Build
+
+If you're experiencing a `StackOverflowError` when trying to trigger a Gradle Sync in Android Studio or during the Gradle build, it's most likely [this issue](https://issuetracker.google.com/issues/232075280) documented on the Android Gradle Plugin (AGP) site. The issue is only present in version `7.2.0` of AGP and can be fixed as follows:
+
+Update the Sentry Android Gradle Plugin to version `3.1.3` or above:
+
+```groovy
+plugins {
+    id 'io.sentry.android.gradle' version '{{@inject packages.version('sentry.java.android.gradle-plugin', '3.1.3') }}'
+}
+```
+
+Or update the Android Gradle Plugin to version `7.2.1`:
+
+```groovy
+plugins {
+  id 'com.android.application' version '7.2.1'
+}
+```
+
+If the problem persists, it's most likely caused by some other Gradle plugin that is processing `.pom` files. In this case, you can work around the problem by upgrading the `sentry-android` or `sentry-android-core` dependency to version `6.3.0` or above:
+
+```groovy
+dependencies {
+  implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.3.0') }}' // or sentry-android-core if you don't use the ndk package
+}
+```
+
+#### Runtime Crash When Using `sentry-android-core` in a Submodule
+
+If you're declaring a `sentry-android-core:6.x` dependency that's **not in** your main `app` module, but in one of the submodules, and you're using the Sentry Android Gradle Plugin version `3.1.0`, the application will crash at runtime with a `NoSuchMethodError`. This is because the plugin will try to install the `sentry-android-ndk` with an incompatible version `5.7.0`. To fix this problem, you can update the Sentry Android Gradle Plugin to version `3.1.1` or above:
+
+```groovy
+plugins {
+    id 'io.sentry.android.gradle' version '{{@inject packages.version('sentry.java.android.gradle-plugin', '3.1.1') }}'
+}
+```
+
+Alternatively, you can tell the plugin to use your version of the Sentry NDK:
+
+```groovy
+sentry {
+  autoInstallation {
+    sentryVersion = '6.0.0' // or whatever version you use for `sentry-android-core`
+  }
+}
+```
+
+<Note>
+
+This problem is only relevant to these specific versions: `sentry-android-core` version `6.+` and `sentry-android-gradle-plugin` version `3.1.0`.
+
+</Note>
+
+Check [this issue](https://github.com/getsentry/sentry-android-gradle-plugin/issues/329) for more details.

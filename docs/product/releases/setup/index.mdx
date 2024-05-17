@@ -1,0 +1,77 @@
+---
+title: Set Up
+sidebar_order: 1
+description: "Learn about setting up your SDK to enable Releases and to monitor release health."
+---
+
+Setting up your application to send Sentry releases data fully is a multi-step process, and is adaptable to your organization's needs.
+
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, it will automate steps 3.2 and 4 of this process. If you're managing your releases manually, then you should follow all of the steps below.
+
+## 1. Configure Your SDK
+
+With your SDK configured to provide a release identifier and enable session tracking, you can monitor both [releases](/product/releases/) and [release health](/product/releases/health/). Check out the documentation for your specific platform to [configure the SDK](/platform-redirect/?next=/configuration/releases/).
+
+<Note>
+
+You must have the environment [configured in your SDK](/platform-redirect/?next=/configuration/environments/) to use this feature.
+
+</Note>
+
+### Release Health
+
+Release health is supported for the following SDKs:
+
+- [Android](/platforms/android/configuration/releases/#release-health)
+- [Flutter](/platforms/flutter/configuration/releases/#release-health)
+- [iOS](/platforms/apple/configuration/releases/#release-health)
+- [JavaScript (browser)](/platforms/javascript/configuration/releases/#release-health)
+- [JavaScript (node)](/platforms/javascript/guides/node/configuration/releases/#release-health)
+- [Electron](/platforms/javascript/guides/electron/configuration/releases/#release-health)
+- [Native (C/C++)](/platforms/native/configuration/releases/#release-health)
+- [Python](/platforms/python/configuration/releases/#release-health)
+- [React Native](/platforms/react-native/configuration/releases/#release-health)
+- [Rust](/platforms/rust/configuration/releases/#release-health)
+- [.NET](/platforms/dotnet/configuration/releases/#release-health)
+- [Unity](/platforms/unity/configuration/releases/#release-health)
+
+## 2. Upload Source Maps or Other Debug Files
+
+In cases where your code is processed — bundled, minified, transpiled, compiled, or otherwise obfuscated by tools like webpack, Terser, or the C++ compiler — source maps (or other debug files) are necessary for Sentry to display the source code in your stack traces in its original untransformed form. Setting up source maps is also necessary before [suspect commits](#3-associate-commits) can be enabled. Check out our SDK documentation to find source map or other debug file set up instructions for your specific platform if it's not in the list below:
+
+- [Android](/platforms/android/configuration/using-ndk/#symbolicate-stack-traces)
+- [Flutter](/platforms/flutter/upload-debug/)
+- [iOS](/platforms/apple/guides/ios/dsym/)
+- [JavaScript](/platforms/javascript/sourcemaps/)
+- [Node.js](/platforms/javascript/guides/node/sourcemaps/)
+
+## 3. Associate Commits
+
+[Associating commits](/product/releases/associate-commits/) to a release allows you to more easily pinpoint which changes may be responsible for a given issue. To set them up:
+
+1. [Install a repository integration](/organization/integrations/source-code-mgmt/) so Sentry can access your commit history. (You can also upload commit data manually through our API if you don't want to use an integration.)
+2. Configure your release management script to [associate commits with each release](/product/releases/associate-commits/). If you're using one of our [release automation](/product/releases/setup/release-automation/) options, this will be done for you.
+
+Learn more about the benefits of tracking commit in [Associate Commits](/product/releases/associate-commits/).
+
+## 4. Notify Sentry
+
+If you're not using one of our [release automation](/product/releases/setup/release-automation/) options, let Sentry know you’ve deployed your release by sending an additional request after creating a release:
+
+```bash
+sentry-cli releases --org ORGANIZATION_SLUG deploys VERSION new -e ENVIRONMENT
+```
+
+<Note>
+
+Make sure you have a [token](/product/cli/configuration/) properly configured.
+
+</Note>
+
+Typically, a release = a deployment, but if you have several environments in which you want to deploy a release, this step also allows you to create those deployments individually.
+
+You can also use our [API](/api/releases/create-a-new-deploy-for-an-organization/) to create a deploy.
+
+When you notify Sentry that you've deployed a release to a new environment, we can automatically send an email to Sentry users who have committed to the release being deployed.
+
+If [finalizing the release](/product/cli/releases/#finalizing-releases) isn't already included as part of your release automation process, make sure to do that. For more information, check out our [CLI documentation](/product/cli/releases/).

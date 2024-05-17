@@ -1,0 +1,230 @@
+---
+title: Associate Commits
+sidebar_order: 2
+description: "Learn how to associate commits with a release."
+---
+
+<Include name="only-error-issues-note.mdx" />
+
+In your release process, you can add a step to create a release in Sentry and associate it with commits from your linked repository. When you've done this, you'll be able to see the commits associated with a release in the **Release Details** page.
+
+If you're using one of our [release automation](/product/releases/setup/release-automation/) options, this step should be done automatically.
+
+However, if you don't have a repository integration installed, you can send Sentry your raw commit metadata using the [Sentry CLI](#using-the-cli) or [our API](#using-the-api).
+
+## Associate Commits With a Release
+
+When you've associated commits, we can tie together the commits in the release, including:
+
+- Files touched by those commits
+- Files observed in the stack trace
+- Authors of those files
+- Issues resolved by those commits
+
+### Using the CLI
+
+In this CLI example:
+
+- Environment variables configure the CLI (see [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) for alternatives)
+- The `propose-version` sub-command determines a release ID automatically
+- A release tagged `VERSION` is created for the organization `my-org` for projects `project1` and `project2`
+- Because of the `--auto` flag, the repository name is determined automatically, and commits between the previous release’s head commit and the current head commit are associated with the release.
+
+<OrgAuthTokenNote />
+
+```bash
+# Assumes you're in a git repository
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+export SENTRY_ORG=___ORG_SLUG___
+VERSION=$(sentry-cli releases propose-version)
+
+# Create a release
+sentry-cli releases new -p project1 -p project2 $VERSION
+
+# Associate commits with the release
+sentry-cli releases set-commits --auto $VERSION
+```
+
+If you don't have a repo-based integration associated with your Sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's head commit and the current head commit with the release. If this is the first release, Sentry will use the latest 10 - 20 commits, depending on the integration. This behavior is configurable with the `--initial-depth` flag.
+
+Alternatively, you can use the `--local` flag to enable this behavior by default:
+
+```bash
+sentry-cli releases set-commits --local $VERSION
+```
+
+For more control over which commits to associate, or if you're unable to execute the command inside the repository, you can manually specify a repository and range.
+
+The following example associates commits (or refs) between `from` and `to` with the current release, where `from` is the previous release’s commit. The `from` commit is optional; we’ll use the previous release’s commit as the baseline if it is excluded:
+
+```bash
+sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION
+```
+
+<Note>
+  The repository name `my-repo` should match the name you entered when linking
+  the repo, and should be in the form `owner-name/repo-name`.
+</Note>
+
+### Using the API
+
+To send Sentry your commit metadata using the API, use the [create release endpoint](/api/releases/create-a-new-release-for-an-organization/).
+
+Use the following format for your commits:
+
+```json
+{
+  "commits": [
+    {
+      "patch_set": [
+        { "path": "path/to/added-file.html", "type": "A" },
+        { "path": "path/to/modified-file.html", "type": "M" },
+        { "path": "path/to/deleted-file.html", "type": "D" }
+      ],
+      "repository": "owner-name/repo-name",
+      "author_name": "Author Name",
+      "author_email": "author_email@example.com",
+      "timestamp": "2018-09-20T11:50:22+03:00",
+      "message": "This is the commit message.",
+      "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+  ]
+}
+```
+
+`patch_set`
+
+A list of the files that have been changed in the commit. Specifying the `patch_set` is necessary to power suspect commits and suggested assignees. It consists of two parts:
+
+    `path`
+    : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
+
+    `type`
+    : The types of changes that happened in that commit. The options are:
+        - `Add (A)`
+        - `Modify (M)`
+        - `Delete (D)`
+
+`repository`
+
+The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
+
+`author_email`
+
+The commit author's email is required to enable the suggested assignee feature.
+
+`author_name`
+
+The commit author's name may also be included.
+
+`timestamp`
+
+The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
+
+`message`
+
+The commit message.
+
+`id`
+
+The commit ID.
+
+#### Create the Release with Patch Data
+
+Here is an example of a request using patch data:
+
+<Note>
+
+Confirm you’re using [Auth Tokens](/api/auth/#auth-tokens), **not** [API Keys](/api/auth/#api-keys), which are deprecated.
+
+</Note>
+
+```bash
+curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
+  -X POST \
+  -H 'Authorization: Bearer <Token>' \
+  -H 'Content-Type: application/json' \
+  -d '
+ {
+ "version": "2.0rc2",
+ "projects":["project-1","project-2"],
+ "commits":[
+     {
+        "patch_set": [
+            {"path": "path/to/added-file.html", "type": "A"},
+            {"path": "path/to/modified-file.html", "type": "M"},
+            {"path": "path/to/deleted-file.html", "type": "D"}
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
+        "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+ ]
+ }
+ '
+```
+
+If you’d like to have more control over what order the commits appear in, you can send us a list of all commits. That might look like this:
+
+```python
+import subprocess
+import requests
+
+SENTRY_API_TOKEN = <my_api_token>
+sha_of_previous_release = <previous_sha>
+
+log = subprocess.Popen([
+    'git',
+    '--no-pager',
+    'log',
+    '--no-merges',
+    '--no-color',
+    '--pretty=%H',
+    '%s..HEAD' % (sha_of_previous_release,),
+], stdout=subprocess.PIPE)
+
+commits = log.stdout.read().strip().split('\n')
+
+data = {
+    'commits': [{'id': c, 'repository': 'my-repo-name'} for c in commits],
+    'version': commits[0],
+    'projects': ['my-project', 'my-other-project'],
+}
+
+res = requests.post(
+    'https://sentry.io/api/0/organizations/my-org/releases/',
+    json=data,
+    headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
+)
+```
+
+For more information, see the [API reference](/api/releases/create-a-new-release-for-an-organization/).
+
+<Note>
+
+If you receive an "Unable to Fetch Commits" email, take a look at our [help center article](https://sentry.zendesk.com/hc/en-us/articles/23968845267739-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits).
+
+</Note>
+
+## Resolve Issues by Commit
+
+Additionally, when you've started associating commits with a release, you'll be able to resolve issues by including the issue ID in your commit message. You can find the issue ID at the top of the **Issue Details** page, next to the assignee dropdown.
+
+A commit message might look like this, for example:
+
+```bash
+Prevent empty queries on users
+
+Fixes SENTRY-317
+```
+
+When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry, we’ll mark the issue as resolved in that release. You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+
+<Note>
+
+If you’re using GitHub, you may have a privacy setting enabled that prevents Sentry from identifying the user’s actual email address. To use the suggested owners feature, uncheck “Keep my email address private” in GitHub’s [account settings](https://github.com/settings/emails).
+
+</Note>

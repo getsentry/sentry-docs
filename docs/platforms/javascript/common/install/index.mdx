@@ -1,0 +1,90 @@
+---
+title: Installation Methods
+sidebar_order: 1
+description: "Review our alternate installation methods."
+notSupported:
+  - javascript.angular
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.ember
+  - javascript.gatsby
+  - javascript.nextjs
+  - javascript.react
+  - javascript.vue
+  - javascript.wasm
+  - javascript.remix
+  - javascript.svelte
+  - javascript.sveltekit
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.gcp-functions
+  - javascript.nestjs
+---
+
+<PageGrid />
+
+<PlatformCategorySection supported={['server']}>
+
+## How To Decide Which Installation Method To Use
+
+Most node applications today are either written in CommonJS (CJS), or compiled to CJS before running them.
+CommonJS uses `require()` to load modules. Our recommended installation method when using CommonJS is to require the `instrument.js` file at the top of your application. However, if your application is run in ESM mode, this will not work. In this case, you can follow the [ESM docs](./esm).
+
+Note that even if your application is written in ESM (using `import`), it may still be _run_ in CJS. In this case, you should follow the [CommonJS instructions](./commonjs).
+
+### My application is in TypeScript
+
+If you're using TypeScript, your application is likely compiled to CommonJS before running it. In this case, you should follow the [CommonJS instructions](./commonjs).
+
+### My application uses `require`
+
+If you are using `require()` in your application, you should follow the [CommonJS instructions](./commonjs).
+
+### My application uses `import`
+
+If you are using `import` in your application, your installation method depends on how your application is _run_. If you compile your application (e.g. into a `/dist` folder or similar) before running this, you need to check how the compiled code looks like. Is the compiled code using `require`? Then you should follow the [CommonJS instructions](./commonjs). If the compiled code is using `import`, you should follow the [ESM instructions](./esm).
+
+If you do not compile your code, you'll need to follow the [ESM instructions](./esm).
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+
+## How To Decide Which Installation Method To Use
+
+Depending on the concrete needs of your application, you may wonder which installation method you should use.
+
+### Why Choose the Loader Script Over NPM
+
+Using the Loader Script is the easiest way to start using Sentry. Add a script tag to your application, and we'll take care of setting everything else up correctly for you.
+
+- **Easy to set up**: Just [add a script tag](./loader/#using-the-loader) to your application.
+
+- **Easy to upgrade**: We'll take care of always shipping the latest version of the SDK to your users. No action's needed from you. This ensures you'll always get the latest features and bug fixes of the Sentry SDK.
+
+- **Easy to add additional configuration**: You can [configure the SDK](./loader/#sdk-configuration) to your liking via `window.sentryOnLoad`.
+
+- **Lazy-loading**: If you just want to use Sentry for errors, we'll only load the SDK when an error occurs, reducing the amount of JavaScript loaded on your page until then.
+
+  <Note>
+    Note that when enabling Session Replay and/or Performance Monitoring, the
+    SDK will be loaded immediately because we need to capture what's happening
+    on the page as early as possible.
+  </Note>
+
+### Why Choose NPM Over the Loader Script
+
+While using the Loader Script has definite advantages, it also comes with some drawbacks.
+In these scenarios, using the npm package is the better choice:
+
+- **Framework-specific initialization**: As of now, the Loader Script only provides generic Browser JavaScript instrumentation. This means that you won't get any React, Vue, or similar framework-specific features for Sentry. To get these features, you'll need to install the framework SDK (e.g. `@sentry/react` or `@sentry/vue`) via npm.
+
+- **Full public API**: The Loader Script only exposes a subset of public APIs (for example, `Sentry.captureException()`, ...). If you need a lot of custom functionality, you're likely better off with the npm package.
+
+- **Full control over the SDK version**: If you need full control over the SDK version, you'll need to install the SDK via npm.
+
+</PlatformCategorySection>

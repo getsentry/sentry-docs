@@ -1,0 +1,181 @@
+---
+title: Basic Options
+sidebar_order: 0
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init method as an object."
+---
+
+SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
+initialized.
+
+<PlatformContent includePath="configuration/config-intro" />
+
+```go
+// ClientOptions that configures a SDK Client
+type ClientOptions struct {
+	// The DSN to use. If the DSN is not set, the client is effectively
+	// disabled.
+	Dsn string
+	// In debug mode, the debug information is printed to stdout to help you
+	// understand what Sentry is doing.
+	Debug bool
+	// Configures whether SDK should generate and attach stack traces to pure
+	// capture message calls.
+	AttachStacktrace bool
+	// The sample rate for event submission in the range [0.0, 1.0]. By default,
+	// all events are sent. Thus, as a historical special case, the sample rate
+	// 0.0 is treated as if it was 1.0. To drop all events, set the DSN to the
+	// empty string.
+	SampleRate float64
+	// Enable performance tracing.
+	EnableTracing bool
+	// The sample rate for sampling traces in the range [0.0, 1.0].
+	TracesSampleRate float64
+	// Used to customize the sampling of traces, overrides TracesSampleRate.
+	TracesSampler TracesSampler
+	// The sample rate for profiling traces in the range [0.0, 1.0].
+	// This is relative to TracesSampleRate - it is a ratio of profiled traces out of all sampled traces.
+	ProfilesSampleRate float64
+	// List of regexp strings that will be used to match against event's message
+	// and if applicable, caught errors type and value.
+	// If the match is found, then a whole event will be dropped.
+	IgnoreErrors []string
+	// List of regexp strings that will be used to match against a transaction's
+	// name. If a match is found, then the transaction  will be dropped.
+	IgnoreTransactions []string
+	// If this flag is enabled, certain personally identifiable information (PII) is added by active integrations.
+	// By default, no such data is sent.
+	SendDefaultPII bool
+	// BeforeSend is called before error events are sent to Sentry.
+	// Use it to mutate the event or return nil to discard the event.
+	BeforeSend func(event *Event, hint *EventHint) *Event
+	// BeforeSendTransaction is called before transaction events are sent to Sentry.
+	// Use it to mutate the transaction or return nil to discard the transaction.
+	BeforeSendTransaction func(event *Event, hint *EventHint) *Event
+	// Before breadcrumb add callback.
+	BeforeBreadcrumb func(breadcrumb *Breadcrumb, hint *BreadcrumbHint) *Breadcrumb
+	// Integrations to be installed on the current Client, receives default
+	// integrations.
+	Integrations func([]Integration) []Integration
+	// io.Writer implementation that should be used with the Debug mode.
+	DebugWriter io.Writer
+	// The transport to use. Defaults to HTTPTransport.
+	Transport Transport
+	// The server name to be reported.
+	ServerName string
+	// The release to be sent with events.
+	//
+	// Some Sentry features are built around releases, and, thus, reporting
+	// events with a non-empty release improves the product experience. See
+	// https://docs.sentry.io/product/releases/.
+	//
+	// If Release is not set, the SDK will try to derive a default value
+	// from environment variables or the Git repository in the working
+	// directory.
+	//
+	// If you distribute a compiled binary, it is recommended to set the
+	// Release value explicitly at build time. As an example, you can use:
+	//
+	// 	go build -ldflags='-X main.release=VALUE'
+	//
+	// That will set the value of a predeclared variable 'release' in the
+	// 'main' package to 'VALUE'. Then, use that variable when initializing
+	// the SDK:
+	//
+	// 	sentry.Init(ClientOptions{Release: release})
+	//
+	// See https://golang.org/cmd/go/ and https://golang.org/cmd/link/ for
+	// the official documentation of -ldflags and -X, respectively.
+	Release string
+	// The dist to be sent with events.
+	Dist string
+	// The environment to be sent with events.
+	Environment string
+	// Maximum number of breadcrumbs
+	// when MaxBreadcrumbs is negative then ignore breadcrumbs.
+	MaxBreadcrumbs int
+	// Maximum number of spans.
+	//
+	// See https://develop.sentry.dev/sdk/envelopes/#size-limits for size limits
+	// applied during event ingestion. Events that exceed these limits might get dropped.
+	MaxSpans int
+	// An optional pointer to http.Client that will be used with a default
+	// HTTPTransport. Using your own client will make HTTPTransport, HTTPProxy,
+	// HTTPSProxy and CaCerts options ignored.
+	HTTPClient *http.Client
+	// An optional pointer to http.Transport that will be used with a default
+	// HTTPTransport. Using your own transport will make HTTPProxy, HTTPSProxy
+	// and CaCerts options ignored.
+	HTTPTransport http.RoundTripper
+	// An optional HTTP proxy to use.
+	// This will default to the HTTP_PROXY environment variable.
+	HTTPProxy string
+	// An optional HTTPS proxy to use.
+	// This will default to the HTTPS_PROXY environment variable.
+	// HTTPS_PROXY takes precedence over HTTP_PROXY for https requests.
+	HTTPSProxy string
+	// An optional set of SSL certificates to use.
+	CaCerts *x509.CertPool
+	// MaxErrorDepth is the maximum number of errors reported in a chain of errors.
+	// This protects the SDK from an arbitrarily long chain of wrapped errors.
+	//
+	// An additional consideration is that arguably reporting a long chain of errors
+	// is of little use when debugging production errors with Sentry. The Sentry UI
+	// is not optimized for long chains either. The top-level error together with a
+	// stack trace is often the most useful information.
+	MaxErrorDepth int
+}
+```
+
+### Providing SSL Certificates
+
+By default, TLS uses the host's root CA set. If you don't have `ca-certificates` (which should be your go-to way of fixing the issue of the missing certificates) and want to use `gocertifi` instead, you can provide pre-loaded cert files as one of the options to the `sentry.Init` call:
+
+<SignInNote />
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/certifi/gocertifi"
+	"github.com/getsentry/sentry-go"
+)
+
+sentryClientOptions := sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+}
+
+rootCAs, err := gocertifi.CACerts()
+if err != nil {
+	log.Println("Could not load CA Certificates: %v\n", err)
+} else {
+	sentryClientOptions.CaCerts = rootCAs
+}
+
+sentry.Init(sentryClientOptions)
+```
+
+### Removing Default Integrations
+
+`sentry-go` SDK has few built-in integrations that enhance events with additional information, or manage them in one way or another.
+
+If you want to read more about them, see the [source code](https://github.com/getsentry/sentry-go/blob/master/integrations.go) directly.
+
+However, there are some cases where you may want to disable some of them. To do this, you can use the `Integrations` configuration option and filter unwanted integrations. For example:
+
+```go
+sentry.Init(sentry.ClientOptions{
+	// ...
+	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+		var filteredIntegrations []sentry.Integration
+		for _, integration := range integrations {
+			if integration.Name() == "ContextifyFrames" {
+				continue
+			}
+			filteredIntegrations = append(filteredIntegrations, integration)
+		}
+		return filteredIntegrations
+	},
+})
+```

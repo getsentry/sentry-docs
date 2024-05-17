@@ -1,0 +1,36 @@
+```php
+class MyRpcException extends \Exception
+{
+    private string $functionName;
+    private int    $statusCode;
+
+    /**
+     * For example the name of the RPC function that was called (e.g. "getAllBlogArticles").
+     */
+    public function getFunctionName(): string
+    {
+        return $this->functionName;
+    }
+
+    /**
+     * For example a HTTP status code returned by the server.
+     */
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+}
+
+try {
+    // Run code that for example throws a MyRpcException
+} catch (MyRpcException $e) {
+    \Sentry\withScope(function (\Sentry\State\Scope $scope) use ($e) {
+        $scope->setFingerprint([
+          '{{ default }}',
+          $e->getFunctionName(),
+          $e->getStatusCode(),
+        ]);
+        \Sentry\captureException($e);
+    });
+}
+```

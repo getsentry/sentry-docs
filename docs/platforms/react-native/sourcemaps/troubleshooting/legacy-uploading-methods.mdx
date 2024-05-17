@@ -1,0 +1,87 @@
+---
+title: Legacy Uploading Methods
+description: "Learn about how to upload source maps with older SDKs and Sentry tools."
+sidebar_order: 5
+---
+
+This page describes how to upload source maps for older React Native SDKs. If you're using the latest version of the SDK, [follow these instructions](/platforms/react-native/sourcemaps).
+
+## Legacy Instructions for Preparing Source Maps for a Release
+
+You need to generate and upload the source maps at build time for **every release** of your app for the events sent to be correctly unminified. To do so, follow these steps:
+
+### 1. Configure CLI
+
+Configure the CLI by reviewing the [configuration guide](/product/cli/configuration/) for CLI commands.
+
+### 2. Generate the bundle and source maps
+
+<Alert level="warning" title="Hermes">
+
+If you use the **Hermes engine**, you will need to [follow this guide to compile source maps for Hermes](/platforms/react-native/manual-setup/hermes/#custom-source-maps).
+
+</Alert>
+
+You can use the React Native CLI to generate the JavaScript bundle and source maps for your app:
+
+```bash {tabTitle:Android}
+react-native bundle \
+  --dev false \
+  --platform android \
+  --entry-file index.android.js \
+  --reset-cache \
+  --bundle-output index.android.bundle \
+  --sourcemap-output index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+react-native bundle \
+  --dev false \
+  --platform ios \
+  --entry-file index.ios.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+[Learn more about the React Native CLI bundle command](https://github.com/react-native-community/cli/blob/master/docs/commands.md#bundle).
+
+#### 2.1 Pass your entry file
+
+Pass your entry file to `--entry-file` for Android or iOS, respectively. By default, this file is usually named `index.js`. It is often named `index.android.js` for Android or `index.ios.js` for iOS.
+
+#### 2.2 Output your bundle files and source maps
+
+These files will output your bundle and source maps. By default, these files are named `index.android.bundle` and `index.android.bundle.map` for Android and `main.jsbundle` and `main.jsbundle.map` for iOS.
+
+<Note>
+
+The source map's name must be the bundle's name appended with `.map` for source maps to correctly be detected.
+
+</Note>
+
+### 3. Upload the bundle and source maps
+
+```bash {tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli releases \
+    files <release> \
+    upload-sourcemaps \
+    --dist <dist> \
+    --strip-prefix /path/to/project/root \
+    index.android.bundle index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli releases \
+    files <release> \
+    upload-sourcemaps \
+    --dist <dist> \
+    --strip-prefix /path/to/project/root \
+    main.jsbundle main.jsbundle.map
+```
+
+<Note>
+
+If you're using `sentry-cli` prior to version 1.59.0, pass `--rewrite` to the `upload-sourcemaps` command to fix up the source maps before the upload (inlines sources and so forth). Version 1.59.0 does this automatically.
+
+</Note>

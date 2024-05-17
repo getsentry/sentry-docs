@@ -1,0 +1,86 @@
+---
+title: ASGI
+description: "Learn about the ASGI integration and how it adds support for ASGI applications."
+---
+
+The ASGI middleware can be used to instrument any [ASGI](https://asgi.readthedocs.io/en/latest/)-compatible web framework to attach request data for your events.
+
+<Note>
+
+If you use an ASGI framework, please use our specific integrations for [FastAPI](/platforms/python/integrations/fastapi/), [Starlette](/platforms/python/integrations/starlette/), [Quart](/platforms/python/integrations/quart/), and [Sanic](/platforms/python/integrations/sanic/) instead of this ASGI middleware as those are easier to use and capture more useful information.
+
+</Note>
+
+## Install
+
+```bash
+pip install --upgrade 'sentry-sdk'
+```
+
+## Configure
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+
+from my_asgi_app import app
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True
+)
+
+app = SentryAsgiMiddleware(app)
+```
+
+The middleware supports both ASGI 2 and ASGI 3 transparently.
+
+## Verify
+
+Trigger an error in your code and see it show up in [sentry.io](https://sentry.io).
+
+```python
+sentry_sdk.init(...) # same as above
+
+def app(scope):
+    async def get_body():
+        return f"The number is: {1/0}" # raises an error!
+
+    async def asgi(receive, send):
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"content-type", b"text/plain"]],
+            }
+        )
+        await send({"type": "http.response.body", "body": await get_body()})
+
+    return asgi
+
+app = SentryAsgiMiddleware(app)
+```
+
+Run your ASGI app with unicorn:
+
+```bash
+uvicorn main:app --port 8000
+```
+
+Point your browser to [http://localhost:8000](http://localhost:8000) to trigger the error which is then sent to Sentry.
+
+Additionally, a transaction will show up in the "Performance" section on [sentry.io](https://sentry.io).
+
+## Behavior
+
+- Request data is attached to all events: **HTTP method, URL, headers**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+- The ASGI middleware does not behave like a regular integration. It is not initialized through an extra parameter to `init` and is not attached to a client. When capturing or supplementing events, it just uses the currently active scopes.
+
+## Supported Versions
+
+- Python: 3.7+

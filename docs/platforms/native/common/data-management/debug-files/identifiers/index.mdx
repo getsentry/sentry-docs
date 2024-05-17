@@ -1,0 +1,59 @@
+---
+title: Debug Identifiers
+description: "Learn about build tooling requirements that allow Sentry to uniquely identify debug information files across builds."
+sidebar_order: 2
+---
+
+Each debug information file specifies a unique identifier. Crash reports declare
+these identifiers to allow debuggers and crash reporting systems to resolve the
+correct files. Sentry distinguishes two kinds of identifiers:
+
+- **Code Identifier**: The unique identifier of the executable or dynamic
+  library -- the code file. The contents of this identifier are
+  platform-dependent: Mach-O files use a UUID, ELF files a SHA hash, PE files use
+  a concatenation of certain header attributes. For WebAssembly we use an
+  embedded UUID in the `build_id` section of the file.
+
+- **Debug Identifier**: The unique identifier of the debug companion file. In
+  contrast to the code identifier, Sentry enforces the same structure on all
+  platforms. On Windows, this is the actual unique id of the PDB file; on all
+  other platforms this is a lossy transformation of the code identifier.
+
+When uploading debug information files to Sentry, the CLI and server will always
+compute a _Debug Identifier_ for each uploaded file. This identifier is
+associated with executables and libraries as well as debug companions to ensure
+that they can be uniquely located via one common mechanism.
+
+<Note>
+
+Debug information does not have to be associated with releases. The unique debug
+identifier ensures that Sentry can choose the right files for every crash
+report. However, it is still recommended to configure releases in the client to
+benefit from other features.
+
+</Note>
+
+For native events, the issue details page displays a list of _Loaded Images_.
+This list contains the executable and all loaded dynamic libraries including
+their debug identifiers. You can copy this identifier and search for the exact
+files that match it in the _Debug Files_ settings screen.
+
+`sentry-cli` can help to print properties of debug information files like their
+debug identifier. See [_Checking Debug Information Files_](/product/cli/dif/#checking-files) for more information.
+
+<PlatformContent includePath="debug-files-identifiers-gnu-build-identifiers" />
+
+<PlatformContent includePath="debug-files-identifiers-pdb-age-mismatches" />
+
+## WASM Build IDs
+
+WebAssembly does not yet support build IDs. The option proposed to
+implement build IDs for WebAssembly ([Build ID Section for WASM](https://github.com/WebAssembly/tool-conventions/issues/133))
+has not yet found widespread adoption. Instead, we use a custom
+extension to WebAssembly.
+
+Our recommendation is to embed a UUID in the `build_id` custom section as
+raw binary. Our [`wasm-split`](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split)
+tool can do this for you automatically.
+
+<PlatformContent includePath="debug-files-identifiers-proguard" />

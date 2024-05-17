@@ -1,0 +1,38 @@
+```java {tabTitle:Java}
+import io.sentry.CustomSamplingContext;
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.TransactionOptions;
+
+// sampling context - won't be recorded
+CustomSamplingContext context = new CustomSamplingContext();
+context.set("user_id", 12312012);
+context.set("search_results", searchResults);
+
+TransactionOptions txOptions = new TransactionOptions();
+txOptions.setCustomSamplingContext(context);
+ITransaction transaction = Sentry.startTransaction("GET /search", "http.server", txOptions);
+// transaction context - will be recorded on transaction
+transaction.setDescription("search results");
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.CustomSamplingContext
+import io.sentry.Sentry
+import io.sentry.TransactionOptions
+
+// sampling context - won't be recorded
+val context = CustomSamplingContext().apply {
+  this["user_id"] = 12312012
+  this["search_results"] = searchResults
+}
+
+val txOptions = TransactionOptions().apply {
+  customSamplingContext = context
+}
+
+val transaction = Sentry.startTransaction("GET /search", "http.server", txOptions).apply {
+  // transaction context - will be recorded on transaction
+  description = "search results"
+}
+```

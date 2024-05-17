@@ -1,0 +1,63 @@
+---
+title: clickhouse-driver
+description: "Learn about importing the clickhouse-driver integration and how it captures queries from clickhouse-driver as breadcrumbs."
+---
+
+The clickhouse-driver integration captures queries from
+[clickhouse-driver](https://github.com/mymarilyn/clickhouse-driver) as breadcrumbs and spans.
+The integration is available for clickhouse-driver 0.2.0 or later.
+
+## Install
+
+Install `sentry-sdk` with the `clickhouse-driver` extra.
+
+```bash
+pip install --upgrade 'sentry-sdk[clickhouse-driver]'
+```
+
+## Configure
+
+Add `ClickhouseDriverIntegration()` to your `integrations` list:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.clickhouse_driver import ClickhouseDriverIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        ClickhouseDriverIntegration(),
+    ],
+)
+```
+
+By default, the parameters of the query are not retrieved. To see the query parameters in Sentry, enable `send_default_pii`. See <PlatformLink to="/configuration/options/#send-default-pii">Basic Options</PlatformLink> for details.
+
+## Verify
+
+```python
+from clickhouse_driver import Client
+
+def main():
+    sentry_init(...)  # same as above
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        client = Client(host=DATABASE_HOST)
+        client.execute("DROP TABLE IF EXISTS sentry_test")
+        client.execute("CREATE TABLE sentry_test (x Int32) ENGINE = Memory")
+        client.execute("INSERT INTO sentry_test (x) VALUES", [{"x": 100}])
+
+main()
+```
+
+This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the database operations.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+- clickhouse-driver >= 0.2.0
+- python >= 3.8

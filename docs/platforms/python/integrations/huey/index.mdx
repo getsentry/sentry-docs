@@ -1,0 +1,62 @@
+---
+title: huey
+description: "Learn how to import and use the huey integration."
+---
+
+The huey integration adds support for the
+[huey task queue library](https://huey.readthedocs.io/en/latest/).
+
+## Install
+
+To get started, install `sentry-sdk` from PyPI.
+
+```bash
+pip install --upgrade sentry-sdk
+```
+
+## Configure
+
+Add `HueyIntegration()` to your `integrations` list:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.huey import HueyIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        HueyIntegration(),
+    ],
+)
+```
+
+## Verify
+
+```python
+from huey import SqliteHuey
+
+sentry_sdk.init(...)  # same as above
+
+huey = SqliteHuey(filename='demo.db')
+
+@huey.task()
+def add(a, b):
+    return a + b
+
+with sentry_sdk.start_transaction(name="testing_huey"):
+    result = add(1, 2)
+```
+
+Running this will create a new transaction called `testing_huey` in the
+Performance section of [sentry.io](https://sentry.io). It may
+take a couple of moments for the transaction to show up.
+
+## Supported Versions
+
+- huey: 2.0+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

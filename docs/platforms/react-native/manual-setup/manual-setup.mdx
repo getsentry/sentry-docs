@@ -1,0 +1,258 @@
+---
+title: Manual Configuration
+description: "Learn about manual configuration for iOS and Android."
+sidebar_order: 3
+---
+
+If you can’t (or prefer not to) run the [automatic setup](/platforms/react-native), use the instructions below to configure your application.
+
+## Install SDK Package
+
+Install the `@sentry/react-native` package:
+
+```bash {tabTitle:npm}
+npm install --save @sentry/react-native
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/react-native
+```
+
+## iOS
+
+For iOS, the Sentry SDK wraps the React Native bundle process to upload source maps automatically. The SDK also adds a new Xcode Build Phase to upload debug symbols to ensure you get readable stack traces for your native crashes.
+
+### Add Privacy Manifest
+
+The SDK needs access to certain information about the device and the application for its essential functionality. Some of the APIs required for this are considered privacy-relevant. Add the privacy manifest to your Xcode project to ensure your app is compliant with Apple's guidelines. Read the [Apple Privacy Manifest](/platforms/react-native/data-management/apple-privacy-manifest/) guide for more info on how to add records required for the Sentry SDKs.
+
+### Add `sentry.properties`
+
+Add a `sentry.properties` file to your `ios` directory.
+
+```properties {filename: ios/sentry.properties}
+defaults.url=https://sentry.io/
+defaults.org=___ORG_SLUG___
+defaults.project=___PROJECT_SLUG___
+auth.token=___ORG_AUTH_TOKEN___
+```
+
+### Configure Automatic Source Maps Upload
+
+We modify the React Native build phase (“Bundle React Native code and images”) slightly from this:
+
+```bash {filename:Bundle React Native code and images}
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
+```
+
+To this:
+
+```bash {filename:Bundle React Native code and images}
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+BUNDLE_REACT_NATIVE="/bin/sh $SENTRY_XCODE $REACT_NATIVE_XCODE"
+
+# RN 0.69+
+/bin/sh -c "$WITH_ENVIRONMENT \"$BUNDLE_REACT_NATIVE\""
+
+# RN 0.46 – 0.68
+# /bin/sh -c "$BUNDLE_REACT_NATIVE"
+```
+
+To change the default behavior, pass the following environment variables in `.xcode.env` or in the Build Phase script:
+
+```bash {filename:.xcode.env}
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Temporarily disable source map upload
+
+export AUTO_RELEASE=true # Automatically detect release from Xcode project
+export SENTRY_CLI_EXECUTABLE="path/to/@sentry/cli/bin/sentry-cli"
+export SENTRY_CLI_EXTRA_ARGS="--extra --flags" # Extra arguments for sentry-cli in all build phases
+export SENTRY_CLI_RN_XCODE_EXTRA_ARGS="--extra --flags"
+
+export SOURCE_MAP_PATH="path/to/source-maps" # From where collect-modules should read modules
+export SENTRY_COLLECT_MODULES="path/to/collect-modules.sh"
+export MODULES_PATHS="../node_modules,../my-custom-module"
+```
+
+By default, uploading of source maps for debug simulator builds is disabled for speed reasons. If you want to generate source maps for debug builds, you can pass `--allow-fetch` as a parameter to `SENTRY_CLI_RN_XCODE_EXTRA_ARGS` in the above mentioned script.
+
+### Configure Automatic Debug Symbols Upload
+
+To upload debug symbols to Sentry, create a new Run Script build phase using the following script:
+
+```bash {filename:Upload Debug Symbols to Sentry}
+/bin/sh ../../scripts/sentry-xcode-debug-files.sh
+```
+
+To change the default behavior, you can pass the following environment variables in `.xcode.env` or in the Build Phase script:
+
+```bash {filename:.xcode.env}
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Temporarily disable debug symbols upload
+
+export SENTRY_INCLUDE_NATIVE_SOURCES=true # Upload native iOS sources
+export SENTRY_CLI_EXECUTABLE="paht/to/@sentry/cli/bin/sentry-cli"
+export SENTRY_CLI_EXTRA_ARGS="--extra --flags" # Extra arguments for sentry-cli in all build phases
+export SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS="--extra --flags"
+```
+
+For more information about what options to use in `SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS` visit the [Sentry CLI Apple Debug Symbols](/platforms/apple/dsym/#sentry-cli) documentation.
+
+### Linking the Native Library via CocoaPods
+
+To link the native library via CocoaPods, link to the native module in your Podfile. In React Native versions 0.60 and above, the podspec should be automatically linked. If isn't, you can link to the native module manually by adding the `RNSentry.podspec` to your Podfile as follows:
+
+```ruby
+pod 'RNSentry', :path => '../node_modules/@sentry/react-native/RNSentry.podspec'
+```
+
+### Using node with nvm or Volta
+
+If you are using nvm or Volta, Xcode has trouble locating the default node binary, which can look similar to the [troubleshooting example](/platforms/react-native/troubleshooting/#using-node-with-nvm-or-volta).
+
+## Android
+
+For Android, we hook into Gradle for the source map build process. When you run `npx @sentry/wizard@latest -i reactNative`, the Gradle files are automatically updated. If you can't or don't want to do that, you can follow the steps below to update the files.
+
+### Add `sentry.properties`
+
+Add a `sentry.properties` file to your `android` directory.
+
+```properties {filename: android/sentry.properties}
+defaults.url=https://sentry.io/
+defaults.org=___ORG_SLUG___
+defaults.project=___PROJECT_SLUG___
+auth.token=___ORG_AUTH_TOKEN___
+```
+
+### Enable Gradle Integration
+
+We enable the Gradle integration in your `android/app/build.gradle` file by adding the following line before the `android` options:
+
+```groovy {filename:android/app/build.gradle}
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+### Enable Sentry AGP
+
+You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle) dependency to `android/build.gradle`.
+
+```groovy {filename:android/build.gradle}
+buildscript {
+    dependencies {
+        // Other dependencies ...
+        classpath("io.sentry:sentry-android-gradle-plugin:{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}")
+    }
+}
+```
+
+You can configure the plugin options in `android/app/build.gradle`, as shown below:
+
+```groovy {filename:android/app/build.gradle}
+apply plugin: "io.sentry.android.gradle"
+
+sentry {
+    // Enables or disables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols = true
+
+    // Enables or disables the automatic upload of the app's native source code to Sentry.
+    // This executes sentry-cli with the --include-sources param automatically so
+    // you don't need to do it manually.
+    // This option has an effect only when [uploadNativeSymbols] is enabled.
+    // Default is disabled.
+    includeNativeSources = true
+
+    // `@sentry/react-native` ships with compatible `sentry-android`
+    // This option would install the latest version that ships with the SDK or SAGP (Sentry Android Gradle Plugin)
+    // which might be incompatible with the React Native SDK
+    // Enable auto-installation of Sentry components (sentry-android SDK and okhttp, timber and fragment integrations).
+    // Default is enabled.
+    autoInstallation {
+      enabled = false
+    }
+}
+```
+
+### Enable Logging for `sentry-cli`
+
+You can also enable logging for `sentry-cli` by adding this config before the above `apply from:` line:
+
+```groovy {filename:android/app/build.gradle}
+project.ext.sentryCli = [
+    logLevel: "debug"
+]
+
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+### Fetch `sentry.properties`
+
+We also support fetching different `sentry.properties` files for different flavors. For that, you need to add:
+
+```groovy {filename:android/app/build.gradle}
+project.ext.sentryCli = [
+    logLevel: "debug",
+    flavorAware: true
+]
+
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+The corresponding flavor files should also be placed within the specific build type folder where you intend to use them. For example, the "Android demo release" flavor would be `react-native/android/sentry-demo-release.properties`.
+
+We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
+
+Include the project by adding it to your dependency list in `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+dependencies {
+    // ... other dependencies listed here //
+    implementation project(':@sentry_react-native')
+}
+```
+
+If you're linking manually, make sure your `MainApplication.java` is similar to:
+
+```java
+import io.sentry.react.RNSentryPackage;
+
+public class MainApplication extends Application implements ReactApplication {
+
+    @Override
+    protected List<ReactPackage> getPackages() {
+      List<ReactPackage> packages = new PackageList(this).getPackages();
+      packages.add(new RNSentryPackage());
+      return packages;
+    }
+}
+```
+
+```kotlin
+import io.sentry.react.RNSentryPackage
+
+class MainApplication() : Application(), ReactApplication {
+  override fun getPackages():List<ReactPackage> =
+    PackageList(this).packages.apply {
+      add(RNSentryPackage())
+    }
+}
+```
+
+Add the following to your `settings.gradle` file:
+
+```groovy {filename:android/settings.gradle}
+include ':@sentry_react-native'
+project(':@sentry_react-native').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
+```

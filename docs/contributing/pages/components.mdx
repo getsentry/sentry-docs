@@ -1,0 +1,244 @@
+---
+title: MDX Components
+noindex: true
+---
+
+## Alert
+
+Render an alert callout.
+
+<Alert level="info" title="Important">
+
+This is an alert
+
+</Alert>
+
+```markdown {tabTitle:Example}
+<Alert level="info" title="Important">
+
+This is an alert
+
+</Alert>
+```
+
+Attributes:
+
+- `title` (string)
+- `level` (string: `'info' | 'warning' | 'danger' | 'success'`)
+
+Use this for these types of content:
+
+- **Important:** Use these for information that's critical to know; it's important for users to read, but won't cause a catastrophic problem if they don't read it. These include versions that introduce breaking changes or feature limitations. Use infrequently.
+  - Use this with or without a title
+- **Warning:** Use these for items that MUST be well understood before proceeding. These highlight information that could cause users to make catastrophic errors that break their applications in ways that are very difficult to fix or create liabilities for them, such as information needed to avoid leaking PII. These should be used very rarely.
+  - Use with the title "Important"; do not use the title "Warning"
+
+An Alert component with no level setting will render as a Note component.
+
+See also the [Note component](#note).
+
+## Code Blocks
+
+Consecutive code blocks will be automatically collapsed into a tabulated container. This behavior is generally useful if you want to define an example in multiple languages:
+
+````markdown {tabTitle:Example}
+```javascript
+function foo() {
+  return "bar";
+}
+```
+
+```python
+def foo():
+  return 'bar'
+```
+````
+
+Sometimes you may not want this behavior. To solve this, you can either break up the code blocks with some additional text, or use the `<Break />` component.
+
+Additionally code blocks also support `tabTitle` and `filename` properties:
+
+````markdown {tabTitle:Example}
+```javascript {tabTitle: Hello} {filename: index.js}
+var foo = "bar";
+```
+````
+
+You can bring attention to specific lines in a code block using the `{fromLineA-toLineB}` for ranges,
+or `{lineA,lineB}` for specific lines (or a combination of the two):
+
+```javascript {2} {tabTitle:Example}
+function foo() {
+  let lookat = "me";
+  return "bar";
+}
+```
+
+````markdown {tabTitle:Source}
+```javascript {2}
+function foo() {
+  let lookat = "me";
+  return "bar";
+}
+```
+````
+
+You can also highlight diffs using the `diff` language:
+
+````markdown {tabTitle:Example}
+```diff
+- minus one
++ plus one
+```
+````
+If you want to preserve syntax highlighting, you can add `diff` metadata to any code block
+then annotate the diff with `+` and `-`:
+
+```javascript {diff} {tabTitle:Example}
+function foo() {
+-  return "bar";
++  return "baz";
+}
+```
+
+````markdown {tabTitle:Source}
+```javascript {diff}
+function foo() {
+-  return "bar";
++  return "baz";
+}
+```
+````
+
+## ConfigKey
+
+Render a heading with a configuration key in the correctly cased format for a given platform.
+
+<Note>
+
+If content is specified, it will automatically hide the content when the given `platform` is not selected in context.
+
+</Note>
+
+```markdown {tabTitle:Example}
+<ConfigKey name="send-default-pii" notSupported={["javascript"]}>
+
+Description of send-default-pii
+
+</ConfigKey>
+```
+
+Attributes:
+
+- `name` (string)
+- `platform` (string) - defaults to the `platform` value from the page context
+- `supported` (string[])
+- `notSupported` (string[])
+
+## Note
+
+Render a note.
+
+<Note>
+
+Something important, but maybe not _that_ important.
+
+</Note>
+
+```markdown {tabTitle:Example}
+<Note>
+
+Something important, but maybe not _that_ important.
+
+</Note>
+```
+
+Use this for these types of content:
+
+- **Prerequisite(s):** Use these to list things that are required to finish. Place them prior to the procedure/process that follows so a user doesn't start and stop.
+- **Note:** to document information that's relevant to the topic, but isn't part of the larger point of the content. This might include a piece of information that should be highlighted, but isn't necessarily more important than other information. These include calling out early adopter features or providing clarification. Use sparingly.
+
+Don't use a title with this type of note.
+
+See also the [Alert component](#alert).
+
+## PageGrid
+
+Render all child pages of this document, including their `description` if available.
+
+```markdown {tabTitle:Example}
+<PageGrid />
+```
+
+Attributes:
+
+- `header` (string) - optional header value to include, rendered as an H2
+- `nextPages` (boolean) - only render pages which come next based on sidebar ordering
+
+## PlatformContent
+
+Render an include based on the currently selected `platform` in context.
+
+```markdown {tabTitle:Example}
+<PlatformContent includePath="sdk-init" />
+```
+
+Attributes:
+
+- `includePath` (string) - the subfolder within `/includes` to map to
+- `platform` (string) - defaults to the `platform` value from the page context
+
+Some notes:
+
+- When the current platform comes from the page context and no matching include is found, the content will be hidden.
+
+- Similar to `PlatformSection`, you can embed content in the block which will render _before_ the given include, but only when an include is available.
+
+- A file named `_default` will be used if no other content matches.
+
+Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
+
+## PlatformIdentifier
+
+Render terms in the correct case within the body text of a page (not in code samples) based on the platform case_style setting:
+
+```markdown {tabTitle:Example}
+<PlatformIdentifier name="before-send" />
+```
+
+For example, if you use `<PlatformIdentifier name="before-send" />`, it will render as:
+
+- `beforeSend` if case_style=camelCase
+- `before_send` if case_style=snake_case
+- `BeforeSend` if case_style=PascalCase
+
+This component only works properly in platform pages.
+
+## PlatformLink
+
+Useful for linking to platform-specific content when there's not a specific platform already selected.
+
+```markdown {tabTitle:Example}
+<PlatformLink to="/enriching-events/" />
+```
+
+This will direct users to a page where they can choose the platform, and then to the appropriate link. If they're within a page that already has an active platform, it will simply link to the appropriate page and skip the redirect.
+
+## PlatformSection
+
+Render a section based on the currently selected `platform` in context. When the platform is not valid, the content will be hidden.
+
+```markdown {tabTitle:Example}
+<PlatformSection notSupported={["javascript"]}>
+
+Something that applies to all platforms, but not javascript or node.
+
+</PlatformSection>
+```
+
+Attributes:
+
+- `platform` (string) - defaults to the `platform` value from the page context
+- `supported` (string[])
+- `notSupported` (string[])
+- `noGuides` (boolean) - hide this on all guides (takes precedence over `supported`/`notSupported`)

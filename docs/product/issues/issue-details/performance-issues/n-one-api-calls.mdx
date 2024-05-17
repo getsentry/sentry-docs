@@ -1,0 +1,76 @@
+---
+title: "N+1 API Calls"
+sidebar_order: 15
+description: "Learn more about N+1 API Calls and how to diagnose and fix them."
+---
+
+_N+1 API Calls_ are a performance problem that happens when an application makes many simultaneous network requests to fetch a given type of resource. For example, when an application makes one network request for each item on a list instead of fetching all the information at once in a single combined network call. Each call to the server incurs performance overhead, and if the number of calls is high, it can lead to significant performance problems. This problem commonly occurs when rendering lists or grids of items, where each item needs to fetch additional information from the server.
+
+## Affected Platforms
+
+Sentry detects N+1 API Calls in frontend and mobile applications. The detector is both language and platform-agnostic. You can expect to see this problem in environments like React, Vue, Angular, React Native, Android, and others. Backend environments aren't supported at this time.
+
+## Detection Criteria
+
+The N+1 API Call detector looks for groups of simultaneous network calls to the same URL. It uses the following detection criteria:
+
+- Applies to `GET` requests only
+- Minimum of `10` network calls must be happening simultaneously
+- Total duration of involved spans must exceed `300ms`.
+- Network calls must be within `5ms` of each other
+- Calls can't be to a GraphQL endpoint or to `_next/data`
+- Calls can't be fetching a static resource (such as `.png` files)
+- The transaction operation must be `"navigation"`, `"pageload"`, `"ui.load"`, or `"ui.action"`
+- The span operation must be `"http.client"`
+
+You can configure detector thresholds for N+1 API Call issues in **Project Settings > Performance**:
+
+![N+1 API Calls detector threshold settings](./img/n-plus-one-api-calls-detector-settings.png)
+
+## Span Evidence
+
+You can identify the root cause of your N+1 API Call problems by looking at three main aspects in the "Span Evidence" section:
+
+- Transaction name
+- Repeating spans - This is the URL that's receiving the repeated network calls
+- Parameters - These are the query parameters that vary between the network calls
+
+![N+1 API Calls span evidence](./img/n-plus-one-api-calls-evidence.png)
+
+View it by going to the **Issues** page in Sentry, clicking on the N+1 API Call error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+
+## Fingerprinting
+
+Sentry computes the issue fingerprint based on the URLs of the repeating network calls. Sentry parameterizes the URLs by stripping integers, UUIDs, SHA1 hashes, and MD5 hashes. If you're finding that Sentry is failing to correctly group N+1 API Call issues, you can parameterize the `http.client` spans in your transactions by using the <PlatformLink to="/configuration/options#before-send-transaction"><PlatformIdentifier name="before-send-transaction" /></PlatformLink> hook if your platform supports it.
+
+## Example
+
+Consider a book recommendation website written in React. The homepage generates a list of the most popular books, and renders a `<Book />` component for each book in the list. Each `<Book />` component makes a `fetch` call to get the book information from the API.
+
+```jsx
+const Book({ id }) => {
+  { book, isLoading } = useFetch(`/books?id=${id}`);
+
+  if (isLoading) {
+    return <span>LOADING...</span>
+  }
+
+  return (
+    <div>
+      <span>{book.title}</span>
+    </div>
+  );
+};
+```
+
+If the list has 100 books in it, the page will make 100 network calls simultaneously. The number 100 is the "N" in "N+1 API Call". This effect is visible in the span waterfall, which shows all the simultaneous network requests:
+
+![N+1 API Calls in an example application](./img/n-plus-one-api-calls-in-book-application.png)
+
+## Fixing N+1 API Call Issues
+
+Fixes for this issue type depend on the application context. In some cases, this behavior is intentional and even desired. It's up to you to decide what the appropriate fix is, if any. Here are some common approaches:
+
+- Fetch all the information ahead of time in one network call. In the example above, you might update the `/books` endpoint to accept a list of IDs (e.g., `/books?id=78&id=89&id=120`).
+- Lazy-load the information. In the book example, you could change the `<Book>` component to only fetch the information once the component is visible on the screen.
+- Cache the information. If your page makes concurrent calls that might be duplicates, you can improve performance by adding caching, or call deduplication.

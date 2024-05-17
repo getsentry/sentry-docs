@@ -1,0 +1,89 @@
+To simplify creating events, there are shorthand functions that construct prepopulated event objects. The most important one is `CaptureMessage`. The `Level` parameter is optional:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->CaptureMessage("Message", ESentryLevel::Info);
+```
+
+There is also the option to configure scope for some specific messages:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+SentrySubsystem->CaptureMessageWithScope("Message", ScopeDelegate, ESentryLevel::Info);
+
+// Put scope configuration logic here
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    Scope->SetTagValue("Module", "Test");
+    ...
+}
+```
+
+The same result can be achieved by calling corresponding functions in blueprint:
+
+![Capture message](./img/unreal_capture_message.png)
+
+<Note>
+
+Scoped message capturing is supported only on macOS, iOS and Android.
+
+</Note>
+
+## Manual Events
+
+To create and capture a manual event:
+
+1. Create an event, `USentryEvent`. This internally creates an object and initializes it with common event attributes, like `timestamp` and `event_id`.
+2. Set custom attributes of the event, like `Message` or `Level`.
+3. Send the event to Sentry by invoking the `CaptureEvent` method `USentrySubsystem`.
+
+In a simplest case, it looks like this:
+
+```c
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+USentryEvent* Event = NewObject<USentryEvent>();
+Event->SetMessage("Message");
+Event->SetLevel(ESentryLevel::Info);
+
+SentrySubsystem->CaptureEvent(Event);
+```
+
+You can also configure scope for some specific events:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+USentryEvent* Event = NewObject<USentryEvent>();
+Event->SetMessage("Message");
+Event->SetLevel(ESentryLevel::Info);
+
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+SentrySubsystem->CaptureEventWithScope(Event, ScopeDelegate, ESentryLevel::Info);
+
+// Put scope configuration logic here
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    Scope->SetTagValue("Module", "Test");
+    ...
+}
+```
+
+The same result can be achieved by calling corresponding functions in blueprint:
+
+![Capture event](./img/unreal_capture_event.png)
+
+<Note>
+
+Scoped events capturing is supported only on macOS, iOS and Android platforms.
+
+</Note>
+
+For the full list of supported values, check out [_Event Payloads_](https://develop.sentry.dev/sdk/event-payloads/) and linked documents.

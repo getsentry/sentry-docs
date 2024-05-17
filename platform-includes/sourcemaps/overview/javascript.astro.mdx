@@ -1,0 +1,64 @@
+## Configure Source Maps Upload
+
+Source maps upload should work if you followed the [Astro CLI installation guide](/platforms/javascript/guides/astro/#add-readable-stack-traces-to-errors). However, there are some options to configure source maps upload for your production builds for other configurations.
+
+### Enable Source Maps Upload
+
+To automatically upload source maps during production builds, add the `SENTRY_AUTH_TOKEN` environment variable to your environment, for example in a `.env.sentry-build-plugin` file or in your CI setup.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Next, add your project slug to the `sourceMapsUploadOptions` in your Astro config:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentry({
+      // Other Sentry options
+      sourceMapsUploadOptions: {
+        project: "___PROJECT_SLUG___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    }),
+  ],
+});
+```
+
+### Disable Source Maps Upload
+
+You can disable automatic source maps upload in your Astro configuration with `enabled: false` under `sourceMapsUploadOptions`
+
+### Setting the Source Maps Assets Directory
+
+By default, the Sentry Astro integration will look for source maps in sensible default directories, depending on your `outDir`, `rootDir` and `adapter` configuration.
+If these defaults don't work for you (for example, due to an advanced customized build setup or an unsupported adapter), you can specify the `assets` option to point to the folder(s) where your source maps are located:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentry({
+      sourceMapsUploadOptions: {
+        assets: [".clientOut/**/*", ".serverOut/**/*"],
+      },
+    }),
+  ],
+});
+```
+
+The specified patterns must follow the [glob syntax](https://www.npmjs.com/package/glob#glob-primer).
+
+### Working With Old Authentication Tokens
+
+Source maps work best with [organization-scoped auth tokens](/account/auth-tokens/#organization-auth-tokens). If you are using an old self-hosted Sentry version that doesn't yet support org-based tokens or you're using a different type of Sentry auth token, refer to our [legacy upload methods](/platforms/javascript/guides/astro/sourcemaps/troubleshooting_js/#working-with-old-authentication-tokens) for more information.
+
+
+### Disabeling Telemetry Data Collection
+
+The Astro SDK uses the Sentry Vite plugin to upload source maps.
+This plugin collects telemetry data to help us improve the source map uploading experience.
+Read more about this in our [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#telemetry).
+You can disable telemetry collection by setting `telemetry:false` under `sourceMapsUploadOptions`.

@@ -1,0 +1,47 @@
+<Alert level="" title="NLog Layouts">
+
+For more information on how to dynamically set event data via `NLog.config`, see NLog's [layout renderer documentation](https://nlog-project.org/config/?tab=layout-renderers).
+
+</Alert>
+
+<SignInNote />
+
+```xml {tabTitle:NLog.config}
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+  <extensions>
+    <add assembly="Sentry.NLog" />
+  </extensions>
+  <targets>
+    <target
+      xsi:type="Sentry"
+      name="sentry"
+      dsn="___PUBLIC_DSN___"
+      release="my-project-name@2.3.12">
+    </target>
+  </targets>
+
+  <rules>
+    <logger name="*" writeTo="sentry" />
+  </rules>
+</nlog>
+```
+
+```csharp
+// Add this to the SDK initialization callback
+options.Release = "my-project-name@2.3.12";
+```
+
+```fsharp
+// Add this to the SDK initialization callback
+options.Release <- "my-project-name@2.3.12"
+```
+
+The SDK attempts to locate the release to add to events sent to Sentry.
+
+The SDK will first look at the [entry assembly's](<https://msdn.microsoft.com/en-us/library/system.reflection.assembly.getentryassembly(v=vs.110).aspx>) `AssemblyInformationalVersionAttribute`, which accepts a string as
+value and is often used to set a GIT commit hash.
+
+If that returns null, it'll look at the default `AssemblyVersionAttribute` which accepts the numeric version number.

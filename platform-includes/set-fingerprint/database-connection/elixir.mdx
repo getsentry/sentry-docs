@@ -1,0 +1,16 @@
+```elixir
+defmodule SentryHook do
+  def before_send(event) do
+    case event.original_exception do
+      %DBConnection.ConnectionError{} ->
+        put_in(event.fingerprint, ["database_connection_error"])
+
+      _other ->
+        event
+    end
+  end
+end
+
+config :sentry,
+  before_send: {SentryHook, :before_send}
+```

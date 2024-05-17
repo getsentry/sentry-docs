@@ -1,0 +1,110 @@
+---
+title: HTTP Client Errors
+sidebar_order: 13
+description: "This feature, once enabled, automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry"
+---
+
+Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry. The error event will contain the `request` and `response` data, such as `url`, `status_code`, and so on.
+
+Since 8.0.0, this feature has been enabled by default. To disable it:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableCaptureFailedRequests = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableCaptureFailedRequests = NO;
+}];
+```
+
+By default, only HTTP client errors with a response code between `500` and `599` are captured as error events, but you can change this behavior by setting the `failedRequestStatusCodes` option:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    let httpStatusCodeRange = HttpStatusCodeRange(min: 400, max: 599)
+    options.failedRequestStatusCodes = [ httpStatusCodeRange ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    SentryHttpStatusCodeRange *httpStatusCodeRange =
+            [[SentryHttpStatusCodeRange alloc] initWithMin:400 max:599];
+    options.failedRequestStatusCodes = @[ httpStatusCodeRange ];
+}];
+```
+
+HTTP client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by setting the `failedRequestTargets` option with either a regular expression or a plain `String`. A plain string must contain at least one of the items from the list. Plain strings don't have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.failedRequestTargets = [ "www.example.com" ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.failedRequestTargets = @[ @"www.example.com" ];
+}];
+```
+
+Error events may contain PII data, such as `Headers` and `Cookies`. Sentry already does data scrubbing by default, but you can scrub any data before it is sent. Learn more in [Scrubbing Sensitive Data](/platforms/apple/guides/ios/data-management/sensitive-data/).
+
+These events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/product/sentry-basics/search/searchable-properties/) documentation.
+
+### Customize or Drop the Error Event
+
+The captured error event can be customized or dropped with a `beforeSend`:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSend = { event in
+        // modify event here or return nil to discard the event
+        return event
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
+        // modify event here or return nil to discard the event
+        return event;
+    }
+}];
+```

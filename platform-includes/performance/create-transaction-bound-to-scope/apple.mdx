@@ -1,0 +1,57 @@
+## Create Transaction Bound to The Current Scope
+
+Our SDK can bind a transaction to the scope making it accessible to every method running within this scope by calling `SentrySDK#startTransaction` method with `bindToScope` parameter to `true`.
+
+`bindToScope` additionally ensures that your new transaction replaces any one that may be already started. This is useful if you want custom instrumentation to co-exist with auto-instrumented transactions.
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `SentrySDK.span`. This method will return a `SpanProtocol` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `nil`.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(
+    name: "processOrderBatch",
+    operation: "task",
+    bindToScope: true
+)
+processOrderBatch()
+transaction.finish()
+
+func processOrderBatch() {
+    var span = SentrySDK.span
+
+    if span == nil {
+        span = SentrySDK.startTransaction(name: "processOrderBatch", operation: "task")
+    }
+
+    var innerSpan = span.startChild(operation: "subtask")
+    // omitted code
+    innerSpan.finish()
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+id<SentrySpan> transaction =
+    [SentrySDK startTransactionWithName:@"processOrderBatch"
+                              operation:@"task"
+                            bindToScope:YES];
+
+
+[self processOrderBatch];
+[transaction finish];
+
+- (void)processOrderBatch {
+    id<SentrySpan> span = SentrySDK.span;
+
+    if (span == nil) {
+        span = [SentrySDK startTransactionWithName:@"processOrderBatch"
+                                         operation:@"task"];
+    }
+
+    id<SentrySpan> innerSpan = [span startChildWithOperation:@"subtask"];
+    // omitted code
+    [innerSpan finish];
+}
+```

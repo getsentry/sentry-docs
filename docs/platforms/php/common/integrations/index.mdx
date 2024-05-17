@@ -1,0 +1,99 @@
+---
+title: Integrations
+description: "Learn about the automatic integrations Sentry provides and how to configure them."
+sidebar_order: 500
+---
+
+## Default Integrations
+
+These integrations are enabled by default and integrate into the
+standard library or the interpreter itself. They are documented so you can be both aware of what they do and disable them if they cause issues.
+
+To disable system integrations, set `default_integrations => false` when calling `\Sentry\init()`.
+
+### ExceptionListenerIntegration
+
+This integration catches all global uncaught exceptions and emits events when an error occurs.
+
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an exception listener.
+
+### ErrorListenerIntegration
+
+This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
+
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an error listener. By default, the `ErrorHandler` reserves 16 KiB of memory to handle fatal errors. When handling out of memory errors, the `ErrorHandler` additionally increases the [`memory_limit`](https://www.php.net/manual/en/ini.core.php#ini.memory-limit) by an additional 5 MiB to have enough room to send the out of memory event to Sentry. This change is only done once and only affects the handling of the out of memory error.
+
+To change the amount of memory reserved for fatal error handling or the amount the `memory_limit` is increased when handling an out of memory error, you can register the fatal error handler yourself before calling `\Sentry\init(...)`:
+
+```php
+// The amount of reserved memory every request (in bytes), this has to be a positive integer amount of bytes. Defaults to 16 KiB
+$errorHandler = \Sentry\ErrorHandler::registerOnceFatalErrorHandler(16 * 1024);
+// The amount of memory in bytes to increase the `memory_limit` to when handling a out of memory error, can also be set to `null` to disable increasing the `memory_limit`. Defaults to 5 MiB
+$errorHandler->setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(5 * 1024 * 1024);
+```
+
+For some frameworks or projects, specific integrations are provided both officially and by third-party users that automatically register the error handlers. Please refer to their documentation.
+
+By default, the error*types option defaults to the value returned by the `error_reporting()` function, which can change at runtime. Alternately, you can set the option to a fixed value by setting its value to a bitmask of the PHP `E*\*`constants in`\Sentry\init()`. In this case, Sentry will log only errors of those specific types regardless of the current reporting level.
+
+### FatalErrorListenerIntegration
+
+This integration catches all fatal errors and emits the corresponding events.
+
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as a fatal error listener.
+
+### RequestIntegration
+
+This integration adds to the event request data:
+
+- HTTP method
+- URL (including the query string)
+- Body (by default only if the body is 10Kb or less)
+
+If the [`send_default_pii` option](../configuration/options/#send-default-pii) is enabled, it will also send the following PII:
+
+- IP address
+- Cookies
+- Headers
+
+### TransactionIntegration
+
+This integration sets the `transaction` attribute of the event to the value found in the raw event payload or to the value of the `PATH_INFO` server var if present.
+
+### FrameContextifierIntegration
+
+This integration reads excerpts of code around the line that originated an error.
+
+### EnvironmentIntegration
+
+This integration fills the event data with PHP runtime and server OS information.
+
+### ModulesIntegration
+
+This integration logs all the versions of the packages installed with Composer with the event details; the root project is also included.
+
+## Custom Integrations
+
+You can customize the list of integration without disabling the default integration using the `integrations` option. You can pass a callable for advanced needs, though a fixed list of integrations will work in most use cases.
+
+In the example below, all integrations are enabled except the `ExceptionListenerIntegration`.
+
+<SignInNote />
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'integrations' => static function (array $integrations) {
+        $integrations = array_filter($integrations, static function (\Sentry\Integration\IntegrationInterface $integration) {
+            // Check if the integration if an instance of the exception listener and return false to remove it from the array
+            if ($integration instanceof \Sentry\Integration\ExceptionListenerIntegration) {
+                return false;
+            }
+
+            return true;
+        });
+
+        return $integrations;
+    },
+]);
+```

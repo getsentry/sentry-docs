@@ -1,0 +1,88 @@
+---
+title: Alerts Best Practices
+keywords: ["best practice", "alerting", "manage noise"]
+sidebar_order: 30
+description: "Learn best practices for creating alerts."
+---
+
+Alerts should notify you when there's an important problem with your application. But they shouldn't be too noisy, because that can lead to alert fatigue. The following best practices will help you create relevant alerts that notify the right people — that is, the people equipped to fix the problem.
+
+There are two types of alerts: [issue alerts](/product/alerts/alert-types/#issue-alerts) and [metric alerts](/product/alerts/alert-types/#metric-alerts). Most of our alerting best practices are specific to issue alerts, however, the [alert conditions best practices](#alert-conditions-best-practices) apply to both issue and metric alerts.
+
+## Issue Alerts Best Practices
+
+An issue alert is triggered when an individual issue meets some criteria. These criteria (or "triggers") can be based on state-changes or frequency. The best practices that follow cover alerts based on state and frequency changes, as well as reducing noise, and effective routing.
+
+### State-Change Alerts
+
+The following triggers, or “when” conditions, capture state changes in issues:
+
+- A new issue is created
+- The issue changes state from resolved to unresolved, or a regression occurs
+- The issue changes state from archived to escalating
+
+Your first instinct might be to set an alert for every state change. However, this is likely to result in too many alerts if you're running an app with a significant number of users. In particular, regressions will be more common than you expect because Sentry auto-resolves issues after 14 days of silence (configurable), and many issues keep coming back after the 14-day window.
+
+To deal with this, the **Issues** page includes the [**Review List**](/product/issues/states-triage/#mark-reviewed) (in the "For Review" tab), containing only issues that have had a state change in the last seven days. We recommended that you review this list once a day. If you need real-time notifications for particular types of issues, such as those affecting your enterprise customers, you can always create alerts with those filters.
+
+### Frequency-Based Alerts
+
+Below, we describe best practices for setting alerts using the following frequency-based triggers:
+
+- **Number of events in an issue**: This is a very commonly used trigger, but remember that frequency isn't everything: a low-frequency error can be more important than a high-frequency one if it's in a more important part of your app.
+- **Number of users affected by an issue**: Sometimes a very small number of users create a lot of errors, so in some cases alerting on users affected can be more important than error frequency. However, remember that not all errors that have user counts in Sentry may be actually user-facing, and vice versa.
+- **Percent of sessions affected by an issue**: Error counts and users affected require constant manual adjustments as your traffic patterns change and are not well suited to deal with seasonality (for example, fewer errors on the weekend). Also, it can be hard to assess the impact of an issue from error counts or counts of users affected. In such cases, if you've configured your project to capture session data, you can opt for alerting when an issue affects a certain percentage of user sessions.
+
+### Reducing Noise
+
+One way to keep alerts from becoming too noisy is to use filters, or “if” conditions, as part of your alert configuration. Below, we describe best practices for setting alerts using the following noise-reducing filtering options:
+
+- **Prioritize using tags**: Filter issue alerts based on important tags, such as `customer_type=enterprise` or `url=/very/important/page`. You can find the list of tags available in your project under **[Project] > Settings > Tags**. The list is an aggregation of all tag keys (default and custom) encountered in events for that project.
+- **Prioritize new issues**: If you're frequently getting alerted about old issues, filter your alerts to issues created in the last few days using the `The issue is older or newer than...` filter.
+- **Filter transient issues**: Many issues exhibit a short burst of events that can trip your frequency-based alerts. To filter out these issues, use the `Issue has happened at least {X} times` filter.
+- **Prioritize the latest release**: Use the `The event is from the latest release` filter to make your issue alert only apply to the latest release.
+- **Archive noisy issues**: If you're seeing alerts from the same issue repeatedly, [archive the issue](/product/issues/states-triage/#archive). (This is not an alert configuration setting.)
+
+### Routing
+
+These routing best practices ensure that you alert the right people about a problem in your application.
+
+- **Ownership Rules**: Use [ownership rules and code owners](/product/issues/ownership-rules/) to let Sentry automatically send alerts to the right people, as well as to ease configuration burden. You can configure ownership in **[Project] > Settings > Ownership Rules**. In the case of ownership rules, when there are no matching owners, the alert goes to all project members by default. If this is too broad, and you'd like a specific owner to be the fallback, end your ownership rules with a rule like `*:<owner>`.
+- **Delivery methods for different priorities**: Use different delivery methods to separate alerts of different priorities. For example, you might route from highest to lowest priority like so:
+  - High priority: Page (for example, PagerDuty or OpsGenie)
+  - Medium priority: Notification (for example, Slack)
+  - Low priority: Email
+- **Review List**: Found in the "For Review" tab of **Issues**, the [**Review List**](/product/issues/states-triage/#mark-reviewed) is where you can check on your lowest priority issues without receiving any alerts.
+- **Build an integration**: If you would like to route alert notifications to solutions with which Sentry doesn't yet have an out-of-the-box integration, you can use our [integration platform](/organization/integrations/integration-platform/). When you create an integration, it will be available in the alert actions menu. You might want use your own integration for:
+  - Sending alerts to integrations not supported natively
+  - Aggregating alerts from your different monitoring systems
+  - Writing custom rules in the webhook handler to route alerts more intelligently
+
+## Alert Conditions Best Practices
+
+Both frequency-based issue alerts and metric alerts can notify you in two ways:
+
+- When they cross a [fixed threshold](#fixed-thresholds)
+- When they deviate from their historical behavior, based on a [dynamic threshold](#dynamic-thresholds-change-alerts), or what we call a _change alert_
+
+### Fixed Thresholds
+
+Fixed thresholds are most effective when you have a clear idea of what constitutes good or bad performance. Typically, they’re the type of threshold you’ll use most often when setting up alerts. Some examples of fixed thresholds are:
+
+- When your app's crash rate exceeds 1%
+- When your app's transaction volume drops to zero
+- When any issue affects more than 100 enterprise users in a day
+- When the response time of a key transaction exceeds 500 ms
+
+### Dynamic Thresholds: Change Alerts
+
+Dynamic thresholds help you detect when a metric deviates significantly from its “normal” range. For example, the percentage of sessions affected by an issue in the last 24 hours is _20% greater than one week ago_ (dynamic), rather than the percentage of sessions affected is simply _greater than 20%_ (fixed).
+
+Dynamic thresholds are good for when it’s cumbersome to create fixed thresholds for every metric of interest, or when you don’t have an expected value for a metric, such as in the following scenarios:
+
+- **Seasonal fluctuations**: Seasonal metrics, such as number of transactions (which fluctuates daily), are more accurately monitored by comparing them to the previous day or week, rather than a fixed value.
+- **Unpredictable growth**: Fixed-threshold alerts may require continuous manual adjustment as traffic patterns change, such as with a fast-growing app. Dynamic thresholds work regardless of changing traffic patterns.
+
+You may want to **complement** (more common) rather than **replace** (less common) fixed thresholds with dynamic thresholds.
+
+Learn more about [change alerts for issue alerts](/product/alerts/create-alerts/issue-alert-config/#change-alerts) and [change alerts for metric alerts](/product/alerts/create-alerts/metric-alert-config/#change-alerts-percent-change) in the full documentation.

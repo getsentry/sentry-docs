@@ -1,0 +1,39 @@
+For example, if you want to create a transaction for a user interaction in your application:
+
+```c
+// Let's say this method is called in a background thread when a user clicks on the checkout button.
+void perform_checkout() {
+    // This will create a new Transaction for you
+    sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
+        "checkout",
+        "perform-checkout"
+    );
+    sentry_transaction_t *tx = sentry_transaction_start(tx_ctx, sentry_value_new_null());
+
+    // Validate the cart
+    sentry_span_t *validation_span = sentry_transaction_start_child(
+        tx,
+        "validation",
+        "validating shopping cart",
+    );
+
+    validate_shopping_cart(); // Some long process, maybe a sync http request.
+
+    sentry_span_finish(validation_span);
+
+    // Process the order
+    sentry_span_t *process_span = sentry_transaction_start_child(
+        tx,
+        "process",
+        "processing shopping cart",
+    )
+
+    process_shopping_cart(); // Another time consuming process.
+
+    sentry_span_finish(process_span);
+
+    sentry_transaction_finish(tx);
+}
+```
+
+This example will send a transaction named `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `validate_shopping_cart()` took and a `process` span that measures `process_shopping_cart()`. Finally, the call to `sentry_transaction_finish()` will finish the transaction and send it to Sentry.

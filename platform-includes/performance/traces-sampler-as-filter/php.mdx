@@ -1,0 +1,22 @@
+<SignInNote />
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
+        if ($context->getParentSampled()) {
+            // If the parent transaction (for example a JavaScript front-end)
+            // is sampled, also sample the current transaction
+            return 1.0;
+        }
+
+        if (some_condition()) {
+            // Drop this transaction, by setting its sample rate to 0
+            return 0;
+        }
+
+        // Default sample rate for all other transactions (replaces `traces_sample_rate`)
+        return 0.25;
+    },
+]);
+```

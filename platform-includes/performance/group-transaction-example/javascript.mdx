@@ -1,0 +1,37 @@
+```javascript
+// All JavaScript-based SDKs include this function, so it's safe to replace `@sentry/node`
+// with your particular SDK
+import { addEventProcessor } from "@sentry/node";
+
+addEventProcessor((event) => {
+  if (event.type === "transaction") {
+    event.transaction = sanitizeTransactionName(event.transaction);
+  }
+  return event;
+});
+```
+
+For browser JavaScript applications using the `BrowserTracing` integration, the `beforeStartSpan` option can be used to better group `navigation`/`pageload` transactions together based on URL.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  // ...
+  integrations: [
+    browserTracingIntegration({
+      beforeStartSpan: (context) => {
+        return {
+          ...context,
+          // You could use your UI's routing library to find the matching
+          // route template here. We don't have one right now, so do some basic
+          // parameter replacements.
+          name: location.pathname
+            .replace(/\/[a-f0-9]{32}/g, "/<hash>")
+            .replace(/\/\d+/g, "/<digits>"),
+        };
+      },
+    }),
+  ],
+});
+```

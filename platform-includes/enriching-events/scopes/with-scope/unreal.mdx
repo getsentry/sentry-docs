@@ -1,0 +1,26 @@
+<Note>
+
+Local scopes are supported for iOS and Android only.
+
+</Note>
+
+```cpp
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    Scope->SetTagValue("my-tag", "my value");
+    Scope->SetLevel(ESentryLevel::Error);
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// will be tagged with my-tag="my value"
+SentrySubsystem->CaptureMessageWithScope("Error message", ScopeDelegate);
+
+// will not be tagged with my-tag
+SentrySubsystem->CaptureMessage("Error message");
+```

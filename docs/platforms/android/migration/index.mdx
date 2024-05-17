@@ -1,0 +1,683 @@
+---
+title: Migration Guide
+sidebar_order: 8000
+description: "Migrating between versions of Sentry's SDK for Android."
+---
+
+## Migration from `io.sentry:sentry-android-gradle-plugin:3.x.x` to `io.sentry:sentry-android-gradle-plugin:4.0.0`
+
+### Breaking Changes
+
+- Bumped Sentry Android SDK to `7.0.0`. Refer to the [section below](#migrating-from-iosentrysentry-android-6x-to-iosentrysentry-android-700) for details about changes to the SDK.
+- Renamed `experimentalGuardsquareSupport` flag to `dexguardEnabled`.
+
+### Sentry Android SDK Compatibility
+
+You must use Sentry Gradle plugin 4.+ together with the Sentry Android SDK 7.+ otherwise, it might crash at runtime due to binary incompatibility. If you can't do that for some reason, you can specify the Sentry version via the plugin config block:
+
+```kotlin
+sentry {
+  autoInstallation {
+    sentryVersion.set("7.0.0")
+  }
+}
+```
+
+Similarly, if you have a Sentry SDK (e.g. `sentry-android-core`) dependency on one of your Gradle modules and you're updating it to 7.+, make sure the Gradle plugin is at 4.+, or specify the SDK version as shown in the snippet above.
+
+## Migrating from `io.sentry:sentry-android 6.x` to `io.sentry:sentry-android 7.0.0`
+
+### Breaking Changes
+
+- The minimum supported API level was updated to 19 (`minSdk`).
+- The `sentry-android-okhttp` classes were deprecated in favor of `sentry-okhttp`, which is a pure Java module and can be used in non-Android projects.
+  - The `SentryOkHttpUtils` class was removed from the public API. If you were using it, consider filing a [feature request](https://github.com/getsentry/sentry-java/issues).
+- If you're using `sentry-kotlin-extensions`, it now requires `kotlinx-coroutines-core` version `1.6.1` or higher.
+- Moved `enableNdk` and `enableScopeSync` from `SentryOptions` to `SentryAndroidOptions`.
+- Changed the return type of `SentryApolloInterceptor.BeforeSpanCallback` from `ISpan` to `ISpan?`.
+- `Scope` now implements the `IScope` interface, therefore some methods like `ScopeCallback.run` accept `IScope` now.
+- Some `Sentry.startTransaction` overloads do not exist anymore, and instead, you can set old options by passing a `TransactionOptions` object in.
+
+For example:
+
+```kotlin
+// old
+val transaction = Sentry.startTransaction("name", "op", bindToScope = true)
+// new
+val transaction = Sentry.startTransaction("name", "op", TransactionOptions().apply { isBindToScope = true })
+```
+
+### Behavioral Changes
+
+- `Sentry.getSpan()` now returns the root span/transaction instead of the latest span.
+  - This will make the span hierarchy leaner and more readable.
+- The SDK now captures failed HTTP and GraphQL (Apollo) requests by default.
+  - This can increase your event consumption and may affect your quota, because we will report failed network requests as Sentry events if you're using the `sentry-android-okhttp` or `sentry-apollo-3` integrations by default. You can customize what errors you want/don't want to have reported for [OkHttp](/platforms/android/integrations/okhttp/#http-client-errors) and [Apollo3](/platforms/android/integrations/apollo3/#graphql-client-errors) respectively.
+- Added a deadline timeout for automatic transactions.
+  - This affects all automatically generated transactions on Android (UI, clicks). The default timeout is 30s, meaning the automatic transaction will be force-finished with the status `deadline_exceeded` when it reaches the deadline.
+- The SDK now sets `ip_address` to \{\{auto}} by default, even if sendDefaultPII is disabled.
+  - We recommend you instead use the "Prevent Storing of IP Addresses" option in the "Security & Privacy" project settings on [sentry.io](https://sentry.io/).
+- The `maxSpans` setting (defaults to 1000) is now enforced for nested child spans. This means a single transaction can have `maxSpans` number of children (nested or not) at most.
+
+### Sentry Integrations Version Compatibility
+
+Make sure to align _all_ Sentry dependencies (like `-timber`, `-okhttp` or other packages) to the same version when bumping the SDK to 7.+, otherwise, it will crash at runtime due to binary incompatibility.
+
+For example, if you're using the [Sentry Android Gradle plugin](https://github.com/getsentry/sentry-android-gradle-plugin) with the `autoInstallation` [feature](/platforms/android/configuration/gradle/#auto-installation) (enabled by default), make sure to use version 4.+ of the Gradle plugin together with version 7.+ of the SDK. If you can't do that for some reason, you can specify the Sentry version via the plugin config block:
+
+```kotlin
+sentry {
+  autoInstallation {
+    sentryVersion.set("7.0.0")
+  }
+}
+```
+
+Similarly, if you have a Sentry SDK (e.g. `sentry-android-core`) dependency on one of your Gradle modules and you're updating it to 7.+, make sure the Gradle plugin is at 4.+ or specify the SDK version as shown in the snippet above.
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `7.0.0` of `sentry`, [Sentry's version >= v22.12.0](https://github.com/getsentry/self-hosted/releases) is required to properly ingest transactions with unfinished spans. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+## Migrating from `io.sentry:sentry-android 6.14.x` to `io.sentry:sentry-android 6.15.0`
+
+The `sentry-compose-android` and `sentry-compose` integrations now declare their upstream dependencies as `compileOnly`. Make sure to have the `androidx.navigation:navigation-compose`, `androidx.compose.runtime:runtime`, and `androidx.compose.ui:ui` dependencies on the classpath if you're using those integrations. Otherwise, the application will crash with a `NoClassDefFoundError` exception.
+
+## Migrating from `io.sentry:sentry-android 6.2.x` to `io.sentry:sentry-android 6.3.0`
+
+The `sentry-android-okhttp`, `sentry-android-fragment`, and `sentry-android-timber` integrations now declare their upstream dependencies as `compileOnly`. Make sure to have the `okhttp`, `fragment`, and `timber` dependencies on the classpath if you're using those integrations or the application will crash with a `NoClassDefFoundError` exception.
+
+## Migrating from `io.sentry:sentry-android 6.x` to `io.sentry:sentry-android 6.2.0`
+
+- Kotlin plugin is upgraded to `1.6.10`.
+
+This version is still compatible with Kotlin `1.4`.
+
+<Note>
+
+This only affects integrations that are written in Kotlin, such as `timber`, `fragment`, `okhttp`, `navigation` and `compose`.
+
+</Note>
+
+## Migrating from `io.sentry:sentry-android 5.x` to `io.sentry:sentry-android 6.0.0`
+
+- Kotlin plugin is upgraded to `1.5`.
+- Kotlin `languageVersion` is upgraded to `1.4`.
+- `Gson` is removed as a transitive dependency and vendored in the SDK.
+  - Protocol classes now implement the `JsonSerializable` and `JsonDeserializer` interfaces.
+- `SentryOptions#shutdownTimeout` is renamed to `shutdownTimeoutMillis`.
+- Removed `@Deprecated` and `@ApiStatus.ScheduledForRemoval` methods
+  - `ITransaction#setRequest`
+  - `ITransaction#getRequest`
+  - `ITransaction#getContexts`
+  - `SentryBaseEvent#getOriginThrowable`
+  - `SentryOptions#getCacheDirSize`
+  - `SentryOptions#setCacheDirSize`
+  - `SentryOptions#isEnableSessionTracking`
+  - `SentryOptions#setEnableSessionTracking`
+- Removed unnecessary abstractions
+  - `IBuildInfoProvider` is now `BuildInfoProvider` only.
+  - `IHandler` is now `MainLooperHandler` only.
+- `ISpan` now has higher precision using the `System#nanoTime` instead of milliseconds.
+
+- Hints changed its type from `Object` to `io.sentry.Hint`
+
+_Old_:
+
+```kotlin
+Sentry.captureException(RuntimeException("exception"), "myStringHint")
+```
+
+_New_:
+
+```kotlin
+val hints = mutableMapOf<String, Any>("myHint" to "myStringHint")
+Sentry.captureException(RuntimeException("exception"), hints)
+```
+
+- `SentryOptions#enableScopeSync` is now enabled by default, to disable it, see the code snippet below.
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.ndk.scope-sync.enable" android:value="false" />
+```
+
+- `SentryOptions#sendClientReports` is now enabled by default. To disable it, use the code snippet below:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.send-client-reports" android:value="false" />
+```
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `6.0.0` of `sentry`, [Sentry's version >= v21.9.0](https://github.com/getsentry/self-hosted/releases) is required or you have to manually disable sending client reports via the `sendClientReports` option. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+There are more changes and refactors, but they are not user breaking changes.
+
+## Migrating to `io.sentry:sentry-android-timber 5.6.2`
+
+Starting from version `5.6.2`, the `Timber.tag` usage is no longer supported by our SDK (the tag will not be captured and reflected on Sentry). Please, vote on this [GitHub issue](https://github.com/getsentry/sentry-java/issues/1900) to let us know if we should provide support for that.
+
+<Note>
+
+Support for `Timber.tag` has been brought back in version `5.7.2`.
+
+</Note>
+
+## Migrating from `io.sentry:sentry-android-gradle-plugin 2.x` to `io.sentry:sentry-android-gradle-plugin 3.0.0`
+
+The `io.sentry.android.gradle` >= `3.0.0` requires [Android Gradle Plugin >= 7.0.0](https://developer.android.com/studio/releases/gradle-plugin#7-0-0). For older versions of the Android Gradle Plugin, use `io.sentry.android.gradle:2.+`.
+
+### includeProguardMapping
+
+The `autoUpload` flag has been deprecated in favor of two new options:
+
+- `includeProguardMapping` - Disables/enables Proguard mapping functionality. When enabled, generates a UUID and attempts to upload a Proguard mapping associated with that UUID to Sentry. When `autoUploadProguardMapping` is disabled, the plugin will only generate a `sentry-debug-meta.properties` file containing UUID, which can later be used to manually upload the mapping using, for example [sentry-cli](/product/cli/dif/#proguard-mapping-upload).
+- `autoUploadProguardMapping` - Defines whether the gradle plugin should attempt to auto-upload the mapping file to Sentry.
+  When `includeProguardMapping` is disabled, this flag has no effect.
+
+_Old_:
+
+```groovy
+sentry {
+    autoUpload = false
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(false)
+}
+```
+
+_New_:
+
+```groovy
+sentry {
+  includeProguardMapping = true
+  autoUploadProguardMapping = false
+}
+```
+
+```kotlin
+sentry {
+  includeProguardMapping.set(true)
+  autoUploadProguardMapping.set(false)
+}
+```
+
+### tracingInstrumentation
+
+The `io.sentry.android.gradle` enables the tracing instrumentation (via bytecode manipulation) for `androidx.sqlite` and `androidx.room` libraries by default, to disable it, see the code snippet below.
+
+```groovy
+sentry {
+    // Enable or disable the tracing instrumentation.
+    // Does auto instrumentation for 'androidx.sqlite' and 'androidx.room' libraries.
+    // It starts and finishes a Span within any CRUD operation.
+    // Default is enabled.
+    // Only available v3.0.0 and above.
+    tracingInstrumentation {
+      enabled = false
+    }
+}
+```
+
+```kotlin
+sentry {
+    // Enable or disable the tracing instrumentation.
+    // Does auto instrumentation for 'androidx.sqlite' and 'androidx.room' libraries.
+    // It starts and finishes a Span within any CRUD operation.
+    // Default is enabled.
+    // Only available v3.0.0 and above.
+    tracingInstrumentation {
+      enabled.set(false)
+    }
+}
+```
+
+## Migrating from `io.sentry:sentry-android-gradle-plugin 1.x` to `io.sentry:sentry-android-gradle-plugin 2.0.0`
+
+The `io.sentry.android.gradle` >= `2.0.0` requires [Android Gradle Plugin >= 4.0.0](https://developer.android.com/studio/releases/gradle-plugin#4-0-0).
+
+The `io.sentry.android.gradle` >= `2.0.0` must be applied to the `app/build.gradle` module (or the module that has `com.android.application` plugin applied).
+
+The `io.sentry.android.gradle` >= `2.0.0` publishes the Gradle Plugin Marker to Maven Central. As a result, you no longer need to set the `classpath`.
+
+_Old_:
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
+    }
+}
+
+apply plugin: 'io.sentry.android.gradle'
+```
+
+_New_:
+
+```groovy
+plugins {
+    id "io.sentry.android.gradle" version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.android.gradle") version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+The `io.sentry.android.gradle` has been rewritten in Kotlin. As a result, the Groovy or Kotlin DSL syntax has slightly changed.
+
+The `autoProguardConfig` flag has been removed, the Android SDK >= `2.0.0` version already merges the ProGuard rules automatically.
+
+_Old_:
+
+```groovy
+sentry {
+    autoProguardConfig false
+    autoUpload true
+    uploadNativeSymbols false
+    includeNativeSources false
+}
+```
+
+_New_:
+
+```groovy
+sentry {
+    autoUpload = true
+    uploadNativeSymbols = false
+    includeNativeSources = false
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(true)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
+}
+```
+
+## Migrating from `io.sentry:sentry-android 4.3.0` to `io.sentry:sentry-android 5.0.0`
+
+You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/configuration/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+
+`Sentry#startTransaction` by default does not bind created transaction to the scope. To start transaction with binding to the scope, use one of the new overloaded `startTransaction` methods taking `bindToScope` parameter and set it to `true`. Bound transaction can be retrieved with `Sentry#getSpan`.
+
+All SDK methods have been annotated with [JetBrains Annotations](https://github.com/JetBrains/java-annotations): `@Nullable` and `@NotNull`. Kotlin compiler respects these annotations, so in Kotlin code, some fields that were recognized as not-null, are now nullable, and the other way around.
+
+`SentryBaseEvent#getOriginThrowable` has been deprecated in favor of `SentryBaseEvent#getThrowable`, and `SentryBaseEvent#getThrowable` now returns the unwrapped throwable.
+
+`SentryOptions#getCacheDirSize` has been deprecated in favor of `SentryOptions#getMaxCacheItems`.
+
+`InvalidDsnException` has been removed. It is replaced by `IllegalArgumentException`.
+
+`EventProcessor` interface has a new `default` method which could break the instantiation when using trailing lambdas.
+
+_Old_:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+_New_:
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
+        return event
+    }
+})
+```
+
+A random generated `installationId` replaces `Settings.Secure.ANDROID_ID`, which has been removed. This may affect the number of unique users displayed on the the Issues page and Alerts.
+If you always set a custom user using `Sentry.setUser(customUser)`, the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet:
+
+```java
+User user = new User();
+user.setId(Settings.Secure.ANDROID_ID);
+
+Sentry.setUser(user);
+```
+
+`SentryOptions#setEnableSessionTracking(boolean)` is deprecated in favor of `SentryOptions#setEnableAutoSessionTracking(boolean)`. It will be removed in future.
+
+_Old_:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableSessionTracking(false);
+});
+```
+
+_New_:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableAutoSessionTracking(false);
+});
+```
+
+`io.sentry.session-tracking.enable` AndroidManifest meta-data is deprecated in favor of `io.sentry.auto-session-tracking.enable`. It will be removed in future.
+
+_Old_:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.session-tracking.enable" android:value="false" />
+</application>
+```
+
+_New_:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-session-tracking.enable" android:value="false" />
+</application>
+```
+
+## Migrating from `io.sentry:sentry-android 4.1.0` to `io.sentry:sentry-android 4.2.0`
+
+`operation` is now a required property of the `SentryTransaction` and `SentrySpan`. Whenever a transaction or span is started, the value for `operation` must be provided:
+
+```java
+Sentry.startTransaction("transaction-name", "operation-name");
+```
+
+## Migrating from `io.sentry:sentry-android 2.x` to `io.sentry:sentry-android 3.x`
+
+### Package changes
+
+The package `io.sentry.core` has been renamed to `io.sentry`. To compile correctly, replace the strings on all the usages from `io.sentry.core.` to `io.sentry.`
+
+Other than that, the APIs didn't change. Release Heath sets by default. If you prefer not to track the health of your releases, disable it with:
+
+```xml
+<application>
+  <meta-data android:name="io.sentry.session-tracking.enable" android:value="false" />
+</application>
+```
+
+## Migrating from `io.sentry:sentry-android 1.x` to `io.sentry:sentry-android 2.x`
+
+With Sentry Android, we've updated the API to resemble the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. And now that the SDK isn't built on top of `io.sentry:sentry-java`, Sentry Android has more Android-specific features.
+
+If you want to upgrade from the previous version of the SDK, please check the following sections of changes that may need updating in your code.
+
+### Configuration
+
+The file `sentry.properties` used by the previous version of the SDK has been discontinued. Configurations for the new SDK are in `AndroidManifest.xml` or directly in the code.
+
+Example of the configuration in the Manifest:
+
+<SignInNote />
+
+```xml
+<application>
+    <!-- Example of the Sentry DSN setting -->
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+</application>
+```
+
+If you want to set the configuration manually in the code, you need to initialize the SDK with `SentryAndroid.init()` --- described in [Installation](#installation) --- in the same file as `SentryAndroidOptions`, which holds configuration items.
+
+### Installation
+
+The new SDK can initialize automatically, all you need to do is provide the DSN in your Manifest file, as shown in the previous example in [Configuration](#configuration).
+
+#### Manual Installation
+
+If you want to register any callback to filter and modify events and/or breadcrumbs, or if you want to provide the configuration values via code, you need to initialize the SDK using the `SentryAndroid.init()`.
+
+To initialize the SDK manually:
+
+- Disable the `auto-init` feature by providing the following line in the manifest:
+
+  ```xml
+  <application>
+      <meta-data android:name="io.sentry.auto-init" android:value="false" />
+  </application>
+  ```
+
+- Initialize the SDK directly in your application:
+
+<SignInNote />
+
+```java
+SentryAndroid.init(this, options -> {
+  options.setDsn("___PUBLIC_DSN___");
+});
+```
+
+```kotlin
+SentryAndroid.init(this) { options ->
+  options.dsn = "___PUBLIC_DSN___"
+}
+```
+
+### Releases
+
+Please note that the new SDK will send with each event a release version in a different format than the previous SDK.
+
+If you are using the [GitHub](/organization/integrations/source-code-mgmt/github/) or [GitLab](/organization/integrations/source-code-mgmt/gitlab/) integrations, you need to do one of the following:
+
+- [Use the new format](/platforms/android/configuration/releases/)
+- Set the release in your `AndroidManifest.xml`
+- Change your code as described in the configuration section
+
+### API
+
+#### Set tag
+
+_Old_:
+
+```java
+Sentry.getContext().addTag("tagName", "tagValue");
+```
+
+```kotlin
+Sentry.getContext().addTag("tagName", "tagValue")
+```
+
+_New_:
+
+```java
+Sentry.setTag("tagName", "tagValue");
+```
+
+```kotlin
+Sentry.setTag("tagName", "tagValue")
+```
+
+#### Capture custom exception
+
+_Old_:
+
+```java
+try {
+  int x = 1 / 0;
+} catch (Exception e) {
+  Sentry.capture(e);
+}
+```
+
+```kotlin
+try {
+  val x = 1 / 0
+} catch (e: Exception) {
+  Sentry.capture(e)
+}
+```
+
+_New_:
+
+```java
+try {
+  int x = 1 / 0;
+} catch (Exception e) {
+  Sentry.captureException(e);
+}
+```
+
+```kotlin
+try {
+  val x = 1 / 0
+} catch (e: Exception) {
+  Sentry.captureException(e)
+}
+```
+
+#### Capture a message
+
+_Old_:
+
+```java
+Sentry.capture("This is a test");
+```
+
+```kotlin
+Sentry.capture("This is a test")
+```
+
+_New_:
+
+```java
+Sentry.captureMessage("This is a test"); // SentryLevel.INFO by default
+Sentry.captureMessage("This is a test", SentryLevel.WARNING); // or specific level
+```
+
+```kotlin
+Sentry.captureMessage("This is a test") // SentryLevel.INFO by default
+Sentry.captureMessage("This is a test", SentryLevel.WARNING) // or specific level
+```
+
+#### Breadcrumbs
+
+_Old_:
+
+```java
+Sentry.getContext().recordBreadcrumb(
+  new BreadcrumbBuilder().setMessage("User made an action").build()
+);
+```
+
+```kotlin
+Sentry.getContext().recordBreadcrumb(
+  BreadcrumbBuilder().setMessage("User made an action").build()
+)
+```
+
+_New_:
+
+```java
+Sentry.addBreadcrumb("User made an action");
+```
+
+```kotlin
+Sentry.addBreadcrumb("User made an action")
+```
+
+#### User
+
+_Old_:
+
+```java
+Sentry.getContext().setUser(
+  new UserBuilder().setEmail("hello@sentry.io").build()
+);
+```
+
+```kotlin
+Sentry.getContext().setUser(
+  UserBuilder().setEmail("hello@sentry.io").build()
+)
+```
+
+_New_:
+
+```java
+User user = new User();
+user.setEmail("hello@sentry.io");
+Sentry.setUser(user);
+```
+
+```kotlin
+val user = User().apply {
+  email = "hello@sentry.io"
+}
+Sentry.setUser(user)
+```
+
+#### Set extra
+
+_Old_:
+
+```java
+Sentry.getContext().addExtra("extra", "thing");
+```
+
+```kotlin
+Sentry.getContext().addExtra("extra", "thing")
+```
+
+_New_:
+
+```java
+Sentry.setExtra("extra", "thing");
+```
+
+```kotlin
+Sentry.setExtra("extra", "thing")
+```
+
+#### Clear the Context/Scope
+
+_Old_:
+
+```java
+Sentry.clearContext();
+```
+
+```kotlin
+Sentry.clearContext()
+```
+
+_New_:
+
+```java
+Sentry.configureScope(s -> s.clear());
+```
+
+```kotlin
+Sentry.configureScope { it.clear() }
+```
+
+### Sentry Gradle Plugin
+
+Disable the `autoProguardConfig` flag from the Sentry Gradle Plugin since `io.sentry:sentry-android` >= `2.0.0` does this automatically.
+
+```groovy
+sentry {
+    autoProguardConfig false
+}
+```

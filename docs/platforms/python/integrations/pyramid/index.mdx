@@ -1,0 +1,120 @@
+---
+title: Pyramid
+description: "Learn about using Sentry with Pyramid."
+---
+
+The Pyramid integration adds support for the [Pyramid Web Framework](https://trypyramid.com/).
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash
+pip install --upgrade sentry-sdk
+```
+
+## Configure
+
+If you have the `pyramid` package in your dependencies, the Pyramid integration will be enabled automatically when you initialize the Sentry SDK.
+
+<SignInNote />
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+
+from pyramid.config import Configurator
+
+with Configurator() as config:
+    # ...
+```
+
+## Verify
+
+```python
+from wsgiref.simple_server import make_server
+from pyramid.config import Configurator
+from pyramid.response import Response
+
+sentry_sdk.init(...)  # same as above
+
+def hello_world(request):
+    1/0  # raises an error
+    return Response('Hello World!')
+
+if __name__ == '__main__':
+    with Configurator() as config:
+        config.add_route('hello', '/')
+        config.add_view(hello_world, route_name='hello')
+        app = config.make_wsgi_app()
+
+    server = make_server('0.0.0.0', 6543, app)
+    server.serve_forever()
+```
+
+When you point your browser to [http://localhost:6543/](http://localhost:6543/) an error event will be sent to [sentry.io](https://sentry.io).
+
+## Behavior
+
+<Include name="python-uwsgi-warning.mdx" />
+
+- The Sentry Python SDK will install the Pyramid integration for all of your apps. The integration hooks into Pyramid itself, not any of your apps specifically.
+
+- The SDK will report all exceptions leading to an Internal Server Error. These two kinds of exceptions are:
+
+  - exceptions that are not handled by any exception view
+  - exceptions whose exception view returns a status code of 500 (Pyramid version 1.9+ only)
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+- Logging with _any_ logger will create breadcrumbs when
+  the [Logging](/platforms/python/integrations/logging/)
+  integration is enabled (done by default).
+
+## Options
+
+By adding `PyramidIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PyramidIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.pyramid import PyramidIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        PyramidIntegration(
+            transaction_style="route_pattern",
+        )
+    ]
+)
+```
+
+You can pass the following keyword arguments to `PyramidIntegration()`:
+
+- `transaction_style`:
+
+  ```python
+  config.add_route("myroute", "/myurl/{id}")
+  config.add_view(myfunction, route_name="myroute")
+  ```
+
+  In the above code, you can set the transaction to:
+
+  - `/myurl/{id}` if you set `transaction_style="route_pattern"`
+  - `myroute` if you set `transaction_style="route_name"`
+
+  The default is `"route_name"`.
+
+## Supported Versions
+
+- Pyramid: 1.6+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

@@ -1,0 +1,35 @@
+{/*<!-- prettier-ignore -->*/}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        before_breadcrumb: 'sentry.callback.before_breadcrumb'
+
+services:
+    sentry.callback.before_breadcrumb:
+        class: 'App\Service\Sentry'
+        factory: [ '@App\Service\Sentry', 'getBeforeBreadcrumb' ]
+```
+
+The service needed for the `before_breadcrumb` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public function getBeforeBreadcrumb(): callable
+    {
+        return function(\Sentry\Breadcrumb $breadcrumb): ?\Sentry\Breadcrumb {
+            return $breadcrumb;
+        };
+    }
+}
+```
+
+<Note>
+
+Learn more in [Callables in Symfony Options](/platforms/php/guides/symfony/configuration/symfony-options/#callables).
+
+</Note>

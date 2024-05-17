@@ -1,0 +1,53 @@
+Or alternatively:
+
+Configure sample rate in `sentry.properties`:
+
+```properties
+# Set traces_sample_rate to 1.0 to capture 100%
+# of transactions for performance monitoring.
+# We recommend adjusting this value in production.
+traces-sample-rate=1.0
+```
+
+Or through providing a bean of type `SentryOptions#TracesSamplerCallback`:
+
+```java
+import io.sentry.SentryOptions.TracesSamplerCallback;
+import io.sentry.SamplingContext;
+import org.springframework.stereotype.Component;
+
+@Component
+class CustomTracesSamplerCallback implements TracesSamplerCallback {
+  @Override
+  public Double sample(SamplingContext context) {
+    CustomSamplingContext customSamplingContext = context.getCustomSamplingContext();
+    if (customSamplingContext != null) {
+      HttpServletRequest request = (HttpServletRequest) customSamplingContext.get("request");
+      // return a number between 0 and 1 or null (to fallback to configured value)
+    } else {
+      // return a number between 0 and 1 or null (to fallback to configured value)
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.SentryOptions.TracesSamplerCallback
+import io.sentry.SamplingContext
+import org.springframework.stereotype.Component
+
+@Component
+class CustomTracesSamplerCallback : TracesSamplerCallback {
+  override fun sample(context: SamplingContext): Double? {
+    val customSamplingContext = context.customSamplingContext
+    if (customSamplingContext != null) {
+      val request = customSamplingContext["request"] as HttpServletRequest
+      // return a number between 0 and 1 or null (to fallback to configured value)
+    } else {
+      // return a number between 0 and 1 or null (to fallback to configured value)
+    }
+  }
+}
+```
+
+Without sampling, automatically-captured transactions can add up quickly. The Spring integration, for example, will send a transaction for every request made to the server.

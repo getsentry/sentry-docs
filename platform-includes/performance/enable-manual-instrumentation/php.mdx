@@ -1,0 +1,38 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+The following example creates a transaction for a scope that contains an expensive operation (for example, `expensive_operation`), and sends the result to Sentry:
+
+```php
+// Setup context for the full transaction
+$transactionContext = \Sentry\Tracing\TransactionContext::make()
+    ->setName('Example Transaction')
+    ->setOp('http.server');
+
+// Start the transaction
+$transaction = \Sentry\startTransaction($transactionContext);
+
+// Set the current transaction as the current span so we can retrieve it later
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+
+// Setup the context for the expensive operation span
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('expensive_operation');
+
+// Start the span
+$span1 = $transaction->startChild($spanContext);
+
+// Set the current span to the span we just started
+\Sentry\SentrySdk::getCurrentHub()->setSpan($span1);
+
+// Calling expensive_operation()
+expensive_operation();
+
+// Finish the span
+$span1->finish();
+
+// Set the current span back to the transaction since we just finished the previous span
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+
+// Finish the transaction, this submits the transaction and it's span to Sentry
+$transaction->finish();
+```

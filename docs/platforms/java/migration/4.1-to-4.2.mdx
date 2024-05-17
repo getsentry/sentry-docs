@@ -1,0 +1,81 @@
+---
+title: Migrating Version 4.1 to 4.2
+sidebar_order: 999
+description: "Learn about migrating from version 4.1.0 to 4.2.0"
+---
+
+## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.2.0`
+
+`operation` is now a required property of the `SentryTransaction` and `SentrySpan`. Whenever a transaction or span is started, the value for `operation` must be provided:
+
+```java
+Sentry.startTransaction("transaction-name", "operation-name");
+```
+
+### Spring
+
+#### RestTemplate instrumentation
+
+Simplified `RestTemplate` instrumentation does not involve anymore setting `UriTemplateHandler` using `SentrySpanClientHttpRequestInterceptor`.
+
+Code snippet adding Sentry `RestTemplate` instrumentation changed from:
+
+```java
+@Bean
+RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate = new RestTemplate();
+  SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
+  UriTemplateHandler templateHandler = restTemplate.getUriTemplateHandler();
+  restTemplate.setUriTemplateHandler(sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler));
+  restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+  return restTemplate;
+}
+```
+
+into:
+
+```java
+@Bean
+RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate = new RestTemplate();
+  SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
+  restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+  return restTemplate;
+}
+```
+
+#### SentryExceptionResolver does not send handled errors by default
+
+To prevent `SentryExceptionResolver` from sending errors that have been already captured by `@ExceptionHandlers`, we've changed the order for `SentryExceptionResolver` to `1`.
+
+Old behavior can be brought back by setting `exceptionResolverOrder` property on `@EnableSentry`:
+
+```java
+@EnableSentry(exceptionResolverOrder = -2147483648)
+class CustomConfiguration {
+  ...
+}
+```
+
+### Spring Boot
+
+#### SentryExceptionResolver does not send handled errors by default
+
+To prevent `SentryExceptionResolver` from sending errors that have been already captured by `@ExceptionHandlers`, we've changed the order for `SentryExceptionResolver` to `1`.
+
+Old behavior can be brought back by setting a property `sentry.exception-resolver-order=-2147483648`
+
+#### `@SentryTransaction` `operation` is now required
+
+`@SentryTransaction` must have `operation` property provided.
+
+```java
+class MyComponent {
+
+  @SentryTransaction(name = "transaction-name", operation = "operation-name")
+  @Scheduled(fixedRate = 3 * 1000L)
+  void execute() {
+      ...
+    }
+}
+```

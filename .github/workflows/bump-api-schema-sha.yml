@@ -1,0 +1,43 @@
+name: Bump API Schema SHA
+on:
+  # This could be run manually, but the general expectation is that this fires
+  # from GHA in getsentry/sentry-api-schema on changes there. See:
+  #
+  #   https://develop.sentry.dev/api/public/#build-process
+
+  workflow_dispatch:
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: 'Bump API Schema SHA'
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: 'Bump API Schema SHA'
+        shell: bash
+        env:
+          # An elevated token is necessary because with plain github.token
+          # GitHub does not recursively call workflows, which means CI does not
+          # kick off for the PR we're about to create.
+          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+        run: |
+          set -euo pipefail
+
+          git config user.email "bot@getsentry.com"
+          git config user.name "openapi-getsentry-bot"
+
+          filepath="src/build/resolveOpenAPI.ts"
+
+          sha="$(curl -sSl -H 'Accept: application/vnd.github.VERSION.sha' 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main')"
+          echo "Latest commit to 'getsentry/sentry-api-schema' is $sha"
+
+          sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"
+          echo "Updated $filepath"
+
+          branch="bot/bump-api-schema-to-${sha:0:8}"
+          git checkout -b "$branch"
+          git add "$filepath"
+          git commit -m "Bump API schema to ${sha:0:8}"
+          git push --set-upstream origin "$branch"
+
+          gh pr create --fill
+          gh pr merge --squash --auto

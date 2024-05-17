@@ -1,0 +1,49 @@
+---
+title: Set Up Profiling
+description: "Learn how to enable profiling in your app if it is not already set up."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/preface" />
+<PlatformContent includePath="profiling/index/why-profiling" />
+
+## Enable Profiling
+
+<Note>
+
+Ruby profiling beta is available starting in SDK version `5.9.0`.
+
+</Note>
+
+We use the [`stackprof` gem](https://github.com/tmm1/stackprof) to collect profiles for Ruby.
+
+First add `stackprof` to your `Gemfile` and make sure it is loaded before `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'stackprof'
+gem 'sentry-ruby'
+```
+
+Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your Sentry initializer.
+
+<SignInNote />
+
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.traces_sample_rate = 1.0
+  config.profiles_sample_rate = 1.0
+end
+```
+
+<Note>
+
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+
+For Profiling to work, you have to first enable Sentry’s performance monitoring via `traces_sample_rate` (like in the example above). Read our <PlatformLink to="/performance/">performance setup documentation</PlatformLink> to learn how to configure sampling. If you set your sample rate to 1.0, all transactions will be captured.
+
+</Note>

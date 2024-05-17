@@ -1,0 +1,17 @@
+---
+title: Unit Testing
+sidebar_order: 20
+description: "Learn about unit testing with `ISentryClient` and `IHub`."
+---
+
+If you don't want to couple your code with a static class like `SentrySdk`, especially to allow your code to be testable, you can use two abstractions:
+
+- `ISentryClient`: exposes the `CaptureEvent` method and its implementation `SentryClient` is responsible for queueing the event to be sent to Sentry. It also abstracts away the internal transport.
+- `IHub`: holds a client and the current [scope](../enriching-events/scopes/). In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
+
+To allow different events to hold different contextual data, you need to know in which scope you are in, which is managed by the [`Hub`](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry/Internal/Hub.cs). It holds the scope management as well as a client.
+
+If all you are only sending events without modification/access to the current scope, then you depend on `ISentryClient`. If you would like to have access to the current scope by configuring it or binding a different client to it, you depend on `IHub`.
+
+An example using `IHub` for testability is [SentryLogger](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry.Extensions.Logging/SentryLogger.cs) and its unit tests [SentryLoggerTests](https://github.com/getsentry/sentry-dotnet/blob/master/test/Sentry.Extensions.Logging.Tests/SentryLoggerTests.cs).
+`SentryLogger` depends on `IHub` because it does modify the scope (through `AddBreadcrumb`). In case it only sent events, it should instead depend on `ISentryClient`

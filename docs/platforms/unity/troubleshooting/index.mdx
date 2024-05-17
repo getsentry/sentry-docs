@@ -1,0 +1,68 @@
+---
+title: Troubleshooting
+sidebar_order: 9000
+description: "Learn more about how to troubleshoot common issues with the Unity SDK. "
+---
+
+## Build Issues
+
+### Disabling the Sentry SDK for selected platforms
+
+By adding the snippet below to an `Editor` directory inside your Unity project, you can set up the ability to automatically disable the Sentry SDK for any targeted platform.
+
+```csharp
+using Sentry.Unity;
+using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
+
+public class PreBuildProcessor : IPreprocessBuildWithReport
+{
+    public int callbackOrder => 0;
+
+    public void OnPreprocessBuild(BuildReport report)
+    {
+        if (report.summary.platform is BuildTarget.Android)
+        {
+            var sentryOptions =
+                AssetDatabase.LoadAssetAtPath<ScriptableSentryUnityOptions>("Assets/Resources/Sentry/SentryOptions.asset");
+            sentryOptions.Enabled = false;
+            EditorUtility.SetDirty(sentryOptions);
+        }
+    }
+}
+```
+
+### Build input file cannot be found: '\*\*/Libraries/io.sentry.unity/Plugins/iOS/SentryNativeBridge.m'
+
+You can resolve this issue by creating a clean build or choosing "Replace" when prompted. Alternatively, you can remove the unused `SentryNativeBridge.m`from the **UnityFramework Target > Compile Sources** in the project settings. Instead of relying on Unity to copy the `SentryNativeBridge.m` over to the generated Xcode project, starting with 0.12.0, the SDK copies it manually to `**/Libraries/io.sentry.unity/SentryNativeBridge.m`.
+
+### Failed to locate the Sentry package
+
+This happens if you've copied some of the SDK files directly to the Assets folder. You can resolve this issue by installing the SDK with UPM.
+
+## Runtime issues
+
+### Library not loaded: @rpath/Sentry.framework/Sentry
+
+If you encounter the following error:
+
+```
+2021-10-29 15:21:40.011452-0400 MyApp[2180:186329] Error loading /var/containers/Bundle/Application/88CC4619-7C5D-4BB1-9F4B-5AAD7EC4BF9C/MyApp.app/Frameworks/UnityFramework.framework/UnityFramework:  dlopen(/var/containers/Bundle/Application/88CC4619-7C5D-4BB1-9F4B-5AAD7EC4BF9C/MyApp.app/Frameworks/UnityFramework.framework/UnityFramework, 265): Library not loaded: @rpath/Sentry.framework/Sentry
+  Referenced from: /private/var/containers/Bundle/Application/88CC4619-7C5D-4BB1-9F4B-5AAD7EC4BF9C/MyApp.app/Frameworks/UnityFramework.framework/UnityFramework
+  Reason: image not found
+```
+
+This can happen if you've copied some of the SDK files directly to the Assets folder and the `Sentry.Unity.Editor.iOS.dll` which runs when you build an iOS player wasn't able to copy the `Sentry.framework` to the final app. Enabling debug mode in the Sentry editor window would display more information in the Unity console.
+
+You can resolve this issue by installing the SDK with UPM.
+
+## Events
+
+### Universal Windows Platform - Events Not Sent
+
+In order to send events to Sentry, you will need to activate the InternetClient Capability in your Player Settings.
+
+### Mono JIT stack trace is incomplete on crashes
+
+This is a [known limitation](https://github.com/getsentry/sentry-unity/issues/884#issuecomment-1233035296) of the Mono JIT scripting backend, resulting from the native code not being able to see the actual generated code at the time of a crash. There are no debug files we can use to provide more information to stack traces since all code is generated when running the managed code. Using the IL2CPP scripting backend may provide more information, if that's an option for you.

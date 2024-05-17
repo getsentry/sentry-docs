@@ -1,0 +1,55 @@
+---
+title: Cloud Resource Context
+description: "Learn about the Cloud Resource Context integration and how it adds information about the Cloud environment the project runs in."
+---
+
+The Cloud Resource Context integration adds information about the cloud platform your app runs to errors and performance events. Currently [Amazon EC2](https://aws.amazon.com/ec2/) and [Google Compute Engine](https://cloud.google.com/compute) are supported.
+
+## Install
+
+To install it, run:
+
+```bash
+pip install --upgrade 'sentry-sdk'
+```
+
+## Configure
+
+Add `CloudResourceContextIntegration()` to your `integrations` list:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.cloud_resource_context import CloudResourceContextIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        CloudResourceContextIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Trigger an error in the code running in your cloud and see the error and performance data show up in [sentry.io](https://sentry.io). It takes a couple of moments for the performance data to show up in [sentry.io](https://sentry.io).
+
+## Behavior
+
+When the SDK starts up, information from the cloud provider the app is running in is retrieved and added to all error and performance events sent to Sentry.
+The [developer documentation](https://develop.sentry.dev/sdk/event-payloads/contexts/#runtime-context) lists all the information that's being added.
+
+In AWS EC2 the context looks like this:
+
+![AWS EC2 Cloud Resource Context in Sentry event](./img/cloudresourcecontext-aws-ec2.png)
+
+In Google Cloud Platform GCE the context looks like this:
+
+![Google GCE Cloud Resource Context in Sentry event](./img/cloudresourcecontext-gcp-gce.png)
+
+## Supported Versions
+
+- Python: 3.6+
+- Cloud platforms: Amazon EC2, Google Compute Engine

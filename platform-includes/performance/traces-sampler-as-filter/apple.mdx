@@ -1,0 +1,33 @@
+```swift {tabTitle:Swift}
+SentrySDK.start { options in
+    options.tracesSampler = { context in
+        if /* make a decision based on `samplingContext` */ {
+          // Drop this transaction, by setting its sample rate to 0%
+          return 0;
+        } else if /* ... */ {
+          // Override sample rate for other cases (replaces `options.tracesSampleRate`)
+          return 0.1;
+        }
+
+        // Can return `nil` to fallback to the rate configured by `options.tracesSampleRate`
+        return nil;
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions * options) {
+    options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * _Nonnull samplingContext) {
+        if (/* make a decision based on `samplingContext` */) {
+          // Drop this transaction, by setting its sample rate to 0%
+          return @0;
+        } else if (/* ... */) {
+          // Override sample rate for other cases (replaces `options.tracesSampleRate`)
+          return @0.1;
+        }
+
+        // Can return `nil` to fallback to the rate configured by `options.tracesSampleRate`
+        return nil;
+    };
+}];
+```

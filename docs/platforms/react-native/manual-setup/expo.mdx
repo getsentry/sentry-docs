@@ -1,0 +1,105 @@
+---
+title: Expo
+description: "Learn how to set up an Expo-managed project with the Sentry React Native SDK."
+---
+
+To set up the Sentry React Native SDK in your Expo project, follow the steps on this page.
+
+## Prerequisities
+
+- [Expo SDK 50](https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/) or newer.
+  - [Expo SDK 49](https://docs.expo.dev/guides/using-sentry/) and older are supported by the `sentry-expo` package.
+- [Migrate from `sentry-expo` to `@sentry/react-native`](/platforms/react-native/migration/sentry-expo/).
+- [Sign up for an account](https://sentry.io/signup/).
+
+## Install the Sentry SDK
+
+Install the `@sentry/react-native` package:
+
+```bash {tabTitle:Expo}
+npx expo install @sentry/react-native
+```
+
+```bash {tabTitle:npm}
+npm install --save @sentry/react-native
+```
+
+```bash {tabTitle:Yarn}
+yarn add @sentry/react-native
+```
+
+### Intialize the SDK
+
+Import the `@sentry/react-native` package and call `init` with your DSN:
+
+```javascript {tabTitle:App.js or app/_layout.js}
+import { Text, View } from "react-native";
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+function App() {
+  return (
+    <View>
+      <Text>Expo Example!</Text>
+    </View>
+  );
+}
+
+export default Sentry.wrap(App);
+```
+
+### Wrap Your App
+
+Wrap the root component of your application with `Sentry.wrap`:
+
+```javascript {tabTitle:App.js or app/_layout.js}
+export default Sentry.wrap(App);
+```
+
+### Add the Sentry Expo Plugin
+
+To ensure bundles and source maps are automatically uploaded during the native applications builds, add `withSentry` to the Expo application configuration:
+
+<Include name="react-native-expo-plugin-code-snippet.mdx" />
+
+### Add Sentry Metro Plugin
+
+To ensure unique Debug IDs get assigned to the generated bundles and source maps, add Sentry Serializer to the Metro configuration:
+
+<Include name="react-native-expo-metro-plugin-code-snippet.mdx" />
+
+### Add Privacy Manifest
+
+The SDK needs access to certain information about the device and the application for its essential functionality. Some of the APIs required for this are considered privacy-relevant. Add the privacy manifest to your Xcode project to ensure your app is compliant with Apple's guidelines. Read the [Apple Privacy Manifest](/platforms/react-native/data-management/apple-privacy-manifest/) guide for more info on how to add records required for the Sentry SDKs.
+
+## Verify Setup
+
+To verify that everything is working as expected, build the `Release` version of your application and send a test event to Sentry by adding:
+
+```javascript
+<Button
+  title="Try!"
+  onPress={() => {
+    Sentry.captureException(new Error("First error"));
+  }}
+/>
+```
+
+## Next Steps
+
+- [Learn how to upload source maps for native builds and Expo Updates](/platforms/react-native/sourcemaps/uploading/expo/)
+- [Add automatic performance monitoring with Expo Router](/platforms/react-native/performance/instrumentation/expo-router/)
+
+## Notes
+
+- Don't commit your auth token. Instead, use an environment variable like `SENTRY_AUTH_TOKEN`.
+- Source maps for the `Release` version of your application are uploaded automatically during the native application build.
+- During development, the source code is resolved using the Metro Server and source maps aren't used. This currently doesn't work on web.

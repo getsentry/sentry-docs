@@ -1,0 +1,38 @@
+A `BiFunction<SentryEvent, Hint, SentryEvent>` can be used to mutate, discard (return null), or return a completely new event.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
+import io.sentry.Hint
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
+  @Override
+  public SentryEvent execute(SentryEvent event, Hint hint) {
+    if (hint.get("my-hint-key") != null) {
+      return null;
+    } else {
+      return event;
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.SentryEvent
+import io.sentry.SentryOptions
+import io.sentry.Hint
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendCallback : SentryOptions.BeforeSendCallback {
+  override fun execute(event: SentryEvent, hint: Hint): SentryEvent? {
+    if (hint["my-hint-key"] != null) {
+      null
+    } else {
+      event
+    }
+  }
+}
+```

@@ -1,0 +1,46 @@
+<Note>
+
+If you wish to install Sentry's React Native SDK v4, follow the steps [here](/platforms/react-native/troubleshooting#set-up-sdk-v4-with-react-native-069-or-higher).
+
+</Note>
+
+Run `@sentry/wizard`:
+
+```bash {tabTitle:npm}
+npx @sentry/wizard@latest -s -i reactNative
+```
+
+<Note>
+
+The wizard doesn't support React Native versions `0.68` and older. To use the wizard with older versions of React Native, you'll have to `confirm` in the wizard dialogue and manually patch the Xcode project later. Read more on the [Manual Configuration](/platforms/react-native/manual-setup/manual-setup/) page.
+
+</Note>
+
+[Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [set up manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer. You only need to patch the project once. Then you can add the patched files to your version control system.
+The following tasks will be performed by the Sentry Wizard:
+
+- Install the `@sentry/react-native` package.
+- Enable the Sentry React Native Gradle build step for Android to auto-upload generated source maps and debug symbols.
+- Wrap the _Bundle React Native code and images_ Xcode project build phase script to upload generated source maps and collect bundled node modules.
+- Add _Upload Debug Symbols to Sentry_ Xcode project build phase.
+- Run `pod install`.
+- Store build credentials in _*ios/sentry.properties*_ and _*android/sentry.properties*_.
+- Configure Sentry for the supplied DSN in your _*App.tsx*_ file.
+
+### Expo
+
+If you're using Expo, [read our docs](/platforms/react-native/manual-setup/expo/) to learn how to add Sentry to your Expo project. This SDK will work for both managed and bare projects.
+
+### iOS Specifics
+
+The SDK needs access to certain information about the device and the application for its essential functionality. Some of the APIs required for this are considered privacy-relevant. Add the privacy manifest to your Xcode project to ensure your app is compliant with Apple's guidelines. Read the [Apple Privacy Manifest](/platforms/react-native/data-management/apple-privacy-manifest/) guide for more info on how to add records required for the Sentry SDKs.
+
+When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps.
+
+### Android Specifics
+
+For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease` or `./gradlew bundleRelease`, source maps are automatically built and uploaded to Sentry.
+
+If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build.
+
+To disable this feature, set `org.gradle.configureondemand=false` or remove it as its default value is disabled, do this in the `gradle.properties` file.

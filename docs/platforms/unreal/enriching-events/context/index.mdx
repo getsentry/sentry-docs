@@ -1,0 +1,58 @@
+---
+title: Context
+description: "Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event."
+---
+
+Custom contexts allow you to attach arbitrary data to an event. Often, this context is shared among any issue captured in its lifecycle. You cannot search these, but they are viewable on the issue page:
+
+<Include name="common-imgs/additional_data" />
+
+<Note>
+
+If you need to be able to search on custom data, [use tags](../tags) instead.
+
+</Note>
+
+## Structured Context
+
+The best way to attach custom data is with a structured context. A context must always be an object and its values can be arbitrary.
+
+Then, use <PlatformIdentifier name="set-context" /> and give the context a unique name:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+TMap<FString, FString> ContextData;
+AdditionalData.Add("Class", "Paladin");
+AdditionalData.Add("Role", "Taunt");
+
+SentrySubsystem->SetContext("Character", ContextData);
+```
+
+The same result can be achieved by calling corresponding function in blueprint:
+
+![Set context](./unreal_set_context.png)
+
+Alternatively, this configuration can be provided to the crash reporter [during initialization](/platforms/unreal/configuration/setup-crashreporter/#configure-attributes).
+
+<Note>
+
+Sentry's SDK automatically attaches certain context values such as `Engine version`, `Configuration`, and `Target Type`, to name a few, to all events.
+
+</Note>
+
+There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
+
+Learn more about conventions for common contexts in the [contexts interface developer documentation](https://develop.sentry.dev/sdk/event-payloads/contexts/).
+
+## Size Limitations
+
+When sending context, _consider payload size limits_. Sentry does not recommend sending the entire application state and large data blobs in contexts. If you exceed the maximum payload size, Sentry will respond with HTTP error `413 Payload Too Large` and reject the event.
+
+The Sentry SDK will try its best to accommodate the data you send and trim large context payloads. Some SDKs can truncate parts of the event; for more details, see the [developer documentation on SDK data handling](https://develop.sentry.dev/sdk/data-handling/).
+
+## Additional Data
+
+**Additional Data is deprecated** in favor of structured contexts.
+
+Sentry used to support adding unstructured "Additional Data" via <PlatformIdentifier name="set-extra" />.

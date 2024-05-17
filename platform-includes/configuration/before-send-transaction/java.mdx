@@ -1,0 +1,32 @@
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+  options.setBeforeSendTransaction((transaction, hint) -> {
+    // Modify or drop the transaction here:
+    if ("/unimportant/route".equals(transaction.getTransaction())) {
+      // Don't send the transaction to Sentry
+      return null;
+    } else {
+      return transaction;
+    }
+  });
+});
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryOptions.BeforeSendTransactionCallback
+
+Sentry.init { options ->
+  options.beforeSendTransaction = BeforeSendTransactionCallback { transaction, hint ->
+    // Modify or drop the transaction here:
+    if ("/unimportant/route" == transaction.transaction) {
+      // Don't send the transaction to Sentry
+      null
+    } else {
+      transaction
+    }
+  }
+}
+```

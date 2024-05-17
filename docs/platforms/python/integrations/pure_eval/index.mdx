@@ -1,0 +1,55 @@
+---
+title: pure_eval
+description: "Learn about `pure_eval` and how to add it to your integrations list."
+---
+
+This integration uses [`pure_eval`](https://github.com/alexmojaki/pure_eval) to safely evaluate additional expressions in the source code and display their values alongside other local variables.
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `pure_eval` extra or `pip install pure_eval executing asttokens`.
+
+```bash
+pip install --upgrade 'sentry-sdk[pure_eval]'
+```
+
+## Configure
+
+Add `PureEvalIntegration()` to your `integrations` list:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.pure_eval import PureEvalIntegration
+
+sentry_sdk.init(
+    dns="___PUBLIC_DSN___",
+    integrations=[
+        PureEvalIntegration(),
+    ],
+)
+```
+
+## Verify
+
+```python
+from types import SimpleNamespace
+
+def main():
+    sentry_sdk.init(...)  # same as above
+
+    namespace = SimpleNamespace()
+    namespace.d = {1: 2}
+    print(namespace.d[1] / 0)
+
+main()
+```
+
+When you run this example script an error will be sent to Sentry. Through the `PureEvalIntegration` the stack trace of the error will include the values of `namespace.d` and `namespace.d[1]` which would not be shown without `PureEvalIntegration`.
+
+## Supported Versions
+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

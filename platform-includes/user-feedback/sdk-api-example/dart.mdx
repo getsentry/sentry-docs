@@ -1,0 +1,28 @@
+```dart
+import 'package:sentry/sentry.dart';
+
+// Option 1: Retrieving SentryId from beforeSend
+SentryId sentryId = SentryId.empty();
+
+await Sentry.init((options) {
+  options.beforeSend = (event, {hint}) async {
+    sentryId = event.eventId;
+    return event;
+  };
+});
+
+// Option 2: Retrieving SentryId from the method capturing the event
+SentryId sentryId = Sentry.captureMessage("My message");
+
+// Option 3: Retrieving SentryId from the beforeSend callback
+SentryId sentryId = Sentry.lastEventId;
+
+final userFeedback = SentryUserFeedback(
+    eventId: sentryId,
+    comments: 'Hello World!',
+    email: 'foo@bar.org',
+    name: 'John Doe',
+);
+
+Sentry.captureUserFeedback(userFeedback);
+```

@@ -1,0 +1,305 @@
+---
+title: Basic Options
+sidebar_order: 1
+description: "Learn more about how to configure the SDK."
+---
+
+Configuration is passed as part of the client initialization:
+
+<SignInNote />
+
+```ruby
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  config.attr = 'value'
+end
+```
+
+## Optional settings
+
+`async`
+
+**This option has been deprecated and could be removed in the future.**
+
+**For more information, please read [this issue](https://github.com/getsentry/sentry-ruby/issues/1522).**
+
+By default, `sentry-ruby` sends events asynchronously with its own background worker. This option only exists for compatibility reasons, and it's not recommended to new Sentry users.
+
+`background_worker_threads`
+
+If `config.async` isn't provided, Sentry will send events in a non-blocking way with its own background worker. By default, the worker holds a thread pool that has [the number of processors] threads. But you can configure it with this configuration option:
+
+```ruby
+config.background_worker_threads = 5
+```
+
+Or if you want to send events synchronously, set the value to 0:
+
+```ruby
+config.background_worker_threads = 0
+```
+
+`backtrace_cleanup_callback`
+
+If you want to clean up exceptions' backtrace before it's sent to Sentry, you can specify a callback with `backtrace_cleanup_callback` to do that. For example:
+
+```ruby
+config.backtrace_cleanup_callback = lambda do |backtrace|
+  Rails.backtrace_cleaner.clean(backtrace)
+end
+```
+
+`before_send`
+
+Provide a lambda or proc. This will be `called` before sending an error event to Sentry. Receives an `event` and `hint` as parameter. `hint` is a dict `{:exception => ex | nil, :message => message | nil}`. It is possible to mutate the event, also if this function returns `nil` the event will be dropped and not sent.
+
+<PlatformContent includePath="configuration/before-send/" />
+
+`before_send_transaction`
+
+Provide a lambda or proc. This will be `called` before sending a transaction event to Sentry. It receives an `event` and `hint` as a parameter. The `hint` object is currently empty, but might be augmented in the future. It's possible to mutate the event. Also, if this function returns `nil`, the event will be dropped and not sent.
+
+<PlatformContent includePath="configuration/before-send-transaction" />
+
+`breadcrumbs_logger`
+
+Sentry supports different breadcrumbs loggers in the Ruby SDK:
+
+- `:sentry_logger` - A general breadcrumbs logger for all Ruby applications.
+- `:active_support_logger` - Built on top of [ActiveSupport instrumentation](https://guides.rubyonrails.org/active_support_instrumentation.html) and provides many Rails-specific information.
+- `:monotonic_active_support_logger` - Similar to `:active_support_logger` but breadcrumbs will have monotonic time values. Only available with Rails 6.1+.
+- `:http_logger` - It captures requests made with the standard `net/http` library.
+
+And you can enable them with the `breadcrumbs_logger` option:
+
+```ruby
+config.breadcrumbs_logger = [:active_support_logger]
+config.breadcrumbs_logger = [:active_support_logger, :http_logger]
+```
+
+`include_local_variables`
+
+Whether to capture local variables from the raised exception's frame. Default is `false`. This was called `capture_exception_frame_locals` in older versions.
+
+`context_lines`
+
+How many lines to display before/after the line where issue occurs. Default is `3`.
+
+`debug`
+
+Activation of debugging mode. When enabled, SDK errors will be logged with backtrace. Default is `false`. Please use `config.logger.level` for more output; this is merely for attaching backtraces to the messages.
+
+`enabled_environments`
+
+As of v0.10.0, events will be sent to Sentry in all environments. If you do not wish to send events in an environment, we suggest you unset the SENTRY_DSN variable in that environment.
+
+Alternately, you can configure Sentry to run only in certain environments by configuring the `enabled_environments` list. For example, to only run Sentry in production:
+
+```ruby
+config.enabled_environments = %w[production]
+```
+
+`environment`
+
+Sentry automatically sets the current environment to RAILS_ENV, or if it is not present, RACK_ENV. If you are using Sentry outside of Rack or Rails, or wish to override environment detection, you’ll need to set the current environment by setting SENTRY_CURRENT_ENV or configuring the client yourself:
+
+<PlatformContent includePath="set-environment" />
+
+`excluded_exceptions`
+
+If you never wish to be notified of certain exceptions, specify ‘excluded_exceptions’ in your config file.
+
+In the example below, the exceptions Rails uses to generate 404 responses will be suppressed.
+
+```ruby
+config.excluded_exceptions += ['ActionController::RoutingError', 'ActiveRecord::RecordNotFound']
+```
+
+You can find the list of exceptions that are excluded by default in `Sentry::Configuration::IGNORE_DEFAULT`. It is suggested that you append to these defaults rather than overwrite them with `=`.
+
+`inspect_exception_causes_for_exclusion`
+
+Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. Default value is `true`.
+
+```ruby
+config.inspect_exception_causes_for_exclusion = true
+```
+
+`logger`
+
+The logger used by Sentry. Default is `Rails.logger` in Rails, otherwise an instance of `Sentry::Logger`. Make sure to change the logger level if you need debug output.
+
+```ruby
+config.logger = Sentry::Logger.new(STDOUT)
+config.logger.level = ::Logger::DEBUG # defaults to INFO
+```
+
+`max_breadcrumbs`
+
+The maximum number of breadcrumbs the SDK would hold. Default is `100`.
+
+```ruby
+config.max_breadcrumbs = 30
+```
+
+`trace_propagation_targets`
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain an array of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace headers will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+By default, trace headers are attached to every outgoing request from the instrumented client.
+
+`propagate_traces`
+
+By default, Sentry injects `sentry-trace` and `baggage` headers to outgoing requests made with `Net::HTTP` to connect traces between services. You can disable this behavior with
+
+```ruby
+config.propagate_traces = false
+```
+
+`release`
+
+Track the version of your application in Sentry.
+
+We guess the release intelligently in the following order of preference:
+
+- Commit SHA of the last commit (git)
+- Reading from the REVISION file in the app root
+- Heroku’s dyno metadata (must have enabled via Heroku Labs)
+
+<PlatformContent includePath="set-release" />
+
+`sample_rate`
+
+The sampling factor to apply to events. A value of 0.00 will deny sending any events, and a value of 1.00 will send 100% of events.
+
+```ruby
+# send 50% of events
+config.sample_rate = 0.5
+```
+
+`send_client_reports`
+
+Attach diagnostic client reports about dropped events to an existing envelope max once every 30s. Default is `true`.
+
+This information will not be visible to users at the moment, but we're planning to add this information to user-facing UI.
+
+If you **do not** want to send this data, you can opt-out by setting
+
+```ruby
+config.send_client_reports = false
+```
+
+`send_default_pii`
+
+When its value is `false` (default), sensitive information like
+
+- user ip
+- user cookie
+- request body
+- query string in the url
+
+will not be sent to Sentry.
+
+You can re-enable it by setting:
+
+```ruby
+config.send_default_pii = true
+```
+
+`send_modules`
+
+A boolean to decide whether to send modules (dependencies) information to Sentry (default is `true`).
+
+```ruby
+config.send_modules = false # if you don't want to send all the dependency info
+```
+
+`skip_rake_integration`
+
+Determine whether to ignore exceptions caused by rake integrations. Default is `false`.
+
+`trusted_proxies`
+
+These trusted proxies will be skipped when the SDK computing the user's ip address. `sentry-rails` will automatically inject the value of `Rails.application.config.action_dispatch.trusted_proxie` to this option.
+
+```ruby
+config.trusted_proxies = ["2.2.2.2"]
+```
+
+## Tracing Options
+
+`traces_sample_rate`
+
+By providing a float between `0.0` and `1.0`, you can control the sampling factor of tracing events.
+
+- `nil` (default) or `0.0` means the tracing feature is disabled.
+- `1.0` means sending all the events.
+
+<PlatformContent includePath="performance/traces-sample-rate" />
+
+`traces_sampler`
+
+You can gain more control on tracing event (transaction)'s sampling decision by providing a callable object (`Proc` or `Lambda`) as a `traces_sampler`:
+
+<PlatformContent includePath="performance/traces-sampler-as-sampler" />
+
+`enable_backpressure_handling`
+
+A boolean that controls whether a new monitor thread will be spawned to perform health checks on the SDK. If the system is unhealthy, the SDK will keep halving the `traces_sample_rate` set by you in 10 second intervals until recovery. This downsampling helps ensure that the system stays stable and reduces SDK overhead under high load.
+
+This option is disabled by default.
+
+## Transport Options
+
+`transport_class`
+
+By default, the SDK uses `Sentry::HTTPTransport` class for sending events to Sentry, which should work for the majority of users. But if you want to use your own Transport class, you can change it with this option:
+
+```ruby
+config.transport.transport_class = MyTransportClass
+```
+
+`proxy`
+
+Setup a proxy to use to connect to Sentry. This option is respected by the default `Sentry::HTTPTransport` class. You can set `config.transport.proxy` with as a `String` containing a proxy URI, or a `URI` object, or a `Hash` containing `uri`, `user` and `password` keys.
+
+```ruby
+Sentry.init do |config|
+  # ...
+
+  # Provide proxy config as a String
+  config.transport.proxy = "http://user:password@proxyhost.net:8080"
+
+  # Or a URI
+  config.transport.proxy = URI("http://user:password@proxyhost.net:8080")
+
+  # Or a Hash
+  config.transport.proxy = {
+    uri: "http://proxyhost.net:8080",
+    user: "user",
+    password: "password"
+  }
+end
+
+```
+
+## Environment Variables
+
+`SENTRY_DSN`
+
+After you complete setting up a project, you’ll be given a value which we call a DSN, or Data Source Name. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by Sentry (the Sentry client). It consists of a few pieces, including the protocol, public and secret keys, the server address, and the project identifier.
+
+With Sentry, you may either set the SENTRY_DSN environment variable (recommended), or set your DSN manually in a config block:
+
+<SignInNote />
+
+```ruby
+# in Rails, this might be in config/initializers/sentry.rb
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+end
+```

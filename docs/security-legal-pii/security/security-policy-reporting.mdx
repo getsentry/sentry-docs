@@ -1,0 +1,88 @@
+---
+title: Security Policy Reporting
+sidebar_order: 150
+description: "Learn how Sentry can help manage Content-Security-Policy violations,  CSP reports, Expect-CT,  and HTTP Public Key Pinning (HPKP) failures here."
+---
+
+Sentry provides the ability to collect information on [Content-Security-Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) violations, as well as [Expect-CT](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT) and [HTTP Public Key Pinning (HPKP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning) failures by setting the proper HTTP header which results in the violation or failure to be sent to Sentry endpoint specified in _report-uri_.
+
+The integration process consists of configuring the appropriate header with your project key’s Security Header endpoint found at **Project Settings > Security Headers**.
+
+## Content-Security-Policy
+
+[Content-Security-Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) (CSP) is a security standard that helps prevent cross-site scripting (XSS), clickjacking and other code injection attacks resulting from the execution of malicious content in the trusted web page context. It’s enforced by browser vendors, and Sentry supports capturing CSP violations using the standard CSP reporting hooks.
+
+To configure CSP reports in Sentry, you’ll need to send a header from your server describing your policy and specifying the authenticated Sentry endpoint:
+
+<SignInNote />
+
+```
+Content-Security-Policy: ...;
+    report-uri https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___;
+    report-to csp-endpoint
+
+Report-To: {"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"}],"include_subdomains":true}
+```
+
+<Alert level="note" title="Compatibility Recommendation">
+
+Though the `report-to` directive is intended to replace the deprecated `report-uri` directive, `report-to` isn't supported in most browsers yet. So for compatibility with current browsers while also adding forward compatibility when browsers get `report-to` support, you can specify both `report-uri` and `report-to` in your Content-Security-Policy (CSP).
+
+</Alert>
+
+Alternatively, you can set up CSP reports to simply send reports rather than enforcing the policy:
+
+<SignInNote />
+
+```
+Content-Security-Policy-Report-Only: ...;
+    report-uri https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___;
+    report-to csp-endpoint
+
+Report-To: {"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"}],"include_subdomains":true}
+```
+
+When defining your policy it is important to ensure that `sentry.io` or your self-hosted Sentry domain is in your `default-src` or `connect-src` policy, or browsers will block requests that submit policy violations.
+
+For more information, see the article on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy).
+
+## Expect-CT
+
+[Certificate Transparency](https://en.wikipedia.org/wiki/Certificate_Transparency) (CT) is a security standard that helps track and identify valid certificates, allowing identification of maliciously issued certificates.
+
+To configure reports in Sentry, you’ll need to configure the Expect-CT header from your server:
+
+<SignInNote />
+
+```
+Expect-CT: ..., report-uri="https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"
+```
+
+For more information, see the article on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT).
+
+## HTTP Public Key Pinning
+
+[HTTP Public Key Pinning](https://en.wikipedia.org/wiki/HTTP_Public_Key_Pinning) (HPKP) is a security feature that tells a web client to associate a specific cryptographic public key with a certain web server to decrease the risk of MITM attacks with forged certificates. It’s enforced by browser vendors, and Sentry supports capturing violations using the standard reporting hooks.
+
+To configure HPKP reports in Sentry, you’ll need to send a header from your server describing your policy and specify the authenticated Sentry endpoint:
+
+<SignInNote />
+
+```
+Public-Key-Pins: ...; report-uri="https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"
+```
+
+For more information, see the article on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning).
+
+## Additional Configuration
+
+In addition to the `sentry_key` parameter, you may also pass the following within the query string for the report URI:
+
+`sentry_environment`
+
+The environment name (for example, production).
+The environment name is case-sensitive and can't contain new lines, spaces, or forward slashes. It can't be the string "None" or exceed 64 characters.
+
+`sentry_release`
+
+The version of the application.

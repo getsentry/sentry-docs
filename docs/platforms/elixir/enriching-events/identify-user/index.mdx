@@ -1,0 +1,45 @@
+---
+title: Users
+description: "Learn how to configure the SDK to capture the user and gain critical pieces of information that construct a unique identity in Sentry."
+---
+
+Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
+
+<DefinitionList>
+
+### `id`
+
+<Note>
+
+If you don't provide an `id`, the SDK falls back to `installationId`, which the SDK randomly generates once during an app's installation.
+
+</Note>
+
+Your internal identifier for the user.
+
+### `username`
+
+The username. Typically used as a better label than the internal id.
+
+### `email`
+
+An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+
+### `ip_address`
+
+The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user.
+Serverside SDKs that instrument incoming requests will attempt to pull the IP address from the HTTP request data (`request.env.REMOTE_ADDR` field in JSON), if available. That might require <PlatformIdentifier name="send-default-pii" /> set to `true` in the SDK options.
+
+If the user's `ip_address` is set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server.
+
+If the field is omitted, the default value is `null`. However, due to backwards compatibility concerns, certain platforms (in particular JavaScript) have a different default value for `"{{auto}}"`. SDKs and other clients should not rely on this behavior and should set IP addresses or `"{{auto}}"` explicitly.
+
+To opt out of storing users' IP addresses in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data](/security-legal-pii/scrubbing/) scrubbing to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+
+</DefinitionList>
+
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+
+To identify the user:
+
+<PlatformContent includePath="enriching-events/set-user" />

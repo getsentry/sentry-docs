@@ -1,0 +1,31 @@
+---
+title: IL2CPP Line Numbers
+description: "Learn how the SDK provides line numbers to issues from IL2CPP builds."
+sidebar_order: 10
+---
+
+Sentry can provide you with line numbers on C# exceptions in **release and development builds** with IL2CPP, on Unity versions `2020.3`, `2021.3`, and later.
+
+Unity provides you the option to select [IL2CPP](https://docs.unity3d.com/Manual/IL2CPP.html) as your scripting backend. This leads to C++ code being generated from your compiled C# (IL) code, hence the name `IL to CPP`.
+
+The Sentry SDK provides line number support for IL2CPP builds for the following platforms:
+
+- Windows (\*currently limited to Unity 2021.3 or newer)
+- macOS
+- Linux
+- Android
+- iOS
+
+When you build with IL2CPP, errors in your game will happen in the native code. Also, the mapping between your C# code and the generated C++ code is part of the build process and isn't shipped with your game. That means the event the Sentry SDK reports can only contain the native stack trace. To provide you with C# line numbers, the Sentry server needs to have access to that line mapping through [Debug Information Files](/platforms/unity/data-management/debug-files/).
+
+This feature is enabled by default. You can opt out of it through the editor configuration window by selecting **Tools -> Sentry -> Advanced -> IL2CPP line numbers** or [programmatically](/platforms/unity/configuration/options/#programmatic-configuration).
+
+```csharp
+options.Il2CppLineNumberSupportEnabled = false;
+```
+
+The support for line numbers in C# Exceptions with IL2CPP relies on the debug symbol upload. With the automated debug symbol upload enabled, the [Sentry SDK will upload the line mapping automatically](/platforms/unity/native-support/#debug-symbols).
+
+### Known Limitations
+
+Currently, line number support is limited when programmatically subscribing to button click events via `Button.onClick.AddListener`. However, you can set up callbacks through the editor to work around this.

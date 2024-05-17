@@ -1,0 +1,63 @@
+```java
+import io.sentry.SamplingContext;
+import io.sentry.SentryOptions.TracesSamplerCallback;
+import org.springframework.stereotype.Component;
+
+@Component
+class CustomTracesSamplerCallback implements TracesSamplerCallback {
+  @Override
+  public Double sample(SamplingContext context) {
+    // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+    Boolean parentSampled = context.getTransactionContext().getParentSampled();
+    if (parentSampled != null) {
+      return parentSampled ? 1.0 : 0.0;
+    }
+    CustomSamplingContext ctx = context.getCustomSamplingContext();
+    if (ctx != null) {
+      if (/* make a decision based on `samplingContext` */) {
+        // Drop this transaction, by setting its sample rate to 0%
+        return 0.0;
+      } else if (/* ... */) {
+        // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+        return 0.1;
+      }
+      // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+      return null;
+    } else {
+      return null;
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.SamplingContext
+import io.sentry.SentryOptions.TracesSamplerCallback
+import org.springframework.stereotype.Component
+
+@Component
+class CustomTracesSamplerCallback : TracesSamplerCallback {
+
+  override fun sample(context: SamplingContext): Double? {
+    // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+    val parentSampled = context.transactionContext.parentSampled
+    if (parentSampled != null) {
+      return if (parentSampled) 1.0 else 0.0
+    }
+    val ctx = context.customSamplingContext
+    if (ctx != null) {
+      if (/* make a decision based on `samplingContext` */) {
+        // Drop this transaction, by setting its sample rate to 0%
+        return 0.0
+      } else if (/* ... */) {
+        // Override sample rate for other cases (replaces `options.TracesSampleRate`)
+        return 0.1
+      }
+      // Can return `null` to fallback to the rate configured by `options.tracesSampleRate`
+      return null
+    } else {
+      return null
+    }
+  }
+}
+```

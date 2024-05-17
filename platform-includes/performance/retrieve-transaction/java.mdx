@@ -1,0 +1,43 @@
+## Retrieve a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
+
+```java {tabTitle: Java}
+import io.sentry.ISpan;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+ISpan span = Sentry.getSpan();
+if (span == null) {
+  span = Sentry.startTransaction("transaction-name", "task");
+} else {
+  span = span.startChild("task");
+}
+
+try {
+  // omitted code
+} catch (Exception e) {
+  span.setThrowable(e);
+  span.setStatus(SpanStatus.INTERNAL_ERROR);
+  throw e;
+} finally {
+  span.finish();
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+val span = Sentry.getSpan()?.startChild("task") ?: Sentry.startTransaction("transaction-name", "task")
+
+try {
+  // omitted code
+} catch (e: Exception) {
+  span.throwable = e
+  span.status = SpanStatus.INTERNAL_ERROR
+  throw e
+} finally {
+  span.finish()
+}
+```

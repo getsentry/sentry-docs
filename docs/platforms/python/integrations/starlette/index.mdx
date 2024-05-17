@@ -1,0 +1,103 @@
+---
+title: Starlette
+description: "Learn about using Sentry with Starlette."
+---
+
+The Starlette integration adds support for the [Starlette Framework](https://www.starlette.io/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `starlette` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[starlette]'
+```
+
+## Configure
+
+If you have the `starlette` package in your dependencies, the Starlette integration will be enabled automatically when you initialize the Sentry SDK.
+
+<SignInNote />
+
+```python
+from starlette.applications import Starlette
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+
+app = Starlette(routes=[...])
+```
+
+## Verify
+
+```python
+from starlette.applications import Starlette
+from starlette.routing import Route
+
+sentry_sdk.init(...)  # same as above
+
+async def trigger_error(request):
+    division_by_zero = 1 / 0
+
+app = Starlette(routes=[
+    Route("/sentry-debug", trigger_error),
+])
+```
+
+When you point your browser to [http://localhost:8000/sentry-debug](http://localhost:8000/sentry-debug) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- All exceptions leading to an Internal Server Error are reported.
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- If `enable_tracing` or a `traces_sample_rate` is set, then performance information is also reported, which you can see on the **Performance** page of [sentry.io](https://sentry.io).
+
+## Options
+
+By adding `StarletteIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `StarletteIntegration` to change its behavior:
+
+```python
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        StarletteIntegration(
+            transaction_style="endpoint",
+        )
+    ],
+)
+```
+
+You can pass the following keyword arguments to `StarletteIntegration()`:
+
+- `transaction_style`:
+
+  ```python
+  async def product_detail(request):
+      return JSONResponse({...})
+
+  app = Starlette(routes=[
+      Route('/catalog/product/{product_id}', product_detail),
+  ])
+  ```
+
+  In the above code, the transaction name will be:
+
+  - `"/catalog/product/{product_id}"` if you set `transaction_style="url"`.
+  - `"product_detail"` if you set `transaction_style="endpoint"`
+
+  The default is `"url"`.
+
+## Supported Versions
+
+- Starlette: 0.19.1+
+- Python: 3.7+

@@ -1,0 +1,20 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+```rust
+// Transaction can be started by providing the name and the operation
+let tx_ctx = sentry::TransactionContext::new(
+    "transaction name",
+    "transaction operation",
+);
+let transaction = sentry::start_transaction(tx_ctx);
+
+// Transactions can have child spans, and those spans can have child spans as well.
+let span = transaction.start_child("span operation", "span description");
+
+// ...
+// Perform your operations
+// ...
+
+span.finish(); // Remember that only finished spans will be sent with the transaction
+transaction.finish(); // Finishing the transaction will send it to Sentry
+```

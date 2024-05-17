@@ -1,0 +1,88 @@
+---
+title: Migration Guide
+sidebar_order: 8000
+---
+
+## Migrating From `sentry_flutter` `6.18.x` to `sentry_flutter` `7.0.0`
+
+In addition to the changes introduced in [sentry](/platforms/dart/migration/):
+
+API changes:
+
+- Sentry's Flutter SDK version 7.0.0 and above requires Flutter `3.0.0`.
+- [`sentry_dio`](https://pub.dev/packages/sentry_dio), version 7.0.0 requires [`dio 5.0.0`](https://pub.dev/packages/dio)
+- The Sentry Cocoa SDK was upgraded to `8.0.0` which introduces breaking changes, see the [migration guide](/platforms/apple/migration/#migrating-from-7x-to-8x).
+- The following fields have been removed from the `SentryFlutterOptions` class and replaced:
+  - `enableAutoPerformanceTracking` replaced with `enableAutoPerformanceTracing`.
+  - `enableOutOfMemoryTracking` replaced with `enableWatchdogTerminationTracking`.
+  - `anrTimeoutIntervalMillis` replaced with `anrTimeoutInterval`.
+  - `autoSessionTrackingIntervalMillis` replaced with `autoSessionTrackingInterval`.
+- The `enableNdkScopeSync` feature is now enabled by default.
+
+## Migrating From `sentry_flutter` `6.12.x` to `sentry_flutter` `6.13.x`
+
+The SDK already runs your init `callback` on an error handler, such as [`runZonedGuarded`](https://api.flutter.dev/flutter/dart-async/runZonedGuarded.html) on Flutter versions prior to `3.3`, or [`PlatformDispatcher.onError`](https://api.flutter.dev/flutter/dart-ui/PlatformDispatcher/onError.html) on Flutter versions 3.3 and higher, so that errors are automatically captured. No code changes are needed on your part.
+
+## Migrating From `sentry_flutter` `6.5.x` to `sentry_flutter` `6.6.x`
+
+There are no Flutter-specific breaking changes. However, there are some in [sentry](/platforms/dart/migration/) for Dart.
+
+## Migrating From `sentry_flutter` `6.3.x` to `sentry_flutter` `6.4.x`
+
+To build a Flutter app for Android, Kotlin 1.5.31 or higher is required.
+If your app uses a lower version, you will receive the following [error message](https://docs.flutter.dev/release/breaking-changes/kotlin-version#summary).
+
+## Migrating From `sentry_flutter` `5.1.x` to `sentry_flutter` `6.0.0`
+
+There are no Flutter specific breaking changes. However there are some in [sentry](/platforms/dart/migration/) for Dart.
+
+## Migrating from `sentry_flutter` `5.0.0` to `sentry_flutter` `5.1.0`
+
+# Android specific changes
+
+You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/configuration/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+
+A random generated installationId replaces [Settings.Secure.ANDROID_ID](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID), which has been removed. This may affect the number of unique users displayed on the the Issues page and Alerts. If you always set a custom user using Sentry.setUser(customUser), the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet.
+It makes use of the [device_info_plus](https://pub.dev/packages/device_info_plus) plugin:
+
+<SignInNote />
+
+```dart
+import 'package:flutter/foundation.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      // revert to old behavior on Android
+      if (defaultTargetPlatform == TargetPlatform.android && !kIsWeb) {
+        options.addEventProcessor(addAndroidDeviceId);
+      }
+    },
+    // Init your App.
+    appRunner: () => runApp(MyApp()),
+  );
+}
+
+FutureOr<SentryEvent?> addAndroidId(
+  SentryEvent event, {
+  Hint? hint,
+}) async {
+  var info = await DeviceInfoPlugin().androidInfo;
+  var user = (event.user ?? SentryUser()).copyWith(id: info.androidId);
+
+  return event.copyWith(
+    user: user,
+  );
+}
+```
+
+## Migrating from `sentry_flutter` `4.0.x` to `sentry_flutter` `5.0.0`
+
+In addition to the changes introduced in [sentry](/platforms/dart/migration/):
+
+- `SentryFlutterOptions.enableLifecycleBreadcrumbs` was replaced with `SentryFlutterOptions.enableAppLifecycleBreadcrumbs`.
+- The Web Plugin Registrant import changed from `import 'package:sentry_flutter/src/sentry_flutter_web.dart';` to `import 'package:sentry_flutter/sentry_flutter_web.dart';`
+  - This change may lead to breaking changes. In most cases, however, this change won't lead to breaking changes since the referencing file is auto-generated.

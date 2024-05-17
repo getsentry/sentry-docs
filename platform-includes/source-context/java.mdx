@@ -1,0 +1,389 @@
+You'll need to enable the Source Context feature to see your source code as part of stack traces in Sentry. You can either do this:
+
+- By adding one of a build tool plugin to your project
+- Or, by manually uploading your source bundle using the Sentry CLI
+
+This document covers both methods. You can find more information about uploading via the CLI in our [Debug Information Files](/product/cli/dif/#jvm-source-bundles) docs.
+
+<PlatformSection supported={["android"]}>
+
+Source Context also works with ProGuard. See the [ProGuard & DexGuard](/platforms/android/enhance-errors/proguard/) docs for more information.
+
+</PlatformSection>
+
+### UUIDs
+
+A random UUID must be generated and placed into the `sentry-debug-meta.properties`. The same UUID must be used to upload the source bundle file. Whenever an error is sent to Sentry, this UUID is sent alongside the error, allowing
+the Sentry server to look up source code in the source bundle with a matching ID.
+
+If you're using a build tool plugin, these steps happen automatically.
+
+![Java Source Context](./img/java-source-context.png)
+
+All of the following methods require `org`, `project` and an `authToken`.
+
+You can create an auth token by visiting the
+[Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page in Sentry.io.
+
+## Known Limitations
+
+- Files with same name but different extensions will lead to undefined behavior
+  - e.g. MainActivity.java and MainActivity.kt will both be renamed to MainActivity.jvm
+- Package declaration and file tree must match for source lookup to work
+  - e.g. a class io.sentry.sample.MainActivity.java has to be stored in io/sentry/sample
+
+<PlatformSection supported={["android"]}>
+
+- Kotlin files are allowed to contain multiple classes but code obfuscation tools like ProGuard or R8 may prevent this from working correctly
+- We don't add generated sources for AGP < 7.4
+
+</PlatformSection>
+
+## Using the Gradle Build Tool Plugin
+
+We have a [Sentry Gradle Plugin](https://github.com/getsentry/sentry-android-gradle-plugin) available.
+
+Set the auth token as an environment variable to be used when running your release build.
+
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Add the Sentry Gradle plugin to your project by adding the following lines:
+
+<PlatformSection supported={["android"]}>
+
+<SignInNote />
+
+```groovy
+plugins {
+    id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+
+sentry {
+    // Enables more detailed log output, e.g. for sentry-cli.
+    //
+    // Default is false.
+    debug = true
+
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext = true
+
+    // Includes additional source directories into the source bundle.
+    // These directories are resolved relative to the project directory.
+    additionalSourceDirsForSourceContext = ["mysrc/java", "other-source-dir/main/kotlin"]
+
+    org = "___ORG_SLUG___"
+    projectName = "___PROJECT_SLUG___"
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+
+sentry {
+    // Enables more detailed log output, e.g. for sentry-cli.
+    //
+    // Default is false.
+    debug.set(true)
+
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext.set(true)
+
+    // Includes additional source directories into the source bundle.
+    // These directories are resolved relative to the project directory.
+    additionalSourceDirsForSourceContext.set(setOf("mysrc/java", "other-source-dir/main/kotlin"))
+
+    org.set("___ORG_SLUG___")
+    projectName.set("___PROJECT_SLUG___")
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
+}
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["android"]}>
+
+Make sure the `assemble` task is executed.
+
+<SignInNote />
+
+```groovy
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+
+sentry {
+    // Enables more detailed log output, e.g. for sentry-cli.
+    //
+    // Default is false.
+    debug = true
+
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext = true
+
+    // Includes additional source directories into the source bundle.
+    // These directories are resolved relative to the project directory.
+    additionalSourceDirsForSourceContext = ["mysrc/java", "other-source-dir/main/kotlin"]
+
+    org = "___ORG_SLUG___"
+    projectName = "___PROJECT_SLUG___"
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.jvm.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+
+sentry {
+    // Enables more detailed log output, e.g. for sentry-cli.
+    //
+    // Default is false.
+    debug.set(true)
+
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    //
+    // Default is disabled.
+    includeSourceContext.set(true)
+
+    // Includes additional source directories into the source bundle.
+    // These directories are resolved relative to the project directory.
+    additionalSourceDirsForSourceContext.set(setOf("mysrc/java", "other-source-dir/main/kotlin"))
+
+    org.set("___ORG_SLUG___")
+    projectName.set("___PROJECT_SLUG___")
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
+}
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["android"]}>
+
+### Include NDK Source Context with Gradle Plugin
+
+By default native code (C/C++) is not uploaded with the Java/Kotlin code. Add the following options to enable Source Context for native code:
+
+```groovy
+sentry {
+    // Includes the source code of native code when uploading native symbols for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually. This only works with uploadNativeSymbols enabled.
+    //
+    // Default is disabled.
+    includeNativeSources = true
+
+    // Enables the automatic configuration of Native Symbols for Sentry.
+    // This executes sentry-cli automatically so you don't need to do it manually.
+    //
+    // Default is disabled.
+    uploadNativeSymbols = true
+}
+```
+
+```kotlin
+sentry {
+    // Includes the source code of native code when uploading native symbols for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually. This only works with uploadNativeSymbols enabled.
+    //
+    // Default is disabled.
+    includeNativeSources.set(true)
+
+    // Enables the automatic configuration of Native Symbols for Sentry.
+    // This executes sentry-cli automatically so you don't need to do it manually.
+    //
+    // Default is disabled.
+    uploadNativeSymbols.set(true)
+}
+```
+
+</PlatformSection>
+
+### Source Context for Generated Code
+
+If you have a code generation step in your build (e.g. Quarkus) you will see an error similar to this:
+
+```
+Task ':xxx:sentryCollectSourcesJava' uses this output of task ':xxx:quarkusGenerateCode' without declaring an explicit or implicit dependency. This can lead to incorrect results being produced, depending on what order the tasks are executed.
+```
+
+To resolve this, declare a task dependency for `sentryCollectSourcesJava` on code generation tasks that exist in your build:
+
+```groovy
+tasks.named("sentryCollectSourcesJava") {
+    // Make the task run after the tasks that generate code during build
+    mustRunAfter("CodeGenTask1", "CodeGenTask2")
+}
+```
+
+```kotlin
+tasks.named("sentryCollectSourcesJava") {
+    // Make the task run after the tasks that generate code during build
+    mustRunAfter("CodeGenTask1", "CodeGenTask2")
+}
+```
+
+<PlatformSection notSupported={["android"]}>
+
+## Using the Maven Build Tool Plugin
+
+We have a [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) available.
+
+Set the auth token as an environment variable to be used when running your release build.
+
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Add the Sentry Maven Plugin to your project by adding the following lines to your `pom.xml` file:
+
+<SignInNote />
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-maven-plugin</artifactId>
+            <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+            <!-- Required to allow auto-install of Sentry SDK and Integrations -->
+            <extensions>true</extensions>
+            <configuration>
+                <!-- for showing output of sentry-cli -->
+                <debugSentryCli>true</debugSentryCli>
+
+                <!-- optionally specify the path to sentry-cli -->
+                <!-- download it here: https://github.com/getsentry/sentry-cli/releases -->
+                <!-- minimum required version is 2.21.2 -->
+                <!-- by default the sentry-cli bundled with the plugin will be used -->
+                <!-- <sentryCliExecutablePath>/path/to/sentry-cli</sentryCliExecutablePath> -->
+
+                <org>___ORG_SLUG___</org>
+
+                <project>___PROJECT_SLUG___</project>
+
+                <!-- in case you're self hosting, provide the URL here -->
+                <!--<url>http://localhost:8000/</url>-->
+
+                <!-- provide your auth token via SENTRY_AUTH_TOKEN environment variable -->
+                <authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+            </configuration>
+            <executions>
+                <execution>
+                    <goals>
+                        <!--  Generates a source bundle and uploads it to Sentry. -->
+                        <!--  This enables source context, allowing you to see your source -->
+                        <!--  code as part of your stack traces in Sentry. -->
+                        <goal>uploadSourceBundle</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    ...
+</build>
+```
+
+You must manually download `sentry-cli` for your required architecture and point
+the Maven Plugin to it using `sentryCliExecutablePath`.
+You can get the latest release from the following URL:
+
+```
+https://github.com/getsentry/sentry-cli/releases/tag/{{@inject apps.version('sentry-cli', '2.17.3') }}
+```
+
+</PlatformSection>
+
+## Manually Uploading Source Context
+
+If you're using a build tool we don't support, or you prefer not to use Sentry's build tool plugins, you'll need to create and upload source bundle files manually using the Sentry CLI.
+
+The `sentry-cli` commands allow you to supply `--org` and `--project` as well as provide the auth token by setting the `SENTRY_AUTH_TOKEN` environment variable.
+
+You can also use a `.sentryclirc` or a `.properties` file, which you can link using the `SENTRY_PROPERTIES` environment variable.
+
+### Creating the Source Bundle
+
+First, create the source bundle containing your source files:
+
+```
+sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VALID_UUID path/to/source-code
+```
+
+### Uploading the Source Bundle
+
+Next, upload that source bundle to Sentry:
+
+```
+sentry-cli debug-files upload --type jvm path/to/bundle
+```
+
+### Configuring the SDK
+
+You'll need to tell the SDK which source bundle it should use for providing Source Context via one of the following options:
+
+#### `sentry-debug-meta.properties`
+
+Add a `sentry-debug-meta.properties` file to your application resources at build time which will be picked up automatically by the SDK.
+
+```properties
+io.sentry.bundle-ids=A_VALID_UUID
+```
+
+#### `sentry.properties`
+
+```properties
+bundle-ids=A_VALID_UUID
+```
+
+<PlatformSection supported={["java.spring"]}>
+
+#### `application.properties`
+
+```properties
+sentry.bundle-ids=A_VALID_UUID`
+```
+
+</PlatformSection>
+
+#### `SentryOptions`
+
+```Java
+options.addBundleId("A_VALID_UUID");
+```
+
+<PlatformSection supported={["android"]}>
+
+## Manually Uploading Debug Symbols and Native Source Code
+
+Upload the native debug symbols manually using the `debug-files upload command`. Adding the `--include-sources` flag, sentry-cli will automatically generate source bundles on the fly and upload them. Here's a typical example for Android:
+
+```
+sentry-cli debug-files upload app/build/intermediates/merged_native_libs/ --include-sources
+```
+
+</PlatformSection>

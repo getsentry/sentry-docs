@@ -1,0 +1,78 @@
+---
+title: Troubleshooting
+sidebar_order: 100
+description: "Learn more about how to troubleshoot common issues with the ASP.NET SDK."
+---
+
+## Configuration Issues
+
+### Proxy Server
+
+Often, your server can only access the internet through a proxy server.
+If that's the case, make sure your proxy server is listed in the `web.config` so the `HttpClient`
+used by Sentry's SDK can pick it up.
+
+```xml
+<system.net>
+    <defaultProxy>
+      <proxy proxyaddress="http://proxy.address.here" bypassonlocal="true" />
+    </defaultProxy>
+</system.net>
+```
+
+### TLS 1.2 Support & Windows Server
+
+If you're not able to capture events from ASP.NET to Sentry
+on older versions of Windows Server, with the older .NET Framework, you must enable TLS 1.2.
+
+```
+using System.Net;
+
+ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
+```
+
+### SentrSdk.Init With Error
+
+If you get the following error during Sentry initialization, you may have a misconfiguration on your Web.config:
+
+`System.IO.FileNotFoundException: Could not load file or assembly System.Net.Http, Version=4.0.0.0`
+
+You can fix it with one of the three solutions below:
+
+- Find the `assemblyIdentity` for `System.Net.Http` and remove the `bindingRedirect`.
+
+```xml
+<dependentAssembly>
+  <assemblyIdentity name="System.Net.Http" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+</dependentAssembly>
+```
+
+- Find the `assemblyIdentity` for `System.Net.Http` and lower the newVersion to `4.0.0.0`.
+
+```xml
+<dependentAssembly>
+  <assemblyIdentity name="System.Net.Http" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+  <bindingRedirect oldVersion="0.0.0.0-4.2.0.0" newVersion="4.0.0.0" />
+</dependentAssembly>
+```
+
+- Install the latest package from `System.Net.Http` in NuGet into your project.
+
+You can find more information about the problem [in this GitHub issue](https://github.com/dotnet/runtime/issues/24382).
+
+### Tags Not Showing if Set on Application_Start
+
+This happens because the `scope` from `requests` will be different from the one executed during the execution of Application_Start.
+To apply `Tags` globally, it's recommended that you set them in `SentryOptions`, as shown in the example below:
+
+<SignInNote />
+
+```csharp
+SentrySdk.Init(options =>
+{
+  options.Dsn = "___PUBLIC_DSN___";
+  options.DefaultTags.Add("TagName", "value");
+});
+```
+
+<PlatformContent includePath="troubleshooting" />

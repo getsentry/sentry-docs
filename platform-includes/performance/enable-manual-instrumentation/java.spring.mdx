@@ -1,0 +1,201 @@
+To instrument certain regions of your code, you can create transactions to capture them.
+
+## Capturing Bean Method Execution
+
+Every Spring bean method execution can be turned into a transaction or a span.
+
+### Capturing Transaction
+
+To enable this feature, you must include `spring-aop` and `aspectj` in your application:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-aop</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjweaver</artifactId>
+</dependency>
+```
+
+Then, import `SentryTracingConfiguration` in one of your `@Configuration` classes:
+
+```java {tabTitle:Java (Spring 5)}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import io.sentry.spring.tracing.SentryTracingConfiguration;
+
+@Import(SentryTracingConfiguration.class)
+class SentryConfig {
+}
+```
+
+```java {tabTitle:Java (Spring 6)}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import io.sentry.spring.jakarta.tracing.SentryTracingConfiguration;
+
+@Import(SentryTracingConfiguration.class)
+class SentryConfig {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import io.sentry.spring.tracing.SentryTracingConfiguration
+
+@Import(SentryTracingConfiguration::class)
+class SentryConfig {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import io.sentry.spring.jakarta.tracing.SentryTracingConfiguration
+
+@Import(SentryTracingConfiguration::class)
+class SentryConfig {
+}
+```
+
+Methods executed outside of Spring MVC request processing can be turned into transactions by annotating them with `@SentryTransaction` annotation:
+
+```java {tabTitle:Java (Spring 5)}
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+import io.sentry.spring.tracing.SentryTransaction;
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  void execute() {
+    ...
+  }
+}
+```
+
+```java {tabTitle:Java (Spring 6)}
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+import io.sentry.spring.jakarta.tracing.SentryTransaction;
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  void execute() {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
+import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Scheduled
+import io.sentry.spring.tracing.SentryTransaction
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  fun execute() {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Scheduled
+import io.sentry.spring.jakarta.tracing.SentryTransaction
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  fun execute() {
+    ...
+  }
+}
+```
+
+`@SentryTransaction` can be configured with custom `name`. If not defined, `name` will be resolved from the class, and the method name.
+
+`@SentryTransaction` can be also placed on a class or an interface - it turns every method execution from the annotated type into a transaction.
+
+Advanced Spring AOP users can redefine transaction pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentryTransactionPointcut`.
+
+### Capturing a Span
+
+To create a span around a method execution, annotate method with `@SentrySpan` annotation:
+
+```java {tabTitle:Java (Spring 5)}
+import org.springframework.stereotype.Component;
+import io.sentry.spring.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
+```java {tabTitle:Java (Spring 6)}
+import org.springframework.stereotype.Component;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)}
+import org.springframework.stereotype.Component
+import io.sentry.spring.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)}
+import org.springframework.stereotype.Component
+import io.sentry.spring.jakarta.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+```
+
+`@SentrySpan` can be configured with custom `description` property. If not defined, `operation` will be resolved from the class, and the method name.
+
+`@SentrySpan` can be also placed on a class or an interface - it turns every method execution from the annotated type into a span.
+
+Advanced Spring AOP users can redefine around which methods spans and transactions are created by creating custom advice, pointcut and advisor beans instead of importing `SentryTracingConfiguration` class.

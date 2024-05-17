@@ -1,0 +1,16 @@
+```javascript
+document
+  .querySelector("#get-reviews-btn")
+  .addEventListener("click", async (event) => {
+    const movie = event.target.dataset.title;
+    try {
+      const reviews = await fetchMovieReviews(movie);
+      renderMovieReviews(reviews);
+    } catch (e) {
+      const fetchError = new Error(`Failed to fetch reviews for: ${movie}`);
+      fetchError.cause = e;
+      Sentry.captureException(fetchError);
+      renderMovieReviewsError(fetchError);
+    }
+  });
+```

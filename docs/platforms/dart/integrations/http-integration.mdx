@@ -1,0 +1,94 @@
+---
+title: HTTP Integration
+description: "Learn more about the Sentry HTTP integration for the Dart SDK."
+sidebar_order: 2
+---
+
+## Reporting Bad HTTP Requests as Errors
+
+The `SentryHttpClient` can also catch exceptions that may occur during requests — for example [`SocketException`](https://api.dart.dev/stable/2.13.4/dart-io/SocketException-class.html).
+
+```dart
+import 'package:sentry/sentry.dart';
+
+var client = SentryHttpClient();
+try {
+var uriResponse = await client.post('https://example.com/whatsit/create',
+     body: {'name': 'doodle', 'color': 'blue'});
+ print(await client.get(uriResponse.bodyFields['uri']));
+} finally {
+ client.close();
+}
+```
+
+This is an opt-out feature. The following example shows how to disable it:
+
+<SignInNote />
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.captureFailedRequests = false;
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+```
+
+Furthermore you can track HTTP requests that you consider bad. In the
+following example, exceptions are captured for each request
+with a status code within the range of 400 to 404, and also for 500.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+var client = SentryHttpClient(
+  failedRequestStatusCodes: [
+    SentryStatusCode.range(400, 404),
+    SentryStatusCode(500),
+  ],
+);
+
+try {
+var uriResponse = await client.post('https://example.com/whatsit/create',
+     body: {'name': 'doodle', 'color': 'blue'});
+ print(await client.get(uriResponse.bodyFields['uri']));
+} finally {
+ client.close();
+}
+```
+
+## Performance Monitoring for HTTP Requests
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+The `SentryHttpClient` starts a span out of the active span bound to the scope for each HTTP Request.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction(
+  'webrequest',
+  'request',
+  bindToScope: true,
+);
+
+var client = SentryHttpClient();
+try {
+var uriResponse = await client.post('https://example.com/whatsit/create',
+     body: {'name': 'doodle', 'color': 'blue'});
+ print(await client.get(uriResponse.bodyFields['uri']));
+} finally {
+ client.close();
+}
+
+await transaction.finish(status: SpanStatus.ok());
+```

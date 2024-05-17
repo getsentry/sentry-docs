@@ -1,0 +1,14 @@
+```ruby
+Sentry.init do |config|
+  #...
+
+  # this example uses Rails' parameter filter to sanitize the event payload
+  # for Rails 6+
+  filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
+  # for Rails 5
+  filter = ActionDispatch::Http::ParameterFilter.new(Rails.application.config.filter_parameters)
+  config.before_send = lambda do |event, hint|
+    filter.filter(event.to_hash)
+  end
+end
+```

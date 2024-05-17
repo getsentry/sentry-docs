@@ -1,0 +1,52 @@
+For example, if you're using webpack and Babel, and you have the following code in your `webpack.config.js`, you'll want to modify `exclude` so it doesn't block the SDK.
+
+Before:
+
+```javascript {filename:webpack.config.js}
+module: {
+  rules: [
+    {
+      test: /\.(js)$/,
+      exclude: /node_modules/,
+      use: ['babel-loader']
+    }
+  ]
+},
+```
+
+After:
+
+```javascript {filename:webpack.config.js}
+module: {
+  rules: [
+    {
+      test: /\.(js)$/,
+      // Make sure to include all `@sentry` packages, not just the main SDK package
+      exclude: filepath => filepath.includes("node_modules") && !filepath.includes("@sentry"),
+      use: ['babel-loader']
+    }
+  ]
+},
+```
+
+Though the above example is webpack-specific, similar changes can be made to configuraton for Rollup, esbuild, and the like.
+
+<PlatformSection notSupported={[
+"javascript.angular",
+"javascript.capacitor",
+"javascript.cordova",
+"javascript.electron",
+"javascript.ember",
+"javascript.gatsby",
+"javascript.nextjs",
+"javascript.react",
+"javascript.remix",
+"javascript.svelte",
+"javascript.sveltekit",
+"javascript.vue",
+"javascript.wasm",
+]}>
+
+As an alternative, you can use one of our [ES5 CDN bundles](/platforms/javascript/install/loader/#available-bundles).
+
+</PlatformSection>

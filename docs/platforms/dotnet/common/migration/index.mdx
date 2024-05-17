@@ -1,0 +1,507 @@
+---
+title: Migration Guide
+description: "Migrating between versions of Sentry SDK for .NET."
+sidebar_order: 8000
+---
+
+Upgrading includes both breaking changes and new features.
+
+## Migrating to 4.x
+
+### .NET Target Framework Changes
+
+We're dropping support for some of the old target frameworks. See this [GitHub Discussion](https://github.com/getsentry/sentry-dotnet/discussions/2776) for details on why.
+
+- Support for .NET Framework 4.6.1 has been replaced with 4.6.2 because 4.6.1 went out of support in 2022.
+- Support for .NET Core 3.1 and .NET 5 has been dropped.
+- Support for netstandard2.0 for Sentry.AspNetCore has been dropped.
+- Support for .NET 6 on mobile (e.g: `net6.0-android`) has been replaced with .NET 7 .
+<br/>Due to changes in .NET 8, it's no longer possible to maintain support for .NET 6 mobile-specific targets. As a result, we are transitioning mobile-specific TFMs from `net6.0-platform` to `net7.0-platform`. This means that mobile apps built on .NET 6 will now utilize the `Sentry` .NET 6 package, which provides .NET-only features without native/platform-specific bindings and SDKs. For more information, please refer to [this ticket](https://github.com/getsentry/sentry-dotnet/issues/2623).
+
+- Support for MAUI Tizen has been dropped
+
+### Sentry Self-Hosted Compatibility
+
+If you're using `sentry.io` this change does not affect you.
+This SDK version is compatible with a self-hosted version of Sentry `22.12.0` or higher. If you are using an older version of [self-hosted Sentry](https://develop.sentry.dev/self-hosted/) (aka on-premise), you will need to [upgrade](https://develop.sentry.dev/self-hosted/releases/). 
+
+### Significant Changes in Behavior
+
+- Transaction names for ASP.NET Core are now consistently named `HTTP-VERB /path` (e.g. `GET /home`). Previously, the leading forward slash was missing for some endpoints.
+- Setting `SentryOptions.Dsn` to `null` now throws `ArgumentNullException` during initialization.
+- `CaptureFailedRequests` is now enabled by default.
+- When `ImplicitUsings` is enabled, the `Sentry` namespace is automatically added to global usings. If you have conflicts, you can opt out by adding the following to your `csproj`:
+    ```
+    <PropertyGroup>
+      <SentryImplicitUsings>false</SentryImplicitUsings>
+    </PropertyGroup>
+    ```
+- Transactions' spans are no longer automatically finished with the status `deadline_exceeded` by the transaction. This is now handled by [Relay](https://github.com/getsentry/relay). 
+  - Customers self hosting Sentry must use version `22.12.0` or later
+- The `User.IpAddress` is now set to `{{auto}}` by default, even when `sendDefaultPII` is disabled.
+  - To prevent sending IP addresses, use the "Prevent Storing of IP Addresses" option in the "Security & Privacy" project settings on sentry.io.
+- The `DiagnosticLogger` signature for `LogWarning` now takes `exception` as the first parameter. This way, it no longer gets mixed up with `TArgs`.
+
+### Breaking Changes
+
+#### Changed APIs
+
+- Class renamed from `Sentry.User` to `Sentry.SentryUser`.
+- Class renamed from `Sentry.Runtime` to `Sentry.SentryRuntime`.
+- Class renamed from `Sentry.Span` to `Sentry.SentrySpan`.
+- Class renamed from `Sentry.Transaction` to `Sentry.SentryTransaction`.
+- Class renamed from `Sentry.Constants` to `Sentry.SentryConstants`.
+- Class renamed from `Sentry.Context` to `Sentry.SentryContext`.
+- Class renamed from `Sentry.Package` to `Sentry.SentryPackage`.
+- Class renamed from `Sentry.Request` to `Sentry.SentryRequest`.
+- Class renamed from `Sentry.` to `Sentry.SentryTransaction`.
+- Class renamed from `Sentry.Session` to `Sentry.SentrySession`.
+- Class renamed from `Sentry.Attachment` to `Sentry.SentryAttachment`.
+- Class renamed from `Sentry.Hint` to `Sentry.SentryHint`.
+- Interface renamed from `Sentry.ISession` to `Sentry.SentryISession`.
+- Interface renamed from `Sentry.IJsonSerializable` to `Sentry.SentryIJsonSerializable`.
+- Interface renamed from `Sentry.ITransaction` to `Sentry.ITransactionTracer`.
+- iOS and MacCatalyst platform-specific options renamed from `Cocoa` to `Native`.
+- iOS and MacCatalyst platform-specific options from `iOS` to `Cocoa`.
+- iOS platform-specific options renamed from `EnableCocoaSdkTracing` to `EnableTracing`.
+- Android platform-specific options renamed from `Android` to `Native`.
+- Android platform-specific options renamed from `EnableAndroidSdkTracing` and `EnableAndroidSdkBeforeSend` to `EnableTracing` and `EnableBeforeSend` respectively.
+- `DebugImage` and `DebugMeta` moved to `Sentry.Protocol` namespace.
+- `SentryClient.Dispose` is no longer obsolete.
+- `ISentryClient.CaptureEvent` overloads have been replaced by a single method accepting optional `Hint` and `Scope` parameters. You will need to pass `hint` as a named parameter from code that calls `CaptureEvent` without passing a `scope` argument.
+- `TransactionContext` and `SpanContext` constructors were updated and unified. If you're constructing instances of these classes, you will need to adjust the order in which you pass parameters to these.
+    ```csharp
+    public TransactionContext(
+        string name,
+        string operation,
+        SpanId? spanId = null,
+        SpanId? parentSpanId = null,
+        SentryId? traceId = null,
+        string? description = "",
+        SpanStatus? status = null,
+        bool? isSampled = null,
+        bool? isParentSampled = null,
+        TransactionNameSource nameSource = TransactionNameSource.Custom
+    )
+    ```
+- The `DiagnosticLogger` signature for `LogError` and `LogFatal` now takes the `exception` as the first parameter. This way, it no longer gets mixed up with the `TArgs`. The `DiagnosticLogger` now also receives an overload for `LogError` and `LogFatal` that accepts a message only.
+- `Distribution` added to `IEventLike`.
+- `StackFrame`'s `ImageAddress`, `InstructionAddress`, and `FunctionId` changed to `long?`.
+- `DebugImage.ImageAddress` changed to `long?`.
+- Contexts now inherit from `IDictionary` rather than `ConcurrentDictionary`. The specific dictionary being used is an implementation detail.
+- The method used to configure a Sentry Sink for Serilog now has an additional overload. Calling `WriteTo.Sentry()` with no arguments will no longer attempt to initialize the SDK (it has optional arguments to configure the behavior of the Sink only). If you want to initialize Sentry at the same time you configure the Sentry Sink, then you will need to use the overload of this method that accepts a DSN as the first parameter (for example, `WriteTo.Sentry("https://d4d82fc1c2c4032a83f3a29aa3a3aff@fake-sentry.io:65535/2147483647")`).
+
+#### Removed APIs
+
+- `SentrySinkExtensions.ConfigureSentrySerilogOptions` is now internal only. If you were using this method, please use one of the `SentrySinkExtensions.Sentry` extension methods instead.
+- A number of `[Obsolete]` options have been removed:
+  - `BeforeSend` - use `SetBeforeSend` instead.
+  - `BeforeSendTransaction` - use `SetBeforeSendTransaction` instead.
+  - `BeforeBreadcrumb` - use `SetBeforeBreadcrumb` instead.
+  - `CreateHttpClientHandler` - use `CreateHttpMessageHandler` instead.
+  - `ReportAssemblies` - use `ReportAssembliesMode` instead.
+  - `KeepAggregateException` - this property is no longer used and has no replacement.
+  - `DisableTaskUnobservedTaskExceptionCapture`- use `DisableUnobservedTaskExceptionCapture` instead.
+  - `DebugDiagnosticLogger` - use `TraceDiagnosticLogger` instead.
+- A number of iOS/Android-specific `[Obsolete]` options have been removed:
+  - `Distribution` - use `SentryOptions.Distribution` instead.
+  - `EnableAutoPerformanceTracking` - use `SetBeforeSendTransaction` instead.
+  - `EnableCoreDataTracking` - use `EnableCoreDataTracing` instead.
+  - `EnableFileIOTracking` - use `EnableFileIOTracing` instead.
+  - `EnableOutOfMemoryTracking` - use `EnableWatchdogTerminationTracking` instead.
+  - `EnableUIViewControllerTracking` - use `EnableUIViewControllerTracing` instead.
+  - `StitchAsyncCode` - no longer available.
+  - `ProfilingTracesInterval` - no longer available.
+  - `ProfilingEnabled` - use `ProfilesSampleRate` instead.
+- A number of obsolete types have been removed:
+  - `SystemClock` - use `SystemClock.Clock` instead.
+  - `Scope.GetSpan()` - use `Span` property instead.
+  - `IUserFactory` - use `ISentryUserFactory` instead.
+  - `SentryException.Data` - use `SentryException.Mechanism.Data` instead.
+  - `Runtime.Clone()` - this shouldn't have been public in the past and has no replacement.
+  - `AssemblyExtensions` - this shouldn't have been public in the past and has no replacement.
+  - `SentryDatabaseLogging.UseBreadcrumbs()` - it is called automatically and has no replacement.
+- A number of interfaces have removed:  
+  - `IHasMeasurements` - use `ISpanData` instead.
+  - `IHasBreadcrumbs` - use `IEventLike` instead.
+  - `ISpanContext` - use `ITraceContext` instead.
+  - `IHasTransactionNameSource` - use `ITransactionContext` instead.
+- The unused `StackFrame.InstructionOffset` has been removed.
+- The unused `Scope.Platform` property has been removed.
+- The obsolete setter `Sentry.PlatformAbstractions.Runtime.Identifier` has been removed.
+- `Sentry.Values<T>` is now internal as it is never exposed in the public API.
+- The `TracePropagationTarget` class has been removed. Use the `SubstringOrRegexPattern` class instead.
+- The `WithScope` and `WithScopeAsync` methods have been removed. We have discovered that these methods didn't work correctly in certain desktop contexts, especially when using a global scope.
+<br/>Replace your usage of `WithScope` with overloads of `Capture*` methods:
+  - `SentrySdk.CaptureEvent(SentryEvent @event, Action<Scope> scopeCallback)`
+  - `SentrySdk.CaptureMessage(string message, Action<Scope> scopeCallback)`
+  - `SentrySdk.CaptureException(Exception exception, Action<Scope> scopeCallback)`
+
+  ```c#
+  // Before
+  SentrySdk.WithScope(scope =>
+  {
+    scope.SetTag("key", "value");
+    SentrySdk.CaptureEvent(new SentryEvent());
+  });
+
+  // After
+  SentrySdk.CaptureEvent(new SentryEvent(), scope =>
+  {
+    // Configure your scope here
+    scope.SetTag("key", "value");
+  });
+  ```
+
+## Migrating to 3.12.0
+
+### NuGet Changes
+
+If you're using the `Sentry.EntityFramework` NuGet package, you must update to at least version 6.2 of the `EntityFramework` NuGet package.
+
+## Migrating from 2.x to 3.x
+
+### Breaking Changes
+
+Please read through **all** breaking changes prior to upgrading.
+
+#### Grouping Changes
+
+The format of the stack traces were greatly improved with the help of Ben Adam's iconic library `Ben.Demystifier`. Frames now include details such as `async`, `static`, the actual return type, method parameters, tuples and their names, and more.
+
+However, this will **affect grouping**. If you prefer to stay with the original stack trace format, you can opt-out of this feature with:
+
+```
+options.StackTraceMode = StackTraceMode.Original;
+```
+
+#### Serialization
+
+In version 3.0.0, the Sentry SDK for .NET changed from `Newtonsoft.Json` to `System.Text.Json`.
+Using the new library has many advantages. These include the lack of an additional dependency (when targeting .NET Core 3, .NET 5, and later versions) and much faster performance.
+
+One breaking change that affects objects set as [Context](../enriching-events/context/) and `Extra` is that `Newtonsoft.Json` was previously able to serialize some types, which is not possible with `System.Text.Json`.
+
+Setting an instance of `Exception` that was caught in a `catch` block could fail to serialize, and the event would be dropped by Sentry. This won't break your app, but the error wouldn't make it into Sentry:
+
+```
+ ---> System.NotSupportedException: Serialization and deserialization of 'System.Type' instances are not supported and should be avoided since they can lead to security issues.
+   at System.Text.Json.Serialization.Converters.TypeConverter.Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.WriteCore(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+```
+
+To avoid this issue, pass a serializable object into Sentry. For example, map the instance of `Exception` to an anonymous object:
+
+```
+try
+{
+    throw new ArgumentNullException("test");
+}
+catch (Exception e)
+{
+    SentrySdk.ConfigureScope(s =>
+    {
+        s.Contexts["Exception"] = new
+        {
+            e.Message,
+            e.StackTrace,
+            e.Data
+        };
+    });
+    SentrySdk.CaptureMessage("Exception in contexts");
+}
+```
+
+### Namespace Change
+
+Classes under `Sentry.Protocol` were moved to the root namespace `Sentry`. All except `Context` classes like `App`, `Device`, etc.
+
+### ASP.NET
+
+ASP.NET (**not Core**) users need to install an additional package, `Sentry.AspNet`. Without this package, HTTP related information will not be added to events.
+
+You can plug the package into the `Init` as follows:
+
+```
+options.AddAspNet();
+```
+
+The motivation was to remove the reference to `System.Web` and decouple the core of the package from any specific namespaces of the .NET Framework. This change improves the experience from other environments, such as game engines like Unity and [Godot](https://gatomalo.dev/blog/2020/03/21/error-monitoring-godot-sentry/#android).
+
+### ASP.NET Core
+
+#### Environment Casing
+
+To match Sentry's default environment naming convention, unless explicitly set otherwise, the Sentry environment will be reported in lowercase. That means if `ASPNET_ENVIRONMENT` is equal to `Production`, the Sentry SDK will report it as `production`.
+
+#### Removal of `IncludeRequestPayload`
+
+The option `IncludeRequestPayload` that was deprecated in the Sentry SDK 2.0 has been removed.
+The replacement is the option `MaxRequestBodySize`.
+
+#### New Methods on `IHub` and `ISentryClient`
+
+Sentry's performance monitoring capabilities requires additive API changes to interfaces such as `IHub` and `ISentryClient`. If you implement your own `IHub`, you'll need to implement two new methods:
+
+`ISentryClient` received: `CaptureTransaction`.
+`IHub` received: `StartTransaction` and `GetTraceHeader`.
+
+#### Rename of `DiagnosticsLogger` to `DiagnosticLogger`
+
+To align with other SDKs, the option is now named: `DiagnosticLogger`
+[Docs PR](https://github.com/getsentry/sentry-docs/pull/2945).
+
+#### `Dsn` as a String
+
+`SentryOptions` now take a string for `Dsn`:
+
+Before: `o.Dsn = new Dsn("..");`
+After: `o.Dsn = "..";`
+
+#### `LogEntry` Became `Message`
+
+The property of `SentryEvent` that supports a structured log entry was renamed to `Message` to align with the protocol and other SDKs.
+
+### Self-Hosted Support
+
+This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using an on-premise installation it requires Sentry version >= v20.6.0 to work. If you are using sentry.io nothing will change and no action is needed.
+
+### New Features and Improvements
+
+#### Offline Caching
+
+You can optionally have events cached to disk. To do so, specify which directory the SDK can use to write crash files:
+
+`options.CacheDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))`
+
+#### Attachments
+
+You can add attachments to events. Please refer to our [Attachments documentation](../enriching-events/attachments/).
+
+#### User Feedback
+
+You can add user feedback to events via a .NET API. Please refer to the [User Feedback documentation](../user-feedback/).
+
+#### ASP.NET Core gRPC support
+
+A new package was added ASP.NET Core gPRC support, adding the ability to log the request payload in case of errors.
+
+#### Release Notes
+
+Please refer to [GitHub for the complete release notes](https://github.com/getsentry/sentry-dotnet/releases/tag/3.0.0).
+
+## Migrating from SharpRaven to Sentry SDK
+
+Below are the main differences between SharpRaven and Sentry SDK, including a list of features available in Sentry SDK that are not available in SharpRaven.
+
+### Sentry Package
+
+- Automatic capture of global unhandled exceptions (AppDomain)
+- Scope management
+- Duplicate events automatically dropped
+- Events from the same exception automatically dropped
+- Web proxy support
+- HttpClient/HttpClientHandler configuration callback
+- Compress request body
+- Event sampling opt-in
+- Event flooding protection (429 retry-after and internal bound queue)
+- Release automatically set (`AssemblyInformationalVersionAttribute`, `AssemblyVersion` or env var)
+- DSN discovered via environment variable
+- Release (version) reported automatically
+- CLS Compliant
+- Strong named
+- BeforeSend and BeforeBreadcrumb callbacks
+- Event and Exception processors
+- SourceLink (including PDB in nuget package)
+- Device OS info sent
+- Device Runtime info sent
+- Enable SDK debug mode (opt-in)
+- Attach stack trace for captured messages (opt-in)
+
+### Sentry.Extensions.Logging
+
+- Includes all features from the Sentry package.
+- BeginScope data added to Sentry scope, sent with events
+- LogInformation or higher added as breadcrumb, sent with next events.
+- LogError or higher automatically captures an event
+- Minimal levels are configurable.
+
+### Sentry.AspNetCore
+
+- Includes all features from the Sentry package.
+- Includes all features from the Sentry.Extensions.Logging package.
+- Easy ASP.NET Core integration, single line: UseSentry.
+- Captures unhandled exceptions in the middleware pipeline
+- Captures exceptions handled by the framework UseExceptionHandler and Error page display.
+- Any event sent will include relevant application log messages
+- RequestId as tag
+- URL as tag
+- Environment is automatically set (IHostingEnvironment)
+- Request payload can be captured if opt-in
+- Support for EventProcessors registered with DI
+- Support for ExceptionProcessors registered with DI
+- Captures logs from the request (using Microsoft.Extensions.Logging)
+- Supports configuration system (e.g: appsettings.json)
+- Server OS info sent
+- Server Runtime info sent
+- Request headers sent
+- Request body compressed
+
+All packages are:
+
+- Strong named
+- Tested on Windows, Linux, and macOS
+- Tested on .NET Core, .NET Framework, and Mono
+
+It's also very configurable, for example:
+
+- HTTP Proxy
+- Event sampling
+- Enable request body extraction
+- Send PII data (Personal Identifiable Information, requires opt-in)
+- Read diagnostics activity data
+- BeforeSend: Callback to modify/reject event before sending
+- BeforeBreadcrumb: Callback to modify/reject a breadcrumb
+- LogEventFilter: Filter events by inspecting log data
+- Maximum number of breadcrumbs to store
+- Event queue depth
+- Shutdown timeout: If there are events to send, how long to wait until shutdown
+- Accept compressed response
+- Compress request body
+- Breadcrumb level: Minimum log level to store as a breadcrumb
+- Event level: Minimum log level to send an event to Sentry
+- Disable duplicate event detection
+- Disable capture of global unhandled exceptions
+- Add event processor
+- Add exception processor
+- Enable SDK debug mode
+- Attach stack trace for captured messages (opt-in)
+
+### Breaking Changes
+
+Upgrading from SharpRaven to Sentry SDK includes the following breaking changes.
+
+#### .NET Framework Support Reduced
+
+If your project is targeting .NET Framework, it will need to be using at least v4.6.1 to use Sentry (SharpRaven supported .NET Framework v3.5 and higher).
+
+#### Initialization
+
+Changed how to initialize Sentry:
+
+<SignInNote />
+
+```csharp
+using Sentry;
+
+// Initialize with DSN
+SentrySdk.Init("___PUBLIC_DSN___");
+
+// Initialize with options
+SentrySdk.Init(o =>
+{
+    o.Dsn = "___PUBLIC_DSN___";
+});
+```
+
+For ASP.NET (classic) integration, add `Sentry.AspNet` package and initialize it by calling `o.AddAspNet()`:
+
+<SignInNote />
+
+```csharp
+using Sentry;
+using Sentry.AspNet;
+
+SentrySdk.Init(o =>
+{
+    o.Dsn = "___PUBLIC_DSN___";
+
+    o.AddAspNet();
+});
+```
+
+#### Event Queue
+
+Contrary to SharpRaven, events in Sentry SDK are sent in background without blocking the currently executing code. Calling `SentrySdk.CaptureException(...)` does not immediately send an event, but instead queues it up on a background thread.
+
+Usage changes:
+
+```csharp
+// Before
+ravenClient.Capture(...);
+await ravenClient.CaptureAsync(...);
+
+// After
+SentrySdk.CaptureEvent(...);
+```
+
+If you need to stop the execution until events captured are sent to Sentry, you can also flush the queue:
+
+```csharp
+SentrySdk.CaptureException(...);
+// Only proceed once exception is captured. Waiting up to 2 seconds for it.
+await SentrySdk.FlushAsync(TimeSpan.FromSeconds(2));
+```
+
+You can close the SDK, which will also flush the event queue, by invoking the `IDisposable` returned by `SentrySdk.Init(...)`:
+
+<SignInNote />
+
+```csharp
+var sentryInitialization = SentrySdk.Init("___PUBLIC_DSN___");
+
+// Capture a non-error message
+SentrySdk.CaptureMessage("hello world");
+
+// Tear down Sentry and flush queued up events
+sentryInitialization.Dispose();
+```
+
+#### Event Processors
+
+Usage changes:
+
+```csharp
+// Before
+ravenClient.BeforeSend = requester =>
+{
+    // Here you can log data from the requester
+    // or replace it entirely if you want.
+    return requester;
+};
+
+// After
+SentrySdk.Init(o =>
+{
+    o.BeforeSend = e =>
+    {
+        // Mutate the event or return null to drop it altogether
+        return e;
+    };
+}
+});
+```
+
+#### Providing User Information
+
+SharpRaven used `IUserFactory` interface for extracting user information. In Sentry SDK you can instead provide user information directly:
+
+```csharp
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.User = new User
+    {
+        Id = "42",
+        Email = "john.doe@example.com"
+    };
+})
+```
+
+For ASP.NET Core applications, this is done automatically. User information is extracted from the context of the currently executing request.

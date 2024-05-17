@@ -1,0 +1,92 @@
+---
+title: Maven
+description: "Learn about using the Sentry Maven Plugin."
+sidebar_order: 105
+---
+
+The [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) is an addition to the main Java SDK and offers
+seamless integration with the Maven build system. It supports the following features:
+
+- Auto-installation of Sentry Java SDK and relevant integrations
+- Uploading Source Context
+
+## Setup
+
+### Install
+
+Using Maven in your application module's `pom.xml` add:
+
+```xml
+<project>
+  ...
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.sentry</groupId>
+        <artifactId>sentry-maven-plugin</artifactId>
+        <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+        <!-- Required to allow auto-install of Sentry SDK and Integrations -->
+        <extensions>true</extensions>
+      </plugin>
+      ...
+    </plugins>
+    ...
+  </build>
+...
+</project>
+```
+
+### Configure
+
+We expose the following configuration values, by adding a `<configuration>` section to the the plugin in `pom.xml`:
+
+```xml
+<project>
+  ...
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.sentry</groupId>
+        <artifactId>sentry-maven-plugin</artifactId>
+        <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+        <!-- Required to allow auto-install of Sentry SDK and Integrations -->
+        <extensions>true</extensions>
+        <configuration>
+          <!-- for showing output of sentry-cli -->
+          <debugSentryCli>true</debugSentryCli>
+
+          <!--  Disable the plugin -->
+          <skip>false</skip>
+
+          <!--  Disable source-context -->
+          <skipSourceBundle>false</skipSourceBundle>
+
+          <!--  Disable auto-install of SDK and Integrations -->
+          <skipAutoInstall>false</skipAutoInstall>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <!--  Generates a source bundle and uploads it to Sentry. -->
+              <!--  This enables source context, allowing you to see your source -->
+              <!--  code as part of your stack traces in Sentry. -->
+              <goal>uploadSourceBundle</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      ...
+    </plugins>
+    ...
+  </build>
+  ...
+</project>
+```
+
+## Auto Installation
+
+The plugin automatically adds the Sentry Java SDK as well as available Sentry integrations as dependencies if it detects a library dependency we support. For example, if your project has a dependency on `graphql-java` the plugin will automatically add `sentry-graphql` as an additional dependency.
+
+## Source Context
+
+See our documentation on <PlatformLink to="/source-context/">Source Context</PlatformLink>.

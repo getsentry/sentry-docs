@@ -1,0 +1,101 @@
+---
+title: Laravel 5.x
+description: "Learn about using Sentry with Laravel 5.x."
+sidebar_order: 300
+---
+
+<Note>
+
+Laravel 5.x is supported until version 2.14.x of the `sentry/sentry-laravel` package.
+
+</Note>
+
+Laravel is supported using a native package: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
+
+This guide is for Laravel 5.x. We also provide instructions for [the latest Laravel](/platforms/php/guides/laravel/) as well as [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
+
+## Install
+
+Install the `sentry/sentry-laravel` package:
+
+```bash
+composer require "sentry/sentry-laravel:^2.14"
+```
+
+If you're on Laravel 5.5 or higher, the package will be auto-discovered. Otherwise, you will need to manually configure it in your `config/app.php`.
+
+```php {filename:config/app.php}
+'providers' => array(
+    // ...
+    Sentry\Laravel\ServiceProvider::class,
+),
+'aliases' => array(
+    // ...
+    'Sentry' => Sentry\Laravel\Facade::class,
+),
+```
+
+Add Sentry reporting to `App/Exceptions/Handler.php`.
+
+```php {filename:App/Exceptions/Handler.php}
+public function report(Exception $exception)
+{
+    if ($this->shouldReport($exception) && app()->bound('sentry')) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+```
+
+## Configure
+
+Configure the Sentry DSN with this command:
+
+<SignInNote />
+
+```shell
+php artisan sentry:publish --dsn=___PUBLIC_DSN___
+```
+
+It creates the config file (`config/sentry.php`) and adds the `DSN` to your `.env` file.
+
+<SignInNote />
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+```
+
+## Verify
+
+### Verify With Artisan
+
+You can test your configuration using the provided `sentry:test` artisan command:
+
+```shell
+php artisan sentry:test
+```
+
+### Verify With Code
+
+You can verify that Sentry is capturing errors in your Laravel application by creating a route that will throw an exception:
+
+```php {filename:routes/web.php}
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});
+```
+
+Visiting this route will trigger an exception that will be captured by Sentry.
+
+## Local Development and Testing
+
+When Sentry is installed in your application, it will also be active when you are developing or running tests.
+
+You most likely don't want errors to be sent to Sentry when you are developing or running tests. To avoid this, set the DSN value to `null` to disable sending errors to Sentry.
+
+You can also do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or by defining it as `SENTRY_LARAVEL_DSN=null`.
+
+If you do leave Sentry enabled when developing or running tests, it's possible for it to have a negative effect on the performance of your application or test suite.
+
+<PageGrid nextPages header="Next Steps" />

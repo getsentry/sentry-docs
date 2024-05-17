@@ -1,0 +1,57 @@
+---
+title: WPF
+description: "Learn more about how Sentry's .NET SDK works with Windows Presentation Foundation (WPF) applications."
+---
+
+Sentry's .NET SDK works with Windows Presentation Foundation applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry). It works with WPF apps running on .NET Framework 4.6.1, .NET Core 3.0 or higher.
+
+## Configuration
+
+In addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must configure the WPF specific error handler.
+
+<Note>
+
+The SDK should be initialized in the constructor of your application class (usually `App.xaml.cs`). Do not initialize the SDK in the `OnStartup()` event of the application or the `Hub` will not be initialized correctly.
+
+</Note>
+
+The SDK automatically handles `AppDomain.UnhandledException`. On WPF, for production apps (when no debugger is attached), WPF catches exception to show the dialog to the user. You can also configure your app to capture those exceptions before the dialog shows up:
+
+<SignInNote />
+
+```csharp
+using System.Windows;
+
+public partial class App : Application
+{
+    public App()
+    {
+        SentrySdk.Init(o =>
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+
+            // Enable Global Mode since this is a client app
+            o.IsGlobalModeEnabled = true;
+
+            //TODO: any other options you need go here
+        });
+        DispatcherUnhandledException += App_DispatcherUnhandledException;
+    }
+
+    void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        SentrySdk.CaptureException(e.Exception);
+
+        // If you want to avoid the application from crashing:
+        e.Handled = true;
+    }
+}
+```

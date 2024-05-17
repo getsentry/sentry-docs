@@ -1,0 +1,96 @@
+---
+title: Drift Database Instrumentation
+description: "Learn more about the Sentry Drift Database Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.drift
+categories:
+  - mobile
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 7.13.1)_
+
+Drift is a library for easily managing SQLite databases within Flutter applications.
+The [sentry_drift](https://pub.dev/packages/sentry_drift) package provides `Drift` support for database performance instrumentation and allows you to track the performance of your queries.
+
+## Instrumentation Behaviour
+
+The created spans will be attached to the transaction on the scope - if no transaction is on the scope the Drift span will not be sent to Sentry.
+
+## Prerequisites
+
+Before starting, ensure:
+
+1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring is set up. Learn more [here](/platforms/flutter/performance/).
+
+## Install
+
+Add the `sentry_drift` dependency to install the Drift database instrumentation.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '7.13.1') }}
+sentry_drift: ^{{@inject packages.version('sentry.dart.drift', '7.13.1') }}
+```
+
+## Configure
+
+Inject `SentryQueryExecutor` into a `Drift` database instance:
+
+```dart
+import 'package:drift/native.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+final executor = SentryQueryExecutor(
+  () => NativeDatabase.memory(), // You can also provide your own database opener
+  databaseName: 'my_db_name',
+);
+final database = AppDatabase(executor); // AppDatabase is an example of the auto-generated database class by Drift.
+```
+
+## Verify
+
+### 1. Execute the Code
+
+```dart
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+import 'your_database.dart';
+
+Future<void> driftTest() async {
+  final tr = Sentry.startTransaction(
+    'driftTest',
+    'op',
+    bindToScope: true
+  );
+  final executor = SentryQueryExecutor(
+    () => NativeDatabase.memory(),
+    databaseName: 'your_db_name',
+  );
+  final db = AppDatabase(executor);
+
+  await db.into(db.todoItems).insert(
+        TodoItemsCompanion.insert(
+          title: 'This is a test title',
+          content: 'test',
+        ),
+      );
+
+  final items = await db.select(db.todoItems).get();
+
+  await db.close();
+
+  await tr.finish(status: const SpanStatus.ok());
+}
+```
+
+### 2. View the Transaction on Sentry.io
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `driftTest`.

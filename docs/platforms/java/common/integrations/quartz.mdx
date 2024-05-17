@@ -1,0 +1,71 @@
+---
+title: Quartz Integration
+description: "Learn how to send check-ins for your Quartz jobs."
+---
+
+Sentry's [Quartz](http://www.quartz-scheduler.org/) integration is provided through `SenryJobListener` which you have to add to your scheduler instance.
+
+The Quartz integration will be configured automatically if you're using `spring-boot-starter-quartz` with either the `sentry-spring-boot-starter` or the `sentry-spring-boot-jakarta-starter` integration. However, you still have to specify the monitor slug as shown below.
+
+Check-ins may also be [sent manually](/platforms/java/crons/) or if you're using Sentry's Spring Boot integration you can send send check-ins for your `@Scheduled` tasks by using our [`@SentryCheckIn` annotation](/platforms/java/guides/spring-boot/crons/).
+
+## Install
+
+To install use:
+
+```groovy {tabTitle:Gradle Plugin}
+plugins {
+  id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.13.0') }}"
+}
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-quartz:{{@inject packages.version('sentry.java.quartz', '6.30.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-quartz</artifactId>
+    <version>{{@inject packages.version('sentry.java.quartz', '6.30.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-quartz" % "{{@inject packages.version('sentry.java.quartz', '6.30.0') }}"
+```
+
+For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-quartz).
+
+## Set Up
+
+You have to provide the monitor slug either
+
+- when building a Quartz `JobDetail` instance
+- or when building a Quartz `Trigger` instance
+
+To do so, you have to add an entry to the jobs data map:
+
+```java
+import io.sentry.quartz.SentryJobListener;
+
+// you can set the monitor slug on the job detail
+JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
+jobDetailFactory.setJobDataAsMap(Collections.singletonMap(SentryJobListener.SENTRY_SLUG_KEY, "<monitor-slug>"));
+
+// you can also set the monitor slug on the trigger
+SimpleTriggerFactoryBean trigger = new SimpleTriggerFactoryBean();
+trigger.setJobDataAsMap(Collections.singletonMap(SENTRY_SLUG_KEY, "monitor_slug_simple_trigger"));
+```
+
+<Note>
+
+Setting the monitor slug on the `Trigger` will override what is set on the `JobDetail`. This also means you can set up a separate monitor per `Trigger`.
+
+</Note>
+
+<Note>
+
+Setting a global job listener using a `SchedulerFactoryBeanCustomizer` in Spring Boot, will override the listener set by Sentry. For Sentry to work properly, you need to add a new `SentryJobListener` instance to the global job listeners.
+
+</Note>

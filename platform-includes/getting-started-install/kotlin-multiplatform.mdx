@@ -1,0 +1,49 @@
+To install the Kotlin Multiplatform SDK, you need to add the following to your `build.gradle.kts` file in your shared module:
+
+```kotlin {filename:shared/build.gradle.kts}
+plugins {
+    kotlin("multiplatform")
+    kotlin("native.cocoapods")
+    // .. your other plugins
+}
+
+kotlin {
+  android()
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+      }
+    }
+
+    // Android target
+    val androidMain by getting {
+      dependsOn(commonMain)
+    }
+
+    // Apple targets:
+    val iosMain by getting {
+      dependsOn(commonMain)
+    }
+  }
+
+  cocoapods {
+    summary = "Some description for the Shared Module"
+    homepage = "Link to the Shared Module homepage"
+    ios.deploymentTarget = "14.1"
+    podfile = project.file("../iosApp/Podfile")
+    // Make sure you use the proper version according to our Cocoa SDK Version Compatibility Table.
+    pod("Sentry") {
+      version = "~> 8.25"
+      extraOpts += listOf("-compiler-option", "-fmodules")
+    }
+    framework {
+      baseName = "shared"
+    }
+  }
+}
+```

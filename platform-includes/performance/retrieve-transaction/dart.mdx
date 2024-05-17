@@ -1,0 +1,19 @@
+## Retrieve a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction, otherwise it returns `null`.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+final span = Sentry.getSpan()?.startChild('task') ??
+    Sentry.startTransaction('processOrderBatch()', 'task');
+
+try {
+  processOrderBatch();
+} catch (exception) {
+  span.throwable = exception;
+  span.status = SpanStatus.internalError();
+} finally {
+  await span.finish();
+}
+```

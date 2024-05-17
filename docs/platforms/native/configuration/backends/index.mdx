@@ -1,0 +1,28 @@
+---
+title: Backends
+sidebar_order: 80
+description: Learn more about backends, extending the functionality of the Sentry SDK for crash reporting.
+---
+
+_Backends_ extend the functionality of the SDK for some common frameworks
+and libraries. Similar to plugins, they extend the functionality of the Sentry
+SDK.
+
+The Native SDK can use different backends that are responsible for capturing
+crashes. The backend is configured at build-time, using the `SENTRY_BACKEND`
+CMake option, with support for the following options:
+
+- [`crashpad`](crashpad/): This uses the out-of-process crashpad handler.
+  It is used as the default on Windows and macOS.
+- `breakpad`: This uses the in-process breakpad handler.
+  It is used as the default on Linux.
+- `inproc`: A small in-process handler which is supported on all platforms,
+  and is used as default on Android.
+- `none`: This builds `sentry-native` without a backend, so it does not handle
+  crashes at all. It is primarily used for tests.
+
+`Breakpad` and `inproc` both run "in-process", so they run in the same process
+as the application they capture crashes for. This means these backends can't
+send a crash to Sentry immediately after it happens. Instead, the crash report is
+written to disk and sent the next time the application is run. Since `Crashpad`
+runs in a different process it doesn't have this limitation.

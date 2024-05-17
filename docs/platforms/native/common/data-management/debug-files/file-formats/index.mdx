@@ -1,0 +1,59 @@
+---
+title: "Debug File Formats"
+description: "Learn about platform-specific file formats and the debug information they contain."
+sidebar_order: 1
+---
+
+Sentry differentiates four kinds of debug information:
+
+- **Debug Information:** Provides function names, paths to source files, line
+  numbers, and inline frames. The process of resolving this information from
+  instruction addresses is called "symbolication". This information is
+  relatively large compared to the executable and usually put into a separate
+  file. In Sentry, these files are designated as _debug companions_ and show the
+  `debug` tag.
+
+- **Symbol Tables:** If debug information is not available for a certain
+  library, Sentry can use symbol tables as a fallback to retrieve function
+  names. Symbol tables are usually included in both the executable and debug
+  companion files. However, they do not contain sufficient information to
+  resolve inline functions or file names and line numbers. The `symtab` tag
+  indicates symbol tables.
+
+- **Source Code:** Conventionally, source code is not part of regular debug
+  information files. Sentry CLI can bundle source code of your application and
+  upload it to display source context in stack traces in Sentry. These bundles
+  show up with the `sources` tag.
+
+- **Unwind Information:** Enables Sentry to extract stack traces from Minidumps
+  and other binary crash formats of optimized builds. This process is referred
+  to as "stack unwinding" or "stack walking". Since this is also required when
+  throwing exceptions in C++, this information is often included in the
+  executable or library. If an uploaded file contains this information, it shows
+  the `unwind` tag. Note that on some platforms no actual unwinding takes place.
+  For instance, WebAssembly currently does not have the equivalent of minidumps
+  which means we do not require that type of information in such cases.
+
+Compilers place the above debug information in different files passed on the
+target platform, architecture, build flags or optimization level. Consequently,
+Sentry might not need all of the above information to process crash reports.
+Still, it is always a good idea to provide all available debug information.
+
+`sentry-cli` can be used to list properties of supported debug files and
+validate their contents. See [_Debug Information Files in sentry-cli_](/product/cli/dif/) for more information.
+
+<PlatformContent includePath="debug-file-formats-mach-o-dsym" />
+
+## WASM
+
+For WebAssembly, we support [DWARF in WASM containers](https://yurydelendik.github.io/webassembly-dwarf/).
+Note that we do not support source maps, which are also a format used for WASM
+debugging, but have shortcomings that make them impractical for a crash reporting
+tool like Sentry.
+
+Since WASM does not specify debug/build IDs yet, we provide a separate tool to
+add build IDs and split files called [wasm-split](https://github.com/getsentry/symbolicator/blob/master/crates/wasm-split)
+to help you create a debug companion file ready for uploading to Sentry
+while removing all debug information from the release binary.
+
+<PlatformContent includePath="debug-file-formats-proguard-mappings" />

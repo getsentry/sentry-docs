@@ -1,0 +1,59 @@
+---
+title: Redirects
+noindex: true
+---
+
+Redirects allow you to automatically redirect an incoming request path to a new destination path. When you move or rename a file, you should make sure to set up a redirect from the old path to the new path, so that the old URL still takes users to the right place.
+
+## Add a New Redirect
+
+There are two ways to add redirects in the Sentry docs:
+
+- [Add a New Redirect in `middleware.ts` (Recommended)](#add-a-new-redirect-in-middlewarets-recommended)
+- [Add a New Redirect in `vercel.json`](#add-a-new-redirect-in-verceljson)
+
+Because Sentry has a limited number of Vercel redirects, you should configure your redirects in `middleware.ts` whenever possible. You should only use `vercel.json` if you need to use regular expressions in your redirects.
+
+### Add a New Redirect in `middleware.ts` (Recommended)
+
+Set up all simple one-to-one redirects in `src/middleware.ts`.
+
+To add a new redirect in [`src/middleware.ts`](https://github.com/getsentry/sentry-docs/blob/master/src/middleware.ts), add a new object to `REDIRECTS` with the following properties:
+
+- `from`: The incoming request path.
+- `to`: The new destination path you want to route to.
+
+#### Example Redirect in `middleware.ts`
+
+The example below redirects `https://docs.sentry.io/performance/` to `https://docs.sentry.io/product/performance/`:
+
+```typescript {filename:middleware.ts} {2-5}
+const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
+  {
+    from: '/performance/',
+    to: '/product/performance/',
+  },
+];
+```
+
+### Add a New Redirect in `vercel.json`
+
+Sentry has a limited number of Vercel redirects, so you should only configure redirects in `vercel.json` if your redirects need to use regular expressions. Otherwise, use [`middleware.ts`](#add-a-new-redirect-in-middlewarets-recommended).
+
+To add a new redirect in [`vercel.json`](https://github.com/getsentry/sentry-docs/blob/master/vercel.json#L34), add a new object in `redirects` with the following properties:
+
+- `source`: The incoming request path pattern.
+- `destination`: The new destination path you want to route to.
+
+#### Example Redirect in `vercel.json`
+
+The example below redirects URLs like `https://docs.sentry.io/cli/(.*)` to `https://docs.sentry.io/product/cli/$1` with a matching regex pattern. For example, `https://docs.sentry.io/cli/installation/` would be redirected to `https://docs.sentry.io/product/cli/installation/`.
+
+```json {filename:vercel.json}
+ "redirects": [
+    {
+      "source": "/cli/(.*)",
+      "destination": "/product/cli/$1"
+    },
+ ]
+```

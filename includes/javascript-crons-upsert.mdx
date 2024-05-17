@@ -1,0 +1,150 @@
+You can create and update your Monitors programmatically with code rather than [creating and configuring them in Sentry.io](https://sentry.io/crons/create/).
+
+To create/update a monitor, use `Sentry.withMonitor()` and pass in your monitor configuration as a third parameter:
+
+```javascript
+const monitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "* * * * *",
+  },
+  checkinMargin: 2, // In minutes. Optional.
+  maxRuntime: 10, // In minutes. Optional.
+  timezone: "America/Los_Angeles", // Optional.
+};
+
+Sentry.withMonitor(
+  "<monitor-slug>",
+  () => {
+    // Execute your scheduled task here...
+  },
+  monitorConfig
+);
+```
+
+```typescript
+import { MonitorConfig } from "@sentry/types";
+
+const monitorConfig: MonitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "* * * * *",
+  },
+  checkinMargin: 2, // In minutes. Optional.
+  maxRuntime: 10, // In minutes. Optional.
+  timezone: "America/Los_Angeles", // Optional.
+};
+
+Sentry.withMonitor(
+  "<monitor-slug>",
+  () => {
+    // Execute your scheduled task here...
+  },
+  monitorConfig
+);
+```
+
+To configure the monitor's check-ins, use `Sentry.captureCheckIn()` and pass in your monitor configuration as a second parameter:
+
+```javascript
+const monitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "* * * * *",
+  },
+  checkinMargin: 2, // In minutes. Optional.
+  maxRuntime: 10, // In minutes. Optional.
+  timezone: "America/Los_Angeles", // Optional.
+};
+
+// 🟡 Notify Sentry your job is running:
+const checkInId = Sentry.captureCheckIn(
+  {
+    monitorSlug: "<monitor-slug>",
+    status: "in_progress",
+  },
+  monitorConfig
+);
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+Sentry.captureCheckIn(
+  {
+    // Make sure this variable is named `checkInId`
+    checkInId,
+    monitorSlug: "<monitor-slug>",
+    status: "ok",
+  },
+  monitorConfig
+);
+```
+
+```typescript
+import { MonitorConfig } from "@sentry/types";
+
+const monitorConfig: MonitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "* * * * *",
+  },
+  checkinMargin: 2, // In minutes. Optional.
+  maxRuntime: 10, // In minutes. Optional.
+  timezone: "America/Los_Angeles", // Optional.
+};
+
+// 🟡 Notify Sentry your job is running:
+const checkInId = Sentry.captureCheckIn(
+  {
+    monitorSlug: "<monitor-slug>",
+    status: "in_progress",
+  },
+  monitorConfig
+);
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+Sentry.captureCheckIn(
+  {
+    // Make sure this variable is named `checkInId`
+    checkInId,
+    monitorSlug: "<monitor-slug>",
+    status: "ok",
+  },
+  monitorConfig
+);
+```
+
+### Monitor Configuration Properties
+
+The following are available monitor configuration properties:
+
+`schedule`:
+
+The job's schedule:
+
+The schedule representation for your monitor, either `crontab` or `interval`. The structure will vary depending on the type:
+
+```json
+{"type": "crontab", "value": "0 * * * *"}
+{"type": "interval", "value": "2", "unit": "hour"}
+```
+
+`checkinMargin`:
+
+The amount of time (in minutes) Sentry should wait for your check-in before it's considered missed ("grace period"). Optional.
+
+<Note>
+
+We recommend that your check-in margin be less than or equal to your interval.
+
+</Note>
+
+`maxRuntime`:
+
+The amount of time (in minutes) your job is allowed to run before it's considered failed. Optional.
+
+`timezone`:
+
+The `tz` where your job is running. This is usually your server's timezone, (such as `America/Los_Angeles`). See [list of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Optional.

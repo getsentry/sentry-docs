@@ -1,0 +1,28 @@
+## Connect Errors With Spans
+
+Sentry errors can be linked with transactions and spans.
+
+Errors reported to Sentry are automatically linked to any running transaction or span that is **bound to the scope**. There is only one global scope in the native SDK, and only one transaction or span can be bound to the scope at once. In a multi-threaded application, all errors are linked to the single transaction or span bound to the scope.
+
+```c
+sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
+    "checkout",
+    "perform-checkout",
+);
+sentry_transaction_t *tx = sentry_transaction_start(tx_ctx, sentry_value_new_null());
+
+// Bind the transaction / span to the scope:
+sentry_set_span(tx);
+
+// Errors captured after the line above will be linked to the transaction
+sentry_value_t exc = sentry_value_new_exception(
+    "ParseIntError",
+    "invalid digit found in string",
+);
+
+sentry_value_t event = sentry_value_new_event();
+sentry_event_add_exception(event, exc);
+sentry_capture_event(event);
+
+sentry_transaction_finish(tx);
+```

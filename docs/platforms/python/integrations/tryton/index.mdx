@@ -1,0 +1,66 @@
+---
+title: Tryton
+description: "Learn aboutn using Sentry with Tryton."
+---
+
+The Tryton integration adds support for the [Tryton Framework Server](https://www.tryton.org/).
+
+## Configure
+
+To configure the SDK, initialize it with the integration in a custom `wsgi.py` script:
+
+<SignInNote />
+
+```python {filename:wsgi.py}
+# wsgi.py
+import sentry_sdk
+from sentry_sdk.integrations.trytond import TrytondWSGIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        TrytondWSGIIntegration(),
+    ],
+)
+
+from trytond.application import app as application
+
+# ...
+```
+
+In Tryton>=5.4 an error handler can be registered to respond the client
+with a custom error message including the Sentry event id instead of a traceback.
+
+```python {filename:wsgi.py}
+# wsgi.py
+# ...
+
+from trytond.exceptions import TrytonException, UserError
+
+@application.error_handler
+def _(app, request, e):
+    if isinstance(e, TrytonException):
+        return
+    else:
+        event_id = sentry_sdk.last_event_id()
+        data = UserError('Custom message', f'{event_id}\n{e}')
+        return app.make_response(request, data)
+```
+
+## Behavior
+
+- The Sentry Python SDK will install the Tryton integration. The integration hooks to the TrytonWSGI class' instance.
+
+- All uncaught exceptions not inherited from Tryton exceptions are reported.
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+## Supported Versions
+
+- Tryton: 4.6+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

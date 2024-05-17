@@ -1,0 +1,34 @@
+## Thread Safety
+
+Be careful when spawning operations as independent threads or asynchronous tasks.
+
+APIs provided by the SDK are not inherently thread-safe. Several constructors will contain a warning regarding thread-safety in their docstrings. Functions that operate on the return values of such constructors will also mention any locking requirements.
+
+For example, the documentation of `sentry_transaction_context_new()`, which constructs a `sentry_transaction_context_t`, includes a [warning in its final paragraph](https://github.com/getsentry/sentry-native/blob/0.4.14/include/sentry.h#L1288-L1309):
+
+```c
+/**
+ * Constructs a new Transaction Context. The returned value needs to be passed
+ * into `sentry_transaction_start` in order to be recorded and sent to sentry.
+ *
+ * [...]
+ *
+ * The returned value is not thread-safe. Users are expected to ensure that
+ * appropriate locking mechanisms are implemented over the Transaction Context
+ * if it needs to be mutated across threads. Methods operating on the
+ * Transaction Context will mention what kind of expectations they carry if they
+ * need to mutate or access the object in a thread-safe way.
+ */
+```
+
+Following up on that warning, `sentry_transaction_context_set_name()`, which operates on a `sentry_transaction_context_t`, [notes that it requires a lock](https://github.com/getsentry/sentry-native/blob/0.4.14/include/sentry.h#L1311-L1319):
+
+```c
+/**
+ * Sets the `name` on a Transaction Context, which will be used in the
+ * Transaction constructed off of the context.
+ *
+ * The Transaction Context should not be mutated by other functions while
+ * setting a name on it.
+ */
+```

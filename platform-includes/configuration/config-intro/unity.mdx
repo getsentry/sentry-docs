@@ -1,0 +1,31 @@
+## Programmatic Configuration
+
+In order to provide native crash support, the Sentry SDK for Unity includes [platform-specific (that is, Native)](/platforms/unity/native-support/) SDKs, such as [Android](/platforms/android/), [Apple](/platforms/apple/guides/ios/), and [Native](/platforms/native/). Those SDKs share the options with which they get initialized.
+
+The C# layer self-initializes through the use of the [BeforeSceneLoad RuntimeInitializeOnLoadMethodAttribute](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.BeforeSceneLoad.html). On desktop, the C# layer is also responsible for initializing the native SDKs.
+
+On mobile, the native SDKs are configured and set up during build time and initialize themselves before the Unity engine. This allows us to capture bugs/crashes of the engine itself. For that reason, we rely on on the options being set in the Sentry editor configuration window and saved to `Assets/Resources/Sentry/SentryOptions.asset`.
+
+To provide a way to modify options programmatically, we've added `ScriptableOptionsConfiguration` to the `Options Config` tab in the Sentry editor window.
+
+![Options Configuration](./img/unity-options-configuration.png)
+
+There are two situations when a scriptable configuration object comes into play:
+
+- `Runtime Options Script` is executed on each app startup, right before the managed Sentry SDK is initialized (except for Android, iOS, and macOS native layers, which are already set up by that time).
+  An example of how this can be used is for implementing your own filtering of events using the [BeforeSend](/platforms/unity/configuration/filtering/#using-platformidentifier-namebefore-send-) callback.
+  (This callback only runs for events coming from C# scripts.)
+
+- `Buildtime Options Script` - is executed by the Unity Editor during app build.
+  Changes you make here affect the current build and also allow you to alter native platform build-time settings (Android, iOS, macOS).
+
+<Note>
+  Not all options can be used on all platforms, also some may need to be changed
+  at build-time, others at runtime. In most cases it's safe for both functions
+  to run the same code.
+</Note>
+
+<Note>
+  You can click the button _New_ to create a scriptable object from template to
+  get started.
+</Note>

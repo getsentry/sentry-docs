@@ -1,0 +1,109 @@
+---
+title: AWS Lambda Manual Instrumentation
+description: "Learn about instrumenting your AWS lambda function manually using Sentry."
+sidebar_order: 2000
+---
+
+This guide walks you through how to manually add Sentry to your AWS Lambda function by installing the Sentry SDK into your AWS Lambda function packages. While this method takes more effort, it gives you full control of your Sentry setup and manual instrumentation.
+
+
+
+You can also configure this function in one of the two ways described below:
+
+
+- **Without touching your code:**
+    This method can be instrumented from the Sentry product by those who have access to the AWS infrastructure and doesn't require that you make any direct updates to the code. See the [AWS Lambda guide](/organization/integrations/cloud-monitoring/aws-lambda/).
+- **By adding the Sentry Lambda Layer to your function manually:**
+    While this is a quick way to add Sentry to your AWS Lambda function, it gives you limited configuration possibilities with environment vars. See <PlatformLink to="/integrations/aws-lambda/manual-layer/">AWS Lambda Layer</PlatformLink>.
+
+## Install
+
+Create a deployment package on your local machine and install the required dependencies in the deployment package.
+For more information, see [AWS Lambda deployment package in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html).
+
+Install our Python SDK into your package directory using `pip`:
+
+```bash
+pip install --target ./package --upgrade sentry-sdk
+```
+
+## Configure
+
+Here's how to use the AWS Lambda integration for the Python SDK:
+
+<SignInNote />
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        AwsLambdaIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
+)
+
+def lambda_handler(event, context):
+    # ...
+```
+
+Check out Sentry's [AWS sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples.
+
+<Alert level="info" title="Note">
+
+If you're using another web framework inside of AWS Lambda, that framework may catch exceptions before we see them. Make sure to enable the framework-specific integration if it exists. See [_the Python main page_](/platforms/python/) for more information.
+
+</Alert>
+
+## Verify
+
+Add an error to your function and run it. If everything's working properly, it should be captured and sent to Sentry.io.
+
+## Behavior
+
+With the AWS Lambda integration enabled, the Python SDK will:
+
+- Automatically report all events from your Lambda Functions.
+- Allow you to <PlatformLink to="/configuration/filtering/">modify the transaction sample rate</PlatformLink> using `traces_sample_rate`.
+- Automatically include the following event reports:
+
+  - A link to CloudWatch Logs
+  - Function details
+  - `sys.argv` for the function
+  - AWS Request ID
+  - Function execution time
+  - Function version
+
+  You can add more data as described <PlatformLink to="/enriching-events/">here</PlatformLink>.
+
+- Request data including **HTTP method, URL, headers, form data, and JSON payloads** will be attached to all events. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information such as user ids, usernames, cookies, authorization headers, and IP addresses (unless you set `send_default_pii` to `True`).
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+## Options
+
+You can change the behavior of `AwsLambdaIntegration` by setting options for it:
+
+- `timeout_warning`:
+
+  The timeout warning reports an issue when the function execution time is near
+  the [configured timeout](https://docs.aws.amazon.com/lambda/latest/dg/configuration-console.html).
+
+  To enable the warning, update the SDK initialization to set `timeout_warning` to `True`:
+
+  ```python
+  sentry_sdk.init(
+      ...
+      integrations=[
+          AwsLambdaIntegration(timeout_warning=True),
+      ],
+  )
+  ```
+
+  The timeout warning is sent only if the timeout in the Lambda function configuration is set to a value greater than one second.

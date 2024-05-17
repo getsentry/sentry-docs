@@ -1,0 +1,378 @@
+---
+title: OkHttp
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.okhttp
+description: "Learn more about the Sentry OkHttp integration for the Android SDK."
+categories:
+  - mobile
+---
+
+The `sentry-okhttp` library provides [OkHttp](https://github.com/square/okhttp) support for Sentry via the [OkHttp Interceptor](https://github.com/square/okhttp/blob/a2059dedc0b1d4a977480834ae4ed9ea576a3eb8/okhttp/src/main/kotlin/okhttp3/Interceptor.kt).
+
+On this page, we get you up and running with Sentry's OkHttp Integration, so that it will automatically add a breadcrumb and start a span out of the active span bound to the scope for each HTTP Request.
+
+<Note>
+
+The minimum supported version of `okhttp` is `3.13.0` due to its [incompatibilities](https://medium.com/square-corner-blog/okhttp-3-13-requires-android-5-818bb78d07ce) with Android versions below 5.0. However, you are free to adapt our [SentryOkHttpInterceptor](https://github.com/getsentry/sentry-java/blob/main/sentry-okhttp/src/main/java/io/sentry/okhttp/SentryOkHttpInterceptor.kt) if you're using an older `okhttp` version.
+
+</Note>
+
+## Auto-Installation With the Sentry Android Gradle Plugin
+
+Starting from version `3.1.0`, the Sentry Android Gradle plugin will automatically add the `sentry-okhttp` dependency and instrument all of your `OkHttpClient` instances through bytecode manipulation. The plugin will only add the `sentry-okhttp` dependency if an `okhttp` dependency was discovered on the classpath.
+Starting from version `3.11.0`, the Sentry Android Gradle plugin will also automatically add the `SentryOkHttpEventListener` to your `OkHttpClient` instances through bytecode manipulation.
+
+### Install
+
+Add the Sentry Android Gradle plugin in `build.gradle`:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+Then, initialize the [Android SDK](/platforms/android/#configure).
+
+### Disable
+
+If you would like to disable the OkHttp instrumentation feature, we expose a configuration option for that:
+
+```groovy
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.OKHTTP
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.OKHTTP)
+  }
+}
+```
+
+<Note>
+
+Learn more about the Sentry Android Gradle plugin in our [Gradle](/platforms/android/configuration/gradle/) documentation.
+
+</Note>
+
+## Manual Installation
+
+### Install
+
+Sentry captures data by adding an `OkHttp Interceptor` and an `OkHttp EventListener`. To add the OkHttp integration, initialize the [Android SDK](/platforms/android/), then add the `sentry-okhttp` dependency using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '5.0.0') }}'
+implementation 'io.sentry:sentry-okhttp:{{@inject packages.version('sentry.java.okhttp', '5.0.0') }}'
+```
+
+### Configure
+
+<Note>
+
+The SentryOkHttpEventListener is available in Sentry's Android SDK version `6.20.0` and above.
+
+</Note>
+
+Configuration should happen once you create your `OkHttpClient` instance.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor())
+  .eventListener(SentryOkHttpEventListener())
+  .build()
+```
+
+```java
+import okhttp3.OkHttpClient;
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor;
+
+private final OkHttpClient client = new OkHttpClient.Builder()
+  .addInterceptor(new SentryOkHttpInterceptor())
+  .eventListener(new SentryOkHttpEventListener())
+  .build();
+```
+
+The SDK uses the `SentryOkHttpInterceptor` to support [Distributed Tracing](/product/sentry-basics/tracing/distributed-tracing/) and creates a span for any http call.
+The SDK can give more in-depth information through the `SentryOkHttpEventListener` by creating a span for each operation reported by OkHttp, including: dns setup, proxy selection, http connect, ssl setup, send request headers, send request body, receive response headers, and receive response body.
+
+## Verify
+
+This snippet includes a HTTP Request and captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+import io.sentry.Sentry
+import java.io.IOException
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
+@Throws(IOException::class)
+fun run(url: String): String? {
+  val request = Request.Builder()
+    .url(url)
+    .build()
+
+  val bodyStr = client
+    .newCall(request)
+    .execute()
+    .body?.toString()
+
+  Sentry.captureMessage("The Message $bodyStr")
+
+  return bodyStr
+}
+```
+
+```java
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor;
+import io.sentry.Sentry
+import java.io.IOException;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
+
+String run(String url) throws IOException {
+  Request request = new Request.Builder()
+    .url(url)
+    .build();
+
+  ResponseBody body = client
+    .newCall(request)
+    .execute()
+    .body();
+
+  String bodyStr = body != null ? body.toString() : null;
+
+  Sentry.captureMessage("The Message " + bodyStr);
+
+  return bodyStr;
+}
+```
+
+<Note>
+
+Learn more about manually capturing an error or message, in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+## Customize the Recorded Span
+
+The captured span can be customized or dropped with a `BeforeSpanCallback`:
+
+```kotlin
+import io.sentry.ISpan
+import io.sentry.okhttp.SentryOkHttpInterceptor
+import okhttp3.Request
+import okhttp3.Response
+
+class CustomBeforeSpanCallback : SentryOkHttpInterceptor.BeforeSpanCallback {
+  override fun execute(span: ISpan, request: Request, response: Response?): ISpan? {
+    return if (request.url.toUri().toString().contains("/admin")) {
+      null
+    } else {
+      span
+    }
+  }
+}
+```
+
+```java
+import io.sentry.ISpan;
+import io.sentry.okhttp.SentryOkHttpInterceptor;
+import okhttp3.Request;
+import okhttp3.Response;
+
+class CustomBeforeSpanCallback implements SentryOkHttpInterceptor.BeforeSpanCallback {
+  public ISpan execute(ISpan span, Request request, Response response) {
+    if (request.getUrl().toUri().toString().contains("/admin")) {
+      return null;
+    } else {
+      return span;
+    }
+  }
+}
+```
+
+The callback instance must be set on the `SentryOkHttpInterceptor` once you create your `OkHttpClient` instance.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .eventListener(SentryOkHttpEventListener())
+  .addInterceptor(SentryOkHttpInterceptor(CustomBeforeSpanCallback()))
+  .build()
+```
+
+```java
+import okhttp3.OkHttpClient;
+import io.sentry.okhttp.SentryOkHttpEventListener;
+import io.sentry.okhttp.SentryOkHttpInterceptor;
+
+private final OkHttpClient client = new OkHttpClient.Builder()
+  .eventListener(new SentryOkHttpEventListener())
+  .addInterceptor(new SentryOkHttpInterceptor(new CustomBeforeSpanCallback()))
+  .build();
+```
+
+## Using Multiple Event Listeners
+
+The event listener can propagate calls to another `EventListener` or `EventListener.Factory` that's set on the `SentryOkHttpEventListener` once you create your `OkHttpClient` instance.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .eventListener(SentryOkHttpEventListener(MyEventListener()))
+  .addInterceptor(SentryOkHttpInterceptor(CustomBeforeSpanCallback()))
+  .build()
+```
+
+```java
+import okhttp3.OkHttpClient;
+import io.sentry.okhttp.SentryOkHttpEventListener;
+import io.sentry.okhttp.SentryOkHttpInterceptor;
+
+private final OkHttpClient client = new OkHttpClient.Builder()
+  .eventListener(new SentryOkHttpEventListener(new MyEventListener()))
+  .addInterceptor(new SentryOkHttpInterceptor(new CustomBeforeSpanCallback()))
+  .build();
+```
+
+## HTTP Client Errors
+
+This feature automatically captures HTTP client errors (like bad response codes) as error events and reports them to Sentry. The error event will contain the `request` and `response` data, including the `url`, `status_code`, and so on.
+
+Starting with SDK version `7.0.0`, HTTP client error capturing is enabled by default. For prior versions of the SDK, this feature is opt-in and can be enabled by setting the `captureFailedRequests` option to `true`:
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .eventListener(SentryOkHttpEventListener())
+  .addInterceptor(SentryOkHttpInterceptor(captureFailedRequests = true))
+  .build()
+```
+
+By default, only HTTP client errors with a response code between `500` and `599` are captured as error events, but you can change this behavior by setting the `failedRequestStatusCodes` option:
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+import io.sentry.HttpStatusCodeRange
+
+private val client = OkHttpClient.Builder()
+  .eventListener(SentryOkHttpEventListener())
+  .addInterceptor(SentryOkHttpInterceptor(
+    captureFailedRequests = true,
+    failedRequestStatusCodes = listOf(HttpStatusCodeRange(400, 599))))
+  .build()
+```
+
+HTTP client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by setting the `failedRequestTargets` option with either a regular expression or a plain `String`. A plain string must contain at least one of the items from the list. Plain strings don't have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.okhttp.SentryOkHttpEventListener
+import io.sentry.okhttp.SentryOkHttpInterceptor
+import io.sentry.HttpStatusCodeRange
+
+private val client = OkHttpClient.Builder()
+  .eventListener(SentryOkHttpEventListener())
+  .addInterceptor(SentryOkHttpInterceptor(
+    captureFailedRequests = true,
+    failedRequestTargets = listOf("myapi.com")))
+  .build()
+```
+
+By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+</application>
+```
+
+Those events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/product/sentry-basics/search/searchable-properties/) documentation.
+
+### Customize or Drop the Error Event
+
+To customize or drop the error event, you need to do a [manual initialization](/platforms/android/configuration/manual-init/#manual-initialization) of the Sentry Android SDK.
+
+The captured error event can be customized or dropped with a `BeforeSendCallback`:
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import okhttp3.Request
+import okhttp3.Response
+import io.sentry.TypeCheckHint.OKHTTP_REQUEST
+import io.sentry.TypeCheckHint.OKHTTP_RESPONSE
+
+SentryAndroid.init(this) { options ->
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    val request = hint.getAs(OKHTTP_REQUEST, Request::class.java)
+    val response = hint.getAs(OKHTTP_RESPONSE, Response::class.java)
+
+    // customize or drop the event
+    event
+  }
+}
+```
+
+### Automatically Captured HTTP Client Errors and Manually Captured Errors
+
+When `captureFailedRequests` is enabled, some HTTP client libraries throw unchecked exceptions like `retrofit2.HttpException`. In this case, the error event is captured twice; once by the HTTP client library and once by the Sentry Android SDK:
+
+```kotlin
+import io.sentry.Sentry
+import retrofit2.HttpException
+
+try {
+  // If this API call returns 500, it will be captured as an error event by the `SentryOkHttpInterceptor`.
+  return GitHubAPI.service.listReposAsync("getsentry")
+} catch (e: HttpException) {
+  // Do not manually capture this exception to avoid duplicated error events.
+  // Sentry.captureException(e)
+}
+```
+
+We recommend you identify those errors and **not** capture them manually with the `Sentry.captureException` method.

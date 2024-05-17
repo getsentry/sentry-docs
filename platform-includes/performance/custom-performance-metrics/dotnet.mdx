@@ -1,0 +1,21 @@
+Adding custom metrics is supported in Sentry's .NET SDK, version `3.23.0` and above.
+
+The following example shows how to set custom metrics on a `transaction`, including how obtain the current `span` and get its `transaction`.
+If you already have the `transaction` or `span`, you can use it directly.
+
+```csharp
+var span = SentrySdk.GetSpan();  // or hub.GetSpan()
+if (span != null)
+{
+    var transaction = span.GetTransaction();
+
+    // Record amount of memory used
+    transaction.SetMeasurement("memory_used", 64, MeasurementUnit.Information.Megabyte);
+
+    // Record time it took to load user profile
+    transaction.SetMeasurement("user_profile_loading_time", 1.3, MeasurementUnit.Duration.Second);
+
+    // Record number of times the screen was loaded
+    transaction.SetMeasurement("screen_load_count", 4);
+}
+```

@@ -1,0 +1,37 @@
+---
+title: Migrating Version 6.x to 7.0
+sidebar_order: 996
+description: "Learn about migrating from version 6.x to 7.0.0"
+---
+
+## Migrating from `io.sentry:sentry` `6.x` to `io.sentry:sentry` `7.0.0`
+
+### Breaking Changes
+
+- The `sentry-android-okhttp` classes were deprecated in favor of `sentry-okhttp`, which is a pure Java module and can be used in non-Android projects. Check the [OkHttp Integration](/platforms/java/performance/instrumentation/okhttp) documentation to see how to use it.
+  - The `SentryOkHttpUtils` class was removed from the public API. If you were using it, consider filing a [feature request](https://github.com/getsentry/sentry-java/issues).
+- If you're using `sentry-kotlin-extensions`, it now requires `kotlinx-coroutines-core` version `1.6.1` or higher.
+- Changed the return type of `SentryApolloInterceptor.BeforeSpanCallback` from `ISpan` to `ISpan?`.
+- `Scope` now implements the `IScope` interface, therefore some methods like `ScopeCallback.run` accept `IScope` now.
+- Some `Sentry.startTransaction` overloads do not exist anymore, and instead, you can set old options by passing a `TransactionOptions` object in.
+
+For example:
+
+```kotlin
+// old
+val transaction = Sentry.startTransaction("name", "op", bindToScope = true)
+// new
+val transaction = Sentry.startTransaction("name", "op", TransactionOptions().apply { isBindToScope = true })
+```
+
+### Behavioral Changes
+
+- The SDK now captures failed HTTP and GraphQL (Apollo) requests by default.
+  - This can increase your event consumption and may affect your quota, because the SDK will report failed network requests as Sentry events if you're using the `sentry-okhttp` or `sentry-apollo-3` integrations by default. You can customize what errors you want/don't want to have reported for [OkHttp](/platforms/java/performance/instrumentation/okhttp/#http-client-errors) and [Apollo3](/platforms/java/performance/instrumentation/apollo3/#graphql-client-errors) respectively.
+- The SDK now sets `ip_address` to \{\{auto}} by default, even if sendDefaultPII is disabled.
+  - We recommend you instead use the "Prevent Storing of IP Addresses" option in the "Security & Privacy" project settings on [sentry.io](https://sentry.io/).
+- The `maxSpans` setting (defaults to 1000) is now enforced for nested child spans. This means a single transaction can have `maxSpans` number of children (nested or not) at most.
+
+### Sentry Self-hosted Compatibility
+
+- Starting with version `7.0.0` of the SDK, [Sentry's version >= v22.12.0](https://github.com/getsentry/self-hosted/releases) is required to properly ingest transactions with unfinished spans. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.

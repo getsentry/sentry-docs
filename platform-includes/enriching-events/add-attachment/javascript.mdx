@@ -1,0 +1,51 @@
+Attachments live on the `Scope` and will be sent with all events.
+
+```javascript
+// Add an attachment
+Sentry.getCurrentScope().addAttachment({
+  filename: "attachment.txt",
+  data: "Some content",
+});
+
+// Clear attachments
+Sentry.getCurrentScope().clearAttachments();
+```
+
+An attachment has the following fields:
+
+`filename`
+
+The filename is required and will be displayed in [sentry.io](https://sentry.io).
+
+`data`
+
+The content of the attachment is required and is either a `string` or `Uint8Array`.
+
+`contentType`
+
+The type of content stored in this attachment. Any [MIME
+type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be
+used; the default is `application/octet-stream`.
+
+## Add or Modify Attachments Before Sending
+
+It's possible to add, remove, or modify attachments before an event is sent by way of
+the <PlatformLink to="/configuration/options/#before-send"><PlatformIdentifier name="before-send" /></PlatformLink>
+hook or a global event processor.
+
+<SignInNote />
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  beforeSend: (event, hint) => {
+    hint.attachments = [{ filename: "screenshot.png", data: captureScreen() }];
+    return event;
+  },
+});
+
+Sentry.addEventProcessor((event, hint) => {
+  hint.attachments = [{ filename: "log.txt", data: readLogFile() }];
+  return event;
+});
+```

@@ -1,0 +1,53 @@
+---
+title: Expo
+description: "Upload source maps for native Expo releases and EAS Update."
+---
+
+Sentry's React Native SDK works out of the box with Expo applications. To see readable stack traces in the product, you must upload source maps to Sentry. This guide explains how to upload source maps for Expo applications.
+
+## Prerequisities
+
+- [Sign up for an account](https://sentry.io/signup/)
+- [Migrate from `sentry-expo` to `@sentry/react-native`](/platforms/react-native/migration/sentry-expo/)
+- [Set up Sentry React Native SDK](/platforms/react-native/manual-setup/expo/) version 5.16.0-alpha.4 or newer
+
+<OrgAuthTokenNote />
+
+<Include name="react-native-sourcemaps-expo-common-instructions.mdx" />
+
+## Automatic Upload for Release
+
+When the Sentry Expo Plugin `@sentry/react-native/expo` and the Sentry Metro Pugin are added to your application configuration, source maps for the native builds are uploaded automatically during EAS Builds and when building the native application release locally using `npx expo prebuild`.
+
+## Manual Upload for EAS Updates
+
+To upload source maps for EAS Updates and `npx expo export`, set up the Sentry Expo Plugin, the Sentry Metro plugin and execute the `sentry-expo-upload-sourcemaps` command.
+
+### Create Update
+
+To create an update for the application use the following command:
+
+```bash
+# npx expo export --dump-sourcemap
+eas update
+```
+
+### Upload Source Maps
+
+To upload source maps for all platforms use the following command:
+
+```bash
+SENTRY_PROJECT=___PROJECT_SLUG___ \
+SENTRY_ORG=___ORG_SLUG___ \
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ \
+npx sentry-expo-upload-sourcemaps dist
+```
+
+#### Notes
+
+- `dist` is the default output directory of `eas update`.
+- Uploaded source maps have no associated releases. This is expected as updates can apply to multiple releases.
+
+## Notes
+
+For a guide on how to manually upload source maps for Expo application releases, see the [Expo (Advanced)](/platforms/react-native/sourcemaps/uploading/expo-advanced/) source maps docs.

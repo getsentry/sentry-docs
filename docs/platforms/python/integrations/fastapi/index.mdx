@@ -1,0 +1,145 @@
+---
+title: FastAPI
+description: "Learn about using Sentry with FastAPI."
+---
+
+The FastAPI integration adds support for the [FastAPI Framework](https://fastapi.tiangolo.com/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `fastapi` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[fastapi]'
+```
+
+## Configure
+
+If you have the `fastapi` package in your dependencies, the FastAPI integration will be enabled automatically when you initialize the Sentry SDK.
+
+<SignInNote />
+
+```python
+from fastapi import FastAPI
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+)
+
+app = FastAPI()
+```
+
+## Verify
+
+```python
+from fastapi import FastAPI
+
+sentry_sdk.init(...)  # same as above
+
+app = FastAPI()
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
+```
+
+When you point your browser to [http://localhost:8000/sentry-debug](http://localhost:8000/sentry-debug) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behaviour
+
+### Issue Reporting
+
+The following information about your FastAPI project will be available to you on Sentry.io:
+
+- All exceptions leading to an Internal Server Error are captured and reported.
+- Request data such as URL, HTTP method, headers, form data, and JSON payloads is attached to all issues.
+- Sentry excludes raw bodies and multipart file uploads.
+- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+![Issues List](./img/fastapi-issues-list.png)
+
+### Monitor Performance
+
+The following parts of your FastAPI project are monitored:
+
+- Middleware stack
+- Middleware `send` and `receive` callbacks
+- Database queries
+- Redis commands
+
+![Performance details are shown as waterfall diagram](./img/fastapi-performance-details.png)
+
+<Note>
+
+The parameter `enable_tracing` needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
+
+</Note>
+
+## Options
+
+By adding `FastApiIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `FastApiIntegration` to change its behavior.
+Because FastAPI is based on the Starlette framework, both integrations, `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
+
+```python
+from sentry_sdk.integrations.starlette import StarletteIntegration
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_tracing=True,
+    integrations=[
+        StarletteIntegration(
+            transaction_style="endpoint"
+        ),
+        FastApiIntegration(
+            transaction_style="endpoint"
+        ),
+    ]
+)
+```
+
+You can pass the following keyword arguments to `StarletteIntegration()` and `FastApiIntegration()`:
+
+- `transaction_style`:
+
+  This option lets you influence how the transactions are named in Sentry. For example:
+
+  ```python
+  import sentry_sdk
+  from sentry_sdk.integrations.starlette import StarletteIntegration
+  from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+  sentry_sdk.init(
+      # ...
+      integrations=[
+          StarletteIntegration(
+              transaction_style="endpoint"
+          ),
+          FastApiIntegration(
+              transaction_style="endpoint"
+          ),
+      ],
+  )
+
+  app = FastAPI()
+
+  @app.get("/catalog/product/{product_id}")
+  async def product_detail(product_id):
+      return {...}
+  ```
+
+  In the above code, the transaction name will be:
+
+  - `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
+  - `"product_detail"` if you set `transaction_style="endpoint"`
+
+  The default is `"url"`.
+
+## Supported Versions
+
+- FastAPI: 0.79.0+
+- Python: 3.7+

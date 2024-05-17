@@ -1,0 +1,63 @@
+<SignInNote />
+
+```javascript {tabTitle: npm}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  integrations: [],
+});
+
+Sentry.addIntegration(Sentry.reportingObserverIntegration());
+```
+
+```html {tabTitle: Loader}
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      integrations: [],
+    });
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/reportingobserver.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'reportingobserver.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  // Later in your application
+  // By calling this inside of `Sentry.onLoad()`, we can be sure the SDK has been initialized at this point.
+  window.Sentry &&
+    Sentry.onLoad(function () {
+      Sentry.addIntegration(Sentry.reportingObserverIntegration());
+    });
+</script>
+```
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/reportingobserver.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'reportingobserver.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [],
+  });
+
+  Sentry.addIntegration(Sentry.reportingObserverIntegration());
+</script>
+```

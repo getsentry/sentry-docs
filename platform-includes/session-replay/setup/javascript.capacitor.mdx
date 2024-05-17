@@ -1,0 +1,50 @@
+Several options are supported and passable using the integration constructor. See the [configuration documentation](/platforms/javascript/guides/capacitor/session-replay/configuration/) for more details. To set up the integration, add the following to your Sentry initialization:
+
+<Note>
+  The minimal supported version of Sentry's SDK for Capacitor is 0.11.0.
+</Note>
+
+<SignInNote />
+
+```javascript {9,13,15-21}
+import * as Sentry from "@sentry/capacitor";
+import { Replay } from "@sentry/replay";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // This sets the sample rate at 10%. You may want this to be 100% while
+  // in development, then sample at a lower rate in production.
+  replaysSessionSampleRate: 0.1,
+
+  // If the entire session is not sampled, use the below sample rate to sample
+  // sessions when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+
+  integrations: [
+    replayIntegration({
+      // Additional SDK configuration goes in here, for example:
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+  ],
+});
+```
+
+Session replays with errors, will always be captured with the settings above.
+You can verify this by adding the following snippet anywhere in your code and running it:
+
+```javascript
+setTimeout(() => {
+  throw new Error("Sentry Test Error");
+});
+```
+
+### PII & Privacy Considerations
+Personally identifiable information (PII) and privacy are important considerations when enabling Session Replay. There are multiple ways in which Sentry helps you avoid collecting PII, including:
+- [Masking](/platforms/javascript/session-replay/privacy/#masking), which replaces the text content with something else -- the default behavior being to replace each character with a *.
+- Making [network request, response bodies, and headers](/platforms/javascript/session-replay/privacy/#network-request-and-response-bodies-and-headers) an opt-in feature, because the best way to avoid getting PII into Sentry is by not adding URLs of endpoints that may contain PII.
+
+While we have certain privacy considerations in place, Sentry's Session Replay allows you to set up the [privacy configurations](/platforms/javascript/session-replay/privacy/#privacy-configuration) that work best for your use case. For example, if you're working on a static website that's free of PII or other types of private data, you can opt out of the default text masking and image blocking settings.
+To learn more about Session Replay privacy, [read our docs.](/platforms/javascript/session-replay/privacy/)
+

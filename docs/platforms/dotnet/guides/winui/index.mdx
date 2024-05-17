@@ -1,0 +1,131 @@
+---
+title: WinUI
+description: "Learn about using Sentry's .NET SDK with the Windows UI Library"
+---
+
+Sentry's .NET SDK works with Windows UI Library applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+
+## Configuration (Without Trimming)
+
+If you don't have [Trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0) enabled when publishing your application then all you need to do is [initialize the SDK with `SentrySdk.Init`](/platforms/dotnet/) in the constructor of your application class (usually `App.xaml.cs`). Sentry's integration for WinUI will automatically capture any unhandled exceptions in your application and send these to Sentry.
+
+<Note>
+
+Do not initialize the SDK in the `OnLaunched` event of the application or the `Hub` will not be initialized correctly.
+
+</Note>
+
+<SignInNote />
+
+```csharp
+// Add these to your existing using statements.
+using Sentry;
+using Sentry.Protocol;
+
+sealed partial class App : Application
+{
+    public App()
+    {
+        // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
+        SentrySdk.Init(o =>
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+
+            // Enable Global Mode since this is a client app.
+            o.IsGlobalModeEnabled = true;
+
+            // TODO:Any other Sentry options you need go here.
+        });
+
+        // Initialize the app component, and hook the Suspending event.
+        this.InitializeComponent();
+
+        // Add any other code you may need last.
+    }
+}
+```
+
+## Configuration (With Trimming)
+
+If you have [Trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0) enabled when publishing your application then, in addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must also configure an UnhandledException handler in the constructor of your application class (usually `App.xaml.cs`).
+
+<Note>
+
+Do not initialize the SDK in the `OnLaunched` event of the application or the `Hub` will not be initialized correctly.
+
+</Note>
+
+<SignInNote />
+
+```csharp
+// Add these to your existing using statements.
+using Sentry;
+using Sentry.Protocol;
+using UnhandledExceptionEventArgs = Microsoft.UI.Xaml.UnhandledExceptionEventArgs;
+
+sealed partial class App : Application
+{
+    public App()
+    {
+        // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
+        SentrySdk.Init(o =>
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+
+            // Enable Global Mode since this is a client app.
+            o.IsGlobalModeEnabled = true;
+
+            // Disable Sentry's built in UnhandledException handler as this won't work with AOT compilation
+            o.DisableWinUiUnhandledExceptionIntegration();
+
+            // TODO:Any other Sentry options you need go here.
+        });
+
+        // Hook up the WinUI UnhandledException event before initializing the app component.
+        this.UnhandledException += OnUnhandledException;
+
+        // Initialize the app component, and hook the Suspending event.
+        this.InitializeComponent();
+
+        // Add any other code you may need last.
+    }
+
+    // Add this OnUnhandledException handler.
+
+    // Use this attribute to ensure all types of exceptions are handled.
+    [SecurityCritical]
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        // Get a reference to the exception, because the Exception property is cleared when accessed.
+        var exception = e.Exception;
+        if (exception != null)
+        {
+            // Tell Sentry this was an unhandled exception
+            exception.Data[Mechanism.HandledKey] = false;
+            exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
+
+            // Capture the exception
+            SentrySdk.CaptureException(exception);
+
+            // Flush the event immediately
+            SentrySdk.FlushAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
+        }
+    }
+}
+```

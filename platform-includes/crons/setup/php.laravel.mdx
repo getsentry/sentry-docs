@@ -1,0 +1,41 @@
+## Job Monitoring
+
+Use the Laravel SDK to monitor and notify you if your [scheduled task](https://laravel.com/docs/10.x/scheduling) is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
+
+To set up, add the `sentryMonitor()` macro to your scheduled tasks defined in your `app/Console/Kernel.php` file:
+
+```php {filename:app/Console/Kernel.php}
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('emails:send')
+        ->everyHour()
+        ->sentryMonitor(); // add this line
+}
+```
+
+Tasks that use Laravel's `between`, `unlessBetween`, `when` and `skip` methods are currently not supported.
+For the best results, we recommend using Laravel's [`cron`](https://laravel.com/docs/10.x/scheduling#schedule-frequency-options) method to define your schedule's frequency.
+
+## Configure a Job Monitor
+
+By default, the Laravel SDK will infer various parameters of your scheduled task.
+For greater control, we expose some optional parameters on the `sentryMonitor()` macro.
+
+```php {filename:app/Console/Kernel.php}
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('emails:send')
+        ->everyHour()
+        ->sentryMonitor(
+            // Specify the slug of the job monitor in case of duplicate commands or if the monitor was created in the UI
+            monitorSlug: null,
+            // Check-in margin in minutes
+            checkInMargin: 5,
+            // Max runtime in minutes
+            maxRuntime: 15,
+            // In case you want to configure the job monitor exclusively in the UI, you can turn off sending the monitor config with the check-in.
+            // Passing a monitor-slug is required in this case.
+            updateMonitorConfig: false,
+        )
+}
+```

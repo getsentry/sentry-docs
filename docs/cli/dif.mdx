@@ -1,0 +1,290 @@
+---
+title: "Debug Information Files"
+sidebar_order: 3
+description: "Debug information files allow Sentry to extract stack traces and provide more information about crash reports for most compiled platforms. Sentry's CLI can be used to validate and upload debug information files. "
+---
+
+Debug information files allow Sentry to extract stack traces and provide more
+information about crash reports for most compiled platforms. `sentry-cli` can be
+used to validate and upload debug information files. For more general
+information, refer to [_Debug Information Files_](/platforms/native/data-management/debug-files/).
+
+## Permissions
+
+The `sentry-cli` requires an [Organization Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) so that Debug Information Files can be uploaded.
+
+<Note>
+
+Source maps, while also being debug information files, are handled
+differently in Sentry. For more information see [Source Maps in sentry-cli](/product/cli/releases/#sentry-cli-sourcemaps).
+
+</Note>
+
+## Checking Files
+
+Not all debug information files can be used by Sentry. To see if they are usable
+or not, you can use the `sentry-cli debug-files check` command:
+
+```bash
+sentry-cli debug-files check mylibrary.so.debug
+
+Debug Info File Check
+  Type: elf debug companion
+  Contained debug identifiers:
+    > 924e148f-3bb7-06a0-74c1-36f42f08b40e (x86_64)
+  Contained debug information:
+    > symtab, debug
+  Usable: yes
+```
+
+This will report the debug identifiers of the debug information file as well as
+if it passes basic requirements for Sentry.
+
+## Finding Files
+
+If you see in Sentry's UI that debug information files are missing, but you are
+not sure how to locate them, you can use the `sentry-cli debug-files find` command
+to look for them:
+
+```bash
+sentry-cli debug-files find <identifier>
+```
+
+Additionally, `sentry-cli debug-files upload` can automatically search for files in a
+folder or ZIP archive.
+
+## Creating Source Bundles
+
+To get inline source context in stack traces in the Sentry UI, `sentry-cli` can
+scan debug files for references to source code files, resolve them in the local
+file system and bundle them up. The resulting source bundle is an archive
+containing all source files referenced by a specific debug information file.
+
+This is particularly useful when building and uploading debug information files
+are detached. In this case, a source bundle can be created when building and can
+be uploaded at any later point in time with `sentry-cli debug-files upload`.
+
+To create a source bundle, use the `debug-files bundle-sources` command on a list of
+debug information files:
+
+```bash
+# on the build machine:
+sentry-cli debug-files bundle-sources /path/to/files...
+
+# at any later time:
+sentry-cli debug-files upload --type sourcebundle /path/to/bundles...
+```
+
+To create multiple source bundles for all debug information files, use the
+command on each file individually.
+
+Alternatively, add the `--include-sources` option to the `debug-files upload` command,
+which generates source bundles on the fly during the upload. This requires that
+the upload is performed on the same machine as the application build:
+
+```bash
+sentry-cli debug-files upload --include-sources /path/to/files...
+```
+
+## Uploading Files
+
+Use the `sentry-cli debug-files upload` command to upload debug information files to
+Sentry. The command will recursively scan the provided folders or ZIP archives.
+Files that have already been upload are skipped automatically.
+
+We recommend uploading debug information files when publishing or releasing your
+application. Alternatively, files can be uploaded during the build process. See
+[_Debug Information Files_](/platforms/native/data-management/debug-files/)
+for more information.
+
+<Note>
+
+You need to specify the organization and project you are working with because
+debug information files work on projects. For more information about this refer
+to [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects).
+
+</Note>
+
+A basic debug file upload can be started with:
+
+```bash
+sentry-cli debug-files upload -o <org> -p <project> /path/to/files...
+
+> Found 2 debug information files
+> Prepared debug information files for upload
+> Uploaded 2 missing debug information files
+> File processing complete:
+
+  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
+  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
+```
+
+After the upload, Sentry analyzes the files to symbolicate future events. If you
+want to send a native crash to Sentry to verify correct operation, ensure that
+the debug files are listed in _Project Settings > Debug Files_. Alternatively,
+specify `--wait` in the CLI, which will block until server-side analysis is
+complete:
+
+```bash
+sentry-cli debug-files upload -o <org> -p <project> --wait /path/to/files...
+
+> Found 2 debug information files
+> Prepared debug information files for upload
+> Uploaded 2 missing debug information files
+> File processing complete:
+
+      OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
+      OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
+```
+
+### Upload Options
+
+The command's `--help` output lists and explains all options:
+
+```bash
+sentry-cli debug-files upload --help
+```
+
+### Symbol Maps
+
+If you are hiding debug symbols from Apple, the debug files will not contain
+many useful symbols. In that case, the sentry-cli upload will warn you that it
+needs BCSymbolMaps:
+
+```bash
+sentry-cli debug-files upload ...
+> Found 34 debug information files
+> Warning: Found 10 symbol files with hidden symbols (need BCSymbolMaps)
+```
+
+In this case, you need the BCSymbolMaps that match your files. Typically, these
+are generated by the Xcode build process. Supply the `--symbol-maps` parameter
+and point it to the folder containing the symbol maps:
+
+```bash
+sentry-cli debug-files upload --symbol-maps path/to/symbolmaps path/to/debug/symbols
+```
+
+### Breakpad Files
+
+In contrast to native debug files, Breakpad symbols discard a lot of information
+that is not required to process minidumps. Most notably, inline functions are
+not declared, such that Sentry is not able to display inline frames in stack
+traces.
+
+If possible, upload native debug files such as dSYMs, PDBs or ELF files instead
+of Breakpad symbols.
+
+## ProGuard Mapping Upload
+
+`sentry-cli` can be used to upload ProGuard files to Sentry; however, in most
+situations, you would use the [Gradle
+plugin](https://github.com/getsentry/sentry-android-gradle-plugin) to do that. Nevertheless, there may be
+situations where you would upload ProGuard files manually. For instance,
+when you only release some of the builds you're creating.
+
+<Note>
+
+You need to specify the organization and project you are working with
+because ProGuard files work on projects. For more information about this refer to
+[Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects).
+
+</Note>
+
+The `upload-proguard` command is the one to use for uploading ProGuard files. It
+takes the path to one or more ProGuard mapping files and will upload them to
+Sentry.
+
+```bash
+sentry-cli upload-proguard \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt
+```
+
+Since the Android Sentry SDK needs to know the UUID of the mapping file, you need
+to associate it with the upload. However, you first have to place that UUID into the `AndroidManifest.xml` file:
+
+```xml
+<application>
+  <meta-data android:name="io.sentry.proguard-uuid" android:value="A_VALID_UUID" />
+</application>
+```
+
+The same UUID needs to be used to upload the mapping file:
+
+```bash
+sentry-cli upload-proguard \
+    --uuid A_VALID_UUID \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt
+```
+
+Additionally, you can associate the proguard mapping file to a specific release:
+
+```bash
+# Additionally create an association to the release my.app.id@1.0.0+1
+sentry-cli upload-proguard \
+    --uuid A_VALID_UUID \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt \
+    --app-id my.app.id \
+    --version 1.0.0 \
+    --version-code 1
+```
+
+After the upload, Sentry deobfuscates future events.
+To make sure that it worked, you can check _Project Settings > ProGuard_ and see if the upload mapping files are listed.
+
+### Upload Options
+
+The command's `--help` output lists and explains all options:
+
+```bash
+sentry-cli upload-proguard --help
+```
+
+## JVM Source Bundles
+
+If you're using a build tool we don't support, or you prefer not to use Sentry's build tool plugins, you'll need to upload source bundle files manually.
+
+See the build tool plugins we currently support here:
+
+- [Android](/platforms/android/enhance-errors/source-context/)
+- [Java](/platforms/java/source-context/)
+
+You can also upload ProGuard files manually with `sentry-cli` for any JVM-based language like
+Java or Kotlin.
+
+<Note>
+
+Before you can upload source files, you must configure the Sentry CLI with the organization and project you are uploading bundle files for. See the CLI docs on
+[Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) to learn how to do this.
+
+</Note>
+
+### Creating a Source Bundle
+
+Run the `debug-files bundle-jvm` command to create a source bundle for a
+source directory.
+
+```bash
+sentry-cli debug-files bundle-jvm \
+    --output some/dir \
+    --debug-id A_VALID_UUID \
+    path/to/source/dir
+```
+
+You must provide the UUID of the source bundle for the Java/Android SDK to send.
+More details can be found in the [Source Context](/platforms/java/source-context/#manually-uploading-source-context) docs for Java and the [Source Context](/platforms/android/enhance-errors/source-context/#manually-uploading-source-context) docs for Android.
+
+### Uploading a Source Bundle
+
+The `debug-files upload` command allows you to upload the source
+bundle you created to Sentry.
+
+```bash
+sentry-cli debug-files upload \
+    --type jvm \
+    output/path/of/bundle-jvm/command
+```
+
+After the upload, Sentry will attach Source Context to future events.
+
+To make sure these steps worked, check **Project Settings > Debug Files** in Sentry.io to see if the uploaded source bundle files are listed.

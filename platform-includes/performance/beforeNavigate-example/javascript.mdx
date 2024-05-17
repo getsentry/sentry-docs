@@ -1,0 +1,22 @@
+One common use case is parameterizing transaction names. For both `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` value to generate a transaction name. Using `beforeStartSpan` lets you modify the transaction name to make it more generic, so that, for example, transactions named `GET /users/12312012` and `GET /users/11212012` can both be renamed to `GET /users/:userid`. That way they'll be grouped together.
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: [
+    Sentry.browserTracingIntegration({
+      beforeStartSpan: (context) => {
+        return {
+          ...context,
+          // You could use your UI's routing library to find the matching
+          // route template here. We don't have one right now, so do some basic
+          // parameter replacements.
+          name: location.pathname
+            .replace(/\/[a-f0-9]{32}/g, "/<hash>")
+            .replace(/\/\d+/g, "/<digits>"),
+        };
+      },
+    }),
+  ],
+});
+```

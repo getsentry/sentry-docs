@@ -1,0 +1,96 @@
+---
+title: Symfony
+sdk: sentry.php.symfony
+description: "Symfony is a set of reusable PHP components and a PHP framework to build web applications and services. Learn how to set it up with Sentry."
+---
+
+Symfony is supported via the [`sentry-symfony`](https://github.com/getsentry/sentry-symfony) package as a native bundle.
+
+## Install
+
+Install the `sentry/sentry-symfony` bundle:
+
+```bash
+composer require sentry/sentry-symfony
+```
+
+## Configure
+
+Add your DSN to your `.env` file:
+
+<SignInNote />
+
+```plain {filename:.env}
+###> sentry/sentry-symfony ###
+SENTRY_DSN="___PUBLIC_DSN___"
+###< sentry/sentry-symfony ###
+```
+
+### Monolog Integration
+
+If you are using [Monolog](https://github.com/Seldaek/monolog) to report events instead of the typical error listener approach, you need this additional configuration to log the errors correctly:
+
+{/* <!-- prettier-ignore --> */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
+    register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
+
+monolog:
+    handlers:
+        sentry:
+            type: sentry
+            level: !php/const Monolog\Logger::ERROR
+            hub_id: Sentry\State\HubInterface
+            fill_extra_context: true # Enables sending monolog context to Sentry
+```
+
+Additionally, you can register the `PsrLogMessageProcessor` to resolve PSR-3 placeholders in reported messages:
+
+{/* <!-- prettier-ignore --> */}
+```yaml {filename:config/packages/sentry.yaml}
+services:
+    Monolog\Processor\PsrLogMessageProcessor:
+        tags: { name: monolog.processor, handler: sentry }
+```
+
+## Test the implementation
+
+To test that both logger error and exception are correctly sent to sentry.io, you can create the following controller:
+
+```php
+<?php
+
+namespace App\Controller;
+
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
+
+class SentryTestController extends AbstractController
+{
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    /**
+     * @Route(name="sentry_test", path="/_sentry-test")
+     */
+    public function testLog()
+    {
+        // the following code will test if monolog integration logs to sentry
+        $this->logger->error('My custom logged error.', ['some' => 'Context Data']);
+
+        // the following code will test if an uncaught exception logs to sentry
+        throw new \RuntimeException('Example exception.');
+    }
+}
+```
+
+After you visit the `/_sentry-test` page, you can view and resolve the recorded error by logging into [sentry.io](https://sentry.io) and opening your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.

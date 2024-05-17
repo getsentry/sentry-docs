@@ -1,0 +1,87 @@
+---
+title: Hermes
+sidebar_order: 30
+description: "Learn about using the Hermes engine with our React Native SDK."
+---
+
+Sentry React Native SDK supports `Hermes` engine out of the box.
+
+## Source Maps
+
+Read our React Native [Source Maps](/platforms/react-native/sourcemaps/) documentation to learn how to upload source maps for your app.
+
+## Troubleshooting
+
+This section describes common issues when using Hermes and how to resolve them.
+
+### Multiple ways of Enabling Source Maps in Xcode
+
+If you use `EXTRA_PACKAGER_ARGS`, you only need the packager source map. This is the default behavior if you used [`@sentry/wizard`](/platforms/react-native/#install). If you use [`SOURCEMAP_FILE`](https://reactnative.dev/docs/sourcemaps#enable-source-maps-on-ios), the combined Hermes source map is necessary.
+
+### Check RN Tooling Steps
+
+Our React Native [Source Maps](/platforms/react-native/sourcemaps/) documentation is based on [`react-native-xcode.sh`](https://github.com/facebook/react-native/blob/0.71-stable/scripts/react-native-xcode.sh) for iOS and on [`BundleHermesCTask.kt`](https://github.com/facebook/react-native/blob/0.71-stable/packages/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/tasks/BundleHermesCTask.kt) for Android. If you are having issues with the manually generated artifacts check the steps of your React Native tooling using the previous links.
+
+<Note>
+
+React Native [`0.70`](https://github.com/facebook/react-native/blob/e3a5fbe72f966b27b967192317d7072db52d1c8c/scripts/react-native-xcode.sh#L141) and CodePush Update minifies the packager bundle by default.
+
+</Note>
+
+<Note>
+
+[`BundleHermesCTask.kt`](https://github.com/facebook/react-native/blob/0.71-stable/packages/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/tasks/BundleHermesCTask.kt) is only available from version `0.71` on. For previous versions, use [`react.gradle`](https://github.com/facebook/react-native/blob/0.70-stable/react.gradle).
+
+</Note>
+
+For more details see [this issue](https://github.com/facebook/react-native/issues/34043) in the React Native repository.
+
+### Don't Combine Hermes and RAM Bundles
+
+If you are using Hermes, you should not have the [RAM bundles](/platforms/react-native/manual-setup/ram-bundles/) feature enabled. In Hermes, when loading the bytecode, `mmap` ensures that the entire file is not loaded. Using Hermes with RAM bundles might lead to issues, because those mechanisms are not compatible with each other.
+
+### Minimum Required Versions
+
+Sentry added support for `react-native` builds that use the `hermes` engine, which required changes to the Sentry SDK, `sentry-cli` as well as Sentry itself.
+
+Sentry customers using the SaaS product ([sentry.io](https://sentry.io/)) will need to update the SDK and `sentry-cli`.
+The minimum required version for the SDK is `@sentry/react-native` [SDK version `1.3.3`](https://github.com/getsentry/sentry-react-native/releases/tag/1.3.3),
+and `@sentry/cli` [version `1.51.1`](https://github.com/getsentry/sentry-cli/releases/tag/1.51.1).
+
+For self-hosted Sentry users, the minimum version required is [f07352b](https://hub.docker.com/r/getsentry/sentry/tags?page=1&name=f07352b).
+
+Once you have the minimum version of the SDK, Sentry provides the standard integration as described in the [React Native Sentry documentation](/platforms/react-native/).
+
+### Upload Using Sentry Fastlane Plugin
+
+To upload generated sourcemaps using Fastlane, use the `sentry_upload_sourcemap` action. See how to install Sentry Fastlane Plugin [here](https://github.com/getsentry/sentry-fastlane-plugin).
+
+<OrgAuthTokenNote />
+
+```ruby {tabTitle:Android}
+sentry_upload_sourcemap(
+  auth_token: '___ORG_AUTH_TOKEN___',
+  org_slug: '___ORG_SLUG___',
+  project_slug: '___PROJECT_SLUG___',
+  version: '...',
+  app_identifier: '...', # bundle_identifer of your app
+  build: '...', # optional build number of your app
+  dist: '...', # optional distribution of the release usually the buildnumber
+  sourcemap: ['index.android.bundle', 'index.android.bundle.map'],
+  rewrite: true
+)
+```
+
+```ruby {tabTitle:iOS}
+sentry_upload_sourcemap(
+  auth_token: '___ORG_AUTH_TOKEN___',
+  org_slug: '___ORG_SLUG___',
+  project_slug: '___PROJECT_SLUG___',
+  version: '...',
+  app_identifier: '...', # bundle_identifer of your app
+  build: '...', # optional build number of your app
+  dist: '...', # optional distribution of the release usually the buildnumber
+  sourcemap: ['main.jsbundle', 'main.jsbundle.map'],
+  rewrite: true
+)
+```

@@ -1,0 +1,14 @@
+```dart
+import 'package:sentry/sentry.dart';
+
+FutureOr<SentryEvent?> beforeSend(SentryEvent event, Hint hint) async {
+  if (event.throwable is DatabaseException) {
+    event = event.copyWith(fingerprint: ['database-connection-error']);
+  }
+  return event;
+}
+
+Future<void> main() async {
+  await Sentry.init((options) => options.beforeSend = beforeSend);
+}
+```

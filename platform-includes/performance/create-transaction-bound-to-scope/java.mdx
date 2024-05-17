@@ -1,0 +1,82 @@
+## Create Transaction Bound to The Current Scope
+
+Our SDK can bind a transaction to the scope making it accessible to every method running within this scope by calling `Sentry#startTransaction` method with `bindToScope` parameter to `true`.
+
+`bindToScope` additionally ensures that your new transaction replaces any one that may be already started. This is useful if you want custom instrumentation to co-exist with auto-instrumented transactions.
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
+
+```java
+import java.io.FileNotFoundException;
+
+import io.sentry.ISpan;
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+import io.sentry.TransactionOptions;
+
+// A good name for the transaction is key, to help identify what this is about
+TransactionOptions txOptions = new TransactionOptions();
+txOptions.setBindToScope(true);
+ITransaction transaction = Sentry.startTransaction("processOrderBatch()", "task", txOptions);
+try {
+  processOrderBatch();
+} catch (Exception e) {
+  transaction.setThrowable(e);
+  transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+  throw e;
+} finally {
+  transaction.finish();
+}
+
+void processOrderBatch() {
+  ISpan span = Sentry.getSpan();
+  if (span == null) {
+    span = Sentry.startTransaction("processOrderBatch()", "task");
+  }
+  ISpan innerSpan = span.startChild("task", "operation");
+  try {
+    // omitted code
+  } catch (FileNotFoundException e) {
+    innerSpan.setThrowable(e);
+    innerSpan.setStatus(SpanStatus.NOT_FOUND);
+    throw e;
+  } finally {
+    innerSpan.finish();
+  }
+}
+```
+
+```kotlin
+import java.io.FileNotFoundException
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+import io.sentry.TransactionOptions
+
+val transaction = Sentry.startTransaction("processOrderBatch()", "task", TransactionOptions().apply { isBindToScope = true })
+try {
+  processOrderBatch()
+} catch (e: Exception) {
+  transaction.throwable = e
+  transaction.status = SpanStatus.INTERNAL_ERROR
+  throw e
+} finally {
+  transaction.finish()
+}
+
+fun processOrderBatch(item: Item) {
+  val span = Sentry.getSpan() ?: Sentry.startTransaction("processOrderBatch()", "task")
+  val innerSpan = it.startChild("task", "operation")
+
+  try {
+    // omitted code
+  } catch (e: FileNotFoundException) {
+    innerSpan.throwable = e
+    innerSpan.status = SpanStatus.NOT_FOUND
+    throw e
+  } finally {
+    innerSpan.finish()
+  }
+}
+```

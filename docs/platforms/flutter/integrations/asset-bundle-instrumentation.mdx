@@ -1,0 +1,79 @@
+---
+title: Asset Bundle Instrumentation
+description: "Learn more about the Sentry App Start Instrumentation for the Flutter SDK."
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart.flutter
+categories:
+  - mobile
+---
+
+[AssetBundle](https://api.flutter.dev/flutter/services/AssetBundle-class.html) instrumentation provides insight into how long your app takes to load its assets, such as files.
+
+## Instrumentation Behaviour
+
+The instrumentation starts a span from an active transaction that's bound to the scope of the following calls:
+
+- `load` and `loadString` - The SDK sets the span `operation` to `file.read`.
+- `loadStructuredData` - The SDK sets the span `operation` to `serialize`.
+
+## Prerequisites
+
+Before starting, ensure:
+
+1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/flutter/#configure).
+2. Performance Monitoring is set up. Learn more [here](/platforms/flutter/performance/).
+
+## Configure
+
+Wrap the `runApp` method with a `DefaultAssetBundle` and `SentryAssetBundle`.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) => options.dsn = '___PUBLIC_DSN___',
+      appRunner: () => runApp(
+        DefaultAssetBundle(
+          bundle: SentryAssetBundle(),
+          child: MyApp(),
+        ),
+    ),
+  );
+}
+```
+
+## Verify
+
+### 1. Execute the Code
+
+```dart
+final transaction = Sentry.startTransaction(
+  'asset-bundle-transaction',
+  'load',
+  bindToScope: true,
+);
+
+final text = await DefaultAssetBundle.of(context).loadString('assets/lorem-ipsum.txt');
+
+await transaction.finish(status: const SpanStatus.ok());
+```
+
+### 2. View the Transaction on Sentry.io
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project.
+Clicking **Performance** will open a page with transactions, where you can select the just recorded transaction with the name `asset-bundle-transaction`.
+
+## Additional Configuration
+
+### Disabling the `loadStructuredData` Feature
+
+The `loadStructuredData` is an opt-out feature. The following example shows how to disable it:
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+SentryAssetBundle(enableStructuredDataTracing: false)
+```

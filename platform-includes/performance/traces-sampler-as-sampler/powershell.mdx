@@ -1,0 +1,44 @@
+```powershell
+Start-Sentry {
+    // Add this to the SDK initialization callback
+    // To set a uniform sample rate
+    $_.TracesSampleRate = 1.0
+
+    // OR: Determine traces sample rate based on the sampling context
+    $_.TracesSampler = [System.Func[Sentry.TransactionSamplingContext, System.Nullable`1[System.Double]]] {
+        param([Sentry.TransactionSamplingContext]$context)
+
+        # If this is the continuation of a trace, just use that decision (rate controlled by the caller)
+        if ($null -ne $context.TransactionContext.IsParentSampled)
+        {
+            if ($context.TransactionContext.IsParentSampled.Value)
+            {
+                return 1.0
+            }
+            else
+            {
+                return 0.0
+            }
+        }
+
+        # Otherwise, sample based on a custom sampling context you set with your transactions.
+        switch ( $context.CustomSamplingContext['__HttpPath'] )
+        {
+            # These are important - take a big sample
+            '/payment' { 0.5 }
+
+            # Search is less important and happen much more frequently - only take 1%
+            '/search' { 0.01 }
+
+            # The health check endpoint is just noise - drop all transactions
+            '/health' { 0.0 }
+
+            # Default sample rate
+            default { 0.1 }
+
+            # Or return null to fallback to options.TracesSampleRate (1.0 in this case)
+            # default { $null }
+        }
+    }
+}
+```

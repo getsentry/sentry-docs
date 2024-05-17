@@ -1,0 +1,103 @@
+---
+title: App Hangs
+sidebar_order: 11
+description: "Learn about how to add app hang detection reporting."
+---
+
+<Note>
+
+We recommend disabling this feature for Widgets and Live Activities because it might detect false positives.
+
+</Note>
+
+This integration tracks app hangs. This feature is available on iOS, tvOS, and macOS.
+
+Trying to use an unresponsive app is extremely frustrating for users. There are many reasons why an app may become unresponsive, such as long- running code, infinite loop bugs, and so on. With app hang tracking you can detect and fix them.
+
+The app hang detection integration has a default timeout of two (2) seconds, but with version 7.24.0, we’ve improved the algorithm to detect app hangs sooner, decreasing from `appHangTimeoutInterval * 2` to `appHangTimeoutInterval * 1.2`.
+
+To detect app hangs, the SDK launches a dedicated watchdog thread called `io.sentry.AppHangTracker`, which periodically enqueues work items on the main thread, and checks if the main thread is executing them within the timeout. If the app is unresponsive for two seconds or more, it creates an error event. This thread is also used by <PlatformLink to="/configuration/watchdog-terminations/">Watchdog Terminations</PlatformLink> and will be launched even if `enableAppHangTracking` is disabled.
+
+Recording the stack trace precisely when the app hang occurs works reliably if the app is completely stuck, but if the main thread is extremely busy with different code spots, the app hang detection might fire a bit too late. If this happens, the SDK may record a stack trace that isn’t 100% related to the code, causing the app to hang. Each event has a stack trace of all running threads so you can easily detect where the problem occurred.
+
+The SDK reports an app hang immediately, but doesn’t report the exact duration because the [watchdog](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) could kill the app anytime if it's blocking the main thread.
+
+Because the app hang detection integration uses SentryCrashIntegration to capture the stack trace when creating app hang events, SentryCrashIntegration has to be enabled for the integration to work.
+
+You can filter and modify app hang events in `beforeSend` by checking the event exception type:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSend = { event in
+        if (event.exceptions?.first?.type == "App Hanging") {
+          // modify event here or return nil to discard the event
+        }
+        return event
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
+        if ([self.exceptions.count == 1 && event.exceptions.firstObject.type isEqualToString:@"App Hanging"]) {
+          // modify event here or return nil to discard the event
+        }
+        return event;
+    }
+}];
+```
+
+Starting with version 8.0.0, this feature has been enabled by default. To disable it:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableAppHangTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAppHangTracking = NO;
+}];
+
+```
+
+You can change the timeout by changing the `appHangTimeoutInterval` option:
+
+<SignInNote />
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.appHangTimeoutInterval = 1
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.appHangTimeoutInterval = 1;
+}];
+
+```
