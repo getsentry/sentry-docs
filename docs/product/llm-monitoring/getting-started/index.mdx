@@ -1,20 +1,23 @@
 ---
 title: Set Up
 sidebar_order: 0
-description: "Learn how to set up Sentry AI Monitoring"
+description: "Learn how to set up Sentry LLM Monitoring"
 ---
 
-Sentry AI Monitoring is easiest to use with the Python SDK and an official integration like OpenAI.
+Sentry LLM Monitoring is easiest to use with the Python SDK and an official integration like OpenAI.
 
-![AI Monitoring User Interface](../img/pipelines-view.png)
+![LLM Monitoring User Interface](../img/pipelines-view.png)
 
 
-To start sending AI data to Sentry, make sure you've created a Sentry project for your AI-enabled repository and follow one of the guides below:
+To start sending LLM data to Sentry, make sure you've created a Sentry project for your AI-enabled repository and follow one of the guides below:
 
 ## Official AI Integrations
 
 - [OpenAI](/platforms/python/integrations/openai/)
 - [Langchain](/platforms/python/integrations/langchain/)
+- [Anthropic](/platforms/python/integrations/anthropic/)
+- [Huggingface Hub](/platforms/python/integrations/huggingface_hub/)
+- [Cohere](/platforms/python/integrations/cohere/)
 
 <Alert level="note" title="Don't see your platform?">
 
@@ -25,14 +28,14 @@ We'll be adding AI integrations continuously. You can also instrument AI manuall
 
 ## Pipelines and LLMs
 
-The Sentry AI Monitoring feature relies on the fact that you have an orchestrator (like langchain) creating pipelines of one or more AI models (such as gpt-4). In the AI Monitoring dashboard, we show you a table of the AI pipelines and pull the token usage from your AI models.
+The Sentry LLM Monitoring feature relies on the fact that you have an orchestrator (like LangChain) creating pipelines of one or more LLMs (such as gpt-4). In the LLM Monitoring dashboard, we show you a table of the AI pipelines and pull the token usage from your LLMs.
 
-If you're using OpenAI without langchain, you'll need to manually create pipelines with the `@ai_track` annotation. If you're using langchain without OpenAI, you might have to manually record token usage with `record_token_usage()`. Both manual helpers are documented below.
+If you're using a provider like OpenAI without an orchestrator like LangChain, you'll need to manually create pipelines with the `@ai_track` annotation. If you're using a non-supported LLM provider and want to record token usage, use the `record_token_usage()` helper function. Both manual helpers are documented below.
 
 ### Python SDK Decorators
 
 The [Python SDK](/platforms/python) includes an `@ai_track` decorator which will mark functions as AI-related and
-cause them to show up in the AI Monitoring dashboard.
+cause them to show up in the LLM Monitoring dashboard.
 
 ```python
 
@@ -42,7 +45,7 @@ import sentry_sdk
 import requests
 
 @ai_track(description="AI tool")
-def some_workload_function():
+def some_workload_function(**kwargs):
     """
     This function is an example of calling arbitrary code with @ai_track so that it shows up in the Sentry trace
     """
@@ -63,10 +66,11 @@ def some_llm_call():
 def some_pipeline():
     """
     The topmost level function with @ai_track gets the operation "ai.pipeline", which makes it show up
-    in the table of AI pipelines in the Sentry AI Monitoring dashboard.
+    in the table of AI pipelines in the Sentry LLM Monitoring dashboard.
     """
     client = OpenAI()
-    some_workload_function()
+    # Data can be passed to the @ai_track annotation to include metadata
+    some_workload_function(sentry_tags={"username": "my_user"}, sentry_data={"data": "some longer data that provides context"})
     some_llm_call()
     response = (
         client.chat.completions.create(
