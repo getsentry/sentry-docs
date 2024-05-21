@@ -1,6 +1,6 @@
 ---
-title: Queues Instrumentation
-description: "Learn how to make sure your messaging queues are performing as expected."
+title: Instrument Queues
+description: "Learn how to manually instrument your code to use Sentry's Queues module"
 sidebar_order: 20
 ---
 
@@ -64,7 +64,7 @@ To start capturing performance metrics, use the `Sentry.startSpan` function to w
 | `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
 | `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
 
-Use `Sentry.continueTrace` to connect your consumer spans to their associated producer spans:
+Use `Sentry.continueTrace` to connect your consumer spans to their associated producer spans, and `setStatus` to mark the trace of your message as success or failed.
 
 
 <Note>
@@ -84,7 +84,7 @@ Sentry.continueTrace(
                 ...transactionContext,
                 name: 'queue_consumer_transaction',
             },
-            () => {
+            (parent) => {
                 Sentry.startSpan({
                     ...transactionContext,
                     name: 'queue_consumer',
@@ -98,6 +98,7 @@ Sentry.continueTrace(
                     }     
                 }, (span) => {
                     ... // Continue message processing
+                    parent.setStatus({code: 1, message: 'ok'});
                 });
             },
         ),
