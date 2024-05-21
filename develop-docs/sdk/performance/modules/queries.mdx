@@ -2,4 +2,70 @@
 title: 'Queries Module'
 ---
 
-to be defined ...
+The SDK should auto-instrument all database queries, and each query to the database should result in a span. This includes queries made manually, or via ORM. The Queries module supports SQL databases like PostgreSQL and MySQL. It does not support databases like Neo4j, ClickHouse, or MongoDB. Regardless of that, the SDK should instrument database queries as fully and correctly as possible to ensure correct behavior and future compatibility.
+
+## Span Attributes
+
+| Attribute | Description | Notes |
+|:--|:--|:--|
+| `op` | Prefixed with `"db"` (e.g., `"db"`, `"db.query"`, `"db.sql.query"`) [^1] | Required |
+| `description` | The full scrubbed query (e.g., `SELECT * FROM users where id = ?`) | Required, see  [Query Scrubbing](#query-scrubbing) for details |
+| `data` | A key-value mapping of span attributes. (e.g., `{"db.system": "postgresql", "db.name": "prod-2"}`) | Required for full experience. See [Span Data](#span-data) for details |
+
+### Query Scrubbing
+
+The query description should be scrubbed of any user-supplied values.
+
+e.g., the query
+
+```sql
+SELECT * FROM users WHERE id = 17;
+```
+should be scrubbed to:
+
+```sql
+SELECT * FROM users WHERE id = ?;
+```
+
+The `?` parameter is a placeholder in the query. The SDK must scrub out all values and replace them with a placeholder. Supported placeholder values are `%s`, `?`, `:c0` (e.g., `:c0`, `:c1`) and `$1` (e.g., `$1`, `$2`).
+
+### Span Data
+
+For full support, each database span should have a `data` attribute. `data` is itself a key-value lookup of attributes. Refer to [Database Span Data Conventions](/sdk/performance/span-data-conventions/#database) for a full list of attributes that database spans should have. We recommend that the SDK provide _all_ of those attributes for every span. However, the _minimal_ requirement is that the SDK provides the `db.system` attribute.
+
+## Instrumentation Example
+
+Consider a hypothetical Python ORM:
+
+```python
+from magicORM import ORM
+from .models import User, Product
+
+ORM.connect_postgres(host="127.0.0.1", port="7777", database="production")
+return User.find(17).find_related(Product)
+```
+
+Assume it makes this SQL query:
+
+```sql
+SELECT * FROM projects
+WHERE projects_user = 17;
+```
+
+This should result in the following span:
+
+```json
+{
+  "description": "SELECT * FROM projects WHERE projects_user = 17",
+  "op": "db",
+  "data": {
+    "db.system": "postgresql",
+    "db.operation": "SELECT",
+    "db.name": "production",
+    "server.address": "127.0.0.1",
+    "server.port": "7777"
+  }
+}
+```
+
+[^1]: Some operations are accepted by Sentry, but not indexed by the Queries module. This includes `db.sql.room`, `db.redis`, and some others. Do not attempt to trick the system by providing an incorrect span operation!
