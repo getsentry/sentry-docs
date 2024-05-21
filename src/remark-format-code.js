@@ -44,7 +44,6 @@ async function formatCode(node) {
     // get rid of the trailing newline
     node.value = formattedCode.trimEnd();
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log(`⚠️  Error formatting code block\n${e.message}`);
+    // noop - logging here would spam the build logs to a degree of unusability
   }
 }

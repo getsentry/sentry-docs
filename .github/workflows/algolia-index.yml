@@ -1,0 +1,37 @@
+name: Update Algolia index
+on:
+  push:
+    branches:
+      - master
+jobs:
+  index:
+    name: Update Algolia index
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: getsentry/action-setup-volta@c52be2ea13cfdc084edb806e81958c13e445941e # v1.2.0
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      - run: yarn install --frozen-lockfile
+        if: steps.cache.outputs.cache-hit != 'true'
+      # Remove the changelog directory to avoid a build error due to missing `DATABASE_URL`
+      # and save some build time
+      - run: rm -r app/changelog/feed.xml
+      - run: yarn build
+      # bun seems to be the most straightforward way to run a TypeScript script
+      # without introducing another dependency like ts-node or tsx for everyone else
+      - run: bun ./scripts/algolia.ts
+        env:
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+          ALGOLIA_INDEX_PREFIX: ${{ secrets.ALGOLIA_INDEX_PREFIX }}
+          NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
+          NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}

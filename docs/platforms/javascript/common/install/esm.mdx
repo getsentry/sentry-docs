@@ -1,0 +1,43 @@
+---
+title: ESM (MJS)
+sidebar_order: 10
+description: "Learn about running Sentry in an ESM application."
+supported:
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.koa
+---
+
+<Alert>
+  Are you unsure if you should use this installation method? Review our
+  [installation methods](../).
+</Alert>
+
+When running your application in ESM mode, you can't use `require()` to load modules. Instead, you have to use the `--import` command line options to load a module before the application starts.
+
+You need to create a file named `instrument.mjs` that imports and initializes Sentry:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+// Ensure to call this before importing any other modules!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
+
+Adjust the Node.js call for your application to use the [--import](https://nodejs.org/api/cli.html#--importmodule) parameter and point it at `instrument.js`, which contains your `Sentry.init()` code:
+
+```bash
+# Note: This is only available for Node v18.19.0 onwards.
+node --import ./instrument.mjs app.mjs
+```
+
+We do not support ESM in Node versions before 18.19.0.
