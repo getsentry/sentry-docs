@@ -186,6 +186,30 @@ The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds
 export SENTRY_DIST=$CI_BUILD_NUMBER
 ```
 
+## Unknown receiver 'SwiftDescriptor'
+
+If you see an error like `Unknown receiver 'SwiftDescriptor'` during the application build process, it's due to a conflict of `APPLICATION_EXTENSION_API_ONLY`. The Sentry cocoapod is by default configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script changed it. To fix the error add the following to the `Podfile`.
+
+```ruby {filename:ios/Podfile}
+post_install do |installer|
+  react_native_post_install(
+    installer,
+    config[:reactNativePath],
+    :mac_catalyst_enabled => false,
+  )
+
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if target.name == 'Sentry'
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+      else
+        # configuration for other targets
+      end
+    end
+  end
+end
+```
+
 ## Set Up SDK v4 With React Native 0.69 or Higher
 
 To install an older version of the `@sentry/react-native`, you'll need to specify it in the install command. Similarly, you'll need to use a compatible `@sentry/wizard`, as shown in the script below.

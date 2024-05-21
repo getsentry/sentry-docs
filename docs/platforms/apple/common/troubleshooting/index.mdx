@@ -50,6 +50,24 @@ Check your app for any procedure that cleans the cache of your app during runtim
 
 Since Xcode 14 App Store Connect doesn't make debug symbols available for download anymore, see [Xcode Release Notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations). Please use a different way of uploading the debug symbols by following the [documentation](/platforms/apple/dsym/).
 
+## Unknown receiver 'SwiftDescriptor'
+
+If you see an error like `Unknown receiver 'SwiftDescriptor'` during the application build process, it's due to a conflict of `APPLICATION_EXTENSION_API_ONLY`. The Sentry cocoapod is by default configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script changed it. To fix the error add the following to the `Podfile`.
+
+```ruby {filename:ios/Podfile}
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if target.name == 'Sentry'
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+      else
+        # configuration for other targets
+      end
+    end
+  end
+end
+```
+
 ## Crash in `SentrySubClassFinder.actOnSubclassesOfViewControllerInImage`
 
 Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControllerInImage` with a stacktrace similar to the one below:
