@@ -3,7 +3,7 @@ title: Track Angular Components
 description: "Learn how Sentry's Angular SDK allows you to monitor the rendering performance of your application and its components."
 ---
 
-Sentry's Angular SDK offers a feature to monitor the performance of your Angular components: component tracking. Enabling this feature provides you with spans in your transactions that show the initialization and update cycles of your Angular components. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
+Sentry's Angular SDK offers a feature to monitor the performance of your Angular components: Component Tracking. Enabling this feature provides you with spans in your transactions that show the initialization and update cycles of your Angular components. This allows you to drill down into how your components are behaving so you can identify slow initializations or frequent updates, which might have an impact on your app's performance.
 
 <Alert>
 
@@ -13,25 +13,14 @@ To set up component tracking, you need to configure performance monitoring. For 
 
 To track your components as part of your transactions, use any (or a combination) of the following options.
 
-## Using `TraceDirective`
+## Using the `trace` directive
 
-`TraceDirective` tracks a duration between the `OnInit` and `AfterViewInit` lifecycle hooks in your component template. It adds spans called **`ui.angular.init`** to the currently active transaction that allows you to track specific individual instances of your components. If you want to track all instances instead, use [`TraceClassDecorator`](#using-traceclassdecorator).
+Our `TraceDirective` tracks a duration between the `OnInit` and `AfterViewInit` lifecycle hooks in your component template. It adds spans called **`ui.angular.init`** to the currently active transaction that allows you to track specific individual instances of your components. If you want to track all instances instead, use [`TraceClass`](#using-traceclass).
 
 Import `TraceModule` either globally in your application's `app.module.ts` file or in the module(s) in which
 you want to track your components:
 
-```typescript {filename:app.module.ts} {tabTitle:Angular 12+}
-import * as Sentry from "@sentry/angular-ivy";
-
-@NgModule({
-  // ...
-  imports: [Sentry.TraceModule],
-  // ...
-})
-export class AppModule {}
-```
-
-```typescript {filename:app.module.ts} {tabTitle:Angular 10/11}
+```typescript {filename:app.module.ts} {1,5}
 import * as Sentry from "@sentry/angular";
 
 @NgModule({
@@ -44,44 +33,19 @@ export class AppModule {}
 
 Then, in your component's template, add the directive to all components you want to track. Remember to give the `trace` attribute a name, which will be shown in the span's description:
 
-```html {filename:app.component.ts}
-<app-header [trace]="'header'"></app-header>
-<articles-list [trace]="'articles-list'"></articles-list>
-<app-footer [trace]="'footer'"></app-footer>
+```html {filename:app.component.(ts|html)}
+<app-header trace="header"></app-header>
+<articles-list trace="articles-list"></articles-list>
+<app-footer trace="footer"></app-footer>
 ```
 
-<Alert level="info" title="Compatibility">
+## Using `TraceClass`
 
-If you're using version 6 of the Angular SDK, using `TraceDirective` or `TraceModule` causes a
-compiler error at application compile time of your Angular application. This is a [known issue](https://github.com/getsentry/sentry-javascript/issues/3282)
-of our Angular SDK v6 and it was [fixed](https://github.com/getsentry/sentry-javascript/issues/4644)
-in version 7. We recommend upgrading to the latest Angular SDK version.
-Otherwise, please use the other options (`TraceClassDecorator` and `TraceMethodDecorator`)
-below to track your Angular components.
+The `TraceClass` decorator tracks the duration between the `OnInit` and `AfterViewInit` lifecycle hooks in components. It adds spans called **`ui.angular.init`** to the currently active transaction. In contrast to the [`trace` directive](#using-the-trace-directive), `TraceClassDecorator` tracks all instances of the component(s) you add it to, creating spans for each component instance.
 
-</Alert>
+Just add `TraceClass` decorator with a component name to the components you want to track:
 
-## Using `TraceClassDecorator`
-
-`TraceClassDecorator` tracks the duration between the `OnInit` and `AfterViewInit` lifecycle hooks in components. It adds spans called **`ui.angular.init`** to the currently active transaction. In contrast to [`TraceDirective`](#using-tracedirective), `TraceClassDecorator` tracks all instances of the component(s) you add it to, creating spans for each component instance.
-
-Just add `TraceClassDecorator` to the components you want to track:
-
-```javascript {filename:header.component.ts} {tabTitle: Angular 12+}
-import { Component } from "@angular/core";
-import * as Sentry from "@sentry/angular-ivy";
-
-@Component({
-  selector: "app-header",
-  templateUrl: "./header.component.html",
-})
-@Sentry.TraceClassDecorator()
-export class HeaderComponent {
-  // ...
-}
-```
-
-```javascript {filename:header.component.ts} {tabTitle: Angular 10/11}
+```typescript {filename:header.component.ts} {2,8}
 import { Component } from "@angular/core";
 import * as Sentry from "@sentry/angular";
 
@@ -89,31 +53,19 @@ import * as Sentry from "@sentry/angular";
   selector: "app-header",
   templateUrl: "./header.component.html",
 })
-@Sentry.TraceClassDecorator()
+@Sentry.TraceClass({ name: "Header" })
 export class HeaderComponent {
   // ...
 }
 ```
 
-## Using `TraceMethodDecorator`
+Note: Due to code minification in production builds, you need to pass a `name` property to the `TraceClass` decorator. Otherwise, spans will refer to the component as `<unnamed>`.
 
-`TraceMethodDecorator` tracks specific component lifecycle hooks as point-in-time spans. The added spans are called **`ui.angular.[methodname]`** (like, `ui.angular.ngOnChanges`). For example, you can use this decorator to track how often component changes are detected during an ongoing transaction:
+## Using `TraceMethod`
 
-```javascript {filename:login.component.ts} {tabTitle: Angular 12+}
-import { Component, OnInit } from "@angular/core";
-import * as Sentry from "@sentry/angular-ivy";
+The `TraceMethod` decorator tracks specific component lifecycle hooks as point-in-time spans. The added spans are called **`ui.angular.[methodname]`** (like, `ui.angular.ngOnChanges`). For example, you can use this decorator to track how often component changes are detected:
 
-@Component({
-  selector: "app-login",
-  templateUrl: "./login.component.html",
-})
-export class LoginComponent implements OnChanges {
-  @Sentry.TraceMethodDecorator()
-  ngOnChanges(changes: SimpleChanges) {}
-}
-```
-
-```javascript {filename:login.component.ts} {tabTitle: Angular 10/11}
+```typescript {filename:login.component.ts} {2,9}
 import { Component, OnInit } from "@angular/core";
 import * as Sentry from "@sentry/angular";
 
@@ -122,38 +74,24 @@ import * as Sentry from "@sentry/angular";
   templateUrl: "./login.component.html",
 })
 export class LoginComponent implements OnChanges {
-  @Sentry.TraceMethodDecorator()
-  ngOnChanges(changes: SimpleChanges) {}
+  @Sentry.TraceMethod({ name: "Login.ngOnChanges" })
+  ngOnChanges(changes: SimpleChanges) {
+    // ...
+  }
 }
 ```
+
+Note: Due to code minification in production builds, you need to pass a `name` property to the `TraceMethod` decorator. Otherwise, created spans will refer to the component as `<unnamed>`.
 
 ## Advanced Usage
 
-You can combine our tracking utilities and track the bootstrapping duration of your app.
+You can combine our component tracking utilities and track the bootstrapping duration of your app.
 
 ### Combining Component Tracking Utilities
 
 To get the best insights into your components' performance, you can combine `TraceDirective`, `TraceClassDecorator`, and `TraceMethodDecorator`. This allows you to track component initialization durations as well as arbitrary lifecycle events, such as change and destroy events:
 
-```javascript {filename:user-card.component.ts} {tabTitle: Angular 12+}
-import { Component, OnInit } from "@angular/core";
-import * as Sentry from "@sentry/angular-ivy";
-
-@Component({
-  selector: "app-user-card",
-  templateUrl: "./user-card.component.html",
-})
-@Sentry.TraceClassDecorator()
-export class UserCardComponent implements OnChanges, OnDestroy {
-  @Sentry.TraceMethodDecorator()
-  ngOnChanges(changes: SimpleChanges) {}
-
-  @Sentry.TraceMethodDecorator()
-  ngOnDestroy() {}
-}
-```
-
-```javascript {filename:user-card.component.ts} {tabTitle: Angular 10/11}
+```typescript {filename:user-card.component.ts} {2,8,10,13}
 import { Component, OnInit } from "@angular/core";
 import * as Sentry from "@sentry/angular";
 
@@ -161,19 +99,19 @@ import * as Sentry from "@sentry/angular";
   selector: "app-user-card",
   templateUrl: "./user-card.component.html",
 })
-@Sentry.TraceClassDecorator()
+@Sentry.TraceClass()
 export class UserCardComponent implements OnChanges, OnDestroy {
-  @Sentry.TraceMethodDecorator()
+  @Sentry.TraceMethod()
   ngOnChanges(changes: SimpleChanges) {}
 
-  @Sentry.TraceMethodDecorator()
+  @Sentry.TraceMethod()
   ngOnDestroy() {}
 }
 ```
 
-User `TraceDirective` if you only want to track components in certain instances or locations:
+Use the `trace` directive if you only want to track components in certain instances or locations:
 
-```html {filename: user-card.component.html}
+```html {filename: user-card.component.html} {2,5}
 <div>
   <app-icon trace="user-icon">user</app-icon>
   <label>{{ user.name }}</label>
@@ -186,10 +124,10 @@ User `TraceDirective` if you only want to track components in certain instances 
 
 You can add your own custom spans using `startSpan()`. For example, you can track the duration of the Angular bootstrapping process to find out how long your app takes to bootstrap on your users' devices:
 
-```javascript {tabTitle: Angular 12+} {filename:main.ts}
+```typescript {filename:main.ts} {3,9-20}
 import { enableProdMode } from "@angular/core";
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
-import * as Sentry from "@sentry/angular-ivy";
+import * as Sentry from "@sentry/angular";
 
 import { AppModule } from "./app/app.module";
 
@@ -203,30 +141,6 @@ Sentry.startSpan(
   async () => {
     await platformBrowserDynamic()
       .bootstrapModule(AppModule)
-      .then(() => console.log(`Bootstrap success`))
-      .catch((err) => console.error(err));
-  }
-);
-```
-
-```javascript {tabTitle: Angular 10/11} {filename:main.ts}
-import { enableProdMode } from "@angular/core";
-import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
-import * as Sentry from "@sentry/angular";
-
-import { AppModule } from "./app/app.module";
-
-// ...
-
-Sentry.startSpan(
-  {
-    name: "platform-browser-dynamic",
-    op: "ui.angular.bootstrap",
-  },
-  async () => {
-    await platformBrowserDynamic()
-      .bootstrapModule(AppModule)
-      .then(() => console.log(`Bootstrap success`))
       .catch((err) => console.error(err));
   }
 );

@@ -62,6 +62,62 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/organization/integrations/github/',
+    to: '/organization/integrations/source-code-mgmt/github/',
+  },
+  {
+    from: '/organization/integrations/gitlab/',
+    to: '/organization/integrations/source-code-mgmt/gitlab/',
+  },
+  {
+    from: '/organization/integrations/bitbucket/',
+    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+  },
+  {
+    from: '/organization/integrations/rookout/',
+    to: '/organization/integrations/debugging/rookout/',
+  },
+  {
+    from: '/organization/integrations/split/',
+    to: '/organization/integrations/feature-flag/split/',
+  },
+  {
+    from: '/organization/integrations/teamwork/',
+    to: '/organization/integrations/issue-tracking/teamwork/',
+  },
+  {
+    from: '/organization/integrations/jira/',
+    to: '/organization/integrations/issue-tracking/jira/',
+  },
+  {
+    from: '/organization/integrations/linear/',
+    to: '/organization/integrations/issue-tracking/linear/',
+  },
+  {
+    from: '/organization/integrations/clickup/',
+    to: '/organization/integrations/issue-tracking/clickup/',
+  },
+  {
+    from: '/organization/integrations/project-mgmt/shortcut/',
+    to: '/organization/integrations/issue-tracking/shortcut/',
+  },
+  {
+    from: '/organization/integrations/slack/',
+    to: '/organization/integrations/notification-incidents/slack/',
+  },
+  {
+    from: '/organization/integrations/pagerduty/',
+    to: '/organization/integrations/notification-incidents/pagerduty/',
+  },
+  {
+    from: '/organization/integrations/vanta/',
+    to: '/organization/integrations/compliance/vanta/',
+  },
+  {
+    from: '/organization/integrations/jam/',
+    to: '/organization/integrations/session-replay/jam/',
+  },
+  {
     from: '/product/crons/getting-started/cli/',
     to: '/cli/crons/',
   },
@@ -2015,23 +2071,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/learn/sensitive-data/',
+    to: '/security-legal-pii/scrubbing/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/guides/manage-event-stream/',
-    to: '/organization/quotas/manage-event-stream-guide/',
+    to: '/pricing/quotas/manage-event-stream-guide/',
   },
   {
     from: '/learn/sso/',
@@ -2906,6 +2966,10 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/',
   },
   {
+    from: '/accounts/pricing/',
+    to: '/pricing/',
+  },
+  {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
   },
@@ -2963,35 +3027,35 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/accounts/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/accounts/quotas/spike-protection/',
-    to: '/organization/quotas/spike-protection/',
+    to: '/pricing/quotas/spike-protection/',
   },
   {
     from: '/product/accounts/quotas/spend-allocation/',
-    to: '/organization/quotas/spend-allocation/',
+    to: '/pricing/quotas/spend-allocation/',
   },
   {
     from: '/product/accounts/quotas/manage-event-stream-guide/',
-    to: '/organization/quotas/manage-event-stream-guide/',
+    to: '/pricing/quotas/manage-event-stream-guide/',
   },
   {
     from: '/product/accounts/quotas/manage-transaction-quota/',
-    to: '/organization/quotas/manage-transaction-quota/',
+    to: '/pricing/quotas/manage-transaction-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-replay-quota/',
-    to: '/organization/quotas/manage-replay-quota/',
+    to: '/pricing/quotas/manage-replay-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-attachments-quota/',
-    to: '/organization/quotas/manage-attachments-quota/',
+    to: '/pricing/quotas/manage-attachments-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-cron-monitors/',
-    to: '/organization/quotas/manage-cron-monitors/',
+    to: '/pricing/quotas/manage-cron-monitors/',
   },
   {
     from: '/product/accounts/migration/',
@@ -3008,6 +3072,30 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/product/accounts/',
     to: '/account/',
+  },
+  {
+    from: '/account/getting-started/',
+    to: '/organization/getting-started/',
+  },
+  {
+    from: '/account/membership/',
+    to: '/organization/membership/',
+  },
+  {
+    from: '/account/early-adopter-features/',
+    to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/account/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/organization/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/account/sso/',
+    to: '/organization/authentication/sso/',
   },
 ];
 

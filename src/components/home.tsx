@@ -28,7 +28,7 @@ export async function Home() {
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} />
       <Banner />
-      <div className="max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
+      <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
           <div className="flex flex-col justify-center items-start">
             <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
@@ -107,7 +107,8 @@ export async function Home() {
           </FooterLink>
         </div>
         <p className="px-3 text-sm">
-          © 2023 • Sentry is a registered trademark of Functional Software, Inc.
+          © {new Date().getFullYear()} • Sentry is a registered trademark of Functional
+          Software, Inc.
         </p>
         <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
           <SentryWordmarkLogo height={50} fill="#ffffff" />

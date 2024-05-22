@@ -2,13 +2,14 @@
 title: AWS Lambda
 description: "Learn about Sentry's integration with AWS Lambda."
 sdk: sentry.javascript.node
+fallbackGuide: javascript.node
 categories:
   - serverless
 ---
 
 <Note>
 
-Looking for instructions on how to add Sentry without modifying your code? [Check out these docs instead](/product/integrations/cloud-monitoring/aws-lambda/).
+Looking for instructions on how to add Sentry without modifying your code? [Check out these docs instead](/organization/integrations/cloud-monitoring/aws-lambda/).
 
 </Note>
 
@@ -18,18 +19,20 @@ Before you begin, note:
 - You need to have experience with AWS console and a basic understanding of Lambda.
 - You'll need an AWS account and you have to create an [IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
 
-_(New in version 5.26.0)_
+<Note>
+  This guide is for version 8.0.0 and up of `@sentry/aws-serverless`.
+</Note>
 
 Create a deployment package on your local machine and install the required dependencies in the deployment package. For more information, see [Building an AWS Lambda deployment package for Node.js](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-deployment-package-nodejs/).
 
-Add `@sentry/serverless` as a dependency:
+Add `@sentry/aws-serverless` as a dependency:
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/serverless
+npm install --save @sentry/aws-serverless
 ```
 
 ```bash {tabTitle:Yarn}
-yarn add @sentry/serverless
+yarn add @sentry/aws-serverless
 ```
 
 We also support [installing Sentry as a Container Image](/platforms/javascript/guides/aws-lambda/container-image/) and [installing Sentry in Lambda Layer](/platforms/javascript/guides/aws-lambda/layer/).
@@ -39,25 +42,26 @@ You can use the AWS Lambda integration for the Node like this:
 <SignInNote />
 
 ```javascript {tabTitle:async}
-const Sentry = require("@sentry/serverless");
+const Sentry = require("@sentry/aws-serverless");
 
-Sentry.AWSLambda.init({
+Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // Add Performance Monitoring by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
-exports.handler = Sentry.AWSLambda.wrapHandler(async (event, context) => {
+exports.handler = Sentry.wrapHandler(async (event, context) => {
   // Your handler code
 });
 ```
 
 ```javascript {tabTitle:sync}
-const Sentry = require("@sentry/serverless");
+const Sentry = require("@sentry/aws-serverless");
 
-Sentry.AWSLambda.init({
+Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   // We recommend adjusting this value in production, or using tracesSampler
@@ -65,7 +69,7 @@ Sentry.AWSLambda.init({
   tracesSampleRate: 1.0,
 });
 
-exports.handler = Sentry.AWSLambda.wrapHandler((event, context, callback) => {
+exports.handler = Sentry.wrapHandler((event, context, callback) => {
   // Your handler code
 });
 ```
@@ -77,20 +81,18 @@ exports.handler = Sentry.AWSLambda.wrapHandler((event, context, callback) => {
 Sentry reports timeout warning when the function is within 500ms of its execution time. You can turn off timeout warnings by setting `captureTimeoutWarning` to `false` in the handler options. To change timeout warning limit, assign a numeric value (in ms) to `timeoutWarningLimit`
 
 ```javascript {tabTitle:captureTimeoutWarning}
-exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
+exports.handler = Sentry.wrapHandler(yourHandler, {
   captureTimeoutWarning: false,
 });
 ```
 
 ```javascript {tabTitle:timeoutWarning}
-exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
+exports.handler = Sentry.wrapHandler(yourHandler, {
   timeoutWarningLimit: 50,
 });
 ```
 
 ## Capture Rejected Promises in `Promise.allSettled`
-
-_(New in version 6.14.3)_
 
 By default, Sentry captures errors raised by your handler.
 However, your handler might return a `Promise.allSettled` result.
@@ -99,7 +101,7 @@ In this case, even if one of the messages has failed, Sentry won't capture any e
 The `captureAllSettledReasons` (default: `false`) option captures all promise rejected results
 
 ```javascript {tabTitle:captureAllSettledReasons}
-exports.handler = Sentry.AWSLambda.wrapHandler(
+exports.handler = Sentry.wrapHandler(
   () => {
     return Promise.allSettled([
       Promise.rejected(new Error("first")),

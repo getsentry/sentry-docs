@@ -13,7 +13,9 @@ notSupported:
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
+  - javascript.hapi
   - javascript.koa
+  - javascript.nestjs
 description: "Learn about customizing sessions with the Session Replay SDK."
 ---
 
@@ -195,3 +197,52 @@ replayIntegration({
 
 If you return `false` from this method for a given error, we will not check the error sample rate for this error.
 If you return `true`, we will continue to check the error sample rate as normal.
+
+
+### Connect Replays with Support Software
+
+Replays do not need to be connected to an application error, they can also be used to supplement your support tickets.
+Depending on the level of customization provided by your support widget, it is possible to send a replay to
+Sentry when your users open the support widget. Note that Sentry's [User Feedback](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
+provides this functionality by default! You can then send the ID of the replay along with the support ticket that your
+user submits. The ID can be used to reference the replay in Sentry. Alternatively, you can search for
+replays by a user identifier such as email.
+
+The example below provides a template for how you might connect Replay to your support widget.
+
+```javascript
+/**
+ * Initialize the Sentry SDK as normal.
+ *
+ * `replaysOnErrorSampleRate` needs to be > 0 so that replays are always buffering and only sent when necessary
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 0.5,
+  integrations: [Sentry.replayIntegration()],
+});
+
+/**
+ * Your widget will need to have an event/hook to trigger flushing the replay to
+ * Sentry.
+ */
+MySupportWidget.on('open', () => {
+  const replay = Sentry.getReplay();
+  // Send replay to Sentry
+  replay.flush();
+  // Retrieve the replay id that was saved and attach it to your support widget
+  const replayId = replay.getReplayId();
+  MySupportWidget.setTag('replayId', replayId);
+});
+
+/**
+ * If your support application allows you to send custom data with the support
+ * ticket, you may want to include a link to the replay URL in Sentry. That
+ * way, you'll be able to open the replay directly from the ticket itself.
+ * Replay URLs have the following format:
+ *
+ *   https://<org-slug>.sentry.io/replays/<replay-id>/
+ *
+ */
+```

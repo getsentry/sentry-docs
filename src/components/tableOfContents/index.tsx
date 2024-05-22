@@ -98,7 +98,7 @@ export function TableOfContents() {
         }
         return {
           depth: el.tagName === 'H2' ? 2 : 3,
-          url: `#${el.id} `,
+          url: `#${el.id}`,
           title,
           element: el,
           isActive: false,
