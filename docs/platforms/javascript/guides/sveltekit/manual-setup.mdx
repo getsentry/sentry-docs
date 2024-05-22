@@ -200,7 +200,7 @@ You can set them as environment variables, for example in a `.env` file:
 - `SENTRY_AUTH_TOKEN` your Sentry auth token (can be obtained from the [Organization Token Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/))
 - `SENTRY_URL` your Sentry instance URL. This is only required if you use your own Sentry instance (as opposed to `https://sentry.io`).
 
-Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. All available options are documented at [the Sentry Vite plugin repo](https://www.npmjs.com/package/@sentry/vite-plugin/v/0.6.1#configuration).
+Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. All available options are documented at [the Sentry Vite plugin repo](https://www.npmjs.com/package/@sentry/vite-plugin/v/2.14.2#options).
 
 <OrgAuthTokenNote />
 
@@ -210,7 +210,7 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 <SignInNote />
 
-```javascript {filename:vite.config.js} {7-11}
+```javascript {filename:vite.config.js} {7-16}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -221,6 +221,11 @@ export default {
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
         authToken: process.env.SENTRY_AUTH_TOKEN,
+        sourcemaps: {
+          assets: ["./build/*/**/*"],
+          ignore: ["**/build/client/**/*"],
+          filesToDeleteAfterUpload: ["./build/**/*.map"],
+        },
       },
     }),
     sveltekit(),
