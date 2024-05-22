@@ -36,7 +36,9 @@ In places where you are not able to wrap executing code in a callback (e.g. when
 
 ## Span Hierarchy in the Browser
 
-In browser environments, it is not possible to reliably keep track of the active span across asynchronous boundaries. This means that if multiple asynchronous operations are started in parallel, it is not possible to determine which span is the parent of which child span. Imagine the following example:
+In browser environments, spans are by default collected in a flat hierarchy where every span is the direct child of the root span. You can opt into a more fine grained hierarchy but there are trade-offs. 
+
+The key reason for keeping a flat hierarchy is because in browsers it's impossible to reliably keep track of the active span across asynchronous boundaries. This means that if multiple asynchronous operations are started in parallel, it is not possible to determine which span is the parent of which child span. Imagine the following example:
 
 ```javascript
 Sentry.startSpan({ name: "span 1" }, async () => {
@@ -52,7 +54,7 @@ Sentry.startSpan({ name: "span 2" }, async () => {
 });
 ```
 
-In the browser, there would be no way to know that `span 1` is only active inside of its callback, while `span 2` is active in the other callback. Because of this, in realitiy _all_ fetch spans would become children of `span 2`. This is misleading and confusing, which is why by default in the browser, **all spans will become children of the root span** (which is usually the pageload or navigation span). This means that you will always have a flat hierarchy of spans.
+In the browser, there would be no way to know that `span 1` is only active inside of its callback, while `span 2` is active in the other callback. Because of this, in realitiy, _all_ fetch spans would become children of `span 2`. This is misleading and confusing, which is why by default in the browser, **all spans will become children of the root span** (which is usually the pageload or navigation span). This means that you will always have a flat hierarchy of spans.
 
 This is a tradeoff that we have made to ensure that the data that is captured is accurate and reliable. If you need to capture a more complex hierarchy of spans, you can opt-out of this behavior by setting `parentSpanIsAlwaysRootSpan: false`:
 
@@ -62,7 +64,7 @@ Sentry.init({
 });
 ```
 
-This will revert to use the full hierarchy behavior, where spans are children of the currently active span. However, this may lead to incorrect data in the case of multiple parallel asynchronous operations - it is up to you to ensure there are not multiple parallel asynchronous operations that start spans in this case.
+This will revert to use the full hierarchy behavior, where spans are children of the currently active span. However, this may lead to incorrect data in the case of multiple parallel asynchronous operations - it is up to you to ensure there are no multiple parallel asynchronous operations that start spans in this case.
 
 </PlatformCategorySection>
 
@@ -89,13 +91,13 @@ For most scenarios, we recommend to start active spans with `Sentry.startSpan()`
 
 ## Starting an Active Span with Manual End (`startSpanManual`)
 
-Sometimes, you do not want the span to be ended automatically when the callback is done. In this case, you can use `Sentry.startSpanManual()`. This will start a new span that is active in the provided callback, but will not automatically end the span when the callback is done. You have to manually end the span by calling `span.end()`.
+Sometimes, you do not want the span to be ended automatically when the callback is done. In this case, you can use `Sentry.startSpanManual()`. This will start a new span that is active in the provided callback, but will not be automatically ended when the callback is done. You have to manually end the span by calling `span.end()`.
 
 <PlatformContent includePath="performance/start-span-manual" />
 
 ## Starting Inactive Spans (`startInactiveSpan`)
 
-To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the current active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
+To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
 
 <PlatformContent includePath="performance/start-inactive-span" />
 
