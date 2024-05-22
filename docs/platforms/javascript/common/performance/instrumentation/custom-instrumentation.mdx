@@ -36,7 +36,7 @@ In places where you are not able to wrap executing code in a callback (e.g. when
 
 ## Span Hierarchy in the Browser
 
-In browser environments, spans are by default collected in a flat hierarchy where every span is the direct child of the root span. You can opt into a more fine grained hierarchy but there are trade-offs. 
+In browser environments, spans are by default collected in a flat hierarchy where every span is the direct child of the root span. You can opt into a more fine-grained hierarchy but there are trade-offs. 
 
 The key reason for keeping a flat hierarchy is because in browsers it's impossible to reliably keep track of the active span across asynchronous boundaries. This means that if multiple asynchronous operations are started in parallel, it is not possible to determine which span is the parent of which child span. Imagine the following example:
 
@@ -54,7 +54,7 @@ Sentry.startSpan({ name: "span 2" }, async () => {
 });
 ```
 
-In the browser, there would be no way to know that `span 1` is only active inside of its callback, while `span 2` is active in the other callback. Because of this, in realitiy, _all_ fetch spans would become children of `span 2`. This is misleading and confusing, which is why by default in the browser, **all spans will become children of the root span** (which is usually the pageload or navigation span). This means that you will always have a flat hierarchy of spans.
+In the browser, there would be no way to know that `span 1` is only active inside of its callback, while `span 2` is active in the other callback. Because of this, in reality, _all_ fetch spans would become children of `span 2`. This is misleading and confusing, which is why by default in the browser, **all spans will become children of the root span** (which is usually the pageload or navigation span). This means that you will always have a flat hierarchy of spans.
 
 This is a tradeoff that we have made to ensure that the data that is captured is accurate and reliable. If you need to capture a more complex hierarchy of spans, you can opt-out of this behavior by setting `parentSpanIsAlwaysRootSpan: false`:
 
@@ -85,7 +85,7 @@ Only `name` is required, all other options are optional.
 
 ## Starting an Active Span (`startSpan`)
 
-For most scenarios, we recommend to start active spans with `Sentry.startSpan()`. This will start a new span that is active in the provided callback, and will automatically end the span when the callback is done. The callback can be synchronuous, or asynchronous (a promise). In the case of an asynchronous callback, the span will be ended when the promise is resolved or rejected. If the provided callback errors or rejects, the span will be marked as failed.
+For most scenarios, we recommend to start active spans with `Sentry.startSpan()`. This will start a new span that is active in the provided callback, and will automatically end the span when the callback is done. The callback can be synchronous, or asynchronous (a promise). In the case of an asynchronous callback, the span will be ended when the promise is resolved or rejected. If the provided callback errors or rejects, the span will be marked as failed.
 
 <PlatformContent includePath="performance/start-span" />
 
