@@ -3,7 +3,7 @@ title: Instrument Queues
 sidebar_order: 3000
 description: "Learn how to manually instrument your code to use Sentry's Queues module. "
 ---
-To ensure that you have performance data about your messaging queues, you'll need to instrument custom spans and transactions around your queue producers and consumers.
+Sentry comes with automatic instrumentation for the most common messaging queue systems. In case yours isn't supported, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
 
 ## Producer Instrumentation
 
@@ -15,7 +15,7 @@ To start capturing performance metrics, use the `sentry_sdk.start_span()` functi
 | `messaging.destination.name` | string | The queue or topic name |
 | `messaging.message.body.size` | int | Size of the message body in bytes |
 
-Your `queue.publish` span must exist inside a transaction in order to be recognized as a producer span. If you are using a <PlatformLink to="/integrations/#web-frameworks">supported web framework</PlatformLink> the transaction is created by the integration. If you use plain Python, you can start a new one using `sentry_sdk.start_transaction()`.
+Your `queue.publish` span must exist inside a transaction in order to be recognized as a producer span. If you are using a <PlatformLink to="/integrations/#web-frameworks">supported web framework</PlatformLink>, the transaction is created by the integration. If you use plain Python, you can start a new one using `sentry_sdk.start_transaction()`.
 
 You must also include trace headers (`sentry-trace` and `baggage`) in your message so that your consumers can continue your trace once your message is picked up.
 
@@ -59,7 +59,7 @@ with sentry_sdk.start_transaction(
             queue=queue,
             body=message,
             timestamp=now,
-            headers = {
+            headers={
                 "sentry-trace": sentry_sdk.get_traceparent(),
                 "baggage": sentry_sdk.get_baggage(),
             },
@@ -79,7 +79,7 @@ To start capturing performance metrics, use the `sentry_sdk.start_span()` functi
 | `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
 | `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
 
-Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a <PlatformLink to="/integrations/#web-frameworks">supported web framework</PlatformLink> the transaction is created by the integration. If you use plain Python, you can start a new one using `sentry_sdk.start_transaction()`.
+Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a <PlatformLink to="/integrations/#web-frameworks">supported web framework</PlatformLink>, the transaction is created by the integration. If you use plain Python, you can start a new one using `sentry_sdk.start_transaction()`.
 
 Use `sentry_sdk.continue_trace()` to connect your consumer spans to their associated producer spans, and `span.set_status()` to mark the trace of your message as success or failed.
 
@@ -102,7 +102,7 @@ message = connection.consume(queue=queue)
 # Calculate latency (optional, but valuable)
 now = datetime.now(timezone.utc)
 message_time = datetime.fromtimestamp(message["timestamp"], timezone.utc)
-latency =  now - message_time
+latency = now - message_time
 
 # Continue the trace started in the producer
 # If you are using a web framework, the framework integration
