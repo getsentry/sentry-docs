@@ -305,6 +305,109 @@ document
 
 </PlatformSection>
 
+### Loading Strategies
+
+The `feedbackIntegration` is special among our integrations because it is a user-facing integration. Therefore, we have two strategies available to help you control bundle size. What strategies are available depend on how you have installed the SDK into your application.
+
+All of the code examples on this page use `feedbackIntegration` as a default because it is available whether you have chosen the CDN or NPM installation method.
+
+<Note>
+In every case, we recommend using `feedbackIntegration` in your `Sentry.init` call.
+</Note>
+
+1. `feedbackSyncIntegration`
+
+    This integration includes all the code needed to render the "Send Feedback" button, as well as the form that is triggered when the button is clicked. Choosing this loading strategy means accepting the largest bundle size in your application. The benefit of this is that the feedback widget is guaranteed to work when the user interacts with it.
+
+    This loading strategy is not available if you have installed the SDK via the CDN.
+
+2. `feedbackAsyncIntegration`
+
+    This integration includes the minimum amount of code needed to show the "Send Feedback" button on the screen when the page is loaded. When the user clicks on that button the integration will asynchronously load inrernal integrations that show the form, and let the user type out their feedback message. This has the benefit of being the lowest bundle size. The drawback is that asyncronous loading can fail when the user interacts with the button.
+
+#### When Installed via CDN
+
+For CDN users `feedbackIntegration` is an alias of `feedbackAsyncIntegration`.
+
+```javascript {tabTitle: Default Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the default strategy, an alias for `feedbackAsyncIntegration`
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+```javascript {tabTitle: Async Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the async strategy so everything is bundled for page load
+    Sentry.feedbackAsyncIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+#### When Installed via NPM
+
+For NPM users `feedbackIntegration` is an alias of `feedbackSyncIntegration`.
+
+```javascript {tabTitle: Default Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the default strategy, an alias for `feedbackSyncIntegration`
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+```javascript {tabTitle: Sync Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the sync strategy so everything is bundled for page load
+    Sentry.feedbackSyncIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+```javascript {tabTitle: Async Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the async strategy to keep bundle size lower
+    Sentry.feedbackAsyncIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
 ## Crash-Report Modal
 
 You can customize the Crash-Report modal to your organization's needs, for example, for localization purposes. All options can be passed through the `Sentry.showReportDialog` call.
