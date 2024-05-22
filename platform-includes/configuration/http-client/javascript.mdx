@@ -17,21 +17,20 @@ Sentry.init({
   // Configure sentryOnLoad before adding the Loader Script
   window.sentryOnLoad = function () {
     Sentry.init({
-      integrations: [Sentry.httpClientIntegration()],
-
       // This option is required for capturing headers and cookies.
       sendDefaultPii: true,
     });
+
+    Sentry.lazyLoadIntegration("httpClientIntegration").then(
+      (integration) => {
+        Sentry.addIntegration(integration());
+      }
+    );
   };
 </script>
 
 <script
   src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
-  crossorigin="anonymous"
-></script>
-<script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/httpclient.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'httpclient.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 ```
