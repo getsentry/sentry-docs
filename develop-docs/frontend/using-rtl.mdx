@@ -18,6 +18,38 @@ As a part of this goal, we avoid testing implementation details so refactors (ch
 
 We are generally in favor of Use Case Coverage over Code Coverage.
 
+## Use our built-in contexts
+By default, `render()` has some default contexts setup for you. The organization context is set to `OrganizationFixture()` and the router context has some default params like orgId and projectId. These can be overriden by passing a proptery to the 2nd argument of the `render()` function.
+
+Example of overriding the default organization features and access:
+```tsx
+import {OrganizationFixture} from 'sentry-fixture/organization';
+import {render, screen} from "sentry-test/reactTestingLibrary";
+
+const organization = OrganizationFixture({access: ['org:admin'], features: ['my-feature-flag']});
+// useOrganization will now get the above organization
+render(<Example />, {organization});
+```
+
+Router context can be overriden in the same way.
+
+```tsx
+const {organization, router, routerContext} = initializeOrg({
+  organization: {features: ['global-views', 'open-membership']},
+  router: {
+    location: {
+      pathname: '/organizations/org-slug/issues/',
+      query: {environment: 'prod'},
+    },
+    params: {},
+  },
+});
+
+render(<Example />, {context: routerContext, organization});
+await userEvent.click(something);
+expect(router.push).toHaveBeenCalledTimes(1);
+```
+
 ## Querying
 
 - use `getBy...` as much as possible
