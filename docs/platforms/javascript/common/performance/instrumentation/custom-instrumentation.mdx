@@ -32,6 +32,40 @@ A key constraint for active spans is that they can only be made active inside of
 
 In places where you are not able to wrap executing code in a callback (e.g. when working with hooks or similar) you have to work with inactive spans, and can combine this with [withActiveSpan](#with-active-span) to manually associate child spans with the correct parent span.
 
+<PlatformCategorySection supported={['browser']}>
+
+## Span Hierarchy in the Browser
+
+In browser environments, it is not possible to reliably keep track of the active span across asynchronous boundaries. This means that if multiple asynchronous operations are started in parallel, it is not possible to determine which span is the parent of which child span. Imagine the following example:
+
+```javascript
+Sentry.startSpan({ name: "span 1" }, async () => {
+  await fetch("https://example.com/1");
+  await fetch("https://example.com/2");
+  await fetch("https://example.com/3");
+});
+
+Sentry.startSpan({ name: "span 2" }, async () => {
+  await fetch("https://example.com/4");
+  await fetch("https://example.com/5");
+  await fetch("https://example.com/6");
+});
+```
+
+In the browser, there would be no way to know that `span 1` is only active inside of its callback, while `span 2` is active in the other callback. Because of this, in realitiy _all_ fetch spans would become children of `span 2`. This is misleading and confusing, which is why by default in the browser, **all spans will become children of the root span** (which is usually the pageload or navigation span). This means that you will always have a flat hierarchy of spans.
+
+This is a tradeoff that we have made to ensure that the data that is captured is accurate and reliable. If you need to capture a more complex hierarchy of spans, you can opt-out of this behavior by setting `parentSpanIsAlwaysRootSpan: false`:
+
+```javascript
+Sentry.init({
+  parentSpanIsAlwaysRootSpan: false,
+});
+```
+
+This will revert to use the full hierarchy behavior, where spans are children of the currently active span. However, this may lead to incorrect data in the case of multiple parallel asynchronous operations - it is up to you to ensure there are not multiple parallel asynchronous operations that start spans in this case.
+
+</PlatformCategorySection>
+
 ## Span Starting Options
 
 The following options can be used for all span starting functions:
