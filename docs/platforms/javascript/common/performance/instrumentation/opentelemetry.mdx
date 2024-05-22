@@ -9,26 +9,98 @@ supported:
   - javascript.azure-functions
   - javascript.connect
   - javascript.express
+  - javascript.fastify
   - javascript.gcp-functions
+  - javascript.hapi
   - javascript.koa
+  - javascript.nestjs
 notSupported:
   - javascript
 ---
 
-You can configure your [OpenTelemetry SDK](https://opentelemetry.io/) to send traces and spans to Sentry.
+The Sentry SDK uses [OpenTelemetry](https://opentelemetry.io/) under the hood. This means that any OpenTelemetry instrumentation that emits spans will automatically be picked up by Sentry - no further configuration needed!
 
-## Install
+## Using Custom OpenTelemetry Instrumentation
 
-<PlatformContent includePath="performance/opentelemetry-install" />
+While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like this:
 
-## Usage
+```js
+const Sentry = require("@sentry/node");
+const {
+  GenericPoolInstrumentation,
+} = require("@opentelemetry/instrumentation-generic-pool");
+const { registerInstrumentations } = require("@opentelemetry/instrumentation");
 
-<PlatformContent includePath="performance/opentelemetry-setup" />
+Sentry.init({
+  dsn: "__DSN__",
 
-## OpenTelemetry and Sentry
+  // The SentrySampler will use this to determine which traces to sample
+  tracesSampleRate: 1.0,
+});
 
-With Sentry’s OpenTelemetry SDK, an OpenTelemetry `Span` becomes a Sentry `Transaction` or `Span`. The first `Span` sent through the Sentry `SpanProcessor` is a `Transaction`, and any child `Span` gets attached to the first `Transaction` upon checking the parent `Span` context. This is true for the OpenTelemetry root `Span` and any top level `Span` in the system. For example, a request sent from frontend to backend will create an OpenTelemetry root `Span` with a corresponding Sentry `Transaction`. The backend request will create a new Sentry `Transaction` for the OpenTelemetry `Span`. The Sentry `Transaction` and `Span` are linked as a trace for navigation and error tracking purposes.
+// Afterwards, you can add additional instrumentation:
+registerInstrumentations({
+  instrumentations: [new GenericPoolInstrumentation()],
+});
+```
 
-## Additional Configuration
+Any instrumentation added like this will be automatically picked up by Sentry.
 
-If you need more fine grained control over Sentry, take a look at the <PlatformLink to="/configuration/">Configuration page</PlatformLink>. In case you'd like to filter out transactions before sending them to Sentry (to get rid of health checks, for example), you may find the <PlatformLink to="/configuration/filtering/#filtering-transaction-events">Filtering page</PlatformLink> helpful.
+## Using a Custom OpenTelemetry Setup
+
+If you already have OpenTelemetry set up yourself, you can also use your existing setup.
+
+In this case, you need to set `skipOpenTelemetrySetup: true` in your `init({})` config, and ensure you setup all the
+components that Sentry needs yourself. In this case, you need to install `@sentry/opentelemetry`, and add the following:
+
+```js
+const Sentry = require("@sentry/node");
+const {
+  SentrySpanProcessor,
+  SentryPropagator,
+  SentryContextManager,
+  SentrySampler,
+} = require("@sentry/opentelemetry");
+
+Sentry.init({
+  dsn: "__DSN__",
+  skipOpenTelemetrySetup: true,
+
+  // The SentrySampler will use this to determine which traces to sample
+  tracesSampleRate: 1.0,
+});
+
+// This e.g. sets up @opentelemetry/sdk-trace-node
+const provider = manuallySetUpOpenTelemetry();
+
+// We need a custom span processor
+provider.addSpanProcessor(new SentrySpanProcessor());
+// We need a custom propagator and context manager
+provier.register({
+  propagator: new SentryPropagator(),
+  contextManager: new SentryContextManager(),
+});
+
+// We need our sampler to ensure the correct subset of traces is sent to Sentry
+const provider = new BasicTracerProvider({
+  sampler: new SentrySampler(Sentry.getClient()),
+});
+```
+
+## Using an OpenTelemetry Tracer
+
+We recommend using `Sentry.startSpan()` and related APIs to create spans. However, you can also use native OpenTelemetry APIs to create spans.
+
+You can access the tracer Sentry uses via `client.tracer` and then create spans with OpenTelemetry APIs, as shown below:
+
+```js
+const Sentry = require("@sentry/node");
+
+const tracer = Sentry.getClient()?.tracer;
+// Now you can use native APIs on the tracer:
+tracer.startActiveSpan("span name", () => {
+  // measure something
+});
+```
+
+You can also use any other tracer; all OpenTelemetry spans will be picked up by Sentry automatically.

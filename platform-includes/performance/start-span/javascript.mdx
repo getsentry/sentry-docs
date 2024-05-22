@@ -1,12 +1,30 @@
-You can use the `Sentry.startSpan` method to wrap a callback in a span to measure how long it will take. The span will automatically be finished when the callback finishes. This works with both synchronous and async callbacks, but automatically finishes async callbacks based on the promise that is returned from the callback. In cases where you need to manually finish the span (because you don't return anything), you can use `Sentry.startSpanManual`, documented below this snippet.
+Start a span for a synchronuous operation:
 
 ```javascript
 const result = Sentry.startSpan({ name: "Important Function" }, () => {
   return expensiveFunction();
 });
+```
 
-const result2 = await Sentry.startSpan(
+Start a span for an asynchronous operation:
+
+```javascript
+const result = await Sentry.startSpan(
   { name: "Important Function" },
+  async () => {
+    const res = await doSomethingAsync();
+    return updateRes(res);
+  }
+);
+```
+
+You can also nest spans:
+
+```javascript
+const result = await Sentry.startSpan(
+  {
+    name: "Important Function",
+  },
   async () => {
     const res = await Sentry.startSpan({ name: "Child Span" }, () => {
       return expensiveAsyncFunction();
@@ -15,43 +33,4 @@ const result2 = await Sentry.startSpan(
     return updateRes(res);
   }
 );
-
-const result3 = Sentry.startSpan({ name: "Important Function" }, (span) => {
-  // You can access the span to add attributes or set specific status.
-  // The span may be undefined if the span was not sampled or if performance monitoring is disabled.
-  span?.setAttribute("foo", "bar");
-  return expensiveFunction();
-});
-
-const result4 = Sentry.startSpan(
-  {
-    name: "Important Function",
-    // You can also pass attributes directly to `startSpan`:
-    attributes: {
-      foo: "bar",
-      count: 1,
-    },
-  },
-  () => {
-    return expensiveFunction();
-  }
-);
-```
-
-In this example, the span named `Important Function` will become the active span for the duration of the callback.
-
-If you need to override when the span finishes, you can use `Sentry.startSpanManual`. This is useful if you don't want to finish the span when the callback ends, or if you want to finish the span at a specific time.
-
-```javascript
-// Start a span that tracks the duration of middleware
-function middleware(_req, res, next) {
-  return Sentry.startSpanManual({ name: "middleware" }, (span) => {
-    res.once("finish", () => {
-      span?.setHttpStatus(res.status);
-      // manually tell the span when to end
-      span?.end();
-    });
-    return next();
-  });
-}
 ```

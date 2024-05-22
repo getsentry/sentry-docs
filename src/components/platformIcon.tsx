@@ -65,6 +65,7 @@ import GoogleSVG from 'platformicons/svg/google.svg';
 import GrapheneSVG from 'platformicons/svg/graphene.svg';
 import GraphqlSVG from 'platformicons/svg/graphql.svg';
 import GrpcSVG from 'platformicons/svg/grpc.svg';
+import HapiSVG from 'platformicons/svg/hapi.svg';
 import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
@@ -84,6 +85,7 @@ import MartiniSVG from 'platformicons/svg/martini.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
+import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
@@ -197,6 +199,7 @@ import GoogleSVGLarge from 'platformicons/svg_80x80/google.svg';
 import GrapheneSVGLarge from 'platformicons/svg_80x80/graphene.svg';
 import GraphqlSVGLarge from 'platformicons/svg_80x80/graphql.svg';
 import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
+import HapiSVGLarge from 'platformicons/svg_80x80/hapi.svg';
 import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
@@ -216,6 +219,7 @@ import MartiniSVGLarge from 'platformicons/svg_80x80/martini.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
+import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
@@ -565,6 +569,10 @@ const formatToSVG = {
     sm: FastifySVG,
     lg: FastifySVGLarge,
   },
+  hapi: {
+    sm: HapiSVG,
+    lg: HapiSVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -604,6 +612,10 @@ const formatToSVG = {
   nativec: {
     sm: NativecSVG,
     lg: NativecSVGLarge,
+  },
+  nestjs: {
+    sm: NestjsSVG,
+    lg: NestjsSVGLarge,
   },
   nextjs: {
     sm: NextjsSVG,
@@ -815,12 +827,13 @@ export const PLATFORM_TO_ICON = {
   dart: 'dart',
   default: 'default',
   dotnet: 'dotnet',
-  'dotnet-aspnetcore': 'dotnet',
+  'dotnet-aspnetcore': 'dotnetcore',
   'dotnet-aspnet': 'dotnet',
-  'dotnet-awslambda': 'awslambda',
+  'dotnet-aws-lambda': 'awslambda',
   'dotnet-blazor': 'blazor',
   'dotnet-csharp': 'csharp',
-  'dotnet-gcpfunctions': 'gcp-functions',
+  'dotnet-google-cloud-functions': 'gcp-functions',
+  'dotnet-azure-functions-worker': 'azure-functions',
   'dotnet-maui': 'maui',
   'dotnet-uno': 'uno',
   'dotnet-xamarin': 'xamarin',
@@ -869,8 +882,10 @@ export const PLATFORM_TO_ICON = {
   'javascript-gatsby': 'gatsby',
   'javascript-gcp-functions': 'gcp-functions',
   'javascript-ionic': 'ionic',
+  'javascript-hapi': 'hapi',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
+  'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
@@ -887,6 +902,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
+  'native-wasm': 'wasm',
   openai: 'openai',
   perl: 'perl',
   php: 'php',
@@ -899,8 +915,10 @@ export const PLATFORM_TO_ICON = {
   'python-airflow': 'apache-airflow',
   'python-ariadne': 'ariadne',
   'python-asyncpg': 'postgresql',
-  'python-awslambda': 'awslambda',
+  'python-aws-lambda': 'awslambda',
   'python-azurefunctions': 'azure-functions',
+  'python-gcp-functions': 'gcp-functions',
+  'python-anthropic': 'anthropic',
   'python-beam': 'apache-beam',
   'python-boto3': 'aws',
   'python-bottle': 'bottle',
@@ -918,11 +936,13 @@ export const PLATFORM_TO_ICON = {
   'python-grpc': 'grpc',
   'python-httpx': 'httpx',
   'python-huey': 'huey',
+  'python-huggingface_hub': 'huggingface',
+  'python-langchain': 'langchain',
   'python-loguru': 'loguru',
+  'python-openai': 'openai',
   'python-pylons': 'python',
   'python-pymongo': 'mongodb',
   'python-pyramid': 'pyramid',
-  'python-pythonawslambda': 'awslambda',
   'python-quart': 'quart',
   'python-redis': 'redis',
   'python-rq': 'redis',
