@@ -108,11 +108,11 @@ export function OnboardingOptionsButtons({
   }, [options]);
 
   return (
-    <div className="flex gap-4 my-8 py-6 border-t border-b">
+    <div className="flex gap-4 my-4 py-4 border-t border-b">
       {options.map(option => (
         <Button
           variant="surface"
-          size="3"
+          size="2"
           disabled={option.disabled}
           asChild
           key={option.id}
