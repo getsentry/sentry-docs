@@ -18,12 +18,13 @@ The following configuration options apply to version 8.0.0 and above of the Java
 
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
-| Key            | Type                                       | Default           | Description                                                                                                                                                                                                                                |
-| -------------- | ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `autoInject`   | `boolean`                                  | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
-| `showBranding` | `boolean`                                  | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
-| `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
-| `id`           | `string`                                   | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
+| Key            | Type                                                                                      | Default           | Description                                                                                                                                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autoInject`   | `boolean`                                                                                 | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
+| `showBranding` | `boolean`                                                                                 | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
+| `colorScheme`  | <code>"system" \| "light" \| "dark"</code>                                                | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
+| `id`           | `string`                                                                                  | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
+| `tags`         | `Record<string, number \| string \| boolean \| bigint \| symbol \| null \| undefined>` | `{}`              | Tags to set on the feedback event.                                                                                                                                                                                                         |
 
 ### Auto-Inject vs. Manual Injection
 
@@ -45,6 +46,8 @@ widget.removeFromDom();
 Read more about how to [use your own UI](#bring-your-own-button) below.
 
 ### User and Form
+
+The following options can be configured for the integration in `feedbackIntegration({})`:
 
 | Key                | Type                     | Default                               | Description                                                                                                            |
 | ------------------ | ------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -209,14 +212,14 @@ feedbackIntegration({
 
 Because it’s sometimes useful to know when a user started interacting with the feedback form, we've made it possible for you to add custom logging, or start and stop background timers on the page that tell you when the user is done.
 
-Pass these callbacks when you initialize the Feedback integration:
+The following options can be configured for the integration in `feedbackIntegration({})`:
 
 ```javascript
 feedbackIntegration({
   onFormOpen: () => {},
   onFormClose: () => {},
-  onSubmitSuccess: () => {},
-  onSubmitError: () => {},
+  onSubmitSuccess: (data: FeedbackFormData) => {},
+  onSubmitError: (error: Error) => {},
 });
 ```
 
@@ -238,11 +241,10 @@ feedback.attachTo(document.querySelector("#your-button"), {
 Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user. Here is an example using JSX to define a button:
 
 ```typescript
-import { BrowserClient, Feedback, getClient } from "@sentry/react";
+import { getFeedback } from "@sentry/react";
 
 function MyFeedbackButton() {
-  const client = getClient<BrowserClient>();
-  const feedback = client?.getIntegration(Feedback);
+  const feedback = getFeedback();
 
   // Don't render custom feedback button if Feedback integration isn't installed
   if (!feedback) {
