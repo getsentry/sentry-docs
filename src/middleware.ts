@@ -3097,7 +3097,7 @@ const REDIRECTS: Redirect[] = [
     from: '/account/sso/',
     to: '/organization/authentication/sso/',
   },
-    {
+  {
     from: '/product/ai-monitoring/',
     to: '/product/llm-monitoring/',
   },
