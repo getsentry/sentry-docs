@@ -21,6 +21,11 @@ export function OnboardingOption({
 
 type OnboardingOptionType = {
   dependsOn: string[];
+  /**
+   * Unique identifier for the option, will control the visibility
+   * of `<OnboardingOption optionId="this_id"` /> somewhere on the page
+   * or lines of code specified in in a `{onboardingOptions: {this_id: 'line-range'}}` in a code block meta
+   */
   id: string;
   name: string;
   disabled?: boolean;
