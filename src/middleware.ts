@@ -3097,6 +3097,18 @@ const REDIRECTS: Redirect[] = [
     from: '/account/sso/',
     to: '/organization/authentication/sso/',
   },
+  {
+    from: '/product/ai-monitoring/',
+    to: '/product/llm-monitoring/',
+  },
+  {
+    from: '/product/ai-monitoring/getting-started/',
+    to: '/product/llm-monitoring/getting-started/',
+  },
+  {
+    from: '/product/ai-monitoring/getting-started/the-dashboard/',
+    to: '/product/llm-monitoring/getting-started/the-dashboard/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
