@@ -4,42 +4,40 @@ sidebar_order: 2000
 description: "Learn how to manually instrument your code to use Sentry's Requests module."
 ---
 
-As a prerequisite to setting up [Requests](/product/performance/requests/), you’ll need to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Once this is done, the JavaScript SDK will automatically instrument outgoing HTTP requests. If that doesn't fit your use case, you can set up using [custom instrumentation](#custom-instrumentation).
-
-## Custom Instrumentation
+As a prerequisite to setting up [Requests](/product/performance/requests/), you'll need to first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink>. Once this is done, the JavaScript SDK will automatically instrument outgoing HTTP requests. If that doesn't fit your use case, follow this guide to manually instrument your requests.
 
 For detailed information about which data can be set, see the [Requests Module developer specifications](https://develop.sentry.dev/sdk/performance/modules/requests/).
 
-### Initialize Sentry
+## Wrap HTTP Requests in a Span
 
-<PlatformContent includePath="getting-started-config" />
+<Note>
 
-### Wrap The HTTP Requests in a Span
+Refer to [HTTP Span Data Conventions](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http) for a full list of the span data attributes.
 
-NOTE: Refer to [HTTP Span Data Conventions](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http) for a full list of the span data attributes.
+</Note>
 
 Here is an example of an instrumented function that makes HTTP requests:
 
-```javascript
+```javascript {filename: my-request.js}
 async function makeRequest(method, url) {
   return await Sentry.startSpan(
-    {op: 'http.client', name: `${method} ${url}`},
-    async span => {
+    { op: "http.client", name: `${method} ${url}` },
+    async (span) => {
       const parsedURL = new URL(url, location.origin);
+
+      span.setAttribute("http.request.method", method);
+
+      span.setAttribute("server.address", parsedURL.hostname);
+      span.setAttribute("server.port", parsedURL.port || undefined);
 
       const response = await fetch(url, {
         method,
       });
 
-      span?.setAttribute('http.request.method', method);
-
-      span?.setAttribute('server.address', parsedURL.hostname);
-      span?.setAttribute('server.port', parsedURL.port || undefined);
-
-      span?.setAttribute('http.response.status_code', response.status);
-      span?.setAttribute(
-        'http.response_content_length',
-        Number(response.headers.get('content-length'))
+      span.setAttribute("http.response.status_code", response.status);
+      span.setAttribute(
+        "http.response_content_length",
+        Number(response.headers.get("content-length"))
       );
 
       // A good place to set other span attributes
