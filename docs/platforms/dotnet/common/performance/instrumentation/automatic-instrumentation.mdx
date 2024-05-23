@@ -33,7 +33,11 @@ To avoid depleting performance quota, Sentry will only create request spans when
 ```csharp
   var transaction = SentrySdk.StartTransaction("tutorial", "example");
   SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+  
+  // The SentryHttpMessageHandler will automatically create a span for the request
   var response = await httpClient.GetStringAsync("https://example.com");
+  
+  transaction.Finish();
 ```
 
 Additionally, `SentryHttpMessageHandler` also inherits from `DelegatingHandler` which allows you to chain it together with other handlers. For example:
