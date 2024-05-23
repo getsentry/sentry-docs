@@ -4,8 +4,6 @@ description: "Learn how to measure the data points you care about by configuring
 sidebar_order: 5500
 ---
 
-<Include name="feature-stage-beta-metrics.mdx" />
-
 <Note>
 
 Metrics for .NET are supported with Sentry .NET SDK version `4.0.0` and above.
@@ -13,6 +11,8 @@ Metrics for .NET are supported with Sentry .NET SDK version `4.0.0` and above.
 </Note>
 
 Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
+
+# Custom metrics
 
 ## Initialization
 
@@ -22,8 +22,12 @@ To enable metrics you have to opt-in the metrics feature.
 SentrySdk.Init(options =>
 {
     options.dsn = "___DSN___";
-    // Initialize some (non null) ExperimentalMetricsOptions to enable Sentry Metrics,
-    options.ExperimentalMetrics = new ExperimentalMetricsOptions { EnableCodeLocations = true };
+    // Enable Sentry Metrics,
+    options.EnableMetrics(metrics =>
+    {
+        // Send code locations with any metrics you emit manually
+        metrics.EnableCodeLocations = true;
+    });
 });
 ```
 
@@ -92,4 +96,59 @@ using (SentrySdk.Metrics.StartTimer("bingo"))
 {
     // Your code goes here
 }
+```
+
+# OpenTelemetry Metrics
+
+The Sentry SDK for .NET also allows you to configure OpenTelemetry metrics that you would like to automatically capture and send to Sentry.
+
+For example, you could configure Sentry to capture all of the built-in metrics that it knows about:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics => metrics
+            .AddRuntimeInstrumentation() // <-- Requires the OpenTelemetry.Instrumentation.Runtime package
+            .AddMeter(
+                "Microsoft.AspNetCore.Hosting",
+                "Microsoft.AspNetCore.Server.Kestrel",
+                "System.Net.Http")
+    );
+
+builder.WebHost.UseSentry(options =>
+{
+    options.dsn = "___DSN___";
+    options.EnableMetrics(metrics => metrics.CaptureSystemDiagnosticsMeters = BuiltInSystemDiagnosticsMeters.All);
+});
+```
+
+Or to capture only metrics from specific Meters:
+
+```csharp
+builder.WebHost.UseSentry(options =>
+{
+    options.dsn = "___DSN___";
+    metrics.CaptureSystemDiagnosticsMeters = [
+        BuiltInSystemDiagnosticsMeters.MicrosoftAspNetCoreHosting,
+        BuiltInSystemDiagnosticsMeters.SystemNetHttp,
+    ];
+});
+```
+
+Or even to capture only specific Instruments:
+
+```csharp
+var HatsMeter = new Meter("HatCo.HatStore", "1.0.0");
+var HatsSold = HatsMeter.CreateCounter<int>(
+    name: "hats-sold",
+    unit: "Hats",
+    description: "Number of hats sold"
+);
+
+SentrySdk.Init(options => {
+    options.dsn = "___DSN___";
+    options.EnableMetrics(metrics => {
+        metrics.CaptureSystemDiagnosticsInstruments = ["hats-sold"];
+    });
+});
 ```
