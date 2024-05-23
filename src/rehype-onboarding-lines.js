@@ -22,7 +22,7 @@ import {visit} from 'unist-util-visit';
  */
 export default function rehypeOnboardingLines() {
   return tree => {
-    visit(tree, onlyHighlitedCodeBlocks, visitor);
+    visit(tree, {type: 'element', tagName: 'code'}, visitor);
   };
 }
 /**
@@ -89,6 +89,10 @@ function visitor(node) {
     node?.data?.meta || node?.properties?.metastring || ''
   );
 
+  if (!meta.includes('onboardingOptions')) {
+    return;
+  }
+
   const optionForLine = getOptionForLine(meta);
 
   node.children.forEach((line, index) => {
@@ -99,12 +103,3 @@ function visitor(node) {
     }
   });
 }
-
-/**
- * Check if the node is a code block with the metastring containing `onboardingOptions`
- * @param {Element} node
- * @return {boolean}
- */
-const onlyHighlitedCodeBlocks = node =>
-  node.tagName === 'code' &&
-  (node?.data?.meta || node?.properties?.metastring || '').includes('onboardingOptions');
