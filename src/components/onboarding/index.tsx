@@ -123,6 +123,7 @@ export function OnboardingOptionsButtons({
               checked={options.find(opt => opt.id === option.id)?.selected}
               disabled={option.disabled}
               variant="soft"
+              size="1"
               onCheckedChange={ev => {
                 handleCheckedChange(option, ev as boolean);
               }}
