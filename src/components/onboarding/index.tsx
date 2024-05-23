@@ -108,7 +108,7 @@ export function OnboardingOptionsButtons({
   }, [options]);
 
   return (
-    <div className="flex gap-4 my-4 py-4 border-t border-b">
+    <div className="flex gap-4 py-5">
       {options.map(option => (
         <Button
           variant="surface"
