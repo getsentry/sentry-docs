@@ -1,7 +1,11 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {Button, Checkbox} from '@radix-ui/themes';
+import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import {Button, Checkbox, Theme} from '@radix-ui/themes';
+
+import styles from './styles.module.scss';
 
 export function OnboardingOption({
   children,
@@ -29,6 +33,10 @@ type OnboardingOptionType = {
   id: string;
   name: string;
   disabled?: boolean;
+  /**
+   * Tooltip content, can contain simple HTML tags (like `<b>bold</b>`)
+   */
+  tooltip?: string;
 };
 
 const validateOptionDeps = (options: OnboardingOptionType[]) => {
@@ -133,7 +141,26 @@ export function OnboardingOptionsButtons({
                 handleCheckedChange(option, ev as boolean);
               }}
             />
+
             {option.name}
+            {option.tooltip && (
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <QuestionMarkCircledIcon fontSize={20} strokeWidth="2" />
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Theme accentColor="iris">
+                      <Tooltip.Content className={styles.TooltipContent} sideOffset={5}>
+                        {/* use `dangerouslySetInnerHTML` to render HTML tags */}
+                        <span dangerouslySetInnerHTML={{__html: option.tooltip}} />
+                        <Tooltip.Arrow className={styles.TooltipArrow} />
+                      </Tooltip.Content>
+                    </Theme>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+            )}
           </label>
         </Button>
       ))}
