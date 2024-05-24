@@ -204,17 +204,21 @@ export function OnboardingOptionButtons({
   return (
     <div
       ref={buttonsRef}
-      className={`flex flex-wrap gap-4 py-2 bg-white/90 sticky top-[80px] z-[1000] rounded shadow-[var(--shadow-6)] transition ${
+      className={`flex flex-wrap gap-3 py-2 bg-white/90 sticky top-[80px] z-[1000] rounded shadow-[var(--shadow-6)] transition ${
         isSticky ? 'px-2 backdrop-blur' : ''
       }`}
     >
       {options.map(option => (
         <Button
           variant="surface"
-          size="2"
+          size={{
+            xs: '3',
+            md: '2',
+          }}
           disabled={option.disabled}
           asChild
           key={option.id}
+          className="w-full md:w-auto"
         >
           <label role="button">
             <Checkbox
