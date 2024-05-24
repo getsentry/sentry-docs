@@ -62,7 +62,7 @@ const getOptionForLine = meta => {
   // {onboardingOptions: {performance: '1, 3-4', profiling: '5-6'}} {other stuff}
   const optionsRE = /{onboardingOptions:\s*({[^}]*})\s*}/;
   let linesForOptions = {};
-  let options = optionsRE.exec(meta)?.[1];
+  const options = optionsRE.exec(meta)?.[1];
   if (!options) {
     return () => undefined;
   }
