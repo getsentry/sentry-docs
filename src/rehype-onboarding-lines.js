@@ -58,12 +58,29 @@ const parseLines = meta => {
  * @return { (index:number) => string | undefined }
  */
 const getOptionForLine = meta => {
+  // match the onboardingOptions object, but will also match `other stuff`
+  // {onboardingOptions: {performance: '1, 3-4', profiling: '5-6'}} {other stuff}
   const optionsRE = /{.*onboardingOptions:(.*)}/i;
   let linesForOptions = {};
-  const options = optionsRE.exec(meta)?.[1];
+  let options = optionsRE.exec(meta)?.[1];
   if (!options) {
     return () => undefined;
   }
+  // take as many characters as possible until we have balanced curly braces
+  // to get rid of the `other stuff` in the example above
+  const stack = [];
+  for (let i = 0; i < options.length; i++) {
+    if (options[i] === '{') {
+      stack.push(i);
+    } else if (options[i] === '}') {
+      stack.pop();
+      if (stack.length === 0) {
+        options = options.slice(0, i + 1);
+        break;
+      }
+    }
+  }
+
   // eval provides the convenience of not having to wrap the object properties in quotes
   // eslint-disable-next-line no-eval
   const parsedOptions = eval(`(${options})`);
