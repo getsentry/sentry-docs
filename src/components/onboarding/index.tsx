@@ -204,7 +204,7 @@ export function OnboardingOptionButtons({
   return (
     <div
       ref={buttonsRef}
-      className={`flex gap-4 py-2 bg-white/90 sticky top-[80px] z-[1000] rounded shadow-[var(--shadow-6)] transition ${
+      className={`flex flex-wrap gap-4 py-2 bg-white/90 sticky top-[80px] z-[1000] rounded shadow-[var(--shadow-6)] transition ${
         isSticky ? 'px-2 backdrop-blur' : ''
       }`}
     >
