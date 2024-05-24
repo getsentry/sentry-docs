@@ -66,6 +66,9 @@ type OnboardingOptionType = {
    * or lines of code specified in in a `{onboardingOptions: {this_id: 'line-range'}}` in a code block meta
    */
   id: OptionId;
+  /**
+   * defaults to `true`
+   */
   checked?: boolean;
   disabled?: boolean;
 };
@@ -88,17 +91,13 @@ export function OnboardingOption({
   optionId: OptionId;
 }) {
   validateOptionIds([{id: optionId}]);
-  return (
-    <div data-onboarding-option={optionId} className="hidden">
-      {children}
-    </div>
-  );
+  return <div data-onboarding-option={optionId}>{children}</div>;
 }
 
 export function OnboardingOptionButtons({
   options: initialOptions,
 }: {
-  // convenience type to allow passing option ids as strings when no additional config is required
+  // convenience to allow passing option ids as strings when no additional config is required
   options: (OnboardingOptionType | OptionId)[];
 }) {
   const normalizedOptions = initialOptions.map(option => {
@@ -110,11 +109,18 @@ export function OnboardingOptionButtons({
 
   validateOptionIds(normalizedOptions);
 
-  const [options, setSelectedOptions] = useState<
-    (OnboardingOptionType & {checked: boolean})[]
-  >(normalizedOptions.map(option => ({...option, checked: Boolean(option.checked)})));
+  const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
+    normalizedOptions.map(option => ({
+      ...option,
+      // default to checked if not excplicitly set
+      checked: option.checked ?? true,
+    }))
+  );
 
   function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
+    const dependencies = optionDetails[clickedOption.id].deps ?? [];
+    const depenedants =
+      options.filter(opt => optionDetails[opt.id].deps?.includes(clickedOption.id)) ?? [];
     setSelectedOptions(prev => {
       // - select option and all dependencies
       // - disable dependencies
@@ -126,13 +132,13 @@ export function OnboardingOptionButtons({
               checked: true,
             };
           }
-          if (optionDetails[clickedOption.id].deps?.includes(opt.id)) {
-            return {...opt, disabled: true, checked: true};
+          if (dependencies.includes(opt.id)) {
+            return {...opt, checked: true};
           }
           return opt;
         });
       }
-      // unselect option and reenable dependencies
+      // unselect option and all dependants
       // Note: does not account for dependencies of multiple dependants
       return prev.map(opt => {
         if (opt.id === clickedOption.id) {
@@ -141,10 +147,11 @@ export function OnboardingOptionButtons({
             checked: false,
           };
         }
-        // reenable dependencies
-        return optionDetails[clickedOption.id].deps?.includes(opt.id)
-          ? {...opt, disabled: false}
-          : opt;
+        // deselect dependants
+        if (depenedants.find(dep => dep.id === opt.id)) {
+          return {...opt, checked: false};
+        }
+        return opt;
       });
     });
   }

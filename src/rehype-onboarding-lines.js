@@ -99,7 +99,6 @@ function visitor(node) {
     const option = optionForLine(index);
     if (option) {
       line.properties['data-onboarding-option'] = option;
-      line.properties.className.push('hidden');
     }
   });
 }
