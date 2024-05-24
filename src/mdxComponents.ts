@@ -11,7 +11,7 @@ import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
-import {OnboardingOption, OnboardingOptionsButtons} from './components/onboarding';
+import {OnboardingOption, OnboardingOptionButtons} from './components/onboarding';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
@@ -62,7 +62,7 @@ export function mdxComponents(
     PlatformOrGuideName,
     PlatformSdkPackageName,
     OnboardingOption,
-    OnboardingOptionsButtons,
+    OnboardingOptionButtons,
     RelayMetrics,
     SandboxLink,
     SignInNote,

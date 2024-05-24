@@ -51,7 +51,7 @@ const validateOptionDeps = (options: OnboardingOptionType[]) => {
   });
 };
 
-export function OnboardingOptionsButtons({
+export function OnboardingOptionButtons({
   options: initialOptions,
 }: {
   options: OnboardingOptionType[];
