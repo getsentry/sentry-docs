@@ -32,9 +32,9 @@ const optionDetails: Record<
     name: 'Profiling',
     description: (
       <span>
-        <b>Requires Performance Monitoring</b> <br /> See the exact lines of code causing
-        your performance bottlenecks, for faster troubleshooting and resource
-        optimization.
+        <span className={styles.TooltipTitle}>Requires Performance Monitoring</span>
+        See the exact lines of code causing your performance bottlenecks, for faster
+        troubleshooting and resource optimization.
       </span>
     ),
     deps: ['performance'],
