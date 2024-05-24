@@ -24,6 +24,10 @@ export default async function Page({
     ]);
   });
 
+  if (platformList.length === 0) {
+    return notFound();
+  }
+
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {
     const isValidPlatform = platformList.some(
