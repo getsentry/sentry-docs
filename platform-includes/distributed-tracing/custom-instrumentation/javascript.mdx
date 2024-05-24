@@ -173,6 +173,28 @@ In this example, tracing information is propagated to the project running at `ht
 
 The two services are now connected with your custom distributed tracing implementation.
 
+### Starting a New Trace
+
+In case the SDK's [default behavior](../#trace-duration) for the trace duration does not fir your use case, you can manually start a new trace that will no longer be connected to the current (distributed) trace.
+This means that spans or errors collected by the SDK during this new trace will not be connected to spans or errors collected before or after this new trace.
+
+To start a new trace that remains valid throughout the duration of a callback, use `startNewTrace`:
+
+```javascript {2-6}
+myButton.addEventListener("click", async () => {
+  Sentry.startNewTrace(() => {
+    Sentry.startSpan(
+      { op: "ui.interaction.click", name: "fetch click" },
+      async () => {
+        await fetch("http://example.com");
+      }
+    );
+  });
+});
+```
+
+Once the callback ended, the SDK will continue the previous trace (if available).
+
 ## Verification
 
 If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
