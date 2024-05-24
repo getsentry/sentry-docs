@@ -1,81 +1,133 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import {ReactNode, useEffect, useRef, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
 
 import styles from './styles.module.scss';
 
-export function OnboardingOption({
-  children,
-  optionId,
-  dependsOn = [],
-}: {
-  children: React.ReactNode;
-  optionId: string;
-  dependsOn?: string[];
-}) {
-  return (
-    <div data-onboarding-option={optionId} className="hidden" data-depends-on={dependsOn}>
-      {children}
-    </div>
-  );
-}
+const optionDetails: Record<
+  OptionId,
+  {
+    description: ReactNode;
+    name: string;
+    deps?: OptionId[];
+  }
+> = {
+  'error-monitoring': {
+    name: 'Error Monitoring',
+    description: "Let's admit it, we all have errors.",
+  },
+  performance: {
+    name: 'Performance Monitoring',
+    description: (
+      <span>
+        Automatic performance issue detection across services and context on who is
+        impacted, outliers, regressions, and the root cause of your slowdown.
+      </span>
+    ),
+  },
+  profiling: {
+    name: 'Profiling',
+    description: (
+      <span>
+        <b>Requires Performance Monitoring</b> <br /> See the exact lines of code causing
+        your performance bottlenecks, for faster troubleshooting and resource
+        optimization.
+      </span>
+    ),
+    deps: ['performance'],
+  },
+  'session-replay': {
+    name: 'Session Replay',
+    description: (
+      <span>
+        Video-like reproductions of user sessions with debugging context to help you
+        confirm issue impact and troubleshoot faster.
+      </span>
+    ),
+  },
+};
+
+const OPTION_IDS = [
+  'error-monitoring',
+  'performance',
+  'profiling',
+  'session-replay',
+] as const;
+
+type OptionId = (typeof OPTION_IDS)[number];
 
 type OnboardingOptionType = {
-  dependsOn: string[];
   /**
    * Unique identifier for the option, will control the visibility
    * of `<OnboardingOption optionId="this_id"` /> somewhere on the page
    * or lines of code specified in in a `{onboardingOptions: {this_id: 'line-range'}}` in a code block meta
    */
-  id: string;
-  name: string;
+  id: OptionId;
+  checked?: boolean;
   disabled?: boolean;
-  /**
-   * Tooltip content, can contain simple HTML tags (like `<b>bold</b>`)
-   */
-  tooltip?: string;
 };
 
-const validateOptionDeps = (options: OnboardingOptionType[]) => {
+const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
   options.forEach(option => {
-    option.dependsOn?.forEach(dep => {
-      if (!options.find(opt => opt.id === dep)) {
-        throw new Error(
-          `Option dependency with \`${dep}\` not found: \`${JSON.stringify(option, null, 2)}\``
-        );
-      }
-    });
+    if (!OPTION_IDS.includes(option.id)) {
+      throw new Error(
+        `Invalid option id: ${option.id}.\nValid options are: ${OPTION_IDS.map(opt => `"${opt}"`).join(', ')}`
+      );
+    }
   });
 };
+
+export function OnboardingOption({
+  children,
+  optionId,
+}: {
+  children: React.ReactNode;
+  optionId: OptionId;
+}) {
+  validateOptionIds([{id: optionId}]);
+  return (
+    <div data-onboarding-option={optionId} className="hidden">
+      {children}
+    </div>
+  );
+}
 
 export function OnboardingOptionButtons({
   options: initialOptions,
 }: {
-  options: OnboardingOptionType[];
+  // convenience type to allow passing option ids as strings when no additional config is required
+  options: (OnboardingOptionType | OptionId)[];
 }) {
-  validateOptionDeps(initialOptions);
+  const normalizedOptions = initialOptions.map(option => {
+    if (typeof option === 'string') {
+      return {id: option};
+    }
+    return option;
+  });
+
+  validateOptionIds(normalizedOptions);
 
   const [options, setSelectedOptions] = useState<
-    (OnboardingOptionType & {selected: boolean})[]
-  >(initialOptions.map(option => ({...option, selected: option.disabled || false})));
+    (OnboardingOptionType & {checked: boolean})[]
+  >(normalizedOptions.map(option => ({...option, checked: Boolean(option.checked)})));
 
-  function handleCheckedChange(option: OnboardingOptionType, selected: boolean) {
+  function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
     setSelectedOptions(prev => {
       // - select option and all dependencies
       // - disable dependencies
-      if (selected) {
+      if (checked) {
         return prev.map(opt => {
-          if (opt.id === option.id) {
+          if (opt.id === clickedOption.id) {
             return {
               ...opt,
-              selected: true,
+              checked: true,
             };
           }
-          if (option.dependsOn?.includes(opt.id)) {
-            return {...opt, disabled: true, selected: true};
+          if (optionDetails[clickedOption.id].deps?.includes(opt.id)) {
+            return {...opt, disabled: true, checked: true};
           }
           return opt;
         });
@@ -83,14 +135,16 @@ export function OnboardingOptionButtons({
       // unselect option and reenable dependencies
       // Note: does not account for dependencies of multiple dependants
       return prev.map(opt => {
-        if (opt.id === option.id) {
+        if (opt.id === clickedOption.id) {
           return {
             ...opt,
-            selected: false,
+            checked: false,
           };
         }
         // reenable dependencies
-        return option.dependsOn?.includes(opt.id) ? {...opt, disabled: false} : opt;
+        return optionDetails[clickedOption.id].deps?.includes(opt.id)
+          ? {...opt, disabled: false}
+          : opt;
       });
     });
   }
@@ -103,10 +157,10 @@ export function OnboardingOptionButtons({
         `[data-onboarding-option="${option.id}"]`
       );
       targetElements.forEach(el => {
-        el.classList.toggle('hidden', !option.selected);
+        el.classList.toggle('hidden', !option.checked);
       });
-      if (option.selected && option.dependsOn) {
-        const dependenciesSelecor = option.dependsOn.map(
+      if (option.checked && optionDetails[option.id].deps?.length) {
+        const dependenciesSelecor = optionDetails[option.id].deps!.map(
           dep => `[data-onboarding-option="${dep}"]`
         );
         const dependencies = document.querySelectorAll<HTMLDivElement>(
@@ -160,7 +214,7 @@ export function OnboardingOptionButtons({
           <label role="button">
             <Checkbox
               defaultChecked={option.disabled}
-              checked={options.find(opt => opt.id === option.id)?.selected}
+              checked={option.checked}
               disabled={option.disabled}
               variant="soft"
               size="1"
@@ -169,8 +223,8 @@ export function OnboardingOptionButtons({
               }}
             />
 
-            {option.name}
-            {option.tooltip && (
+            {optionDetails[option.id].name}
+            {optionDetails[option.id] && (
               <Tooltip.Provider>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
@@ -179,8 +233,7 @@ export function OnboardingOptionButtons({
                   <Tooltip.Portal>
                     <Theme accentColor="iris">
                       <Tooltip.Content className={styles.TooltipContent} sideOffset={5}>
-                        {/* use `dangerouslySetInnerHTML` to render HTML tags */}
-                        <span dangerouslySetInnerHTML={{__html: option.tooltip}} />
+                        {optionDetails[option.id].description}
                         <Tooltip.Arrow className={styles.TooltipArrow} />
                       </Tooltip.Content>
                     </Theme>
