@@ -58,7 +58,6 @@ const Sentry = require("@sentry/node");
 const {
   SentrySpanProcessor,
   SentryPropagator,
-  SentryContextManager,
   SentrySampler,
 } = require("@sentry/opentelemetry");
 
@@ -78,13 +77,16 @@ provider.addSpanProcessor(new SentrySpanProcessor());
 // We need a custom propagator and context manager
 provier.register({
   propagator: new SentryPropagator(),
-  contextManager: new SentryContextManager(),
+  contextManager: new Sentry.SentryContextManager(),
 });
 
 // We need our sampler to ensure the correct subset of traces is sent to Sentry
 const provider = new BasicTracerProvider({
   sampler: new SentrySampler(Sentry.getClient()),
 });
+
+// Validate that the setup is correct
+Sentry.validateOpenTelemetrySetup();
 ```
 
 ## Using an OpenTelemetry Tracer
