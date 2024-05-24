@@ -1,34 +1,47 @@
 ---
 title: Instrument Caches
 sidebar_order: 1000
-description: "Learn how to manually instrument your code to use Sentry's Cache module. "
+description: "Learn how to manually instrument your code to use Sentry's Cache module."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+  - javascript.deno
+  - javascript.nextjs
+  - javascript.astro
+  - javascript.sveltekit
+  - javascript.remix
 ---
 
 A cache can be used to speed up data retrieval, thereby improving application performance. Because instead of getting data from a potentially slow data layer, your application will be getting data from memory (in a best case scenario). Caching can speed up read-heavy workloads for applications like Q&A portals, gaming, media sharing, and social networking.
 
-Sentry offers a [cache-monitring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/) that can be auto-instrumented using Sentry's redis integration (more coming soon).
-
+Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/) that can be auto-instrumented using Sentry's Redis integration (more coming soon).
 
 ## Manual Instrumentation
 
-If you're using anything other than Sentry's redis integration, you'll need to manually instrument the [Cache Module](<(https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/)>) by following the steps below.
+If you're using anything other than Sentry's Redis integration, you'll need to manually instrument the [Cache Module](<(https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/)>) by following the steps below.
 
 You'll need to create two spans - one indicating that something is being put into the cache, and a second one indicating that something is being fetched from the cache.
 
-Make sure that there's a transaction running when you create the spans. If you're using a web framework those transactions will be created for you automatically. See <PlatformLink to="/performance/">Performance Monitoring</PlatformLink> for more information.
+<PlatformSection supported={["javascript.node", "javascript.deno", "javascript.bun"]}>
+
+Make sure that there's an active span before you create your cache spans. If you're using a web framework like Express, a span will be created for you automatically. See <PlatformLink to="/performance/">Performance Monitoring</PlatformLink> for more information.
+
+</PlatformSection>
 
 For detailed information about which data can be set, see the [Cache Module Developer Specification](https://develop.sentry.dev/sdk/performance/modules/caches/).
 
+### Step 1: Add Span When Putting Data Into the Cache
 
-
-
-### Initialize Sentry
-
-<PlatformContent includePath="getting-started-config" />
-
-### Add Span When Putting Data Into the Cache
-
-If the cache you’re using isn’t supported by the auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans instead:
+Follow these custom instrumentation instructions to emit cache setting spans:
 
 1. Set the cache value with whatever cache library you happen to be using.
 2. Wrap the part of your application that uses the cached value with `Sentry.startSpan(...)`.
@@ -39,7 +52,7 @@ If the cache you’re using isn’t supported by the auto instrumentation mentio
 
 (The steps described above are also documented in the snippet.)
 
-```js
+```javascript {filename: my-cache.js}
 const key = "myCacheKey123";
 const value = "The value I want to cache.";
 
@@ -61,7 +74,7 @@ Sentry.startSpan(
 );
 ```
 
-### Add Span When Retrieving Data From the Cache
+### Step 2: Add Span When Retrieving Data From the Cache
 
 If the cache you’re using isn’t supported by the auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans instead:
 
@@ -74,7 +87,7 @@ If the cache you’re using isn’t supported by the auto instrumentation mentio
 7. Optionally, you can set other attributes such as `cache.item_size`. (See [Cache Module Span Data Conventions](https://develop.sentry.dev/sdk/performance/modules/caches/#span-data) for more information.)
    (The steps described above are also documented in the snippet.)
 
-```js
+```javascript {filename: my-cache.js}
 const key = "myCacheKey123";
 
 Sentry.startSpan(
