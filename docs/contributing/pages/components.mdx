@@ -242,3 +242,106 @@ Attributes:
 - `supported` (string[])
 - `notSupported` (string[])
 - `noGuides` (boolean) - hide this on all guides (takes precedence over `supported`/`notSupported`)
+
+## Onboarding Options
+
+If you're writing product feature specific docs, you can specify code block `onboardingOptions` metadata:
+
+````markdown
+```go {onboardingOptions: {performance: '13-17'}}
+// your code here
+```
+````
+
+the general syntax is `onboardingOptions: {[feature_id: 'range'}` where `feature` is the feature id
+and `range` is the corresponding line range (similar to the line highlighting syntax).
+
+You can specify multiple features by separating them with a comma:
+
+`{onboardingOptions: {performance: '13-17', profiling: '5-6'}}`
+
+The range visibility will be controlled by the `OnboardingOptionButtons` component:
+
+````jsx diff
+<OnboardingOptionButtons
+  options={[
+    {id: 'error-monitoring', disabled: true},
+    "performance"
+  ]}
+/>
+````
+
+- `options` can either be either an object of this shape:
+
+```typescript
+{
+  id: 'error-monitoring'| 'performance'| 'profiling'| 'session-replay',
+  disabled: boolean,
+  checked: boolean
+}
+```
+or a string (one of these `id`s 👆) for convenience when using defaults.
+
+- default values: `disabled: false` and `checked: false`.
+
+Example (output of the above):
+
+<OnboardingOptionButtons
+  options={[
+    {id: 'error-monitoring', disabled: true},
+    "performance"
+  ]}
+  dontStick
+/>
+
+```go {onboardingOptions: {performance: '13-17'}}
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
+	"github.com/gin-gonic/gin"
+)
+
+// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
+if err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	EnableTracing: true,
+	// Set TracesSampleRate to 1.0 to capture 100%
+	// of transactions for performance monitoring.
+	// We recommend adjusting this value in production,
+	TracesSampleRate: 1.0,
+}); err != nil {
+	fmt.Printf("Sentry initialization failed: %v\n", err)
+}
+
+// Then create your app
+app := gin.Default()
+
+// Once it's done, you can attach the handler as one of your middleware
+app.Use(sentrygin.New(sentrygin.Options{}))
+
+// Set up routes
+app.GET("/", func(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "Hello world!")
+})
+
+// And run it
+app.Run(":3000")
+```
+
+You can conditionally render content based on the selected onboarding options using the
+`OnboardingOption` component
+
+Example (toggle the `performance` option above to see the effect):
+
+<OnboardingOption optionId="performance">
+
+```jsx
+<OnboardingOption optionId="performance">
+  This code block is wrapped in a `OnboardingOption` component and will only
+  be rendered when the `performance` option is selected.
+</OnboardingOption>
+```
+</OnboardingOption>
