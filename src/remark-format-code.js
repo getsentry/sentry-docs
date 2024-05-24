@@ -12,7 +12,10 @@ export default function remarkFormatCodeBlocks() {
     const formattingWork = codeNodes
       // skip code blocks with diff meta as they might have
       // broken syntax due to + and - characters
-      .filter(node => !node.meta?.includes('diff'))
+      // or with `onboardingOptions` as they need to have predictable line numbers
+      .filter(
+        node => !(node.meta?.includes('diff') || node.meta?.includes('onboardingOptions'))
+      )
       .map(node => formatCode(node));
 
     await Promise.all(formattingWork);
