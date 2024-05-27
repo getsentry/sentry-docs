@@ -11,7 +11,7 @@ import {visit} from 'unist-util-visit';
  * to each line of code based on the metastring of the code block.
  *
  * The metastring should be in the format of:
- * `{onboardingOptions: {performance: '1, 3-4', profiling: '5-6'}}`
+ * `{"onboardingOptions": {"performance": "1, 3-4", "profiling": "5-6"}}`
  * where the keys are the onboarding options, the line numbers can be individual or ranges separated by a comma.
  *
  * These lines will be hidden by default and shown based on the user's selection of `<OnboardingOptionsButtons ... />`
