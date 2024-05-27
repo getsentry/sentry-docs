@@ -7,10 +7,31 @@ supported:
   - javascript.connect
   - javascript.express
   - javascript.fastify
+  - javascript.hapi
   - javascript.koa
 ---
 
-When running your application in ESM mode, you can't use `require()` to load modules. Instead, you have to use the  `--import` command line options to load a module before the application starts:
+<Alert>
+  Are you unsure if you should use this installation method? Review our
+  [installation methods](../).
+</Alert>
+
+When running your application in ESM mode, you can't use `require()` to load modules. Instead, you have to use the `--import` command line options to load a module before the application starts.
+
+You need to create a file named `instrument.mjs` that imports and initializes Sentry:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+// Ensure to call this before importing any other modules!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
 
 Adjust the Node.js call for your application to use the [--import](https://nodejs.org/api/cli.html#--importmodule) parameter and point it at `instrument.js`, which contains your `Sentry.init()` code:
 
@@ -19,11 +40,10 @@ Adjust the Node.js call for your application to use the [--import](https://nodej
 node --import ./instrument.mjs app.mjs
 ```
 
+If it is not possible for you to pass the `--import` flag to the Node.js binary, you can alternatively use the `NODE_OPTIONS` environment variable as follows:
+
+```bash
+NODE_OPTIONS="--import ./instrument.mjs" npm run start
+```
+
 We do not support ESM in Node versions before 18.19.0.
-
-## When to use this
-
-Most node applications today are either written in CommonJS (CJS), or compiled to CJS before running them.
-CommonJS uses `require()` to load modules. Our recommended installation method when using CommonJS is to require the `instrument.js` file at the top of your application. However, if your application is run in ESM mode, this will not work. In this case, you can follow the [ESM docs](./esm).
-
-Note that even if your application is written in ESM (using `import`), it may still be _run_ in CJS. For example, almost all applications written in TypeScript are compiled to CJS before running them. In this case, you should follow the CommonJS instructions.

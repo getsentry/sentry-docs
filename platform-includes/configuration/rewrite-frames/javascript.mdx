@@ -13,19 +13,17 @@ Sentry.init({
 <script>
   // Configure sentryOnLoad before adding the Loader Script
   window.sentryOnLoad = function () {
-    Sentry.init({
-      integrations: [Sentry.rewriteFramesIntegration()],
-    });
+    Sentry.init({});
+    Sentry.lazyLoadIntegration("rewriteFramesIntegration").then(
+      (integration) => {
+        Sentry.addIntegration(integration());
+      }
+    );
   };
 </script>
 
 <script
   src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
-  crossorigin="anonymous"
-></script>
-<script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/rewriteframes.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'rewriteframes.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 ```

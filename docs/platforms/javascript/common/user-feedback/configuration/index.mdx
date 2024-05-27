@@ -1,16 +1,18 @@
 ---
 title: Configuration
 sidebar_order: 6100
-description: "Learn about the general User Feedback configuration fields."
+description: "Learn about general User Feedback configuration fields."
 ---
 
-<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.koa"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.koa", "javascript.nestjs"]}>
 
 ## User Feedback Widget
 
 The User Feedback Widget offers many customization options, and if the available options are insufficient, you can [use your own UI](#bring-your-own-widget).
 
 The following configuration options apply to version 8.0.0 and above of the JavaScript SDK. The Feedback Widget in version 7 of the SDK was a beta release and is now deprecated.
+
+![An image showing the available customization options for the User Feedback Widget](./img/user-feedback-widget-customization.png)
 
 ### General
 
@@ -20,7 +22,7 @@ The following options can be configured for the integration in `feedbackIntegrat
 | -------------- | ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `autoInject`   | `boolean`                                  | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
 | `showBranding` | `boolean`                                  | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
-| `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"`        | The color theme to use. `"system"` will follow your OS color scheme.                                                                                                                                                                       |
+| `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
 | `id`           | `string`                                   | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
 
 ### Auto-Inject vs. Manual Injection
@@ -46,16 +48,16 @@ Read more about how to [use your own UI](#bring-your-own-button) below.
 
 | Key                | Type                     | Default                               | Description                                                                                                            |
 | ------------------ | ------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `showName`         | `boolean`                | `true`                                | Displays the name field on the Feedback form.                                                                          |
-| `showEmail`        | `boolean`                | `true`                                | Displays the email field on the Feedback form.                                                                         |
+| `showName`         | `boolean`                | `true`                                | Displays the name field on the feedback form.                                                                          |
+| `showEmail`        | `boolean`                | `true`                                | Displays the email field on the feedback form.                                                                         |
 | `enableScreenshot` | `boolean`                | `true`                                | Allows the user to send a screenshot attachment with their feedback. For self-hosted, release 24.4.2 is also required. |
-| `isNameRequired`   | `boolean`                | `false`                               | Requires the name field on the Feedback form to be filled in.                                                          |
-| `isEmailRequired`  | `boolean`                | `false`                               | Requires the email field on the Feedback form to be filled in.                                                         |
+| `isNameRequired`   | `boolean`                | `false`                               | Requires the name field on the feedback form to be filled in.                                                          |
+| `isEmailRequired`  | `boolean`                | `false`                               | Requires the email field on the feedback form to be filled in.                                                         |
 | `useSentryUser`    | `Record<string, string>` | `{ email: 'email', name: 'username'}` | Sets the `email` and `name` fields to the corresponding Sentry SDK user fields that were called with `Sentry.setUser`. |
 
 #### User Context
 
-If you have set a user context by calling [`Sentry.setUser`](/platforms/javascript/enriching-events/identify-user/) then those values will be used as defaults for the `name` and `email` fields. If those fields are hidden from the user, then the default values will still be sent along with the feedback message.
+If you've set a user context by calling <PlatformLink to="/enriching-events/identify-user/">`Sentry.setUser()`</PlatformLink>, those values will be used as defaults for the `name` and `email` fields. If those fields are hidden from the user, the default values will still be sent along with the feedback message.
 
 Below is an example configuration with non-default user fields.
 
@@ -160,7 +162,7 @@ Colors can be customized by by defining CSS variables that override the default 
 | `--success-color`     | `successColor`     | `#268d75`                                 | `#2da98c`                                 | Color used for success-related components (such as text color when feedback is submitted successfully). |
 | `--error-color`       | `errorColor`       | `#df3338`                                 | `#f55459`                                 | Color used for error related components (such as text color when there's an error submitting feedback). |
 | `--box-shadow`        | `boxShadow`        | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | Box shadow style used for the widget (injected button and form).                                        |
-| `--outline`           | `outline`          | `1px auto var(--accent-background)`       | `1px auto var(--accent-background)`       | Outline for form inputs when focused.                                                             |
+| `--outline`           | `outline`          | `1px auto var(--accent-background)`       | `1px auto var(--accent-background)`       | Outline for form inputs when focused.                                                                   |
 
 #### Theme priority
 
@@ -205,7 +207,7 @@ feedbackIntegration({
 
 ### Event Callbacks
 
-Sometimes it’s important to know when a user started interacting with the feedback form, so you can add custom logging, or start/stop background timers on the page until the user is done.
+Because it’s sometimes useful to know when a user started interacting with the feedback form, we've made it possible for you to add custom logging, or start and stop background timers on the page that tell you when the user is done.
 
 Pass these callbacks when you initialize the Feedback integration:
 
@@ -220,7 +222,7 @@ feedbackIntegration({
 
 ### Bring Your Own Button
 
-You can skip the default injected button and use your own button to trigger displaying the form. Call `feedback.attachTo()` to have the SDK attach a click listener to your own button. You can additionally supply the same customization options that the constructor accepts (like for text labels and colors).
+You can use your own button instead of the default injected button to trigger the form being displayed, by calling `feedback.attachTo()` to have the SDK attach a click listener to your button. You can also supply the same customization options that the constructor accepts (for example, for text labels and colors).
 
 ```javascript
 const feedback = feedbackIntegration({
@@ -248,10 +250,10 @@ function MyFeedbackButton() {
   }
 
   return (
-    <button type="button" onClick={() => {
+    <button type="button" onClick={async () => {
       const form = await feedback.createForm();
       form.appendToDom();
-      form.show();
+      form.open();
     }}>
       Give me feedback
     </button>
@@ -263,8 +265,8 @@ function MyFeedbackButton() {
 
 You can also use your own UI components to gather feedback and pass the feedback data object to the `sendFeedback()` function. The `sendFeedback` function accepts two parameters:
 
-- a JavaScript object with a required `message` property and additionally, optional `name` and `email` properties or a `FormData` instance with the same properties
-- an optional "options" object
+- A JavaScript object with a required `message` property and also optional `name` and `email` properties, or a `FormData` instance with the same properties.
+- An optional "options" object.
 
 ```javascript
 Sentry.sendFeedback(
@@ -279,7 +281,7 @@ Sentry.sendFeedback(
 );
 ```
 
-Here is a simple example:
+Here's a simple example:
 
 ```html
 <form id="my-feedback-form">
@@ -307,27 +309,27 @@ document
 
 You can customize the Crash-Report modal to your organization's needs, for example, for localization purposes. All options can be passed through the `Sentry.showReportDialog` call.
 
-| Param            | Default                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| `eventId`        | Manually set the id of the event.                                                                 |
-| `dsn`            | Manually set dsn to report to.                                                                    |
-| `user`           | Manually set user data _[an object with keys listed below]_.                                      |
-| `user.email`     | User's email address.                                                                             |
-| `user.name`      | User's name.                                                                                      |
-| `lang`           | _[automatic]_ – **override for Sentry’s language code**                                           |
-| `title`          | It looks like we’re having issues.                                                                |
-| `subtitle`       | Our team has been notified.                                                                       |
-| `subtitle2`      | If you’d like to help, tell us what happened below. – **not visible on small screen resolutions** |
-| `labelName`      | Name                                                                                              |
-| `labelEmail`     | Email                                                                                             |
-| `labelComments`  | What happened?                                                                                    |
-| `labelClose`     | Close                                                                                             |
-| `labelSubmit`    | Submit                                                                                            |
-| `errorGeneric`   | An unknown error occurred while submitting your report. Please try again.                         |
-| `errorFormEntry` | Some fields were invalid. Please correct the errors and try again.                                |
-| `successMessage` | Your feedback has been sent. Thank you!                                                           |
-| `onLoad`         | n/a - **an optional callback that will be invoked when the widget opens**                         |
-| `onClose`        | n/a - **an optional callback that will be invoked when the widget closes**                        |
+| Param            | Default                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `eventId`        | Manually set the id of the event.                                                                    |
+| `dsn`            | Manually set dsn to report to.                                                                       |
+| `user`           | Manually set user data _[an object with keys listed below]_.                                         |
+| `user.email`     | User's email address.                                                                                |
+| `user.name`      | User's name.                                                                                         |
+| `lang`           | _[automatic]_ – (**Override for Sentry’s language code.**)                                           |
+| `title`          | It looks like we’re having issues.                                                                   |
+| `subtitle`       | Our team has been notified.                                                                          |
+| `subtitle2`      | If you’d like to help, tell us what happened below. – (**Not visible on small screen resolutions.**) |
+| `labelName`      | Name                                                                                                 |
+| `labelEmail`     | Email                                                                                                |
+| `labelComments`  | What happened?                                                                                       |
+| `labelClose`     | Close                                                                                                |
+| `labelSubmit`    | Submit                                                                                               |
+| `errorGeneric`   | An unknown error occurred while submitting your report. Please try again.                            |
+| `errorFormEntry` | Some fields were invalid. Please correct the errors and try again.                                   |
+| `successMessage` | Your feedback has been sent. Thank you!                                                              |
+| `onLoad`         | n/a - (**An optional callback that will be invoked when the widget opens.**)                         |
+| `onClose`        | n/a - (**An optional callback that will be invoked when the widget closes.**)                        |
 
 The optional callback `onLoad` will be called when users see the widget. You can use this to run custom logic, for example to log an analytics event:
 

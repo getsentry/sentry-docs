@@ -2071,23 +2071,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/learn/sensitive-data/',
+    to: '/security-legal-pii/scrubbing/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/guides/manage-event-stream/',
-    to: '/organization/quotas/manage-event-stream-guide/',
+    to: '/pricing/quotas/manage-event-stream-guide/',
   },
   {
     from: '/learn/sso/',
@@ -2962,6 +2966,10 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/',
   },
   {
+    from: '/accounts/pricing/',
+    to: '/pricing/',
+  },
+  {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
   },
@@ -3019,35 +3027,35 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/accounts/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/accounts/quotas/spike-protection/',
-    to: '/organization/quotas/spike-protection/',
+    to: '/pricing/quotas/spike-protection/',
   },
   {
     from: '/product/accounts/quotas/spend-allocation/',
-    to: '/organization/quotas/spend-allocation/',
+    to: '/pricing/quotas/spend-allocation/',
   },
   {
     from: '/product/accounts/quotas/manage-event-stream-guide/',
-    to: '/organization/quotas/manage-event-stream-guide/',
+    to: '/pricing/quotas/manage-event-stream-guide/',
   },
   {
     from: '/product/accounts/quotas/manage-transaction-quota/',
-    to: '/organization/quotas/manage-transaction-quota/',
+    to: '/pricing/quotas/manage-transaction-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-replay-quota/',
-    to: '/organization/quotas/manage-replay-quota/',
+    to: '/pricing/quotas/manage-replay-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-attachments-quota/',
-    to: '/organization/quotas/manage-attachments-quota/',
+    to: '/pricing/quotas/manage-attachments-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-cron-monitors/',
-    to: '/organization/quotas/manage-cron-monitors/',
+    to: '/pricing/quotas/manage-cron-monitors/',
   },
   {
     from: '/product/accounts/migration/',
@@ -3079,11 +3087,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/account/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/account/sso/',
     to: '/organization/authentication/sso/',
+  },
+  {
+    from: '/product/ai-monitoring/',
+    to: '/product/llm-monitoring/',
+  },
+  {
+    from: '/product/ai-monitoring/getting-started/',
+    to: '/product/llm-monitoring/getting-started/',
+  },
+  {
+    from: '/product/ai-monitoring/getting-started/the-dashboard/',
+    to: '/product/llm-monitoring/getting-started/the-dashboard/',
   },
 ];
 

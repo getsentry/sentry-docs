@@ -66,7 +66,7 @@ Sentry.init({
 
 3. Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
 
-```javascript {filename:hooks.client.js}
+```javascript {filename:hooks.client.js} {5}
 const myErrorHandler = ({ error, event }) => {
   console.error("An error occurred on the client side:", error, event);
 };
@@ -77,7 +77,7 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 // export const handleError = handleErrorWithSentry();
 ```
 
-```typescript {filename:hooks.client.ts}
+```typescript {filename:hooks.client.ts} {5}
 const myErrorHandler = ({ error, event }) => {
   console.error("An error occurred on the client side:", error, event);
 };
@@ -122,7 +122,7 @@ Sentry.init({
 
 3. Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
 
-```javascript {filename:hooks.server.js}
+```javascript {filename:hooks.server.js} {5}
 const myErrorHandler = ({ error, event }) => {
   console.error("An error occurred on the server side:", error, event);
 };
@@ -132,7 +132,7 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 // export const handleError = handleErrorWithSentry();
 ```
 
-```typescript {filename:hooks.server.ts}
+```typescript {filename:hooks.server.ts} {5}
 const myErrorHandler = ({ error, event }) => {
   console.error("An error occurred on the server side:", error, event);
 };
@@ -162,7 +162,7 @@ export const handle = Sentry.sentryHandle();
 Add the `sentrySvelteKit` plugins to your `vite.config.(js|ts)` file so the Sentry SDK can apply build-time features.
 Make sure that it is added _before_ the sveltekit plugin:
 
-```javascript {filename:vite.config.js}
+```javascript {filename:vite.config.js} {2,5}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -172,7 +172,7 @@ export default {
 };
 ```
 
-```typescript {filename:vite.config.ts}
+```typescript {filename:vite.config.ts} {2,5}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -200,7 +200,7 @@ You can set them as environment variables, for example in a `.env` file:
 - `SENTRY_AUTH_TOKEN` your Sentry auth token (can be obtained from the [Organization Token Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/))
 - `SENTRY_URL` your Sentry instance URL. This is only required if you use your own Sentry instance (as opposed to `https://sentry.io`).
 
-Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. All available options are documented at [the Sentry Vite plugin repo](https://www.npmjs.com/package/@sentry/vite-plugin/v/0.6.1#configuration).
+Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. All available options are documented at [the Sentry Vite plugin repo](https://www.npmjs.com/package/@sentry/vite-plugin/v/2.14.2#options).
 
 <OrgAuthTokenNote />
 
@@ -210,7 +210,7 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 <SignInNote />
 
-```javascript {filename:vite.config.js}
+```javascript {filename:vite.config.js} {7-16}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -221,9 +221,11 @@ export default {
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        url: "https://sentry.my-company.com",
-        cleanArtifacts: true,
-        rewrite: false,
+        sourcemaps: {
+          assets: ["./build/*/**/*"],
+          ignore: ["**/build/client/**/*"],
+          filesToDeleteAfterUpload: ["./build/**/*.map"],
+        },
       },
     }),
     sveltekit(),
@@ -232,7 +234,7 @@ export default {
 };
 ```
 
-```typescript {filename:vite.config.ts}
+```typescript {filename:vite.config.ts} {7-11}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -243,7 +245,6 @@ export default {
         org: "___ORG_SLUG___",
         project: "___PROJET_SLUG___",
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        cleanArtifacts: true,
       },
     }),
     sveltekit(),
@@ -259,7 +260,7 @@ Using the `sourceMapsUploadOptions` object is useful if the default source maps 
 By default, `sentrySvelteKit` will try to detect your SvelteKit adapter to configure source maps upload correctly.
 If you're not using one of the [supported adapters](../#compatibility) or the wrong one is detected, you can override the adapter detection by passing the `adapter` option to `sentrySvelteKit`:
 
-```javascript {filename:vite.config.js}
+```javascript {filename:vite.config.js} {7}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -274,7 +275,7 @@ export default {
 };
 ```
 
-```typescript {filename:vite.config.ts}
+```typescript {filename:vite.config.ts} {7}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -293,7 +294,7 @@ export default {
 
 You can disable automatic source maps upload in your Vite config:
 
-```javascript {filename:vite.config.js}
+```javascript {filename:vite.config.js} {7}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -308,7 +309,7 @@ export default {
 };
 ```
 
-```typescript {filename:vite.config.ts}
+```typescript {filename:vite.config.ts} {7}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -342,7 +343,7 @@ If you have custom Sentry code in these files, you'll have to [manually](#instru
 
 By passing the `autoInstrument` option to `sentrySvelteKit` you can disable auto-instrumentation entirely, or customize which `load` functions should be instrumented:
 
-```javascript {filename:vite.config.js}
+```javascript {filename:vite.config.js} {7-10}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -360,7 +361,7 @@ export default {
 };
 ```
 
-```typescript {filename:vite.config.ts}
+```typescript {filename:vite.config.ts} {7-10}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -382,7 +383,7 @@ export default {
 
 If you set the `autoInstrument` option to `false`, the SDK won't auto-instrument any `load` functions. You can still [manually instrument](#instrument-load-functions-manually) specific `load` functions.
 
-```javascript {filename:vite.config.js}
+```javascript {filename:vite.config.js} {7}
 import { sveltekit } from '@sveltejs/kit/vite';
 import { sentrySvelteKit } from '@sentry/sveltekit';
 
@@ -397,7 +398,7 @@ export default {
 };
 ```
 
-```typescript {filename:vite.config.ts}
+```typescript {filename:vite.config.ts}  {7}
 import { sveltekit } from '@sveltejs/kit/vite';
 import { sentrySvelteKit } from '@sentry/sveltekit';
 
@@ -420,19 +421,23 @@ If you don't want to use auto-instrumentation, you can also manually instrument 
 
 Use the `wrapLoadWithSentry` function to wrap universal `load` functions declared in `+page.(js|ts)` or `+layout.(js|ts)`
 
-```javascript {filename:+(page|layout).js}
+```javascript {filename:+(page|layout).js} {1,3}
 import { wrapLoadWithSentry } from "@sentry/sveltekit";
 
-export const load = wrapLoadWithSentry((event) => {
-  //... your load code
+export const load = wrapLoadWithSentry(({ fetch }) => {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  return { data };
 });
 ```
 
-```typescript {filename:+(page|layout).ts}
+```typescript {filename:+(page|layout).ts} {1,3}
 import { wrapLoadWithSentry } from "@sentry/sveltekit";
 
-export const load = wrapLoadWithSentry((event) => {
-  //... your load code
+export const load = wrapLoadWithSentry(({ fetch }) => {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  return { data };
 });
 ```
 
@@ -440,19 +445,23 @@ export const load = wrapLoadWithSentry((event) => {
 
 Or use the `wrapServerLoadWithSentry` function to wrap server-only `load` functions declared in `+page.server.(js|ts)` or `+layout.server.(js|ts)`
 
-```javascript {filename:+(page|layout).server.js}
+```javascript {filename:+(page|layout).server.js} {1,3}
 import { wrapServerLoadWithSentry } from "@sentry/sveltekit";
 
-export const load = wrapServerLoadWithSentry((event) => {
-  //... your load code
+export const load = wrapServerLoadWithSentry(({ fetch }) => {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  return { data };
 });
 ```
 
-```typescript {filename:+(page|layout).server.ts}
+```typescript {filename:+(page|layout).server.ts} {1,3}
 import { wrapServerLoadWithSentry } from "@sentry/sveltekit";
 
-export const load = wrapServerLoadWithSentry((event) => {
-  //... your load code
+export const load = wrapServerLoadWithSentry(({ event }) => {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  return { data };
 });
 ```
 
@@ -478,7 +487,7 @@ export const handle = sentryHandle({ fetchProxyScriptNonce: "<your-nonce>" });
 
 Then, adjust your [SvelteKit CSP configuration](https://kit.svelte.dev/docs/configuration#csp):
 
-```javascript {svelte.config.js}
+```javascript {svelte.config.js} {5}
 const config = {
   kit: {
     csp: {

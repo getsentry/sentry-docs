@@ -35,7 +35,9 @@ This will guide you through the installation and configuration process and sugge
 
 Start by configuring the SDK as described above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the `main` process and all `renderer` processes to also catch errors during startup.
 
-If you are using preload scripts, have `contextIsolation` enabled and want to capture errors from the isolated preload context, you should call `init` early in that context too.
+If you are using preload scripts, have `contextIsolation` enabled and want to
+capture errors from the isolated preload context, you should call the renderer `init`
+early in that context too.
 
 ### App `userData` Directory
 
@@ -45,30 +47,10 @@ If you change the `userData` directory used by your app, ensure this change is m
 
 ```javascript
 import { app } from "electron";
-import * as Sentry from "@sentry/electron";
+import * as Sentry from "@sentry/electron/main";
 
 app.setPath("userData", "~/.config/my-app");
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
-```
-
-## Bundler Configuration
-
-The SDK attempts to ensure JavaScript bundlers pick up the correct entry point
-for the Electron process type, but this is not foolproof. If the incorrect entry
-point is selected, your bundler may throw an error or an error will be thrown at
-runtime. If this occurs there are process specific exports to ensure that the correct code
-is bundled for the process.
-
-In the main process:
-
-```javascript
-import * as Sentry from "@sentry/electron/main";
-```
-
-In the renderer processes:
-
-```javascript
-import * as Sentry from "@sentry/electron/renderer";
 ```
 
 ## Framework-Specific SDKs
@@ -102,18 +84,34 @@ import * as Sentry from "@sentry/electron/main";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   transportOptions: {
-    // The maximum number of days to keep an event in the queue.
+    /* The maximum number of days to keep an event in the queue. */
     maxQueueAgeDays: 30,
-    // The maximum number of events to keep in the queue.
+    /* The maximum number of events to keep in the queue. */
     maxQueueCount: 30,
-    // Called every time the number of requests in the queue changes.
-    queuedLengthChanged: (length) => {},
-    // Called before attempting to send an event to Sentry. Used to override queuing behavior.
-    //
-    // Return 'send' to attempt to send the event.
-    // Return 'queue' to queue and persist the event for sending later.
-    // Return 'drop' to drop the event.
-    beforeSend: (request) => (isOnline() ? "send" : "queue"),
+    /**
+     * Called before we attempt to send an envelope to Sentry.
+     *
+     * If this function returns false, `shouldStore` will be called to determine if the envelope should be stored.
+     *
+     * Default: () => true
+     *
+     * @param envelope The envelope that will be sent.
+     * @returns Whether we should attempt to send the envelope
+     */
+    shouldSend: (envelope: Envelope) => boolean | Promise<boolean>;
+    /**
+     * Called before an event is stored.
+     *
+     * Return false to drop the envelope rather than store it.
+     *
+     * Default: () => true
+     *
+     * @param envelope The envelope that failed to send.
+     * @param error The error that occurred.
+     * @param retryDelay The current retry delay in milliseconds.
+     * @returns Whether we should store the envelope in the queue
+     */
+    shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
   },
 });
 ```
@@ -127,7 +125,7 @@ By default, the SDK attempts to establish communication from `renderer` to `main
 <SignInNote />
 
 ```javascript
-const { init, IPCMode } = require("@sentry/electron");
+const { init, IPCMode } = require("@sentry/electron/main");
 
 init({
   dsn: "___PUBLIC_DSN___",
