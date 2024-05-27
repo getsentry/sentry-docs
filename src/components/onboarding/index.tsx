@@ -171,7 +171,7 @@ export function OnboardingOptionButtons({
           if (el.classList.contains('code-line')) {
             el.classList.toggle('animate-line', option.checked);
           } else {
-            el.classList.toggle('animate-section', option.checked);
+            el.classList.toggle('animate-content', option.checked);
           }
         }
       });
