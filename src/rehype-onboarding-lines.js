@@ -59,8 +59,7 @@ const parseLines = meta => {
  */
 const getOptionForLine = meta => {
   // match the onboardingOptions object, but avoid `other stuff`
-  // {onboardingOptions: {performance: '1, 3-4', profiling: '5-6'}} {other stuff}
-  const optionsRE = /{onboardingOptions:\s*({[^}]*})\s*}/;
+  const optionsRE = /{"onboardingOptions":\s*({[^}]*})\s*}/;
   let linesForOptions = {};
   const options = optionsRE.exec(meta)?.[1];
   if (!options) {
@@ -68,8 +67,7 @@ const getOptionForLine = meta => {
   }
 
   // eval provides the convenience of not having to wrap the object properties in quotes
-  // eslint-disable-next-line no-eval
-  const parsedOptions = eval(`(${options})`);
+  const parsedOptions = JSON.parse(options);
   linesForOptions = Object.keys(parsedOptions).reduce((acc, key) => {
     acc[key] = parseLines(parsedOptions[key]);
     return acc;
