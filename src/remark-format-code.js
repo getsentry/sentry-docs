@@ -40,7 +40,11 @@ async function formatCode(node) {
   }
 
   try {
-    const formattedCode = await format(node.value, {...prettierConfig, ...parserConfig});
+    const formattedCode = await format(node.value, {
+      ...prettierConfig,
+      ...parserConfig,
+      printWidth: 80,
+    });
     // get rid of the trailing newline
     node.value = formattedCode.trimEnd();
   } catch (e) {
