@@ -1,6 +1,6 @@
 'use client';
 
-import {ReactNode, useEffect, useRef, useState} from 'react';
+import {ReactNode, useEffect, useReducer, useRef, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
@@ -116,8 +116,10 @@ export function OnboardingOptionButtons({
       checked: option.checked ?? true,
     }))
   );
+  const [touchedOptions, touchOptions] = useReducer(() => true, false);
 
   function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
+    touchOptions();
     const dependencies = optionDetails[clickedOption.id].deps ?? [];
     const depenedants =
       options.filter(opt => optionDetails[opt.id].deps?.includes(clickedOption.id)) ?? [];
@@ -165,6 +167,13 @@ export function OnboardingOptionButtons({
       );
       targetElements.forEach(el => {
         el.classList.toggle('hidden', !option.checked);
+        if (touchedOptions) {
+          if (el.classList.contains('code-line')) {
+            el.classList.toggle('animate-line', option.checked);
+          } else {
+            el.classList.toggle('animate-section', option.checked);
+          }
+        }
       });
       if (option.checked && optionDetails[option.id].deps?.length) {
         const dependenciesSelecor = optionDetails[option.id].deps!.map(
@@ -179,7 +188,7 @@ export function OnboardingOptionButtons({
         });
       }
     });
-  }, [options]);
+  }, [options, touchOptions]);
 
   const buttonsRef = useRef<HTMLDivElement>(null);
   const containerTopPx = 80;
