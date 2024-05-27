@@ -62,7 +62,59 @@ const integration = {
 };
 ```
 
+You can also return a promise that resolves with an event or `null`. However, this is not recommended and should be avoided wherever possible, because it can delay event sending.
+
+### `preprocessEvent`
+
+This hook is similar to `processEvent`, but it is called before the event is passed to any other `processEvent` hook. It can be used in places where the order of processing is important.
+
+In most cases, you should just use `processEvent`. Only use `preprocessEvent` if you need to ensure that your hook is called before any other `processEvent` hook.
+
+Similar to `processEvent`, this hooks receives the event, hint, and client as arguments. However, this hook does not allow to return a modified event or `null` to drop the event - instead, you can only mutate the passed in event in this hook:
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  preprocessEvent(event, hint, client) {
+    event.extra = {
+      ...event.extra,
+      myCustomTag: "value",
+    };
+    // Nothing to return, just mutate the event
+  },
+};
+```
+
 ### `setupOnce`
 
 This hook is similar to `setup`, but it is only run once, even if the SDK is re-initialized. It does not receive any arguments.
 You should probably not use this, but use `setup` instead. The only reason to use `setupOnce` is e.g. when you may be calling `Sentry.init()` multiple times and you want to ensure a certain piece of code is only run once.
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  setupOnce() {
+    wrapLibrary();
+  },
+};
+```
+
+### `afterAllSetup`
+
+This hook is triggered after `setupOnce()` and `setup()` have been called for all integrations.
+You can use it if it is important that all other integrations have been run before.
+
+In most cases, you should not need to use this hook, and should use `setup` instead.
+
+The hook receives the `client` that is being set up as the first argument.
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  afterAllSetup(client) {
+    // We can be sure that all other integrations
+    // have run their `setup` and `setupOnce` hooks now
+    startSomeThing(client);
+  },
+};
+```
