@@ -1,25 +1,26 @@
-### Initialize
-
-To initialize the SDK, you need to call:
+To capture all errors, you should initialize the Sentry React Native SDK as soon as possible.
 
 <SignInNote />
 
-```javascript {filename:App.js}
+```javascript {filename:App.js} {"onboardingOptions": {"performance": "5-7", "profiling": "8-12"}}
 import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+  // We recommend adjusting this value in production.
   tracesSampleRate: 1.0,
+  _experiments: {
+    // profilesSampleRate is relative to tracesSampleRate.
+    // Here, we'll capture profiles for 100% of transactions.
+    profilesSampleRate: 1.0,
+  },
 });
 ```
 
-Once this is done, all unhandled exceptions will be automatically captured by Sentry. You can also perform the following optional steps:
+<OnboardingOption optionId="performance">
 
-### Wrap Your App
+#### Wrap Your App
 
 Wrap your app with Sentry to automatically instrument it with [touch event tracking](/platforms/react-native/touchevents/) and [automatic performance monitoring](/platforms/react-native/performance/instrumentation/automatic-instrumentation/):
 
@@ -27,14 +28,6 @@ Wrap your app with Sentry to automatically instrument it with [touch event track
 export default Sentry.wrap(App);
 ```
 
-### Enable Performance Monitoring
+You do not need to do this for Sentry to work or if your app does not have a single parent "App" component.
 
-Learn how to enable Sentry's [performance monitoring](/platforms/react-native/performance/) in your SDK to help you track your application performance, measuring metrics like throughput and latency.
-
-### Ensure Promise Rejection Handling is Active
-
-Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry. If the rejection handling is not active, our SDK might issue a warning:
-
-> WARN: Unhandled promise rejections might not be caught by Sentry. Read about how to fix this on our troubleshooting docs.
-
-[Visit our troubleshooting section to read on how to make sure promise rejection handling is active.](/platforms/react-native/troubleshooting/#unhandled-promise-rejections)
+</OnboardingOption>
