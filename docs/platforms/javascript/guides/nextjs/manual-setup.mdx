@@ -68,9 +68,11 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
-## Create Client Initialization Config File
+## Create Initialization Config Files
 
-Create this file in the root directory of your Next.js application: `sentry.client.config.js`. In this file, add your initialization code for the client-side SDK. The setup for browser-side initialization is explained below.
+Create three files in the root directory of your Next.js application: `sentry.client.config.js`, `sentry.server.config.js` and `sentry.edge.config.js`. In these files, add your initialization code for the client-side SDK and server-side SDK, respectively. We've included some examples below.
+
+Please note that there are slight differences between these files since they run in different places (browser, server, edge), so copy them carefully!
 
 <SignInNote />
 
@@ -100,51 +102,63 @@ Sentry.init({
 });
 ```
 
+```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // ...
+
+  // Note: if you want to override the automatic release value, do not set a
+  // `release` value here - use the environment variable `SENTRY_RELEASE`, so
+  // that it will also get attached to your source maps
+});
+```
+
+```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // ...
+
+  // Note: if you want to override the automatic release value, do not set a
+  // `release` value here - use the environment variable `SENTRY_RELEASE`, so
+  // that it will also get attached to your source maps
+});
+```
+
 We recommend you include your DSN directly in these three files. Alternatively you can pass the DSN via a _public_ environment variable like `NEXT_PUBLIC_SENTRY_DSN`.
 
 While the client initialization code will be injected into your application's client bundle by `withSentryConfig` which we set up earlier,
 the configuration for the server and edge runtime needs to be imported from a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation).
-You can set this file up by adding a `instrumentation.(js|ts)` file to the root directory of your Next.js application (or inside the `src` folder if you are using one) and adding the following content:
+You can set this file up by adding a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you are using one) and adding the following content:
 
 ```javascript {filename:instrumentation.(js|ts)}
-import * as Sentry from "@sentry/nextjs";
-
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    Sentry.init({
-      dsn: "___PUBLIC_DSN___",
-
-      // Set tracesSampleRate to 1.0 to capture 100%
-      // of transactions for performance monitoring.
-      // We recommend adjusting this value in production
-      tracesSampleRate: 1.0,
-
-      // ...
-
-      // Note: if you want to override the automatic release value, do not set a
-      // `release` value here - use the environment variable `SENTRY_RELEASE`, so
-      // that it will also get attached to your source maps
-    });
+    await import("./sentry.server.config");
   }
 
   if (process.env.NEXT_RUNTIME === "edge") {
-    Sentry.init({
-      dsn: "___PUBLIC_DSN___",
-
-      // Set tracesSampleRate to 1.0 to capture 100%
-      // of transactions for performance monitoring.
-      // We recommend adjusting this value in production
-      tracesSampleRate: 1.0,
-
-      // ...
-
-      // Note: if you want to override the automatic release value, do not set a
-      // `release` value here - use the environment variable `SENTRY_RELEASE`, so
-      // that it will also get attached to your source maps
-    });
+    await import("./sentry.edge.config");
   }
 }
 ```
+
+Make sure that the `import` statements point to your newly created `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)` files.
 
 ## Report React Component Render Errors
 
@@ -596,9 +610,9 @@ module.exports = withSentryConfig(nextConfig, {
 
 ### Opt Out of Sentry SDK bundling in Client or Server side
 
-If you want the `sentry` to be available in your server side & not in client side, you can make your `sentry.client.config.js` empty. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle. The same goes the opposite for opting out of server side bundle by not initializing Sentry inside `instrumentation.(js|ts)`.
+If you want the `sentry` to be available in your server side & not in client side, you can make your `sentry.client.config.js` empty. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle. The same goes the opposite for opting out of server side bundle by emptying `sentry.server.config.js`.
 
-You cannot delete the client config file because the SDK requires you to have it.
+You cannot delete the respective config files because the SDK requires you to have it.
 
 ## Disable the Sentry SDK Debug Logger to Save Bundle Size
 
