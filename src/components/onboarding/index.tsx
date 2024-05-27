@@ -86,12 +86,22 @@ const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
 export function OnboardingOption({
   children,
   optionId,
+  hideForThisOption,
 }: {
   children: React.ReactNode;
   optionId: OptionId;
+  hideForThisOption?: boolean;
 }) {
   validateOptionIds([{id: optionId}]);
-  return <div data-onboarding-option={optionId}>{children}</div>;
+  return (
+    <div
+      data-onboarding-option={optionId}
+      data-hide-for-this-option={hideForThisOption}
+      className={hideForThisOption ? 'hidden' : ''}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function OnboardingOptionButtons({
@@ -166,12 +176,25 @@ export function OnboardingOptionButtons({
         `[data-onboarding-option="${option.id}"]`
       );
       targetElements.forEach(el => {
-        el.classList.toggle('hidden', !option.checked);
+        console.log('el', el.dataset);
+
+        const hiddenForThisOption = el.dataset.hideForThisOption === 'true';
+        if (hiddenForThisOption) {
+          el.classList.toggle('hidden', option.checked);
+        } else {
+          el.classList.toggle('hidden', !option.checked);
+        }
+        // only animate things when user has interacted with the options
         if (touchedOptions) {
           if (el.classList.contains('code-line')) {
             el.classList.toggle('animate-line', option.checked);
-          } else {
-            el.classList.toggle('animate-content', option.checked);
+          }
+          // animate content, account for inverted logic for hiding
+          else {
+            el.classList.toggle(
+              'animate-content',
+              hiddenForThisOption ? !option.checked : option.checked
+            );
           }
         }
       });
