@@ -102,7 +102,7 @@ export function OnboardingOptionButtons({
 }) {
   const normalizedOptions = initialOptions.map(option => {
     if (typeof option === 'string') {
-      return {id: option};
+      return {id: option, disabled: option === 'error-monitoring'};
     }
     return option;
   });
