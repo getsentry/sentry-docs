@@ -1,0 +1,131 @@
+---
+title: Late Initialization (ESM or CJS)
+sidebar_order: 12
+description: "Learn about running Sentry in an ESM or CJS application, in scenarios where you cannot run init early."
+supported:
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.koa
+---
+
+<Alert>
+  Are you unsure if you should use this installation method? Review our
+  [installation methods](../).
+</Alert>
+
+In order for auto-instrumentation to work, it is generally required to run `Sentry.init()` as early as possible, before anything else is imported in your application.
+
+However, in some cases this may not be possible to do - for example, if you are fetching your DSN from an external source. In this case, you can use the `@sentry/node/preload` hook to ensure modules are wrapped early, which allows you to call `Sentry.init()` later at a time of your choosing.
+
+<Note>
+  We recommend to only use this method if strictly necessary. In most cases, it
+  is better to find a way to run `Sentry.init()` early in your application, in
+  order to ensure that no error can go unreported.
+</Note>
+
+## Late Initialization with CommonJS (CJS)
+
+In your CJS application, use the `@sentry/node/preload` hook with `--require` to ensure modules are wrapped early:
+
+```bash
+# Note: This is only available for Node v18.19.0 onwards.
+node --require @sentry/node/preload app.js
+```
+
+Then, in your application you can call `Sentry.init()` at a later point:
+
+```javascript {filename: main.js}
+const startApp = require("./app");
+const fetchDsn = require("./utils/fetchDsn");
+const Sentry = require("@sentry/node");
+
+startApp();
+
+const dsn = fetchDsn();
+Sentry.init({
+  dsn,
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+// From now on, Sentry is initialized,
+// but the app is still auto-instrumented
+```
+
+## Late Initialization with ESM
+
+In your CJS application, use the `@sentry/node/preload` hook with `--import` to ensure modules are wrapped early:
+
+```bash
+# Note: This is only available for Node v18.19.0 onwards.
+node --import @sentry/node/preload app.,js
+```
+
+Then, in your application you can call `Sentry.init()` at a later point:
+
+```javascript {filename: main.js}
+import startApp from "./app";
+import fetchDsn from "./utils/fetchDsn";
+import * as Sentry from "@sentry/node";
+
+startApp();
+
+const dsn = fetchDsn();
+Sentry.init({
+  dsn,
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+// From now on, Sentry is initialized,
+// but the app is still auto-instrumented
+```
+
+## What does Preloading mean?
+
+Integrations that are preloaded ensure that the necessary modules are wrapped early, before they can be imported by your application. At this point, the modules are wrapped, but will not do anything - nothing will be emitted or captured from them.
+
+Once you call `Sentry.init()`, the wrapped modules will automatically start emitting performance data which will be sent to Sentry.
+
+## What is Preloaded?
+
+By default, all performance instrumentation is preloaded when using the `@sentry/node/preload` hook.
+
+You can optionally configure to only preload certain integrations by defining a `SENTRY_PRELOAD_INTEGRATIONS` environment variable. This variable should be a comma-separated list of integrations to preload. For example, to only preload the `Http` and `Express` integrations, you can set the environment variable as follows:
+
+```bash
+SENTRY_PRELOAD_INTEGRATIONS="Http,Express" node --require @sentry/node/preload app.js
+```
+
+You can pass the names of any of the following integrations:
+
+- `Http`
+- `Express`
+- `Connect`
+- `Fastify`
+- `Hapi`
+- `Koa`
+- `Nest`
+- `Mongo`
+- `Mongoose`
+- `Mysql`
+- `Mysql2`
+- `Postgres`
+- `Graphql`
+
+Note that it is not necessary to preload `NodeFetch`, this will always be instrumented.
+
+## Debugging Preload
+
+You can also define a `SENTRY_DEBUG` environment variable in order to get debug logs from the preload hook. This can be useful to understand what is happening during the preload process.
+
+```bash
+SENTRY_DEBUG=1 node --require @sentry/node/preload app.js
+```
