@@ -11,13 +11,25 @@ categories:
   - desktop
 ---
 
-On this page, we get you up and running with Sentry's SDK.
+On this page, we get you up and running with Sentry's Flutter SDK.
 
-Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+<Note>
+
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+</Note>
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
 
 ```yml {filename:pubspec.yaml}
 dependencies:
@@ -30,7 +42,7 @@ Configuration should happen as early as possible in your application's lifecycle
 
 <SignInNote />
 
-```dart
+```dart {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import 'package:flutter/widgets.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -41,27 +53,36 @@ Future<void> main() async {
       // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
       // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
+      // The sampling rate for profiling is relative to tracesSampleRate
+      // Setting to 1.0 will profile 100% of sampled transactions:
+      // Note: Profiling alpha is available for iOS and macOS since SDK version 7.12.0
+      options.profilesSampleRate = 1.0;
     },
     appRunner: () => runApp(MyApp()),
   );
 
-  // or define SENTRY_DSN via Dart environment variable (--dart-define)
+  // you can also configure SENTRY_DSN, SENTRY_RELEASE, SENTRY_DIST, and
+  // SENTRY_ENVIRONMENT via Dart environment variable (--dart-define)
 }
 ```
 
-You can configure the `SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_DIST` and `SENTRY_ENVIRONMENT` via the Dart environment variables passing the `--dart-define` flag to the compiler as noted in the code sample.
-
-
 ## Verify
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Test that error reporting is working correctly by adding the below snippet to your app, and finding the reported Error on Sentry.
 
-<PlatformContent includePath="getting-started-verify" />
+```dart
+import 'package:sentry/sentry.dart';
 
-<Note>
+try {
+  aMethodThatMightFail();
+} catch (exception, stackTrace) {
+  await Sentry.captureException(
+    exception,
+    stackTrace: stackTrace,
+  );
+}
+```
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+## Next Steps
 
-</Note>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+- <PlatformLink to="/features">Learn more about Sentry's Flutter SDK features</PlatformLink>
