@@ -82,9 +82,10 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
 export function TableOfContents() {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
 
+  // gather the toc items on mount
   useEffect(() => {
     if (typeof document === 'undefined') {
-      return () => {};
+      return;
     }
     const main = document.getElementById('main');
     if (!main) {
@@ -106,6 +107,12 @@ export function TableOfContents() {
       })
       .filter(isTruthy);
     setTocItems(tocItems_);
+  }, []);
+
+  useEffect(() => {
+    if (tocItems.length === 0) {
+      return () => {};
+    }
     // account for the header height
     const rootMarginTop = 100;
     // element is consiered in view if it is in the top 1/3 of the screen
@@ -126,10 +133,10 @@ export function TableOfContents() {
         setTocItems(items => items.map(setActive));
       }
     }, observerOptions);
-    const headings = tocItems_.map(item => item.element);
+    const headings = tocItems.map(item => item.element);
     headings.forEach(heading => observer.observe(heading));
     return () => headings.forEach(heading => observer.unobserve(heading));
-  }, []);
+  }, [tocItems]);
 
   const router = useRouter();
 
