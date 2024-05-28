@@ -30,22 +30,9 @@ pip install --upgrade 'sentry-sdk[anthropic]'
 
 ## Configure
 
-Add `AnthropicIntegration()` to your `integrations` in the `sentry_sdk.init` call:
+If you have the `anthropic` package in your dependencies, the Anthropic integration will be enabled automatically when you initialize the Sentry SDK.
 
-```python
-from anthropic import Anthropic
-
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    traces_sample_rate=1.0,
-    integrations=[AnthropicIntegration()],
-)
-
-client = Anthropic()
-```
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
@@ -91,15 +78,20 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 The `AnthropicIntegration` takes an optional `include_prompts` parameter. If set to `False`, prompts are excluded from being sent to Sentry, despite `send_default_pii=True`.
 
-```python
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 from sentry_sdk.integrations.anthropic import AnthropicIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    send_default_pii=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
     traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+    send_default_pii=True,
     integrations=[
         AnthropicIntegration(
             include_prompts=False, # Exclude prompts from being sent to Sentry, despite send_default_pii=True
