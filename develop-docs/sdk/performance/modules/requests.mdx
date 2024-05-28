@@ -2,33 +2,29 @@
 title: 'Requests Module'
 ---
 
-The SDK should auto-instrument all outgoing HTTP requests, regardless of the library that issues the requests. Each outgoing request should result in a span.
+The SDK should auto-instrument all outgoing HTTP requests, regardless of the library that issues the requests. Each outgoing request should result in a span. The Requests module is technology agnostic, it only cares about span data properties.
 
-## Span Conventions
+## Span Attributes
 
-### Span Attributes
-
-| Attribute | Description |
-|:--|:--|
-| `op` | Always `http.client` |
-| `description` | A string including the HTTP request method, and the URL. e.g., `"GET https://example.com/data.json"` | The HTTP method must be one of the [known HTTP request methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods) |
+| Attribute | Description | Notes |
+|:--|:--|:--|
+| `op` | Always `"http.client"` | Required |
+| `description` | A string including the HTTP request method, and the full URL. e.g., `"GET https://example.com/data.json?filter=all"` | Required [^1] |
+| `data` | A key-value mapping of span attributes. (e.g., `{"http.query": "filter=all", "server.address": "prod-2.example.com"}`) | Required for full experience. See [Span Data](#span-data) for details |
 
 ### Span Data
 
-Refer to [HTTP Span Data Conventions](/sdk/performance/span-data-conventions/#http) for a full list of the span data attributes. Note these caveats:
+None of the span data fields are hard requirements, but attaching as many of them as possible is a more future-proof approach. We recommend that the SDK adds every attribute listed in the [HTTP Span Data Conventions](/sdk/performance/span-data-conventions/#http). The minimal requirements are:
 
-- the `server.address` span data attribute is only required if the URL is relative
+- `server.address` must be set to allow correct domain grouping _for descriptions containing relative URLs_. e.g., the description `"GET /data.json"` is missing a domain. In this case, `server.address` must be set. If the span description contains the full URL, `span.server` can be omitted
+- `http.response.status_code` must be set to enable response code breakdowns
 
-## Instrumentation
+## Instrumentation Example
 
-The SDK should create a span when the HTTP request is complete, and attach all the relevant available data.
-
-**Example**
-
-Consider the website `example.com`. This code, running on the page:
+Consider a website called "App Ex", running on `app.example.com`. This JavaScript code that issues an HTTP request from the browser:
 
 ```javascript
-fetch("/data.json")
+fetch("/data.json?user=1")
 ```
 
 Should result in the following span, assuming the request was successful:
@@ -42,10 +38,11 @@ Should result in the following span, assuming the request was successful:
     "http.request_method": "GET",
     "http.response.status_code": 200,
     "http.fragment": "",
-    "server.address": "example.com"
+    "server.address": "app.example.com",
+    "server.port": 8080,
     ... other span properties
   }
 }
 ```
 
-NOTE: Refer to [HTTP Span Data Conventions](/sdk/performance/span-data-conventions/#http) for a full list of properties you can attach to an `http.client` span.
+[^1]: The HTTP method must be one of the [known HTTP request methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
