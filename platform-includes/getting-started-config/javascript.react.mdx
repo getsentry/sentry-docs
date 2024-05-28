@@ -56,6 +56,29 @@ root.render(<App />);
 
 Once this is done, all unhandled exceptions are automatically captured by Sentry.
 
+### React 19 Error Reporting
+
+Starting with React 19, the `createRoot` and `hydrateRoot` methods from `react-dom` expose error hooks that can be used to capture errors automatically. Use the `Sentry.reactErrorHandler` function to capture errors in the error hooks you are interested in.
+
+```javascript
+import { createRoot } from "react-dom/client";
+
+const container = document.getElementById(“app”);
+const root = createRoot(container, {
+  // Callback called when an error is thrown and not caught by an ErrorBoundary.
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    console.warn('Uncaught error', error, errorInfo.componentStack);
+  }),
+  // Callback called when React catches an error in an ErrorBoundary.
+  onCaughtError: Sentry.reactErrorHandler(),
+  // Callback called when React automatically recovers from errors.
+  onRecoverableError: Sentry.reactErrorHandler(),
+});
+root.render();
+```
+
+These hooks apply to all React component mounted to the container passed onto `createRoot`/`hydrateRoot`. If you want more finely grained control over error handling, we recommend adding an `ErrorBoundary` component to your application.
+
 ### Add Error Boundary
 
 If you're using React 16 or above, you can use the [Error Boundary](features/error-boundary/) component to automatically send Javascript errors from inside a component tree to Sentry, and set a fallback UI.
