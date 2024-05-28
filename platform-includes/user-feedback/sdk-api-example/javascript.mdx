@@ -1,5 +1,3 @@
-_Requires JS SDK version v7.47.0 or higher._
-
 ```javascript
 import * as Sentry from "@sentry/browser";
 
@@ -7,29 +5,30 @@ const eventId = Sentry.captureMessage("User Feedback");
 // OR: const eventId = Sentry.lastEventId();
 
 const userFeedback = {
-  event_id: eventId,
   name: "John Doe",
   email: "john@doe.com",
-  comments: "I really like your App, thanks!",
+  message: "I really like your App, thanks!",
+  associatedEventId: eventId,
 };
-Sentry.captureUserFeedback(userFeedback);
+Sentry.captureFeedback(userFeedback);
 ```
 
-You could also collect feedback and send it when an error occurs via the SDK's `beforeSend` callback:
-
-<SignInNote />
+You can also attach further data to the feedback event by passing a hint as second argument, similar to other `capture` methods:
 
 ```javascript
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  beforeSend: event => {
-    const userFeedback = collectYourUserFeedback();
-    const feedback = {
-      ...userFeedback,
-      event_id: event.event_id,
-    }
-    Sentry.captureUserFeedback(feedback);
-    return event;
+Sentry.captureFeedback(
+  { message: "I really like your App, thanks!" },
+  {
+    captureContext: {
+      tags: { key: "value" },
+      extra: { key: "value" },
+    },
+    attachments: [
+      {
+        filename: "screenshot.png",
+        data: "base64-encoded-image",
+      },
+    ],
   }
-})
+);
 ```
