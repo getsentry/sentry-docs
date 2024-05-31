@@ -33,8 +33,8 @@ function uuidv4() {
 
 // Initialize Algolia Insights
 algoliaInsights('init', {
-  appId: 'OOK48W9UCL',
-  apiKey: '2d64ec1106519cbc672d863b0d200782',
+  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
 });
 
 // We dont want to track anyone cross page/sessions or use cookies

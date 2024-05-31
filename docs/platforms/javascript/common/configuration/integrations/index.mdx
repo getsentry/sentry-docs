@@ -47,11 +47,48 @@ You can add additional integrations in your `init` call:
 
 <PlatformContent includePath="configuration/enable-pluggable-integrations" />
 
-Alternatively, you can add integrations lazily via `Sentry.addIntegration()`.
-This is useful if you only want to enable an integration in a specific environment or if you want to lazy-load an integration.
+Alternatively, you can add integrations via `Sentry.addIntegration()`.
+This is useful if you only want to enable an integration in a specific environment or if you want to load an integration later.
 For all other cases, we recommend you use the `integrations` option.
 
 <PlatformContent includePath="configuration/enable-pluggable-integrations-lazy" />
+
+<PlatformCategorySection supported={['browser']}>
+
+## Lazy Loading Integrations
+
+You can lazy load pluggable integrations via `Sentry.lazyLoadIntegration()`. This will try to load the integration from the CDN, allowing you to add an integration without increasing the initial bundle size.
+
+```javascript
+async function loadHttpClient() {
+  const httpClientIntegration = await Sentry.lazyLoadIntegration('httpClientIntegration');
+  Sentry.addIntegration(httpClientIntegration());
+}
+```
+
+Note that this function will reject if it fails to load the integration from the CDN, which can happen e.g. if a user has an ad-blocker or if there is a network problem. You should always make sure to handle rejections for this function in your application.
+
+Lazy loading is available for the following integrations:
+
+- `replayIntegration`
+- `replayCanvasIntegration`
+- `feedbackIntegration`
+- `feedbackModalIntegration`
+- `feedbackScreenshotIntegration`
+- `captureConsoleIntegration`
+- `contextLinesIntegration`
+- `linkedErrorsIntegration`
+- `debugIntegration`
+- `dedupeIntegration`
+- `extraErrorDataIntegration`
+- `httpClientIntegration`
+- `reportingObserverIntegration`
+- `rewriteFramesIntegration`
+- `sessionTimingIntegration`
+- `browserProfilingIntegration`
+
+
+</PlatformCategorySection>
 
 ## Removing a Default Integration
 

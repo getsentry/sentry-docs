@@ -1,8 +1,6 @@
 import {format} from 'prettier';
 import {visit} from 'unist-util-visit';
 
-import * as prettierConfig from '../prettier.config.js';
-
 export default function remarkFormatCodeBlocks() {
   return async tree => {
     const codeNodes = [];
@@ -12,7 +10,10 @@ export default function remarkFormatCodeBlocks() {
     const formattingWork = codeNodes
       // skip code blocks with diff meta as they might have
       // broken syntax due to + and - characters
-      .filter(node => !node.meta?.includes('diff'))
+      // or with `onboardingOptions` as they need to have predictable line numbers
+      .filter(
+        node => !(node.meta?.includes('diff') || node.meta?.includes('onboardingOptions'))
+      )
       .map(node => formatCode(node));
 
     await Promise.all(formattingWork);
@@ -40,7 +41,10 @@ async function formatCode(node) {
   }
 
   try {
-    const formattedCode = await format(node.value, {...prettierConfig, ...parserConfig});
+    const formattedCode = await format(node.value, {
+      printWidth: 75, // The code blocks in the docs have around 77 characters available on desktop
+      ...parserConfig,
+    });
     // get rid of the trailing newline
     node.value = formattedCode.trimEnd();
   } catch (e) {

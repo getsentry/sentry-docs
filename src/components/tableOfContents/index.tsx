@@ -1,7 +1,6 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {useRouter} from 'next/navigation';
 
 import {isTruthy} from 'sentry-docs/utils';
 
@@ -82,9 +81,10 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
 export function TableOfContents() {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
 
+  // gather the toc items on mount
   useEffect(() => {
     if (typeof document === 'undefined') {
-      return () => {};
+      return;
     }
     const main = document.getElementById('main');
     if (!main) {
@@ -98,7 +98,7 @@ export function TableOfContents() {
         }
         return {
           depth: el.tagName === 'H2' ? 2 : 3,
-          url: `#${el.id} `,
+          url: `#${el.id}`,
           title,
           element: el,
           isActive: false,
@@ -106,6 +106,12 @@ export function TableOfContents() {
       })
       .filter(isTruthy);
     setTocItems(tocItems_);
+  }, []);
+
+  useEffect(() => {
+    if (tocItems.length === 0) {
+      return () => {};
+    }
     // account for the header height
     const rootMarginTop = 100;
     // element is consiered in view if it is in the top 1/3 of the screen
@@ -126,20 +132,10 @@ export function TableOfContents() {
         setTocItems(items => items.map(setActive));
       }
     }, observerOptions);
-    const headings = tocItems_.map(item => item.element);
+    const headings = tocItems.map(item => item.element);
     headings.forEach(heading => observer.observe(heading));
     return () => headings.forEach(heading => observer.unobserve(heading));
-  }, []);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    // sync the first visible heading fragment to url hash without polluting the history
-    const firstVisible = tocItems.find(h => h.isActive);
-    if (firstVisible) {
-      router.replace(`#${firstVisible.element.id}`, {scroll: false});
-    }
-  }, [tocItems, router]);
+  }, [tocItems]);
 
   return (
     <div className={styles['doc-toc']}>

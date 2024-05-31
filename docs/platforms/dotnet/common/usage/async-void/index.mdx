@@ -1,0 +1,28 @@
+---
+title: "Async Void"
+description: "Learn how to safely run `async void` methods in your UI event handlers."
+sidebar_order: 50
+---
+
+The Sentry SDK for .NET supports capturing exceptions thrown from `async void` methods. This is particularly useful for capturing exceptions when you need to run asynchronous code from UI event handlers.
+
+## Basic Example
+
+The following example uses `RunAsyncVoid` in a button click event handler:
+
+```csharp
+    private void OnFetchContentClicked(object sender, EventArgs e)
+    {
+        var client = new HttpClient();
+
+        // This example passes an exception handler callback to RunAsyncVoid, which logs a warning if an exception occurs
+        SentrySdk.RunAsyncVoid(
+            async () => await client.GetAsync("https://amostunreliablewebsite.net/"),
+            ex => _logger.LogWarning(ex, "Error fetching data")
+        );
+
+        // This is an example of the same, omitting the exception handler callback. In this case, the default exception
+        // handler will be used, which simply captures any exceptions and sends these to Sentry
+        SentrySdk.RunAsyncVoid(async () => await client.GetAsync("https://amostunreliablewebsite.net/"));
+    }
+```

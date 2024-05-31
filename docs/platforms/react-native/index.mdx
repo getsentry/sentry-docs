@@ -8,38 +8,101 @@ categories:
   - mobile
 ---
 
-<PlatformContent includePath="getting-started-primer" />
-
-On this page, we get you up and running with Sentry's SDK.
-
-Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
-
-If you prefer to follow video instructions, see [How to Install the Sentry React Native SDK in 60 Seconds](https://vimeo.com/899369012).
-
-## Install
-
-Sentry captures data by using an SDK within your application’s runtime.
-
-<PlatformContent includePath="getting-started-install" />
-
-## Configure
-
-Configuration should happen as early as possible in your application's lifecycle.
-
-<PlatformContent includePath="getting-started-config" />
-
-<PlatformContent includePath="getting-started-sourcemaps" />
-
-## Verify
-
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
-
-<PlatformContent includePath="getting-started-verify" />
+On this page, we get you up and running with Sentry's React Native SDK, automatically reporting errors and exceptions in your application. If you prefer to follow video instructions, see [How to Install the Sentry React Native SDK in 60 Seconds](https://vimeo.com/899369012).
 
 <Note>
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
 
 </Note>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
+
+To install, run `@sentry/wizard`:
+
+```bash {tabTitle:npm}
+npx @sentry/wizard@latest -s -i reactNative
+```
+
+[Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [set up manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer. You only need to patch the project once. Then you can add the patched files to your version control system.
+
+<Expandable title="The following tasks will be performed by the Sentry Wizard">
+
+- Install the `@sentry/react-native` package.
+- Enable the Sentry React Native Gradle build step for Android to auto-upload generated source maps and debug symbols.
+- Wrap the _Bundle React Native code and images_ Xcode project build phase script to upload generated source maps and collect bundled node modules.
+- Add _Upload Debug Symbols to Sentry_ Xcode project build phase.
+- Run `pod install`.
+- Store build credentials in _*ios/sentry.properties*_ and _*android/sentry.properties*_.
+- Configure Sentry for the supplied DSN in your _*App.tsx*_ file.
+
+</Expandable>
+
+If you're using Expo, [read our docs](/platforms/react-native/manual-setup/expo/) to learn how to add Sentry to your Expo project. This SDK will work for both managed and bare projects.
+
+
+## Configure
+
+To capture all errors, initialize the Sentry React Native SDK as soon as possible.
+
+<SignInNote />
+
+```javascript {filename:App.js} {"onboardingOptions": {"performance": "5-7", "profiling": "8-12"}}
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  _experiments: {
+    // profilesSampleRate is relative to tracesSampleRate.
+    // Here, we'll capture profiles for 100% of transactions.
+    profilesSampleRate: 1.0,
+  },
+});
+```
+
+<OnboardingOption optionId="performance">
+
+#### Wrap Your App
+
+To automatically instrument your app with [touch event tracking](/platforms/react-native/touchevents/) and [automatic performance monitoring](/platforms/react-native/performance/instrumentation/automatic-instrumentation/), wrap it with `Sentry.wrap`:
+
+```javascript {filename:App.js}
+export default Sentry.wrap(App);
+```
+
+This is not required if your app does not have a single parent "App" component.
+
+</OnboardingOption>
+
+
+## Verify
+
+Verify that your app is sending events to Sentry by adding the following snippet, which includes an intentional error. You should see the error reported in Sentry within a few minutes.
+
+```javascript {tabTitle:Throw Error}
+throw new Error("My first Sentry error!");
+```
+
+```javascript {tabTitle:Native Crash}
+Sentry.nativeCrash();
+```
+
+
+## Next Steps
+
+- <PlatformLink to="/features">Learn about the features of Sentry's React Native SDK</PlatformLink>
+- <PlatformLink to="/sourcemaps/">Add readable stack traces to errors</PlatformLink>
+- <PlatformLink to="/data-management/apple-privacy-manifest">Add Apple Privacy manifest</PlatformLink>
