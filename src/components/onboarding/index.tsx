@@ -20,11 +20,11 @@ const optionDetails: Record<
     description: "Let's admit it, we all have errors.",
   },
   performance: {
-    name: 'Performance Monitoring',
+    name: 'Tracing',
     description: (
       <span>
-        Automatic performance issue detection across services and context on who is
-        impacted, outliers, regressions, and the root cause of your slowdown.
+        Tracing and automatic performance issue detection across services and context on
+        who is impacted, outliers, regressions, and the root cause of your slowdown.
       </span>
     ),
   },
@@ -32,7 +32,7 @@ const optionDetails: Record<
     name: 'Profiling',
     description: (
       <span>
-        <span className={styles.TooltipTitle}>Requires Performance Monitoring</span>
+        <span className={styles.TooltipTitle}>Requires Tracing to be enabled</span>
         See the exact lines of code causing your performance bottlenecks, for faster
         troubleshooting and resource optimization.
       </span>
