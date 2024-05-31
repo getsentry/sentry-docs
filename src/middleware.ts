@@ -3109,6 +3109,10 @@ const REDIRECTS: Redirect[] = [
     from: '/product/ai-monitoring/getting-started/the-dashboard/',
     to: '/product/llm-monitoring/getting-started/the-dashboard/',
   },
+  {
+    from: '/product/performance/resources/',
+    to: '/product/performance/assets/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
