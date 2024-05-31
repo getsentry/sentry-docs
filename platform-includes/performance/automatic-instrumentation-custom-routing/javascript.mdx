@@ -15,8 +15,10 @@ Sentry.init({
   ],
 });
 
+const client = Sentry.getClient()
+
 // We start the pageload span as early as possible!
-let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan({
+let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan(client, {
   name: window.location.pathname,
   attributes: {
     [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "url",
@@ -25,8 +27,6 @@ let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan({
 
 // Somewhere, instrument your router like this:
 myRouter.on("routeChange", (route) => {
-  const client = Sentry.getClient();
-
   // Make sure that the pageload span uses the route name
   // After that, each route change should trigger a navigation span (which will automatically finish the previous one)
   if (pageLoadSpan) {
