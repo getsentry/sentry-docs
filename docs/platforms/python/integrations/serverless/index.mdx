@@ -26,13 +26,27 @@ Apply the `serverless_function` decorator to each function that might throw erro
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 from sentry_sdk.integrations.serverless import serverless_function
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 
 @serverless_function
@@ -49,7 +63,7 @@ Wrap a functions with the `serverless_function` that triggers an error:
 ```python
 @serverless_function
 def my_function(...):
-    1/0  # raises an error
+    1 / 0  # raises an error
 ```
 
 Now deploy your function. When you now run your function an error event will be sent to [sentry.io](https://sentry.io).

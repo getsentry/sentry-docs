@@ -11,14 +11,28 @@ To configure the SDK, initialize it with the integration in a custom `wsgi.py` s
 
 <SignInNote />
 
-```python {filename:wsgi.py}
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:wsgi.py} {"onboardingOptions": {"performance": "7-9", "profiling": "10-13"}}
 # wsgi.py
 import sentry_sdk
 from sentry_sdk.integrations.trytond import TrytondWSGIIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         TrytondWSGIIntegration(),
     ],
@@ -30,7 +44,7 @@ from trytond.application import app as application
 ```
 
 In Tryton>=5.4 an error handler can be registered to respond the client
-with a custom error message including the Sentry event id instead of a traceback.
+with a custom error message including the Sentry event ID instead of a traceback.
 
 ```python {filename:wsgi.py}
 # wsgi.py

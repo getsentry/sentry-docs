@@ -33,20 +33,30 @@ Here's how to use the AWS Lambda integration for the Python SDK:
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         AwsLambdaIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 
 def lambda_handler(event, context):
@@ -99,7 +109,7 @@ You can change the behavior of `AwsLambdaIntegration` by setting options for it:
 
   ```python
   sentry_sdk.init(
-      ...
+      # ...
       integrations=[
           AwsLambdaIntegration(timeout_warning=True),
       ],
