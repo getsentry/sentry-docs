@@ -2,7 +2,7 @@ Then forward the `init` method from the sibling Sentry SDK for the framework you
 
 <SignInNote />
 
-```typescript {tabTitle: Angular} {filename: app.module.ts}
+```typescript {tabTitle: Angular} {filename: app.module.ts} {"onboardingOptions": {"performance": "13-18, 23-27, 45-54", "session-replay": "19-21, 28-32"}}
 import * as Sentry from "@sentry/capacitor";
 import * as SentryAngular from "@sentry/angular";
 
@@ -21,11 +21,20 @@ Sentry.init(
       SentryAngular.browserTracingIntegration({
         tracePropagationTargets: ["localhost", "https://yourserver.io/api"],
       }),
+      // Registers the Replay integration,
+      // which automatically captures Session Replays
+      Sentry.replayIntegration(),
     ],
+
     // Set tracesSampleRate to 1.0 to capture 100%
     // of transactions for performance monitoring.
     // We recommend adjusting this value in production
     tracesSampleRate: 1.0,
+
+    // Capture Replay for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
   },
   // Forward the init method from @sentry/angular
   SentryAngular.init
