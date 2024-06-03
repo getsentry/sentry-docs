@@ -8,13 +8,6 @@ Sentry provides an integration with AWS Lambda ASP.NET Core Server through the [
 
 ## Install
 
-<OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance',
-  ]}
-/>
-
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
@@ -35,6 +28,14 @@ All `ASP.NET Core` configurations are valid here. But one configuration in parti
 
 <SignInNote />
 
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+  ]}
+/>
+
 ```csharp {"onboardingOptions": {"performance": "12-14"}}
 public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFunction
 {
@@ -42,16 +43,16 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
     {
         builder
             // Add Sentry
-            .UseSentry(o =>
+            .UseSentry(options =>
             {
-                o.Dsn = "___PUBLIC_DSN___";
+                options.Dsn = "___PUBLIC_DSN___";
                 // When configuring for the first time, to see what the SDK is doing:
-                o.Debug = true;
+                options.Debug = true;
                 // Set TracesSampleRate to 0.1 to capture 10%
                 // of transactions for performance monitoring.
-                o.TracesSampleRate = 0.1;
+                options.TracesSampleRate = 0.1;
                 // Required in Serverless environments
-                o.FlushOnCompletedRequest = true;
+                options.FlushOnCompletedRequest = true;
             })
             .UseStartup<Startup>();
     }
