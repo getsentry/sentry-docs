@@ -24,9 +24,17 @@ This will add appropriate intercepters to your server/client to capture errors a
 
 <SignInNote />
 
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
 ### Server
 
-```python
+```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import grpc
 
 import sentry_sdk
@@ -34,7 +42,13 @@ from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         GRPCIntegration(),
     ],
@@ -52,7 +66,7 @@ server = grpc.aio.server()
 
 ### Client
 
-```python
+```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import grpc
 
 import sentry_sdk
@@ -60,7 +74,13 @@ from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         GRPCIntegration(),
     ],
@@ -98,13 +118,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 ```python
 import grpc
 
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    integrations=[
-        GRPCIntegration(),
-    ],
-)
+sentry_sdk.init(...)  # same as above
 
 ...
 

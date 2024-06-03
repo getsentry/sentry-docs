@@ -7,8 +7,7 @@ If you use a WSGI framework not directly supported by the SDK, or wrote a raw WS
 
 <Note>
 
-If you use an WSGI framework, please use our specific integrations for [Flask](/platforms/python/integrations/flask/), [Bottle](/platforms/python/integrations/bottle/), [Falcon](/platforms/python/integrations/falcon/), [Pyramid](/platforms/python/integrations/pyramid/), and [Tryton](/platforms/python/integrations/tryton/) instead of this WSGI middleware as those are easier to use and capture more useful information.
-
+Please check our list of [supported integrations](/platforms/python/integrations/) as there might already be a specific integration (like [Django](/platforms/python/integrations/django/) or [Flask](/platforms/python/integrations/flask/)) that is easier to use and captures more useful information than our generic WSGI middleware. If that's the case, you should use the specific integration instead of this middleware.
 </Note>
 
 ## Install
@@ -21,7 +20,15 @@ pip install --upgrade 'sentry-sdk'
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import sentry_sdk
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
@@ -29,7 +36,13 @@ from my_wsgi_app import app
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 
 app = SentryWsgiMiddleware(app)
@@ -48,7 +61,7 @@ sentry_sdk.init(...)  # same as above
 def app(env, start_response):
     start_response('200 OK', [('Content-Type', 'text/plain')])
     response_body = 'Hello World'
-    1/0  # this raises an error
+    1 / 0  # this raises an error
     return [response_body.encode()]
 
 app = SentryWsgiMiddleware(app)
