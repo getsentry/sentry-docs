@@ -209,7 +209,7 @@ export function OnboardingOptionButtons({
         });
       }
     });
-  }, [options, touchOptions]);
+  }, [options, touchedOptions]);
 
   return (
     <div className="flex flex-wrap gap-3 py-2 bg-white/90 sticky top-[80px] z-[1000] rounded shadow-[var(--shadow-6)] transition">
