@@ -62,6 +62,10 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
+    to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
+  },
+  {
     from: '/organization/integrations/github/',
     to: '/organization/integrations/source-code-mgmt/github/',
   },
