@@ -1,0 +1,112 @@
+---
+title: Instrument Queues
+sidebar_order: 3000
+description: "Learn how to manually instrument your code to use Sentry's Queues module. "
+---
+Sentry comes with automatic instrumentation for the most common messaging queue systems. In case yours isn't supported, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
+
+## Producer Instrumentation
+
+To start capturing performance metrics, use the `Sentry.with_child_span()` function to wrap your queue producer events. Your span `op` must be set to `queue.publish`. Include the following span data to enrich your producer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | int | Size of the message body in bytes |
+
+Your `queue.publish` span must exist inside a transaction in order to be recognized as a producer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Ruby, you can start a new one using `Sentry.start_transaction()`.
+
+You must also include trace headers in your message so that your consumers can continue your trace once your message is picked up.
+
+
+```ruby
+connection = MyCustomQueue.connect
+
+# The message you want to send to the queue
+queue = "messages"
+message = "Hello World!"
+message_id = "abc123"
+
+# Create transaction
+transaction = Sentry.start_transaction(name: 'queue_producer_transaction', op: 'function')
+
+# Create the span
+Sentry.with_child_span(op: 'queue.publish', description: 'queue_producer') do |span|
+  # Set span data
+  span.set_data('messaging.message.id', message_id)
+  span.set_data('messaging.destination.name', queue)
+  span.set_data('messaging.message.body.size', message.bytesize)
+
+  # Publish the message to the queue (including current time stamp)
+  now = DateTime.now
+  connection.publish(
+    queue: queue,
+    body: message,
+    timestamp: now,
+    headers: {...} # Insert trace headers here
+  )
+end
+
+transaction.finish
+```
+
+
+## Consumer Instrumentation
+
+To start capturing performance metrics, use the `Sentry.with_child_span()` function to wrap your queue consumers. Your span `op` must be set to `queue.process`. Include the following span data to enrich your consumer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | number | Size of the message body in bytes |
+| `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
+| `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
+
+Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Ruby, you can start a new one using `Sentry.start_transaction()`.
+
+Use `Sentry.continue_trace()` to connect your consumer spans to their associated producer spans, and `span.set_status()` to mark the trace of your message as success or failed.
+
+
+```ruby
+connection = MyCustomQueue.connect
+
+# Pick up message from queues
+queue = "messages"
+message = connection.consume(queue: queue)
+env = ... # Get trace headers from the message
+
+# Calculate latency (optional, but valuable)
+now = DateTime.now
+message_time = DateTime.strptime(message["timestamp"].to_s, '%s')
+latency = now - message_time
+
+# Create transaction
+transaction = Sentry.continue_trace(env, name: 'queue_consumer_transaction', op: 'function')
+Sentry.start_transaction(transaction: transaction)
+
+# Create the span
+span = transaction.start_child(op: 'queue.process', description: 'queue_consumer')
+
+Sentry.with_child_span(op: 'queue.process', description: 'queue_consumer') do |span|
+  # Set span data
+  span.set_extra('messaging.message.id', message["message_id"])
+  span.set_extra('messaging.destination.name', queue)
+  span.set_extra('messaging.message.body.size', message["body"].bytesize)
+  span.set_extra('messaging.message.receive.latency', latency)
+  span.set_extra('messaging.message.retry.count', 0)
+
+  # Process the message
+  begin
+    process_message(message)
+  rescue => e
+    # In case of an error set the status to "internal_error"
+    span.set_status("internal_error")
+  end
+  
+  span.finish
+end
+
+transaction.finish
+```
