@@ -29,7 +29,15 @@ The example below demonstrates the simplest recommended setup.
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
 from sanic import Sanic
 import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
@@ -40,6 +48,13 @@ app = Sanic(__main__)
 async def init_sentry(_):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
         integrations=[AsyncioIntegration()],
     )
 ```
@@ -59,8 +74,7 @@ from sentry_sdk.integrations.sanic import SanicIntegration
 @app.listener("before_server_start")
 async def init_sentry(_):
     sentry_sdk.init(
-        dsn="___PUBLIC_DSN___",
-        enable_tracing=True,
+        # ...
         integrations=[
             AsyncioIntegration(),
             SanicIntegration(
