@@ -9,20 +9,34 @@ The Spark Integration adds support for the Python API for Apache Spark, [PySpark
 
 ### Driver
 
-The spark driver integration is supported for Spark 2 and above.
+The Spark driver integration is supported for Spark 2 and above.
 
 To configure the SDK, initialize it with the integration before you create a `SparkContext` or `SparkSession`.
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "7-9", "profiling": "10-13"}}
 import sentry_sdk
 from sentry_sdk.integrations.spark import SparkIntegration
 
 if __name__ == "__main__":
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        enable_tracing=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
         integrations=[
             SparkIntegration(),
         ],
@@ -43,7 +57,7 @@ Create a file called `sentry-daemon.py` with the following content:
 
 <SignInNote />
 
-```python {filename:sentry-daemon.py}
+```python {filename:sentry-daemon.py} {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import sentry_sdk
 from sentry_sdk.integrations.spark import SparkWorkerIntegration
 import pyspark.daemon as original_daemon
@@ -51,7 +65,13 @@ import pyspark.daemon as original_daemon
 if __name__ == '__main__':
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        enable_tracing=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
         integrations=[
             SparkWorkerIntegration(),
         ],
