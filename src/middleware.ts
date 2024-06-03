@@ -3113,6 +3113,46 @@ const REDIRECTS: Redirect[] = [
     from: '/product/ai-monitoring/getting-started/the-dashboard/',
     to: '/product/llm-monitoring/getting-started/the-dashboard/',
   },
+  {
+    from: '/enriching-error-data/advanced-datascrubbing/',
+    to: '/concepts/data-management/advanced-datascrubbing/',
+  },
+  {
+    from: '/data-management/advanced-datascrubbing/',
+    to: '/concepts/data-management/advanced-datascrubbing/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/features/component-tracking/',
+    to: '/platforms/javascript/guides/react/features/component-names/',
+  },
+  {
+    from: '/platforms/rust/usage/sdk-fingerprinting/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
+  },
+  {
+    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
+    to: '/platforms/java/guides/spring/data-management/',
+  },
+  {
+    from: '/support/',
+    to: 'https://sentry.zendesk.com/hc/en-us/',
+  },
+  {
+    from: '/product/security-policy-reporting/',
+    to: '/security-legal-pii/security/security-policy-reporting/',
+  },
+  {
+    from: '/product/session-replay/protecting-user-privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    from: '/product/data-management-settings/restrict-display/',
+    to: '/security-legal-pii/scrubbing/restrict-display/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
