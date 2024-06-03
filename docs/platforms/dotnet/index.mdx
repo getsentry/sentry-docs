@@ -1,0 +1,86 @@
+---
+title: .NET
+sdk: sentry.dotnet
+caseStyle: snake_case
+supportLevel: production
+---
+
+On this page, we get you up and running with Sentry's .NET SDK, automatically reporting errors and exceptions in your application.
+
+<Note>
+
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+</Note>
+
+<GuideGrid platform="dotnet" />
+
+This <PlatformLink to="/compatibility/">SDK is compatible</PlatformLink> with the latest .NET and .NET Core platforms, as well as .NET Standard 2.0 and .NET Framework 4.6.1 or newer. You can use it with applications written in C#, VB.NET, F#, and other .NET programming languages. For older versions, such as .NET Framework 3.5, you may continue to use our <Link rel={`nofollow`} to={`/platforms/dotnet/legacy-sdk/`}>legacy SDK</Link>, until further notice.
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
+
+Install the **NuGet** package to add the Sentry dependency:
+
+```shell {tabTitle:.NET Core CLI} {"onboardingOptions": {"profiling": "2-3"}}
+dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
+// Sentry profiling for .NET is available in Alpha on .NET 6.0+
+dotnet add package Sentry.Profiling -v {{@inject packages.version('sentry.dotnet.profiling') }}
+```
+
+```powershell {tabTitle:Package Manager} {"onboardingOptions": {"profiling": "2-3"}}
+Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
+// Sentry profiling for .NET is available in Alpha on .NET 6.0+
+Install-Package Sentry.Profiling -Version {{@inject packages.version('sentry.dotnet.profiling') }}
+```
+
+```shell {tabTitle:Paket CLI} {"onboardingOptions": {"profiling": "2-3"}}
+paket add Sentry --version {{@inject packages.version('sentry.dotnet') }}
+// Sentry profiling for .NET is available in Alpha on .NET 6.0+
+paket add Sentry.Profiling --version {{@inject packages.version('sentry.dotnet.profiling') }}
+```
+
+## Configure
+
+To capture all errors, even the one during the startup of your application, you should initialize the Sentry .NET SDK as soon as possible.
+
+<SignInNote />
+
+```csharp {"onboardingOptions": {"performance": "6-7", "profiling": "8-9"}}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.us.sentry.io/5428537";
+    options.Debug = true;
+    options.AutoSessionTracking = true;
+    // A fixed sample rate
+    options.TracesSampleRate = 0.1f;
+    // A sample rate for profiling - this is relative to TracesSampleRate
+    options.ProfilesSampleRate = 0.1f;
+});
+```
+
+## Verify
+
+The SDK will capture unhandled exceptions that are simply thrown or you can handle the error by calling `CaptureException` explicitely.
+
+```csharp
+using Sentry;
+
+try
+{
+    throw null;
+}
+catch (Exception ex)
+{
+    SentrySdk.CaptureException(ex);
+}
+```
