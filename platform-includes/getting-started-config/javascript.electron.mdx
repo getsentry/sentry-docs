@@ -3,15 +3,34 @@ You should `init` the SDK in the `main` process and every `renderer` process you
 <SignInNote />
 
 In the Electron `main` process:
+
 ```javascript
 import * as Sentry from "@sentry/electron/main";
 
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
 ```
 
 In the Electron `renderer` process:
-```javascript
+
+```javascript {"onboardingOptions": {"performance": "5, 8-12", "session-replay": "6, 13-17"}}
 import * as Sentry from "@sentry/electron/renderer";
 
-Sentry.init();
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
 ```
