@@ -1,0 +1,100 @@
+---
+title: Configuring PyCharm
+---
+
+## Overview
+
+If you use PyCharm for developing there are a few things you need to configure in order to be able to run and debug.
+
+This document describes a few useful configurations for sentry development
+
+## Configurations:
+
+Python interpreter: (make sure it is the venv interpreter) e.g. `~/venv/sentry/bin/python`
+
+![img/PyCharmPyInterpreter.png](img/PyCharmPyInterpreter.png)
+
+To create a configuration (a run/debug configuration) just go to Run | Edit Configurations... (also available in the default toolbar).
+
+![img/AddConfiguration.png](img/AddConfiguration.png)
+
+### Test runner
+
+Sentry uses pytest for its unit tests.
+
+Create a pytest configuration (under Python tests)
+
+Set Target: **Custom**
+
+Additional Arguments: **tests/sentry**
+
+![img/AddPytestConfiguration.png](img/AddPytestConfiguration.png)
+
+### Dev server with everything needed
+
+For running (not debugging) with everything set up (web, workers, cron):
+
+- Create another Python configuration
+- Script path: `<venv dir>/bin/sentry` e.g. `~/venv/sentry/bin/sentry`
+- Parameters: `devserver --workers`
+- Python interpreter: the venv interpreter
+- Working dir: (the `src` path in your sentry installation directory ) e.g. ~/dev/sentry/src
+
+**Note:** You will not be able to debug the web workers with this configuration (the web worker is started by invoking a uwsgi server and I couldn't find a way to attach to it).
+
+![img/PyCharmPyInterpreter.png](img/PyCharmPyInterpreter.png)
+
+### Getsentry dev server with everything needed
+
+You can duplicate a Sentry devserver run configuration to run from the "getsentry" repo, with the following changes:
+
+1. Change the script path to `getsentry/.venv/bin/sentry` within your getsentry project. (Not to be confused with `.venv/bin/getsentry`, which is a bash script.)
+2. Prepend the parameters with `--config=<your path>/getsentry/getsentry/settings.py`. So the full value should look like `--config=.../settings.py devserver --workers`.
+3. Change the Python interpreter to point at `.venv/bin/python` within your getsentry project. You may need to go into PyCharm's global "Preferences" window and add it as a project interpreter ("Project: sentry > Project Interpreter").
+4. Change the working directory to `getsentry/getsentry`.
+
+Note that the paths in step 2 and 4 refer to the directory named `getsentry` within the repository named `getsentry`. If the repository also has a parent directory named `getsentry` to correspond to the GitHub org name, the correct paths may contain [getsentry/getsentry/getsentry](https://en.wikipedia.org/wiki/Semantic_satiation).
+
+![img/PyCharmGetsentry.png](img/PyCharmGetsentry.png)
+
+### Debugging with PyCharm
+
+The `devserver` command exists mainly to spawn daemons in separate processes, which means it is not very useful to attach a debugger to it in its default mode.
+
+#### Web server
+
+The `devserver` command has a special flag that will cause the web server to be launched in a thread of the same process (rather than as the `web` daemon). This allows the same PyCharm "Debug" action that launches the devserver to attach to the web server and hit breakpoints on its back end.
+
+Clone your devserver run configuration and add `--debug-server` to the end of the "Parameters" field. Launch it by selecting "Debug" rather than "Run".
+
+The `--debug-server` flag may cause the process to not respond correctly to SIGINT and to shut down less gracefully than your original configuration. It is recommended to keep both, using the first with the "Run" command and the second with the "Debug" command.
+
+You may keep the `--workers` flag alongside `--debug-server`, but note that it will not be possible to attach breakpoints to the workers, nor to any other daemons spawned by the devserver.
+
+#### Stand-alone daemons
+
+To attach a debugger to an individual daemon other than `web`, create a run configuration for the daemon. The following attributes should be the same as your devserver config. (You may clone it and change only the "Parameters" field.)
+
+- Script path: `<venv dir>/bin/sentry` e.g. `~/venv/sentry/bin/sentry`
+- Python interpreter: the venv interpreter
+- Working dir: (the `src` path in your sentry installation directory ) e.g. `~/dev/sentry/src`
+
+Set the new run configuration's parameters to a `run` command that launches the daemon, such as:
+
+- `run cron`
+- `run worker -c 1`
+
+#### Tips and troubleshooting
+
+- The same set of modifications will work on run configs for the `getsentry` project, if you want to debug that.
+- PyCharm's "Compound" run configuration type is useful for launching several run configurations at once. It may be convenient to set one up if you are debugging one or more stand-alone daemons in concert with a devserver.
+
+![img/DevserverLeetSetup.png](img/DevserverLeetSetup.png)
+
+- If you would like Sentry to behave differently in a debugging environment than in a regular run, you can add arbitrary environment variables and then check for them in your `.sentry/sentry.conf.py` file. For example, the screenshot below shows a setup where APM sampling is disabled while debugging (since stopping on breakpoints would pollute time measurements). Note that `PYCHARM_DEBUG` is an arbitrary name; it has no special meaning to PyCharm nor to Sentry.
+
+![img/PycharmRunConfigEnvVar.png](img/PycharmRunConfigEnvVar.png)
+
+- If your individually-run daemons are not working, you can troubleshoot by debugging `devserver --debug-server` and inserting breakpoints on `src/sentry/runner/commands/devserver.py`. This will let you manually inspect the commands that the `devserver` command is running. (Look for the `manager.add_process` call near the bottom.) Try adjusting the parameters in your run configs to match those commands if they don't already.
+
+![img/DevserverTroubleshooting.png](img/DevserverTroubleshooting.png)

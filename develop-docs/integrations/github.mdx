@@ -1,0 +1,75 @@
+---
+title: "GitHub Integration"
+---
+
+## Create a GitHub App
+
+To configure the GitHub integration you'll need to create a GitHub app and obtain credentials.
+
+<Alert level="warning">
+  The GitHub App name must not contain any spaces.
+</Alert>
+
+<CreateGitHubAppForm url="https://github.com/organizations/:org/settings/apps/new?name=:org-Sentry-Integration&public=false&members=read&emails=read&administration=read&contents=read&issues=write&pull_requests=write&repository_hooks=write&url=:url-prefix&callback_url=:url-prefix%2Fauth%2Fsso%2F&setup_url=:url-prefix%2Fextensions%2Fgithub%2Fsetup%2F&webhook_url=:url-prefix%2Fextensions%2Fgithub%2Fwebhook%2F&events[]=push&events[]=pull_request&webhook_active=true" defaultOrg="your-organization" defaultUrlPrefix="https://your-sentry-url-prefix.com" />
+
+Start by following GitHub's [official guide on creating a GitHub App](https://developer.github.com/apps/building-github-apps/creating-a-github-app/).
+
+If the form above does not work for you, you need the following settings for your GitHub Application. 
+You'll need to come up with your own webhook secret:
+
+| Setting                         | Value                                      |
+| ------------------------------- | ------------------------------------------ |
+| Homepage URL                    | `${url-prefix}`                            |
+| User authorization callback URL | `${url-prefix}/auth/sso/`                  |
+| Setup URL (optional)            | `${url-prefix}/extensions/github/setup/`   |
+| Webhook URL                     | `${url-prefix}/extensions/github/webhook/` |
+| Webhook secret                  | "my-super-secret-example-secret"           |
+
+When prompted for permissions, choose the following:
+
+| Permission                                       | Setting      |
+| ------------------------------------------------ | ------------ |
+| Repository / Administration                      | Read-only    |
+| Repository / Contents                            | Read-only    |
+| Organization permissions / members (optional)    | Read-only    |
+| Account permissions / Email addresses (optional) | Read-only    |
+| Repository / Issues                              | Read & write |
+| Repository / Pull requests                       | Read & write |
+| Repository / Webhooks                            | Read & write |
+
+When prompted to subscribe to events, choose the following:
+
+ - Pull Request
+ - Push 
+
+<Alert title="Trick" level="info">
+  Enabling optional permissions will also enable the <Link to="/self-hosted/sso/#github-auth">GitHub SSO</Link> for your instance.
+</Alert>
+
+You'll be given various credentials, configure them in `config.yml`:
+
+```yml
+# App ID
+github-app.id: GITHUB_APP_ID
+# App Name
+github-app.name: "GITHUB_APP_NAME"
+# Client ID
+github-app.client-id: "GITHUB_CLIENT_ID"
+# Client Secret
+github-app.client-secret: "GITHUB_CLIENT_SECRET"
+# Webhook Secret
+github-app.webhook-secret: "my-super-secret-example-secret"
+```
+
+Last, generate and download the private key, and add it to your configuration for your app:
+
+```yml
+github-app.private-key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  -----END RSA PRIVATE KEY-----
+```

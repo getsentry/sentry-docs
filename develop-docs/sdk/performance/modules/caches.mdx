@@ -1,0 +1,72 @@
+---
+title: 'Caches Module'
+---
+
+The SDK's caching integration is agnostic to the underlying engine used. In most cases, the SDK will instrument existing cache abstractions in certain frameworks or libraries.
+
+## Span conventions
+
+### Span Operations
+
+| Span OP | Description |
+|:--|:--|
+| `cache.get` | A single item or multiple items are retrieved from the cache |
+| `cache.put` | A single item or multiple items are written to the cache |
+| `cache.remove` | A single item or multiple items are removed from the cache |
+| `cache.flush` | The entire content of the cache is deleted |
+
+### Span Description
+
+The description of cache spans should be set to the cache key(s), sepreated by commas, e.g. `posts`, or `article1, article2`.
+
+### Span Data
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `cache.hit` | bool | cache hit or miss | required only on read-operations (`cache.get`)
+| `cache.key` | array | the key(s) involved in the operation | required only on operations that have a key
+
+The following data attributes are only to be set if exposed by the instrumented cache abstraction or retrievable with minimal overhead.
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `cache.item_size ` | int | the size of the item/items read/written/deleted in `bytes` | only on operations that have a key
+| `cache.success ` | bool | the operation has succeeded or failed | 
+| `cache.ttl ` | int | the time to life in `seconds` | only on operations that have a key
+| `network.peer.address` | string | The hostname of the cache instance |
+| `network.peer.port` | int | the port used by the cache instance | 
+
+## Instrumentation
+
+Once an application performs a caching operation, the SDK creates a new span based on the operation, wrapping any spans of the underlying engine as direct children.
+
+**Example**
+
+```
+item = Cache::get('posts')
+```
+
+This should result in the following spans, assuming a cache hit with an underlying Redis instance being used.
+
+```
+<span op:"cache.get" description:"posts" cache.key:"posts" cache.hit=true>
+	<span op:db.redis description:"GET posts"></span>
+</span>
+```
+
+### SDK Options
+
+If convenient, the SDK can optionally offer a `cache_prefixes` option, that wraps existing instrumentations into a cache span.
+This will likely only be useful if Redis is being used as a cache.
+
+```
+Sentry.init({
+  integrations: [
+    new Sentry.Integrations.Redis({
+	    cachePrefixes: ['posts:', 'authors:'],
+    }),
+  ],
+})
+```
+
+In this example, all Redis queries involving keys that match `posts:*` and `authors:*` will be wrapped into `cache.*` span.

@@ -1,0 +1,49 @@
+---
+title: Development Basics
+sidebar_order: 2
+---
+
+So you want to develop an SDK?  Before you get started here are some basics that are
+worth following to have a better experience.
+
+Run a Local Relay
+-----------------
+
+You do not need a local Sentry for SDK development but you will want to run a local
+[relay](https://docs.sentry.io/product/relay/).  The reason for this is that Sentry's
+main ingestion endpoint is not intended for development but for high throughput
+production use.  What this means is that a lot of the event processing is happening
+after the event has already been accepted by the system so you won't be able to see
+errors when sending the HTTP request.
+
+If you haven't used relay yet, have a look at the [getting started](https://docs.sentry.io/product/relay/getting-started/)
+docs for relay.  Once installed you will want to turn up the log level in your
+`.relay/config.yml` file:
+
+```yaml
+logging:
+  level: trace
+```
+
+Make sure your relay is running whenever you're doing development:
+
+```shell
+relay run
+```
+
+When sending events just substitute `orgXXX.ingest.sentry.io` with `localhost:3000` or
+whichever port you ended up chosing.  Also note that a local relay will out of the box
+be available via HTTP only so don't try to send HTTPS requests there.
+
+Join the SDK maintainers channel on Discord
+---------------------
+
+You can reach out to Sentry open source contributors and find other SDK maintainers in the [Sentry Discord server](https://discord.gg/sentry). Make sure to say hi on `#sdk-maintainers`.
+
+Consult Existing SDKs
+---------------------
+
+While we're trying to keep the docs up to date about all important things, it's usually
+a good idea to refer to already existing Sentry SDKs for input.  In particular the
+transport design is not part of the documentation but generally quite similar between
+SDKs.

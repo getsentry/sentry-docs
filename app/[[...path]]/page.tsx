@@ -15,13 +15,15 @@ import {
   getDocsRootNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {getDevDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {capitilize} from 'sentry-docs/utils';
 
-export async function generateStaticParams() {
-  const docs = await getDocsFrontMatter();
+const isDevelopDocs = !!process.env.DEVELOP_DOCS;
+
+export function generateStaticParams() {
+  const docs = getDevDocsFrontMatter();
   const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
@@ -49,6 +51,23 @@ export default async function Page({params}) {
     return <Home />;
   }
 
+  if (isDevelopDocs) {
+    // get the MDX for the current doc and render it
+    let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
+    try {
+      doc = await getFileBySlug(`develop-docs/${params.path.join('/')}`);
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        // eslint-disable-next-line no-console
+        console.error('ENOENT', params.path);
+        return notFound();
+      }
+      throw e;
+    }
+    const {mdxSource, frontMatter} = doc;
+    // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
+  }
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
   if (!rootNode) {
