@@ -38,7 +38,7 @@ Once performance metrics have been enabled, you'll see two spans inside your tra
 - `ui.compose.composition`, describing the time it took to execute your `@Composable`
 - `ui.compose.rendering`, describing the time it took to render your `@Composable` to the canvas
 
-The `SentryTraced` function also provides an `enableUserInteractionTracing` argument, which automatically applies a `Modifier.testTag()` and enables the _User Interactions_ feature mentioned below.
+The `SentryTraced` function also provides an `enableUserInteractionTracing` argument, which automatically applies a `Modifier.sentryTag()` and enables the _User Interactions_ feature mentioned below.
 
 ### Installation
 
@@ -110,17 +110,20 @@ SentryAndroid.init(this) { options ->
 }
 ```
 
-The Sentry SDK utilizes the built-in `Modifier.testTag("<tag>")` of a Composable to determine its identifier. Here's an example:
+#### Capture Composables
+
+The Sentry SDK requires you to have either `Modifier.sentryTag("<tag>")` or `Modifier.testTag("<tag>")` applied on each `@Composable` you want to capture to determine its identifier.
+Here's an example:
 
 ```kotlin
-import androidx.compose.ui.platform.testTag
+import io.sentry.compose.sentryTag
 
 @Composable
 fun LoginScreen() {
   Column {
     // ...
     Button(
-        modifier = Modifier.testTag("button_login"),
+        modifier = Modifier.sentryTag("button_login"),
         onClick = { TODO() }) {
         Text(text = "Login")
     }
@@ -130,7 +133,8 @@ fun LoginScreen() {
 
 <Note>
 
-If a `@Composable` doesn't have a `testTag` modifier applied, both breadcrumbs and transactions won't be captured because they can't be uniquely identified. To automatically generate tags, refer to the docs about our <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink>.
+If a `@Composable` doesn't have a `.sentryTag` or a `.testTag` modifier applied, both breadcrumbs and transactions won't be captured because they can't be uniquely identified.
+To automatically generate tags, refer to the docs about our <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink>.
 
 </Note>
 
