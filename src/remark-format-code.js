@@ -1,8 +1,6 @@
 import {format} from 'prettier';
 import {visit} from 'unist-util-visit';
 
-import * as prettierConfig from '../prettier.config.js';
-
 export default function remarkFormatCodeBlocks() {
   return async tree => {
     const codeNodes = [];
@@ -44,9 +42,8 @@ async function formatCode(node) {
 
   try {
     const formattedCode = await format(node.value, {
-      ...prettierConfig,
+      printWidth: 75, // The code blocks in the docs have around 77 characters available on desktop
       ...parserConfig,
-      printWidth: 80,
     });
     // get rid of the trailing newline
     node.value = formattedCode.trimEnd();

@@ -1,7 +1,6 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {useRouter} from 'next/navigation';
 
 import {isTruthy} from 'sentry-docs/utils';
 
@@ -137,16 +136,6 @@ export function TableOfContents() {
     headings.forEach(heading => observer.observe(heading));
     return () => headings.forEach(heading => observer.unobserve(heading));
   }, [tocItems]);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    // sync the first visible heading fragment to url hash without polluting the history
-    const firstVisible = tocItems.find(h => h.isActive);
-    if (firstVisible) {
-      router.replace(`#${firstVisible.element.id}`, {scroll: false});
-    }
-  }, [tocItems, router]);
 
   return (
     <div className={styles['doc-toc']}>

@@ -25,13 +25,27 @@ You can use the Google Cloud Functions integration for the Python SDK like this:
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 from sentry_sdk.integrations.gcp import GcpIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         GcpIntegration(),
     ],
@@ -57,12 +71,9 @@ the [configured timeout](https://cloud.google.com/functions/docs/concepts/exec#t
 To enable the warning, update the SDK initialization to set `timeout_warning` to
 `true`:
 
-<SignInNote />
-
 ```python
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     integrations=[
         GcpIntegration(
             timeout_warning=True
