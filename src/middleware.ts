@@ -3103,15 +3103,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/llm-monitoring/',
+    to: '/product/insights/llm-monitoring/',
   },
   {
     from: '/product/ai-monitoring/getting-started/',
-    to: '/product/llm-monitoring/getting-started/',
+    to: '/product/insights/llm-monitoring/getting-started/',
   },
   {
     from: '/product/ai-monitoring/getting-started/the-dashboard/',
-    to: '/product/llm-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+  },
+  {
+    from: '/product/llm-monitoring/',
+    to: '/product/insights/llm-monitoring/',
+  },
+  {
+    from: '/product/llm-monitoring/getting-started/',
+    to: '/product/insights/llm-monitoring/getting-started/',
+  },
+  {
+    from: '/product/llm-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
   },
   {
     from: '/product/metrics/',
@@ -3170,8 +3182,56 @@ const REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/scrubbing/restrict-display/',
   },
   {
+    from: '/product/performance/requests/',
+    to: '/product/insights/requests/',
+  },
+  {
+    from: '/product/performance/queries/',
+    to: '/product/insights/queries/',
+  },
+  {
     from: '/product/performance/resources/',
-    to: '/product/performance/assets/',
+    to: '/product/insights/assets/',
+  },
+  {
+    from: '/product/performance/assets/',
+    to: '/product/insights/assets/',
+  },
+  {
+    from: '/product/performance/mobile-vitals/',
+    to: '/product/insights/mobile-vitals/',
+  },
+  {
+    from: '/product/performance/mobile-vitals/screen-loads/',
+    to: '/product/insights/mobile-vitals/screen-loads/',
+  },
+  {
+    from: '/product/performance/mobile-vitals/app-starts/',
+    to: '/product/insights/mobile-vitals/app-starts/',
+  },
+  {
+    from: '/product/performance/web-vitals/',
+    to: '/product/insights/web-vitals/',
+  },
+  {
+    from: '/product/performance/web-vitals/web-vitals-concepts/',
+    to: '/product/insights/web-vitals/web-vitals-concepts/',
+  },
+  {
+    from: '/product/performance/caches/',
+    to: '/product/insights/caches/',
+  },
+  {
+    from: '/product/performance/caches/cache-page/',
+    to: '/product/insights/caches/cache-page/',
+  },
+  {
+    from: '/product/performance/queue-monitoring/',
+    to: '/product/insights/queue-monitoring/',
+  },
+  {
+    from: '/product/performance/queue-monitoring/queues-page/',
+    to: '/product/insights/queue-monitoring/queues-page/',
   },
 ];
 
