@@ -3199,7 +3199,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/mobile-vitals/',
-    to: '/product/insights/mobile-vitals//',
+    to: '/product/insights/mobile-vitals/',
   },
   {
     from: '/product/performance/mobile-vitals/screen-loads/',
