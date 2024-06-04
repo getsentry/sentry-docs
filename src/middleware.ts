@@ -2159,27 +2159,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/profiling/',
-    to: '/product/profiling/',
+    to: '/product/explore/profiling/',
   },
   {
     from: '/profiling/performance-overhead/',
-    to: '/product/profiling/performance-overhead/',
+    to: '/product/explore/profiling/performance-overhead/',
   },
   {
     from: '/profiling/setup/',
-    to: '/product/profiling/getting-started/',
+    to: '/product/explore/profiling/getting-started/',
   },
   {
     from: '/profiling/getting-started/',
-    to: '/product/profiling/getting-started/',
+    to: '/product/explore/profiling/getting-started/',
   },
   {
     from: '/profiling/mobile-app-profiling/',
-    to: '/product/profiling/mobile-app-profiling/',
+    to: '/product/explore/profiling/mobile-app-profiling/',
   },
   {
     from: '/profiling/mobile-app-profiling/metrics/',
-    to: '/product/profiling/mobile-app-profiling/metrics/',
+    to: '/product/explore/profiling/mobile-app-profiling/metrics/',
   },
   {
     from: '/product/error-monitoring/filtering/',
@@ -2247,43 +2247,39 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/discover-queries/',
-  },
-  {
-    from: '/performance-monitoring/discover-queries/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/explore/discover-queries/uncover-trends/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/explore/discover-queries/uncover-trends/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/explore/discover-queries/query-builder/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/explore/discover-queries/query-builder/',
   },
   {
     from: '/product/crons/alerts/',
@@ -3116,6 +3112,22 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/product/ai-monitoring/getting-started/the-dashboard/',
     to: '/product/llm-monitoring/getting-started/the-dashboard/',
+  },
+  {
+    from: '/product/metrics/',
+    to: '/product/explore/metrics/',
+  },
+  {
+    from: '/product/profiling/',
+    to: '/product/explore/profiling/',
+  },
+  {
+    from: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
+  },
+  {
+    from: '/product/session-replay/',
+    to: '/product/explore/session-replay/',
   },
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
