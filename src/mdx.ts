@@ -27,6 +27,7 @@ import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
+import {isTruthy} from './utils';
 
 const root = process.cwd();
 
@@ -94,6 +95,33 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   });
 
   return frontMatter;
+}
+
+export function getDevDocsFrontMatter(): FrontMatter[] {
+  const folder = 'develop-docs';
+  const docsPath = path.join(root, folder);
+  const files = getAllFilesRecursively(docsPath);
+  const fmts = files
+    .map(file => {
+      const fileName = file.slice(docsPath.length + 1);
+      if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+        return undefined;
+      }
+
+      const source = fs.readFileSync(file, 'utf8');
+      const {data: frontmatter} = matter(source);
+      return {
+        ...(frontmatter as FrontMatter),
+        slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+        sourcePath: path.join(folder, fileName),
+      };
+    })
+    .filter(isTruthy);
+  // console.log(
+  //   '🔥 fmts',
+  //   fmts.filter(f => f.slug.startsWith('api'))
+  // );
+  return fmts;
 }
 
 export function getAllFilesFrontMatter(folder: string = 'docs') {
@@ -257,6 +285,7 @@ export async function getFileBySlug(slug: string) {
   }
 
   const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  console.log('🔥 sourcePath', sourcePath);
   const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
