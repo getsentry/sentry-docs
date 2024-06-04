@@ -40,13 +40,14 @@ https://github.com/getsentry/sentry-cocoa.git
 </PlatformSection>
 
 <PlatformSection supported={["apple.ios"]}>
-We recommend installing the SDK through our installation wizard by running the following command inside your project directory:
+We recommend installing the SDK through our [Sentry Wizard](https://github.com/getsentry/sentry-wizard) by running the following command inside your project directory:
 
 ```bash
 brew install getsentry/tools/sentry-wizard && sentry-wizard -i ios
 ```
 
-[Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [set up manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer. You only need to patch the project once. Then you can add the patched files to your version control system.
+This will patch your project and configure the SDK. You only need to patch the project once, then you can add the patched files to your version control system.
+If you prefer, you can also [set up the SDK manually](/platforms/react-native/manual-setup/manual-setup/) or follow the instructions below to adapt the [configuration](#configure).
 
 <Expandable title="The following tasks will be performed by the Sentry Wizard">
 
@@ -64,7 +65,74 @@ brew install getsentry/tools/sentry-wizard && sentry-wizard -i ios
 
 To capture all errors, initialize the SDK as soon as possible, such as in your `AppDelegate` `application:didFinishLaunchingWithOptions` method:
 
-<PlatformContent includePath="getting-started-config" />
+<SignInNote />
+
+```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "9-12", "profiling": "13-16"}}
+import Sentry
+
+func application(_ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+
+    SentrySDK.start { options in
+        options.dsn = "___PUBLIC_DSN___"
+        options.debug = true // Enabled debug when first installing is always helpful
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0
+
+        // Sample rate for profiling, applied on top of TracesSampleRate.
+        // We recommend adjusting this value in production.
+        options.profilesSampleRate = 1.0
+    }
+
+    return true
+}
+```
+
+```objc {tabTitle:Objective-C} {"onboardingOptions": {"performance": "8-11", "profiling": "12-15"}}
+@import Sentry;
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = @1.0;
+
+        // Sample rate for profiling, applied on top of TracesSampleRate.
+        // We recommend adjusting this value in production.
+        options.profilesSampleRate = @1.0;
+    }];
+
+    return YES;
+}
+```
+
+```swift {tabTitle:SwiftUI with App conformer} {"onboardingOptions": {"performance": "9-12", "profiling": "13-16"}}
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Enabled debug when first installing is always helpful
+
+            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.tracesSampleRate = 1.0
+
+            // Sample rate for profiling, applied on top of TracesSampleRate.
+            // We recommend adjusting this value in production.
+            options.profilesSampleRate = 1.0
+        }
+    }
+}
+```
 
 ## Verify
 
