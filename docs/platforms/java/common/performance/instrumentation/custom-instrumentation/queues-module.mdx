@@ -3,7 +3,7 @@ title: Instrument Queues
 sidebar_order: 3000
 description: "Learn how to manually instrument your code to use Sentry's Queues module. "
 ---
-Sentry comes with automatic instrumentation for the most common messaging queue systems. In case yours isn't supported, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
+Sentry currently does not provide any automatic instrumentation for messaging queue systems in Java at this moment. In the meantime, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
 
 ## Producer Instrumentation
 
@@ -75,10 +75,13 @@ To start capturing performance metrics, use the `startChild()` function to wrap 
 | `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
 | `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
 
-Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Java, you can start a new one using `Sentry.startTransaction()`.
+Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. You can start a new transaction in Java using `Sentry.startTransaction()`.
 
 Use `Sentry.continueTrace()` to connect your consumer spans to their associated producer spans, and `setStatus()` to mark the trace of your message as success or failed.
 
+<Note>
+Depending on the messaging system you are instrumenting, you may need to adjust your `sentry-trace` header key to a valid format. If you are using JMS, the `sentry-trace` header should be transported with a  different name (e.g. `sentry_trace`) since `-` characters are not permitted in JMS property names.
+</Note>
 
 ```java
 MyCustomQueue connection = MyCustomQueue.connect();
