@@ -30,22 +30,36 @@ String messageId = "abc123";
 
 // Create transaction
 ITransaction transaction = Sentry.startTransaction("queue_producer_transaction", "function");
+
 try {
     final SentryTraceHeader traceparent = Sentry.getTraceparent();
     final BaggageHeader baggage = Sentry.getBaggage();
-    
-    ISpan span = transaction.startChild("queue.publish", "queue_producer")
-    // Set span data
-    span.setData("messaging.message.id", messageId);
-    span.setData("messaging.destination.name", queue);
-    span.setData("messaging.message.body.size", message.getBytes(StandardCharsets.UTF_8).length);
 
-    // Publish the message to the queue (including current time stamp)
-    long now = Instant.now().getEpochSecond();
-    
-    connection.publish(queue, message, now, traceparent, baggage);
+    ISpan span = transaction.startChild("queue.publish", "queue_producer");
+    try {
+        // Set span data
+        span.setData("messaging.message.id", messageId);
+        span.setData("messaging.destination.name", queue);
+        span.setData("messaging.message.body.size", message.getBytes(StandardCharsets.UTF_8).length);
+
+        // Publish the message to the queue (including current time stamp)
+        long now = Instant.now().getEpochSecond();
+
+        connection.publish(queue, message, now, traceparent, baggage);
+    } catch (Exception e) {
+        span.setThrowable(e);
+        span.setStatus(SpanStatus.INTERNAL_ERROR);
+        throw e;
+    } finally {
+        span.finish();
+    }
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+    throw e;
+} finally {
+    transaction.finish();
 }
-transaction.finish();
 ```
 
 
@@ -84,21 +98,30 @@ ITransaction transaction = Sentry.startTransaction(transactionContext, "queue_co
 
 try {
     ISpan span = transaction.startChild("queue.process", "queue_consumer")
-    // Set span data
-    span.setData("messaging.message.id", message.getMessageId());
-    span.setData("messaging.destination.name", queue);
-    span.setData("messaging.message.body.size", message.getBody().getBytes(StandardCharsets.UTF_8).length);
-    span.setData("messaging.message.receive.latency", latency.toMillis());
-    span.setData("messaging.message.retry.count", 0);
 
     try {
+        // Set span data
+        span.setData("messaging.message.id", message.getMessageId());
+        span.setData("messaging.destination.name", queue);
+        //
+        span.setData("messaging.message.body.size", message.getBody().getBytes(StandardCharsets.UTF_8).length);
+        span.setData("messaging.message.receive.latency", latency.toMillis());
+        span.setData("messaging.message.retry.count", 0);
+
         // Process the message
         processMessage(message);
     } catch (Exception e) {
-        // In case of an error set the status to "internal_error"
+        span.setThrowable(e);
         span.setStatus(SpanStatus.INTERNAL_ERROR);
+        throw e;
+    } finally {
+        span.finish();
     }
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+    throw e;
+} finally {
+    transaction.finish();
 }
-
-transaction.finish();
 ```
