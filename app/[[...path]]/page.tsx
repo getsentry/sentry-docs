@@ -50,7 +50,6 @@ export default async function Page({params}) {
   }
 
   // get frontmatter of all docs in tree
-  const docs = await getDocsFrontMatter();
   const rootNode = await getDocsRootNode();
   if (!rootNode) {
     // eslint-disable-next-line no-console
@@ -99,9 +98,7 @@ export default async function Page({params}) {
   const {mdxSource, frontMatter} = doc;
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
-  return (
-    <MDXLayoutRenderer docs={docs} mdxSource={mdxSource} frontMatter={frontMatter} />
-  );
+  return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
 }
 
 type MetadataProps = {
