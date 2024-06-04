@@ -3169,6 +3169,10 @@ const REDIRECTS: Redirect[] = [
     from: '/product/data-management-settings/restrict-display/',
     to: '/security-legal-pii/scrubbing/restrict-display/',
   },
+  {
+    from: '/product/performance/resources/',
+    to: '/product/performance/assets/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
