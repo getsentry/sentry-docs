@@ -1,0 +1,158 @@
+---
+title: Automatic Instrumentation
+description: "Learn what transactions are captured after tracing is enabled."
+sidebar_order: 10
+notSupported:
+  - javascript.cordova
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/tracing/">set up tracing in your app</PlatformLink> if you haven't already.
+
+</Note>
+
+<PlatformContent includePath="performance/automatic-instrumentation-intro" />
+
+## What Our Instrumentation Provides
+
+<PlatformContent includePath="performance/what-instrumentation-provides" />
+
+## Enable Instrumentation
+
+<PlatformContent includePath="performance/enable-automatic-instrumentation" />
+
+## Configuration Options
+
+<PlatformSection supported={["javascript.nextjs"]} notSupported={["javascript"]}>
+
+Though the `BrowserTracing` integration is automatically enabled in `@sentry/nextjs`, in order to customize its options you must include it in your `Sentry.init` in `sentry.client.config.js`:
+
+<SignInNote />
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [Sentry.browserTracingIntegration()],
+
+  tracesSampleRate: 1.0,
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: [
+    "localhost",
+    /^\//,
+    /^https:\/\/yourserver\.io\/api/,
+  ],
+});
+```
+
+</PlatformSection>
+
+Supported options:
+
+### tracePropagationTargets
+
+<Note>
+
+The `tracingOrigins` option was renamed `tracePropagationTargets` and deprecated in [version `7.19.0`](https://github.com/getsentry/sentry-javascript/releases/tag/7.19.0) of the JavaScript SDK. `tracingOrigins` will be removed in version 8.
+
+</Note>
+
+A list of strings and regular expressions. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link transactions together as part of a single trace.
+
+**The `tracePropagationTargets` option matches the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have additional headers attached.**
+
+The default value of `tracePropagationTargets` is `['localhost', /^\//]`. This means that by default, tracing headers are only attached to requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
+
+<PlatformContent includePath="performance/tracePropagationTargets-example" />
+
+You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` and `baggage` headers. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"` and `"Access-Control-Allow-Headers: baggage"`, but it depends on your set up. If you do not allow the two headers, the request might be blocked.
+
+### beforeStartSpan
+
+`beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing data about the span which will be started. With `beforeStartSpan` you can modify that data or drop the transaction entirely by returning `undefined`.
+
+<PlatformContent includePath="performance/beforeNavigate-example" />
+
+<Note>
+  If you're using React, read our docs to learn how to set up your
+  [React Router integration](/platforms/javascript/guides/react/configuration/integrations/react-router/).
+</Note>
+
+### shouldCreateSpanForRequest
+
+This function can be used to filter out unwanted spans such as XHRs running
+health checks or something similar. If this function isn't specified, spans
+will be created for all requests.
+
+<PlatformContent includePath="performance/filter-span-example" />
+
+### idleTimeout
+
+The idle time, measured in ms, to wait until the transaction will be finished, if there are no unfinished spans. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+
+The default is `1000`.
+
+### finalTimeout
+
+The maximum duration of the transaction, measured in ms. If the transaction duration hits the `finalTimeout` value, it will be finished.
+
+The default is `30000`.
+
+### heartbeatInterval
+
+The time, measured in ms, one heartbeat takes. If no new spans were started or no open spans finished within **three heartbeats**, the transaction will be finished. The heartbeat count restarts whenever a new span is created or an open span is finished.
+
+The default is `5000`.
+
+### instrumentNavigation
+
+This flag enables or disables creation of `navigation` transaction on history changes.
+
+The default is `true`.
+
+### instrumentPageLoad
+
+This flag enables or disables creation of `pageload` transaction on first pageload.
+
+The default is `true`.
+
+### markBackgroundSpans
+
+This option flags transactions when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
+
+The default is `true`.
+
+### enableLongTask
+
+This option determines whether spans for long tasks automatically get created.
+
+The default is `true`.
+
+### enableInp
+
+<Note>
+The `enableInp` option requires SDK [version 7.104.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.104.0) or higher.
+
+INP is in continuous development at Sentry. We plan to improve the experience and reduce friction in future releases.
+</Note>
+
+This option determines whether interactions spans automatically get created when an [Interaction to Next Paint (INP)](/product/performance/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) event is detected. Interactions are scored and surfaced in the [Web Vitals](/product/performance/web-vitals/) module.
+
+The default is `false`.
+
+<Note>
+INP samples currently incur no cost to enable at Sentry. Basic samples contain limited information such as the interaction target, latency, and user. You may wish to enrich your INP samples by setting up [Session Replays](/platforms/javascript/session-replay/) and/or setting up [Browser Profiling](/platforms/javascript/profiling/) instrumentation around your interactive elements to gain further insights into your slowest interactions.
+
+Please note that any Session Replays and Browser Profiles used this way will incur their [standard cost](/pricing/#per-category-pricing) depending on your plan and are subject to the sampling rates configured.
+</Note>
+
+<PlatformContent includePath="performance/enable-inp-example" />
+
+### interactionsSampleRate
+
+This option determines the sample rate of INP spans. `interactionsSampleRate` is applied on top of `tracesSampleRate`, therefore if your `interactionsSampleRate` is set to `0.5` and your `tracesSampleRate` is set to `0.1`, the outcome will be `0.05`.
+
+The default is `1.0`.
