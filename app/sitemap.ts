@@ -1,19 +1,24 @@
 import type {MetadataRoute} from 'next';
 
-import {getDocsFrontMatter} from 'sentry-docs/mdx';
+import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
+
+const isDeveloperDocs = !!process.env.DEVELOPER_DOCS;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  if (isDeveloperDocs) {
+    const docs = getDevDocsFrontMatter();
+    const baseUrl = 'https://develop.sentry.dev';
+    return docsToSitemap(docs, baseUrl);
+  }
   const docs = await getDocsFrontMatter();
+  const baseUrl = 'https://docs.sentry.io';
+  return docsToSitemap(docs, baseUrl);
+}
 
-  const sitemapEntries = docs.map(doc => {
-    let slug = doc.slug;
-    if (!slug.endsWith('/')) {
-      slug += '/';
-    }
-    return {url: `https://docs.sentry.io/${slug}`};
-  });
-  sitemapEntries.unshift({
-    url: 'https://docs.sentry.io/',
-  });
-  return sitemapEntries;
+function docsToSitemap(docs: {slug: string}[], baseUrl: string): MetadataRoute.Sitemap {
+  const paths = docs.map(({slug}) => slug);
+  const appendSlash = (path: string) => (path.endsWith('/') ? path : `${path}/`);
+  const toFullUrl = (path: string) => `${baseUrl}${appendSlash(path)}`;
+  const toSitemapEntry = (url: string) => ({url});
+  return ['/', ...paths].map(appendSlash).map(toFullUrl).map(toSitemapEntry);
 }
