@@ -82,12 +82,12 @@ export default async function Page({params}: {params: {path?: string[]}}) {
 
   if (params.path[0] === 'api' && params.path.length > 1) {
     const categories = await apiCategories();
-    const category = categories.find(c => c.slug === params.path[1]);
+    const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
         return <ApiCategoryPage category={category} />;
       }
-      const api = category.apis.find(a => a.slug === params.path[2]);
+      const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
         return <ApiPage api={api} />;
       }
