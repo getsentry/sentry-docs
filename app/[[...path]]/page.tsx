@@ -15,12 +15,11 @@ import {
   getDocsRootNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {getDevDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {capitilize} from 'sentry-docs/utils';
-
-const isDeveloperDocs = !!process.env.DEVELOPER_DOCS;
 
 export function generateStaticParams() {
   const docs = getDevDocsFrontMatter();

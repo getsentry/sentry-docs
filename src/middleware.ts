@@ -1,7 +1,7 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
-const isDeveloperDocs = !!process.env.DEVELOPER_DOCS;
+import {isDeveloperDocs} from './isDeveloperDocs';
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
