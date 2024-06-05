@@ -60,7 +60,8 @@ type Redirect = {
   to: string;
 };
 
-const REDIRECTS: Redirect[] = [
+/** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
+const SDK_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
@@ -3119,4 +3120,11 @@ const REDIRECTS: Redirect[] = [
   },
 ];
 
-const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
+const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [];
+
+const redirectMap = new Map(
+  (process.env.DEVELOP_DOCS ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [
+    r.from as string,
+    r.to,
+  ])
+);
