@@ -46,16 +46,12 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page({params}) {
-  if (!params.path) {
-    return <Home />;
-  }
-
+export default async function Page({params}: {params: {path?: string[]}}) {
   if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
     let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
     try {
-      doc = await getFileBySlug(`develop-docs/${params.path.join('/')}`);
+      doc = await getFileBySlug(`develop-docs/${params.path?.join('/') ?? ''}`);
     } catch (e) {
       if (e.code === 'ENOENT') {
         // eslint-disable-next-line no-console
@@ -67,6 +63,9 @@ export default async function Page({params}) {
     const {mdxSource, frontMatter} = doc;
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
     return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
+  }
+  if (!params.path) {
+    return <Home />;
   }
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
