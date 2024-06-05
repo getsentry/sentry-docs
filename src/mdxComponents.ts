@@ -4,6 +4,7 @@ import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
 import {ConfigKey} from './components/configKey';
+import {ConfigValue} from './components/configValue';
 import {DefinitionList} from './components/definitionList';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
@@ -41,6 +42,7 @@ export function mdxComponents(
     CodeBlock,
     CodeTabs,
     ConfigKey,
+    ConfigValue,
     DefinitionList,
     Expandable,
     GuideGrid,
