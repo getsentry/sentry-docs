@@ -12,7 +12,17 @@ keywords:
   - ndk
 ---
 
-<PlatformContent includePath="getting-started-primer" />
+<Expandable title="Already using Sentry for Android? Here are some recent highlights">
+
+We released <PlatformLink to="/performance/instrumentation/perf-v2/">Performance-V2</PlatformLink>
+, a set of experimental features to give you more details about app start performance and frame delay on a span level.
+
+We released <PlatformLink to="/enhance-errors/source-context">Source Context</PlatformLink>, which shows snippets of code around the location of stack frames.
+
+Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-java/issues/new?assignees=&labels=Platform%3A+Android%2CType%3A+Bug&template=bug_report_android.yml).
+
+</Expandable>
+
 
 On this page, we get you up and running with Sentry's SDK.
 
@@ -22,17 +32,78 @@ Don't already have an account and Sentry project established? Head over to [sent
 
 Sentry captures data by using an SDK within your application's runtime.
 
-<PlatformContent includePath="getting-started-install" />
+We recommend installing the SDK through our installation wizard by running the following command inside your project directory:
+
+```bash
+brew install getsentry/tools/sentry-wizard && sentry-wizard -i android
+```
+
+The wizard will prompt you to log in to Sentry. It'll then automatically do the following steps for you:
+
+- update your app's `build.gradle` file with the Sentry Gradle plugin and configure it
+- update your `AndroidManifest.xml` with the default Sentry configuration
+- create `sentry.properties` with an auth token to upload proguard mappings (this file is automatically added to `.gitignore`)
+- add an example error to your app's Main Activity to verify your Sentry setup
+
+After the wizard setup is completed, the SDK will automatically capture unhandled exceptions, and monitor performance.
+You can also <PlatformLink to="/usage/">manually capture errors</PlatformLink>.
+
+<Note>
+
+If the setup through the wizard doesn't work for you, you can also <PlatformLink to="/manual-setup/">set up the SDK manually</PlatformLink>.
+
+</Note>
 
 ## Configure
 
-<PlatformContent includePath="getting-started-config" />
+Additional options can be found <PlatformLink to="/configuration/options/">on our dedicated options page</PlatformLink>.
+
+Here, you'll also be able to set context data, which includes data about the <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, or even <PlatformLink to="/enriching-events/context/">arbitrary data</PlatformLink>, all of which will be added to every event sent to Sentry.
 
 ## Verify
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
 
-<PlatformContent includePath="getting-started-verify" />
+<Note>
+
+If you're using [automatic installation via the wizard](/platforms/android/#install), this step isn't necessary.
+
+</Note>
+
+```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import java.lang.Exception;
+import io.sentry.Sentry;
+
+public class MyActivity extends AppCompatActivity {
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    try {
+      throw new Exception("This is a test.");
+    } catch (Exception e) {
+      Sentry.captureException(e);
+    }
+  }
+}
+```
+
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import io.sentry.Sentry
+
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    try {
+      throw Exception("This is a test.")
+    } catch (e: Exception) {
+      Sentry.captureException(e)
+    }
+  }
+}
+```
 
 <Note>
 
