@@ -117,10 +117,6 @@ export function getDevDocsFrontMatter(): FrontMatter[] {
       };
     })
     .filter(isTruthy);
-  // console.log(
-  //   '🔥 fmts',
-  //   fmts.filter(f => f.slug.startsWith('api'))
-  // );
   return fmts;
 }
 
@@ -285,7 +281,6 @@ export async function getFileBySlug(slug: string) {
   }
 
   const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
-  console.log('🔥 sourcePath', sourcePath);
   const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
