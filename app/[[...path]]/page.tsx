@@ -20,7 +20,7 @@ import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {capitilize} from 'sentry-docs/utils';
 
-const isDevelopDocs = !!process.env.DEVELOP_DOCS;
+const isDeveloperDocs = !!process.env.DEVELOPER_DOCS;
 
 export function generateStaticParams() {
   const docs = getDevDocsFrontMatter();
@@ -51,7 +51,7 @@ export default async function Page({params}) {
     return <Home />;
   }
 
-  if (isDevelopDocs) {
+  if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
     let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
     try {

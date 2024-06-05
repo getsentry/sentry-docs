@@ -1,6 +1,8 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
+const isDeveloperDocs = !!process.env.DEVELOPER_DOCS;
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -3123,7 +3125,7 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [];
 
 const redirectMap = new Map(
-  (process.env.DEVELOP_DOCS ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [
+  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [
     r.from as string,
     r.to,
   ])
