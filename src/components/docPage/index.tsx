@@ -12,7 +12,6 @@ import {CodeContextProvider} from '../codeContext';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import {PlatformSdkDetail} from '../platformSdkDetail';
-import {Sidebar} from '../sidebar';
 import {TableOfContents} from '../tableOfContents';
 
 type Props = {
@@ -30,7 +29,6 @@ export function DocPage({
   frontMatter,
   notoc = false,
   fullWidth = false,
-  sidebar,
 }: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
@@ -52,7 +50,6 @@ export function DocPage({
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
-        {sidebar ?? <Sidebar path={path} />}
         <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
           <div
             className={[
