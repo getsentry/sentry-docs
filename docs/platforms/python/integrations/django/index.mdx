@@ -27,12 +27,26 @@ To configure the Sentry SDK, initialize it in your `settings.py` file:
 
 <SignInNote />
 
-```python {filename:settings.py}
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:settings.py} {"onboardingOptions": {"performance": "5-7", "profiling": "8-11"}}
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 ```
 
@@ -82,8 +96,6 @@ The parameter `enable_tracing` needs to be set when initializing the Sentry SDK 
 
 By adding `DjangoIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `DjangoIntegration` to change its behavior:
 
-<SignInNote />
-
 ```python
 import django.db.models.signals
 
@@ -91,7 +103,6 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
     # ...
     integrations=[
         DjangoIntegration(
