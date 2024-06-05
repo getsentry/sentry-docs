@@ -3,16 +3,9 @@ title: Tree Shaking
 sidebar_order: 11000
 description: "Learn how to reduce Sentry bundle size by tree shaking unused code."
 notSupported:
-  - javascript.node
   - javascript.aws-lambda
-  - javascript.azure-functions
-  - javascript.connect
-  - javascript.express
-  - javascript.fastify
   - javascript.gcp-functions
-  - javascript.hapi
-  - javascript.koa
-  - javascript.nestjs
+
 keywords: ["bundle size", "webpack", "rollup", "debug"]
 ---
 
@@ -42,6 +35,7 @@ _This configuration is available starting with v2.9.0 of the bundler plugins._
 
 If you're using one of our bundler plugins, you can use the `bundleSizeOptimizations` configuration option to tree shake optional code:
 
+<PlatformCategorySection supported={['browser']}>
 ```javascript
 // For example, the @sentry/webpack-plugin passed to the webpack config
 sentryPlugin({
@@ -55,6 +49,20 @@ sentryPlugin({
   },
 });
 ```
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['server']}>
+```javascript
+// For example, the @sentry/webpack-plugin passed to the webpack config
+sentryPlugin({
+  // other config
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludePerformanceMonitoring: true,
+  },
+});
+```
+</PlatformCategorySection>
 
 For more details, see the documentation for the specific bundler plugin you're using:
 
@@ -109,9 +117,14 @@ Replacing this flag with `false` will tree shake any SDK code that's related to 
 Replacing this flag with `false` will tree shake any SDK code that's related to performance monitoring.
 
 <Note>
- `__SENTRY_TRACING__` must not be replaced with `false` when you're using any performance monitoring-related SDK features (for example,`Sentry.startTransaction()`). This flag is intended to be used in combination with packages like `@sentry/next` or `@sentry/sveltekit`, which automatically include the performance monitoring functionality.
- </Note>
+  `__SENTRY_TRACING__` must not be replaced with `false` when you're using any
+  performance monitoring-related SDK features (for example,
+  `Sentry.startTransaction()`). This flag is intended to be used in combination
+  with packages like `@sentry/next` or `@sentry/sveltekit`, which automatically
+  include the performance monitoring functionality.
+</Note>
 
+<PlatformCategorySection supported={['browser']}>
 <PlatformSection notSupported={["javascript.wasm", "javascript.cordova", "javascript.bun", "javascript.deno"]}>
 
 `__RRWEB_EXCLUDE_IFRAME__`
@@ -127,6 +140,7 @@ Replacing this flag with `true` will tree shake any SDK code related to capturin
 Replacing this flag with `true` will tree shake any SDK code that's related to the included compression web worker for Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you want to host a compression worker yourself. See <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">Using a Custom Compression Worker</PlatformLink> for details. **We don't recommend enabling this flag unless you provide a custom worker URL.**
 
 </PlatformSection>
+</PlatformCategorySection>
 
 <PlatformSection notSupported={["javascript.nextjs", "javascript.sveltekit", "javascript.remix", "javascript.astro"]}>
 
@@ -134,6 +148,28 @@ Replacing this flag with `true` will tree shake any SDK code that's related to t
 
 To tree shake Sentry debug code in your webpack bundles, we recommend using webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/):
 
+<PlatformCategorySection supported={['browser']}>
+```javascript {filename:webpack.config.js}
+const webpack = require("webpack");
+
+module.exports = {
+// ... other options
+plugins: [
+new webpack.DefinePlugin({
+__SENTRY_DEBUG__: false,
+__SENTRY_TRACING__: false,
+__RRWEB_EXCLUDE_IFRAME__: true,
+__RRWEB_EXCLUDE_SHADOW_DOM__: true,
+__SENTRY_EXCLUDE_REPLAY_WORKER__: true,
+}),
+// ... other plugins
+],
+};
+
+````
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['server']}>
 ```javascript {filename:webpack.config.js}
 const webpack = require("webpack");
 
@@ -143,14 +179,13 @@ module.exports = {
     new webpack.DefinePlugin({
       __SENTRY_DEBUG__: false,
       __SENTRY_TRACING__: false,
-      __RRWEB_EXCLUDE_IFRAME__: true,
-      __RRWEB_EXCLUDE_SHADOW_DOM__: true,
-      __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
     }),
     // ... other plugins
   ],
 };
-```
+````
+
+</PlatformCategorySection>
 
 </PlatformSection>
 
@@ -160,6 +195,7 @@ module.exports = {
 
 If you're using `rollup.js`, we recommend using [Rollup's `replace` plugin](https://github.com/rollup/plugins/tree/master/packages/replace):
 
+<PlatformCategorySection supported={['browser']}>
 ```javascript {filename:rollup.config.js}
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
@@ -179,9 +215,30 @@ export default {
   ],
 };
 ```
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['server']}>
+```javascript {filename:rollup.config.js}
+import replace from "@rollup/plugin-replace";
+import { terser } from "rollup-plugin-terser";
+
+export default {
+  // ... other options
+  treeshake: "smallest", // recommended for best tree shaking results
+  plugins: [
+    replace({
+      __SENTRY_DEBUG__: false,
+      __SENTRY_TRACING__: false,
+    }),
+    // ... other plugins (best placed after)
+  ],
+};
+```
+</PlatformCategorySection>
 
 </PlatformSection>
 
+<PlatformCategorySection supported={['browser']}>
 ## Tree Shaking Default Integrations
 
 By default, the Sentry SDK sets up a list of [default integrations](../integrations) that extend your
@@ -231,3 +288,57 @@ In contrast to `Sentry.init`, the `Client` constructor expects options of type `
 This means that the `ClientOptions.integrations` property is the final array of all integrations that will be used.
 
 </Note>
+</PlatformCategorySection>
+
+<PlatformSection supported={[
+  'javascript.node',
+  'javascript.azure-functions',
+  'javascript.connect',
+  'javascript.express',
+  'javascript.fastify',
+  'javascript.hapi',
+  'javascript.koa',
+  'javascript.nestjs'
+]}>
+
+## Tree Shaking Default Integrations
+
+By default, the Sentry SDK sets up a list of [default integrations](../integrations) that extend your
+SDK functionality. You can also add [additional](../integrations) or [custom](../integrations/custom)
+integrations to your SDK configuration.
+If you don't want to include default integrations in your config, you can use `Sentry.initWithoutDefaultIntegrations()` and pass the integrations you want manually:
+
+```javascript
+const Sentry = require("@sentry/node");
+
+// This will not add _any_ integrations by default!
+Sentry.initWithoutDefaultIntegrations({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.httpIntegration(),
+    Sentry.consoleIntegration(),
+    Sentry.dedupeIntegration(),
+    Sentry.inboundFiltersIntegration(),
+  ],
+});
+```
+
+## Setting up Sentry without Performance Integrations
+
+If you want to use Sentry only for error monitoring, and do not care about any performance monitoring features, you can use the following initialization method to ensure that any performance-specific integrations are not included in your bundle and can be tree-shaken away by a bundler:
+
+```javascript
+const Sentry = require("@sentry/node");
+
+// This will not add _any_ integrations by default!
+Sentry.initWithoutDefaultIntegrations({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Adds all default integrations
+    // except the ones that are only relevant for performance
+    ...Sentry.getDefaultIntegrationsWithoutPerformance(),
+  ],
+});
+```
+
+</PlatformSection>
