@@ -111,7 +111,7 @@ This soft copy-on-write relies on `Scope` being forked in certain cases:
 	- in some cases, we may only be able to intercept `Context` storage, i.e. when an already forked `Context` is being stored, e.g. in a ThreadLocal variable.
 	- in some cases we can intercept `Context` forking, i.e. when a mutated copy of a `Context` is created
 	- in some cases it might be necessary to have a mix of both, since not all auto instrumentation and user instrumentation go through a single place in the same way. e.g. in Java SDK we're sometimes handed a `Context` with some properties already set into our `ContextStorage` where we can then wrap it and intercept future forks of that `Context`
-	- {open question} do we need to fork every time OTel `Context` copied or only when a new OTel span is set
+	- \{open question} do we need to fork every time OTel `Context` copied or only when a new OTel span is set
 
 While it's still possible to misuse, this is a sort of soft copy-on-write that should protect most users.
 
@@ -181,7 +181,7 @@ Here's how the new APIs roughly map to the old-style APIs. In case of `configure
 			<td></td>
 		</tr>
 		<tr>
-			<td rowspan="2" style="vertical-align: middle;"><code>with configure_scope() as scope</code></td>
+			<td rowspan="2" style={{verticalAlign: "middle"}}><code>with configure_scope() as scope</code></td>
 			<td><code>scope = Scope.get_isolation_scope()</code></td>
 			<td>Should affect the whole transaction (one request/response cycle, one execution of a task, etc.).</td>
 		</tr>
@@ -190,7 +190,7 @@ Here's how the new APIs roughly map to the old-style APIs. In case of `configure
 			<td>Should affect the whole span or a part of code isolated via a forked current scope with <code>new_scope</code>.</td>
 		</tr>
 		<tr>
-			<td rowspan="2" style="vertical-align: middle;"><code>with push_scope() as scope</code></td>
+			<td rowspan="2" style={{verticalAlign: "middle"}}><code>with push_scope() as scope</code></td>
 			<td><code>with isolation_scope() as scope</code></td>
 			<td>We're starting a new transaction-worthy unit (request/response cycle, etc.).</td>
 		</tr>
@@ -277,7 +277,7 @@ We can use `Propagator.extract` to fork isolation scope. We try to read the `Sco
 
 #### Tracing Without Performance
 
-Untested: 
+Untested:
 In `Propagator.extract` we can create `PropagationContext` from incoming headers (or similar metadata) or fall back to creating a new `PropagationContext` with random IDs. We then store this `PropagationContet` on the isolation scope. In `Propagator.inject` and when sending events to Sentry, we can use that `PropagationContext` from isolation scope and generate headers (or similar).
 
 - tbd: how does freezing DSC/baggage work? Can we simply freeze whenever the first request (or similar) goes out?
