@@ -16,13 +16,13 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {getDevDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {getDevDocsFrontMatter, getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {capitilize} from 'sentry-docs/utils';
 
-export function generateStaticParams() {
-  const docs = getDevDocsFrontMatter();
+export async function generateStaticParams() {
+  const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
   const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
