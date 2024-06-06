@@ -48,11 +48,6 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
 export default async function Page({params}: {params: {path?: string[]}}) {
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
-  if (!rootNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no root node');
-    return notFound();
-  }
   setServerContext({
     rootNode,
     path: params.path ?? [],
