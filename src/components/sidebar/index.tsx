@@ -134,9 +134,6 @@ const productSidebarItems = [
 
 export async function SidebarLinks({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
-  if (!rootNode) {
-    return null;
-  }
   if (
     productSidebarItems.some(el => el.root === path[0]) ||
     path[0] === 'platform-redirect'
