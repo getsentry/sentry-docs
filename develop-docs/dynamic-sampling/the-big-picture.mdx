@@ -42,6 +42,18 @@ There is a dedicated rate limit for stored transactions after inbound filters an
 
 </Alert>
 
+## Rate Limiting and Trace Completeness
+
+Dynamic sampling ensures complete traces by retaining all transactions associated with a trace if the head transaction is preserved.
+
+Despite dynamic sampling providing trace completeness, transactions or other items (errors, replays, ...) may still be missing from a trace when rate limiting drops one or more transactions. Rate limiting drops items without regard for the trace, making each decision independently and potentially resulting in broken traces.
+
+<Alert title="💡 Example" level="info">
+
+For example, if there is a trace from `Project A` to `Project B` and `Project B` is subject to rate limiting or quota enforcement, transactions of `Project B` from the trace initiated by `Project A` are lost.
+
+</Alert>
+
 ## Client Side Sampling and Dynamic Sampling
 
 Clients have their own [traces sample rate](https://docs.sentry.io/platforms/javascript/performance/#configure-the-sample-rate). The client sample rate is a number in the range `[0.0, 1.0]` (from 0% to 100%) that controls **how many transactions arrive at Sentry**. While documentation will generally suggest a sample rate of `1.0`, for some use cases it might be better to reduce it.
