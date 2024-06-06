@@ -46,6 +46,18 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
 }
 
 export default async function Page({params}: {params: {path?: string[]}}) {
+  // get frontmatter of all docs in tree
+  const rootNode = await getDocsRootNode();
+  if (!rootNode) {
+    // eslint-disable-next-line no-console
+    console.warn('no root node');
+    return notFound();
+  }
+  setServerContext({
+    rootNode,
+    path: params.path ?? [],
+  });
+
   if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
     let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
@@ -66,18 +78,6 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   if (!params.path) {
     return <Home />;
   }
-  // get frontmatter of all docs in tree
-  const rootNode = await getDocsRootNode();
-  if (!rootNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no root node');
-    return notFound();
-  }
-
-  setServerContext({
-    rootNode,
-    path: params.path,
-  });
 
   if (params.path[0] === 'api' && params.path.length > 1) {
     const categories = await apiCategories();
