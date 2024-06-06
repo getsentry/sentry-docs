@@ -1,7 +1,9 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
-import {isDeveloperDocs} from './isDeveloperDocs';
+// This env var is set in next.config.js based on the `DEVELOPER_DOCS` env var at build time
+// a workaround edge middleware not having access to env vars
+const isDeveloperDocs = process.env.DEVELOPER_DOCS_;
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
