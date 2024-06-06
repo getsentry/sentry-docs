@@ -58,24 +58,7 @@ Sentry.init({
 });
 
 // Sometime later
-const { replayIntegration } = await import("@sentry/sveltekit");
-Sentry.addIntegration(replayIntegration());
-```
-
-If your setup does not support top level await, you can create a function and immediately call it (or write an IIFE).
-
-```javascript {tabTitle:Function Definition}
-async function loadReplay() {
-  const { replayIntegration } = await import('@sentry/sveltekit');
-  Sentry.addIntegration(replayIntegration());
-}
-
-loadReplay();
-```
-
-```javascript {tabTitle:IIFE}
-(async () => {
-  const { replayIntegration } = await import('@sentry/sveltekit');
-  Sentry.addIntegration(replayIntegration());
-})();
+import("@sentry/sveltekit").then(lazyLoadedSentry => {
+  Sentry.addIntegration(lazyLoadedSentry.replayIntegration());
+});
 ```

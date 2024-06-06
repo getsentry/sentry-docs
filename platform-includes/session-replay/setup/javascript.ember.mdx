@@ -51,24 +51,7 @@ Sentry.init({
 });
 
 // Sometime later
-const { replayIntegration } = await import("@sentry/ember");
-Sentry.addIntegration(replayIntegration());
-```
-
-If your setup does not support top level await, you can create a function and immediately call it (or write an IIFE).
-
-```javascript {tabTitle:Function Definition}
-async function loadReplay() {
-  const { replayIntegration } = await import('@sentry/ember');
-  Sentry.addIntegration(replayIntegration());
-}
-
-loadReplay();
-```
-
-```javascript {tabTitle:IIFE}
-(async () => {
-  const { replayIntegration } = await import('@sentry/ember');
-  Sentry.addIntegration(replayIntegration());
-})();
+import("@sentry/ember").then(lazyLoadedSentry => {
+  Sentry.addIntegration(lazyLoadedSentry.replayIntegration());
+});
 ```
