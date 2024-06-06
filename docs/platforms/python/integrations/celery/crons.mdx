@@ -30,6 +30,9 @@ app.conf.beat_schedule = {
     },
 }
 ```
+<Note>
+Please note that only crontab parseable schedules will be successfully upserted.
+</Note>
 
 Next, we need to initialize Sentry. Where to do this depends on how you run beat:
 - If beat is running in your worker process (that is, you're running your worker with the `-B`/`--beat` option), initialize Sentry in either the `celeryd_init` or `beat_init` signal.
@@ -39,7 +42,15 @@ Make sure to also set `monitor_beat_tasks=True` in `CeleryIntegration`.
 
 <SignInNote />
 
-```python
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
 # tasks.py
 from celery import signals
 
@@ -51,7 +62,13 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 def init_sentry(**kwargs):
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
-        enable_tracing=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
         integrations=[
             CeleryIntegration(
                 monitor_beat_tasks=True
@@ -82,8 +99,7 @@ You can exclude Celery Beat tasks from being auto-instrumented. To do this, add 
 
 ```python
     sentry_sdk.init(
-        dsn='___PUBLIC_DSN___',
-        enable_tracing=True,
+        # ...
         integrations=[
             CeleryIntegration(
                 monitor_beat_tasks=True,
@@ -93,8 +109,6 @@ You can exclude Celery Beat tasks from being auto-instrumented. To do this, add 
                 ]
             ),
         ],
-        environment="local.dev.grace",
-        release="v1.0",
     )
 ```
 
@@ -112,8 +126,6 @@ Make sure the Sentry `@sentry_sdk.monitor` decorator is below Celery's `@app.tas
 
 </Note>
 
-<SignInNote />
-
 ```python
 # tasks.py
 from celery import Celery, signals
@@ -126,13 +138,7 @@ app = Celery('tasks', broker='...')
 @signals.celeryd_init.connect
 def init_sentry(**kwargs):
     sentry_sdk.init(
-        dsn='___PUBLIC_DSN___',
-        enable_tracing=True,
-        integrations=[
-            CeleryIntegration()
-        ],
-        environment="local.dev.grace",
-        release="v1.0",
+        # same as above
     )
 
 

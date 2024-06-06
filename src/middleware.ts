@@ -62,6 +62,10 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
+    to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
+  },
+  {
     from: '/organization/integrations/github/',
     to: '/organization/integrations/source-code-mgmt/github/',
   },
@@ -1115,11 +1119,15 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/event-detail/',
-    to: '/product/sentry-basics/concepts/tracing/event-detail/',
+    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/tracing/event-detail/',
-    to: '/product/sentry-basics/concepts/tracing/event-detail/',
+    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+  },
+  {
+    from: '/product/sentry-basics/concepts/tracing/event-detail/',
+    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/dsn-explainer/',

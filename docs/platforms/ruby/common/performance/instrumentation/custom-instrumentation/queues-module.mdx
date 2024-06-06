@@ -1,0 +1,91 @@
+---
+title: Instrument Queues
+sidebar_order: 3000
+description: "Learn how to manually instrument your code to use Sentry's Queues module. "
+---
+Sentry comes with automatic instrumentation for the most common messaging queue systems. In case yours isn't supported, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
+
+## Producer Instrumentation
+
+To start capturing performance metrics, use the `Sentry.with_child_span` function to wrap your queue producer events. Your span `op` must be set to `queue.publish`. Include the following span data to enrich your producer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | int | Size of the message body in bytes |
+
+Make sure that there's a transaction running when you create the spans. If you're using a web framework like Rails those transactions will be created for you automatically. See <PlatformLink to='/performance/'>Performance Monitoring</PlatformLink> for more information.
+
+You must also include the trace propagation headers (`sentry-trace` and `baggage`) using the `Sentry.get_trace_propagation_headers` helper in your message so that your consumers can continue your trace once your message is picked up.
+
+```ruby
+connection = my_custom_queue.connect
+
+# The message you want to send to the queue
+queue = 'messages'
+message = 'Hello World!'
+message_id = 'abc123'
+
+Sentry.with_child_span(op: 'queue.publish', description: 'queue_producer') do |span|
+  # Set span data
+  span.set_data('messaging.message.id', message_id)
+  span.set_data('messaging.destination.name', queue)
+  span.set_data('messaging.message.body.size', message.size)
+
+  # Publish the message to the queue (including trace information and current timestamp)
+  connection.publish(
+    queue: queue,
+    body: message,
+    timestamp: Time.now.utc,
+    headers: Sentry.get_trace_propagation_headers
+  )
+end
+```
+
+## Consumer Instrumentation
+
+To start capturing performance metrics, use the `Sentry.with_child_span` function to wrap your queue consumers. Your span `op` must be set to `queue.process`. Include the following span data to enrich your consumer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | number | Size of the message body in bytes |
+| `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
+| `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
+
+Use `Sentry.continue_trace(trace_propagation_headers)` to start a transaction and connect your consumer spans to their associated producer spans, and `span.set_status` to mark the trace of your message as success or failed.
+
+```ruby
+connection = my_custom_queue.connect
+
+# Pick up message from queues
+queue = 'messages'
+message = connection.consume(queue: queue)
+
+# Calculate latency (optional, but valuable)
+now = Time.now.utc
+message_time = Time.new(message[:timestamp])
+latency = now - message_time
+
+# Continue the trace started in the producer and start a transaction
+transaction = sentry_sdk.continue_trace(message[:headers], op: 'function', name: 'queue_consumer_transaction')
+Sentry.start_transaction(transaction)
+Sentry.get_current_scope.set_span(transaction)
+
+# Start the queue.process span
+Sentry.with_child_span(op: 'queue.process', description: 'queue_consumer') do |span|
+  # Set span data
+  span.set_data('messaging.message.id', message[:message_id])
+  span.set_data('messaging.destination.name', queue)
+  span.set_data('messaging.message.body.size', message[:body].size)
+  span.set_data('messaging.message.receive.latency', latency)
+  span.set_data('messaging.message.retry.count', 0)
+
+  process_message(message)
+rescue
+  # In case of an error set the status to 'internal_error'
+  span.set_status('internal_error')
+end
+```

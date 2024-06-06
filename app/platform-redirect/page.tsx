@@ -1,4 +1,4 @@
-import {redirect} from 'next/navigation';
+import {notFound, redirect} from 'next/navigation';
 
 import {DocPage} from 'sentry-docs/components/docPage';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
@@ -14,15 +14,21 @@ export default async function Page({
   if (Array.isArray(next)) {
     next = next[0];
   }
+  // discard the hash
+  const [pathname, _] = next.split('#');
   const rootNode = await getDocsRootNode();
   // get rid of irrelevant platforms for the `next` path
   const platformList = extractPlatforms(rootNode).filter(platform_ => {
     return !!nodeForPath(rootNode, [
       'platforms',
       platform_.key,
-      ...next.split('/').filter(Boolean),
+      ...pathname.split('/').filter(Boolean),
     ]);
   });
+
+  if (platformList.length === 0) {
+    return notFound();
+  }
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {

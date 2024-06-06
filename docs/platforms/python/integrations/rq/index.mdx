@@ -3,7 +3,7 @@ title: RQ (Redis Queue)
 description: "Learn about using Sentry with RQ."
 ---
 
-The RQ integration adds support for the [RQ Job Queue System](https://python-rq.org/).
+The RQ integration adds support for the [RQ job queue system](https://python-rq.org/).
 
 ## Install
 
@@ -21,13 +21,27 @@ Create a file called `mysettings.py` with the following content:
 
 <SignInNote />
 
-```python {filename:mysettings.py}
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:mysettings.py} {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 # mysettings.py
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 ```
 
@@ -47,13 +61,19 @@ In addition, make sure that **`init` is called only once** in your app. For exam
 
 <SignInNote />
 
-```python {filename:app.py}
+```python {filename:app.py} {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 # app.py
 import sentry_sdk
 
 sentry_sdk.init(
     dsn=___PUBLIC_DSN___,
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 ```
 
@@ -74,26 +94,32 @@ To verify, create a `main.py` script that enqueues a function in RQ, then start 
 ```python {filename:jobs.py}
 # jobs.py
 def hello(name):
-    1/0  # raises an error
+    1 / 0  # raises an error
     return "Hello %s!" % name
 ```
 
 ### Settings for worker
 
-```python {filename:mysettings.py}
+```python {filename:mysettings.py} {"onboardingOptions": {"performance": "7-9", "profiling": "10-13"}}
 # mysettings.py
 import sentry_sdk
 
 # Sentry configuration for RQ worker processes
 sentry_sdk.init(
     dsn=___PUBLIC_DSN___,
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 ```
 
 ### Main Python Script
 
-```python {filename:main.py}
+```python {filename:main.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
 # main.py
 from redis import Redis
 from rq import Queue
@@ -105,7 +131,13 @@ import sentry_sdk
 # Sentry configuration for main.py process
 sentry_sdk.init(
     dsn=___PUBLIC_DSN___,
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 
 q = Queue(connection=Redis())

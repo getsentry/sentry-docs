@@ -1,25 +1,30 @@
+It is important to initialize Sentry as early as possible in your application. We recommend putting the Sentry initialization code into its own file and including that file as the first import in your application entry point:
+
 <SignInNote />
 
-```javascript
-import { createRoot } from "react-dom/client";
-import { createBrowserRouter } from "react-router-dom";
-import React from "react";
+```javascript {filename:instrument.js} {"onboardingOptions": {"performance": "3-8, 13-21, 24-30", "session-replay": "22, 31-35"}}
+import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
-import App from "./App";
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-      // See docs for support of different versions of variation of react router
-      // https://docs.sentry.io/platforms/javascript/guides/react/configuration/integrations/react-router/
+    // See docs for support of different versions of variation of react router
+    // https://docs.sentry.io/platforms/javascript/guides/react/configuration/integrations/react-router/
     Sentry.reactRouterV6BrowserTracingIntegration({
-        useEffect: React.useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes
+      useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
     }),
-    Sentry.replayIntegration()
+    Sentry.replayIntegration(),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -27,13 +32,22 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 });
+```
+
+Include the Sentry initialization file as first import statement:
+
+```javascript
+// Sentry initialization should be imported first!
+import "./instrument";
+import App from "./App";
+import { createRoot } from "react-dom/client";
 
 const container = document.getElementById(“app”);
 const root = createRoot(container);
@@ -41,6 +55,29 @@ root.render(<App />);
 ```
 
 Once this is done, all unhandled exceptions are automatically captured by Sentry.
+
+### React 19 Error Reporting
+
+Starting with React 19, the `createRoot` and `hydrateRoot` methods from `react-dom` expose error hooks that are used to capture errors automatically. If you want to customize how errors are handled in specific error hooks, you can use the `Sentry.reactErrorHandler` function.
+
+```javascript
+import { createRoot } from "react-dom/client";
+
+const container = document.getElementById(“app”);
+const root = createRoot(container, {
+  // Callback called when an error is thrown and not caught by an ErrorBoundary.
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    console.warn('Uncaught error', error, errorInfo.componentStack);
+  }),
+  // Callback called when React catches an error in an ErrorBoundary.
+  onCaughtError: Sentry.reactErrorHandler(),
+  // Callback called when React automatically recovers from errors.
+  onRecoverableError: Sentry.reactErrorHandler(),
+});
+root.render();
+```
+
+These hooks apply to all React components mounted to the container passed onto `createRoot`/`hydrateRoot`. If you want more finely grained control over error handling, we recommend adding an `ErrorBoundary` component to your application.
 
 ### Add Error Boundary
 

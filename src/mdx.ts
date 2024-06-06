@@ -17,6 +17,7 @@ import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
+import rehypeOnboardingLines from './rehype-onboarding-lines';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
@@ -333,6 +334,7 @@ export async function getFileBySlug(slug: string) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
+        rehypeOnboardingLines,
         [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];
