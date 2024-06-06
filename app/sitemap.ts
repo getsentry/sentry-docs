@@ -17,8 +17,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 function docsToSitemap(docs: {slug: string}[], baseUrl: string): MetadataRoute.Sitemap {
   const paths = docs.map(({slug}) => slug);
-  const appendSlash = (path: string) => (path.endsWith('/') ? path : `${path}/`);
+  const appendSlash = (path: string) => {
+    if (path === '' || path.endsWith('/')) {
+      return path;
+    }
+    return path + '/';
+  };
   const toFullUrl = (path: string) => `${appendSlash(baseUrl)}${appendSlash(path)}`;
-  const toSitemapEntry = (url: string) => ({url});
-  return ['/', ...paths].map(appendSlash).map(toFullUrl).map(toSitemapEntry);
+  const toSitemapEntry = (path: string) => ({url: toFullUrl(path)});
+  return ['', ...paths].map(toSitemapEntry);
 }
