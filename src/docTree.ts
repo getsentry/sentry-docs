@@ -1,5 +1,6 @@
-import {getDocsFrontMatter} from 'sentry-docs/mdx';
+import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
+import {isDeveloperDocs} from './isDeveloperDocs';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,
@@ -38,7 +39,9 @@ export function getDocsRootNode(): Promise<DocNode> {
 }
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
-  return frontmatterToTree(await getDocsFrontMatter());
+  return frontmatterToTree(
+    isDeveloperDocs ? getDevDocsFrontMatter() : await getDocsFrontMatter()
+  );
 }
 
 function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
@@ -63,7 +66,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
     },
     children: [],
     missing: false,
-    sourcePath: 'src/components/home.tsx',
+    sourcePath: isDeveloperDocs ? 'develop-docs/index.mdx' : '',
   };
 
   const slugMap: {[slug: string]: DocNode} = {};
