@@ -1,6 +1,6 @@
 'use client';
 
-import {ReactNode, useEffect, useReducer, useRef, useState} from 'react';
+import {ReactNode, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
@@ -20,11 +20,11 @@ const optionDetails: Record<
     description: "Let's admit it, we all have errors.",
   },
   performance: {
-    name: 'Performance Monitoring',
+    name: 'Tracing',
     description: (
       <span>
-        Automatic performance issue detection across services and context on who is
-        impacted, outliers, regressions, and the root cause of your slowdown.
+        Tracing and automatic performance issue detection across services and context on
+        who is impacted, outliers, regressions, and the root cause of your slowdown.
       </span>
     ),
   },
@@ -32,7 +32,7 @@ const optionDetails: Record<
     name: 'Profiling',
     description: (
       <span>
-        <span className={styles.TooltipTitle}>Requires Performance Monitoring</span>
+        <span className={styles.TooltipTitle}>Requires Tracing to be enabled</span>
         See the exact lines of code causing your performance bottlenecks, for faster
         troubleshooting and resource optimization.
       </span>
@@ -176,8 +176,6 @@ export function OnboardingOptionButtons({
         `[data-onboarding-option="${option.id}"]`
       );
       targetElements.forEach(el => {
-        console.log('el', el.dataset);
-
         const hiddenForThisOption = el.dataset.hideForThisOption === 'true';
         if (hiddenForThisOption) {
           el.classList.toggle('hidden', option.checked);
@@ -211,35 +209,10 @@ export function OnboardingOptionButtons({
         });
       }
     });
-  }, [options, touchOptions]);
-
-  const buttonsRef = useRef<HTMLDivElement>(null);
-  const containerTopPx = 80;
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      function ([buttonsContainer]) {
-        setIsSticky(!buttonsContainer.isIntersecting);
-      },
-      {
-        // the 1 exptra px is important to trigger the observer
-        // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
-        rootMargin: `-${containerTopPx + 1}px 0px 0px 0px`,
-        threshold: [1],
-      }
-    );
-
-    observer.observe(buttonsRef.current!);
-  }, []);
+  }, [options, touchedOptions]);
 
   return (
-    <div
-      ref={buttonsRef}
-      className={`flex flex-wrap gap-3 py-2 bg-white/90 sticky top-[80px] z-[1000] rounded shadow-[var(--shadow-6)] transition ${
-        isSticky ? 'px-2 backdrop-blur' : ''
-      }`}
-    >
+    <div className="flex flex-wrap gap-3 py-2 bg-white/90 sticky top-[80px] z-[1000] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"
