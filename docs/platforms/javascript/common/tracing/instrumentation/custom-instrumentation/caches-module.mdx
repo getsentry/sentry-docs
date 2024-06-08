@@ -25,6 +25,20 @@ A cache can be used to speed up data retrieval, thereby improving application pe
 
 Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/) that can be auto-instrumented using Sentry's Redis integration (more coming soon).
 
+## Instrumentation with Redis Clients
+
+If you're using a Redis client like `ioredis` or `redis` to cache your data, it is necessary to specify the `cachePrefixes` within the `redisIntegration` options. This configuration allows Sentry to categorize accesses to keys with the defined prefixes as "cache operations".
+
+```javascript
+Sentry.init({
+  integrations: [
+    redisIntegration({
+	    cachePrefixes: ['posts:', 'authors:']
+    })
+  ]
+})
+```
+
 ## Manual Instrumentation
 
 If you're using anything other than Sentry's Redis integration, you'll need to manually instrument the [Cache Module](<(https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/)>) by following the steps below.
@@ -58,7 +72,7 @@ const value = "The value I want to cache.";
 
 Sentry.startSpan(
   {
-    name: "Setting auth cache",
+    name: key,
     attributes: {
       "cache.key": [key],
       "cache.item_size": JSON.stringify(value).length, // Warning: if value is very big this could use lots of memory
@@ -92,7 +106,7 @@ const key = "myCacheKey123";
 
 Sentry.startSpan(
   {
-    name: "Getting auth cache",
+    name: key,
     attributes: {
       "cache.key": [key],
       "network.peer.address": "cache.example.com/supercache",
