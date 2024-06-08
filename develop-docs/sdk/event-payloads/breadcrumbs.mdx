@@ -1,0 +1,289 @@
+---
+title: Breadcrumbs Interface
+---
+
+Sentry uses _breadcrumbs_ to create a trail of events that happened prior to an issue. These events are very similar to traditional logs but can record more rich structured data.
+
+This page provides technical information about a breadcrumb structure. You can read an overview of manual breadcrumb recording and customization on our [Breadcrumbs](https://docs.sentry.io/platform-redirect/?next=/enriching-events/breadcrumbs/) Sentry docs page.
+
+An event may contain a `breadcrumbs` property with one entry, `values`, which is an array of breadcrumb objects. The entries are ordered from oldest to newest. Consequently, the last entry in the list should be the last entry before the event occurred.
+Alternatively, the `breadcrumbs` property may be an array of breadcrumb objects by itself.
+
+The following example illustrates the breadcrumbs part of the event payload and omits other attributes for simplicity.
+
+```json
+{
+  "breadcrumbs": {
+    "values": [
+      {
+        "timestamp": "2016-04-20T20:55:53.845Z",
+        "message": "Something happened",
+        "category": "log",
+        "data": {
+          "foo": "bar",
+          "blub": "blah"
+        }
+      },
+      {
+        "timestamp": "2016-04-20T20:55:53.847Z",
+        "type": "navigation",
+        "data": {
+          "from": "/login",
+          "to": "/dashboard"
+        }
+      }
+    ]
+  }
+}
+```
+
+Or, alternatively:
+
+```json
+{
+  "breadcrumbs": [
+    {
+      "timestamp": "2016-04-20T20:55:53.845Z",
+      "message": "Something happened",
+      "category": "log",
+      "data": {
+        "foo": "bar",
+        "blub": "blah"
+      }
+    },
+    {
+      "timestamp": "2016-04-20T20:55:53.847Z",
+      "type": "navigation",
+      "data": {
+        "from": "/login",
+        "to": "/dashboard"
+      }
+    }
+  ]
+}
+```
+
+A breadcrumb object has the following properties:
+
+`type` (optional)
+
+: The type of breadcrumb. By default, all breadcrumbs are recorded as `default`, which makes them appear as a Debug entry, but Sentry provides other types that influence how the breadcrumbs are rendered. For more information, see the [description of recognized breadcrumb types](#breadcrumb-types).
+
+`category` (optional)
+
+: A dotted string indicating what the crumb is or from where it comes. Typically it is a module name or a descriptive string. For instance, `ui.click` could be used to indicate that a click happened in the UI or flask could be used to indicate that the event originated in the Flask framework.
+
+_Internally we render some crumbs' color and icon based on the provided category. For more information, see the [description of recognized breadcrumb types](#breadcrumb-types)._
+
+`message` (optional)
+
+: Human-readable message for the breadcrumb.
+
+If a message is provided, it is rendered as text with all whitespace preserved.
+
+`data` (optional)
+
+: Arbitrary data associated with this breadcrumb.
+
+Contains a dictionary whose contents depend on the breadcrumb type. Additional parameters that are unsupported by the type are rendered as a key/value table.
+
+`level` (optional)
+
+: This defines the severity level of the breadcrumb. Allowed values are, from highest to lowest: `fatal`, `error`, `warning`, `info`, and `debug`. Levels are used in the UI to emphasize and deemphasize the crumb. The default is `info`.
+
+`timestamp` (recommended)
+
+: A timestamp representing when the breadcrumb occurred. The format is either a string as defined in [RFC 3339](https://tools.ietf.org/html/rfc3339) or a numeric (integer or float) value representing the number of seconds that have elapsed since the [Unixepoch](https://en.wikipedia.org/wiki/Unix_time).  
+Breadcrumbs are most useful when they include a timestamp, as it creates a timeline leading up to an event `expection/error`.
+
+<Alert level="info">
+  Breadcrumbs will not be sorted by timestamp, they keep their order in the way they were added.
+</Alert>
+
+## Breadcrumb Types
+
+Below are descriptions of individual breadcrumb types, and what their `data` properties look like.
+
+`default`
+
+: Describes a generic breadcrumb. This is typically a log message or user-generated breadcrumb. The `data` part is entirely undefined and as such, completely rendered as a key/value table.
+
+```json
+{
+  "type": "default",
+  "category": "started",
+  "data": undefined,
+  "level": "info",
+  "message": "this is a message",
+  "timestamp": 1596814007.035
+}
+```
+
+`debug`
+
+: This is typically a log message. The `data` part is entirely undefined and as such, completely rendered as a key/value table.
+
+_Internally we display breadcrumbs of type `default` that contain category `console` as a breadcrumb of type `debug`._
+
+```json
+{
+  "type": "debug",
+  "category": "started",
+  "data": null,
+  "level": "info",
+  "message": "this is a message",
+  "timestamp": 1596814007.035
+}
+```
+
+`error`
+
+: An error that occurred before the exception.
+
+```json
+{
+  "type": "error",
+  "category": "error",
+  "level": "error",
+  "message": "this is a message",
+  "timestamp": 1596814007.035
+}
+```
+
+`navigation`
+
+: A navigation event can be a URL change in a web application, or a UI transition in a mobile or desktop application, etc.
+
+_Internally we display breadcrumbs of type `default` that contain category `navigation` as a breadcrumb of type `navigation`._
+
+Its `data` property has the following sub-properties:
+
+`from` (Required)
+
+A string representing the original application state / location.
+
+`to` (Required)
+
+A string representing the new application state / location.
+
+```json
+{
+  "type": "navigation",
+  "category": "navigation",
+  "timestamp": "2016-04-20T20:55:53.845Z",
+  "data": {
+    "from": "/login",
+    "to": "/dashboard"
+  }
+}
+```
+
+`http`
+
+: This represents an HTTP request transmitted from your application. This could be an AJAX request from a web application, or a server-to-server HTTP request to an API service provider, etc.
+
+Its `data` property has the following sub-properties:
+
+`url` (optional)
+
+The request URL.
+
+`method` (optional)
+
+The HTTP request method.
+
+`status_code` (optional)
+
+The HTTP status code of the response.
+
+`reason` (optional)
+
+Text that describes the status code.
+
+```json
+{
+  "type": "http",
+  "category": "xhr",
+  "data": {
+    "url": "http://example.com/api/1.0/users",
+    "method": "GET",
+    "status_code": 200,
+    "reason": "OK"
+  },
+  "timestamp": "2016-04-20T20:55:53.845Z"
+}
+```
+
+`info`
+
+: Information that helps identify the root cause of the issue or for whom the error occurred.
+
+```json
+{
+  "type": "info",
+  "category": "started",
+  "level": "info",
+  "message": "this is a message",
+  "timestamp": 1596813998.386
+}
+```
+
+`query`
+
+: This represents a query that was made in your application.
+
+```json
+{
+  "type": "query",
+  "category": "started",
+  "level": "info",
+  "message": "this is a message",
+  "timestamp": 1596813998.386
+}
+```
+
+`transaction`
+
+: Describes a tracing event.
+
+_Internally we display breadcrumbs of type `default` that contain categories `sentry.transaction` and `sentry.event` as a breadcrumb of type `transaction`._
+
+```json
+{
+  "type": "default",
+  "category": "sentry.transaction",
+  "level": "info",
+  "message": "this is a message",
+  "timestamp": 1596813997.646
+}
+```
+
+`ui`
+
+: A user interaction with your app's UI.
+
+_Internally, we display breadcrumbs of type `default` that contain category `ui.*` as a breadcrumb of type `ui`._
+
+```json
+{
+  "type": "default",
+  "category": "ui.click",
+  "message": "div.css-bsbdc4-TextOverflow.e1kpcezi0",
+  "level": "info",
+  "timestamp": 1598613151.875368
+}
+```
+
+`user`
+
+: A user interaction with your app's UI.
+
+```json
+{
+  "type": "user",
+  "category": "click",
+  "message": "div.css-bsbdc4-TextOverflow.e1kpcezi0",
+  "level": "info",
+  "timestamp": 1598613151.875368
+}
+```

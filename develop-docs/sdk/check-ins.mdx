@@ -1,0 +1,161 @@
+---
+title: Check-Ins
+sidebar_order: 20
+---
+
+## Cron Monitor Check-In Payload
+
+A check-in is an item in an envelope called `check_in`. It consists
+of a JSON payload that looks roughly like this:
+
+```json
+{
+  "check_in_id": "83a7c03ed0a04e1b97e2e3b18d38f244",
+  "monitor_slug": "my-monitor",
+  "status": "in_progress",
+  "duration": 10.0,
+  "release": "1.0.0",
+  "environment": "production",
+  "contexts": {
+    "trace": {
+      "trace_id": "8f431b7aa08441bbbd5a0100fd91f9fe"
+    }
+  }
+}
+```
+The following fields exist:
+
+`check_in_id`
+
+: **String, required**. Check-In ID (unique and client generated).
+
+  This may be provided as a empty UUID (128 bit zero value) to indicate to
+  Sentry that the checkin should update the most recent "in_progress" check-in.
+  If the most recent check-in is not in progress a new one will be created
+  instead.
+
+`monitor_slug`
+
+: **String, required**. The distinct slug of the monitor.
+
+`status`
+
+: **String, required**. The status of the check-in. Can be one of the following:
+  - `in_progress`: The check-in has started.
+  - `ok`: The check-in has completed successfully.
+  - `error`: The check-in has failed.
+
+`duration`
+
+: _Number, optional_. The duration of the check-in in seconds. Will only take effect if the
+  status is `ok` or `error`.
+
+`release`
+
+: _String, optional_. The release.
+
+`environment`
+
+: _String, optional_. The environment.
+
+`monitor_config`
+
+: _Object, optional_. A monitor configuration (defined below) that is stored with the
+ check-in in order to verify the state of the monitor at the time of the check-in.
+
+`contexts`
+
+: _Object, optional_. A dictionary of contextual information about the environment running
+ the check-in. Right now we only support the [trace context](https://develop.sentry.dev/sdk/event-payloads/contexts/#trace-context)
+  and use the `trace_id` in order to link check-ins to associated errors.
+
+## Monitor upsert support
+
+In addition to sending check-in details, the SDK may also provide monitor
+configuration, allowing monitors to be created or updated when sending
+check-ins.
+
+
+```json
+{
+  "check_in_id": "83a7c03ed0a04e1b97e2e3b18d38f244",
+  "monitor_slug": "b7645b8e-b47d-4398-be9a-d16b0dac31cb",
+  "status": "in_progress",
+  "monitor_config": {
+    "schedule": {
+      "type": "crontab",
+      "value": "0 * * * *"
+    },
+    "checkin_margin": 5,
+    "max_runtime": 30,
+    "failure_issue_threshold": 2,
+    "recovery_threshold": 2,
+    "timezone": "America/Los_Angeles",
+    "owner": "user:john@example.com"
+  }
+}
+```
+The following fields exist under the `monitor_config` key:
+
+`schedule`
+
+: **Object, required**. [See schedule configuration](#schedule-configuration).
+
+`checkin_margin`
+
+: _Number, optional_. The allowed margin of minutes after the expected
+check-in time that the monitor will not be considered missed for.
+
+`max_runtime`
+
+: _Number, optional_. The allowed duration in minutes that the monitor
+may be `in_progress` for before being considered failed due to timeout.
+
+`failure_issue_threshold`
+
+: _Number, optional_. The number of consecutive failed check-ins it takes
+before an issue is created.
+
+`recovery_threshold`
+
+: _Number, optional_. The number of consecutive OK check-ins it takes
+before an issue is resolved.
+
+`timezone`
+
+: _String, optional_. A [`tz
+database`](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) string
+representing the timezone which the monitor's execution schedule is in.
+
+`owner`
+
+: _String, optional_. An actor identifier string. This looks like
+`user:john@example.com` `team:a-sentry-team`. IDs can also be used but will
+result in a poor DX.
+
+### Schedule configuration
+
+<Note>
+This configuration format differs slightly from what is accepted in the
+monitors frontend APIs.
+</Note>
+
+`type`
+
+: **String, required**. One of `crontab` or `interval`.
+
+#### Using `crontab`
+
+`value`
+
+: **String, required**. The crontab schedule string, e.g. `0 * * * *`.
+
+#### Using `interval`
+
+`value`
+
+: **Number, required**. The interval value.
+
+`unit`
+
+: **String, required**. The interval unit. Should be one of `year`, `month`, `week`, `day`, `hour`, `minute`.
