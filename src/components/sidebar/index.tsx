@@ -11,6 +11,7 @@ import {
   getPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {FrontMatter, Platform} from 'sentry-docs/types';
 
 import styles from './style.module.scss';
@@ -30,6 +31,11 @@ type SidebarProps = {
 };
 export async function Sidebar({path}: SidebarProps) {
   const rootNode = await getDocsRootNode();
+
+  if (isDeveloperDocs) {
+    return <DevelopDocsSidebar path={'/' + path.join('/') + '/'} rootNode={rootNode} />;
+  }
+
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
 
@@ -422,5 +428,555 @@ export function DefaultSidebar({node, path}: DefaultSidebarProps) {
         </Fragment>
       </li>
     </ul>
+  );
+}
+
+function DevelopDocsSidebar({path}: {path: string; rootNode: DocNode}) {
+  return (
+    <aside className={styles.sidebar}>
+      <input type="checkbox" id={sidebarToggleId} className="hidden" />
+      <style>{':root { --sidebar-width: 300px; }'}</style>
+      <div className="md:flex flex-col items-stretch">
+        <div className={styles.toc}>
+          <ul data-sidebar-tree>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>General</h6>
+              </div>
+              <ul data-sidebar-tree>
+                <SidebarLink to="/" title="Overview" path={path} />
+                <SidebarLink
+                  to="https://github.com/getsentry/.github/blob/master/CODE_OF_CONDUCT.md"
+                  title="Code of Conduct"
+                  path={path}
+                />
+                <SidebarLink to="/docs/" title="Documentation Guide" path={path} />
+                <SidebarLink to="/inclusion/" title="Inclusive Language" path={path} />
+                <SidebarLink to="/translations/" title="Translations" path={path} />
+              </ul>
+            </li>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Development</h6>
+              </div>
+              <ul data-sidebar-tree>
+                <SidebarLink to="/philosophy/" title="Philosophy" path={path} />
+                <SidebarLink to="/commit-messages/" title="Commit Messages" path={path} />
+                <SidebarLink to="/code-review/" title="Code Review" path={path} />
+                <SidebarLink
+                  to="/frontend/pull-request-previews/"
+                  title="Pull Request Previews"
+                  path={path}
+                />
+                <SidebarLink to="/workflow/" title="Workflow" path={path} />
+                <SidebarLink
+                  to="/continuous-integration/"
+                  title="Continuous Integration"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/python-dependencies/"
+                  title="Python Dependencies"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/database-migrations/"
+                  title="Database Migrations"
+                  path={path}
+                />
+                <SidebarLink to="/testing/" title="Testing Tips" path={path} />
+                <SidebarLink to="/analytics/" title="Analytics" path={path} />
+                <SidebarLink to="/rust/" title="Rust Development" path={path} />
+              </ul>
+            </li>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Application</h6>
+              </div>
+              <ul data-sidebar-tree>
+                <SidebarLink to="/architecture/" title="Architecture" path={path} />
+                <SidebarLink
+                  to="/sentry-vs-getsentry/"
+                  title="sentry vs getsentry"
+                  path={path}
+                />
+                <SidebarLink to="/config/" title="Configuration" path={path} />
+                <SidebarLink to="/issue-platform/" title="Issue Platform" path={path} />
+                <SidebarLink
+                  to="/issue-platform-detectors/"
+                  title="Issue Platform - Writing Detectors"
+                  path={path}
+                />
+                <SidebarLink to="/feature-flags/" title="Feature Flags" path={path} />
+                <SidebarLink to="/ab-testing/" title="A/B Testing" path={path} />
+                <SidebarLink to="/options/" title="Options" path={path} />
+                <SidebarLink to="/serializers/" title="Serializers" path={path} />
+                <SidebarLink to="/grouping/" title="Grouping" path={path} />
+                <SidebarLink to="/api/" title="API" path={path}>
+                  {/* <Children tree={tree.find(n => n.name === 'api').children} /> */}
+                </SidebarLink>
+                <SidebarLink to="/pii/" title="PII and Data Scrubbing" path={path}>
+                  <SidebarLink to="/pii/types/" title="Rule Types" path={path} />
+                  <SidebarLink to="/pii/methods/" title="Redaction Methods" path={path} />
+                  <SidebarLink to="/pii/selectors/" title="Selectors" path={path} />
+                </SidebarLink>
+                <SidebarLink
+                  to="/transaction-clustering/"
+                  title="Clustering URL Transactions"
+                  path={path}
+                />
+                <SidebarLink to="/dynamic-sampling/" title="Dynamic Sampling" path={path}>
+                  {/* <Children tree={tree.find(n => n.name === 'dynamic-sampling').children} /> */}
+                </SidebarLink>
+                <SidebarLink
+                  to="/delightful-developer-metrics/"
+                  title="Sentry Developer Metrics"
+                  path={path}
+                >
+                  {/*            <Children tree={tree.find(n => n.name === 'delightful-developer-metrics').children} /> */}
+                </SidebarLink>
+              </ul>
+            </li>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Self-Hosted</h6>
+              </div>
+              <ul data-sidebar-tree>
+                <SidebarLink to="/self-hosted/" title="Overview" path={path} />
+                <SidebarLink
+                  to="/self-hosted/releases/"
+                  title="Releases & Upgrading"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/self-hosted/backup/"
+                  title="Backup & Restore"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/self-hosted/custom-ca-roots/"
+                  title="Custom CA Roots"
+                  path={path}
+                />
+                <SidebarLink to="/self-hosted/email/" title="Email" path={path} />
+                <SidebarLink
+                  to="/self-hosted/geolocation/"
+                  title="Geolocation"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/self-hosted/sso/"
+                  title="Single Sign-On (SSO)"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/self-hosted/csp/"
+                  title="Content Security Policy (CSP)"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/self-hosted/reverse-proxy"
+                  title="Reverse Proxy"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/self-hosted/troubleshooting/"
+                  title="Troubleshooting"
+                  path={path}
+                />
+                <SidebarLink to="/self-hosted/support/" title="Support" path={path} />
+              </ul>
+            </li>
+            <li className="mb-3" data-frontend-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Frontend</h6>
+              </div>
+
+              <ul data-frontend-tree>
+                <SidebarLink to="/frontend/" title="Frontend Handbook" path={path} />
+                <SidebarLink
+                  to="/frontend/upgrade-policies/"
+                  title="Dependency Upgrade Policies"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/development-server/"
+                  title="Development Server"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/component-library/"
+                  title="Component Library"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/design-tenets/"
+                  title="Design Tenets"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/network-requests/"
+                  title="Network Requests"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/using-styled-components/"
+                  title="Using Styled Components"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/using-hooks/"
+                  title="Using hooks"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/using-rtl/"
+                  title="Using React Testing Library"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/frontend/working-on-getting-started-docs/"
+                  title="Working on Getting Started Docs"
+                  path={path}
+                />
+              </ul>
+            </li>
+
+            <li className="mb-3" data-frontend-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Backend</h6>
+              </div>
+
+              <ul data-frontend-tree>
+                <SidebarLink
+                  to="/backend/development-server/"
+                  title="Development Server"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/backend/control-silo/"
+                  title="Control Silo"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/backend/cross-region-rpc/"
+                  title="Cross Region RPC"
+                  path={path}
+                />
+                <SidebarLink to="/backend/outboxes/" title="Outboxes" path={path} />
+                <SidebarLink
+                  to="/backend/cross-region-replication/"
+                  title="Cross Region Replication"
+                  path={path}
+                />
+              </ul>
+            </li>
+
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Services</h6>
+              </div>
+
+              <ul data-sidebar-tree>
+                <SidebarLink
+                  to="/services/devservices/"
+                  title="Service Manager (devservices)"
+                  path={path}
+                />
+                <SidebarLink to="/services/ports/" title="Assigned ports" path={path} />
+                <SidebarLink
+                  to="/services/queue/"
+                  title="Asynchronous Workers (celery)"
+                  path={path}
+                />
+                <SidebarLink to="/services/email/" title="Email" path={path} />
+                <SidebarLink to="/services/nodestore/" title="Node Storage" path={path} />
+                <SidebarLink to="/services/filestore/" title="File Storage" path={path} />
+                <SidebarLink
+                  to="/services/tsdb/"
+                  title="Time Series Storage (tsdb)"
+                  path={path}
+                />
+                <SidebarLink to="/services/buffers/" title="Write Buffers" path={path} />
+                <SidebarLink
+                  to="/services/metrics/"
+                  title="Internal Metrics"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/services/quotas/"
+                  title="Quotas & Rate Limiter"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/services/digests/"
+                  title="Notification Digests"
+                  path={path}
+                />
+                <SidebarLink to="/services/relay/" title="Relay" path={path} />
+                <SidebarLink
+                  to="https://github.com/getsentry/snuba"
+                  title="Snuba"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/services/chartcuterie/"
+                  title="Chart Rendering (Chartcuterie)"
+                  path={path}
+                />
+              </ul>
+            </li>
+
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>SDK Development</h6>
+              </div>
+
+              <ul data-sidebar-tree>
+                <SidebarLink to="/sdk/philosophy/" title="Philosophy" path={path} />
+                <SidebarLink to="/sdk/basics/" title="Basics" path={path} />
+                <SidebarLink to="/sdk/overview/" title="Overview" path={path} />
+                <SidebarLink
+                  to="/sdk/craft-quick-start/"
+                  title="Craft Quick Start"
+                  path={path}
+                />
+                <SidebarLink to="/sdk/unified-api/" title="Unified API" path={path} />
+                <SidebarLink
+                  to="/sdk/hub_and_scope_refactoring/"
+                  title="Hub & Scope Refactoring"
+                  path={path}
+                />
+                <SidebarLink to="/sdk/features/" title="Expected Features" path={path} />
+                <SidebarLink to="/sdk/data-handling/" title="Data Handling" path={path} />
+                <SidebarLink to="/sdk/envelopes/" title="Envelopes" path={path} />
+                <SidebarLink to="/sdk/event-payloads/" title="Event Payloads" path={path}>
+                  <SidebarLink
+                    to="/sdk/event-payloads/transaction/"
+                    title="Transaction Type"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/span/"
+                    title="Span Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/breadcrumbs/"
+                    title="Breadcrumbs Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/contexts/"
+                    title="Contexts Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/debugmeta"
+                    title="Debug Meta Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/exception/"
+                    title="Exception Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/message/"
+                    title="Message Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/request/"
+                    title="Request Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/sdk/"
+                    title="SDK Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/stacktrace/"
+                    title="Stack Trace Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/template/"
+                    title="Template Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/threads/"
+                    title="Threads Interface"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/event-payloads/user/"
+                    title="User Interface"
+                    path={path}
+                  />
+                </SidebarLink>
+                <SidebarLink to="/sdk/profiles/" title="Profiles" path={path} />
+                <SidebarLink to="/sdk/metrics/" title="Metrics" path={path} />
+                <SidebarLink to="/sdk/check-ins/" title="Check-Ins" path={path} />
+                <SidebarLink to="/sdk/sessions/" title="Sessions" path={path} />
+                <SidebarLink
+                  to="/sdk/client-reports/"
+                  title="Client Reports"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/sdk/distributed-tracing/"
+                  title="Distributed Tracing"
+                  path={path}
+                />
+                <SidebarLink to="/sdk/performance/" title="Performance" path={path}>
+                  <SidebarLink
+                    to="/sdk/performance/span-operations/"
+                    title="Span Operations"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/span-data-conventions/"
+                    title="Span Data Conventions"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/trace-origin/"
+                    title="Trace Origin"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/ui-event-transactions/"
+                    title="UI Event Transactions"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/time-to-initial-full-display/"
+                    title="Time to Initial/Full Display"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/frames-delay/"
+                    title="Frames Delay"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/dynamic-sampling-context/"
+                    title="Dynamic Sampling Context"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/opentelemetry/"
+                    title="OpenTelemetry Support"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/modules/"
+                    title="Modules"
+                    path={path}
+                  />
+                  <SidebarLink
+                    to="/sdk/performance/backpressure/"
+                    title="Backpressure Management"
+                    path={path}
+                  />
+                </SidebarLink>
+                <SidebarLink
+                  to="/sdk/research/performance"
+                  title="Research: Performance Monitoring API"
+                  path={path}
+                />
+                <SidebarLink to="/sdk/setup-wizards/" title="Setup Wizards" path={path}>
+                  Setup Wizards
+                </SidebarLink>
+                <SidebarLink to="/sdk/rate-limiting/" title="Rate Limiting" path={path} />
+                <SidebarLink
+                  to="/sdk/signal-handlers/"
+                  title="Signal Handlers"
+                  path={path}
+                />
+                <SidebarLink to="/sdk/serverless/" title="Serverless SDKs" path={path} />
+                <SidebarLink
+                  to="/sdk/serverless/aws-lambda"
+                  title="AWS Lambda"
+                  path={path}
+                />
+                <SidebarLink to="/sdk/store/" title="Store Endpoint" path={path} />
+              </ul>
+            </li>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Integrations</h6>
+              </div>
+
+              <ul data-sidebar-tree>
+                {/* this list is alphabetized */}
+                <SidebarLink to="/integrations/" title="Overview" path={path} />
+                <SidebarLink
+                  to="/integrations/azuredevops/"
+                  title="Azure DevOps"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/integrations/bitbucket/"
+                  title="Bitbucket"
+                  path={path}
+                />
+                <SidebarLink to="/integrations/discord/" title="Discord" path={path} />
+                <SidebarLink to="/integrations/github/" title="GitHub" path={path} />
+                <SidebarLink to="/integrations/gitlab/" title="GitLab" path={path} />
+                <SidebarLink to="/integrations/heroku/" title="Heroku" path={path} />
+                <SidebarLink to="/integrations/jira/" title="Jira" path={path} />
+                <SidebarLink
+                  to="/integrations/jira-server/"
+                  title="Jira Server"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/integrations/msteams/"
+                  title="Microsoft Teams"
+                  path={path}
+                />
+                <SidebarLink
+                  to="/integrations/pagerduty/"
+                  title="PagerDuty"
+                  path={path}
+                />
+                <SidebarLink to="/integrations/slack/" title="Slack" path={path} />
+                <SidebarLink to="/integrations/vercel/" title="Vercel" path={path} />
+              </ul>
+            </li>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Resources</h6>
+              </div>
+
+              <ul data-sidebar-tree>
+                <SidebarLink
+                  to="https://docs.sentry.io"
+                  title="User Documentation"
+                  path={path}
+                />
+              </ul>
+            </li>
+            <li className="mb-3" data-sidebar-branch>
+              <div className={headerClassName} data-sidebar-link>
+                <h6>Meta Documentation</h6>
+              </div>
+
+              <ul data-sidebar-tree>
+                <SidebarLink
+                  to="/docs-components/"
+                  title="Documentation Components"
+                  path={path}
+                />
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </aside>
   );
 }
