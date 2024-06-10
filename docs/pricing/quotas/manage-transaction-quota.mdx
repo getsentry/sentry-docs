@@ -1,11 +1,11 @@
 ---
-title: Manage Your Performance Units Quota
+title: Manage Your Span Units Quota
 keywords: ["best practices"]
 sidebar_order: 40
-description: "Learn how to use the tools Sentry provides to control the type and amount of performance units that you pay for."
+description: "Learn how to use the tools Sentry provides to control your span unit quota."
 ---
 
-In most cases, sending all Transaction and Transaction with Profiling events to Sentry could generate more performance data than you'd find useful and might use up your performance units too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions and transactions with profiling that are monitored. This allows you to have performance data that's actionable and meaningful, and to manage your quota.
+In most cases, sending all Transaction events to Sentry could generate more data than you'd find useful and might use up your span units too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have tracing data that's actionable and meaningful.
 
 Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction and transactions with profiling events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first two options are things you can do in [sentry.io](https://sentry.io), whereas the remaining ones are things you'll do in the SDK.
 
@@ -57,34 +57,34 @@ Quotas can only be updated by a Billing or Owner member of your Sentry organizat
 
 </Note>
 
-Once your performance units volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
+Once your span units volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
 
 
 ### Increasing Quotas
 
-If you're dropping events that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either increasing your [reserved](#reserved-volume) or [on-demand](#on-demand-budget) quota.
+If you're dropping events that you want to keep because you've exceeded your quota, add to your quota at any time during your billing cycle by either increasing your [reserved](#reserved-volume) or [pay-as-you-go](/pricing/#pricing-how-it-works) quota.
 
 When you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
 
 To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
 
-If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more performance units volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more span units and purchase pay-as-you-go budget, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
 
 <Alert>
 
-If you upgrade from Team to Business mid-billing period, your on-demand pricing changes retroactively.
+If you upgrade from Team to Business mid-billing period, your pay-as-you-go pricing changes retroactively.
 
 </Alert>
 
 ### Reserved Volume
 
-If the number of events you need is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than on-demand volume since you prepay for it. It also allows you to choose the number of performance units that you want to have available beforehand, rather than just setting an arbitrary on-demand budget. Learn more about [reserved volume](/pricing/#prepaid-reserved-capacity) in our pricing documentation.
+If the number of events you need is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than pay-as-you-go volume since you prepay for it. It also allows you to choose the number of span units that you want to have available beforehand. Learn more about [reserved volume](/pricing/#prepaid-reserved-capacity) in our pricing documentation.
 
 You shouldn't increase your reserved volume if you think your need for more events is temporary, since [reducing your reserved volume is tied to your billing period](#decreasing-quotas).
 
-### On-Demand Budget
+### Pay-as-you-go Budget
 
-If you need to increase your performance units quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, performance units, replays, and attachments) basis. Learn more about [on-demand volume](/pricing/#on-demand-capacity) in our pricing documentation.
+If you need to increase your span units quota temporarily, we recommend that you add or increase pay-as-you-go budget. This is ideal for situations like rolling out a new version of your application where you anticipate more events for the month. Learn more about [pay-as-you-go](/pricing/#pricing-how-it-works) in our pricing documentation.
 
 ### Decreasing Quotas
 
@@ -96,11 +96,10 @@ If you have an annual billing period, plan downgrades and decreases in reserved 
 
 </Alert>
 
-Changes to on-demand volume typically go into effect immediately and are guaranteed to go into effect within 24 hours. However, you can't decrease your on-demand budget to less than what you've consumed in the current period.
+Changes to pay-as-you-go budget typically go into effect immediately and are guaranteed to go into effect within 24 hours. However, you can't decrease your pay-as-you-go budget to less than what you've consumed in the current period.
 
-To decrease your quota, go to **Settings > Subscription** and click "Manage Subscriptions". When you reach the "Review & Confirm" step, the date that these changes go into effect will be displayed:
+To decrease your quota, go to **Settings > Subscription** and click "Manage Subscriptions". When you reach the "Review & Confirm" step, the date that these changes go into effect will be displayed.
 
-![The Review & Confirm step of a subscription update.](./img/review-subscription.png)
 
 <Note>
 
@@ -151,4 +150,4 @@ Some Sentry SDKs support the `beforeSendTransaction` callback method. Once imple
 
 ## SDK Configuration: Tracing Options
 
-When you configure your the SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options), including either setting a sample rate or providing a function for sampling. You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for performance monitoring to capture certain types of transactions.
+When you configure your SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options), including either setting a sample rate or providing a function for sampling. You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for tracing to capture certain types of transactions.

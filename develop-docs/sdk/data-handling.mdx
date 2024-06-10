@@ -1,0 +1,122 @@
+---
+title: "Data Handling"
+sidebar_order: 3
+---
+
+Data handling is the standardized context in how we want SDKs help users filter data.
+
+## Sensitive Data
+
+SDKs should not include PII or other sensitive data in the payload by default.
+When building an SDK we can come across some API that can give useful information to debug a problem.
+In the event that API returns data considered PII, we guard that behind a flag called _Send Default PII_.
+This is an option in the SDK called [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii)
+and is **disabled by default**. That means that data that is naturally sensitive is not sent by default.
+
+Some examples of data guarded by this flag:
+
+- When attaching data of HTTP requests and/or responses to events
+  - Request Body: "raw" HTTP bodies (bodies which cannot be parsed as JSON or formdata) are removed
+  - HTTP Headers: known sensitive headers such as `Authorization` or `Cookie` are removed too.
+  - _Note_ that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
+- User-specific information (e.g. the current user ID according to the used web-framework) is not sent at all.
+- On desktop applications
+  - The username logged in the device is not included. This is often a person's name.
+  - The machine name is not included, for example `Bruno's laptop`
+- SDKs don't set `{{auto}}` as `user.ip`. This instructs the server to keep the connection's IP address.
+- Server SDKs remove the IP address of incoming HTTP requests.
+
+Sentry server is always aware of the connecting IP address and can use it for logging in some platforms. Namely JavaScript and iOS/macOS/tvOS.
+All other platforms require the event to include `user.ip={{auto}}` which happens if `sendDefaultPii` is set to true.
+
+Before sending events to Sentry, the SDKs should invokes callbacks. That allows users to remove any sensitive data client-side.
+
+- [`before-send` and `event-processors`](https://develop.sentry.dev/sdk/unified-api/#static-api) can be used to register a callback with custom logic to remove sensitive data.
+
+### Application State
+
+App state can be critical to help developers reproduce bugs. For that reason, SDKs often collect app state and append to events through auto instrumentation.
+
+When attaching data that could potentially include sensitive data or PII, it's important to:
+
+- Add a note on the docs to notify developers.
+- [Mark that part of the protocol on Relay](https://github.com/getsentry/relay/pull/1383) as such. This allows [data scrubbing](https://docs.sentry.io/product/relay/) to run on those fields.
+
+Some examples of auto instrumentation that could attach sensitive data:
+
+- A SQL integration that includes the query. If a user doesn't use parameterized queries, and appends sensitive data to it, the SDK could include that in the event payload.
+- Desktop apps including window title.
+- A Web framework routing instrumentation attaching route `to` and `from`.
+
+## Structuring Data
+
+For better data scrubbing on the server side, SDKs should save data in a strucutured way, when possible. Starting point of the discussion was [RFC-0038](https://github.com/getsentry/rfcs/blob/main/text/0038-scrubbing-sensitive-data.md)
+
+### Spans
+
+This helps Relay to know what kind of data it receives and this helps with scrubbing sensitive data.
+
+- `http` spans containing urls:
+
+  The description of spans with `op` set to `http` must follow the format `HTTP_METHOD scheme://host/path` (ex. `GET https://example.com/foo`).
+  If an authority is present in the URL (`https://username:password@example.com`), the authority must be replaced with a placeholder regardless of `sendDefaultPii`, leading to a new URL of `https://[Filtered]:[Filtered]@example.com`.
+  If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both are set into the data attribute of the span.
+
+  ```js
+  span.setData({
+    "http.query": url.getQuery(),
+    "http.fragment": uri.getFragment(),
+  });
+  ```
+
+  Additionally all semantic conventions of OpenTelementry for http spans should be set in the `span.data` if applicable:
+  https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/
+
+- `db` spans containing database queries: (sql, graphql, elasticsearch, mongodb, ...)
+
+  The description of spans with `op` set to `db` must not include any query parameters.
+  Instead, use placeholders like `SELECT FROM 'users' WHERE id = ?`
+
+Additionally all semantic conventions of OpenTelementry for database spans should be set in the `span.data` if applicable:
+https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/
+
+### Breadcrumbs
+
+If the `message` in a breadcrumb contains an URL it should be formatted the same way as in `http` spans (see above).
+If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both should also be set in the data attribute like with `http` spans.
+
+```js
+getCurrentHub().addBreadcrumb({
+  type: "http",
+  category: "xhr",
+  data: {
+    method: "POST",
+    url: "https://example.com/api/users/create.php",
+    "http.query": "username=ada&password=123&newsletter=0",
+    "http.fragment": "#foo",
+  },
+});
+```
+
+Additionally all semantic conventions of OpenTelementry for database spans should be set in the `data` if applicable:
+https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/
+
+## Variable Size
+
+Fields in the event payload that allow user-specified or dynamic values are restricted in size. This applies to most meta data fields, such as variables in a stack trace, as well as contexts, tags and extra data:
+
+- Mappings of values (such as HTTP data, extra data, etc) are limited to 50 item pairs.
+- Event IDs are limited to 36 characters and must be valid UUIDs.
+- Tag keys are limited to 32 characters.
+- Tag values are limited to 200 characters.
+- Culprits are limited to 200 characters.
+- Context objects are limited to 8kB.
+- Individual extra data items are limited to 16kB. Total extra data is limited to 256kb.
+- Messages are limited to 8192 characters.
+- HTTP data (the body) is limited to 8kB. Always trim HTTP data before attaching it to the event.
+- Stack traces are limited to 50 frames. If more are sent, data will be removed from the middle of the stack.
+
+Additionally, size limits apply to all store requests for the total size of the request, event payload, and attachments. Sentry rejects all requests exceeding these limits. Please refer the following resources for the exact size limits:
+
+- <Link to="/sdk/envelopes/#size-limits">Envelope Endpoint Size Limits</Link>
+- <Link to="/sdk/store/#size-limits">Store Endpoint Size Limits</Link>
