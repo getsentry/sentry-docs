@@ -1,0 +1,88 @@
+---
+title: Instrument Caches
+sidebar_order: 1000
+description: "Learn how to manually instrument your code to use Sentry's Caches module. "
+---
+A cache can be used to speed up data retrieval, thereby improving application performance. Because instead of getting data from a potentially slow data layer, your application will be getting data from memory (in a best case scenario). Caching can speed up read-heavy workloads for applications like Q&A portals, gaming, media sharing, and social networking.
+
+Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/caches/) for getting an overview of your application's caches.
+
+To make it possible for Sentry to give you an overview of your cache performance, you'll need to create two spans - one indicating that something is being put into the cache, and a second one indicating that something is being fetched from the cache.
+
+Make sure that there's a transaction running when you create the spans. If you're using a web framework like Rails those transactions will be created for you automatically. See <PlatformLink to='/performance/'>Performance Monitoring</PlatformLink> for more information.
+
+For detailed information about which data can be set, see the [Cache Module Developer Specification](https://develop.sentry.dev/sdk/performance/modules/caches/).
+
+## Manual Instrumentation
+
+Follow the steps below to make sure your Cache related spans end up in Sentry correctly.
+
+### Add Span When Putting Data Into the Cache
+
+1. Set the cache value with whatever cache library you happen to be using.
+2. Wrap the part of your application that uses the cached value with  `Sentry.with_child_span { |span| ... }`
+3. Set `op` to `cache.put`.
+4. Set `cache.item_size` to an integer representing the size of the cached item.
+
+(The steps described above are documented in the snippet.)
+
+```ruby
+key = 'myCacheKey123'
+value = 'The value I want to cache.'
+
+Sentry.with_child_span(op: 'cache.put') do |span|
+  # Set a key in your cache using your custom caching solution
+  my_cache.set(key, value)
+
+  # Describe the cache server you are accessing
+  span.set_data('network.peer.address', 'cache.example.com/supercache')
+  span.set_data('network.peer.port', 9000)
+
+  # Add the key you want to set
+  span.set_data('cache.key', key)
+
+  # Add the size of the value you stored in the cache
+  span.set_data('cache.item_size', value.size)  # Warning: if value is very big this could use lots of memory
+end
+```
+
+
+### Add Span When Retrieving Data From the Cache
+
+1. Fetch the cached value from whatever cache library you happen to be using.
+2. Wrap the part of your application that uses the cached value with  `Sentry.with_child_span { |span| ... }`
+3. Set `op` to `cache.get`.
+4. Set `cache.hit` to a boolean value representing whether the value was successfully fetched from the cache or not.
+5. Set `cache.item_size` to an integer representing the size of the cached item.
+
+(The steps described above are documented in the snippet.)
+
+```ruby
+key = 'myCacheKey123'
+value = nil
+
+Sentry.with_child_span(op: 'cache.get') do |span|
+  # Get a key from your caching solution
+  value = my_cache.get(key)
+
+  # Describe the cache server you are accessing
+  span.set_data('network.peer.address', 'cache.example.com/supercache')
+  span.set_data('network.peer.port', 9000)
+
+  # Add the key you just retrieved from the cache
+  span.set_data('cache.key', key)
+
+  if value
+    # If you retrieved a value, the cache was hit
+    span.set_data('cache.hit', True)
+
+    # Optionally also add the size of the value you retrieved
+    span.set_data('cache.item_size', value.size)
+  else
+    # If you could not retrieve a value, it was a miss
+    span.set_data('cache.hit', False)
+  end
+end
+```
+
+You should now have the right spans in place. Head over to the [Cache dashboard](https://sentry.io/orgredirect/organizations/:orgslug/performance/caches/) to see how your cache is performing.

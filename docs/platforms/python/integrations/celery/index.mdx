@@ -19,16 +19,7 @@ If you have the `celery` package in your dependencies, the Celery integration wi
 
 Make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
-<SignInNote />
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn='___PUBLIC_DSN___',
-    enable_tracing=True
-)
-```
+<PlatformContent includePath="getting-started-config" />
 
 ### Standalone Setup
 
@@ -74,9 +65,7 @@ import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    # ...
+    # same as above
     integrations=[
         CeleryIntegration(
             monitor_beat_tasks=True,
@@ -93,14 +82,16 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
 
 - `propagate_traces`
 
-Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
+  Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
 
-If this is set to `False`:
+  If this is set to `False`:
 
-- errors in Celery tasks won't be matched to the triggering function.
-- your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
+  - errors in Celery tasks won't be matched to the triggering function.
+  - your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
 
-The default is `True`.
+  The default is `True`.
+
+  See [Distributed Traces](#distributed-traces) below to learn how to get more fine grained control over distributed tracing in Celery tasks.
 
 - `monitor_beat_tasks`:
 
@@ -128,13 +119,14 @@ You can disable this globally with the `propagate_traces` parameter, documented 
 
 If you want to have more fine-grained control over trace distribution, you can override the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
 
+**Note:** The `CeleryIntegration` does not utilize the `traces_sample_rate` config option for deciding if a trace should be propagated into a Celery task.
+
 ```python
 import sentry_sdk
 
-# Enable global distributed traces (this is the default, just to be explicit.)
+# Enable global distributed traces (this is the default, just to be explicit)
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # same as above
     integrations=[
         CeleryIntegration(
             propagate_traces=True
@@ -150,7 +142,7 @@ my_task_b.apply_async(
     args=("some_parameter", )
 )
 
-# This will NOT propagate the trace. (The task will start its own trace):
+# This will NOT propagate the trace. The task will start its own trace:
 my_task_b.apply_async(
     args=("some_parameter", ),
     headers={"sentry-propagate-traces": False},

@@ -17,19 +17,7 @@ pip install --upgrade 'sentry-sdk[starlette]'
 
 If you have the `starlette` package in your dependencies, the Starlette integration will be enabled automatically when you initialize the Sentry SDK.
 
-<SignInNote />
-
-```python
-from starlette.applications import Starlette
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-)
-
-app = Starlette(routes=[...])
-```
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
@@ -53,7 +41,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 ## Behavior
 
-- All exceptions leading to an Internal Server Error are reported.
+- By default, all exceptions leading to an Internal Server Error are reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
 
 - Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
@@ -67,11 +55,11 @@ By adding `StarletteIntegration` explicitly to your `sentry_sdk.init()` call you
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     integrations=[
         StarletteIntegration(
             transaction_style="endpoint",
+            failed_request_status_codes=[403, range(500, 599)],
         )
     ],
 )
@@ -96,6 +84,19 @@ You can pass the following keyword arguments to `StarletteIntegration()`:
   - `"product_detail"` if you set `transaction_style="endpoint"`
 
   The default is `"url"`.
+
+- `failed_request_status_codes`:
+
+  A list of integers or containers (objects that allow membership checks via `in`)
+  of integers that will determine which status codes should be reported to Sentry.
+
+  Examples of valid `failed_request_status_codes`:
+
+  - `[500]` will only send events on HTTP 500.
+  - `[400, range(500, 599)]` will send events on HTTP 400 as well as the 500-599 range.
+  - `[500, 503]` will send events on HTTP 500 and 503.
+
+  The default is `[range(500, 599)]`.
 
 ## Supported Versions
 

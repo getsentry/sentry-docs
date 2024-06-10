@@ -53,7 +53,7 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 <ConfigKey name="sample-rate">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
 </ConfigKey>
 
@@ -243,7 +243,7 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 <ConfigKey name="enable-tracing">
 
-A boolean value, if true, transactions and trace data will be generated and captured. This will set the `traces-sample-rate` to the recommended default of 1.0 if `traces-sample-rate` is not defined. Note that `traces-sample-rate` and `traces-sampler` take precedence over this option.
+A boolean value, if true, transactions and trace data will be generated and captured. This will set the <PlatformIdentifier name="traces-sample-rate" /> to the recommended default of 1.0 if <PlatformIdentifier name="traces-sample-rate" /> is not defined. Note that <PlatformIdentifier name="traces-sample-rate" /> and <PlatformIdentifier name="traces-sampler" /> take precedence over this option.
 
 </ConfigKey>
 
@@ -256,6 +256,18 @@ A number between 0 and 1, controlling the percentage chance a given transaction 
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
+
+</ConfigKey>
+
+<ConfigKey name="trace-propagation-targets">
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is only attached to outgoing requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
 
 </ConfigKey>
 

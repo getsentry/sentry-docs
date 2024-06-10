@@ -63,7 +63,7 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 <ConfigKey name="sample-rate">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
 </ConfigKey>
 
@@ -86,6 +86,17 @@ When enabled, stack traces are automatically attached to all messages logged. St
 This option is turned on by default.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+</ConfigKey>
+
+<ConfigKey name="enable-sigterm-reporting">
+
+_(New in [sentry-cocoa version 8.27.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8270))_
+
+When enabled, the SDK reports SIGTERM signals to Sentry.
+
+It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as  CPU or disk overuse, watchdog terminations, or when the OS updates your app.
+
 
 </ConfigKey>
 
@@ -151,7 +162,7 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.initialScope = ^(SentryScope *scope) {
-        scope setTagValue:@"my value" forKey:@"my-tag"];
+        [scope setTagValue:@"my value" forKey:@"my-tag"];
         return scope;
     };
 }];
@@ -187,15 +198,11 @@ The default is `3000`.
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
-_(New in version 7.13.0)_
-
 </ConfigKey>
 
 <ConfigKey name="enable-capture-failed-requests">
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
-
-_(New in version 7.30.0)_
 
 </ConfigKey>
 
@@ -238,7 +245,7 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 <ConfigKey name="enable-tracing">
 
-A boolean value, if true, transactions and trace data will be generated and captured. This will set the `traces-sample-rate` to the recommended default of 1.0 if `traces-sample-rate` is not defined. Note that `traces-sample-rate` and `traces-sampler` take precedence over this option.
+A boolean value, if true, transactions and trace data will be generated and captured. This will set the <PlatformIdentifier name="traces-sample-rate" /> to the recommended default of 1.0 if <PlatformIdentifier name="traces-sample-rate" /> is not defined. Note that <PlatformIdentifier name="traces-sample-rate" /> and <PlatformIdentifier name="traces-sampler" /> take precedence over this option.
 
 </ConfigKey>
 
