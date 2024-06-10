@@ -15,10 +15,12 @@ You can find a list of features available by looking at two files:
 They're declared on the `FeatureManager` like so:
 
 ```python
-# pass FeatureHandlerStrategy.OPTIONS to use options automator:
-manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
+# pass FeatureHandlerStrategy.FLAGPOLE to use our options-backed feature flagging system:
+manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE)
 # pass FeatureHandlerStrategy.INTERNAL if you don't plan to use options automator:
 manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
+# [DEPRECATED] pass FeatureHandlerStrategy.OPTIONS to use options automator:
+manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
 ```
 
 The feature can be enabled with the following in your `sentry.conf.py`, usually located at `~/.sentry/`:
@@ -46,41 +48,36 @@ we'll build a feature called `test-feature` scoped at the _organization_ level
 ### Determine the permanency of your feature
 
 Typically we use feature flags for development. They are usually [intended to
-be graduated](#after-launch-graduation). Feature flag that controls a
-subscription-based feature for sentry.io are permanent.
+be graduated](#after-launch-graduation). The only exceptions to this are permanent
+flags which control [subscription plan-specific features](#plan-specific-features)
+in GetSentry.
 
-Most feature flags are placed in `temporary.py`, permanent flags live in
+Most Sentry feature flags are placed in `temporary.py`, while permanent Sentry flags live in
 `permanent.py`.
 
-### Add your feature to server.py
-
-[`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)
-contains many of the default settings in the application. Here you will add
-your feature, and decide what default value it should hold unless specified by
-the user.
-
-The `SENTRY_FEATURES` dictionary contains all the features in the application
-with their corresponding scope. Your feature should start off disabled by default:
-
-```python
-SENTRY_FEATURES = {
-    'organizations:test-feature': False,
-    'auth:register': True,
-    # ...
-    'projects:minidump': False,
-}
-```
+GetSentry only flags are typically placed in [`features.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/features.py).
 
 ### Add your feature to the FeatureManager
 
-If you want to back your feature [flag via options](#building-your-options-based-feature)
-add the feature to the `FeatureManager` like so using the `OPTIONS` enum.:
+If you want to back your feature flag via options, you can do so using the [Flagpole](/feature-flags/flagpole/) library
+by adding the feature to the `FeatureManager` with the `FLAGPOLE` enum set as the feature strategy:
 
 ```python
-default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE)
 ```
 
-If you don't plan to use options, use `FeatureHandlerStrategy.INTERNAL`, for example:
+This is only available in GetSentry at the moment, so all Flagpole features must be defined in [`features.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/features.py).
+
+_Note:_ It used to be required to add a new feature's name to `server.py` in Sentry in order to set a default value, but this
+is no longer required. Instead, the `manager.add()` method takes a default value, or automatically sets the value
+to `False` if no default is provided.
+
+```python
+# Example of a feature set with a default value of True
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE, default=True)
+```
+
+If you don't plan to use Flagpole, use `FeatureHandlerStrategy.INTERNAL` with a custom feature handler instead, for example:
 
 ```python
 default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
@@ -90,10 +87,10 @@ default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHa
 
 The Organization model serializer
 (`src/sentry/api/serializers/models/organization.py`) builds a list
-called `feature_list` that is given to the front-end to use. By default the all
-features are checked and those that are present are added into the list. If
-your feature requires additional custom logic you will have to update the
-organization serializer
+called `feature_list` that is given to the front-end to use. By default, all
+organization features are checked and those that are present are added into the list. If
+your feature requires additional custom logic, you will have to update the
+organization serializer to check and include it manually.
 
 ### Using Model Flags (Less common)
 
@@ -117,18 +114,18 @@ if getattr(obj.flags, 'require_2fa'):
 
 ### In Python code
 
-The FeatureManager's `has` method checks see if the feature exists. The has
-method takes in the feature's name, the object that corresponds to the scope of
+The FeatureManager's `has` method checks see if the feature exists. The `has`
+method takes in the feature's name, the objects that correspond to the scope of
 the feature *(i.e. an organization for an organization level feature or
-a project for a project level feature)*, and the actor (aka user). In our case
-the feature will be added like:
+a project for a project level feature)*, and the actor (aka user). Here's an example
+Organization feature check:
 
 ```python
 if features.has('organizations:test-feature', obj, actor=user):
     feature_list.append('test-feature')
 ```
 
-which only adds the feature to the `feature_list` if that feature is enabled for
+The example code only adds the feature to the `feature_list` if that feature is enabled for
 the organization and the type of user given. Note that when we give the feature
 to the frontend, we remove the scope prefix, and
 our `'organizations:test-feature'` becomes `'test-feature'`.
@@ -182,63 +179,24 @@ configuration file:
 SENTRY_FEATURES['organizations:test-feature'] = True
 ```
 
-Where `SENTRY_FEATURES` will correspond to the `SENTRY_FEATURES` from `step 2`.
-Set it to `True` if you'd like the feature to be available and `False` if not.
+
+Alternatively, you can test Flagpole features by setting custom options locally.
+See the [Flagpole Local Development](/feature-flags/flagpole/#testing-a-flagpole-feature-locally) docs for more information on this.
 
 ## Enabling your feature in production
 
 Feature flags are declared in Sentry's codebase. For self-hosted users, those
 flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
-you have the choice of using an option backed rollout via Options Automator,
+you have the choice of using an option backed rollout via Options Automator with Flagpole,
 or by writing a custom feature flag handler.
+- [Flagpole](/feature-flags/flagpole/) is Sentry's internal feature flagging library, allowing a feature
+with multiple target segments and condition filters to be defined in YAML within Options Automator.
 
-- [Options based features](#building-your-options-based-feature) allow a feature
+- [Options based features](/feature-flags/options-backed-features/) [DEPRECATED] allow a feature
 to be rolled out to a specific subset of LA orgs, a percentage of EA orgs,
 and/or a percentage of all orgs. These can be used in high scale situations, and are generally
-preferred over customer feature handlers.
-
-## Building your options based feature
-Declare your feature in sentry/features/temporary.py or 
-sentry/features/permanent.py like so: 
-```python
-manager.add("organizations:your-new-flag", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
-```
-
-This automatically registers a feature handler for you in getsentry, and also
-auto registers the relevant options.
-
-To roll out your feature, you'll want to set the rollout options via options 
-automator. To figure out the options you need to configure, you can run the 
-following script in getsentry:
-```python
-./bin/generate_automator_feature_options.py --flag organizations:your-new-flag
-```
-
-It will then produce output like 
-
-```python
-Generating automator options for feature flag `organizations:your-new-flag`
-Add these to the appropriate file in options automator to roll out your feature
-For example, to roll out in the US, you can add them to https://github.com/getsentry/sentry-options-automator/blob/main/options/regions/us/app.yaml
-To roll out to all production regions, you can add them to https://github.com/getsentry/sentry-options-automator/blob/main/options/default/app.yaml
-Options:
-  organizations.your-new-flag.la-rollout: 0.0
-  organizations.your-new-flag.ea-rollout: 0.0
-  organizations.your-new-flag.ga-rollout: 0.0
-  organizations.your-new-flag.la-orgs: [
-    "codecov",
-    "sentry",
-    "sentry-sdks",
-    "sentry-test",
-    "sentry-st",
-    "sentry-emerging-tech",
-    "specto-dev",
-  ]
-```
-
-Open a pr in https://github.com/getsentry/sentry-options-automator to set 
-these options and you can roll out your feature flag. You can also customize
-which orgs will be in your la rollout by modifying `la-orgs`
+preferred over customer feature handlers. This strategy predates Flagpole, which is the new standard
+way to define an option-backed feature flag.
 
 ## After launch (Graduation)
 
@@ -259,7 +217,7 @@ sentry.io, you have a few potential paths:
 ## Getsentry feature handlers
 
 Getsentry contains a variety of feature handlers that override the
-`SENTRY_FEATURES` map.
+`SENTRY_FEATURES` map, which are defined in the [`features.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/features.py) file.
 
 ### Plan specific features
 

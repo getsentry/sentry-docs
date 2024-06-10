@@ -124,9 +124,35 @@ Once the option change is deployed, the feature checks will immediately be activ
 
 
 ## Testing a Flagpole feature locally
-You can test a flagpole feature flag locally using the GetSentry devserver. Because the feature handler for Flagpole only exists in GetSentry, it's not currently possible to test Sentry-only flagpole features.
+You can test a flagpole feature flag locally using the GetSentry devserver.
+Because the feature handler for Flagpole only exists in GetSentry, it's not
+ currently possible to test Sentry-only flagpole features.
 
-Start by creating a new yaml file containing your feature config.
+Start by creating a new yaml file containing your feature config. The config 
+file should contain a top-level `options` object containing your feature object,
+and a `flagpole.flagpole_only_features` list option containing the name of the 
+feature you want to test, without the `feature.` prefix:
+```yaml
+options:
+  flagpole.flagpole_only_features: ['organizations:is_sentry']
+
+  'feature.organizations:is_sentry':
+    created_at: '2024-06-01T00:00:00.000000'
+    enabled: false
+    owner: hybrid-cloud
+    segments:
+    - conditions:
+      - operator: in
+        value:
+          - sentry
+        property: organization_slug
+      name: is_sentry
+      rollout: 100
+```
+
+_Note:_ The `flagpole_only_features` option will only be required while
+Flagpole is actively being rolled out.
+
 
 You can push your feature option to your local devserver using the following `getsentry` CLI command:
 
@@ -134,4 +160,9 @@ You can push your feature option to your local devserver using the following `ge
 getsentry configoptions -f <path>/<to>/<your>/<config>.yml -l DEBUG patch
 ```
 
-If this command runs successfully, your flagpole feature should now be active in your local devserver instance and will persist across runs until you remove the feature option.
+If this command runs successfully, your flagpole feature should now be
+active in your local devserver instance and will persist across runs until
+you remove the feature option.
+
+To unset your feature, comment out or remove your feature config from the
+`option` object, and rerun the `getsentry configoptions` command above.
