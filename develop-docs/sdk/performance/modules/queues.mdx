@@ -1,0 +1,68 @@
+---
+title: 'Queues Module'
+---
+
+The SDK's queue integration is agnostic to the underlying engine used. In most cases, the SDK will instrument existing queue abstractions in certain frameworks or libraries.
+
+## Span conventions
+
+### Span Operations
+
+| Span OP | Description |
+|:--|:--|
+| `queue.publish` | One or more messages are provided for publishing to an intermediary. If a single message is published, the context of the “Publish” span can be used as the creation context and no “Create” span needs to be created. |
+| `queue.create` | A message is created. “Create” spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios. |
+| `queue.receive` | One or more messages are requested by a consumer. This operation refers to pull-based scenarios, where consumers explicitly call methods of messaging SDKs to receive messages. |
+| `queue.process` | One or more messages are delivered to or processed by a consumer. |
+| `queue.settle` | One or more messages are settled. |
+
+### Span Data
+
+The following data attributes must be set on both the consumer and the producer spans.
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `messaging.message.id ` | string | the identifier of the message |
+| `messaging.destination.name` | string | the destination name where the message is being consumed from, e.g. the queue name or topic |
+| `messaging.system` | string | the name of the messaging system, e.g. `kafka`, `aws_sqs ` |
+
+The following data attributes are only to be set if exposed by the instrumented queuing abstraction or retrievable with minimal overhead. When possible, the attributes should be set on both the producer and consumer spans.
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `messaging.message.retry.count ` | int | the retries/attempts processing a message |
+| `messaging.message.envelope.size` | int | the size of the message body and metadata in bytes | 
+| `messaging.message.body.size` | int | the size of the message | body in bytes | 
+| `messaging.message.receive.latency ` | float | time delta in seconds between a message being published and when it was received by a consumer (not including processing time on the consumer) |
+
+## Instrumentation
+
+Depending on if a synchronous or asynchronous messaging system is used, the consumer span could instead be its own transaction.
+
+```
+Queue::publish(job)
+
+// in some consumer
+
+Queue::pop()->process()
+```
+
+This should result in the following spans.
+
+```
+<span op:"queue.publish" description:"job-name" ...>
+
+<span op:"queue.process" description:"job-name" ...>
+```
+
+If applicable, any spans created by the underlying engine instrumentation should be direct children of each `queue` span.
+
+```
+<span op:"queue.publish" description:"job" ...>
+	<span op:"db.sql.query" description:"insert into jobs" ...></span>
+</span>
+```
+
+### Distributed Tracing
+
+If applicable, we try to continue a trace from producer to consumer. To do so, we inject both the trace parent (`sentry-trace`) and `baggage` into the payload of the message, and pick it up on the consumer.

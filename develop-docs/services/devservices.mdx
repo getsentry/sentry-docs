@@ -1,0 +1,60 @@
+---
+title: "Service Manager (devservices)"
+---
+
+Sentry provides an abstraction to Docker to run required services within development called `devservices`.
+
+```shell
+Usage: sentry devservices [OPTIONS] COMMAND [ARGS]...
+
+  Manage dependent development services required for Sentry.
+
+  Do not use in production!
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  attach  Run a single devservice in foreground, as...
+  down    Shut down all services.
+  rm      Delete all services and associated data.
+  up      Run/update dependent services.
+```
+
+## Viewing logs for a service
+
+```shell
+# Follow snuba logs
+docker logs -f sentry_snuba
+```
+
+## Running CLI clients for redis, postgres and clickhouse
+
+```shell
+# redis
+docker exec -it sentry_redis redis-cli
+
+# clickhouse
+docker exec -it sentry_clickhouse clickhouse-client
+
+# psql
+docker exec -it sentry_postgres psql -U postgres
+```
+
+## Removing container state
+
+Should you really bamboozle your containers or volumes, you can use `devservices rm` to start over.
+
+```shell
+# Remove all data (containers, volumes, and networks) associated with ALL services
+sentry devservices rm
+```
+
+As an example, let's say we've managed to corrupt our postgres
+database while working on a migration, and you want to reset
+your postgres data you can do:
+
+```shell
+# Remove all data (containers, volumes, and networks) associated with a single service
+sentry devservices rm postgres
+```

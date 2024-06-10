@@ -1,0 +1,132 @@
+---
+title: "Naming and versioning patterns in project config"
+---
+
+## Internal vs External Relay?
+
+Relay fetches project configs from an "upstream". That upstream can either be Sentry or another Relay, both have their own implementation of the same endpoint.
+
+Your configuration will flow from Sentry to either:
+
+- Internal Relay
+
+- External Relays (customers run those, we practically have no deprecation policy for old versions)
+
+Internal Relay can forward your configuration to:
+
+- PoP Relays
+
+Generally, all of those must be able to deal with the changes you make to the project config schema.
+
+## Naming conventions
+
+All fields should be emitted in camelCase. When defining new types in Relay, make sure to add `#[serde(rename_all = "camelCase")]` at the top of it:
+
+```rust
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Foo {
+    ops_breakdown: ...
+}
+```
+
+## Adding new fields in projectconfig endpoint(s)
+
+The endpoint is implemented by both Sentry and Relay itself. When Sentry receives a project config request, it differentiates between trusted Relays operated by Sentry and untrusted Relays operated by customers. Untrusted Relays receive only a subset of the fields:
+
+- In Sentry, this is handled by an [early return](https://github.com/getsentry/sentry/blob/b1434710fff9d8f90c99668bcc958ed1ee52b66e/src/sentry/relay/config.py#L165-L167) to stop populating the config object.
+- In Relay, this is implemented by having two separate types for trusted vs restricted project config, either `ProjectConfig` (consumed by trusted Relays) or `LimitedProjectConfig` (consumed by untrusted Relays).
+
+For as long as your new feature is in development, it's recommended to emit new/different fields only for trusted Relays.
+
+## Defining New Structs in Relay
+
+- use `#[serde(rename_all = "camelCase")]`, even if all fields are single words.
+- never specify `deny_unknown_fields`
+
+New structs are allowed to contain mandatory fields without a default.
+
+## Defining New Enums
+
+There are two kinds of enums:
+
+- Plain string enumerations. The string value determines the variant of the enumeration.
+- Internally tagged enumerations. These are structures (JSON objects) with a discriminator column that indicates the variant.
+- Untagged enumerations. When the type of the field can differ, this allows to serialize the first matching variant. This is used, for example, if a field can either be a string or a number.
+
+Unlike structs, unknown variants are not implicitly ignored by Relay. When defining an enumeration, *always* add a variant to catch unknown variants using `#[serde(other)]`. For example:
+
+```rust
+#[derive(Deserialize, Serialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+enum BreakdownConfig {
+    SpanOperations { ... },
+    #[serde(other)]
+    Unsupported,
+}
+```
+
+Before adding a new variant in Sentry, verify that Relay implements this correctly. If this is not the case, proceed by replacing the field just like when changing a fields type. Never add variants to an enum that does not have an unknown variant.
+
+It is acceptable that Relay does not forward unknown enum variants by dropping the original value, as it is done with the above approach.
+
+## Adding Top-Level Fields
+
+In case you're developing a new feature, you likely want to add completely new data to the project config and not touch existing structs. Here's a small checklist that applies in addition to everything else:
+
+- Verify that the field is in `camelCase`.
+- Ensure the field name has not been used in a past version of Relay. `git log -G field_name` is a simple way to search git history for strings that occur in diffs.
+- Make sure your field is either optional or has a default
+- Do not serialize when the field is `None` or default via `serde(skip_serializing_if)`.
+- Use `ErrorBoundary` around the field type for as long as your new feature is pre-GA and can change its definition. This makes sure that if the field definition is malformed, Relay contains the error and continues to parse the rest of the project config.
+- Do not use types with platform specific behavior, such as `usize`.
+
+  It can be tempting to use `usize` if for some reason the max value of your field is platform-dependent (i.e. whether the Relay that deserializes currently runs on a 32-bit OS). This *can be* the case if your field is an index into some array/vec. Even in those cases it is barely worth it. Keep in mind that not only the current Relay needs to use that number as array index, but also downstream Relays.
+
+## Adding Subfields
+
+In principle, it's permitted to add new fields at any time. Relay ignores additional fields, so struct field definitions can be implemented and deployed at a later point. For example, a struct like this will deserialize just fine from a JSON message with additional fields:
+
+```rust
+struct Foo {
+    foo: u64,
+}
+
+// compatible with: {"foo": 123}, {"foo": 123, "bar": 456}, {"foo": 123, ...}
+// incompatible with: {"foo": "123"}
+```
+
+There are two caveats:
+
+- As demonstrated above, changing types is *not* safe. See below for instructions on changing types.
+- Ensure the field name has never been used before. It could have been implemented with different types, or trigger unwanted behavior in prior versions of Relay.
+- Note that adding enum variants requires a different approach.
+
+## Renaming Fields
+
+Do not rename a field for features that are generally available for external Relays. Renaming a field makes the field invisible to older Relays. This makes it infeasible to rename fields for aesthetic reasons (it *may* be fine if your feature is pre-EA), but for the same reason [it is a useful mechanism for versioning](#breaking-changes-and-actual-versioning)
+
+## Changing Field Types
+
+Assuming your field is emitted for external Relays, **changing a field type is
+rarely possible**. Even for internal Relays, changing types of fields is only
+possible if the two types have identical serialization/deserialization
+behavior. This is rather unlikely and so hard to determine that we require you
+always [rename the field](#breaking-changes-and-actual-versioning) in addition.
+
+## Deployment & Monitoring
+
+Talk to the ingest team for deploying and monitoring.
+
+## Breaking changes, and actual versioning
+
+We've mostly gone through things that we don't want you to do, as they will cause incidents.
+
+In case you do need to make larger changes to the schema, or you want to do a large amount of smaller changes and feel like guaranteeing backwards compat for all of them is too hard, consider renaming the top-level field `x` to `x_v2`.
+
+This will effectively hide the field from older Relays, so field `x` has to be an optional field in the first place.
+
+For certain protocol changes there is a ["project state
+version"](https://github.com/getsentry/relay/blob/3933cd6ccd59c3270f56853ffbc8678b219e44e6/relay-server/src/actors/project_upstream.rs#L25-L34)
+in Relay that could be bumped. It was used once to implement a larger change to
+the protocol.
