@@ -1,0 +1,57 @@
+---
+title: Blazor WebAssembly
+sdk: sentry.aspnetcore.blazor.webassembly
+description: "Learn about Sentry's .NET integration with Blazor WebAssembly."
+---
+
+Sentry provides an integration with Blazor WebAssembly through the [Sentry.AspNetCore.Blazor.WebAssembly NuGet package](https://www.nuget.org/packages/Sentry.AspNetCore.Blazor.WebAssembly).
+
+<Note>
+
+The Blazor WebAssembly package is currently in preview. Alpha features are still in progress and may have bugs. We recognize the irony.
+
+</Note>
+
+
+## Install
+
+Add the Sentry dependency to your Blazor WebAssembly application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.AspNetCore.Blazor.WebAssembly -v {{@inject packages.version('sentry.dotnet.aspnetcore.blazor.webassembly') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.AspNetCore.Blazor.WebAssembly -Version {{@inject packages.version('sentry.dotnet.aspnetcore.blazor.webassembly') }}
+```
+
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the Blazor WebAssembly related features, through this package you'll also get access to the `ILogger<T>` integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
+
+## Configure
+
+Sentry integration with Blazor WebAssembly is done by calling `.UseSentry()` and specifying the options, for example:
+
+<SignInNote />
+
+
+```csharp
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.UseSentry(options =>
+{
+        options.Dsn = "___PUBLIC_DSN___";
+        options.EnableTracing = true;
+        // When configuring for the first time, to see what the SDK is doing:
+        // options.Debug = true;
+
+
+});
+
+// Captures logError and higher as events
+builder.Logging.AddSentry(o => o.InitializeSdk = false);
+
+await builder.Build().RunAsync();
+```
+
+## Samples
+
+- [Integration with Blazor WebAssembly](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Blazor.Wasm) sample demonstrates Sentry with Blazor WebAssembly. (**C#**)
