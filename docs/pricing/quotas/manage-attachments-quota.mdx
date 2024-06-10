@@ -7,7 +7,7 @@ description: "Learn how to use the tools Sentry provides to control the type and
 
 Sending all your error attachments to Sentry may consume your quota too rapidly, so we provide tools to control the _type_ and _amount_ of attachments that are stored.
 
-Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process, but these tips will show you how to get the most out of your error events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first three options are all things you can do in [sentry.io](https://sentry.io), whereas the remaining one is something you'll do in the SDK.
+These tips will help you manage your attachment quota and are ordered from easiest (or least time-consuming) to most challenging (or potentially time-consuming). The first three can be done in [sentry.io](https://sentry.io). The last one is something you'll do in your SDK.
 
 ## Before You Begin: Check Your Quota Usage
 
@@ -38,13 +38,13 @@ Once your attachments volume is approaching or has exceeded the quota, teammates
 
 ### Increasing Quotas
 
-If you're dropping attachments that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either increasing your [reserved](#reserved-volume) or [on-demand](#on-demand-budget) quota.
+If you're dropping attachments that you want to keep because you've exceeded your quota, add to your quota at any time during your billing period by either increasing your [reserved volume or pay-as-you-go](/pricing/#pricing-how-it-works) budget.
 
 When you exceed your quota threshold, the server will respond with a 429 HTTP status code, which communicates to SDKs and clients to stop sending events and thus their associated attachments. This status code comes with a `Retry-After` header that indicates the time for which this rate limit is active. However, clients are not supposed to retry events, but instead drop events until the rate limit has expired, to prevent queue backlogs. Note, that since event ingestion and rate limiting happen asynchronously, the 429 HTTP status code is always slightly delayed.
 
 To increase your quota, go to **Settings > Subscription** and click the "Manage Subscription" button to access your subscription options. When you increase your quota, the change goes into effect immediately.
 
-If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more attachments volume and purchase on-demand volume, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
+If you're on a Developer plan and want to increase your quota, you'll need to upgrade to a Team or Business plan. On these plans you can prepay for more attachments volume and purchase pay-as-you-go budget, as needed. Learn about Sentry's plans on our [pricing page](https://sentry.io/pricing/).
 
 <Note>
 
@@ -54,13 +54,13 @@ If you upgrade from Team to Business mid-billing period, your on-demand pricing 
 
 ### Reserved Volume
 
-If the amount of data you need for attachments is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than on-demand volume since you prepay for it. It also allows you to choose the amount of data you want to have available for attachments beforehand rather than just setting an arbitrary on-demand budget. Learn more about [reserved volume](/pricing/#prepaid-reserved-capacity) in our pricing documentation.
+If the amount of data you need for attachments is steadily increasing, you may want to increase your reserved capacity or volume. Reserved volume is less expensive than pay-as-you-go budget since you prepay for it. Learn more about [reserved volume](/pricing/#pricing-how-it-works) in our pricing documentation.
 
 You shouldn't increase your reserved volume if you think your need for more events is temporary, since [reducing your reserved volume is tied to your billing period](#decreasing-quotas).
 
-### On-Demand Budget
+### Pay-as-you-go Budget
 
-If you need to increase your attachments quota temporarily, we recommend that you add or increase on-demand budget. This is ideal for situations like rolling out a new version of your application where you anticipate receiving more data for the month. To add on-demand capacity or volume, you enter a monthly maximum budget on either a shared or per-category (errors, transactions, and attachments) basis. Learn more about [on-demand volume](/pricing/#on-demand-capacity) in our pricing documentation.
+If you need to increase your attachments quota temporarily, we recommend that you add or increase your pay-as-you-go budget. This is ideal for situations like rolling out a new version of your application where you anticipate receiving more data for the month. Learn more about our pricing model [here](/pricing/#pricing-how-it-works).
 
 ### Decreasing Quotas
 
@@ -72,11 +72,9 @@ If you have an annual billing period, plan downgrades and decreases in reserved 
 
 </Alert>
 
-Changes to on-demand volume typically go into effect immediately and are guaranteed to go into effect within 24 hours. However, you can't decrease your on-demand budget to less than what you've consumed in the current period.
+Changes to pay-as-you-go budget typically go into effect immediately and are guaranteed to go into effect within 24 hours. However, you can't decrease your pay-as-you-go budget to less than what you've consumed in the current period.
 
-To decrease your quota, go to **Settings > Subscription** and click "Manage Subscriptions". When you reach the "Review & Confirm" step, the date that these changes go into effect will be displayed:
-
-![The Review & Confirm step of a subscription update.](./img/review-subscription.png)
+To decrease your quota, go to **Settings > Subscription** and click "Manage Subscriptions". When you reach the "Review & Confirm" step, the date that these changes go into effect will be displayed.
 
 <Note>
 
@@ -96,6 +94,6 @@ While you can't set filters for attachments directly, when you set inbound filte
 
 ## Attachments Size
 
-To avoid using up your attachments quota — which is based on size and not number of instances of attachments data sent — or having the attachment dropped entirely, consider limiting the size of values passed into Sentry's APIs. For example, if your application attaches application state or request bodies to Sentry events, truncate them first.
+To avoid using up your attachments quota (which is based on size rather than the number of attachments sent), or having the attachment dropped entirely, consider limiting the size of values passed into Sentry's APIs. For example, if your application attaches application state or request bodies to Sentry events, truncate them first.
 
 For more information, refer to our [Size Limits](/concepts/data-management/size-limits) guide.
