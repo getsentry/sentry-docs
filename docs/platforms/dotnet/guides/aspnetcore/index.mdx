@@ -27,6 +27,8 @@ To enable tracing integration for ASP.NET Core, refer to <PlatformLink to="/trac
 
 ## Install
 
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
@@ -47,33 +49,14 @@ This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extens
 
 The simplest way to initialize Sentry in ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-7.0).
 
-When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information:
+When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information. The SDK provides this as extension methods to support ASP.NET Core `2.X`, `3.X`, and `5.X` and later:
 
-### ASP.NET Core 6.0:
-
-```csharp
+```csharp  {tabTitle:WebApplication}
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseSentry(); // Initialize Sentry
 ```
 
-```fsharp
-open Microsoft.AspNetCore.Builder
-open Microsoft.Extensions.Hosting
-open Microsoft.AspNetCore.Hosting
-
-[<EntryPoint>]
-let main args =
-    let builder = WebApplication.CreateBuilder(args)
-    builder.WebHost.UseSentry() // you'll need to include Microsoft.AspNetCore.Hosting.
-
-    app.Run()
-
-    0 // Exit code
-```
-
-### ASP.NET Core 3.0
-
-```csharp
+```csharp {tabTitle:IHostBuilder}
 public static IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)
         .ConfigureWebHostDefaults(webBuilder =>
@@ -83,26 +66,8 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         });
 ```
 
-```fsharp
-let CreateHostBuilder args =
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(fun webBuilder ->
-            // Add the following line:
-            webBuilder.UseSentry() |> ignore
-        )
-```
-
-### ASP.NET Core 2.x
-
-```csharp
+```csharp {tabTitle:IWebHost}
 public static IWebHost BuildWebHost(string[] args) =>
-    WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
-```
-
-```fsharp
-let CreateHostBuilder args =
     WebHost.CreateDefaultBuilder(args)
         // Add the following line:
         .UseSentry()
@@ -118,7 +83,7 @@ An example of some of the options that can be configured via `appsettings.json`:
 
 <SignInNote />
 
-```json {filename:appsettings.json}
+```json {filename:appsettings.json} {"onboardingOptions": {"performance": "10"}}
   "Sentry": {
     "Dsn": "___PUBLIC_DSN___",
     "SendDefaultPii": true,
@@ -132,7 +97,11 @@ An example of some of the options that can be configured via `appsettings.json`:
   },
 ```
 
+<OnboardingOption optionId="performance">
+
 Setting `TracesSampleRate` to `1.0` in this example configures Sentry to capture 100% of transactions for tracing. We recommend adjusting this value in production. See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> for further information.
+
+</OnboardingOption>
 
 ### Environment variables
 
@@ -152,7 +121,7 @@ ASP.NET Core will automatically read this environment variable and bind it to th
 
 Finally, any settings that can be configured via `appsettings.json` or environment variables can also be configured via code. Some settings can only be configured in code, such as the `BeforeSend` callback:
 
-```csharp
+```csharp {"onboardingOptions": {"performance": "3"}}
 .UseSentry(options =>
 {
     options.TracesSampleRate = 1.0; // <- Set this to configure automatic tracing
@@ -165,7 +134,7 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 })
 ```
 
-```fsharp
+```fsharp {"onboardingOptions": {"performance": "2"}}
 .UseSentry (fun options ->
     options.TracesSampleRate <- 1.0   // <- Set this to configure automatic tracing
     options.SetBeforeSend(fun event hint ->

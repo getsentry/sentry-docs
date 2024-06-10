@@ -8,6 +8,8 @@ Sentry provides an integration with AWS Lambda ASP.NET Core Server through the [
 
 ## Install
 
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
@@ -20,7 +22,7 @@ dotnet add package Sentry.AspNetCore -v {{@inject packages.version('sentry.dotne
 
 You can combine this integration with a logging library like `log4net`, `NLog`, or `Serilog` to include both request data as well as your logs as breadcrumbs. The logging ingrations also capture events when an error is logged.
 
-### Configuring
+### Configure
 
 All `ASP.NET Core` configurations are valid here. But one configuration in particular is relevant.
 
@@ -28,16 +30,16 @@ All `ASP.NET Core` configurations are valid here. But one configuration in parti
 
 <SignInNote />
 
-```csharp
+```csharp {"onboardingOptions": {"performance": "12-14"}}
 public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFunction
 {
     protected override void Init(IWebHostBuilder builder)
     {
         builder
             // Add Sentry
-            .UseSentry(o =>
+            .UseSentry(options =>
             {
-                o.Dsn = "___PUBLIC_DSN___";
+                options.Dsn = "___PUBLIC_DSN___";
                 // When configuring for the first time, to see what the SDK is doing:
                 o.Debug = true;
                 // Set TracesSampleRate to 1.0 to capture 100%
@@ -45,7 +47,7 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
                 // We recommend adjusting this value in production
                 o.TracesSampleRate = 1.0;
                 // Required in Serverless environments
-                o.FlushOnCompletedRequest = true;
+                options.FlushOnCompletedRequest = true;
             })
             .UseStartup<Startup>();
     }
