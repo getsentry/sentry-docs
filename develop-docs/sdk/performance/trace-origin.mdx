@@ -1,0 +1,68 @@
+---
+title: "Trace Origin"
+---
+
+Trace origin indicates what created a trace or a span. Not all traces and spans contain enough information
+to tell whether the user or what precisely in the SDK created it. Origin solves this problem. Origin can be sent with
+the <Link to="/sdk/event-payloads/contexts/#trace-context">trace context</Link> or <Link to="/sdk/event-payloads/span/">spans</Link>.
+The SDKs should set this value automatically. It is not expected to be set manually by users. The value for origin should rarely change so that we can run proper analytics on them.
+
+
+The origin is of type `string` and consists of four parts: `<type>.<category>.<integration-name>.<integration-part>`.
+Only the first is mandatory. The parts build upon each other, meaning it is forbidden
+to skip one part. For example, you may send parts one and two but aren't allowed to send parts one and three without part two.
+
+`type`
+
+: _Required_. Can be either `manual` or `auto`. `manual` indicates that the user created the trace or span, `auto` indicates
+that the SDK or some integration created it.
+
+`category` 
+
+: _Optional_. Is the category of the trace or span, and it must be a category of <Link to="/sdk/performance/span-operations/#currently-used-categories">span operations</Link>. For example, `http`, `db`, `ui`, `navigation`, `file`, `browser`, `rpc`, etc.
+
+`integration-name` 
+
+: _Optional_. Is the name of the integration of the SDK that created the trace or span. 
+
+`integration-part`
+
+: _Optional_. Is the part of the integration of the SDK that created the trace or span. This is only useful when one integration creates multiple traces or spans, and you'd like to differentiate. Therefore, most of the time, this will be omitted.
+
+
+All parts can only contain:
+
+* Alphanumeric characters: `a-z` , `A-Z` , and `0-9`.
+* Underscores: `_`
+
+
+### Examples
+
+- `manual`
+- `auto`
+- `auto.file`
+- `auto.navigation`
+- `auto.app.start`
+- `auto.ui.swift_ui`
+- `auto.ui.view_controller`
+- `auto.ui.jetpack_compose`
+- `auto.ui.activity`
+- `auto.navigation.jetpack_compose`
+- `auto.http.okhttp`
+- `auto.http.http_client_5`
+- `auto.http.client.stream`
+- `auto.db.core_data`
+- `auto.db.graphql`
+
+Origins of type `manual` can also have categories and integration names. For example, for the <Link to="/sdk/performance/time-to-initial-full-display/">time to display feature</Link>, the user manually calls an API  of the SDK,
+creating a span. In this case, the SDK can tell what created the span, but the user did it manually. On the other hand, the SDK also
+automatically creates a span. In this case we end up with the following origins:
+
+- `manual.ui.time_to_display`
+- `auto.ui.time_to_display`
+
+## See also:
+
+- <Link to="/sdk/event-payloads/span/">Span Interface</Link>
+- <Link to="/sdk/event-payloads/contexts/#trace-context">Trace Context</Link>
+- Related [RFC](https://github.com/getsentry/rfcs/pull/73/);

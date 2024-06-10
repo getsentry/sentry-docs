@@ -1,0 +1,283 @@
+---
+title: 'Span Operations'
+---
+
+Span operations are a short code identifying the type of operation the span is measuring. Span operations are low cardinality attributes - they should be as general as possible while still being human readable and useful. They should avoid including high cardinality data like IDs and URLs.
+
+Operations are expected to follow [OpenTelemetry's semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md) as much as possible.
+
+It's important to keep categories consistent between SDKs and integrations as they are used by Sentry in the [Operations Breakdown](https://docs.sentry.io/product/sentry-basics/tracing/event-detail/#operations-breakdown) feature. For example, both `db.init` and `db.query` will be categorized as database operations (`db`). The default operations breakdown config can be seen [here](https://github.com/getsentry/sentry/blob/9f36200d665209c9328f5ccc21135d3de9b65318/src/sentry/projectoptions/defaults.py#L80).
+
+<Alert title="Note" level="info">
+  Span operations should be lower case and use snake_case
+</Alert>
+
+# List of Operations
+
+The following tables contain examples of operations used by the SDKs and Sentry product. The usage column in the table contains examples of using that operation category, but are not hard recommendations for operation usage. As long as categories stay consistent, SDK developers are free to choose actions and identifiers that best match the use case they are instrumenting.
+
+If a span operation is not provided, the value of `default` is set by Relay. The value `default` can also be set by SDKs, for example, to avoid breaking changes when no longer requiring `op` to be set on `TransactionContext`.
+
+## General
+
+| Category | Usage | Description                                         |
+| -------- | ----- | --------------------------------------------------- |
+| mark     |       | A general point-in-time span (span with 0 duration) |
+| function |       | The time it took for a general function to execute  |
+
+## Browser
+
+| Category   | Usage                     | Description                                                                                                                                                                              |
+| ---------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pageload   |                           | A full page load of a web application.                                                                                                                                                   |
+| navigation |                           | Client-side browser history change in a web application.                                                                                                                                 |
+| resource   |                           | Resource as per [Performance Resource Timing](https://w3c.github.io/resource-timing/#sec-performanceresourcetiming). Defaults to `resource.other` if resource cannot be indentified.     |
+|            | resource.script           |                                                                                                                                                                                          |
+|            | resource.link             |                                                                                                                                                                                          |
+|            | resource.css              |                                                                                                                                                                                          |
+|            | resource.img              |                                                                                                                                                                                          |
+| browser    |                           | Usage of browser APIs or functionality                                                                                                                                                   |
+|            | browser.paint             |                                                                                                                                                                                          |
+| measure    |                           | Usage of [performance.measure() API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)                                                                               |
+| ui         |                           |                                                                                                                                                                                          |
+|            | ui.task                   | A task that is taken on the main UI thread. Typically used to indicate to users about things like the [Long Tasks API](https://developer.mozilla.org/en-US/docs/Web/API/Long_Tasks_API). |
+|            | ui.render                 | Time it takes to render a UI element                                                                                                                                                     |
+|            | ui.update                 | Time it takes to update a UI element                                                                                                                                                     |
+|            | ui.action                 | A user interaction                                                                                                                                                                       |
+|            | ui.action.click           |                                                                                                                                                                                          |
+| http       |                           |                                                                                                                                                                                          |
+|            | http.client               |                                                                                                                                                                                          |
+|            | http.graphql.query        |                                                                                                                                                                                          |
+|            | http.graphql.mutation     |                                                                                                                                                                                          |
+|            | http.graphql.subscription |                                                                                                                                                                                          |
+| serialize  |                           | Serialization of data                                                                                                                                                                    |
+
+### JS Frameworks
+
+JS Frameworks should be prepended with the `ui` category for operations related to UI components.
+
+| Category    | Usage                           | Description                                                          |
+| ----------- | ------------------------------- | -------------------------------------------------------------------- |
+| ui.react    |                                 | Spans related to [React](https://reactjs.org/) components            |
+|             | ui.react.render                 |                                                                      |
+|             | ui.react.update                 |                                                                      |
+|             | ui.react.mount                  |                                                                      |
+| ui.vue      |                                 | Spans related to [Vue.js](https://vuejs.org/) components             |
+|             | ui.vue.activate                 |                                                                      |
+|             | ui.vue.create                   |                                                                      |
+|             | ui.vue.destroy                  |                                                                      |
+|             | ui.vue.mount                    |                                                                      |
+|             | ui.vue.update                   |                                                                      |
+| ui.svelte   |                                 | Spans related to [Svelte](https://svelte.dev/) components            |
+|             | ui.svelte.init                  |                                                                      |
+|             | ui.svelte.update                |                                                                      |
+| ui.angular  |                                 | Spans related to [Angular](https://angular.io/) components           |
+|             | ui.angular.init                 |                                                                      |
+|             | ui.angular.routing              |                                                                      |
+|             | ui.angular.[methodName]         | Created when a method wrapped with `TraceMethodDecorator` was called |
+| ui.ember    |                                 | Spans related to [EmberJS](https://emberjs.com/) components          |
+|             | ui.ember.route.before_model     |                                                                      |
+|             | ui.ember.route.model            |                                                                      |
+|             | ui.ember.route.after_model      |                                                                      |
+|             | ui.ember.route.setup_controller |                                                                      |
+| ui.livewire |                                 | Spans related to [Livewire](https://laravel-livewire.com/)           |
+|             |                                 | components                                                           |
+|             | ui.livewire.component           |                                                                      |
+
+## Web Server
+
+Web server related spans should aim to follow OpenTelemetry's [HTTP](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md) and [RPC](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md) semantic conventions when possible.
+
+| Category        | Usage                                 | Description                                                        |
+| --------------- | ------------------------------------- | ------------------------------------------------------------------ |
+| http            |                                       | Spans related to http operations                                   |
+|                 | http.client                           |                                                                    |
+|                 | http.server                           |                                                                    |
+| websocket       |                                       |                                                                    |
+|                 | websocket.server                      |                                                                    |
+| rpc             |                                       | Spans related to remote procedure calls (RPC)                      |
+| grpc            |                                       | Usage of the [gRPC framework](https://grpc.io/)                    |
+| graphql         |                                       | a GraphQL operation                                                |
+|                 | graphql.execute                       |                                                                    |
+|                 | graphql.parse                         |                                                                    |
+|                 | graphql.resolve                       |                                                                    |
+|                 | graphql.request                       |                                                                    |
+|                 | graphql.query                         |                                                                    |
+|                 | graphql.mutation                      |                                                                    |
+|                 | graphql.subscription                  |                                                                    |
+|                 | graphql.validate                      |                                                                    |
+| subprocess      |                                       | Creating new processes                                             |
+|                 | subprocess.wait                       |                                                                    |
+|                 | subprocess.communicate                |                                                                    |
+| middleware      |                                       | Usage of webserver middlewares                                     |
+|                 | middleware.express                    |                                                                    |
+|                 | middleware.handle                     |                                                                    |
+|                 | middleware.starlette                  |                                                                    |
+|                 | middleware.django                     |                                                                    |
+| view            |                                       | Rendering of a view                                                |
+|                 | view.process_action.action_controller |                                                                    |
+|                 | view.render                           |                                                                    |
+| template        |                                       |                                                                    |
+|                 | template.init                         |                                                                    |
+|                 | template.parse                        |                                                                    |
+|                 | template.render                       |                                                                    |
+|                 | template.django.render                |                                                                    |
+|                 | template.render_template.action_view  |                                                                    |
+| event           |                                       |                                                                    |
+|                 | event.django                          | Spans related to Django signals                                    |
+| function        |                                       |                                                                    |
+| function.remix  |                                       | Spans related to [Remix](https://remix.run/) data fetchers         |
+|                 | function.remix.document_request       |                                                                    |
+|                 | function.remix.action                 |                                                                    |
+|                 | function.remix.loader                 |                                                                    |
+| function.nextjs |                                       | Spans related to [NextJS](https://nextjs.org/) data fetchers       |
+| serialize       |                                       | Serialization of data                                              |
+| console         |                                       | Accessing web servers through the command line (ex. Rails console) |
+|                 | console.command                       |                                                                    |
+| file            |                                       | Operations on the file system (internal or external)               |
+| app             |                                       |                                                                    |
+|                 | app.bootstrap                         |                                                                    |
+|                 | app.php.autoload                      |                                                                    |
+
+## Database
+
+Databased related spans are expected to follow OpenTelemetry's [Database](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md) semantic conventions when possible.
+
+| Category | Usage                | Description                |
+| -------- | -------------------- | -------------------------- |
+| db       |                      | An operation on a database |
+|          | db.query             |                            |
+|          | db.sql.query         |                            |
+|          | db.sql.prisma        |                            |
+|          | db.redis             |                            |
+|          | db.sql.active_record |                            |
+|          | db.sql.execute       |                            |
+|          | db.sql.transaction   |                            |
+| cache    |                      |                            |
+|          | cache.get_item       |                            |
+|          | cache.clear          |                            |
+|          | cache.delete_item    |                            |
+|          | cache.save           |                            |
+
+## Serverless (FAAS)
+
+Serverless related spans are expected to follow OpenTelemetry's [Function as a Service](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md) (FaaS) semantic conventions when possible.
+
+| Category       | Usage                    | Description                                 |
+| -------------- | ------------------------ | ------------------------------------------- |
+| http           |                          |                                             |
+|                | http.client              |                                             |
+|                | http.client.stream       |                                             |
+| grpc           |                          |                                             |
+|                | grpc.client              |                                             |
+| function.gcp   |                          | Invocations of a GCP function               |
+|                | function.gcp.event       |                                             |
+|                | function.gcp.cloud_event |                                             |
+|                | function.gcp.http        |                                             |
+| function.aws   |                          | Invocations of an AWS Lambda function       |
+| function.azure |                          | Invocations of an Azure serverless function |
+
+## Mobile
+
+| Category   | Usage                     | Description                   |
+| ---------- | ------------------------- | ----------------------------- |
+| app        |                           | Data about the mobile app     |
+|            | app.start                 |                               |
+|            | app.start.warm            |                               |
+|            | app.start.cold            |                               |
+| ui         |                           | An operation on a mobile UI   |
+|            | ui.load                   |                               |
+|            | ui.load.initial_display   |                               |
+|            | ui.load.full_display      |                               |
+|            | ui.action                 |                               |
+|            | ui.action.click           |                               |
+|            | ui.action.swipe           |                               |
+|            | ui.action.scroll          |                               |
+| navigation |                           | Navigating to another screen  |
+| file       |                           | Operations on the file system |
+|            | file.read                 |                               |
+|            | file.write                |                               |
+|            | file.copy                 |                               |
+|            | file.delete               |                               |
+|            | file.open                 |                               |
+|            | file.rename               |                               |
+| serialize  |                           | Serialization of data         |
+| http       |                           |                               |
+|            | http.client               |                               |
+|            | http.graphql.query        |                               |
+|            | http.graphql.mutation     |                               |
+|            | http.graphql.subscription |                               |
+
+## Desktop
+
+| Category  | Usage                     | Description                  |
+| --------- | ------------------------- | ---------------------------- |
+| app       |                           | Data about the desktop app   |
+|           | app.start                 |                              |
+|           | app.start.warm            |                              |
+|           | app.start.cold            |                              |
+| ui        |                           | An operation on a desktop UI |
+|           | ui.load                   |                              |
+|           | ui.action                 |                              |
+|           | ui.action.click           |                              |
+|           | ui.action.swipe           |                              |
+|           | ui.action.scroll          |                              |
+| serialize |                           | Serialization of data        |
+| http      |                           |                              |
+|           | http.client               |                              |
+|           | http.graphql.query        |                              |
+|           | http.graphql.mutation     |                              |
+|           | http.graphql.subscription |                              |
+
+## Messages/Queues
+
+Messages/Queue spans are expected follow OpenTelemetry's [Messaging](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md) semantic conventions when possible.
+
+| Category | Usage                  | Description |
+| -------- | ---------------------- | ----------- |
+| topic    |                        |             |
+|          | topic.send             |             |
+|          | topic.receive          |             |
+|          | topic.process          |             |
+| queue    |                        |             |
+|          | queue.task             |             |
+|          | queue.task.celery      |             |
+|          | queue.task.rq          |             |
+|          | queue.task.delayed_job |             |
+|          | queue.task.active_job  |             |
+|          | queue.submit           |             |
+|          | queue.submit.celery    |             |
+|          | queue.resque           |             |
+|          | queue.sidekiq          |             |
+
+# Currently Used Categories
+
+| Category   | Description |
+| ---------- | ----------- |
+| ai         |             |
+| app        |             |
+| browser    |             |
+| console    |             |
+| db         |             |
+| file       |             |
+| function   |             |
+| graphql    |             |
+| graphql    |             |
+| grpc       |             |
+| http       |             |
+| mark       |             |
+| measure    |             |
+| middleware |             |
+| navigation |             |
+| pageload   |             |
+| queue      |             |
+| resource   |             |
+| rpc        |             |
+| serialize  |             |
+| socket     |             |
+| subprocess |             |
+| template   |             |
+| topic      |             |
+| ui         |             |
+| view       |             |
+| websocket  |             |
