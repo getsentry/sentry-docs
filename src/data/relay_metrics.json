@@ -73,12 +73,6 @@
   },
   {
     "type": "Counter",
-    "name": "dynamic_sampling_decision",
-    "description": "Counter for dynamic sampling decision.\n\nThis metric is tagged with:\n- `decision`: \"drop\" if dynamic sampling drops the envelope, else \"keep\".",
-    "features": []
-  },
-  {
-    "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
     "features": []
@@ -460,12 +454,24 @@
     "features": []
   },
   {
+    "type": "Histogram",
+    "name": "partition_splits",
+    "description": "Measures how many splits were performed when sending out a partition.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "processing.event.produced",
     "description": "Number of messages placed on the Kafka queues.\n\nWhen Relay operates as Sentry service and an Envelope item is successfully processed, each\nEnvelope item results in a dedicated message on one of the ingestion topics on Kafka.\n\nThis metric is tagged with:\n- `event_type`: The kind of message produced to Kafka.\n- `namespace` (only for metrics): The namespace that the metric belongs to.\n- `is_segment` (only for event_type span): `true` the span is the root of a segment.\n- `has_parent` (only for event_type span): `false` if the span is the root of a trace.\n- `platform` (only for event_type span): The platform from which the span was spent.\n- `metric_type` (only for event_type metric): The metric type, counter, distribution,\ngauge or set.\n- `metric_encoding` (only for event_type metric): The encoding used for distribution and\nset metrics.\n\nThe message types can be:\n\n- `event`: An error or transaction event. Error events are sent to `ingest-events`,\ntransactions to `ingest-transactions`, and errors with attachments are sent to\n`ingest-attachments`.\n- `attachment`: An attachment file associated with an error event, sent to\n`ingest-attachments`.\n- `user_report`: A message from the user feedback dialog, sent to `ingest-events`.\n- `session`: A release health session update, sent to `ingest-sessions`.",
     "features": [
       "processing"
     ]
+  },
+  {
+    "type": "Counter",
+    "name": "processing.feedback_attachments",
+    "description": "The number of attachments processed in the same envelope as a user_report_v2 event.",
+    "features": []
   },
   {
     "type": "Counter",

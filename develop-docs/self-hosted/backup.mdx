@@ -1,0 +1,196 @@
+---
+title: "Self-Hosted Backup & Restore"
+---
+
+## Partial JSON backup
+
+If you need a quick way to backup, view, examine, and restore data from your Sentry instance and
+don't need historical event data, you can use any of the following methods:
+
+- A custom, scoped backup via `./sentry-admin.sh` (on self-hosted versions >=23.11.1).
+- Running the included backup and restore scripts in the `self-hosted/scripts` directory (on
+  self-hosted versions >=23.3.1).
+- Manually calling the `export` and `import` commands in the `web` docker container.
+
+These commands should be run from your `self-hosted` directory, and will save and load "low-volume"
+data only.
+
+### What's included?
+
+The partial JSON backup is just that - partial. Its purpose is to include "low-volume" data like
+users, organizations, and server configurations, while excluding "high-volume" data like events,
+issues, or anything that references external files.
+
+Specifically, the following data is generally included in a partial JSON backup:
+
+- Global configuration (options, admin accounts, API keys and authorizations, etc).
+- Sentry apps, service hooks, and basic integrations.
+- Users, their authenticators, notifications, and recent/saved searches.
+- Organizations, their members, and their settings.
+- Projects, their members, and their settings.
+- Teams, their members, and their settings.
+- Alert rules, incidents, and monitors.
+
+### Backup
+
+#### Basic usage
+
+Depending on which version of `self-hosted` you're running, you may perform a simple JSON backup as
+follows:
+
+```shell
+# If using self-hosted version <= 23.3.0:
+docker compose run -v $(pwd)/sentry:/sentry-data/backup  --rm -T -e SENTRY_LOG_LEVEL=CRITICAL web export /sentry-data/backup/backup.json
+
+# If using self-hosted version >= 23.3.1:
+./scripts/backup.sh
+
+# If using self-hosted version >= 24.1.0:
+./scripts/backup.sh [user | organization | config | global]
+```
+
+<Alert title="Note" level="info">
+<markdown>
+
+If you choose to backup using the `docker compose run ...` command, omitting the `-T` or `-e
+SENTRY_LOG_LEVEL=CRITICAL` arguments will cause your backup file to have logging lines mixed in,
+which you will then need to manually remove.
+
+</markdown>
+</Alert>
+
+#### Advanced usage
+
+If you'd like more granular control over what gets backed up, and are using a `self-hosted` release
+greater than or equal to 23.11.1, you may use the `./sentry-admin.sh export` command instead. In
+particular, this command allows you export only a certain ***scope*** of data. There are four such
+scopes:
+
+- `User`: Exports data associated with Sentry users only, like their emails, permissions, and login
+  credentials. Exports in this scope can be filtered by username. Exports in this scope can be
+  created using the `./sentry-admin.sh export users ...` CLI command.
+- `Organization`: Exports data owned by a set of Sentry organizations, and the users that are
+  members of that set. Exports in this scope can be filtered by organization slug. Exports in this
+  scope can be created using the `./sentry-admin.sh export organizations ...` CLI command.
+- `Config`: Exports all instance-wide configurations, like global options and admin credentials.
+  Exports in this scope can be created using the `./sentry-admin.sh export config ...` CLI command.
+- `Global`: Exports all exportable data. Exports in this scope can be created using the
+  `./sentry-admin.sh export global ...` CLI command. This command is equivalent to running
+  `backup.sh`.
+
+For more detailed information, including how to encrypt a backup, see `./sentry-admin.sh export
+--help`.
+
+#### Encryption
+
+The `./sentry-admin.sh` CLI supports encryption and decryption of backups using 2048-bit asymmetric
+RSA keys. These keys can be stored manually as files accessible from the local file system:
+
+```shell
+# Encrypt and backup using locally stored keys.
+./sentry-admin.sh export global /path/to/export.tar --encrypt-with /path/to/public/key/rsa.pub
+
+# Decrypt and restore using locally stored keys.
+./sentry-admin.sh import global /path/to/export.tar --decrypt-with /path/to/private/key/rsa.priv
+```
+
+Alternatively, if you are using Google Cloud Platform's [Key Management
+Service](https://cloud.google.com/security/products/security-key-management?hl=en) to manage keys on
+your behalf, you can use that service directly from the CLI instead:
+
+
+```shell
+# Authenticate with Google Cloud (requires the `gcloud` CLI to be installed):
+gcloud auth login
+
+# Make a local JSON file specifying a key created via https://cloud.google.com/kms/docs/create-key:
+cat <<EOT >> /path/to/json/spec/for/your/key.json
+{
+    "project_id": "<YOUR_GCP_PROJECT_ID>",
+    "location": "<YOUR_KEY_LOCATION>",
+    "key_ring": "<YOUR_KEY_RING_NAME>",
+    "key": "<YOUR_KEY_NAME>",
+    "version": "<YOUR_KEY_VERSION>"
+}
+EOT
+
+# Encrypt and backup using GCP KMS:
+./sentry-admin.sh export global /path/to/export.tar --encrypt-with-gcp-kms /path/to/json/file/identifying/your/kms/key.json
+
+# Decrypt and restore using GCP KMS:
+./sentry-admin.sh import global /path/to/export.tar --decrypt-with-gcp-kms /path/to/json/spec/for/your/key.json
+```
+
+Note that when encryption is used, the output file will be a tarball (`.tar`) instead of a single
+JSON file (`.json`). 
+
+### Restore
+
+<Alert level="warning">
+
+Restoring a partial backup using this method will cause existing data in these tables to be deleted!
+
+</Alert>
+
+Once you have generated a backup, the easiest way to restore it is to place it under the `sentry`
+directory in your main `self-hosted` repo, next to the config files. This directory automatically
+gets mounted to `/etc/sentry` so you can run the following to restore your backup:
+
+```shell
+# If using self-hosted version <= 23.3.0:
+docker compose run --rm -T web import /etc/sentry/backup.json
+
+# If using self-hosted version >= 23.3.1:
+./scripts/restore.sh
+
+# If using self-hosted version >= 24.1.0:
+./scripts/restore.sh [user | organization | config | global]
+```
+
+If you don't see any errors and the process exits with code `0`, congratulations, you have just
+restored your backup.
+
+<Alert level="warning">
+
+We strongly recommended that you restore your backup on the <strong>same version of Sentry</strong>
+on a fresh install (empty database but migrations are run). Otherwise, you are very likely to hit
+errors and may corrupt your database.
+
+</Alert>
+
+#### Advanced usage
+
+If you'd like more granular control over what gets restored from a given backup, and are using a
+`self-hosted` release greater than or equal to 23.11.1, you may use the `./sentry-admin.sh import`
+command instead. This command allows you to control the scope of data that gets imported, as well as
+how it interacts with data already loaded onto the instance.
+
+For more detailed information, including how to decrypt an encrypted backup, see `./sentry-admin.sh
+export --help`.
+
+## Full backup
+
+Another way to backup and restore Sentry is to backup and restore all Docker volumes that it uses. This
+is not the officially supported flow, so do so at your own risk. All volumes that hold critical long-term
+data are already defined as global volumes at install time and are prefixed with `sentry-`:
+
+- `sentry-data`
+- `sentry-postgres`
+- `sentry-redis`
+- `sentry-zookeeper`
+- `sentry-kafka`
+- `sentry-clickhouse`
+- `sentry-symbolicator`
+
+<Alert title="Note" level="info">
+
+Only backing up and restoring these volumes should bring back all persisted data. If you also need
+to back up in-flight data, we recommend backing up any project-specific volumes that <code>docker
+compose</code> automatically creates, typically with the <code>sentry_self_hosted_sentry-</code>
+prefix.
+
+</Alert>
+
+Docker documents [how to backup and restore
+volumes](https://docs.docker.com/storage/volumes/#backup-restore-or-migrate-data-volumes) on their
+documentation. You may use different methods as long as the volumes can be read back without issues.
