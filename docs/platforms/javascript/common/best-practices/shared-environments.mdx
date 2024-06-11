@@ -1,5 +1,5 @@
 ---
-title: Browser Extensions
+title: Shared Environments / Browser Extensions
 sidebar_order: 50
 description: Learn how to use Sentry in shared environments (for example in browser extensions or VSCode extensions).
 notSupported:
@@ -19,11 +19,11 @@ keywords:
     "NodeClient",
     "shared environment",
     "browser extension",
-    "VSCode extension"
+    "VSCode extension",
   ]
 ---
 
-When setting up Sentry in a shared environment where multiple Sentry instances may run, for example, in a browser extension or similar, you should **not use `Sentry.init()`**, as this will pollute the global state. If your browser extension uses `Sentry.init()`, and the website the extension is running on also uses Sentry, the extension may send events to the website's Sentry project, or vice versa.
+When setting up Sentry in a shared environment where multiple Sentry instances may run, for example, in a browser extension or plugin architecture, you should **not use `Sentry.init()`**, as this will pollute the global state. If your browser extension uses `Sentry.init()`, and the website the extension is running on also uses Sentry, the extension may send events to the website's Sentry project, or vice versa.
 
 For such scenarios, you have to set up a client manually as seen in the example below.
 In addition, you should also avoid adding any integrations that use global state, like `Breadcrumbs` or `GlobalHandlers`. Furthermore, some default integrations that use the global state have to be filtered as in the example below.
@@ -41,8 +41,13 @@ import {
 } from "@sentry/browser";
 
 // filter integrations that use the global variable
-const integrations = getDefaultIntegrations({}).filter(defaultIntegration => {
-  return !['BrowserApiErrors', 'TryCatch', 'Breadcrumbs', 'GlobalHandlers'].includes(defaultIntegration.name);
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return ![
+    "BrowserApiErrors",
+    "TryCatch",
+    "Breadcrumbs",
+    "GlobalHandlers",
+  ].includes(defaultIntegration.name);
 });
 
 const client = new BrowserClient({
@@ -55,11 +60,10 @@ const client = new BrowserClient({
 const scope = new Scope();
 scope.setClient(client);
 
-client.init() // initializing has to be done after setting the client on the scope
+client.init(); // initializing has to be done after setting the client on the scope
 
 // You can capture exceptions manually for this client like this:
 scope.captureException(new Error("example"));
-
 ```
 
 To make it a bit simpler but somewhat still maintain "Let Sentry handle unhandled errors" you can use the following code:
