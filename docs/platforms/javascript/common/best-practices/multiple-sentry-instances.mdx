@@ -40,7 +40,9 @@ Creating multiple Sentry clients is **not recommended** in general, as it can le
 
 To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
 This also helps to prevent tracking of any parent application errors in case your application is integrated
-inside of it. In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
+inside of it. To ensure you don't conflict with your parent application, you should also remove any integrations that rely on global state.
+
+In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`. 
 
 <SignInNote />
 
@@ -53,11 +55,23 @@ import {
   Scope,
 } from "@sentry/browser";
 
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter(
+  (defaultIntegration) => {
+    return ![
+      "BrowserApiErrors",
+      "TryCatch",
+      "Breadcrumbs",
+      "GlobalHandlers",
+    ].includes(defaultIntegration.name);
+  },
+);
+
 const client = new BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
-  integrations: defaultIntegrations,
+  integrations: integrations,
 });
 
 const scope = new Scope();
@@ -100,11 +114,23 @@ function happyIntegration() {
   }
 }
 
+// filter integrations that use the global variable
+const integrations = Sentry.getDefaultIntegrations({}).filter(
+  (defaultIntegration) => {
+    return ![
+      "BrowserApiErrors",
+      "TryCatch",
+      "Breadcrumbs",
+      "GlobalHandlers",
+    ].includes(defaultIntegration.name);
+  },
+);
+
 const client1 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
+  integrations: [...integrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 1", event);
     return null; // Returning `null` prevents the event from being sent
@@ -116,7 +142,7 @@ const client2 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___", // Can be a different DSN
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
+  integrations: [...integrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 2", event);
     return null; // Returning `null` prevents the event from being sent
