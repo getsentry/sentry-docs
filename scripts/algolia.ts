@@ -37,6 +37,8 @@ const staticHtmlFilesPath = join(process.cwd(), '.next', 'server', 'app');
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID;
 const ALGOLIA_API_KEY = process.env.ALGOLIA_API_KEY;
 const DOCS_INDEX_NAME = process.env.DOCS_INDEX_NAME;
+// If set to true, the script will skip indexing a page if it encounters an error
+const ALOGOLIA_SKIP_ON_ERROR = process.env.ALOGOLIA_SKIP_ON_ERROR === 'true';
 
 if (!ALGOLIA_APP_ID) {
   throw new Error('`ALGOLIA_APP_ID` env var must be configured in repo secrets');
@@ -106,26 +108,38 @@ async function generateAlogliaRecords(pageFrontMatters: FrontMatter[]) {
       .filter(
         frontMatter => !frontMatter.draft && !frontMatter.noindex && frontMatter.title
       )
-      .map(pageFm => {
-        console.log('processing:', pageFm.slug);
-
-        const htmlFile = join(staticHtmlFilesPath, pageFm.slug + '.html');
-        const html = fs.readFileSync(htmlFile).toString();
-
-        const pageRecords = htmlToAlgoliaRecord(
-          html,
-          {
-            title: pageFm.title,
-            url: '/' + pageFm.slug + '/',
-            pathSegments: extrapolate(pageFm.slug, '/').map(x => `/${x}/`),
-            keywords: pageFm.keywords,
-          },
-          '#main'
-        );
-
-        return pageRecords;
-      })
+      .map(getRecords)
   );
 
   return records.flat();
+}
+
+async function getRecords(pageFm: FrontMatter) {
+  console.log('processing:', pageFm.slug);
+
+  try {
+    const htmlFile = join(staticHtmlFilesPath, pageFm.slug + '.html');
+    const html = fs.readFileSync(htmlFile).toString();
+    const pageRecords = await htmlToAlgoliaRecord(
+      html,
+      {
+        title: pageFm.title,
+        url: '/' + pageFm.slug + '/',
+        pathSegments: extrapolate(pageFm.slug, '/').map(x => `/${x}/`),
+        keywords: pageFm.keywords,
+      },
+      '#main'
+    );
+
+    return pageRecords;
+  } catch (e) {
+    const error = new Error(`🔴 Error processing ${pageFm.slug}: ${e.message}`, {
+      cause: e,
+    });
+    if (ALOGOLIA_SKIP_ON_ERROR) {
+      console.error(error);
+      return [];
+    }
+    throw error;
+  }
 }
