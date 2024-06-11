@@ -4,62 +4,38 @@ sidebar_order: 2
 description: "Learn about the experimental features available for Sentry's Apple SDK."
 ---
 
-Want to play with some new experimental features? Try out [View Hierarchy](/platforms/apple/guides/ios/enriching-events/viewhierarchy/), [Time to Full Display (TTFD)](/platforms/apple/guides/ios/tracing/instrumentation/automatic-instrumentation/#time-to-full-display), [MetricKit](/platforms/apple/guides/watchos/configuration/metric-kit/), [Prewarmed App Start Tracing](/platforms/apple/performance/instrumentation/automatic-instrumentation/#prewarmed-app-start-tracing), [Swift Async Stack Traces](/platforms/apple/guides/ios/#stitch-together-swift-concurrency-stack-traces) and [App Launch Profiling](/platforms/apple/profiling/#enable-launch-profiling).
+Do you want to try some new experimental features? Try out <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">Time to Full Display (TTFD)</PlatformLink> to gain insight into how long it takes your view controller to launch and load all of its content, and <PlatformLink to="/profiling/#enable-launch-profiling">App Launch Profiling</PlatformLink> to get detailled profiles for your app launches.
 
-Note, that experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+If you use Swift concurrency, you can also stitch together stack traces of your async code with the `swiftAsyncStacktraces` option. Note that you can enable this in your Objective-C project, but only async code written in Swift will be stitched together.
+
+<Note>
+Experimental features are still a work-in-progress and may have bugs. We recognize the irony.
+</Note>
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    // ...
+
+    // Enable all experimental features
+    options.enableTimeToFullDisplayTracing = true
+    options.enableAppLaunchProfiling = true
+    options.swiftAsyncStacktraces = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    // ...
+
+    // Enable all experimental features
+    options.enableTimeToFullDisplayTracing = YES;
+    options.enableAppLaunchProfiling = YES;
+    options.swiftAsyncStacktraces = YES; // only applies to async code in Swift
+}];
+```
 
 Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
-
-```swift {tabTitle:Swift}
-import Sentry
-
-SentrySDK.start { options in
-    // ...
-
-    // Enable all experimental features
-    options.attachViewHierarchy = true
-    options.enableMetricKit = true
-    options.enableTimeToFullDisplayTracing = true
-    options.swiftAsyncStacktraces = true
-    options.enableAppLaunchProfiling = true
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    // ...
-
-    // Enable all experimental features
-    options.attachViewHierarchy = YES;
-    options.enableMetricKit = YES;
-    options.enableTimeToFullDisplayTracing = YES;
-    options.swiftAsyncStacktraces = YES;
-    options.enableAppLaunchProfiling = YES;
-}];
-```
-
-**Stitch Together Swift Concurrency Stack Traces**
-
-If you use Swift concurrency, this feature will stitch your stack traces together. That means you will be able to see the full stack trace of your async code.
-For this to happen you need to enable the `swiftAsyncStacktraces` option.
-You can also enable this in your Objective-C project, however, only async code written in Swift will be stitched together.
-
-```swift {tabTitle:Swift}
-import Sentry
-
-SentrySDK.start { options in
-    // ...
-    options.swiftAsyncStacktraces = true
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    // ...
-    options.swiftAsyncStacktraces = YES;
-}];
-```
