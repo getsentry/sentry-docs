@@ -133,7 +133,9 @@ async function getRecords(pageFm: FrontMatter) {
 
     return pageRecords;
   } catch (e) {
-    const error = new Error(`🔴 Error processing ${pageFm.slug}: ${e.message}`);
+    const error = new Error(`🔴 Error processing ${pageFm.slug}: ${e.message}`, {
+      cause: e,
+    });
     if (ALOGOLIA_SKIP_ON_ERROR) {
       console.error(error);
       return [];
