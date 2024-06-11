@@ -18,7 +18,7 @@ notSupported:
   - javascript
 ---
 
-The Sentry SDK uses [OpenTelemetry](https://opentelemetry.io/) under the hood. This means that any OpenTelemetry instrumentation that emits spans will automatically be picked up by Sentry - no further configuration needed!
+The Sentry SDK uses [OpenTelemetry](https://opentelemetry.io/) under the hood. This means that any OpenTelemetry instrumentation that emits spans will automatically be picked up by Sentry - no further configuration needed! To start using Sentry and OpenTelemetry together, set up [Tracing and Performance Monitoring with your Sentry SDK](../).
 
 ## Using Custom OpenTelemetry Instrumentation
 
@@ -50,6 +50,12 @@ Any instrumentation added like this will be automatically picked up by Sentry.
 
 If you already have OpenTelemetry set up yourself, you can also use your existing setup.
 
+<Note>
+
+This setup is only needed if you need to add custom span processors or exporters to your OpenTelemetry setup. Most Sentry users can follow standard SDK setup to get OpenTelemetry data with their SDK.
+
+</Note>
+
 In this case, you need to set `skipOpenTelemetrySetup: true` in your `init({})` config, and ensure you setup all the
 components that Sentry needs yourself. In this case, you need to install `@sentry/opentelemetry`, and add the following:
 
@@ -75,7 +81,7 @@ const provider = manuallySetUpOpenTelemetry();
 // We need a custom span processor
 provider.addSpanProcessor(new SentrySpanProcessor());
 // We need a custom propagator and context manager
-provier.register({
+provider.register({
   propagator: new SentryPropagator(),
   contextManager: new Sentry.SentryContextManager(),
 });
