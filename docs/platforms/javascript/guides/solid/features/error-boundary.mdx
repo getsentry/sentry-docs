@@ -1,0 +1,34 @@
+---
+title: Solid Error Boundary
+description: "Learn how to wrap Solid error boundaries to automatically capture errors."
+---
+
+The Solid SDK exports a function to wrap the native Solid error boundary component to automatically capture exceptions
+from inside a component tree and render a fallback component.
+
+Wrap the native Solid `ErrorBoundary` component with `Sentry.withSentryErrorBoundary`.
+
+<SignInNote />
+
+```jsx
+import * as Sentry from "@sentry/solid";
+import { ErrorBoundary } from "solid-js";
+import App from "./app";
+
+Sentry.init({
+  dsn: "__PUBLIC_DSN__",
+  tracesSampleRate: 1.0, //  Capture 100% of the transactions
+});
+
+// Wrap Solid"s ErrorBoundary to automatically capture exceptions
+const SentryErrorBoundary = Sentry.withSentryErrorBoundary(ErrorBoundary);
+
+render(
+  () => (
+    <SentryErrorBoundary fallback={err => <div>Error: {err.message}</div>}>
+      <App />
+    </SentryErrorBoundary>
+  ),
+  document.getElementById("root"),
+);
+```
