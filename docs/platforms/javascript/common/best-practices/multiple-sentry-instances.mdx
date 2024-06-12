@@ -21,11 +21,12 @@ keywords:
     "Browser Extension",
     "VSCode Extension",
     "Widgets",
-    "monorepo"
+    "monorepo",
   ]
 ---
 
 These best practices are relevant for you if you set up Sentry in one of the following use-cases:
+
 - Browser Extensions
 - VSCode Extensions
 - Third-Party Widgets
@@ -40,7 +41,9 @@ Creating multiple Sentry clients is **not recommended** in general, as it can le
 
 To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
 This also helps to prevent tracking of any parent application errors in case your application is integrated
-inside of it. In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
+inside of it. To ensure you don't conflict with your parent application, you should also remove any integrations that rely on global state.
+
+In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
 
 <SignInNote />
 
@@ -48,22 +51,32 @@ inside of it. In this example we use `BrowserClient` from `@sentry/browser` but 
 import {
   BrowserClient,
   defaultStackParser,
-  defaultIntegrations,
+  getDefaultIntegrations,
   makeFetchTransport,
   Scope,
 } from "@sentry/browser";
+
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return ![
+    "BrowserApiErrors",
+    "TryCatch",
+    "Breadcrumbs",
+    "GlobalHandlers",
+  ].includes(defaultIntegration.name);
+});
 
 const client = new BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
-  integrations: defaultIntegrations,
+  integrations: integrations,
 });
 
 const scope = new Scope();
 scope.setClient(client);
 
-client.init() // initializing has to be done after setting the client on the scope
+client.init(); // initializing has to be done after setting the client on the scope
 
 // You can capture exceptions manually for this client like this:
 scope.captureException(new Error("example"));
@@ -86,7 +99,7 @@ import * as Sentry from "@sentry/browser";
 // Very happy integration that'll prepend and append very happy stick figure to the message
 function happyIntegration() {
   return {
-    name: 'Happy',
+    name: "Happy",
     setupOnce() {
       Sentry.addEventProcessor((event) => {
         const self = Sentry.getClient().getIntegration(HappyIntegration);
@@ -96,15 +109,27 @@ function happyIntegration() {
         }
         return event;
       });
-    }
-  }
+    },
+  };
 }
+
+// filter integrations that use the global variable
+const integrations = Sentry.getDefaultIntegrations({}).filter(
+  (defaultIntegration) => {
+    return ![
+      "BrowserApiErrors",
+      "TryCatch",
+      "Breadcrumbs",
+      "GlobalHandlers",
+    ].includes(defaultIntegration.name);
+  }
+);
 
 const client1 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
+  integrations: [...integrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 1", event);
     return null; // Returning `null` prevents the event from being sent
@@ -116,7 +141,7 @@ const client2 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___", // Can be a different DSN
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
+  integrations: [...integrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 2", event);
     return null; // Returning `null` prevents the event from being sent
