@@ -2974,6 +2974,10 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/',
   },
   {
+    from: '/product/account/pricing/',
+    to: '/pricing/',
+  },
+  {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
   },
