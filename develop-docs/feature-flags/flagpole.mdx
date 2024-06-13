@@ -102,10 +102,58 @@ Each evaluation context is built up in stages via a [`ContextBuilder`](https://g
 
 Each context builder consists of a list of context transformers, which are responsible for creating individual slices of the larger evaluation context.
 
+Here are some common properties we surface via our Sentry and GetSentry context builders that you can use in your conditions:
+
+**Organization Context Properties**
+
+`organization_id` [int]
+
+: The organization's ID
+
+`organization_slug` [str]
+
+: The organization's slug
+
+`organization_name` [str]
+
+: The organization's name
+
+`organization_is-early-adopter` [bool]
+
+: Whether or not the organization has the `early_adopter` flag enabled
+
+**Project Context Properties (If checking a project feature)**
+
+`project_id` [int]
+
+: The project's ID
+
+`project_slug` [str]
+
+: The project's slug
+
+**User Context Properties (If checking a flag with an actor)**
+
+`user_id` [int]
+
+: The active user's ID
+
+`user_email` [str]
+
+: The active user's email address. This should only contain Sentry employee email addresses.
+
+
+To see the latest context properties available, check out the repo-specific context builders:
+- [Sentry Context Builder](https://github.com/getsentry/sentry/blob/master/src/sentry/features/flagpole_context.py)
+
+- [GetSentry Context Builder](https://github.com/getsentry/getsentry/blob/master/getsentry/feature_handlers/getsentry_flagpole_context_builder.py)
+
+
+
 ## Rolling out a new Flagpole feature
 
 Creating a new Flagpole Feature is currently a 3 step process:
-1. Register a new feature in GetSentry's `features.py` file with the Flagpole strategy:
+1. Register a new feature in Sentry's `temporary.py` file or GetSentry's `features.py` file with the Flagpole strategy:
 ```python
 features.add(
     "<feature_scope>:<feature_name>",
@@ -116,17 +164,22 @@ features.add(
 
 2. Add a new feature object entry to sentry-options-automator's `flagpole.yml` file. The feature's option name must follow the following format in order to be picked up by Flagpole:
 
-`feature.<feature_scope>:<feature_name>`.
+```
+feature.<feature_scope>:<feature_name>
+```
 
 3. Add the feature name to the `flagpole.flagpole_only_features` list in sentry-options-automator's default [`app.yaml`](https://github.com/getsentry/sentry-options-automator/blob/483737d45dbc68253e926c3f860b5ae33111697b/options/default/app.yaml#L219) file, omitting the `feature.` prefix.
 
 Once the option change is deployed, the feature checks will immediately be active in all environments and regions.
 
+_Note:_ The feature config should not be merged until the registration commit in step 1 has been fully deployed to all target environments. This is because Options Automator will fail to push options to any environments missing the option registration. 
+
+If this happens, make sure to rerun the options deployment once all environments have been updated to ensure your feature is active.
 
 ## Testing a Flagpole feature locally
 You can test a flagpole feature flag locally using the GetSentry devserver.
-Because the feature handler for Flagpole only exists in GetSentry, it's not
- currently possible to test Sentry-only flagpole features.
+Because the feature handler for Flagpole only exists in GetSentry, it's not possible
+to test flagpole features using the Sentry devserver at this time.
 
 Start by creating a new yaml file containing your feature config. The config 
 file should contain a top-level `options` object containing your feature object,
