@@ -75,11 +75,11 @@ In some cases, repeated events can count against your quota, so it's important t
 
 ### Inbound Filters
 
-If an inbound filter is applied for a type of error, transaction, or attachment, and your subscription allows, it won't be counted. You can manage these in **[Project] > Settings > Inbound Filters**. Learn more in [Manage Your Error Quota](/pricing/quotas/manage-event-stream-guide/#inbound-data-filters), [Manage Your Span Units Quota](/pricing/quotas/manage-transaction-quota/#inbound-filters), [Manage your Replay Quota](/pricing/quotas/manage-replay-quota/), and [Manage Your Attachments Quota](/pricing/quotas/manage-attachments-quota/#inbound-data-filters).
+If an inbound filter is applied for a type of error, transaction/span, or attachment, and your subscription allows, it won't be counted. You can manage these in **[Project] > Settings > Inbound Filters**. Learn more in [Manage Your Error Quota](/pricing/quotas/manage-event-stream-guide/#inbound-data-filters), [Manage Your Span Units Quota](/pricing/quotas/manage-transaction-quota/#inbound-filters), [Manage your Replay Quota](/pricing/quotas/manage-replay-quota/), and [Manage Your Attachments Quota](/pricing/quotas/manage-attachments-quota/#inbound-data-filters).
 
 ### SDK Sample Rate
 
-If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events, effectively limiting the number of errors and transactions you send to Sentry. Setting a sample rate is documented [for each SDK](/platform-redirect/?next=/configuration/sampling/), but you can also learn more in [Manage Your Error Quota](/pricing/quotas/manage-event-stream-guide/#sdk-sample-rate) and [Manage Your Performance Units Quota](/pricing/quotas/manage-transaction-quota/#sdk-configuration-tracing-options/).
+If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events, effectively limiting the number of errors and transactions/spans you send to Sentry. Setting a sample rate is documented [for each SDK](/platform-redirect/?next=/configuration/sampling/), but you can also learn more in [Manage Your Error Quota](/pricing/quotas/manage-event-stream-guide/#sdk-sample-rate) and [Manage Your Span Units Quota](/pricing/quotas/manage-transaction-quota/#sdk-configuration-tracing-options/).
 
 ### SDK Filtering: `beforeSend` and `beforeSendTransaction`
 
@@ -114,9 +114,10 @@ Use this table as a quick reference for what does and doesn't count towards your
 | The event isn't sent based on [SDK filters](#sdk-filtering-beforesend-and-beforesendtransaction) |  |
 | The event isn't sent based on [SDK configuration](#sdk-configuration) |  |
 | [Size limits](#size-limits) have been exceeded |  |
-| [Issues](/product/issues/) are created from accepted errors, transactions, and transactions with profiling |  |
 
 {/*<!-- prettier-ignore-end -->*/}
+
+Sentry groups accepted errors and spans into issues. The issues themselves don't count towards your quota, but the errors and spans that comprise an issue are counted.
 
 ## Key Terms
 
@@ -124,11 +125,11 @@ Let's clarify a few terms:
 
 - **Attachment** - Attachments are stored additional files, such as config files, log files, or stored mini-dumps, that are related to an error event. Unless the option to store crash reports is enabled, Sentry will use these files only to create an event, and then drop them.
 - **Cron Monitor** - A Cron Monitor represents a set of configurations for a scheduled, recurring job such as a "Data Backup" job that runs daily on production and development.
-- **Data** - Anything you send to Sentry. This includes events (errors, transactions, transactions with profiling, or replays), attachments, and event metadata.
+- **Data** - Anything you send to Sentry. This includes events (errors, spans, or replays), attachments, and event metadata.
 - **Error** - What counts as an error varies by platform, but in general, if there's something that looks like an exception, it can be captured as an error in Sentry. Sentry automatically captures errors, uncaught exceptions, and unhandled rejections, as well as other types of errors, depending on platform. A grouping of similar errors makes [an issue](/product/issues/).
-- **Event** - An event is one instance of you sending data to Sentry, excluding attachments. Generally, this data is an error or a transaction.
+- **Event** - An event is one instance of you sending data to Sentry, excluding attachments. Generally, this data is an error or a transaction/span.
 - **Replay** - Session Replays are video-like reproductions of users' sessions as they navigate your app or website.
 - **Span** - The basic unit that [traces](/concepts/key-terms/tracing/distributed-tracing/) are composed of. Multiple spans make up a trace in Sentry and share a trace_id.
 - **Span Unit** - A billing unit in Sentry that maps to span usage.
-**Profile** - A snapshot of your code's resource usage obtained by periodically capturing the call stack as your application runs.
-- **Quota** - Your quota is the amount of data (errors, performance units, replays, attachments) that you pay Sentry to track.
+- **Profile** - A snapshot of your code's resource usage obtained by periodically capturing the call stack as your application runs.
+- **Quota** - Your quota is the amount of data (errors, span units, replays, attachments) that you pay Sentry to track.

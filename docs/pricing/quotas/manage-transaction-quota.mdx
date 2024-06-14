@@ -4,10 +4,9 @@ keywords: ["best practices"]
 sidebar_order: 40
 description: "Learn how to use the tools Sentry provides to control your span unit quota."
 ---
+In most cases, sending all span events to Sentry could generate more data than you'd find useful and might use up your span units too quickly. Sentry provides tools to control the _type_ and _amount_ of spans that are monitored. This allows you to have tracing data that's actionable and meaningful.
 
-In most cases, sending all Transaction events to Sentry could generate more data than you'd find useful and might use up your span units too quickly. Sentry provides tools to control the _type_ and _amount_ of transactions that are monitored. This allows you to have tracing data that's actionable and meaningful.
-
-Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your transaction and transactions with profiling events. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first two options are things you can do in [sentry.io](https://sentry.io), whereas the remaining ones are things you'll do in the SDK.
+Applying the proper SDK configuration is an iterative and on-going process, but these tips will show you how to best use Sentry's tools to get the most out of your span units. These tips are ordered from easiest or least time-consuming to most challenging or potentially time-consuming. The first two options are things you can do in [sentry.io](https://sentry.io), whereas the remaining ones are things you'll do in the SDK.
 
 ## Before You Begin: Check Your Quota Usage
 
@@ -31,23 +30,9 @@ The [Usage Stats](/product/stats/#usage-stats) tab displays details about the to
 
 The "Project" table in the "Usage Stats" tab of **Stats** breaks down your events by project so you can see which ones are consuming your quota. Clicking on the settings icon next to a project name in the table will open the project's settings, where you can manage its [inbound filters](#2-inbound-data-filters).
 
-### Which transactions are consuming my quota?
+## Managing my Quota
 
-<Note>
-
-You can only update the columns of the Results table in **Discover** if your organization is on a Business plan.
-
-</Note>
-
-You can set up [a query](<https://sentry.io/orgredirect/organizations/:orgslug/discover/results/?field=title&field=project&field=count()&name=All+Events&query=event.type%3Atransaction&sort=-count&statsPeriod=14d&yAxis=count()>) in **Discover** to see which transactions or transactions with profiling you're receiving the most and if you want to adjust that. When you're building the query, search for `event.type:transaction` and then set the columns to `title`, `project`, and `count`, as shown below:
-
-![Busiest Projects](./img/manage-trans-quota-01.png)
-
-Once the changes are applied, sort the "Results" table by the "COUNT()" column to display your busiest transactions:
-
-![Busiest Issues](./img/manage-trans-quota-02.png)
-
-You can look for transactions with profiling using  `has:profile.id`. Adding a `profile.id` column to the query will give you a link to the profile.
+Sentry SDKs allow you to configure a sample rate ([example](/platforms/javascript/configuration/sampling/)). The "Project" table in the "Usage Stats" tab of Stats can also help you make decisions about the sample rate that's most relevant for your usage.
 
 ## Adjusting Quotas
 
@@ -57,7 +42,7 @@ Quotas can only be updated by a Billing or Owner member of your Sentry organizat
 
 </Note>
 
-Once your span units volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
+Once your span unit volume is approaching or has exceeded the quota, teammates with the "Owner" organization permission level will receive [notification](/product/alerts/notifications/#quota-notifications) emails. You can then choose to [increase](#increasing-quotas) or [decrease](#decreasing-quotas) your quota.
 
 
 ### Increasing Quotas
@@ -115,12 +100,6 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 ![Built-in Inbound Filters](./img/manage-event-stream-03.png)
 
-<Note>
-
-The **Inbound Data Filters** page in [sentry.io](https://sentry.io) only refers to errors, but it applies to transactions, transactions with profiling, and attachments as well.
-
-</Note>
-
 Sentry provides several methods to filter all events and attachments server-side, which are applied before checking for potential rate limits. Inbound filters include:
 
 - Common browser extension errors
@@ -146,8 +125,8 @@ If you discover a problematic release causing excessive noise, Sentry supports i
 
 ## SDK Filtering: beforeSendTransaction
 
-Some Sentry SDKs support the `beforeSendTransaction` callback method. Once implemented, this method is invoked when the SDK captures a transaction event, right before sending it to your Sentry account. Because it receives the transaction event object as a parameter, you can use it to modify the event's data or drop the event completely (by returning `null`) based on your custom logic and the data available on the event, such as _tags_, _environment_, _release version_, _transaction name_, and so on. Note that only transaction events pass through `beforeSendTransaction`. Error and message events have a separate method, `beforeSend`, which is supported in all SDKs. Learn more about both methods in [Filtering Events](/platform-redirect/?next=/configuration/filtering/).
+Sentry SDKs send transactions, each of which contain an arbitrary number of spans. Some Sentry SDKs support the `beforeSendTransaction` callback method. Once implemented, this method is invoked when the SDK captures a transaction event, right before sending it to your Sentry account. Because it receives the transaction event object as a parameter, you can use it to modify the event's data or drop the event completely (by returning `null`) based on your custom logic and the data available on the event, such as _tags_, _environment_, _release version_, _transaction name_, and so on. Note that only transaction events pass through `beforeSendTransaction`. Error and message events have a separate method, `beforeSend`, which is supported in all SDKs. Learn more about both methods in [Filtering Events](/platform-redirect/?next=/configuration/filtering/).
 
 ## SDK Configuration: Tracing Options
 
-When you configure your SDK, you can control the number of transactions that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options), including either setting a sample rate or providing a function for sampling. You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for tracing to capture certain types of transactions.
+When you configure your SDK, you can control the number of transactions and therefore, the number of spans that are sent to Sentry by setting the [tracing options](/platform-redirect/?next=/configuration/options/%23tracing-options), including either setting a sample rate or providing a function for sampling. You can also set up [custom instrumentation](/platform-redirect/?next=/performance/instrumentation/custom-instrumentation/) for tracing to capture certain types of transactions.
