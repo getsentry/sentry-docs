@@ -247,28 +247,3 @@ const app = express();
 
 // ...
 ```
-
-### Usage with Vite development mode (only for SDK versions < 7.106.0)
-
-<Alert level='info'>
-
-@sentry/remix version 7.106.0 introduced support for Vite development mode, so you don't need to await the build loader. It's recommended to upgrade to the latest version of @sentry/remix.
-
-</Alert>
-
-For SDK versions < 7.106.0, the function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using [Vite](https://remix.run/docs/en/main/future/vite), you'll need to wait for the build loader before passing it to the wrapped handler.
-
-```diff {filename: server/index.ts}
-    wrapExpressCreateRequestHandler(createRequestHandler)({
-      build: viteDevServer
--       ? () =>
--         viteDevServer.ssrLoadModule(
--           "virtual:remix/server-build"
--         )
-+       ? await viteDevServer.ssrLoadModule(
-+           "virtual:remix/server-build"
-+         )
-      : await import(BUILD_DIR + "/index.js"),
-      ...
-    })
-```
