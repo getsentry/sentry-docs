@@ -7,6 +7,9 @@ description: "Learn about how to add app hang detection reporting."
 <Note>
 
 We recommend disabling this feature for Widgets and Live Activities because it might detect false positives.
+Furthermore, the Cocoa SDK might report app hangs when the OS opens a system dialog asking for specific permissions,
+such as whether the user wants to allow your app to paste from the clipboard. As we can't reliably detect these scenarios,
+we advise you to [pause and resume tracking app hangs](#pause-and-resume-app-hang-tracking) to circumvent that problem.
 
 </Note>
 
@@ -99,5 +102,32 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.appHangTimeoutInterval = 1;
 }];
+
+```
+
+### Pause and Resume App Hang Tracking
+
+Starting with version 8.30.0, you can pause and resume app hang tracking at runtime with the following methods:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.pauseAppHangTracking()
+
+// Do something that might cause the app to hang,
+// and you don't want the Cocoa SDK to report it.
+
+SentrySDK.resumeAppHangTracking()
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK pauseAppHangTracking];
+
+// Do something that might cause the app to hang,
+// and you don't want the Cocoa SDK to report it.
+
+[SentrySDK resumeAppHangTracking];
 
 ```
