@@ -3241,6 +3241,18 @@ const REDIRECTS: Redirect[] = [
     from: '/product/explore/session-replay/protecting-user-privacy/',
     to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
+  {
+    from: '/account/choose-your-data-center/',
+    to: '/organization/data-storage-location/',
+  },
+  {
+    from: '/account/early-adopter/',
+    to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/account/quotas/spike-protection/',
+    to: '/pricing/quotas/spike-protection/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
