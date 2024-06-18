@@ -3237,6 +3237,10 @@ const REDIRECTS: Redirect[] = [
     from: '/product/performance/queue-monitoring/queues-page/',
     to: '/product/insights/queue-monitoring/queues-page/',
   },
+  {
+    from: '/product/explore/session-replay/protecting-user-privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
 ];
 
 const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
