@@ -28,11 +28,7 @@ pnpm add @sentry/remix
 
 ## Configure
 
-To use this SDK, initialize Sentry in your Remix entry points for both the client and server.
-
-Create two files in the root directory of your project, `entry.client.tsx` and `entry.server.tsx` (if they don't already exist). Add your initialization code in these files for the client-side and server-side SDK, respectively.
-
-The two configuration types are mostly the same, except that some configuration features, like Session Replay, only work in `entry.client.tsx`.
+To use this SDK, initialize Sentry in your Remix project for both the client and server.
 
 <SignInNote />
 
@@ -69,23 +65,6 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 ```
-
-### Server-side Configuration
-
-```typescript {tabTitle:Server} {filename: entry.server.tsx} {"onboardingOptions": {"performance": "5-9"}}
-import * as Sentry from "@sentry/remix";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
-});
-```
-
-Initialize Sentry in your entry point for the server to capture exceptions and get performance metrics for your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) functions.
 
 To catch React component errors (in Remix v1) and routing transactions (in all Remix versions), wrap your Remix root with `withSentry`.
 
@@ -148,6 +127,48 @@ withSentry(App, {
   },
 });
 ```
+
+
+### Server-side Configuration
+
+Create an instrumentation file (named here as `instrument.server.mjs`) in your project. Add your initialization code in this file for the server-side SDK.
+
+```typescript {tabTitle:Server} {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "5-9"}}
+import * as Sentry from "@sentry/remix";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // To use Sentry OpenTelemetry auto-instrumentation
+  // default: false
+  autoInstrumentRemix: true,
+
+  // Optionally capture action formData attributes with errors.
+  // This requires `sendDefaultPii` set to true as well.
+  captureActionFormDataKeys: {
+    key_x: true,
+    key_y: true,
+  },
+  // To capture action formData attributes.
+  sendDefaultPii: true
+});
+```
+
+Then run your Remix server with:
+
+```bash
+NODE_OPTIONS='--import=./instrument.server.mjs' remix-serve build
+# or
+NODE_OPTIONS='--require=./instrument.server.cjs' remix-serve build
+```
+
+If you use the Express server instead of the Remix built-in server, you can alternatively import your instrumentation file directly at the top of your server implementation. See the example [here](#custom-express-server).
+
+Sentry's Remix SDK will automatically record your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) transactions, as well as server-side errors. You can also initialize Sentry's database integrations, such as <Link to="/platforms/javascript/guides/node/tracing/database/opt-in/#prisma-orm-integration">Prisma</Link>, to get spans for your database calls.
 
 ## Remix v2 Features
 
@@ -213,47 +234,16 @@ To enable readable stack traces, <PlatformLink to="/sourcemaps">configure source
 
 ## Custom Express Server
 
-If you use a custom Express server in your Remix application, you should wrap your [`createRequestHandler` function](https://remix.run/docs/en/main/other-api/adapter#createrequesthandler) manually with `wrapExpressCreateRequestHandler`. This isn't necessary if you're using the built-in Remix App Server.
+You can import your server instrumentation file at the top of your Express server implementation.
 
-<Note>
-
-`wrapExpressCreateRequestHandler` is available starting with version 7.11.0.
-
-</Note>
-
-```typescript {filename: server/index.ts}
-import { wrapExpressCreateRequestHandler } from "@sentry/remix";
-import { createRequestHandler } from "@remix-run/express";
+```typescript {filename: server.ts}
+// import the Sentry instrumentation file before anything else.
+import './instrument.server.mjs';
+// alternatively `require('./instrument.server.cjs')`
 
 // ...
 
-const createSentryRequestHandler =
-  wrapExpressCreateRequestHandler(createRequestHandler);
+const app = express();
 
-app.all("*", createSentryRequestHandler(/* ... */));
-```
-
-### Usage with Vite development mode (only for SDK versions < 7.106.0)
-
-<Alert level='info'>
-
-@sentry/remix version 7.106.0 introduced support for Vite development mode, so you don't need to await the build loader. It's recommended to upgrade to the latest version of @sentry/remix.
-
-</Alert>
-
-For SDK versions < 7.106.0, the function returned by `wrapExpressCreateRequestHandler` accepts the build object as its first parameter. So if your boilerplate code passes the argument as a function, you need to update the usage. For example, if you're using [Vite](https://remix.run/docs/en/main/future/vite), you'll need to wait for the build loader before passing it to the wrapped handler.
-
-```diff {filename: server/index.ts}
-    wrapExpressCreateRequestHandler(createRequestHandler)({
-      build: viteDevServer
--       ? () =>
--         viteDevServer.ssrLoadModule(
--           "virtual:remix/server-build"
--         )
-+       ? await viteDevServer.ssrLoadModule(
-+           "virtual:remix/server-build"
-+         )
-      : await import(BUILD_DIR + "/index.js"),
-      ...
-    })
+// ...
 ```
