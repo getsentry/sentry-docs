@@ -2586,6 +2586,10 @@ const REDIRECTS: Redirect[] = [
     to: '/concepts/search/searchable-properties/releases/',
   },
   {
+    from: '/product/sentry-basics/search/searchable-properties/spans/',
+    to: '/concepts/search/searchable-properties/spans/',
+  },
+  {
     from: '/product/sentry-basics/search/searchable-properties/session-replay/',
     to: '/concepts/search/searchable-properties/session-replay/',
   },
