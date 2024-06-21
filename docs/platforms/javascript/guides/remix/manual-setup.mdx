@@ -66,12 +66,27 @@ Sentry.init({
 });
 ```
 
+#### Remix ErrorBoundary
+
+To capture errors from [ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary), you should define your own `ErrorBoundary` in `root.tsx` and use `Sentry.captureRemixErrorBoundaryError` inside of it. You can also create route-specific error capturing behavior by defining `ErrorBoundary` in your route components. The `ErrorBoundary` you define in `root.tsx` will be used as a fallback for all routes.
+
+```typescript {filename: root.tsx}
+import { captureRemixErrorBoundaryError } from "@sentry/remix";
+
+export const ErrorBoundary: V2_ErrorBoundaryComponent = () => {
+  const error = useRouteError();
+
+  captureRemixErrorBoundaryError(error);
+
+  return <div> ... </div>;
+};
+```
+
 To catch React component errors (in Remix v1) and routing transactions (in all Remix versions), wrap your Remix root with `withSentry`.
 
 <Note>
 
-If you use the Remix `v2_errorBoundary` future flag, you must also configure a [v2 ErrorBoundary](#v2-errorboundary).
-
+If you use Remix v1 with the `v2_errorBoundary` future flag, you must also configure your ErrorBoundary.
 </Note>
 
 ```typescript {filename: root.tsx}
@@ -170,29 +185,7 @@ If you use the Express server instead of the Remix built-in server, you can alte
 
 Sentry's Remix SDK will automatically record your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) transactions, as well as server-side errors. You can also initialize Sentry's database integrations, such as <Link to="/platforms/javascript/guides/node/tracing/database/opt-in/#prisma-orm-integration">Prisma</Link>, to get spans for your database calls.
 
-## Remix v2 Features
-
-_Available from SDK version 7.59.0_
-
-[Remix v2](https://remix.run/docs/en/main/pages/v2) will introduce new features that require additional configuration to work with Sentry. These features are also available from version [1.17.0](https://github.com/remix-run/remix/releases/tag/remix%401.17.0) with [future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags).
-
-### v2 ErrorBoundary
-
-To capture errors from [v2 ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary-v2), you should define your own `ErrorBoundary` in `root.tsx` and use `Sentry.captureRemixErrorBoundaryError` inside of it. You can also create route-specific error capturing behavior by defining `ErrorBoundary` in your route components. The `ErrorBoundary` you define in `root.tsx` will be used as a fallback for all routes.
-
-```typescript {filename: root.tsx}
-import { captureRemixErrorBoundaryError } from "@sentry/remix";
-
-export const ErrorBoundary: V2_ErrorBoundaryComponent = () => {
-  const error = useRouteError();
-
-  captureRemixErrorBoundaryError(error);
-
-  return <div> ... </div>;
-};
-```
-
-## v2 Server-side Errors
+#### Server-side Errors
 
 Sentry won't be able to capture your unexpected server-side errors automatically on Remix v2. To work around this, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point.
 
