@@ -160,14 +160,14 @@ useful because attachments could quickly eat up the users' disk space. Furthermo
 
 When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/envelopes/) with the event.
 
-This feature only applies to SDKs with a user interface, such as Mobile and Desktop. 
+This feature only applies to SDKs with a user interface, such as Mobile and Desktop.
 In some environments such as native iOS, taking a screenshot requires the UI thread and in the event of a crash, that might not be available. So inherently this feature will be a best effort solution.
 Also, some environments don't allow access to the UI or some features during a hard crash, iOS, for example, doesn't allow running Objective-C code after a signal break, therefore no hard crash screenshot capture will be possible.
 It's advised to provide this feature through a single option called `attachScreenshot`. That's the preferred way but in platforms such as Flutter, a wrapping widget is required so documentation can point users to that instead of the suggested option name.
 
 The feature is achieved by adding an attachment with:
 
-* File name `screenshot.jpg` or `screenshot.png` 
+* File name `screenshot.jpg` or `screenshot.png`
   * Subsequent screenshots in the same event should be named `screenshot-n`, where n is the screenshot number starting with 2
 * Image size, if possible should stay below 2 MB but quality/size could be configurable
 * `ContentType: image/jpg` or `ContentType: image/png`
@@ -227,7 +227,7 @@ to Sentry. Ideally, SDKs could send the events in a separate process not impacte
 limitations on mobile platforms, spawning an extra process only for sending envelopes is hard to achieve or impossible.
 The SDKs on these platforms send envelopes on a background thread to not block the UI thread or because they forbid network
 operations on the UI thread. A crash occurring shortly after the SDK init could lead to never reporting such crashes,
-keeping the users unaware of a critical bug. 
+keeping the users unaware of a critical bug.
 
 When the app crashes, the SDK needs to check if it happens within two seconds after the SDK init. If it does, it needs to store
 that information on the disk. We recommend using a marker file, which the SDK checks on initialization. Suppose the SDK
@@ -239,8 +239,8 @@ If the platform allows it, the SDK may call flush directly after the detected st
 application terminates. If the SDK can guarantee transmission to Sentry while crashing, it can skip creating a marker file
 and making a blocking flush call on the next initialization.
 
-If the marker file exists upon the next SDK initialization, the SDK should clear the marker and block the `init` execution up 
-to five seconds, in order to flush out pending envelopes. If the timeout of five seconds is exceeded, the SDK should release 
+If the marker file exists upon the next SDK initialization, the SDK should clear the marker and block the `init` execution up
+to five seconds, in order to flush out pending envelopes. If the timeout of five seconds is exceeded, the SDK should release
 the `init` lock and continue flushing on a background thread.
 
 While, ideally, the SDK should only flush out the crash event envelope, it is acceptable to call flush for all envelopes to
@@ -335,7 +335,7 @@ If the HTTP Client integration does not throw an exception for unsuccessful requ
 
 When capturing error events, pass the original `Request` and `Response` objects from the HTTP Client as `hints`, so the users may filter out events in `beforeSend` with the full context.
 
-Automatically captured HTTP Client error events can be searchable and alertable with the `http.url` and `http.status_code` properties, learn more about it in the [Searchable Properties](https://docs.sentry.io/product/sentry-basics/search/searchable-properties/) docs.
+Automatically captured HTTP Client error events can be searchable and alertable with the `http.url` and `http.status_code` properties, learn more about it in the [Searchable Properties](https://docs.sentry.io/concepts/search/searchable-properties/) docs.
 
 As an example, see the [OkHTTP Client integration](https://github.com/getsentry/sentry-java/pull/2287) for Android.
 
