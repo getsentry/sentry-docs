@@ -264,14 +264,50 @@ feedback.attachTo(document.querySelector("#your-button"), {
   formTitle: "Report a Bug!",
 });
 ```
+```typescript {tabTitle: NextJs}
+function AttachToFeedbackButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
 
-Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user. Here is an example using JSX to define a button:
+  const buttonRef = useRef();
+  useEffect(() => {
+    if (feedback) {
+      const unsubscribe = feedback.attachTo(buttonRef.current)
+      return unsubscribe;
+    }
+    return () => {};
+  }, [feedback]);
 
-```typescript
-import { getFeedback } from "@sentry/react";
+  return (
+    <button type="button" ref={buttonRef}>
+      Give me feedback
+    </button>
+  );
+}
+```
 
-function MyFeedbackButton() {
-  const feedback = getFeedback();
+Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user.
+
+```javascript
+const feedback = feedbackIntegration({
+  // Disable injecting the default widget
+  autoInject: false,
+});
+
+const form = await feedback.createForm();
+form.appendToDom();
+form.open();
+```
+```typescript {tabTitle: NextJS}
+function CreateFeedbackFromButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
 
   // Don't render custom feedback button if Feedback integration isn't installed
   if (!feedback) {
@@ -279,11 +315,14 @@ function MyFeedbackButton() {
   }
 
   return (
-    <button type="button" onClick={async () => {
-      const form = await feedback.createForm();
-      form.appendToDom();
-      form.open();
-    }}>
+    <button
+      type="button"
+      onClick={async () => {
+        const form = await feedback.createForm();
+        form.appendToDom();
+        form.open();
+      }}
+    >
       Give me feedback
     </button>
   );
