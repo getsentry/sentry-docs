@@ -331,13 +331,13 @@ function CreateFeedbackFromButton() {
 
 ### Bring Your Own Widget
 
-You can also use your own UI components to gather feedback and pass the feedback data object to the `sendFeedback()` function. The `sendFeedback` function accepts two parameters:
+You can also use your own UI components to gather feedback and pass the feedback data object to the `captureFeedback()` function. The `captureFeedback` function accepts two parameters:
 
-- A JavaScript object with a required `message` property and also optional `name` and `email` properties, or a `FormData` instance with the same properties.
-- An optional "options" object.
+- A JavaScript object with a required `message` property and also optional `name` and `email` properties.
+- An optional "hints" object.
 
 ```javascript
-Sentry.sendFeedback(
+Sentry.captureFeedback(
   {
     name: "Jane Doe", // optional
     email: "email@example.org", // optional
@@ -345,6 +345,7 @@ Sentry.sendFeedback(
   },
   {
     includeReplay: true, // optional
+    attachments: [] // optional
   }
 );
 ```
@@ -356,19 +357,50 @@ Here's a simple example:
   <input name="name" />
   <input name="email" />
   <textarea name="message" placeholder="What's the issue?" />
+  <button type="submit">Submit</button>
 </form>
 ```
 
 ```javascript
-import { sendFeedback } from "@sentry/react";
+import { captureFeedback } from "@sentry/react";
 
 document
   .getElementById("my-feedback-form")
   .addEventListener("submit", (event) => {
     const formData = new FormData(event.currentTarget);
-    sendFeedback(formData);
+    captureFeedback({
+      name: formData.get('name'),
+      email: formData.get('email'),
+      message: formData.get('message'),
+    }, {
+      attachments: [] // optional
+    });
     event.preventDefault();
   });
+```
+```typescript {tabTitle: With Image Upload}
+function MyFeedbackForm() {
+  return (
+    <form id="my-feedback-form" onSubmit={event => {
+      const formData = new FormData(event.currentTarget);
+
+      Sentry.captureFeedback({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        message: formData.get('message'),
+      }, {
+        attachments: [], // TODO
+      });
+      event.preventDefault();
+    }}>
+      <input name="name" />
+      <input name="email" />
+      <textarea name="message" placeholder="What's the issue?" />
+      <input type="file" name="attachment" />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
 ```
 
 </PlatformSection>
