@@ -31,13 +31,48 @@ Create a deployment package on your local machine and install the required depen
 
 <PlatformContent includePath="getting-started-install" />
 
-We also support [installing Sentry as a Container Image](/platforms/javascript/guides/aws-lambda/container-image/) and [installing Sentry in Lambda Layer](/platforms/javascript/guides/aws-lambda/layer/).
+We also support [installing Sentry in Lambda Layer](/platforms/javascript/guides/aws-lambda/layer/).
 
 ## Configure
 
 You can use the AWS Lambda integration for the Node like this:
 
-<PlatformContent includePath="getting-started-config" />
+<SignInNote />
+
+```javascript {tabTitle:async}
+const Sentry = require("@sentry/aws-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+```javascript {tabTitle:sync}
+const Sentry = require("@sentry/aws-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+exports.handler = Sentry.wrapHandler((event, context, callback) => {
+  // Your handler code
+});
+```
+
+{/* <!-- TODO-ADD-VERIFICATION-EXAMPLE --> */}
 
 ## Enable Timeout Warning
 

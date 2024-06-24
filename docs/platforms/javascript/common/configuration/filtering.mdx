@@ -83,10 +83,115 @@ Sentry.init({
 
 You can also use `denyUrls` if you want to block specific URLs from sending exceptions to Sentry.
 
+### Using `thirdPartyErrorFilterIntegration`
+
+_Available in browser-based SDKs from version 8.10.0_
+
+The `thirdPartyErrorFilterIntegration` allows you to filter out errors originating from third parties, such as browser extensions, code-injecting browsers, or widgets from third-party services that also use Sentry.
+This integration can be very helpful in reducing noise that's not related to your own application code.
+
+<Note>
+
+**Prerequisite**: To use the `thirdPartyErrorFilterIntegration`, ensure you are using a bundler and one of [Sentry's bundler plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins).
+
+</Note>
+
+This integration works by "marking" your JavaScript files with an "application key" during the build process.
+At runtime, if an error occurs, this integration checks application keys for each stack frame in the stack trace.
+This allows you to filter out errors with "unmarked" stack frames, which would indicate third-party code.
+
+To set up this integration, first pass an `applicationKey` to your Sentry bundler plugin. This can be an arbitrary string that identifies your application code:
+
+```ts {tabTitle:Vite} {8}
+// vite.config.ts
+import { defineConfig } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    sentryVitePlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+});
+```
+
+```js {tabTitle:Webpack} {7}
+// webpack.config.js
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  plugins: [
+    sentryWebpackPlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+};
+```
+
+```js {tabTitle:esbuild} {7}
+// esbuild.config.js
+const { sentryEsbuildPlugin } = require("@sentry/esbuild-plugin");
+
+require("esbuild").build({
+  plugins: [
+    sentryEsbuildPlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+});
+```
+
+```js {tabTitle:Rollup} {7}
+// rollup.config.mjs
+import { sentryRollupPlugin } from "@sentry/rollup-plugin";
+
+export default {
+  plugins: [
+    sentryRollupPlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+};
+```
+
+Next, add the `thirdPartyErrorFilterIntegration` to your Sentry initialization:
+
+```js {3-14}
+Sentry.init({
+  integrations: [
+    Sentry.thirdPartyErrorFilterIntegration({
+      // Specify the application keys that you specified in the Sentry bundler plugin
+      filterKeys: ["your-custom-application-key"],
+
+      // Defines how to handle errors that contain third party stack frames.
+      // Possible values are:
+      // - 'drop-error-if-contains-third-party-frames'
+      // - 'drop-error-if-exclusively-contains-third-party-frames'
+      // - 'apply-tag-if-contains-third-party-frames'
+      // - 'apply-tag-if-exclusively-contains-third-party-frames'
+      behaviour: "drop-error-if-contains-third-party-frames",
+    }),
+  ],
+});
+```
+
+The `filterKeys` option takes an array of strings that should be equal to the `applicationKey` value set in the bundler plugin options.
+Unless your website hosts files from more than one of your build-processes, this array should only contain one item.
+
+The `behaviour` option defines what should happen with errors that contain stack frames from third-party code.
+There are four modes you can choose from:
+
+- `"drop-error-if-contains-third-party-frames"`: Drop error events that contain at least one third-party stack frame.
+- `"drop-error-if-exclusively-contains-third-party-frames"`: Drop error events that exclusively contain third-party stack frames.
+- `"apply-tag-if-contains-third-party-frames"`: Keep all error events, but apply a `third_party_code: true` tag in case the error contains at least one third-party stack frame.
+- `"apply-tag-if-exclusively-contains-third-party-frames"`: Keep all error events, but apply a `third_party_code: true` tag in case the error contains exclusively third-party stack frames.
+
+If you choose a mode to only apply tags, the tags can then be used in Sentry to filter your issue stream with the `third_party_code` tag in the issue search bar.
+
 ## Filtering Transaction Events
 
 To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
-
 
 ### Using <PlatformIdentifier name="ignore-transactions" />
 
@@ -115,5 +220,6 @@ Learn more about <PlatformLink to="/configuration/sampling/">configuring the sam
 ## Filtering Spans
 
 To prevent certain spans from being reported to Sentry, use the <PlatformIdentifier name="before-send-span" /> configuration option, which allows you to provide a function to evaluate the current span and drop it if it's not one you want.
+This API is available from Cocoa SDK version 8.30.0 and above.
 
 <PlatformContent includePath="configuration/before-send-span" />
