@@ -12,7 +12,8 @@ import styles from './banner.module.scss';
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT = 'Join Our Live Demo: Intro to Sentry & Codecov on June 25';
-const BANNER_LINK_URL = 'https://sentry.io/resources/intro-to-sentry-and-codecov-live-demo/';
+const BANNER_LINK_URL =
+  'https://sentry.io/resources/intro-to-sentry-and-codecov-live-demo/';
 const BANNER_LINK_TEXT = 'RSVP';
 const OPTIONAL_BANNER_IMAGE = null;
 
