@@ -164,6 +164,14 @@ Make sure that the `import` statements point to your newly created `sentry.serve
 
 To capture React render errors you need to add Error components for the App Router and the Pages Router respectively.
 
+<Alert title="Nested React Server Components" level="warning">
+
+Since Next.js is not exposing errors thrown in nested React Server Components, the SDK can currently not capture them.
+
+[Follow our proposal in the Next.js repository.](https://github.com/vercel/next.js/discussions/67149)
+
+</Alert>
+
 ### React Render Errors in App Router
 
 Create a [Custom Next.js Global Error component](https://nextjs.org/docs/app/building-your-application/routing/error-handling) for the App router:
@@ -175,7 +183,11 @@ import * as Sentry from "@sentry/nextjs";
 import NextError from "next/error";
 import { useEffect } from "react";
 
-export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+export default function GlobalError({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
@@ -217,7 +229,7 @@ export default function GlobalError({ error }) {
 }
 ```
 
-Note that if you create [Next.js `error.js` files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
+Note that if you create [Next.js error.js files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
 This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
 
 ```tsx {filename:error.tsx}
