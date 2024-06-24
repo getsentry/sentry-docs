@@ -66,6 +66,14 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
   },
   {
+    from: '/account/early-adopter-features/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
+  },
+  {
+    from: '/platforms/python/migration/configuration/filtering/',
+    to: '/platforms/python/configuration/filtering/',
+  },
+  {
     from: '/organization/integrations/github/',
     to: '/organization/integrations/source-code-mgmt/github/',
   },
