@@ -36,12 +36,39 @@ const feedback = feedbackIntegration({
   autoInject: false,
 });
 
+// Create and render the button
 const widget = feedback.createWidget();
-widget.appendToDom();
 
 // Later, when it's time to clean up:
 widget.removeFromDom();
 ```
+```typescript {tabTitle: NextJS}
+function ToggleFeedbackButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
+
+  const [widget, setWidget] = useState();
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        if (widget) {
+          widget.removeFromDom();
+          setWidget(null);
+        } else {
+          setWidget(feedback.createWidget());
+        }
+      }}
+    >
+      {widget ? "Remove Widget" : "Create Widget"}
+    </button>
+  );
+}
+```
+
 
 Read more about how to [use your own UI](#bring-your-own-button) below.
 
