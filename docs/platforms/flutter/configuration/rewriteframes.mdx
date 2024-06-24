@@ -1,0 +1,30 @@
+---
+title: Rewrite Frames
+sidebar_order: 70
+description: "Learn more about rewriting frames of the stack trace."
+---
+
+There are instances where you might want to rewrite frames of a stack trace before sending it to Sentry. For example, when you are publishing your Flutter application on the web and want to set a `url_prefix` because it is not deployed at the root of your URL. In this case, the absolute path of your stack frames also needs to include the same prefix so that the source maps can be found for deobfuscation. To set the `url_prefix`, you can use the [Sentry Dart Plugin](https://github.com/getsentry/sentry-dart-plugin). Below is a sample of how to update the stack frame's absolute path to include the prefix using the <PlatformLink to="/configuration/options/#before-send"><PlatformIdentifier name="before-send" /></PlatformLink> hook.
+
+```dart
+options.beforeSend = (event, hint) async {
+  final exceptions = event.exceptions?.map((exception) {
+    final stackTrace = exception.stackTrace;
+    if (stackTrace != null) {
+      final frames = stackTrace.frames.map((frame) {
+        const baseUrl = 'https://example.com/';
+        final modifiedAbsPath = frame.absPath?.replaceFirst(
+          baseUrl,
+          '${baseUrl}my_prefix/',
+        );
+        return frame.copyWith(absPath: modifiedAbsPath);
+      }).toList();
+      return exception.copyWith(
+        stackTrace: SentryStackTrace(frames: frames),
+      );
+    }
+    return exception;
+  }).toList();
+  return event.copyWith(exceptions: exceptions ?? []);
+};
+```
