@@ -74,20 +74,24 @@ In the above setup your local environment will use org slug domains, and send re
 
 ### Ngrok and siloed servers
 
-To combine ngrok and local development servers you’ll need to reserve two domains in ngrok, and create a configuration file for ngrok:
+To combine ngrok and local development servers you’ll need to reserve multiple domains in ngrok, and create a configuration file for ngrok:
 
 ```yaml
 version: '2'
 authtoken: <YOUR-NGROK-AUTHTOKEN>
 tunnels:
+  acme-org:
+    proto: http
+    hostname: acme.<yourname>.ngrok.dev
+    addr: 8000
   control-silo:
     proto: http
-    hostname: $yourname.ngrok.dev
+    hostname: <yourname>.ngrok.dev
     host_header: 'rewrite'
     addr: 8000
   region-silo:
     proto: http
-    hostname: us.$yourname.ngrok.dev
+    hostname: us.<yourname>.ngrok.dev
     addr: 8010
     host_header: 'rewrite'
 ```
@@ -96,16 +100,16 @@ Then run all the required servers
 
 ```shell
 # Run a control silo with ngrok
-sentry devserver --silo=control --ngrok $yourname.ngrok.dev
+sentry devserver --silo=control --ngrok <yourname>.ngrok.dev
 
 # Run a region silo without ngrok
-sentry devserver --silo=region --ngrok $yourname.ngrok.dev
+sentry devserver --silo=region --ngrok <yourname>.ngrok.dev
 
 # Run ngrok
 ngrok start --all --config regions.yml
 ```
 
-This setup will result in both the region and control servers responding to different domains, and CORS will work similar to production.
+This setup will result in both the region and control servers responding to different domains. The multi-region setup with ngrok also enables customer-domains and you'll need ngrok domains for each organization you plan on using. In this configuration, CORS will work similar to production. For ngrok setup with non-siloed development server see <Link to="/backend/development-server/">developement server</Link>.
 
 ### Siloed Django Shell
 
