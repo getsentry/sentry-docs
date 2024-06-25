@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-sidebar_order: 6000
+sidebar_order: 9000
 notSupported:
   - javascript.cordova
   - javascript.wasm
@@ -77,36 +77,9 @@ We're always working on ways to reduce the bundle size. Additionally, there are 
 
 </Expandable>
 
-<Expandable title="How does Rage Click detection work?">
-
-The Replay SDK tries to detect cases where a user clicked on something, but nothing happened. This is called a "Dead Click" -- a click that seems to be "dead" and does nothing, from the user's perspective. This can happen if a bug prevents the UI from being correctly updated after a button is clicked.
-
-The way that the Replay SDK detects this is by checking if a click on a `<button>` or `<a>` element doesn't lead to either updates to the DOM or a page scroll. If within 7 seconds no updates are detected, the SDK will generate a "Slow Click" in the Replay UI. (We call it a "Slow Click" because it may be possible that something will happen after the 7s, but we chose this as a cutoff time.)
-
-Another concept related to this is "Rage Clicks". A "Rage Click" is when a user clicks on an element many times, which indicates frustration that something isn't working.
-
-When a Slow Click and a Rage Click come together, we have a very good indicator that something is actually wrong, and the Replay SDK will generate a "Rage Click" for this.
-
-Note that there are some limitations to this. On the one hand, there may be _false negatives_ -- we cannot detect all cases; for example, imagine a user clicks a "dead" button, but then clicks a different button afterwards that leads to a DOM update. In this case, since we cannot attribute the DOM update to a specific button, we'll _not_ capture this slow click.
-
-On the other hand, there may be _false positives_. For example, if a user clicks a link that leads to a file download, there is no reliable way to detect that a download was initiated, so a Slow Click may be generated even if the button is not actually "dead". For these cases, you can configure the SDK via `slowClickIgnoreSelectors` - see <PlatformLink to='/session-replay/configuration'>Configuration</PlatformLink> for more details.
-
-For example, you could ignore detection of dad and rage clicks for download links in your application like this:
-
-```javascript
-Sentry.replayIntegration({
-  slowClickIgnoreSelectors: [
-    ".download",
-    // Any link with a label including "download" (case-insensitive)
-    'a[label*="download" i]',
-  ],
-});
-```
-</Expandable>
-
 <Expandable title='I see the message: "A large number of mutations was detected (N). This can slow down the Replay SDK and impact your customers."'>
 
-The Sentry SDK attempts to minimize potential [performance overhead](/product/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
+The Sentry SDK attempts to minimize potential [performance overhead](/product/explore/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
 
 If you're seeing the "A large number of mutations was detected" message while watching a replay, it means that your page could be optimized. For example, a dropdown list with thousands of entries could be refactored so that rows are virtualized where only the visible rows are rendered in the DOM. Another potential solution is to paginate the results fetch more data as the user scrolls through it. The SDK has a <PlatformLink to="/session-replay/configuration/#mutation-limits">configuration</PlatformLink> that allows you to configure the limits before recording stops.
 </Expandable>
@@ -145,4 +118,8 @@ const httpLink = createHttpLink({
 
 With this configuration, Replay is able to capture response bodies from Apollo Client requests.
 
+</Expandable>
+
+<Expandable title="`console` calls are triggering replays to record">
+Using the [`captureConsoleIntegration`](https://docs.sentry.io/platforms/javascript/configuration/integrations/captureconsole/) can cause replays to record as if you have triggered an exception. You can use [`beforeErrorSampling`](https://docs.sentry.io/platforms/javascript/guides/sveltekit/session-replay/understanding-sessions/#ignore-certain-errors-for-error-sampling) to avoid this behavior.
 </Expandable>
