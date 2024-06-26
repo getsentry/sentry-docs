@@ -11,6 +11,11 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+
+    // We need to ensure these files are available for the `/platform-redirect` endpoint
+    outputFileTracingIncludes: {
+      '/**': ['./docs/**/*'],
+    },
   },
 
   webpack: (config, _options) => {
