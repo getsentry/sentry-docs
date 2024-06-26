@@ -1,5 +1,5 @@
 import {Fragment, Suspense} from 'react';
-import {type Category, type Changelog} from '@prisma/client';
+import {type Changelog} from '@prisma/client';
 import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import {unstable_cache} from 'next/cache';
