@@ -13,10 +13,6 @@ import ArticleFooter from 'sentry-docs/components/changelog/articleFooter';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 import prisma from 'sentry-docs/prisma';
 
-type ChangelogWithCategories = Changelog & {
-  categories: Category[];
-};
-
 export async function generateMetadata(
   {params},
   parent: ResolvingMetadata
@@ -42,16 +38,10 @@ export async function generateMetadata(
 
 const getChangelog = unstable_cache(
   async slug => {
-    const session = await getServerSession(sessionHandler);
-    let published: boolean | undefined = undefined;
-    if (!session) {
-      published = true;
-    }
     try {
       return await prisma.changelog.findUnique({
         where: {
           slug,
-          published,
         },
         include: {
           categories: true,
@@ -66,10 +56,18 @@ const getChangelog = unstable_cache(
 );
 
 export default async function ChangelogEntry({params}) {
-  const changelog: ChangelogWithCategories | null = await getChangelog(params.slug);
+  const changelog = await getChangelog(params.slug);
 
   if (!changelog) {
-    return notFound();
+    notFound();
+  }
+
+  // Don't show unpublished changelog entries
+  if (!changelog.published) {
+    const session = await getServerSession(sessionHandler);
+    if (!session) {
+      notFound();
+    }
   }
 
   return (
