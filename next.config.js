@@ -14,7 +14,7 @@ const nextConfig = {
 
     // We need to ensure these files are available for the `/platform-redirect` endpoint
     outputFileTracingIncludes: {
-      '/**': ['./docs/**/*'],
+      '/**/*': ['./docs/**/*'],
     },
   },
 
