@@ -1130,11 +1130,15 @@ const REDIRECTS: Redirect[] = [
     to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
+    from: '/product/performance/event-detail/',
+    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+  },
+  {
     from: '/product/sentry-basics/tracing/event-detail/',
     to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
-    from: '/product/sentry-basics/concepts/tracing/event-detail/',
+    from: '/concepts/key-terms/tracing/event-detail/',
     to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
