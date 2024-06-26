@@ -296,6 +296,29 @@ export async function getFileBySlug(slug: string) {
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
 
+  const {code, frontmatter, matter} = await bundleMDXHelper(source, cwd, toc);
+
+  let mergedFrontmatter = frontmatter;
+  if (configFrontmatter) {
+    mergedFrontmatter = {...frontmatter, ...configFrontmatter};
+  }
+
+  return {
+    matter: matter,
+    mdxSource: code,
+    toc,
+    frontMatter: {
+      ...mergedFrontmatter,
+      slug,
+    },
+  };
+}
+
+export async function bundleMDXHelper(
+  source: string,
+  cwd: string = root,
+  toc: TocNode[] = []
+) {
   const result = await bundleMDX<Platform>({
     source,
     cwd,
@@ -385,21 +408,5 @@ export async function getFileBySlug(slug: string) {
       return options;
     },
   });
-
-  const {code, frontmatter} = result;
-
-  let mergedFrontmatter = frontmatter;
-  if (configFrontmatter) {
-    mergedFrontmatter = {...frontmatter, ...configFrontmatter};
-  }
-
-  return {
-    matter: result.matter,
-    mdxSource: code,
-    toc,
-    frontMatter: {
-      ...mergedFrontmatter,
-      slug,
-    },
-  };
+  return result;
 }
