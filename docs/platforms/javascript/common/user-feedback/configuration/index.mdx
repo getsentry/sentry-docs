@@ -354,9 +354,10 @@ Here's a simple example:
 
 ```html
 <form id="my-feedback-form">
-  <input name="name" />
-  <input name="email" />
+  <input name="name" placeholder="Your Name" />
+  <input name="email" placeholder="Your Email" />
   <textarea name="message" placeholder="What's the issue?" />
+  <input type="file" name="attachment" />
   <button type="submit">Submit</button>
 </form>
 ```
@@ -367,55 +368,31 @@ import { captureFeedback } from "@sentry/react";
 document
   .getElementById("my-feedback-form")
   .addEventListener("submit", (event) => {
-    const formData = new FormData(event.currentTarget);
-    captureFeedback({
-      name: formData.get('name'),
-      email: formData.get('email'),
-      message: formData.get('message'),
-    }, {
-      attachments: [] // optional
-    });
     event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const attachment = async () => {
+      const attatchmentField = formData.get("attachment") as File;
+      const data = new Uint8Array(
+        await attatchmentField.arrayBuffer()
+      );
+      const attachmentData = {
+        data,
+        filename: 'upload', // Or pass attatchmentField.name,
+        // No need to set `contentType` because it's encoded in the `data` array
+      };
+      return attachmentData;
+    };
+
+    Sentry.captureFeedback({
+      name: String(formData.get('name')),
+      email: String(formData.get('email')),
+      message: String(formData.get('message')),
+    }, {
+      attachments: [await attachment()],
+    });
   });
 ```
-```typescript {tabTitle: With Image Upload}
-function MyFeedbackForm() {
-  return (
-    <form id="my-feedback-form" onSubmit={async event => {
-      event.preventDefault();
-      const formData = new FormData(event.currentTarget);
-
-      const attachment = async () => {
-        const attatchmentField = formData.get("attachment") as File;
-        const data = new Uint8Array(
-          await attatchmentField.arrayBuffer()
-        );
-        const attachmentData = {
-          data,
-          filename: 'upload', // Or pass attatchmentField.name,
-          // No need to set `contentType` because it's encoded in the `data` array
-        };
-        return attachmentData;
-      };
-
-      Sentry.captureFeedback({
-        name: String(formData.get('name')),
-        email: String(formData.get('email')),
-        message: String(formData.get('message')),
-      }, {
-        attachments: [await attachment()],
-      });
-    }}>
-      <input name="name" placeholder="Your Name" />
-      <input name="email" placeholder="Your Email" />
-      <textarea name="message" placeholder="What's the issue?" />
-      <input type="file" name="attachment" />
-      <button type="submit">Submit</button>
-    </form>
-  );
-}
-```
-
 </PlatformSection>
 
 ### Loading Strategies
