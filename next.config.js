@@ -15,7 +15,9 @@ const nextConfig = {
     // These are put into the lambdas for unknown reasons when Next.js was bumped from 14.0.2 to 14.2.4.
     // Since they are huge we need to ignore them so we don't reach the maximum lambda size:
     // https://vercel.com/docs/functions/runtimes#bundle-size-limits
-    outputFileTracingExcludes: ['.next/cache/webpack', '.git/objects/pack'],
+    outputFileTracingExcludes: {
+      '/**': ['./**/.next/cache/webpack', './**/.git/objects/pack'],
+    },
   },
 
   webpack: (config, _options) => {
