@@ -1135,7 +1135,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/concepts/key-terms/tracing/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/dsn-explainer/',
