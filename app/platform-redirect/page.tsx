@@ -6,6 +6,8 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
+export const runtime = 'edge';
+
 export default async function Page({
   searchParams: {next = '', platform},
 }: {
