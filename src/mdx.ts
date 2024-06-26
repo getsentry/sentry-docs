@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import {fileURLToPath} from 'url';
 
 import matter from 'gray-matter';
 import {s} from 'hastscript';
@@ -28,7 +29,8 @@ import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 
-const root = process.cwd();
+// @ts-ignore
+const directoryName = path.dirname(fileURLToPath(import.meta.url));
 
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
@@ -96,8 +98,8 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   return frontMatter;
 }
 
-export function getAllFilesFrontMatter(folder: string = 'docs') {
-  const docsPath = path.join(root, folder);
+function getAllFilesFrontMatter() {
+  const docsPath = path.join(directoryName, '..', 'docs');
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach(file => {
@@ -115,14 +117,9 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
     allFrontMatter.push({
       ...(frontmatter as FrontMatter),
       slug: formatSlug(fileName),
-      sourcePath: path.join(folder, fileName),
+      sourcePath: path.join('docs', fileName),
     });
   });
-
-  if (folder !== 'docs') {
-    // We exit early if we're not in the docs folder. We use this for the changelog.
-    return allFrontMatter;
-  }
 
   // Add all `common` files in the right place.
   const platformsPath = path.join(docsPath, 'platforms');
@@ -218,17 +215,17 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
 }
 
 export async function getFileBySlug(slug: string) {
-  const configPath = path.join(root, slug, 'config.yml');
+  const configPath = path.join(directoryName, '..', slug, 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
   if (fs.existsSync(configPath)) {
     configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8')) as PlatformConfig;
   }
 
-  let mdxPath = path.join(root, `${slug}.mdx`);
-  let mdxIndexPath = path.join(root, slug, 'index.mdx');
-  let mdPath = path.join(root, `${slug}.md`);
-  let mdIndexPath = path.join(root, slug, 'index.md');
+  let mdxPath = path.join(directoryName, '..', `${slug}.mdx`);
+  let mdxIndexPath = path.join(directoryName, '..', slug, 'index.mdx');
+  let mdPath = path.join(directoryName, '..', `${slug}.md`);
+  let mdIndexPath = path.join(directoryName, '..', slug, 'index.md');
 
   if (
     slug.indexOf('docs/platforms/') === 0 &&
@@ -249,18 +246,20 @@ export async function getFileBySlug(slug: string) {
       commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
     }
     if (commonFilePath && fs.existsSync(commonPath)) {
-      mdxPath = path.join(root, `${commonFilePath}.mdx`);
-      mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
-      mdPath = path.join(root, `${commonFilePath}.md`);
-      mdIndexPath = path.join(root, commonFilePath, 'index.md');
+      mdxPath = path.join(directoryName, '..', `${commonFilePath}.mdx`);
+      mdxIndexPath = path.join(directoryName, '..', commonFilePath, 'index.mdx');
+      mdPath = path.join(directoryName, '..', `${commonFilePath}.md`);
+      mdIndexPath = path.join(directoryName, '..', commonFilePath, 'index.md');
     }
   }
 
-  const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  const sourcePath =
+    [mdxPath, mdxIndexPath, mdPath].find(p => fs.existsSync(p)) ?? mdIndexPath;
   const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
-    root,
+    directoryName,
+    '..',
     'node_modules',
     'esbuild',
     'bin',
@@ -285,7 +284,10 @@ export async function getFileBySlug(slug: string) {
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
         remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [
+          remarkImageSize,
+          {sourceFolder: cwd, publicFolder: path.join(directoryName, '..', 'public')},
+        ],
         remarkMdxImages,
         remarkCodeTitles,
         remarkCodeTabs,
@@ -353,7 +355,7 @@ export async function getFileBySlug(slug: string) {
       };
       // Set the `outdir` to a public location for this bundle.
       // this where this images will be copied
-      options.outdir = path.join(root, 'public', 'mdx-images');
+      options.outdir = path.join(directoryName, '..', 'public', 'mdx-images');
 
       // Set write to true so that esbuild will output the files.
       options.write = true;
