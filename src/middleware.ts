@@ -1127,10 +1127,6 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
-  },
-  {
-    from: '/product/performance/event-detail/',
     to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
