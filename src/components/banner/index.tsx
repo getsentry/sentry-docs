@@ -2,7 +2,6 @@
 
 import {useEffect, useState} from 'react';
 import Image from 'next/image';
-
 import styles from './banner.module.scss';
 
 //
