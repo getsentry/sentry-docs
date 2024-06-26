@@ -384,22 +384,24 @@ function MyFeedbackForm() {
     <form id="my-feedback-form" onSubmit={async event => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
-      
+
       const attachment = async () => {
+        const attatchmentField = formData.get("attachment") as File;
         const data = new Uint8Array(
-          await formData.get("attachment").arrayBuffer()
+          await attatchmentField.arrayBuffer()
         );
         const attachmentData = {
           data,
-          ...formData.get("attachment"),
+          filename: 'upload', // Or pass attatchmentField.name,
+          // No need to set `contentType` because it's encoded in the `data` array
         };
         return attachmentData;
       };
 
       Sentry.captureFeedback({
-        name: formData.get("name"),
-        email: formData.get("email"),
-        message: formData.get("message"),
+        name: String(formData.get('name')),
+        email: String(formData.get('email')),
+        message: String(formData.get('message')),
       }, {
         attachments: [await attachment()],
       });
