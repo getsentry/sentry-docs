@@ -85,7 +85,7 @@ Sentry.init({
   integrations: [Sentry.replayIntegration()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 
@@ -109,7 +109,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 
@@ -128,7 +128,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 
@@ -164,6 +164,14 @@ Make sure that the `import` statements point to your newly created `sentry.serve
 
 To capture React render errors you need to add Error components for the App Router and the Pages Router respectively.
 
+<Alert title="Nested React Server Components" level="warning">
+
+Since Next.js is not exposing errors thrown in nested React Server Components, the SDK can currently not capture them.
+
+[Follow our proposal in the Next.js repository.](https://github.com/vercel/next.js/discussions/67149)
+
+</Alert>
+
 ### React Render Errors in App Router
 
 Create a [Custom Next.js Global Error component](https://nextjs.org/docs/app/building-your-application/routing/error-handling) for the App router:
@@ -187,8 +195,11 @@ export default function GlobalError({
   return (
     <html>
       <body>
-        {/* This is the default Next.js error component but it doesn't allow omitting the statusCode property yet. */}
-        <NextError statusCode={undefined as any} />
+        {/* `NextError` is the default Next.js error page component. Its type
+        definition requires a `statusCode` prop. However, since the App Router
+        does not expose status codes for errors, we simply pass 0 to render a
+        generic error message. */}
+        <NextError statusCode={0} />
       </body>
     </html>
   );
@@ -218,7 +229,7 @@ export default function GlobalError({ error }) {
 }
 ```
 
-Note that if you create [Next.js `error.js` files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
+Note that if you create [Next.js error.js files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
 This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
 
 ```tsx {filename:error.tsx}
@@ -486,7 +497,7 @@ Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-wi
 
 ## Configure Server-side Auto-instrumentation
 
-The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring.
+The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and tracing.
 
 ### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
 

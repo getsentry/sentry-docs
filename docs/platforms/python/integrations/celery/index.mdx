@@ -19,16 +19,7 @@ If you have the `celery` package in your dependencies, the Celery integration wi
 
 Make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
-<SignInNote />
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn='___PUBLIC_DSN___',
-    enable_tracing=True
-)
-```
+<PlatformContent includePath="getting-started-config" />
 
 ### Standalone Setup
 
@@ -74,9 +65,7 @@ import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    # ...
+    # same as above
     integrations=[
         CeleryIntegration(
             monitor_beat_tasks=True,
@@ -135,10 +124,9 @@ If you want to have more fine-grained control over trace distribution, you can o
 ```python
 import sentry_sdk
 
-# Enable global distributed traces (this is the default, just to be explicit.)
+# Enable global distributed traces (this is the default, just to be explicit)
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # same as above
     integrations=[
         CeleryIntegration(
             propagate_traces=True
@@ -154,7 +142,7 @@ my_task_b.apply_async(
     args=("some_parameter", )
 )
 
-# This will NOT propagate the trace. (The task will start its own trace):
+# This will NOT propagate the trace. The task will start its own trace:
 my_task_b.apply_async(
     args=("some_parameter", ),
     headers={"sentry-propagate-traces": False},

@@ -5,26 +5,40 @@ import {Platform, PlatformGuide} from 'sentry-docs/types';
 type Props = {
   children?: React.ReactNode;
   noGuides?: boolean;
+  notSupported?: string[];
   platform?: string;
   supported?: string[];
 };
 
 const isSupported = (
   platformOrGuide: Platform | PlatformGuide,
-  supported: string[]
+  supported: string[],
+  notSupported: string[]
 ): boolean => {
   if (platformOrGuide.categories === null) {
     return false;
   }
 
   // @ts-ignore
-  const categories = Object.values(platformOrGuide.categories);
+  const categories = Object.values(platformOrGuide.categories) as string[];
 
-  // @ts-ignore
-  return supported.length > 0 && supported.filter(v => categories.includes(v)).length > 0;
+  if (supported.length && !supported.some(v => categories.includes(v))) {
+    return false;
+  }
+
+  if (notSupported.length && notSupported.some(v => categories.includes(v))) {
+    return false;
+  }
+
+  return true;
 };
 
-export function PlatformCategorySection({supported = [], noGuides, children}: Props) {
+export function PlatformCategorySection({
+  supported = [],
+  notSupported = [],
+  noGuides,
+  children,
+}: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
 
@@ -36,7 +50,7 @@ export function PlatformCategorySection({supported = [], noGuides, children}: Pr
     return null;
   }
 
-  if (isSupported(currentPlatformOrGuide, supported)) {
+  if (isSupported(currentPlatformOrGuide, supported, notSupported)) {
     return children;
   }
 

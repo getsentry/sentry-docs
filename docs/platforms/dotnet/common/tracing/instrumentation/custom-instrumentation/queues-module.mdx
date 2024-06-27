@@ -1,0 +1,131 @@
+---
+title: Instrument Queues
+sidebar_order: 3000
+description: "Learn how to manually instrument your code to use Sentry's Queues module. "
+---
+Sentry comes with automatic instrumentation for the most common messaging queue systems. In case yours isn't supported, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
+
+## Producer Instrumentation
+
+To start capturing performance metrics, use the `transaction.StartChild()` function to wrap your queue producer events. Your span `op` must be set to `queue.publish`. Include the following span data to enrich your producer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | int | Size of the message body in bytes |
+
+Your `queue.publish` span must exist inside a transaction in order to be recognized as a producer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Go, you can start a new one using `SentrySdk.StartTransaction()`.
+
+You must also include trace headers in your message so that your consumers can continue your trace once your message is picked up.
+
+
+```csharp
+var connection = MyCustomQueue.Connect();
+
+// The message you want to send to the queue
+var queue = "messages";
+var message = "Hello World!";
+var messageId = "abc123";
+var sentryTrace = SentrySdk.getTraceHeader()?.ToString();
+var baggage = SentrySdk.getBaggage()?.ToString();
+
+// Create transaction
+var transaction = SentrySdk.StartTransaction(
+    "queue_producer_transaction",
+    "function"
+);
+
+// Create the span
+var span = transaction.StartChild(
+    "queue.publish",
+    "queue_producer"
+);
+
+// Set span data
+span.SetExtra("messaging.message.id", messageId);
+span.SetExtra("messaging.destination.name", queue);
+span.SetExtra("messaging.message.body.size", Encoding.UTF8.GetByteCount(message));
+
+// Publish the message to the queue (including current time stamp)
+var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+connection.Publish(
+    queue,
+    message,
+    now,
+    sentryTrace,
+    baggage
+);
+
+span.Finish();
+transaction.Finish();
+```
+
+
+## Consumer Instrumentation
+
+To start capturing performance metrics, use the `transaction.StartChild()` function to wrap your queue consumers. Your span `op` must be set to `queue.process`. Include the following span data to enrich your consumer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | number | Size of the message body in bytes |
+| `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
+| `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
+
+Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a <PlatformLink to="/integrations/#web-frameworks">supported web framework</PlatformLink>, the transaction is created by the integration. If you use plain Python, you can start a new one using `SentrySdk.StartTransaction()`.
+
+Use `SentrySdk.ContinueTrace()` to connect your consumer spans to their associated producer spans, and `span.SetExtra()` to mark the trace of your message as success or failed.
+
+
+```csharp
+var connection = MyCustomQueue.Connect();
+
+// Pick up message from queues
+var queue = "messages";
+var message = connection.Consume(queue);
+
+// Calculate latency (optional, but valuable)
+var now = DateTimeOffset.UtcNow;
+var messageTime = DateTimeOffset.FromUnixTimeSeconds(message["timestamp"]);
+var latency = now - messageTime;
+
+var sentryTraceHeader = message["sentry-trace"];
+var sentryBaggageHeader = message["baggage"];
+
+// Create transaction
+var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
+var transaction = SentrySdk.StartTransaction(
+    transactionContext,
+    "queue_consumer_transaction",
+    "function"
+);
+
+// Create the span
+var span = transaction.StartChild(
+    "queue.process",
+    "queue_consumer"
+);
+
+// Set span data
+span.SetExtra("messaging.message.id", message["message_id"]);
+span.SetExtra("messaging.destination.name", queue);
+span.SetExtra("messaging.message.body.size", Encoding.UTF8.GetByteCount(message["body"]));
+span.SetExtra("messaging.message.receive.latency", latency.TotalMilliseconds);
+span.SetExtra("messaging.message.retry.count", 0);
+
+try
+{
+    // Process the message
+    ProcessMessage(message);
+}
+catch (Exception)
+{
+    // In case of an error set the status to "internal_error"
+    span.Status = SpanStatus.InternalError;
+}
+
+span.Finish();
+transaction.Finish();
+```

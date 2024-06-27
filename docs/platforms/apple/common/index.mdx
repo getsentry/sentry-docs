@@ -1,34 +1,173 @@
-<PlatformContent includePath="getting-started-primer" />
-
-On this page, we get you up and running with Sentry's SDK.
-
-Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
-
-## Install
-
-Sentry captures data by using an SDK within your application’s runtime.
-
-<PlatformContent includePath="getting-started-install" />
-
-## Configure
-
-<PlatformContent
-  includePath="configure-early-in-app-lifecycle"
-  notSupported={["apple.ios"]}
-/>
-
-<PlatformContent includePath="getting-started-config" />
-
-## Verify
-
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
-
-<PlatformContent includePath="getting-started-verify" />
+On this page, we get you up and running with Sentry's Apple SDK, which will automatically report errors and exceptions in your application.
 
 <Note>
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
 
 </Note>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+<PlatformSection supported={["apple.visionos"]}>
+
+<Alert level="info" title="Experimental Support">
+
+The support for [visionOS](https://developer.apple.com/visionos/) is currently experimental, which means it may have bugs. We recognize the irony.
+
+</Alert>
+
+</PlatformSection>
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](https://docs.sentry.io/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](https://docs.sentry.io/product/profiling/). To enable tracing and/or profiling, click the corresponding checkmarks to get the code snippets.
+
+<PlatformSection notSupported={["apple.ios"]}>
+
+We recommend installing the SDK with Swift Package Manager (SPM), but we also support alternate [installation methods](install/). To integrate Sentry into your Xcode project, open your App in Xcode and open **File > Add Packages**. Then add the SDK by entering the git repo url in the top right search field:
+
+```
+https://github.com/getsentry/sentry-cocoa.git
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.ios"]}>
+We recommend installing the SDK through our [Sentry Wizard](https://github.com/getsentry/sentry-wizard) by running the following command inside your project directory:
+
+```bash
+brew install getsentry/tools/sentry-wizard && sentry-wizard -i ios
+```
+
+This will patch your project and configure the SDK. You'll only need to patch the project once, then you'll be able to add the patched files to your version control system.
+If you prefer, you can also [set up the SDK manually](/platforms/react-native/manual-setup/manual-setup/) or follow the instructions below to adapt the [configuration](#configure).
+
+<Expandable title="The following tasks will be performed by the Sentry Wizard">
+
+- Install the Sentry SDK via Swift Package Manager or Cocoapods
+- Update your `AppDelegate` or SwiftUI App Initializer with the default Sentry configuration and an example error
+- Add a new `Upload Debug Symbols` phase to your `xcodebuild` build script
+- Create `.sentryclirc` with an auth token to upload debug symbols (this file is automatically added to `.gitignore`)
+- If you're using Fastlane, a lane for uploading debug symbols to Sentry will be added
+
+</Expandable>
+
+</PlatformSection>
+
+## Configure
+
+To capture all errors, initialize the SDK as soon as possible, such as in your `AppDelegate` `application:didFinishLaunchingWithOptions` method:
+
+<SignInNote />
+
+```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "9-12", "profiling": "13-16"}}
+import Sentry
+
+func application(_ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+
+    SentrySDK.start { options in
+        options.dsn = "___PUBLIC_DSN___"
+        options.debug = true // Enabled debug when first installing is always helpful
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0
+
+        // Sample rate for profiling, applied on top of TracesSampleRate.
+        // We recommend adjusting this value in production.
+        options.profilesSampleRate = 1.0
+    }
+
+    return true
+}
+```
+
+```objc {tabTitle:Objective-C} {"onboardingOptions": {"performance": "8-11", "profiling": "12-15"}}
+@import Sentry;
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = @1.0;
+
+        // Sample rate for profiling, applied on top of TracesSampleRate.
+        // We recommend adjusting this value in production.
+        options.profilesSampleRate = @1.0;
+    }];
+
+    return YES;
+}
+```
+
+```swift {tabTitle:SwiftUI with App conformer} {"onboardingOptions": {"performance": "9-12", "profiling": "13-16"}}
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Enabled debug when first installing is always helpful
+
+            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.tracesSampleRate = 1.0
+
+            // Sample rate for profiling, applied on top of TracesSampleRate.
+            // We recommend adjusting this value in production.
+            options.profilesSampleRate = 1.0
+        }
+    }
+}
+```
+
+## Verify
+
+Verify that your app is sending events to Sentry by adding the following snippet, which includes an intentional error. You should see the error reported in Sentry within a few minutes.
+
+<Note>
+
+To verify crashes, ensure you run your application without a debugger attached. Otherwise, the SDK won't capture the crash.
+
+</Note>
+
+```swift {tabTitle:Swift}
+import Sentry
+
+do {
+    try aMethodThatMightFail()
+} catch {
+    SentrySDK.capture(error: error)
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+NSError *error = nil;
+[self aMethodThatMightFail:&error]
+
+if (error) {
+    [SentrySDK captureError:error];
+}
+```
+
+## Next Steps
+
+- <PlatformLink to="/features">Learn more about Sentry's Apple SDK features</PlatformLink>
+- <PlatformLink to="/dsym/">Add readable stack traces to errors</PlatformLink>
+- <PlatformLink to="/data-management/apple-privacy-manifest">Add Apple Privacy manifest</PlatformLink>

@@ -1,0 +1,325 @@
+---
+title: Event Payloads
+---
+
+Events are the fundamental data that clients, often through the use of an SDK, send
+to the Sentry server.
+
+Events are packed into [envelopes](/sdk/envelopes/) and are sent to the `/api/{PROJECT_ID}/envelope/` API endpoint.
+
+Sending event payloads to the `/api/{PROJECT_ID}/store/` API endpoint is deprecated.
+
+<Alert title="Note on backwards compatibility" level="info"><markdown>
+
+We strive to document the canonical format of an event and its additional
+interfaces. However, for backwards compatibility the server also
+understands events that are not in the canonical format described throughout the
+documentation.
+
+Existing SDKs may be using a historical format that is not recommended for new
+code.
+
+</markdown></Alert>
+
+<Alert title="Found a problem?" level="warning"><markdown>
+
+If documentation is lacking or outdated, please let us know by [opening an issue](https://github.com/getsentry/develop/issues/new).
+
+SDK developers might benefit from consulting the [source code defining the protocol as understood by the server](https://github.com/getsentry/relay/tree/master/relay-general/src/protocol).
+
+</markdown></Alert>
+
+## Required Attributes
+
+Attributes are simple data that Sentry understands to provide the most basic
+information about events. These are things like the unique ID of an event or the
+time when it occurred.
+
+The following attributes are required for all events.
+
+import "./properties/event_id.mdx"
+
+`timestamp`
+
+: Indicates when the event was created in the Sentry SDK. The format is either a
+string as defined in [RFC 3339](https://tools.ietf.org/html/rfc3339) or a
+numeric (integer or float) value representing the [number of seconds that have
+elapsed since the Unix epoch](https://en.wikipedia.org/wiki/Unix_time).
+
+```json
+{
+  "timestamp": "2011-05-02T17:41:36Z"
+}
+```
+
+or:
+
+```json
+{
+  "timestamp": 1304358096.0
+}
+```
+
+`platform`
+
+: A string representing the platform the SDK is submitting from. This will be
+used by the Sentry interface to customize various components in the interface.
+
+```json
+{
+  "platform": "python"
+}
+```
+
+Acceptable values are:
+
+- `as3`
+- `c`
+- `cfml`
+- `cocoa`
+- `csharp`
+- `elixir`
+- `haskell`
+- `go`
+- `groovy`
+- `java`
+- `javascript`
+- `native`
+- `node`
+- `objc`
+- `other`
+- `perl`
+- `php`
+- `python`
+- `ruby`
+
+## Optional Attributes
+
+Additionally, there are several optional values which Sentry recognizes and are
+highly encouraged:
+
+`level`
+
+: The record severity.
+
+Defaults to `error`.
+
+The value needs to be one on the supported level string values.
+
+```json
+{
+  "level": "warning"
+}
+```
+
+Acceptable values are:
+
+- `fatal`
+- `error`
+- `warning`
+- `info`
+- `debug`
+
+`logger`
+
+: The name of the logger which created the record.
+
+```json
+{
+  "logger": "my.logger.name"
+}
+```
+
+`transaction`
+
+: The name of the transaction which caused this exception.
+
+For example, in a web app, this might be the route name.
+
+```json
+{
+  "transaction": "/users/<username>/"
+}
+```
+
+`server_name`
+
+: Identifies the host from which the event was recorded.
+
+```json
+{
+  "server_name": "foo.example.com"
+}
+```
+
+`release`
+
+: The release version of the application.
+
+**Release versions must be unique across all projects in your organization**.
+This value can be the git SHA for the given project, or a product identifier
+with a semantic version (suggested format `my-project-name@1.0.0`).
+
+```json
+{
+  "release": "my-project-name@1.0.0"
+}
+```
+
+```json
+{
+  "release": "721e41770371db95eee98ca2707686226b993eda"
+}
+```
+
+`dist`
+
+: The distribution of the application.
+
+Distributions are used to disambiguate build or deployment variants of the
+same release of an application. For example, the dist can be the build number
+of an Xcode build or the version code of an Android build.
+
+```json
+{
+  "release": "721e41770371db95eee98ca2707686226b993eda",
+  "dist": "14G60"
+}
+```
+
+import "./properties/tags.mdx"
+
+`environment`
+
+: The environment name, such as `production` or `staging`. The default value should be `production`.
+
+```json
+{
+  "environment": "production"
+}
+```
+
+`modules`
+
+: A list of relevant modules and their versions.
+
+```json
+{
+  "modules": {
+    "my.module.name": "1.0"
+  }
+}
+```
+
+`extra`
+
+: An arbitrary mapping of additional metadata to store with the event.
+
+```json
+{
+  "extra": {
+    "my_key": 1,
+    "some_other_value": "foo bar"
+  }
+}
+```
+
+`fingerprint`
+
+: A list of strings used to dictate the deduplication of this event.
+
+```json
+{
+  "fingerprint": ["myrpc", "POST", "/foo.bar"]
+}
+```
+
+```json
+{
+  "fingerprint": ["{{ default }}", "http://example.com/my.url"]
+}
+```
+
+For information about overriding grouping see [Customize Grouping with
+Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
+
+`errors`
+
+: A list of errors in capturing or handling this event. This provides meta data
+  about event capturing and processing itself, not about the error or
+  transaction that the event represents.
+
+  This list is primarily populated by Sentry when receiving and processing the
+  event. SDKs are only encouraged to add entries here if there are severe
+  conditions that Sentry cannot detect by inspecting the remaining payload.
+
+  Errors must contain a required `type` field, which can be one of the types
+  declared in the Sentry [EventError] model. If there is no applicable type
+  variant, consider [opening an issue] to suggest the addition.
+
+  Apart from types, any attribute is valid. There are conventions for the
+  semantics of common error attributes, if they are included:
+
+- `name`: A string declaring the path to the payload field that causes or
+  exhibits the error. For example `modules[0].name`.
+- `value`: The original value of a field that causes or exhibits the error.
+
+
+```json
+{
+  "errors": [
+    {
+      "type": "unknown_error",
+      "path": "/var/logs/errors.log.1",
+      "details": "Failed to read attachment"
+    }
+  ]
+}
+```
+
+[eventerror]: https://github.com/getsentry/sentry/blob/master/src/sentry/models/eventerror.py
+[opening an issue]: https://github.com/getsentry/sentry/issues/new/choose
+
+## Size Limits
+
+Event ingestion imposes limits on the size of events.
+These limits are subject to future change and defined currently as:
+
+- *1MB* decompressed (and `200KB` compressed) for events of type `error`
+- *1MB* decompressed (and `200KB` compressed) for events of type `transaction`
+
+Sessions, client reports, replays, check-ins, and profiles are not events and have different size limits. See [Envelope Size Limits](/sdk/envelopes/#size-limits).
+
+## Core Interfaces
+
+All values in the event payload that are not basic attributes are data
+interfaces. The key is the canonical interface short name, and the value is the
+data expected by the interface (usually a dictionary).
+
+For the most part, interfaces are an evolving part of Sentry. Like with
+attributes, SDKs are expected to assume that more interfaces will be added at
+any point in the future.
+
+The core data interfaces are:
+
+- [Exception Interface](exception/)
+- [Message Interface](message/)
+- [Stack Trace Interface](stacktrace/)
+- [Template Interface](template/)
+
+## Scope Interfaces
+
+- [Breadcrumbs Interface](breadcrumbs/)
+- [User Interface](user/)
+- [Request Interface](request/)
+- [Contexts Interface](contexts/)
+- [Threads Interface](threads/)
+
+## Other Interfaces
+
+- [Debug Meta Interface](debugmeta/)
+- [SDK Interface](sdk/)
+
+## Type Definitions
+
+- [Event Type Definitions](types/)

@@ -62,4 +62,8 @@ module.exports = withSentryConfig(module.exports, {
   reactComponentAnnotation: {
     enabled: true,
   },
+
+  unstable_sentryWebpackPluginOptions: {
+    applicationKey: 'sentry-docs',
+  },
 });

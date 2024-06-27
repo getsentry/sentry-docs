@@ -1,0 +1,373 @@
+---
+title: Metrics
+sidebar_order: 13
+---
+
+Sentry supports the emission of pre-aggregated metrics information via the `statsd`
+envelope item.  This emission bypasses relay-side sampling and assumes a client side
+aggregator.  In the product these are referred to as "custom metrics" and internally
+the system sometimes carries the name "ddm" ([delightful developer
+metrics](/delightful-developer-metrics/)).  The functionality sits on top of the
+generics metrics platform which is also used for span and transaction level
+metrics.
+
+These metrics are considered "trace seeking" which means that they should attempt to
+establish a relationship to the current span or trace.
+
+## Introduction
+
+Custom metrics are sent into the `custom` namespace in the generic metrics platform.
+The features exposed from the generic metrics platform to the SDKs are all
+metric types (**counters**, **distributions**, **gauges** and **sets**).  SDKs
+are required to perform local aggregation unless they perform on-shot emissions.
+
+## Aggregator Behavior
+
+Metrics are aggregated into a process wide aggregator which is required to flush
+in intervals that are reasonable for the SDK.  These aggregations are lossless
+(unless the metric type is already lossy which for instance applies to sets
+and gauges) and are required to support tags.  The following general guidelines
+exist:
+
+* **10 Second Bucketing:** SDKs are required to bucket into 10 second intervals
+   (**rollup in seconds**) which is the current lower bound of metric accuracy.
+* **Flush Shift:** SDKs are required to shift the flush interval by `random() * rollup_in_seconds`.
+  That shift is determined once per startup to create jittering.
+* **Force flush:** an SDK is required to perform force flushing ahead of scheduled
+  time if the memory pressure is too high.  There is no rule for this other than
+  that SDKs should be tracking abstract aggregation complexity (eg: a counter
+  only carries a single float, whereas a distribution is a float per emission).
+  For Mobile SDKs, where a low memory footprint is crucial, the recommendation is to use a maximum
+  memory footprint of around 10 KiB for metrics, which requires the SDKs to force flush for around
+  every 1000 SetMetric entries, for example.
+* **Background Aggregation:** SDKs are encouraged to defer flushing and aggregation
+  into a background thread.  For SDKs where `fork()` is to be expected, the background
+  thread needs to ensure it restarts after fork (eg: python).
+* **Tagging:** metrics are tagged by key value pairs, where each key can have more
+  than one value.  Both keys and values are limited to strings, but the SDK can
+  expose other types if it has a reasonable way to stringify these.
+
+In abstract terms the aggregator is recommended to look a bit like this:
+
+```python
+class Aggregator:
+    def __init__(self):
+        self.buckets = {}
+    def get_bucket(self, ts):
+        return self.buckets.setdefault(ts // 10, {})
+    def add(self, type, key, value, unit, tags):
+        mri = "%s:%s" % (type, key)
+```
+
+## Normalization
+
+Normalization shall be done for `statsd` envelope items with unicode support if possible:
+* **Metric Name**: Regex `[^a-zA-Z0-9_\-.]+` with replacement character `_`.
+* **Metric Namespace and Unit**: Regex `[^a-zA-Z0-9_]+` with no replacement character.
+* **Metric Tag Key**: Regex `[^a-zA-Z0-9_\-.\/]+` with no replacement character.
+* **Metric Tag Value**: See below.
+
+{/* Internal note: We can't use `\w` instead of `a-zA-Z0-9` because on some Regex engines `\w` includes chars such as `ä`, `ö` or `é`. */}
+
+### Tag Values Replacement Map
+
+Tag Values support the full UTF-8 character range, except for control characters.
+Reserved characters for Tag Values are `\n`, `\r`, `\t`, `\`, `|`, `,`. The replacement map is as follows.
+
+| Character | Replacement |
+|:--|:--|
+| Line Feed (`<LF>`) | `\n` |
+| Carriage Return (`<CR>`) | `\r` |
+| Tab (`<HT>`) | `\t` |
+| Backslash (`\`) | `\\` |
+| Pipe (`\|`) | `\u{7c}` |
+| Comma (`,`) | `\u{2c}` |
+
+### Maximum Lengths
+
+The lengths of the following components of the `statsd` envelope items should be limited:
+- **Metric Name**: 150 characters.
+- **Metric Unit**: 15 characters.
+
+## Units
+
+SDKs should permit any string unit, but some of them are known to the system and
+will in the future permit recalculations.  They are documented as part of
+relay: [`MetricUnit`](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html).
+
+## Span Seeking and Span Creating Mode
+
+When a metric is emitted it shall either determine the current span (span seeking) or
+create a new span (span creating).
+
+In **span seeking** mode, the span is determined based on the current span on the scope.
+APIs such as `.increment()`, `.distribution()`, `.gauge()` and `.set()` operate in span
+seeking mode.
+
+In **span creating** mode a new active span is started.
+The `.timing()` API operates in span creating mode.
+
+In span creating mode the span should be setup the following way:
+* `span.op = "metric.timing"`
+* `span.description = key` (the metric key)
+* the metric tags should be applied to the span as well
+* the span is finished once the timing callback finishes
+
+From there two things shall be happening unless they are disabled:
+* **Common tag attaching:** the tags `transaction`, `release` and `environment`
+  shall be automatically added to the metric.
+* **Span local aggregation:** the metric shall be attached to the determined span
+  as a local summary (a form of gauge).  For more information see below.
+
+## API
+
+API wise the SDKs are required to expose static metric functions which are to be
+defined in a `metrics` module.  This also documents the aggregation state for
+each metric type.  They are constructed with an initial value, have an `add`
+method to add another value and a `serialize` method that returns the values for
+the final emission as array.
+
+### Common Attributes
+
+The following attributes are common for all metrics.  These should be emitted
+via keyword arguments, some configuration struct or whatever is reasonable
+in the target language.
+
+* `key`: the name of the metric.  SDKs are required to normalize this name.
+* `value`: the value to be emitted, this is specific by metric type.
+* `unit`: the unit for the metric, see below.
+* `tags`: a dictionary or list of tuples of tags and their values.
+* `stacklevel`: a utility attribute for SDKs where n stack level shall be
+  ignored for code location recording.  In languages that have better
+  facilities this can be removed.
+
+### Span Aggregation
+
+On a span every metric is aggregated as a gauge.  For each metric the following
+attributes are retained per span:
+
+* `min`: the minimum value observed.
+* `max`: the maximum value observed.
+* `count`: the number of emissions.
+* `sum`: the sum of all values.
+* `tags`: the metric tags and their values.
+
+The local aggregator behaves as such:
+
+```python
+class LocalAggregator:
+    def add(self, type, value, value, unit, tags):
+        # Assumes sorted tags
+        bucket_key = ("%s:%s@%s" % (ty, key, unit), tags)
+
+        old = self._measurements.get(bucket_key)
+        if old is not None:
+            v_min, v_max, v_count, v_sum = old
+            v_min = min(v_min, value)
+            v_max = max(v_max, value)
+            v_count += 1
+            v_sum += value
+        else:
+            v_min = v_max = v_sum = value
+            v_count = 1
+        self._measurements[bucket_key] = (v_min, v_max, v_count, v_sum)
+```
+
+### Counters
+
+Counters (`c`) have a single method for emission:
+
+* `increment(key, value: int | float = 1.0, unit = "none", ...)`: increments the
+  given key by one in the bucket.
+
+**Aggregation state:**
+
+```python
+class Counter:
+    def __init__(self, initial):
+        self.value = initial
+    def add(self, value):
+        self.value += value
+    def serialize(self):
+        return [self.value]
+```
+
+**Span aggregation:** the value is added to the span local aggregator.
+
+### Distributions
+
+A distribution (`d`) holds all values observed.  There are multiple methods that
+shall exist on an SDK to support common use cases.  The basic way to emit a
+distribution is the low level `distribution` function, higher level methods
+depend on the facilities in the language.
+
+* `distribution(key, value: int | float, unit = "none", ...)`: emits a single
+  value into a distribution.
+
+For languages with context managers (eg: `with` in Python):
+
+* `timing(key, ...)`: this shall measure the time of a code block and emit
+  the measured time as distribution with a time unit (`second`, `millisecond`,
+  etc.).  The default unit shall be `second` in current SDKs as we are not yet
+  normalizing values on the server.
+
+For languages with lambda callback patterns (eg: `timed(() => { ... })`):
+
+* `timing(key, ..., callback)`: this shall measure the time of the invoked lambda and
+  emit the measured time as distribution with a time unit (`second`, `millisecond`,
+  etc.).  The default unit shall be `second` in current SDKs as we are not yet
+  normalizing values on the server.
+
+For languages with decorators:
+
+* `@timing(key, ...)` or `@timed(key, ...)`: Can be used to annotate a function
+  so that every time it is invoked, a timing is emitted.
+
+**Aggregation state:**
+
+```python
+class Distribution:
+    def __init__(self, initial):
+        self.values = [initial]
+    def add(self, value):
+        self.values.append(value)
+    def serialize(self):
+        return self.values
+```
+
+**Span aggregation:** the value is added to the span local aggregator.
+
+### Gauges
+
+Gauges (`g`) are often also called "summaries" as they
+are similar in nature to distributions, but somewhat lossy.  They are however emitted
+per span when metric summaries are enabled.  As they are hard to aggregate across
+different emitters they can be tricky to use properly in practice.
+
+They are emitted by a single function called `gauge`:
+
+* `gauge(key, value: int | float, unit = "none", ...)`: emits a single value into the
+  gauge.
+
+**Aggregation state:**
+
+```python
+class Gauge:
+    def __init__(self, initial):
+        self.last = initial
+        self.min = initial
+        self.max = initial
+        self.sum = initial
+        self.count = 1
+    def add(self, value):
+        self.last = value
+        self.min = min(self.min, value)
+        self.max = max(self.max, value)
+        self.sum += value
+        self.count += 1
+    def serialize(self):
+        return (
+            self.last,
+            self.min,
+            self.max,
+            self.sum,
+            self.count,
+        )
+```
+
+**Span aggregation:** the value is added to the span local aggregator.
+
+### Sets
+
+Sets (`s`) are used to count unique members.  SDKs are supposed to accept integers and
+strings at least, but they are encouraged to use CRC32 to fold them into a 32bit integer.
+As such the aggregation state is partially lossy.
+
+They are emitted with a single method:
+
+* `set(key, value: int | string, unit = "none", ...)`: marks a single value to be in the set.
+
+**Aggregation state:**
+
+```python
+class Set:
+    def __init__(self, initial):
+        self.value = {initial}
+    def add(self, value):
+        self.value.add(value)
+    def serialize(self):
+        def _hash(x):
+            if isinstance(x, str):
+                return crc32(x.encode("utf-8")) & 0xFFFFFFFF
+            return int(x)
+        return [_hash(value) for value in self.value]
+```
+
+**Span aggregation:** the value `1` is added to the span local aggregator for new members.
+
+## Serialization
+
+Metrics are emitted in regular flush intervals (every 5 seconds, with a random offset that
+is determined once per startup) as envelope items.  The item type is `statsd` and the serialization
+format is statsd compatible.  Unlike normal statsd, more than one value can be emitted separated
+by a colon.  These values are the results of calling `serialize` or similar on the aggregation
+state.
+
+The format is documented as part of relay: [relay_metrics](https://getsentry.github.io/relay/relay_metrics/index.html).
+
+Additionally metric summaries retained on the spans shall be emitted as `_metrics_summary`
+on the metrics as documented by this RFC: [RFC-0123](https://github.com/getsentry/rfcs/blob/main/text/0123-metrics-correlation.md).
+
+
+## Hooks
+
+SDKs are encouraged to provide a `before_emit_metric` callback allowing developers to discard a metric from
+being emitted and later aggregated. The provided parameters are the metric key and the tags.
+The callback either returns `True` or `False`, indicating if the metric should be emitted or
+not.
+
+```python
+def before_emit_metric(key, tags):
+    if key in ["metric_a", "metric_b"]:
+        return False
+    return True
+
+sentry_sdk.init(
+    _experiments={
+        "enable_metrics": True,
+        "before_emit_metric": before_emit_metric
+    }
+)
+```
+
+
+## Meta Data
+
+Additionally SDKs are encouraged to capture location information once per metric.  At metric
+emission time the system shall be collecting which code location emitted a metric and retain it.
+For that the same format as for the [`frame`](/sdk/event-payloads/stacktrace/) on the stacktrace
+shall be used.  `stacklevel` number of frames shall be ignored.
+
+The meta data is emitted in JSON as envelope item called `metric_meta`:
+
+```json
+{
+  "timestamp": 1701743645,
+  "mapping": {
+    "encoded_mri": [{
+      "type": "location",
+      "filename": "..."
+    }]
+  }
+}
+```
+
+Today only code mappings are supported.  Each key is an encoded MRI (eg: `c:custom/foo@none`), each
+value in the mapping array has a key called `type` which today can only be `"location"`.  All other
+keys are the same format as the [`frame`](/sdk/event-payloads/stacktrace/) on the stacktrace.  Today
+SDKs should send code locations at least once a day, and they can round the timestamp.
+
+## Reference Implementation
+
+The Python SDK holds a reference implementation in the `metrics.py` module for the full
+feature set: [metrics.py](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/metrics.py).

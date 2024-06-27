@@ -1,0 +1,173 @@
+---
+title: Custom Instrumentation
+description: "Learn how to capture performance data on any action in your app."
+sidebar_order: 20
+---
+
+<Note>
+
+To capture transactions and spans customized to your organization's needs, you must first <PlatformLink to="/tracing/">set up tracing.</PlatformLink>
+
+</Note>
+
+To add custom performance data to your application, you need to add custom instrumentation in the form of spans. Spans are a way to measure the time it takes for a specific action to occur. For example, you can create a span to measure the time it takes for a function to execute.
+
+To get started, import the SDK.
+
+<PlatformContent includePath="enriching-events/import" />
+
+There are three key functions for creating spans:
+
+- [startSpan](#starting-an-active-span-startspan): Creates a new span that is active, and which is automatically ended. You'll likely want to use this function.
+- [startSpanManual](#starting-an-active-span-with-manual-end-startspanmanual): Creates a new span that is active, which has to be ended manually.
+- [startInactiveSpan](#starting-inactive-spans-startinactivespan): Creates a new span that is inactive, which has to be ended manually.
+
+## Active vs. Inactive Spans
+
+When a new span is started, it will automatically be started as a child of the currently active span, if there is one. This means that if a span is started as an **active span**, any spans that are created inside of the callback where the span is active will be children of that span. Additionally, errors will be tied to the currently active span, if there is one.
+
+In contrast, **inactive spans** will never have children automatically associated with them. This is useful if you do not care about capturing child activity.
+
+A key constraint for active spans is that they can only be made active inside of a callback. This constraint exists because otherwise it becomes impossible to associate spans with the correct parent span when working with asynchronous code.
+
+In places where you are not able to wrap executing code in a callback (e.g. when working with hooks or similar) you have to work with inactive spans, and can combine this with [withActiveSpan](#with-active-span) to manually associate child spans with the correct parent span.
+
+<PlatformCategorySection supported={['browser']}>
+
+## Span Hierarchy in the Browser
+
+In browser environments, spans are by default collected in a flat hierarchy where every span is the direct child of the root span. You can opt into a more fine-grained hierarchy but there are trade-offs.
+
+The key reason for keeping a flat hierarchy is because in browsers it's impossible to reliably keep track of the active span across asynchronous boundaries. This means that if multiple asynchronous operations are started in parallel, it is not possible to determine which span is the parent of which child span. Imagine the following example:
+
+```javascript
+Sentry.startSpan({ name: "span 1" }, async () => {
+  await fetch("https://example.com/1");
+  await fetch("https://example.com/2");
+  await fetch("https://example.com/3");
+});
+
+Sentry.startSpan({ name: "span 2" }, async () => {
+  await fetch("https://example.com/4");
+  await fetch("https://example.com/5");
+  await fetch("https://example.com/6");
+});
+```
+
+In the browser, there would be no way to know that `span 1` is only active inside of its callback, while `span 2` is active in the other callback. Because of this, in reality, _all_ fetch spans would become children of `span 2`. This is misleading and confusing, which is why by default in the browser, **all spans will become children of the root span** (which is usually the pageload or navigation span). This means that you will always have a flat hierarchy of spans.
+
+This is a tradeoff that we have made to ensure that the data that is captured is accurate and reliable. If you need to capture a more complex hierarchy of spans, you can opt-out of this behavior by setting `parentSpanIsAlwaysRootSpan: false`:
+
+```javascript
+Sentry.init({
+  parentSpanIsAlwaysRootSpan: false,
+});
+```
+
+This will revert to use the full hierarchy behavior, where spans are children of the currently active span. However, this may lead to incorrect data in the case of multiple parallel asynchronous operations - it is up to you to ensure there are no multiple parallel asynchronous operations that start spans in this case.
+
+</PlatformCategorySection>
+
+## Span Starting Options
+
+The following options can be used for all span starting functions:
+
+| Option             | Type                        | Description                                                         |
+| ------------------ | --------------------------- | ------------------------------------------------------------------- |
+| `name`             | `string`                    | The name of the span.                                               |
+| `op`               | `string`                    | The operation of the span.                                          |
+| `startTime`        | `number`                    | The start time of the span.                                         |
+| `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                   |
+| `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.         |
+| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI. |
+
+Only `name` is required, all other options are optional.
+
+## Starting an Active Span (`startSpan`)
+
+For most scenarios, we recommend to start active spans with `Sentry.startSpan()`. This will start a new span that is active in the provided callback, and will automatically end the span when the callback is done. The callback can be synchronous, or asynchronous (a promise). In the case of an asynchronous callback, the span will be ended when the promise is resolved or rejected. If the provided callback errors or rejects, the span will be marked as failed.
+
+<PlatformContent includePath="performance/start-span" />
+
+## Starting an Active Span with Manual End (`startSpanManual`)
+
+Sometimes, you do not want the span to be ended automatically when the callback is done. In this case, you can use `Sentry.startSpanManual()`. This will start a new span that is active in the provided callback, but will not be automatically ended when the callback is done. You have to manually end the span by calling `span.end()`.
+
+<PlatformContent includePath="performance/start-span-manual" />
+
+## Starting Inactive Spans (`startInactiveSpan`)
+
+To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
+
+<PlatformContent includePath="performance/start-inactive-span" />
+
+## Utilities to work with Spans
+
+We expose some helpful utilities that can help you with custom instrumentation.
+
+### `getActiveSpan`
+
+Returns the currently active span.
+
+```javascript
+const activeSpan = Sentry.getActiveSpan();
+```
+
+### `getRootSpan`
+
+Returns the root span of a given span. If the span is already the root span, it will return the span itself.
+
+```javascript
+const activeSpan = Sentry.getActiveSpan();
+const rootSpan = activeSpan ? Sentry.getRootSpan(activeSpan) : undefined;
+```
+
+### `withActiveSpan`
+
+This method allows you to make a span active for the duration of a callback. You can use this in combination with `startInactiveSpan` to manually associate child spans with the correct parent span:
+
+```javascript
+const span = Sentry.startInactiveSpan({ name: "Parent Span" });
+
+Sentry.withActiveSpan(span, () => {
+  // `span` is now active, any other spans will be children of it
+  Sentry.startSpan({ name: "Child Span" }, () => {
+    // Do something
+  });
+});
+```
+
+You can also pass `null` to `withActiveSpan` to ensure a span will not have any parent:
+
+```javascript
+Sentry.withActiveSpan(null, () => {
+  // This will not have a parent span, no matter what
+  Sentry.startSpan({ name: "Parent Span" }, () => {
+    // Do something
+  });
+});
+```
+
+### `suppressTracing`
+
+Suppress the creation of sampled spans for the duration of the callback. This is useful when you want to prevent certain spans from being captured. For example, if you do not want to create spans for a given fetch request, you can do:
+
+```javascript
+Sentry.suppressTracing(() => {
+  fetch("https://example.com");
+});
+```
+
+### Distributed Tracing
+
+See <PlatformLink to="/tracing/trace-propagation/custom-instrumentation/">Distributed Tracing</PlatformLink> for details on how to manually set up distributed tracing.
+
+## Improving Span Data
+
+### Adding Span operations ("op")
+
+Spans can have an operation associated with them, which help activate Sentry identify additional context about the span. For example database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations and filters for spans with known operations.
+
+Sentry maintains a [list of well known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
+
+<PlatformContent includePath="performance/span-operations" />

@@ -1,0 +1,47 @@
+---
+title: "Time-series Storage"
+---
+
+Sentry provides a service to store time-series data. Primarily this is used to display aggregate information for events and projects, as well as calculating (in real-time) the rates of events.
+
+## The RedisSnuba backend (recommended)
+
+This is the **only backend that works 100% correctly**:
+
+```python
+SENTRY_TSDB = 'sentry.tsdb.redissnuba.RedisSnubaTSDB'
+```
+
+This backend talks to Snuba for event ingestion related metrics, and to Redis for everything else. Snuba needs to have its own outcomes consumer running, which is currently not part of devservices.
+
+The wrapped Redis TSDB can be configured like so (see further down for Redis options):
+
+```python
+SENTRY_TSDB_OPTIONS = {
+    'redis': ... # options dict for RedisTSDB here
+}
+```
+
+## The Dummy Backend
+
+As its name implies, _all_ TSDB data will be dropped on write and substituted with zeroes on read:
+
+```python
+SENTRY_TSDB = 'sentry.tsdb.dummy.DummyTSDB'
+```
+
+## The Redis Backend
+
+The "bare" Redis backend reads and writes all data to Redis. Various columns related to event ingestion (Organization Stats) will show zeroed out data, because that data is only available in Snuba.
+
+```python
+SENTRY_TSDB = 'sentry.tsdb.redis.RedisTSDB'
+```
+
+By default, this will use the `default` named Redis cluster. To use a different cluster, provide the `cluster` option, as such:
+
+```python
+SENTRY_TSDB_OPTIONS = {
+    'cluster': 'tsdb',
+}
+```

@@ -1,0 +1,117 @@
+---
+title: "Cross Region Replication"
+---
+
+Our data-model includes many relations between users and the objects they create or interact with. Eventually users are deleted, and they need to be detached from the records they created, or those records need to be destroyed. Before sentry became a multi-region application, we relied on a mixture of Django callbacks, and postgres constraints to cascade deletions. However, in a multi-region state we arent't able to rely on these anymore as Users are in [Control Silo](/architecture/#silo-modes) and many of the objects they interact with are in the various Region Silos.
+
+## HybridCloud Foreign Keys
+
+Like `ForeignKey` the `HybridCloudForeignKey` field provides relational cascade semantics to the application. Usage of `HybridCloudForeignKey` is very similar to the standard `ForeignKey`:
+
+```python
+@region_silo_model
+class GroupHistory(Model):
+    organization = FlexibleForeignKey("sentry.Organization", db_constraint=False)
+    group = FlexibleForeignKey("sentry.Group", db_constraint=False)
+    project = FlexibleForeignKey("sentry.Project", db_constraint=False)
+    release = FlexibleForeignKey("sentry.Release", null=True, db_constraint=False)
+
+    user_id = HybridCloudForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete="SET_NULL")
+```
+
+`HybridCloudForeignKey` supports the same `on_delete` and `db_index` options that
+`FlexibleForeignKey` does, however cascade operations are **eventually consistent**
+
+## Tombstones
+
+Tracking the absence of a record is complicated. It is far simpler to track the presence of another object. When a cross region resource (like a user) is deleted we create and propagate a marker of what once was aka a *Tombstone*. The presence of a tombstone is used to cleanup data that was previously related now deceased record.
+
+Tombstones have a few properties:
+
+- `id` a monotonic integer that increases as new tombstones are received.
+- `table_name` The table the tombstone is for.
+- `object_identifier` The record that has been removed.
+
+With these properties we can reconcile a record's removal with data removals in another region.
+
+### Tombstone Workflow
+
+User, Organization, and Membership deletions are the most common form of cross region deletions that leverage tombstones. Our implementation of tombstones is powered by [Outbox es](/backend/outboxes/) to reliably and eventually propagate changes to other regions.
+
+The flow for removing a user is
+
+![tombstone workflow diagram](https://mermaid.ink/svg/pako:eNplkTFrwzAQhf-K0BYcD203Q7O0ayHEdNMiSxdHIN2l0qk0hPz3ntMUYme703vf49A7a0cedKcLfFVAB-_Bjtkmg7YyYU0DZIOyOaasPsu0HW3m4MLRIqs3Qs4UVR8izZUdjIHwJhicUNVuNs0MUZ3yEIFB1UkP_vXp-cXgzCLQktlBou8b06hiZabKA_2oBKXYEZYRktFerxd4OD3Kq-b-XjFt6xBDOTzE3ruuoXOsn05hSkORz1va29XCvQNH6EKcIXqtE-Rkg5dWzgaVMpoPkMDoTkYPe1sjG23wItappf6ETnecK6x1PXrL_yXqbm9jkVfwQer7-Gv6WvjlF-fzsOs)
+[diagram source](https://mermaid.live/edit#pako:eNplkTFrwzAQhf-K0BYcD203Q7O0ayHEdNMiSxdHIN2l0qk0hPz3ntMUYme703vf49A7a0cedKcLfFVAB-_Bjtkmg7YyYU0DZIOyOaasPsu0HW3m4MLRIqs3Qs4UVR8izZUdjIHwJhicUNVuNs0MUZ3yEIFB1UkP_vXp-cXgzCLQktlBou8b06hiZabKA_2oBKXYEZYRktFerxd4OD3Kq-b-XjFt6xBDOTzE3ruuoXOsn05hSkORz1va29XCvQNH6EKcIXqtE-Rkg5dWzgaVMpoPkMDoTkYPe1sjG23wItappf6ETnecK6x1PXrL_yXqbm9jkVfwQer7-Gv6WvjlF-fzsOs)
+
+In step 5 and 6 of the above diagram we reconcile the tombstone changes with the rest of the data in the region. Tombstones needs to be reconciled for each relation that the removed record had. For example, removing a user will:
+
+- Delete the user’s saved searches, dashboards, and more using the `CASCADE` action.
+- Null out the user’s in alert rules, releases and more using the `SET NULL` action.
+
+### Tombstone Reconciliation
+
+For each model that has a `HybridCloudForeignKey` we have an arbitrary amount of data to process. Furthermore, due to eventual consistency it is possible for us to receive new records referencing a deleted entity after an entity has been deleted. 
+
+To account for this inherit eventual consistency we maintain a set of ‘watermark’ for each relation. Watermarks can be incremented in batches and progress can be made on each relation in isolation.
+
+For each relationship that the application has to a tombstoned model we do the following:
+
+1. Get the current watermark for the relationship. A watermark consists of the last fully processed record + transaction identifier.
+2. If the current tombstone still has rows referencing it, process another batch of deletions. Deletions can take the form of additional scheduled background deletion, or bulk update queries for the `SET NULL` action.
+3. If the current tombstone has been fully processed, advance the tombstone watermark so that subsequent tombstones are processed.
+4. Repeat steps 1-3 until all tombstones have been processed.
+
+### Adding new HybridCloudForeignKey usage
+
+If you're making a foreign key relationship to an existing model like `User` you don't need to do anything additional to have foreign key actions taken. If you're creating a new model that will be used in `HybridCloudForeignKey` relations, there are several steps that must be completed.
+
+1. Add a new `OutboxCategory` for your model.
+2. Your model's `delete` method must save outbox messages in the same
+   transaction as the `delete` is performed.
+3. You need to implement an 'outbox receiver' that uses `maybe_process_tombstone` to generate a tombstone record.
+
+With these tasks completed, the tombstone system will be able to cascade
+delete operations to related models in other regions.
+
+## Replicated Models
+
+Replicated models allow models to be read locally in all regions where they are used. While reads can be done in all regions, writes must be done in the 'owning' region. Replicated models incur additional complexity and operational overhead and should be used sparingly. Replicated models are a good fit for:
+
+- Records with high read throughput
+- Read operations where the overhead of RPC would cause unacceptable performance overhead.
+- Records where we can accept **eventual consistency**, and don't have requirements for 'read after write' semantics.
+
+Replicated models are powered by [outboxes](/backend/outboxes/) and use outboxes to push state changes from the owning region into regions that are interested in the changes in record state. For organization scoped resources, this is often only the region that the Organization is located in. For User scoped regions, this is generally the regions that a user has membership in.
+
+### Adding a new replicated model
+
+Adding a replicated model rqeuires a number of changes to the 'source' model and creating a 'replica' model. The high-level process to add a replicated model is:
+
+1. Define the 'replica' model. This model should have similar or the same schema as the source model. Take care to preserve the source model id as a separate field in the schema so that updates and deletes can be performed on replicated data.
+2. Add a new `OutboxCategory` for model updates, and add that `category` to the model class.
+3. Add an RpcModel subclass for your model. The RpcModel is used to serialize the state between regions.
+4. Add new an RPC method to `region_replica_service` or `control_replica_service` to handle replication for your model. Your replication RPC method should accept your `RpcModel` as a parameter and idempotently update the replica model.
+5. Update the source model to inherit from `ReplicatedControlModel` or `ReplicatedRegionModel`. Choose a base class based on the silo mode of the 'source' model.
+6. Implement the `payload_for_update`, `outboxes_for_update`, `handle_async_replication`, and `handle_async_deletion` methods as required.
+
+For an existing example of replicated models see `OrgAuthToken` and `OrgAuthTokenReplica`.
+
+### Backfilling replicated models
+
+After creating a replicated model and getting replication working you'll need a way to backfill all existing records from the source region into the regions where replicas are. The replicated model machinery includes tooling for running backfills, and re-running those backfills as schema evolves. Under the hood, replica backfills are completed by generating and processing outbox messages for each record that needs to be replicated.
+
+Before backfills can be performed on a replicated model the following needs to be done:
+
+1. Define an option following the pattern `outbox_replication.{table_name}.replication_version` in `sentry/hybridcloud/options.py`. Set the default value to `0`.
+2. Set the option you created in step 1 to the default value with options-automator.
+
+With these steps completed you're ready to begin a backfill. Backfills are controlled by incrementing the option value to be equal to the `replication_version` defined on the model class. By default `replication_version` is set to `1`. Backfills will incrementally make progress in batches, as to not overwhelm outbox delivery.
+
+### Running backfills as schema evolves
+
+As the schema of your model and its replica evolve, you may need to re-run
+backfills to synchronize state without having to wait for user action.
+
+1. Increment the `replication_version` attribute on the 'source' model.
+2. Update the matching `outbox_replication` option value to start another
+   backfill.

@@ -1,0 +1,209 @@
+---
+title: UI Component Library
+---
+
+<Alert level="info">
+  To jump straight in visit <Link to="https://sentry.io/orgredirect/organizations/:orgslug/stories/"><code>/stories/</code></Link> on your existing Sentry Org/Install.
+</Alert>
+
+## What is a Component Library
+
+This component library is a (growing) collection of all the React components and hooks that are available within the getsentry/sentry codebase. 
+
+The library consists of the framework itself, which helps to make stories available & discoverable, as well as the story content. Each story is meant to describe how to use a React Component or hook, as well as the properties, behaviors, and common or recommended combinations.
+
+## Accessing and Using the Library
+
+The Component Library is implemented as a webpage inside the main sentry application. Whenever Sentry is running, the Library is available.
+
+- **Prod Access**<br />
+    Log in and then visit [`/stories/`](https://sentry.io/orgredirect/organizations/:orgslug/stories/) on your existing Sentry Org. This works the same on sentry.io or for self-hosted installations.
+
+- **Dev Access**<br />
+    Whether you are using `yarn dev-ui` to start a development server, or `sentry devserver` to spin up all the services locally, you can access the Component Library by logging in and changing the path from `/issues/` (the default landing page) to `/stories/`. 
+
+## Ownership 
+
+Stories are explicitly **not owned** by the original author or team that created a given component. **Stories are owned by the reader (you)**.
+
+Therefore if you are reading a story and notice a mistake, omission, or something confusing then be empowered to make a change and improve things!
+
+Similarly if you notice a component is missing from the library be empowered to add it. No one is required to be an expert when adding or editing an entry, but you will make things easier for yourself and your teammates by putting in the effort to be as clear and complete as possible.
+
+## Creating new Stories
+
+### Using the `storyBook()` framework
+
+The easiest way to start documenting a single component is to import and use `storyBook()`.
+
+Here's a template to copy, edit, and get started with:
+
+```typescript
+// Filename: components/button.stories.tsx
+
+import {Button} from 'sentry/components/button'; // replace with your component
+import storyBook from 'sentry/stories/storyBook';
+
+export default storyBook(Button, story => {
+  story('Default', () => <Button>Default Button</Button>);
+});
+```
+
+This template includes all the basics:
+
+1. The filename is `button.stories.tsx` and sits directly beside `button.tsx` which is the component being described.
+2. The file uses a default export; there is no need to name things when there is only one export.
+3. To create the `storyBook()` we're passing in the `Button` component directly as the first argument. This sets the title at the top of the page, and avoids typos.
+4. We've implemented a function that accepts `story` as its argument. This is inspired by `jest` and the [`describe()`](https://jestjs.io/docs/api#describename-fn) function.
+5. Each time we call `story()` we can render out a unit onto the page. This includes a title, and the rendered component example. This is similar to `jest` and the [`test()` or `it()`](https://jestjs.io/docs/api#testname-fn-timeout) function, with the exception that `story` is not a global.
+    
+Using this framework you get some nice things automatically:
+
+- Stories are printed in the same order they are written in the source file
+- Each `story()` callback can be async
+
+Some tips to remember:
+
+- Don't be afraid to import anything else you need to help illustrate use cases for your component. It's useful to leverage `<p>` and `<Fragment>` in most cases for example.
+- If you are demonstrating a component that relies on a global hook like `useOrganization()` or `usePageFilters()`, then you should wrap your story with those context providers manually.
+- Named exports, or a mix of named and default exports, are all supported. This is more useful with [non-framework stories](#non-framework-stories).
+- You can pass the component itself into `storyBook()` to get a nice title on the page. This avoids typos. But be careful of scenarios where a string should be used instead! For example, in a production build components that use `forwardRef` or HoC's can have minified names. Also hook names are always minified. Pass a string instead.
+
+### Non-framework stories
+
+It is possible to skip the `storyBook()` framework function and build stories from scratch. 
+
+Doing this allows full flexibility to define your story.
+
+Using default exports, named exports, or a mixture of each is fully supported. But take note that the order they will be rendered is not consistent/defined.
+
+Look at [icons.stories.tsx](https://sentry.io/orgredirect/organizations/:orgslug/stories/?name=app/icons/icons.stories.tsx) for an example.
+
+### Helper Components
+
+There are some helper components specifically built to make common patterns in stories easier to implement. Of course you can import anything in the sentry repo to make your stories richer, and create new helpers to make expressing stories easier!
+
+Helper Components:
+
+<IconFire color="gray500" size="sm" />
+
+- [`<JSXNode />`](https://github.com/getsentry/sentry/blob/master/static/app/components/stories/jsxNode.tsx)<br />
+    Render a formatted JSX component name and some properties.<br />
+    ```tsx
+    return <JSXNode name="IconFire" props={{color: 'red400', size: 'sm'}} />;
+
+    // will render as <code>&lt;IconFire<br/>color="red"<br/>size="sm" \:gt;</code>
+    ```
+
+- [`<JSXProperty />`](https://github.com/getsentry/sentry/blob/master/static/app/components/stories/jsxProperty.tsx)
+    Render a formatted JSX property name & value.<br />
+    ```tsx
+    return <JSXProperty name="disabled" value={false} />;
+
+    // will render as `<code>size={false}</code>`
+    ```
+
+- [`<SideBySide>{children}</SideBySide>`](https://github.com/getsentry/sentry/blob/master/static/app/components/stories/sideBySide.tsx)<br />
+    A shortcut for `display: flex;` to render multiple items in a row, wrapping as needed
+    ```tsx
+    return (
+      <SideBySide>
+        <Badge type="default">Default</Badge>
+        <Badge type="alpha">Alpha</Badge>
+        <Badge type="beta">Beta</Badge>
+      </SideBySide>
+    );
+    ```
+
+- [`<SizingWindow />`](https://github.com/getsentry/sentry/blob/master/static/app/components/stories/sizingWindow.tsx)<br />
+    A wrapper component to help demonstrate what the component looks like when the parent size is different or changing.<br />
+    By default uses `display:flex; overflow: hidden;` which can test responsive components well. Can also be set to `display: block; overflow: auto;`.<br />
+    ```tsx
+    <SizingWindow style={{height: '100px'}}>
+      <LoadingTriangle />
+    </SizingWindow>`
+    ```
+
+- [`<Matrix />`](https://github.com/getsentry/sentry/blob/master/static/app/components/stories/matrix.tsx)<br />
+    A helper to render multiple pairs of properties and values in a grid.
+    For example, we can render all button `priority` values against all possible `size` values which results in a 4x5 matrix of outputs.
+    ```tsx
+    <Matrix
+      render={() => Button}
+      propMatrix={{
+        priority: ['default', 'primary'],
+        size: ['md', 'sm'],
+      }}
+      selectedProps={['priority', 'size']}
+    />
+    ```
+
+- [`<ThemeToggle />`](https://github.com/getsentry/sentry/blob/master/static/app/components/stories/themeToggle.tsx)<br />
+    A wrapper component to isolate children from the current theme used on the page. Allows quickly toggling an example between <code>light</code>/<code>dark</code> without changing the whole screen (useful at night when you want most things in dark mode).<br/>
+    Use this to emphasize that a component/image has been tested and works well in <code>light</code> or <code>dark</code> mode.
+    ```tsx
+    <ThemeToggle>
+      <LoadingTriangle />
+    </ThemeToggle>
+    ```
+
+
+### Writing a new story
+
+Now that you are armed and ready with the `storyBook()` template from above, and some helper components, it's time to write your new story. What's it going to say?
+
+A good way to start out is just to do a minimal example that shows your component with all the defaults set. This sets a baseline to build on top of and you create for yourself an example to copy+paste and edit as we go.
+
+For button this is the "Default" case and it fits all on one line:
+```typescript
+story('Default', () => <Button>Default Button</Button>);
+```
+
+The next thing to do is follow it up with common and simple props, and all their possible values. Think about things that affects rendering for example sizes and colors, whether something is open or closed by default, things that don't need a lot of explination. One way to do this is by using the `<Matrix />` component, or just listing them out in their own stories one by one.
+
+With the common and simple props out of the way, now is the time to get into more interesting props, like callbacks or complex example data & fixtures. One way to document a callbacks, like `onClick`, is to include `useState()` in your story, and implement a basic counter to demonstrate that the method is being executed; or if you have an `onChange` callback capture the callback args in state, and print that to the screen.
+
+For example:
+```typescript
+story('onClick Prop', () => {
+  const [clicks, setClicks] = useState(0);
+  return (
+    <Fragment>
+      <p>clicked {clicks} times</p>
+      <Button onClick={() => setClicks(prev => prev +1)}>Clicked Me</Button>
+    </Fragment>
+  );
+});
+
+story('onChange Prop', () => {
+  const [lastSelected, setLastSelected] = useState(undefined);
+  return (
+    <Fragment>
+      <p>{selected} is selected</p>
+      <Tabs onChange={(selected) => setLastSelected(selected)} />
+    </Fragment>
+  );
+}
+```
+
+Finally, if you know some common combinations of components include those as well. For example, it's really helpful to be able to see that `<GridEditable />` and `useQueryBasedColumnResize()` are a good pair.
+
+## Ownership & Next Steps
+
+Since all the code for the stories framework is home-grown, anyone can tinker to create features and integrations to make the experience of discovering, reading, and writing, organizing stories much better.
+
+Obviously, documenting a component is a valuable addition to the Component Library. Create a new file and give it a try!
+
+Some ideas for you to tinker with:
+
+- General: Design facelift.
+- File Tree: Fix cutoff labels, Maybe by side-scrolling? Click+drag to make file tree wider?
+- File Tree: Sort folder to the top.
+- File Tree: Add component search. Bonus points if we can search by more than just the filename.
+- Stories: Automatically generate a list of component props from typescript types.
+- Stories: Include a Code-Viewer, so people can see the code that powers a story inline.
+- Stories: Update TS types so `storyBook()` function can accept a hook as the first argument, in addition to `JSXElementConstructor`.
+- Helpers: Create a system to reference related components. "Button is related to Link & Link Button". Bonus points if we can verify those references at build time so they don't go stale.
+- Helpers: Create a helper (iframe?) to simulate browser window sizes, so `@media` CSS queries can be exercised.
+- GetSentry: Create a hook that getsentry can implement so stories from there are included.
+- Tests: Ability to use stories as test fixtures, so we can visually see fixtures that tests use. ie: tests that click buttons and verify render is updated.

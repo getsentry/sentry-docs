@@ -1,0 +1,57 @@
+---
+title: trpcMiddleware
+description: "Capture spans & errors for tRPC handlers."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+---
+
+<Alert level="info">
+
+This integration only works inside server environments (Node.js, Bun, Deno).
+
+</Alert>
+
+_Import name: `Sentry.trpcMiddleware`_
+
+The Sentry tRPC middleware creates spans for your and improves error capturing for tRPC handlers.
+
+The `trpcMiddleware` is not a traditional SDK integration in the sense that your are **not** supposed to add it to the `integrations` option.
+Instead, add it as a middleware to your tRPC router.
+
+```javascript
+import * as Sentry from "@sentry/node";
+import { initTRPC } from "@trpc/server";
+
+const t = initTRPC.context().create();
+
+const sentryMiddleware = t.middleware(
+  Sentry.trpcMiddleware({
+    attachRpcInput: true,
+  })
+);
+
+const sentrifiedProcedure = t.procedure.use(sentryMiddleware);
+```
+
+## Options
+
+### `attachRpcInput`
+
+_Type: `boolean`_
+
+Defaults to `false`. If enabled, the RPC input will be captured in reported events.

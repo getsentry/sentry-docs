@@ -5,7 +5,7 @@ supportLevel: production
 description: "Learn about using Sentry with Django."
 ---
 
-Sentry's [Django](https://www.djangoproject.com/) integration adds support for the Django framework. It enables automatic reporting of errors and exceptions as well as performance monitoring. In order to get started using the integration, you should have a [Sentry account](https://sentry.io) and a project set up.
+Sentry's [Django](https://www.djangoproject.com/) integration adds support for the Django framework. It enables automatic reporting of errors and exceptions as well as tracing. In order to get started using the integration, you should have a [Sentry account](https://sentry.io) and a project set up.
 
 <Note>
 
@@ -27,12 +27,26 @@ To configure the Sentry SDK, initialize it in your `settings.py` file:
 
 <SignInNote />
 
-```python {filename:settings.py}
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:settings.py} {"onboardingOptions": {"performance": "5-7", "profiling": "8-11"}}
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 ```
 
@@ -62,7 +76,7 @@ urlpatterns = [
 - Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
 - Logs emitted by any logger will be recorded as breadcrumbs by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
 
-### Performance Monitoring
+### Tracing
 
 The following parts of your Django project are monitored:
 
@@ -82,8 +96,6 @@ The parameter `enable_tracing` needs to be set when initializing the Sentry SDK 
 
 By adding `DjangoIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `DjangoIntegration` to change its behavior:
 
-<SignInNote />
-
 ```python
 import django.db.models.signals
 
@@ -91,7 +103,6 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
     # ...
     integrations=[
         DjangoIntegration(
@@ -99,7 +110,7 @@ sentry_sdk.init(
             middleware_spans=True,
             signals_spans=True,
             signals_denylist=[
-                django.db.models.signals.pre_init, 
+                django.db.models.signals.pre_init,
                 django.db.models.signals.post_init,
             ],
             cache_spans=False,
@@ -112,7 +123,7 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
 - `transaction_style`:
 
-  How to name transactions showing up in Sentry performance monitoring.
+  How to name transactions showing up in Sentry tracing.
 
   - `"/myproject/myview/<foo>"` if you set `transaction_style="url"`.
   - `"myproject.myview"` if you set `transaction_style="endpoint"`.

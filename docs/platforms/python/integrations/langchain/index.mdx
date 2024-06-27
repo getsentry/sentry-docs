@@ -32,18 +32,28 @@ An additional dependency, `tiktoken`, is required to be installed if you want to
 
 <SignInNote />
 
-```python
-from langchain_openai import ChatOpenAI
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    traces_sample_rate=1.0,
     send_default_pii=True, # send personally-identifiable information like LLM responses to sentry
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
-
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
 ```
 
 ## Verify
@@ -83,10 +93,8 @@ import sentry_sdk
 from sentry_sdk.integrations.langchain import LangchainIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     send_default_pii=True,
-    traces_sample_rate=1.0,
     integrations = [
         LangchainIntegration(
             include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True

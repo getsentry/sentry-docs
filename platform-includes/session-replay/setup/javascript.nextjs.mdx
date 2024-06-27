@@ -1,6 +1,6 @@
 On your client-side NextJS app, add:
 
-```javascript {8,12,14-20}
+```javascript {8,12,14-20} {filename:sentry.client.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
@@ -51,13 +51,14 @@ To learn more about session replay privacy, [read our docs.](/platforms/javascri
 
 Once you've added the integration, Replay will start automatically. If you don't want to start it immediately (lazy-load it), you can use `addIntegration`:
 
-```javascript
+```javascript {filename:sentry.client.config.ts}
 Sentry.init({
   // Note, Replay is NOT instantiated below:
   integrations: [],
 });
 
 // Sometime later
-const { replayIntegration } = await import("@sentry/nextjs");
-Sentry.addIntegration(replayIntegration());
+import("@sentry/nextjs").then(lazyLoadedSentry => {
+  Sentry.addIntegration(lazyLoadedSentry.replayIntegration());
+});
 ```

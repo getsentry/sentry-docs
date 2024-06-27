@@ -1,0 +1,41 @@
+---
+title: "Assigned ports"
+---
+
+The following is a non-exhaustive list of ports used by Sentry services or any dependency of a Sentry service in development setups. It serves two purposes:
+
+* Finding out why a port is used on your work machine and which process to kill to make it free.
+* Finding out which ports are probably safe to assign to new services.
+
+| Port | Service                                    | Description
+|:-----|:-------------------------------------------|:-----------
+| 9000 | Clickhouse                                 | <Link to="/services/devservices/">Devservice</Link> `clickhouse`. Database for Snuba.
+| 8123 | Clickhouse                                 |
+| 9009 | Clickhouse                                 | 
+| 3021 | Symbolicator                               | <Link to="/services/devservices/">Devservice</Link> `symbolicator`. For processing stacktraces.
+| 1218 | [Snuba][]                                  | <Link to="/services/devservices/">Devservice</Link> `snuba`. For searching events.
+| 1219 | [Snuba][] admin                            | Not part of devservices setup, but running `snuba admin` will listen on this port.
+| 9092 | Kafka                                      | <Link to="/services/devservices/">Devservice</Link> `kafka`. for relay-sentry communication and optionally for sentry-snuba communication
+| 6379 | Redis                                      | <Link to="/services/devservices/">Devservice</Link> `redis` (or perhaps installed via Homebrew in rustier setups), responsible for caches, relay projectconfigs and Celery queues
+| 5432 | Postgres                                   | <Link to="/services/devservices/">Devservice</Link> `postgres` (or perhaps installed via Homebrew in rustier setups)
+| 7899 | [Relay][]                                  | <Link to="/services/devservices/">Devservice</Link> `relay`. Serves APIs for SDKs to send events to (aka event ingestion). Webpack on 8000 reverse-proxies to this server. Starts/stops with `sentry devserver`.
+| 8000 | <Link to="/environment/">Sentry Dev</Link> | Webpack devserver, routing all ingest paths to Relay, and the rest to uWSGI. Routing is defined in `webpack.config.ts` in Sentry.
+| 8001 | uWSGI                                      | Starts/stops with `sentry devserver`. Serves the Django app/API. Webpack on 8000 reverse-proxies to this server. In a siloed devserver, this port is used for control silo.
+| 8010 | uWSGI (region silo)                        | Starts/stops with `sentry devserver --silo=region`. Serves the Django app/API. Webpack on 8000 reverse-proxies to this server.
+| 7999 | Sentry frontend prod proxy                 | For testing local UI changes against a prod API
+| 8000 | [Develop docs][]                           | The website around this document. **Conflicts with Sentry Dev.**
+| 3000 | [User docs][]                              | User-facing documentation. May conflict with Relay if Relay is run outside of devservices.
+| 9001 | Sentry Dev Styleguide server               | Bound when running `sentry devserver --styleguide`
+| 9000 | `sentry run web`                           | Legacy default port for `sentry run web`, changed to 9001 to avoid conflict with Clickhouse.
+| 9001 | `sentry run web`                           | Barebones frontend without webpack or Relay. <Link to="/environment/">Sentry Dev</Link> is likely better. **Conflicts with Sentry Dev Styleguide server.**
+| 8000 | [Relay][] mkdocs documentation             | At some point this is going to get merged into our existing docs repos. **Conflicts with Sentry Dev.**
+
+## Finding out what's running on your machine
+
+* Use `lsof -nP -i4 | grep LISTEN` to find occupied ports on macOS.
+* The Dashboard UI of Docker for Mac shows you running docker containers/devservices together with assigned ports and option to start/stop.
+
+[Relay]: https://getsentry.github.io/relay/
+[Snuba]: https://github.com/getsentry/snuba
+[Develop docs]: https://github.com/getsentry/develop/
+[User docs]: https://github.com/getsentry/sentry-docs/

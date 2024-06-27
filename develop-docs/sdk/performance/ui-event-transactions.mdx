@@ -1,0 +1,173 @@
+---
+title: "UI Event Transactions"
+---
+
+We recommend implementing this feature for mobile and desktop SDKs.
+
+UI event transactions are enabled by setting the SDK config option `enableUserInteractionTracing`, 
+which we recommend enabling per default. Remember that this feature will generate many
+transactions, which can significantly impact running out of quota. Therefore, it might be safer to
+disable this feature per default when adding it and enable it per default in an upcoming major SDK
+release.
+
+UI event transactions aim to capture transactions based on user interactions, such as clicks,
+scroll events, pinches, etc. The UI events the SDK can hook into might vary depending on the
+platform. UI event transactions are an expansion to transactions generated automatically by
+the SDK, which are referred to as auto-generated transactions in this document. 
+
+Creating transactions for a single UI event without any spans would be fruitless. Instead, the
+SDK shall use a UI event as the entry point to a possibly meaningful transaction. It should
+wait to see if it can add any auto-generated spans to the transaction. If it can, it shall keep
+and send the transaction. If not, the SDK should discard the empty transaction. A combination of
+two concepts is needed to implement the wait-and-see logic: __idle transactions__ and
+__wait-for-children__. Check out the specification below to see how those two concepts work
+together with covering multiple edge cases. The following description is drastically simplified:
+
+* __Idle-transactions__: The SDK schedule an idle timeout for the transaction when starting it.
+When the transaction or any of its spans starts a new span, it resets the timeout. The SDK finishes
+the transaction when the timeout succeeds.
+* __Wait-for-children__: A transaction waits for all its child spans to finish before finishing itself.
+
+Before diving into the specification with all the edge cases, let's look at two simple examples:
+
+1. The user clicks a button that triggers some requests to the backend and stores data in the
+local database. The SDK can create a meaningful transaction in that case.
+2. The user clicks a button that solely validates some form data and triggers nothing that the
+SDK can automatically instrument. The SDK could only create a transaction without any spans, which would
+be valueless.
+
+# Specification
+
+Users can change the `idleTimeout` via the SDK config options. The default is 3.0 seconds. 
+
+The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Scenario: Starting UI Event transactions
+    Given an instrumentable UI event
+    Then the SDK starts a UI event transaction 
+    And schedules to finish the UIEventTransaction with
+     the idle timeout of the options
+
+Scenario: Wait for children when starting span
+    Given a UI event transaction
+    When the SDK starts a child span
+    Then the SDK cancels the idle timeout
+    And waits for the child to finish
+
+Scenario: Schedule idle timeout when the last span finishes
+    Given a UI event transaction
+    And the transaction has one or multiple running child spans
+    And the transaction is waiting for its children to finish
+    When the SDK finishes the last child span
+    Then the SDK schedules the idle timeout 
+
+Scenario: Discard UI event transactions without child spans
+    Given a UI event transaction
+    And the transaction has no child spans
+    When the idle timeout times out
+    Then the SDK discards the transaction 
+
+Scenario: Set time to last finished child span
+    Given a UI event transaction
+    And the transaction has one finished child span
+    And the transaction has one running child span
+    When the running child span finishes
+    Then the SDK schedules the idle timeout
+    And the SDK finishes the transaction after the idle timeout
+    And trims the end time of the transaction to the one of the last finished
+        child span
+
+Scenario: Don't overwrite existing status of UI event transactions
+    Given a UI event transaction
+    And the UI event transaction has a status
+    When the SDK finishes the UI event transaction
+    Then it keeps the status 
+    And doesn't overwrite it
+
+# If your SDK binds auto-generated transactions to the scope see binding
+# to scope
+Scenario: Event on same UI element with child spans
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a new event
+    Or the user triggers a different UI element
+    Then the SDK finishes the ongoing transaction
+    And sets the status to OK
+    And waits for the children to finish
+    And cancels the idle timeout
+    And starts a new transaction
+
+Scenario: Event on same UI element without child spans
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a new event
+    Or the user triggers a different UI element
+    Then the SDK discards the transaction 
+    And starts a new transaction
+```
+
+## Binding to scope
+
+On platforms mainly interacting with the static API, such as mobile, it's typical to bind auto-generated
+transactions to the scope so that users can access them via the static API. We recommend binding UI event
+transactions to the scope on these platforms. The following extra rules apply as UI event transactions
+could interfere with other auto-generated transactions.
+
+The SDK adds auto-generated spans to the transaction bound to the scope. UI event transactions need
+auto-generated spans not to be empty. Therefore, the SDK shouldn't start a UI event transaction if there
+is already an ongoing screen load/navigation transaction or a transaction bound to the scope by the user.
+
+```Gherkin
+Scenario: Same UI element with different event
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a different event
+    Or the user triggers a different UI element
+    Then the SDK finishes the ongoing transaction
+    And sets the status to OK
+    And waits for the children to finish
+    And cancels the idle timeout
+    And removes the ongoing transaction from the scope
+    And starts a new transaction
+    And puts the new transaction on the scope
+
+Scenario: UI event triggered but transaction ended
+    Given an auto-generated transaction from any UI event
+    And the transaction is already finished
+    When the user triggers the same UI event
+    Then the SDK starts a new UI event transaction
+
+Scenario: Manually created transaction bound to the scope
+    Given an ongoing manually created transaction by the user bound to the
+        scope
+    When the user triggers a UI event
+    Then the SDK doesn't start a UI event transaction
+```
+
+### Screen load/navigation transactions
+
+This section deals specifically with auto-generated transactions for loading screens. If your SDK has
+other types of auto-generated transactions, please update the specification here.
+
+```Gherkin
+Scenario: Ongoing UI event transaction
+    Given an ongoing UI event transaction
+    When the SDK creates a new screen load transaction
+    Then the SDK finishes the ongoing UI event transaction
+    And removes it from the scope
+    And sets the status to canceled
+    And waits for its children to finish
+
+Scenario: Ongoing screen load/navigation transaction
+    Given an ongoing screen load/navigation transaction
+    When the user triggers a UI event
+    Then the SDK doesn't start a UI event transaction
+```
+
+## Transaction name
+
+The user should be able to identify to which UI element the UI event transaction belongs on which screen
+by only looking at the transaction name. Choose whatever works best for your specific platform. Be
+attentive not to use any PII in the transaction name. One recommendation is  
+`screen name + view identifier`. On Android, this would map to
+`LoginActivity.login_button`, and on Cocoa, to `YourApp.LoginViewController.loginButton`. If the UI element
+doesn't have a view identifier, it's acceptable that the SDK doesn't start a UI event transaction and logs
+a warning to inform the user. The Cocoa SDK uses the method the UI element calls as the view identifier. 

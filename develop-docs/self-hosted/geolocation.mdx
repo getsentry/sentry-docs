@@ -1,0 +1,42 @@
+---
+title: 'Self-Hosted Geolocation'
+---
+
+Sentry can use [MaxMind's free `GeoLite2-City` database](https://dev.maxmind.com/geoip/geoip2/geolite2/) to geolocate IP addresses, providing additional context for error events where the end user's IP address is known and for the session history of users logging into your Sentry installation. We bundle MaxMind's [`geoipupdate`](https://hub.docker.com/r/maxmindinc/geoipupdate) tool for this purpose.
+
+<Alert title="Warning" level="warning">
+In order to take advantage of server-side IP address geolocation, you must send IP addresses to Sentry in the first place. <a href="https://docs.sentry.io/platforms/python/data-management/sensitive-data/#personally-identifiable-information-pii">Newer SDKs do not do this by default</a>.
+</Alert>
+
+To enable server-side IP address geolocation, [sign up for a free MaxMind account](https://www.maxmind.com/en/geolite2/signup), then tell Sentry about your credentials by placing your MaxMind configuration file at `geoip/GeoIP.conf`.
+
+```
+AccountID 012345
+LicenseKey foobarbazbuz
+EditionIDs GeoLite2-City
+```
+
+With this configuration file in place, subsequent runs of Sentry's `install.sh` will refresh the IP address geolocation database. The next time you restart your self-hosted Sentry instance (the `relay` and `web` services, in particular), you should start seeing the latest data. Here's how to confirm that it's working:
+
+1. For the `relay` service: **Dashboards > Errors by Country** should have some purple on it.
+
+1. For the `web` service: **User Settings > Security > Session History** should display country code and region (for example, "US (CA)") underneath the IP addresses in the table.
+
+It's normal to see the `sentry_self_hosted_geoipupdate_1` container exit soon after startup, since updating the geolocation database is a one-off batch process and not a long-running job.
+
+## Upgrading
+
+The services that consume the `GeoLite2-City.mmdb` file need to know where to find it. New installs will have this set automatically, but if you are upgrading you will need to manually set the following before restarting Sentry.
+
+In `relay/config.yml` ([example](https://github.com/getsentry/self-hosted/blob/master/relay/config.example.yml)):
+
+```yaml
+processing:
+  geoip_path: "/geoip/GeoLite2-City.mmdb"
+```
+
+In `sentry/sentry.conf.py` ([example](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py)):
+
+```py
+GEOIP_PATH_MMDB = '/geoip/GeoLite2-City.mmdb'
+```

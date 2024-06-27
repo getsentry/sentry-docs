@@ -1,0 +1,57 @@
+---
+title: Using Hooks
+---
+
+To help make components easier to re-use and simpler to understand, React
+and the React ecosystem have been trending towards functional components and
+hooks. Hooks are a convenient way to add state and side-effects to functional
+components. They also provide a convenient way for libraries to expose behavior.
+
+While we are generally in favor of hooks, we have some recommendations about how
+hooks should be used with the Sentry front-end.
+
+### Using hooks from libraries
+
+If a library provides hooks you should use them. Often this will be the only way
+to consume a library. For example `dnd-kit` exposes all of its primitives via
+hooks and we should use the library the way it was intended to be used.
+
+We don't prefer libraries that use or don't use hooks. Instead favor libraries
+with cleaner, simpler APIs, and smaller bundle sizes over ones with larger more
+complex APIs or larger bundle sizes.
+
+### Using react's built-in hooks
+
+The `useState`, `useMemo`, `useCallback`, `useContext`, `useReducer` and `useRef` hooks are welcome
+in any functional component. They are generally a good choice in presentational
+components that need a small amount of state, or access to react primitives like
+references and context. For example, a component with a slide-out or expandable
+state.
+
+The `useEffect` hook is more complex and you need to be careful to track your
+dependencies and ensure that subscriptions are canceled through a cleanup
+callback.
+
+### Using context
+
+The `useContext` hook provides a simpler implemtation option to share state and 
+behavior compared to our previous uses of Reflux. When you need to create new
+sources of shared state, consider using context and `useContext` instead of Reflux.
+Additionally the [wormhole state management
+pattern](https://swizec.com/blog/wormhole-state-management) can be leveraged to 
+expose shared state and mutation functions.
+
+### Using custom hooks
+
+Custom hooks can be created to share reusable logic in the application. When creating a custom hook, 
+the function name must follow the convention, starting with "use" (`useTheme`, for example) 
+and it's fine to call other hooks inside of custom hooks.
+
+Custom hooks are a great way to encapsulate logic, so your component(s) can remain focused 
+on presentation only. Read more about [Reusing Logic with Custom Hooks](https://react.dev/learn/reusing-logic-with-custom-hooks) on react.dev
+
+### Be aware of the rules and caveats of hooks
+
+React hooks have [a few rules](https://reactjs.org/docs/hooks-rules.html). Be
+aware of the rules and limitations that hooks create. We use the ESLint rules to
+prevent most of the hook rules from being trespassed.

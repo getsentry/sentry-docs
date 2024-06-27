@@ -1,0 +1,29 @@
+---
+title: Backend Development Server
+---
+
+(*see also: [Frontend Development Server](/frontend/development-server/)*)
+
+It's possible to run Sentry locally without ever having to build the frontend. It requires to circumvent `sentry devserver`. Instead, you configure:
+
+```python
+# ~/.sentry/sentry.conf.py
+STATIC_URL = "https://sentry.io/_static/{version}"
+STATIC_FRONTEND_APP_URL = "https://sentry.io/_static/dist/"
+```
+
+...and run:
+
+```shell
+sentry run web
+```
+
+When you browse `localhost:9001`, the browser will load JavaScript from production instead of your local static folder.
+
+This will do literally nothing except bring up the web workers. You are now responsible to manually:
+
+* Starting Relay if you need it: `sentry devservices attach relay`
+* Starting relevant Kafka consumers if you need them (e.g. for ingestion). This highly depends on which dataset you're working on.
+* Starting Celery workers using `sentry run worker` to run most kinds of background jobs.
+
+Use `sentry run --help` to see what you might be missing by not running devserver.

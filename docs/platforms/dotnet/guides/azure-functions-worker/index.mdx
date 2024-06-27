@@ -1,6 +1,6 @@
 ---
 title: Azure Functions
-sdk: sentry.dotnet.azurefunctions.worker
+sdk: sentry.dotnet.azure.functions.worker
 description: "Learn about Sentry's .NET integration with Azure Functions."
 ---
 
@@ -8,6 +8,8 @@ Sentry provides an integration with Azure Functions through the [Sentry.Azure.Fu
 All triggers are supported.
 
 ## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
 
 Add the Sentry dependency to your Azure Functions application:
 
@@ -33,7 +35,7 @@ If using the ASP.NET Core integration add `UseSentry` to the `ConfigureFunctions
 
 </Note>
 
-```csharp
+```csharp {"onboardingOptions": {"performance": "11-13"}}
 using Sentry.Azure.Functions.Worker;
 
 var host = new HostBuilder()
@@ -42,9 +44,11 @@ var host = new HostBuilder()
         builder.UseSentry(host, options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
-            options.EnableTracing = true;
             // When configuring for the first time, to see what the SDK is doing:
-            // options.Debug = true;
+            options.Debug = true;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
         });
     })
     .Build();

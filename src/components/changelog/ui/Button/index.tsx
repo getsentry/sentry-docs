@@ -21,7 +21,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props>(
       secondary: `${styles.btn} text-gray-700 border hover:border-indigo-600 disabled:border-indigo-300 disabled:text-gray-300`,
       danger: 'text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300',
       ghost: `${styles.btn} focus:outline focus:outline-2 focus:outline-offset-2 hover:bg-gray-100 !outline-accent-purple`,
-      outine: [styles.btn, styles['outline-btn']].join(' '),
+      outline: [styles.btn, styles['outline-btn']].join(' '),
       solid: [styles.btn, styles['solid-btn']].join(' '),
     };
 

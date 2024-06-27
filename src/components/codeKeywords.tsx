@@ -508,6 +508,11 @@ const Arrow = styled('div')`
 `;
 
 const Dropdown = styled('div')`
+  font-family:
+    'Rubik',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI';
   overflow: hidden;
   border-radius: 3px;
   background: #fff;
@@ -515,7 +520,6 @@ const Dropdown = styled('div')`
 `;
 
 const Selections = styled('div')`
-  padding: 4px 0;
   overflow: scroll;
   overscroll-behavior: contain;
   max-height: 210px;
@@ -545,7 +549,8 @@ function AnimatedContainer({
 }
 
 const DropdownHeader = styled('div')`
-  padding: 4px 8px;
+  padding: 6px 8px;
+  font-size: 0.875rem;
   color: #80708f;
   background-color: #fff;
   border-bottom: 1px solid #dbd6e1;
@@ -559,7 +564,8 @@ const ItemButton = styled('button')<{isActive: boolean}>`
     'Segoe UI';
   font-size: 0.85rem;
   text-align: left;
-  padding: 2px 8px;
+  padding: 6px 8px;
+  cursor: pointer;
   display: block;
   width: 100%;
   background: none;
@@ -579,9 +585,11 @@ const ItemButton = styled('button')<{isActive: boolean}>`
     p.isActive
       ? `
     background-color: #6C5FC7;
-    color: #fff;
+    color: #EBE6EF;
   `
       : `
+    color: #3E3446;
+
     &:hover,
     &.active {
       background-color: #FAF9FB;

@@ -1,0 +1,128 @@
+---
+title: 'Self-Hosted Single Sign-On (SSO)'
+---
+
+SSO in Sentry is handled in one of two ways:
+
+- Via a middleware which handles an upstream proxy dictating the authenticated user
+- Via a third-party service which implements an authentication pipeline
+
+
+## Using a middleware proxy (SAML2)
+
+As of Sentry 20.6.0, self-hosted Sentry comes with built-in support for SAML2 and certain auth providers. For older versions you will need to add the following line into [`sentry/requirements.txt`](https://github.com/getsentry/self-hosted/blob/10.0.1/sentry/requirements.example.txt) before running `./install.sh`:
+
+```
+sentry-auth-saml2@https://github.com/getsentry/sentry-auth-saml2/archive/master.zip#egg=sentry-auth-saml2
+```
+
+ The way you can set this up is the same as [sentry.io](https://sentry.io) except, you need to use your own instance's [`url-prefix`](https://develop.sentry.dev/config/#general) for the URLs mentioned in the documentation.
+
+Please refer to our [main SAML documentation](https://docs.sentry.io/accounts/sso/#saml2-identity-provider) for all the details.
+
+## SSO with OAuth
+
+<Alert title="Note" level="info">
+    Once you enable SSO, this will be the only way to login to your self-hosted instance. If you need free registration along with SSO, you can comment on the <Link to="https://github.com/getsentry/sentry/pull/16247">GitHub PR</Link> for this.
+</Alert>
+
+### Google Auth
+
+As of [Sentry 9.1](https://github.com/getsentry/self-hosted/releases/tag/9.1.2), self-hosted Sentry comes with built-in Google Auth support. To enable, you'll need to [create a client ID and secret for your Google App](https://developers.google.com/identity/sign-in/web/server-side-flow#step_1_create_a_client_id_and_client_secret) and then enter these values into your [`sentry/config.yaml`](https://github.com/getsentry/self-hosted/blob/master/sentry/config.example.yml) file respectively:
+
+```yaml
+auth-google.client-id: '<client id>'
+auth-google.client-secret: '<client secret>'
+```
+
+<Alert title="Note" level="info">
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+</Alert>
+
+### GitHub Auth
+
+As of [Sentry 10](https://github.com/getsentry/self-hosted/releases/tag/10.0.1), self-hosted Sentry comes with built-in GitHub Auth support. To enable, you'll need to create a new GitHub App under your organization and install it.
+
+#### Create GitHub App for SSO & integration
+
+<Alert level="warning">
+  The GitHub App name must not contain any spaces.
+</Alert>
+
+<CreateGitHubAppForm url="https://github.com/organizations/:org/settings/apps/new?name=:org-Sentry-Integration&public=false&members=read&emails=read&administration=read&contents=read&issues=write&pull_requests=write&repository_hooks=write&url=:url-prefix&callback_url=:url-prefix%2Fauth%2Fsso%2F&setup_url=:url-prefix%2Fextensions%2Fgithub%2Fsetup%2F&webhook_url=:url-prefix%2Fextensions%2Fgithub%2Fwebhook%2F&events[]=push&events[]=pull_request&webhook_active=true" defaultOrg="your-organization" defaultUrlPrefix="https://your-sentry-url-prefix.com" />
+
+
+If the form above does not work for you, you need the following settings for your GitHub Application:
+
+| Setting                         | Value                                     |
+| ------------------------------- | ----------------------------------------- |
+| Homepage URL                    | `${urlPrefix}`                            |
+| User authorization callback URL | `${urlPrefix}/auth/sso/`                  |
+| Setup URL (optional)            | `${urlPrefix}/extensions/github/setup/`   |
+| Webhook URL                     | `${urlPrefix}/extensions/github/webhook/` |
+
+<Alert level="warning">
+  Don't forget to replace all occurances of <code>{'${urlPrefix}'}</code> with your own url prefix.
+</Alert>
+
+When prompted for permissions, choose the following:
+
+| Permission                         | Setting      |
+| -----------------------------------| ------------ |
+| Organization permissions / members | Read-only    |
+| User permissions / Email addresses | Read-only    |
+| Repository administration          | Read-only    |
+| Repository contents                | Read-only    |
+| Issues                             | Read & write |
+| Pull requests                      | Read & write |
+| Repository webhooks                | Read & write |
+
+
+#### Update your configuration with your GitHub App information
+
+You will then need to set the following configuration values:
+
+In [`sentry/sentry.conf.py`](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py)
+
+```python
+GITHUB_APP_ID="<App ID>"
+GITHUB_API_SECRET="<Client secret>"
+GITHUB_REQUIRE_VERIFIED_EMAIL = True  # Optional but recommended
+
+# Only if you are using GitHub Enterprise
+#GITHUB_BASE_DOMAIN = "git.example.com"
+#GITHUB_API_DOMAIN = "api.git.example.com"
+```
+In [`sentry/config.yaml`](https://github.com/getsentry/self-hosted/blob/master/sentry/config.example.yml)
+
+```yaml
+github-app.id: <App ID>
+github-app.name: '<GitHub App name>'
+github-app.webhook-secret: '<Webhook secret>' # Use only if configured in GitHub
+github-app.client-id: '<Client ID>'
+github-app.client-secret: '<Client secret>'
+github-app.private-key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  -----END RSA PRIVATE KEY-----
+
+# Only needed if you have multiple organizations enabled
+github-login.client-id: '<Client ID>'
+github-login.client-secret: '<Client secret>'
+```
+
+This will also enable the [GitHub Integration](/integrations/github/) for your instance.
+
+<Alert title="Note" level="info">
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+</Alert>
+
+### Custom Providers
+
+At this time the API is considered unstable and subject to change. Things likely won’t change a lot, but there’s a few areas that need some cleaning up.
+
+With that in mind, if you wish to build your own, take a look at one of the [reference implementations above](https://github.com/getsentry/sentry/tree/master/src/sentry/auth/providers).

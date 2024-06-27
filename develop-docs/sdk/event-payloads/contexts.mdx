@@ -1,0 +1,812 @@
+---
+title: Contexts Interface
+sidebar_order: 9
+---
+
+The Contexts Interface provides additional context data. Typically, this is data
+related to the current user and the environment. For example, the device or
+application version. Its canonical name is `contexts`.
+
+The `contexts` type can be used to define arbitrary contextual data on the
+event. It accepts an object of key/value pairs. The key is the “alias” of the
+context and can be freely chosen. However, as per policy, it should match the
+type of the context unless there are two values for a type. You can omit `type`
+if the key name is the type.
+
+When adding additional data to the event data model contexts are a good fit when
+you have all the data available at a single point in time. Contexts are not well
+suited to data that is collected over time as the SDK interfaces for contexts
+don't afford merging of data.
+
+Unknown data for the contexts is rendered as a key/value list.
+
+In the Sentry Product, certain contexts are rendered in a special way to make it more readable. More details about this can be found in the [contexts code on the Sentry UI](https://github.com/getsentry/sentry/tree/master/static/app/components/events/contexts).
+
+For more details about sending additional data with your event, see the [full documentation on Additional Data](https://docs.sentry.io/platform-redirect/?next=/enriching-events/context/).
+
+## Device Context
+
+Device context describes the device that caused the event. This is most
+appropriate for mobile applications.
+
+The `type` and default key is `"device"`.
+
+`name`
+
+: **Required**. The name of the device. This is typically a hostname.
+
+`family`
+
+: _Optional_. The family of the device. This is usually the common part of model
+names across generations. For instance, `iPhone` would be a reasonable family,
+so would be `Samsung Galaxy`.
+
+`model`
+
+: _Optional_. The model name. This, for example, can be `Samsung Galaxy S3`.
+
+`model_id`
+
+: _Optional_. An internal hardware revision to identify the device exactly.
+
+`arch`
+
+: _Optional_. The CPU architecture.
+
+`battery_level`
+
+: _Optional_. If the device has a battery, this can be a floating point value
+defining the battery level (in the range 0-100).
+
+`battery_temperature`
+
+: _Optional_. If the device has a battery, this can be a floating point value
+defining the battery temperature in Celsius.
+
+`orientation`
+
+: _Optional_. This can be a string `portrait` or `landscape` to define the
+orientation of a device.
+
+`manufacturer`
+
+: _Optional_. The manufacturer of the device.
+
+`brand`
+
+: _Optional_. The brand of the device.
+
+`screen_resolution`
+
+: _Optional_. The screen resolution. (e.g.: 800x600, 3040x1444).
+
+`screen_height_pixels`
+
+: _Optional_. The height of the screen.
+
+`screen_width_pixels`
+
+: _Optional_. The width of the screen.
+
+`screen_density`
+
+: _Optional_. A floating point denoting the screen density.
+
+`screen_dpi`
+
+: _Optional_. A decimal value reflecting the DPI (dots-per-inch) density.
+
+`online`
+
+: _Optional_. Whether the device was online or not.
+
+`charging`
+
+: _Optional_. Whether the device was charging or not.
+
+`low_memory`
+
+: _Optional_. Whether the device was low on memory.
+
+`simulator`
+
+: _Optional_. A flag indicating whether this device is a simulator or an actual
+device.
+
+`memory_size`
+
+: _Optional_. Total system memory available in bytes.
+
+`free_memory`
+
+: _Optional_. Free system memory in bytes.
+
+`usable_memory`
+
+: _Optional_. Memory usable for the app in bytes.
+
+`storage_size`
+
+: _Optional_. Total device storage in bytes.
+
+`free_storage`
+
+: _Optional_. Free device storage in bytes.
+
+`external_storage_size`
+
+: _Optional_. Total size of an attached external storage in bytes (for example,
+android SDK card).
+
+`external_free_storage`
+
+: _Optional_. Free size of an attached external storage in bytes (for example,
+android SDK card).
+
+`boot_time`
+
+: _Optional_. A formatted UTC timestamp when the system was booted. For example,
+`"2018-02-08T12:52:12Z"`.
+
+`timezone`
+
+: _Optional_. The timezone of the device. For example, `Europe/Vienna`. This field is deprecated, please use `timezone` of [culture context](#culture-context) instead.
+
+`language`
+
+: _Optional_. The language of the device. For example, `en`. This field is deprecated, please use `locale` of [culture context](#culture-context) instead.
+
+`processor_count`
+
+: _Optional_. Number of "logical processors". For example, `8`.
+
+`cpu_description`
+
+: _Optional_. CPU description. For example, `Intel(R) Core(TM)2 Quad CPU Q6600 @ 2.40GHz`.
+
+`processor_frequency`
+
+: _Optional_. Processor frequency in MHz. Note that the actual CPU frequency might vary depending on current load and power conditions,
+especially on low-powered devices like phones and laptops.
+
+`device_type`
+
+: _Optional_. Kind of device the application is running on. For example, `Unknown, Handheld, Console, Desktop`.
+
+`battery_status`
+
+: _Optional_. Status of the device's battery. For example, `Unknown, Charging, Discharging, NotCharging, Full`.
+
+`device_unique_identifier`
+
+: _Optional_. Unique device identifier. This value might only be used if `sendDefaultPii` is enabled.
+
+`supports_vibration`
+
+: _Optional_. Is vibration available on the device?
+
+`supports_accelerometer`
+
+: _Optional_. Is accelerometer available on the device?
+
+`supports_gyroscope`
+
+: _Optional_. Is gyroscope available on the device?
+
+`supports_audio`
+
+: _Optional_. Is audio available on the device?
+
+`supports_location_service`
+
+: _Optional_. Is the device capable of reporting its location?
+
+## OS Context
+
+OS context under the default key `"os"` describes the operating system on which
+the crash happened/the event was created.
+
+The `type` and default key is `"os"`. However, since contexts can be set
+multiple times under different keys, there has historically been a lot of
+confusion about which OS context represents what. So here's some examples:
+
+- In events reported from a Python/ASP.NET/Rails web backend, the OS context
+  under the default key `"os"` is the server's operating system, and is set by
+  the SDK (if at all).
+
+  Additionally, the Sentry server will attempt to parse the `User-Agent` header
+  from the event's [Request Interface](/sdk/event-payloads/request/) and create a _secondary_ OS
+  context under the non-default key `"client_os"`.
+
+- In events reported from a JS web frontend, the SDK typically reports no OS
+  context.
+
+  The server however knows by looking at the platform (`"javascript"`) that the
+  incoming User-Agent can only come from the crashing device, and creates the
+  User-Agent based OS context under the default key `"os"`.
+
+To summarize:
+
+- `"os"` key for the device generating the event.
+- `"client_os"` key for an adjacent client device's OS (that is _not_ the
+  device creating the event) if it's important. The Sentry server sets this as part of
+  User-Agent parsing, but SDKs can set this directly too.
+- If in doubt, just send `"os"`. Any other keys are not searchable in the
+  product and will not be visually pronounced using icons, so using something
+  like `"server_os"` to clarify what you meant is probably going to
+  backfire with regards to the overall product experience.
+
+  Under the existing mental model, a hypothetical `"server_os"` key would
+  actually mean you're reporting the operating system of an adjacent "upstream"
+  device that the crashing device is talking to.
+
+  As Kurt Tucholsky said: "The opposite of good is not evil, but good intentions"
+
+`name`
+
+: _Recommended_. The name of the operating system. It might be derived from `raw_description`. It is **required** if `raw_description` is not provided.
+
+`version`
+
+: _Optional_. The version of the operating system.
+
+`build`
+
+: _Optional_. The internal build revision of the operating system.
+
+`kernel_version`
+
+: _Optional_. An independent kernel version string. This is typically the entire
+output of the `uname` syscall.
+
+`rooted`
+
+: _Optional_. A flag indicating whether the OS has been jailbroken or rooted.
+
+`theme`
+
+: _Optional_. Either `light` or `dark`. Describes whether the OS runs in dark mode or not.
+
+`raw_description`
+
+: _Optional_. An unprocessed description string obtained by the operating
+system. For some well-known runtimes, Sentry will attempt to parse `name` and
+`version` from this string, if they are not explicitly given.
+
+`distribution`
+
+: _Optional_. An object that provides meta-data for Linux distributions. The values correspond to entries from the [`/etc/os-release`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html#Options) configuration. Contains the following keys:
+
+- `name`: A stable name for each distribution. This maps to `ID` in `/etc/os-release` (examples: `ubuntu`, `rhel`, `alpine`; a full list of tested identifiers is available in the [Native SDK repository](https://github.com/getsentry/sentry-native/blob/master/tests/fixtures/os_releases/distribution_names.txt).
+- `version`: _Optional_. Typically identifies at least the major release version number. This maps to `VERSION_ID` in `/etc/os-release`. Distributions with rolling releases only, will not provide a version.
+- `pretty_name`: _Optional_. Typically provides the full name, full version, and release alias. This maps to `PRETTY_NAME` in `/etc/os-release` (examples: `Ubuntu 22.04.4 LTS`, `Raspian GNU/Linux 10 (buster)`).
+
+### Example OS Context
+
+The OS Context for the 3 major OSs should look like this:
+
+```json
+{
+  "windows": {
+    "type": "os",
+    "name": "Windows",
+    "version": "10.0.19041",
+    "build": "662"
+  },
+  "mac": {
+    "type": "os",
+    "name": "macOS",
+    "version": "11.1.0",
+    "build": "20C69",
+    "kernel_version": "20.2.0"
+  },
+  "linux": {
+    "type": "os",
+    "name": "Linux",
+    "version": "6.1.82(99.168.amzn2023.x86_64)",
+    "distribution": {
+      "name": "amzn",
+      "version": "2023",
+      "pretty_name": "Amazon Linux 2023.4.20240401"
+    }
+  }
+}
+```
+
+## Runtime Context
+
+Runtime context describes a runtime in more detail. Typically, this context is
+used multiple times if multiple runtimes are involved (for instance, if you have
+a JavaScript application running on top of JVM).
+
+The `type` and default key is `"runtime"`.
+
+`name`
+
+: _Recommended_. The name of the runtime. It might be derived from `raw_description`. It is **required** if `raw_description` is not provided.
+
+`version`
+
+: _Optional_. The version identifier of the runtime.
+
+`raw_description`
+
+: _Optional_. An unprocessed description string obtained by the runtime. For
+some well-known runtimes, Sentry will attempt to parse `name` and `version`
+from this string, if they are not explicitly given.
+
+## App Context
+
+App context describes the application. As opposed to the runtime, this is the
+actual application that was running and carries metadata about the current
+session.
+
+The `type` and default key is `"app"`.
+
+`app_start_time`
+
+: _Optional_. Formatted UTC timestamp when the user started the application.
+
+`device_app_hash`
+
+: _Optional_. Application-specific device identifier.
+
+`build_type`
+
+: _Optional_. String identifying the kind of build. For example, `testflight`.
+
+`app_identifier`
+
+: _Optional_. Version-independent application identifier, often a dotted bundle
+ID.
+
+`app_name`
+
+: _Optional_. Human readable application name, as it appears on the platform.
+
+`app_version`
+
+: _Optional_. Human readable application version, as it appears on the platform.
+
+`app_build`
+
+: _Optional_. Internal build identifier, as it appears on the platform.
+
+`app_memory`
+
+: _Optional_. Amount of memory used by the application in bytes.
+
+`app_arch`
+
+: _Optional_. The CPU architecture of the application. This may differ from the device CPU architecture.
+
+`in_foreground`
+
+: _Optional_. A flag indicating whether the app is in foreground or not. An app is in foreground when it's visible to the user.
+
+`permissions`
+
+: _Optional_. A dictionary of permissions that the application uses. Each entry in the dictionary conforms to the following structure: `<permission_name>: 'granted|denied|not_granted'`.
+If a platform doesn't provide capabilities to identify whether a permission has been `denied`, then `not_granted` can be used.
+
+`view_names`
+
+: _Optional_. A list of visible UI screens at the current point in time.
+
+## Browser Context
+
+Browser context carries information about the browser or user agent for
+web-related errors. This can either be the browser this event occurred in or the
+user agent of a web request that triggered the event.
+
+The `type` and default key is `"browser"`.
+
+`name`
+
+: **Required**. Display name of the browser application.
+
+`version`
+
+: _Optional_. Version string of the browser.
+
+## GPU Context
+
+GPU context describes the GPU of the device.
+
+`name`
+
+: **Required**. The name of the graphics device.
+
+`version`
+
+: _Optional_. The Version of the graphics device.
+
+`id`
+
+: _Optional_. The PCI identifier of the graphics device.
+
+`vendor_id`
+
+: _Optional_. The PCI vendor identifier of the graphics device.
+
+`vendor_name`
+
+: _Optional_. The vendor name as reported by the graphics device.
+
+`memory_size`
+
+: _Optional_. The total GPU memory available in Megabytes.
+
+`api_type`
+
+: _Optional_. The device low-level API type.
+
+Examples: `"Apple Metal"` or `"Direct3D11"`
+
+`multi_threaded_rendering`
+
+: _Optional_. Whether the GPU has multi-threaded rendering or not.
+
+`npot_support`
+
+: _Optional_. The Non-Power-Of-Two-Support support.
+
+`max_texture_size`
+
+: _Optional_. Largest size of a texture that is supported by the graphics hardware. For example, `16384`.
+
+`graphics_shader_level`
+
+: _Optional_. Approximate "shader capability" level of the graphics device. For example, `Shader Model 2.0, OpenGL ES 3.0, Metal / OpenGL ES 3.1, 27 (unknown)`.
+
+`supports_draw_call_instancing`
+
+: _Optional_. Is GPU draw call instancing supported?
+
+`supports_ray_tracing`
+
+: _Optional_. Is ray tracing available on the device?
+
+`supports_compute_shaders`
+
+: _Optional_. Are compute shaders available on the device?
+
+`supports_geometry_shaders`
+
+: _Optional_. Are geometry shaders available on the device?
+
+### Example GPU Context
+
+```json
+{
+  "contexts": {
+    "gpu": {
+      "name": "AMD Radeon Pro 560",
+      "vendor_name": "Apple",
+      "memory_size": 4096,
+      "api_type": "Metal",
+      "multi_threaded_rendering": true,
+      "version": "Metal",
+      "npot_support": "Full"
+    }
+  }
+}
+```
+
+## State Context
+
+State context describes the state of the application (e.g.: Redux store object).
+
+The `type` and default key is `"state"`.
+
+`state`
+
+: **Required**. Object with two keys: _Optional_ `type` for naming the state library (e.g.: Redux, MobX, Vuex) and **Required** `value` that holds the state object.
+
+### Example State Context
+
+```json
+{
+  "contexts": {
+    "state": {
+      "state": {
+        "type": "MobX",
+        "value": {
+          "flights": [],
+          "airports": [],
+          "showModal": false
+        }
+      }
+    }
+  }
+}
+```
+
+## Culture Context
+
+Culture Context describes certain properties of the culture in which
+the software is used.
+
+The `type` and default key is `"culture"`.
+
+`calendar`
+
+: _Optional_. For example `GregorianCalendar`. Free form string.
+
+`display_name`
+
+: _Optional_. Human readable name of the culture. For example `English (United States)`
+
+`locale`
+
+: _Optional_. The name identifier, usually following the RFC 4646. For example `en-US` or `pt-BR`.
+
+`is_24_hour_format`
+
+: _Optional_. boolean, either `true` or `false`.
+
+`timezone`
+
+: _Optional_. The timezone of the locale. For example, `Europe/Vienna`.
+
+## Cloud Resource Context
+
+Cloud Resource Context describes certain properties of cloud provider the software is running.
+The data in the context abides to the [Cloud](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/cloud/) and [Host](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/host/) semantic conventions of OpenTelemenetry.
+
+The `type` and default key is `"cloud_resource"`.
+
+`cloud.provider`
+
+: _Optional_. Name of the cloud provider.
+
+- List of well-known values. If one of them applies, then the respective value MUST be used, otherwise a custom value MAY be used:
+  - `alibaba_cloud` - Alibaba Cloud
+  - `aws` - Amazon Web Services
+  - `azure` - Microsoft Azure
+  - `gcp` - Google Cloud Platform
+  - `ibm_cloud` - IBM Cloud
+  - `tencent_cloud` - Tencent Cloud
+- Example: `aws`
+
+`cloud.account.id`
+
+: _Optional_. The cloud account ID the resource is assigned to.
+
+- Example: `111111111111`
+
+`cloud.region`
+
+: _Optional_. The geographical region the resource is running.
+
+- Example: `us-central1` or `us-east-1`
+
+`cloud.availability_zone`
+
+: _Optional_. Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
+
+- Example: `us-east-1c`
+
+`cloud.platform`
+
+: _Optional_. The cloud platform in use. The prefix of the service SHOULD match the one specified in `cloud.provider`.
+
+- Example: `aws_ecs`
+
+`host.id`
+
+: _Optional_. Unique host ID.
+
+- Example: `3635354529892309001`
+
+`host.type`
+
+: _Optional_. Machine type of host.
+
+- Example: `t4g.medium`
+
+### Example Cloud Resource Context
+
+The following example illustrates the contexts part of the <Link to="/sdk/event-payloads/">event payload</Link> and omits other attributes for simplicity.
+
+```json
+{
+  "contexts": {
+    "cloud_resource": {
+      "cloud.provider": "aws",
+      "cloud.platform": "aws_ec2",
+      "cloud.account.id": "499517922981",
+      "cloud.region": "us-east-1",
+      "cloud.availability_zone": "us-east-1e",
+      "host.id": "i-07d3301208fe0a55a",
+      "host.type": "t2.large"
+    }
+  }
+}
+```
+
+## Trace Context
+
+Additional information that allows Sentry to connect multiple transactions, spans, and/or errors into one trace.
+
+`trace_id`
+
+: _Required_. The trace ID. Determines which `trace` the Span/Transaction belongs to. The value should be 16 random bytes encoded as a hex string (32 characters long).
+
+- Example: `"8f431b7aa08441bbbd5a0100fd91f9fe"`
+
+`span_id`
+
+: _Required_. The ID of the span.
+
+- Example: `"bb8f278130535c3c"`
+
+`parent_span_id`
+
+: _Optional_. The ID of the span enclosing this span.
+
+- Example: `null` or `"a8972eefa820e2ff"`
+
+`op`
+
+: _Optional_. Short code identifying the type of operation the span is measuring. For more details, see [Sentry's conventions around span operations](https://develop.sentry.dev/sdk/performance/span-operations/).
+
+- Example: `"http.server"`
+
+`status`
+
+: _Optional_. Whether the trace failed or succeeded. Currently only used to indicate status of individual transactions.
+
+- Example: `"ok"`
+
+- List of available status plus description:
+
+  | State                        | Description                                                                                                  | HTTP status code equivalent |
+  | ---------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------- |
+  | `ok`                         | Not an error, returned on success                                                                            | 200 and 2XX HTTP statuses   |
+  | `cancelled`                  | The operation was cancelled, typically by the caller                                                         | 499                         |
+  | `unknown` or `unknown_error` | An unknown error raised by APIs that don't return enough error information                                   | 500                         |
+  | `invalid_argument`           | The client specified an invalid argument                                                                     | 400                         |
+  | `deadline_exceeded`          | The deadline expired before the operation could succeed                                                      | 504                         |
+  | `not_found`                  | Content was not found or request was denied for an entire class of users                                     | 404                         |
+  | `already_exists`             | The entity attempted to be created already exists                                                            | 409                         |
+  | `permission_denied`          | The caller doesn't have permission to execute the specified operation                                        | 403                         |
+  | `resource_exhausted`         | The resource has been exhausted e.g. per-user quota exhausted, file system out of space                      | 429                         |
+  | `failed_precondition`        | The client shouldn't retry until the system state has been explicitly handled                                | 400                         |
+  | `aborted`                    | The operation was aborted                                                                                    | 409                         |
+  | `out_of_range`               | The operation was attempted past the valid range e.g. seeking past the end of a file                         | 400                         |
+  | `unimplemented`              | The operation is not implemented or is not supported/enabled for this operation                              | 501                         |
+  | `internal_error`             | Some invariants expected by the underlying system have been broken. This code is reserved for serious errors | 500                         |
+  | `unavailable`                | The service is currently available e.g. as a transient condition                                             | 503                         |
+  | `data_loss`                  | Unrecoverable data loss or corruption                                                                        | 500                         |
+  | `unauthenticated`            | The requester doesn't have valid authentication credentials for the operation                                | 401                         |
+
+`exclusive_time`
+
+: _Optional_. The amount of time in milliseconds spent in this transaction span, excluding its immediate child spans.
+
+- Example: `1.035`
+
+`client_sample_rate`
+
+: _Optional_. The client-side sample rate.
+
+- Example: `0.1`
+
+`tags`
+
+: _Optional_. A map or list of tags for this event. Each tag must be less than 200 characters.
+
+- Example: `{ "deviceMemory": "8 GB", "effectiveConnectionType": "4g", "routing.instrumentation": "react-router-v3" }`
+
+`dynamic_sampling_context`
+
+: _Optional_. The [Dynamic Sampling Context](https://develop.sentry.dev/sdk/performance/dynamic-sampling-context/).
+
+- Example: `{ "trace_id": "12312012123120121231201212312012", "sample_rate": "1.0", "public_key": "93D0D1125146288EAEE2A9B3AF4F96CCBE3CB316" },`
+
+`origin`
+
+: _Optional_. The origin of the trace indicates what created the trace. For more details, see <Link to="/sdk/performance/trace-origin">trace origin</Link>.
+
+`data`
+
+: _Optional_. The map of custom provided data. Currently Sentry SDKs can set following fields:
+
+| Field            | Type              | Description                                                  |
+| ---------------- | ----------------- | ------------------------------------------------------------ |
+| `route`          | `string` or `map` | The current route in the application.                        |
+| `previous_route` | `string` or `map` | The previous route in the application the user was visiting. |
+
+The `route` currently supports the following predefined fields if it's a map:
+
+| Field    | Type     | Description                                    |
+| -------- | -------- | ---------------------------------------------- |
+| `name`   | `string` | The name of the route in the user application. |
+| `params` | `map`    | Params assigned to this route.                 |
+
+If the route is set to a string (e.g. `"route": "foo"`), it will be normalized into a map (e.g. `"route": {"name": "foo"}`) server-side.
+
+### Example Trace Context
+
+```json
+{
+  "contexts": {
+    "trace": {
+      "trace_id": "12312012123120121231201212312012",
+      "span_id": "0415201309082013",
+      "parent_span_id": null,
+      "description": "<OrganizationContext>",
+      "op": "http.server",
+      "tags": {
+        "deviceMemory": "8 GB",
+        "effectiveConnectionType": "4g",
+        "routing.instrumentation": "react-router-v3"
+      },
+      "dynamic_sampling_context": {
+        "trace_id": "12312012123120121231201212312012",
+        "sample_rate": "1.0",
+        "public_key": "93D0D1125146288EAEE2A9B3AF4F96CCBE3CB316"
+      },
+      "origin": "auto.http.http_client_5",
+      "data": {
+        "route": {
+          "name": "HomeRoute"
+        }
+      }
+    }
+  }
+}
+```
+
+## Replay Context
+
+Replay context contains the replay_id of the associated replay with the event.
+
+The only and required field is `replay_id`.
+
+This should not be sent by SDKs in most cases, as the Dynamic Sampling Context will be plucked in relay,
+but for current versions of python and PHP these SDKs will send this context as they do not currently support the
+envelope endpoint.
+
+`replay_id`
+
+: **Required**. The replay_id associated with the event.
+
+### Example Replay Context
+
+```json
+{
+  "contexts": {
+    "replay": {
+      "replay_id": "12312012123120121231201212312012"
+    }
+  }
+}
+```
+
+## Response Context
+
+Response context contains information about the HTTP response associated with the event.
+
+The only and required field is `status_code`.
+
+This is mostly set on transactions in a web server environment where one transaction represents a HTTP request/response cycle.
+
+`status_code`
+
+: **Required.** The integer status code from the HTTP response associated with the event.
+
+- Example: `200`
+
+### Example Response Context
+
+```json
+{
+  "contexts": {
+    "response": {
+      "status_code": 404
+    }
+  }
+}
+```

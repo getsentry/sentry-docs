@@ -1,0 +1,40 @@
+---
+title: "Configuring U2F"
+---
+
+You will need an HTTPS-accessible development server to enable u2f. The easiest way to achieve this is by using [ngrok](https://ngrok.com/).
+
+We recommend persisting this server name so you can configure it once and use it repeatedly. To do this, open up `~/.ngrok2/ngrok.yml` and add a `sentry` instance:
+
+```yaml
+authtoken: REDACTED
+tunnels:
+  sentry:
+    proto: http
+    addr: 8000
+    subdomain: myusername-somethingobscure
+```
+
+Now you can run `ngrok start sentry` to spin up the proxy.
+
+Next up, map your persistent HTTPS url to your local Sentry server within Sentry's configuration. To do this open up `~/.sentry/sentry.conf.py` and add the following:
+
+```python
+# ... existing settings
+
+import os
+
+if os.environ.get("NGROK"):
+    URL = "https://myusername-somethingobscure.ngrok.io"
+
+    SENTRY_OPTIONS["u2f.facets"] = [URL]
+    SENTRY_OPTIONS["system.url-prefix"] = URL
+```
+
+Note: We're using an optional `NGROK` environment variable here so you can easily opt-out of requiring the Ngrok server to be run.
+
+Now you start your development server:
+
+```shell
+NGROK=1 sentry devserver
+```

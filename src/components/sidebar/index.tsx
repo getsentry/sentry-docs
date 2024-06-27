@@ -203,6 +203,7 @@ type NavNode = {
   context: {
     draft: boolean;
     title: string;
+    sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
   };
@@ -215,6 +216,7 @@ const docNodeToNavNode = (node: DocNode): NavNode => ({
     title: node.frontmatter.title,
     sidebar_order: node.frontmatter.sidebar_order,
     sidebar_title: node.frontmatter.sidebar_title,
+    sidebar_hidden: node.frontmatter.sidebar_hidden,
   },
   path: '/' + node.path + '/',
 });
@@ -300,6 +302,7 @@ function PlatformSidebar({rootNode, platformName, guideName}: PlatformSidebarPro
         title: n.frontmatter.title,
         sidebar_order: n.frontmatter.sidebar_order,
         sidebar_title: n.frontmatter.sidebar_title,
+        sidebar_hidden: n.frontmatter.sidebar_hidden,
       },
       path: '/' + n.path + '/',
     };

@@ -1,0 +1,90 @@
+---
+title: Span Interface
+---
+
+The Span Interface specifies a series of _timed_ application events that have a start and end time.
+
+A [Transaction](/sdk/event-payloads/transaction/) may contain zero or more Spans in an array attribute named `spans`. Spans in the list don't have to be ordered, they will be ordered by start / end time on the Server.
+
+While Span attributes will be normalized on the server, a Span is most useful when it includes at least an `op` and `description`.
+
+## Attributes
+
+import "./properties/span_id.mdx";
+
+import "./properties/parent_span_id.mdx";
+
+import "./properties/trace_id.mdx";
+
+import "./properties/op.mdx";
+
+import "./properties/description.mdx";
+
+import "./properties/span_start_timestamp.mdx";
+
+import "./properties/span_timestamp.mdx";
+
+import "./properties/status.mdx";
+
+import "./properties/tags.mdx";
+
+`data`
+
+: _Optional_. Arbitrary data associated with this Span.
+
+The semantic conventions for the `data` field are described in <Link to="/sdk/performance/span-data-conventions/">Sentry's Span Convention Documentation</Link>.
+
+```json
+{
+  "data": {
+    "url": "http://localhost:8080/sockjs-node/info?t=1588601703755",
+    "status_code": 200,
+    "type": "xhr",
+    "method": "GET"
+  }
+}
+```
+
+`origin`
+
+: _Optional_. The origin of the span indicates what created the span. For more details, see <Link to="/sdk/performance/trace-origin">trace origin</Link>.
+
+## Examples
+
+The following example illustrates the Span as part of the [Transaction](/sdk/event-payloads/transaction/) and omits other attributes for simplicity.
+
+```json
+{
+  "spans": [
+    {
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "span_id": "b01b9f6349558cd1",
+      "parent_span_id": "b0e6f15b45c36b12",
+      "op": "http",
+      "description": "GET /sockjs-node/info",
+      "status": "ok",
+      "start_timestamp": 1588601261.481961,
+      "timestamp": 1588601261.488901,
+      "tags": {
+        "http.status_code": "200"
+      },
+      "data": {
+        "url": "http://localhost:8080/sockjs-node/info?t=1588601703755",
+        "status_code": 200,
+        "type": "xhr",
+        "method": "GET"
+      },
+      "origin": "auto.http"
+    },
+    {
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "span_id": "b980d4dec78d7344",
+      "parent_span_id": "9312d0d18bf51736",
+      "op": "update",
+      "description": "Vue <App>",
+      "start_timestamp": 1588601261.535386,
+      "timestamp": 1588601261.544196
+    }
+  ]
+}
+```

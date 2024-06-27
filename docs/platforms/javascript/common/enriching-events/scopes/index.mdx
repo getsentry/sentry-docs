@@ -102,7 +102,7 @@ Sentry.captureException(new Error("my error"));
 
 ## Configuring the Scope
 
-There are two main ways to interact with the scope. You can access the current scope via `Sentry.getCurrentScope()` and use setters on the resulting scope, or you can use global methods like `Sentry.setTag()` directly, which will set on the respective scope under the hood.
+There are two main ways to interact with the scope. You can access the current scope via `Sentry.getCurrentScope()` and use setters on the resulting scope, or you can use global methods like `Sentry.setTag()` directly, which will set on the respective scope under the hood (which will be the isolation scope).
 
 You'll first need to import the SDK, as usual:
 
@@ -111,6 +111,7 @@ You'll first need to import the SDK, as usual:
 You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
 
 ```javascript
+/// Usually, you don't want to write on the current scope, so use with care!
 const scope = Sentry.getCurrentScope();
 scope.setTag("my-tag", "my value");
 scope.setUser({
@@ -118,7 +119,7 @@ scope.setUser({
   email: "john.doe@example.com",
 });
 
-// Or use the global methods
+// Or use the global methods (which will set data on the isolation scope):
 Sentry.setTag("my-tag", "my value");
 Sentry.setUser({
   id: 42,

@@ -10,6 +10,7 @@ type Node = {
   [key: string]: any;
   context: {
     [key: string]: any;
+    sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
     title?: string;
@@ -62,7 +63,11 @@ export const renderChildren = (
   return sortPages(
     children.filter(
       ({name, node}) =>
-        node && !!node.context.title && name !== '' && exclude.indexOf(node.path) === -1
+        node &&
+        !!node.context.title &&
+        name !== '' &&
+        exclude.indexOf(node.path) === -1 &&
+        !node.context.sidebar_hidden
     ),
     ({node}) => node!
   ).map(({node, children: nodeChildren}) => {

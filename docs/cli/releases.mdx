@@ -120,11 +120,11 @@ sentry-cli releases set-commits "$VERSION" --auto --ignore-missing
 
 When you are working with JavaScript and other platforms, you can upload release artifacts to Sentry which are then considered during processing. The most common release artifact are [source maps](/platforms/javascript/sourcemaps/) for which `sentry-cli` has specific support.
 
-To manage release artifacts the `sentry-cli releases files` command can be used which itself provides various sub commands.
+To manage release artifacts the `sentry-cli files` command can be used which itself provides various sub commands.
 
 ### Upload Files
 
-The most common use case is to upload files. For the generic upload the `sentry-cli releases files VERSION upload` command can be used. However since most release artifacts are JavaScript source map related we have a [Upload Source Maps](#sentry-cli-sourcemaps) convenience method for that.
+The most common use case is to upload files. For the generic upload the `sentry-cli files upload` command can be used. However since most release artifacts are JavaScript source map related we have a [Upload Source Maps](#sentry-cli-sourcemaps) convenience method for that.
 
 Files uploaded are typically named with a full (eg: `http://example.com/foo.js`) or truncated URL (eg: `~/foo.js`).
 
@@ -133,7 +133,7 @@ Release artifacts are only considered at time of event processing. So while it�
 The first argument to `upload` is the path to the file, the second is an optional URL we should associate it with. Note that if you want to use an abbreviated URL (eg: `~/foo.js`) make sure to use single quotes to avoid the expansion by the shell to your home folder.
 
 ```bash
-sentry-cli releases files "$VERSION" upload /path/to/file '~/file.js'
+sentry-cli files upload --release "$VERSION" /path/to/file '~/file.js'
 ```
 
 ### Upload Source Maps
@@ -217,7 +217,7 @@ sentry-cli sourcemaps upload /path/to/sourcemaps --ignore-file .sentryignore
 To list uploaded files, the following command can be used:
 
 ```bash
-sentry-cli releases files "$VERSION" list
+sentry-cli files list --release "$VERSION"
 ```
 
 This will return a list of all uploaded files for that release.
@@ -227,8 +227,8 @@ This will return a list of all uploaded files for that release.
 You can also delete already uploaded files. Either by name or all files at once:
 
 ```bash
-sentry-cli releases files "$VERSION" delete NAME_OF_FILE
-sentry-cli releases files "$VERSION" delete --all
+sentry-cli files delete --release "$VERSION" NAME_OF_FILE
+sentry-cli files delete --release "$VERSION" --all
 ```
 
 ## Creating Deploys
@@ -236,7 +236,7 @@ sentry-cli releases files "$VERSION" delete --all
 You can also associate deploys with releases. To create a deploy you first create a release and then a deploy for it. At the very least, you should supply the “environment” the deploy goes to (production, staging etc.). You can freely define this:
 
 ```bash
-sentry-cli releases deploys "$VERSION" new -e ENVIRONMENT
+sentry-cli deploys new --release "$VERSION" -e ENVIRONMENT
 ```
 
 Optionally, you can also define how long the deploy took:
@@ -245,11 +245,11 @@ Optionally, you can also define how long the deploy took:
 start=$(date +%s)
 ...
 now=$(date +%s)
-sentry-cli releases deploys "$VERSION" new -e ENVIRONMENT -t $((now-start))
+sentry-cli deploys new --release "$VERSION" -e ENVIRONMENT -t $((now-start))
 ```
 
 Deploys can be listed too (however they cannot be deleted):
 
 ```bash
-sentry-cli releases deploys "$VERSION" list
+sentry-cli deploys list --release "$VERSION"
 ```

@@ -1,0 +1,99 @@
+---
+title: "Time to Initial/Full Display"
+---
+
+We recommend implementing this feature for mobile and desktop SDKs.
+
+The current screen load transactions timings are unreliable in understanding the time spent in the screen creation.
+This is because they wait for any span created, including any file I/O or network request.
+Time to Initial Display and Time to Full Display are spans added to the screen load transactions,
+which can be used to show more accurate information on the time spent in the screen creation.
+Being spans, they don't impact user quota.
+
+The SDK starts them as soon as a new screen is created, as long as there is an active transaction for the screen load.
+Note: When the app is started, the SDK aligns the start timestamp of the Time to Initial Display and Time to Full Display to the app start timestamp.
+
+## Time to Initial Display
+
+Time to Initial Display is a span with the operation `ui.load.initial_display`, which finishes automatically
+when the screen draws its first frame. It's controlled automatically by the SDK and doesn't
+require any manual intervention from the user.
+
+The SDKs set the time to initial display as a transaction measurement, with `time_to_initial_display` as the key and the span duration as the value.
+Note: The measurement should be set only if the span finishes with the status `OK`. In case a screen is used just as a
+ router to start other screens, it could be finished before drawing a frame.
+
+
+## Time to Full Display
+
+Time to Full Display is a span with operation `ui.load.full_display` which is finished manually through
+the `Sentry.reportFullyDisplayed` static API. This feature has to be enabled by setting the SDK config
+option `enableTimeToFullDisplayTracing`. Remember that the screen load transactions wait for spans to finish,
+so the transaction will run until the user calls the API. So we recommend this feature to be disabled by default.
+It's also set as a measurement of the transaction, with `time_to_full_display` as key and the span duration as value.
+
+The following section explains the possible scenarios of the Time to Full Display.
+
+The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Scenario: Option disabled
+    Given an ongoing screen load/navigation transaction
+    Then the SDK doesn't start the Full Display span
+    When the user calls the manual API `reportFullyDisplayed`
+    Then the SDK ignores the call
+
+Scenario: Option enabled
+    Given the enableTimeToFullDisplay option is enabled
+    When the SDK creates a new screen load transaction
+    Then the Full Display span is started
+
+Scenario: App started
+    Given the enableTimeToFullDisplay option is enabled
+    When the app starts
+    Then the SDK sets the start timestamp of the Time to Initial Display and Time to Full Display span to the app start timestamp
+    And the SDK updates the `time_to_initial_display` and `time_to_full_display` measurements accordingly
+
+Scenario: Screen displayed
+    Given an ongoing Full Display span
+    And the SDK finished the  Initial Display span
+    When the user calls the API `reportFullyDisplayed`
+    Then the SDK finishes the span
+    And sets the status to ok
+
+Scenario: API not called
+    Given an ongoing Full Display span
+    When the user doesn't call the API `reportFullyDisplayed` in 30 seconds
+    Then the SDK finishes the span
+    And sets the status to deadline_exceeded
+    And sets the timestamp to the timestamp of the Initial Display span
+    And the SDK updates the `time_to_full_display` measurement accordingly
+
+Scenario: API called
+    Given an ongoing Full Display span
+    When the user calls the API `reportFullyDisplayed`
+    Then the SDK finishes the Full Display span
+    And set the status to ok
+
+Scenario: API called too early
+    Given an ongoing Initial Display span
+    And the user called the API `reportFullyDisplayed`
+    When the SDK finishes the Initial Display span
+    Then the SDK sets the status to ok
+    And the SDK adjusts the Full Display span end timestamp to the Initial Display span end timestamp
+    And the SDK updates the `time_to_full_display` measurement accordingly
+
+Scenario: Another screen load/navigation transaction occurs
+    Given an ongoing Full Display span
+    When a new screen load/navigation transaction is started
+    Then the SDK finishes the Full Display span
+    And the SDK sets the status to deadline_exceeded
+    And the SDK sets the end timestamp to the Initial Display span end timestamp
+    And the SDK updates the `time_to_full_display` measurement accordingly
+
+Scenario: No ongoing screen load transaction
+    Given there is no active screen load transaction
+    When the user calls the manual API `reportFullyDisplayed`
+    Then the SDK ignores the call
+
+```

@@ -29,6 +29,7 @@ export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
 
 type Page = {
   context: {
+    sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
     title?: string;

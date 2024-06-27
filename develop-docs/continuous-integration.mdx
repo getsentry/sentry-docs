@@ -1,0 +1,44 @@
+---
+title: "Continuous Integration"
+---
+
+Sentry uses a variety of continuous integration services to help ensure we don't
+accidentally break the application.
+
+## Deployments
+
+[GoCD](https://deploy.getsentry.net) is used for deployments. Please refer to the [internal user guide](https://www.notion.so/sentry/GoCD-User-Guide-4f8456d2477c458095c4aa0e67fc38a6).
+
+## GitHub Actions
+
+GitHub actions is our primary CI system and runs our tests on every pull request and on merges to master. It is required that tests pass before changes can be merged.
+
+## Docker images
+
+We use Google Cloud Build to build our Docker containers. Every single commit (including from PRs) gets built, tested and becomes available at `us.gcr.io/sentryio/sentry:<sha>` with no retention guarantees. Every push to `master` gets built, tested and [pushed to Docker Hub](https://hub.docker.com/r/getsentry/sentry/tags) permanently. You can set `SENTRY_IMAGE` to the following, when working with [getsentry/self-hosted](https://github.com/getsentry/self-hosted):
+
+* `getsentry/sentry:<sha>`, `getsentry/sentry:<short_sha>`, or `getsentry/sentry:latest` to pull from a commit in [getsentry/sentry](https://github.com/getsentry/sentry) `master`
+* `us.gcr.io/sentryio/sentry:<sha>` to pull from a commit in any other branch or PR
+
+
+## CI workflow for testing changes with getsentry
+
+See [Workflow](/workflow/).
+
+## Troubleshooting CI
+
+You might also be interested in <Link to="/environment/#troubleshooting">troubleshooting the dev environment</Link>.
+
+---
+
+**Problem:**
+
+When pushing your build to staging and you it fails the `Ensure test image` step on Travis.
+
+**Solution:**
+
+You probably forgot to push your branch on Sentry to GitHub.
+
+## Old Systems
+
+For historical reference, we used to use Travis and Percy which have been replaced by GitHub actions and [a GitHub action](https://github.com/getsentry/action-visual-snapshot) respectively.
