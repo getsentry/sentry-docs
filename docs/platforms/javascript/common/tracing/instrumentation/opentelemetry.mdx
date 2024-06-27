@@ -72,20 +72,22 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// This e.g. sets up @opentelemetry/sdk-trace-node
-const provider = manuallySetUpOpenTelemetry();
+const sentryClient = Sentry.getClient();
+
+// Note: This could be BasicTracerProvider or any other provider depending on
+// how you are using the OpenTelemetry SDK
+const provider = new NodeTracerProvider({
+  // We need our sampler to ensure the correct subset of traces is sent to Sentry
+  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+});
 
 // We need a custom span processor
 provider.addSpanProcessor(new SentrySpanProcessor());
+
 // We need a custom propagator and context manager
 provider.register({
   propagator: new SentryPropagator(),
   contextManager: new Sentry.SentryContextManager(),
-});
-
-// We need our sampler to ensure the correct subset of traces is sent to Sentry
-const provider = new BasicTracerProvider({
-  sampler: new SentrySampler(Sentry.getClient()),
 });
 
 // Validate that the setup is correct
