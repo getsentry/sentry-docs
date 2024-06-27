@@ -24,6 +24,7 @@ The Sentry SDK uses [OpenTelemetry](https://opentelemetry.io/) under the hood. T
 
 While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like this:
 
+<PlatformSection notSupported={["javascript.nestjs"]}>
 ```js
 const Sentry = require("@sentry/node");
 const {
@@ -40,6 +41,25 @@ Sentry.init({
 // Afterwards, you can add additional instrumentation:
 Sentry.addOpenTelemetryInstrumentation(new GenericPoolInstrumentation());
 ```
+</PlatformSection>
+<PlatformSection supported={["javascript.nestjs"]}>
+```js
+const Sentry = require("@sentry/nestjs");
+const {
+  GenericPoolInstrumentation,
+} = require("@opentelemetry/instrumentation-generic-pool");
+
+Sentry.init({
+  dsn: "__DSN__",
+
+  // The SentrySampler will use this to determine which traces to sample
+  tracesSampleRate: 1.0,
+});
+
+// Afterwards, you can add additional instrumentation:
+Sentry.addOpenTelemetryInstrumentation(new GenericPoolInstrumentation());
+```
+</PlatformSection>
 
 Any instrumentation added like this will be automatically picked up by Sentry.
 

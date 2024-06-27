@@ -21,6 +21,7 @@ When running your application in ESM mode, you can't use `require()` to load mod
 
 You need to create a file named `instrument.mjs` that imports and initializes Sentry:
 
+<PlatformSection notSupported={["javascript.nestjs"]}>
 ```javascript {tabTitle:ESM} {filename: instrument.mjs}
 import * as Sentry from "@sentry/node";
 
@@ -33,6 +34,21 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 ```
+</PlatformSection>
+<PlatformSection supported={["javascript.nestjs"]}>
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/nestjs";
+
+// Ensure to call this before importing any other modules!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Tracing by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
+</PlatformSection>
 
 Adjust the Node.js call for your application to use the [--import](https://nodejs.org/api/cli.html#--importmodule) parameter and point it at `instrument.js`, which contains your `Sentry.init()` code:
 

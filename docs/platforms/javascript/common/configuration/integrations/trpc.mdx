@@ -33,6 +33,7 @@ The Sentry tRPC middleware creates spans for your and improves error capturing f
 The `trpcMiddleware` is not a traditional SDK integration in the sense that your are **not** supposed to add it to the `integrations` option.
 Instead, add it as a middleware to your tRPC router.
 
+<PlatformSection notSupported={["javascript.nestjs"]}>
 ```javascript
 import * as Sentry from "@sentry/node";
 import { initTRPC } from "@trpc/server";
@@ -47,6 +48,23 @@ const sentryMiddleware = t.middleware(
 
 const sentrifiedProcedure = t.procedure.use(sentryMiddleware);
 ```
+</PlatformSection>
+<PlatformSection supported={["javascript.nestjs"]}>
+```javascript
+import * as Sentry from "@sentry/nestjs";
+import { initTRPC } from "@trpc/server";
+
+const t = initTRPC.context().create();
+
+const sentryMiddleware = t.middleware(
+  Sentry.trpcMiddleware({
+    attachRpcInput: true,
+  })
+);
+
+const sentrifiedProcedure = t.procedure.use(sentryMiddleware);
+```
+</PlatformSection>
 
 ## Options
 

@@ -39,6 +39,7 @@ node --require @sentry/node/preload app.js
 
 Then, in your application you can call `Sentry.init()` at a later point:
 
+<PlatformSection notSupported={["javascript.nestjs"]}>
 ```javascript {filename: main.js}
 const startApp = require("./app");
 const fetchDsn = require("./utils/fetchDsn");
@@ -58,6 +59,28 @@ Sentry.init({
 // From now on, Sentry is initialized,
 // but the app is still auto-instrumented
 ```
+</PlatformSection>
+<PlatformSection supported={["javascript.nestjs"]}>
+```javascript {filename: main.js}
+const startApp = require("./app");
+const fetchDsn = require("./utils/fetchDsn");
+const Sentry = require("@sentry/nestjs");
+
+startApp();
+
+const dsn = fetchDsn();
+Sentry.init({
+  dsn,
+
+  // Add Tracing by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+  // From now on, Sentry is initialized,
+  // but the app is still auto-instrumented
+  ```
+</PlatformSection>
 
 ## Late Initialization with ESM
 
@@ -70,6 +93,7 @@ node --import @sentry/node/preload app.js
 
 Then, in your application you can call `Sentry.init()` at a later point:
 
+<PlatformSection notSupported={["javascript.nestjs"]}>
 ```javascript {filename: main.js}
 import startApp from "./app";
 import fetchDsn from "./utils/fetchDsn";
@@ -89,6 +113,28 @@ Sentry.init({
 // From now on, Sentry is initialized,
 // but the app is still auto-instrumented
 ```
+</PlatformSection>
+<PlatformSection supported={["javascript.nestjs"]}>
+```javascript {filename: main.js}
+import startApp from "./app";
+import fetchDsn from "./utils/fetchDsn";
+import * as Sentry from "@sentry/nestjs";
+
+startApp();
+
+const dsn = fetchDsn();
+Sentry.init({
+  dsn,
+
+  // Add Tracing by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+// From now on, Sentry is initialized,
+// but the app is still auto-instrumented
+```
+</PlatformSection>
 
 ## What does Preloading mean?
 
