@@ -65,6 +65,19 @@ The SDK will take care of deciding what data belongs on which scope as long as y
 
 The old APIs will continue to work in 2.0, but we recommend migrating to their new counterparts as soon as possible since they will be removed in the next major release.
 
+### Activating a Custom Hub
+
+If you were using a custom hub to isolate event data, we recommend using a custom isolation scope instead. To activate the custom isolation scope, you will need to explicitly pass the isolation scope to the `use_isolation_scope`, which creates a context manager that activates the scope. Here is an example of how to change your code to make it work:
+
+```python diff
+  import sentry_sdk
++ import sentry_sdk.scope
+
+- with my_hub:
++ with sentry_sdk.scope.use_isolation_scope(my_isolation_scope):
+      sentry_sdk.capture_message("I am isolated")
+```
+
 ### Activating Current Hub Clone
 
 If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone the current hub and activate the clone, you should now use `with sentry_sdk.isolation_scope()`, like so:
