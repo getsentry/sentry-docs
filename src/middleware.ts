@@ -66,6 +66,14 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
   },
   {
+    from: '/account/early-adopter-features/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
+  },
+  {
+    from: '/platforms/python/migration/configuration/filtering/',
+    to: '/platforms/python/configuration/filtering/',
+  },
+  {
     from: '/organization/integrations/github/',
     to: '/organization/integrations/source-code-mgmt/github/',
   },
@@ -1119,15 +1127,15 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/tracing/event-detail/',
     to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
-    from: '/product/sentry-basics/concepts/tracing/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    from: '/concepts/key-terms/tracing/event-detail/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/dsn-explainer/',
