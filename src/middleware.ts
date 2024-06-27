@@ -3272,7 +3272,188 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
   },
 ];
 
-const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [];
+const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/',
+    to: '/getting-started/',
+  },
+  {
+    from: '/docs-components/',
+    to: '/development/docs/',
+  },
+  {
+    from: '/docs/',
+    to: '/development/docs/',
+  },
+  {
+    from: '/inclusion/',
+    to: '/development/inclusive-language/',
+  },
+  {
+    from: '/translations/',
+    to: '/development/translations/',
+  },
+  {
+    from: '/environment/',
+    to: '/development/environment/',
+  },
+  {
+    from: '/environment/pycharm/',
+    to: '/development/environment/pycharm/',
+  },
+  {
+    from: '/environment/u2f/',
+    to: '/development/environment/u2f/',
+  },
+  {
+    from: '/testing/',
+    to: '/development/testing/',
+  },
+  {
+    from: '/philosophy/',
+    to: '/development/philosophy/',
+  },
+  {
+    from: '/commit-messages/',
+    to: '/development/commit-messages/',
+  },
+  {
+    from: '/code-review/',
+    to: '/development/code-review/',
+  },
+  {
+    from: '/workflow/',
+    to: '/development/workflow/',
+  },
+  {
+    from: '/continuous-integration/',
+    to: '/development/continuous-integration/',
+  },
+  {
+    from: '/python-dependencies/',
+    to: '/development/python-dependencies/',
+  },
+  {
+    from: '/rust/',
+    to: '/development/rust/',
+  },
+  {
+    from: '/database-migrations/',
+    to: '/development/database-migrations/',
+  },
+  {
+    from: '/testing/',
+    to: '/development/testing/',
+  },
+  {
+    from: '/analytics/',
+    to: '/development/analytics/',
+  },
+  {
+    from: '/architecture/',
+    to: '/application/architecture/',
+  },
+  {
+    from: '/sentry-vs-getsentry/',
+    to: '/application/sentry-vs-getsentry/',
+  },
+  {
+    from: '/config/',
+    to: '/application/config/',
+  },
+  {
+    from: '/issue-platform/',
+    to: '/application/issue-platform/',
+  },
+  {
+    from: '/issue-platform-detectors/',
+    to: '/application/issue-platform-detectors/',
+  },
+  {
+    from: '/feature-flags/',
+    to: '/application/feature-flags/',
+  },
+  {
+    from: '/feature-flags/flagpole/',
+    to: '/application/feature-flags/flagpole/',
+  },
+  {
+    from: '/ab-testing/',
+    to: '/application/ab-testing/',
+  },
+  {
+    from: '/options/',
+    to: '/application/options/',
+  },
+  {
+    from: '/serializers/',
+    to: '/application/serializers/',
+  },
+  {
+    from: '/grouping/',
+    to: '/application/grouping/',
+  },
+  {
+    from: '/api/',
+    to: '/application/api/',
+  },
+  {
+    from: '/api/basics/',
+    to: '/application/api/basics/',
+  },
+  {
+    from: '/api/design/',
+    to: '/application/api/design/',
+  },
+  {
+    from: '/api/concepts/',
+    to: '/application/api/concepts/',
+  },
+  {
+    from: '/api/public/',
+    to: '/application/api/public/',
+  },
+  {
+    from: '/api/checklist/',
+    to: '/application/api/checklist/',
+  },
+  {
+    from: '/pii/',
+    to: '/application/pii/',
+  },
+  {
+    from: '/pii/types/',
+    to: '/application/pii/types/',
+  },
+  {
+    from: '/pii/methods/',
+    to: '/application/pii/methods/',
+  },
+  {
+    from: '/pii/selectors/',
+    to: '/application/pii/selectors/',
+  },
+  {
+    from: '/transaction-clustering/',
+    to: '/application/transaction-clustering/',
+  },
+  {
+    from: '/dynamic-sampling/',
+    to: '/application/dynamic-sampling/',
+  },
+  {
+    from: '/dynamic-sampling/architecture/',
+    to: '/application/dynamic-sampling/architecture/',
+  },
+  {
+    from: '/dynamic-sampling/fidelity-and-biases/',
+    to: '/application/dynamic-sampling/fidelity-and-biases/',
+  },
+  {
+    from: '/dynamic-sampling/the-big-picture/',
+    to: '/application/dynamic-sampling/the-big-picture/',
+  },
+];
 
 const redirectMap = new Map(
   (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [

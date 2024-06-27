@@ -449,43 +449,26 @@ function DevelopDocsSidebar({path, rootNode}: {path: string; rootNode: DocNode})
       <div className="md:flex flex-col items-stretch">
         <div className={styles.toc}>
           <ul data-sidebar-tree>
-            <li className="mb-3" data-sidebar-branch>
-              <div className={headerClassName} data-sidebar-link>
-                <h6>General</h6>
-              </div>
-              <ul data-sidebar-tree>
-                <SidebarLink to="/" title="Overview" path={path} />
-                <SidebarLink
-                  to="https://github.com/getsentry/.github/blob/master/CODE_OF_CONDUCT.md"
-                  title="Code of Conduct"
-                  path={path}
-                />
-                <SidebarLink to="/docs/" title="Documentation Guide" path={path} />
-                <SidebarLink to="/inclusion/" title="Inclusive Language" path={path} />
-                <SidebarLink to="/translations/" title="Translations" path={path} />
-              </ul>
-            </li>
-
             <DynamicNav
-              root="api"
-              title="API"
-              tree={getNavTree('api')}
+              root="getting-started"
+              title="Getting Started"
+              tree={getNavTree('getting-started')}
               headerClassName={headerClassName}
               collapse
             />
 
             <DynamicNav
-              root="sdk"
-              title="SDK Development"
-              tree={getNavTree('sdk')}
+              root="development"
+              title="Development"
+              tree={getNavTree('development')}
               headerClassName={headerClassName}
               collapse
             />
 
             <DynamicNav
-              root="self-hosted"
-              title="Self-Hosted"
-              tree={getNavTree('self-hosted')}
+              root="application"
+              title="Application"
+              tree={getNavTree('application')}
               headerClassName={headerClassName}
               collapse
             />
@@ -507,6 +490,14 @@ function DevelopDocsSidebar({path, rootNode}: {path: string; rootNode: DocNode})
             />
 
             <DynamicNav
+              root="sdk"
+              title="SDK Development"
+              tree={getNavTree('sdk')}
+              headerClassName={headerClassName}
+              collapse
+            />
+
+            <DynamicNav
               root="services"
               title="Services"
               tree={getNavTree('services')}
@@ -522,108 +513,27 @@ function DevelopDocsSidebar({path, rootNode}: {path: string; rootNode: DocNode})
               collapse
             />
 
-            <li className="mb-3" data-sidebar-branch>
-              <div className={headerClassName} data-sidebar-link>
-                <h6>Development</h6>
-              </div>
-              <ul data-sidebar-tree>
-                <SidebarLink to="/philosophy/" title="Philosophy" path={path} />
-                <SidebarLink to="/commit-messages/" title="Commit Messages" path={path} />
-                <SidebarLink to="/code-review/" title="Code Review" path={path} />
-                <SidebarLink
-                  to="/frontend/pull-request-previews/"
-                  title="Pull Request Previews"
-                  path={path}
-                />
-                <SidebarLink to="/workflow/" title="Workflow" path={path} />
-                <SidebarLink
-                  to="/continuous-integration/"
-                  title="Continuous Integration"
-                  path={path}
-                />
-                <SidebarLink
-                  to="/python-dependencies/"
-                  title="Python Dependencies"
-                  path={path}
-                />
-                <SidebarLink
-                  to="/database-migrations/"
-                  title="Database Migrations"
-                  path={path}
-                />
-                <SidebarLink to="/testing/" title="Testing Tips" path={path} />
-                <SidebarLink to="/analytics/" title="Analytics" path={path} />
-                <SidebarLink to="/rust/" title="Rust Development" path={path} />
-              </ul>
-            </li>
-            <li className="mb-3" data-sidebar-branch>
-              <div className={headerClassName} data-sidebar-link>
-                <h6>Application</h6>
-              </div>
-              <ul data-sidebar-tree>
-                <SidebarLink to="/architecture/" title="Architecture" path={path} />
-                <SidebarLink
-                  to="/sentry-vs-getsentry/"
-                  title="sentry vs getsentry"
-                  path={path}
-                />
-                <SidebarLink to="/config/" title="Configuration" path={path} />
-                <SidebarLink to="/issue-platform/" title="Issue Platform" path={path} />
-                <SidebarLink
-                  to="/issue-platform-detectors/"
-                  title="Issue Platform - Writing Detectors"
-                  path={path}
-                />
-                <SidebarLink to="/feature-flags/" title="Feature Flags" path={path} />
-                <SidebarLink to="/ab-testing/" title="A/B Testing" path={path} />
-                <SidebarLink to="/options/" title="Options" path={path} />
-                <SidebarLink to="/serializers/" title="Serializers" path={path} />
-                <SidebarLink to="/grouping/" title="Grouping" path={path} />
-                <SidebarLink to="/api/" title="API" path={path}>
-                  {/* <Children tree={tree.find(n => n.name === 'api').children} /> */}
-                </SidebarLink>
-                <SidebarLink to="/pii/" title="PII and Data Scrubbing" path={path}>
-                  <SidebarLink to="/pii/types/" title="Rule Types" path={path} />
-                  <SidebarLink to="/pii/methods/" title="Redaction Methods" path={path} />
-                  <SidebarLink to="/pii/selectors/" title="Selectors" path={path} />
-                </SidebarLink>
-                <SidebarLink
-                  to="/transaction-clustering/"
-                  title="Clustering URL Transactions"
-                  path={path}
-                />
-                <SidebarLink to="/dynamic-sampling/" title="Dynamic Sampling" path={path}>
-                  {/* <Children tree={tree.find(n => n.name === 'dynamic-sampling').children} /> */}
-                </SidebarLink>
-              </ul>
-            </li>
+            <DynamicNav
+              root="self-hosted"
+              title="Self-Hosted Sentry"
+              tree={getNavTree('self-hosted')}
+              headerClassName={headerClassName}
+              collapse
+            />
 
-            <li className="mb-3" data-sidebar-branch>
-              <div className={headerClassName} data-sidebar-link>
-                <h6>Resources</h6>
-              </div>
-
-              <ul data-sidebar-tree>
-                <SidebarLink
-                  to="https://docs.sentry.io"
-                  title="User Documentation"
-                  path={path}
-                />
-              </ul>
-            </li>
-            <li className="mb-3" data-sidebar-branch>
-              <div className={headerClassName} data-sidebar-link>
-                <h6>Meta Documentation</h6>
-              </div>
-
-              <ul data-sidebar-tree>
-                <SidebarLink
-                  to="/docs-components/"
-                  title="Documentation Components"
-                  path={path}
-                />
-              </ul>
-            </li>
+          </ul>
+          <hr />
+          <ul data-sidebar-tree>
+            <SidebarLink
+              to="https://open.sentry.io/code-of-conduct/"
+              title="Code of Conduct"
+              path={path}
+            />
+            <SidebarLink
+              to="https://docs.sentry.io"
+              title="User Documentation"
+              path={path}
+            />
           </ul>
         </div>
       </div>
