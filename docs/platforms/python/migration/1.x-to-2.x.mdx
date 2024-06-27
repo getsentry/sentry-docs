@@ -65,9 +65,10 @@ The SDK will take care of deciding what data belongs on which scope as long as y
 
 The old APIs will continue to work in 2.0, but we recommend migrating to their new counterparts as soon as possible since they will be removed in the next major release.
 
-### Hub Cloning
+### Activating Current Hub Clone
 
-Creating a new isolation scope provides a similar level of isolation to what you'd previously get by using a hub clone:
+If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone the current hub and activate the clone, you should now use `with sentry_sdk.isolation_scope()`, like so:
+
 
 ```python diff
   import sentry_sdk
@@ -76,6 +77,8 @@ Creating a new isolation scope provides a similar level of isolation to what you
 + with sentry_sdk.isolation_scope() as scope:
       sentry_sdk.capture_message("I am isolated!")
 ```
+
+`sentry_sdk.isolation_scope` is a context manager that creates a new isolation scope by forking the current isolation scope. The forked isolation scope is activated during the context manager's lifetime, providing a similar level of isolation within the context manager as the previous `Hub`-based approach.
 
 ### Scope Configuring
 
