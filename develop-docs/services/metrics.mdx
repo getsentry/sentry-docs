@@ -6,6 +6,66 @@ Sentry provides an abstraction called ‘metrics’ which is used for internal m
 
 The default backend simply discards them (though some values are still kept in the internal time series database).
 
+## Sentry Metrics Abstraction
+
+In order to make metrics collection uniform across the entire `sentry` codebase, we have an abstraction which exposes metrics collection with three methods.
+
+- `incr` → emits a counter metric.
+- `timing` → emits a distribution metric (with the `second` unit on Sentry metrics).
+- `gauge` → emits a gauge metric (temporarily emits a counter, until the infra work is done).
+
+Each method has three main parameters:
+
+- `key` → the name that uniquely identifies the metric. You will use the name to specify the metric when you want to plot it.
+- `value` → the value of the value. You will plot the value of the metric.
+- `tags` → the tags of the metric. You will use the tags to attach metadata to the metric, which can be helpful for aggregations.
+
+To use the metrics abstraction you will first have to import it:
+
+```python
+from sentry.utils import metrics
+```
+
+Once imported, you can start emitting metrics:
+
+```python
+# Emit a counter.
+metrics.incr(
+	"counter_name",
+	tags={"platform": platform}
+)
+
+# Emit a distribution.
+metrics.distribution(
+	"gauge_name",
+	10,
+	tags={"nation": nation},
+	unit="second",
+)
+
+# Emit a gauge.
+metrics.gauge(
+	"gauge_name",
+	10,
+	tags={"nation": nation}
+)
+
+# Emit a distribution (with default time-based unit).
+metrics.timing(
+	"distribution_name",
+	100,
+	tags={"user_segment": user_segment}
+)
+```
+
+If you want to measure how much time a specific piece of code takes, you can use:
+
+```python
+# Emit a distribution metric of the execution time of the function.
+with metrics.timer("my_func"):
+	my_func()
+```
+
 ## Statsd Backend
 
 ```python
@@ -86,7 +146,7 @@ LOGGING['handlers']['console:metrics'] = {
 
 ## Composit Experimental Backend
 
-The `CompositeExperimentalMetricsBackend` reports all operations to both Datadog and Sentry. More information about why and how we are using it can be found in [Sentry Developer Metrics](/delightful-developer-metrics/sending-metrics-abstraction/).
+The current implementation of the `MetricsBackend` is known as `CompositExperimentalMetricsBackend`. The `CompositeExperimentalMetricsBackend` reports all operations to both Datadog and Sentry. For this reason, you will be able to see your metrics on both platforms.
 
 ```python
 SENTRY_METRICS_BACKEND = "sentry.metrics.composite_experimental.CompositeExperimentalMetricsBackend"

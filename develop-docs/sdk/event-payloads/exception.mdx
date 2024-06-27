@@ -92,6 +92,25 @@ type and value in the UI for the primary event display. This flag should be set
 for all "segfaults" for instance as every single error group would look very
 similar otherwise.
 
+`exception_id`
+
+: An optional numeric value providing an ID for the exception relative 
+to this specific event. The SDK should assign simple incrementing integers
+to each exception in the tree, starting with 0 for the root of the tree.
+In other words, when flattened into the list provided in the exception 
+values on the event, the last exception in the list should have ID 0,
+the previous one should have ID 1, the next previous should have ID 2, etc.
+
+`parent_id`
+
+: An optional numeric value pointing at the exception_id that is the 
+parent of this exception. The SDK should assign this to all exceptions except 
+the root exception (the last to be listed in the exception values).
+
+`is_exception_group`
+
+: An optional flag indicating that this exception is part of an exception group type specific to the platform or language.
+
 `meta`
 
 : Optional information from the operating system or runtime on the exception
@@ -326,3 +345,34 @@ Flat list, omitting `values`:
   ]
 }
 ```
+
+Exception group:
+
+```json
+{
+  "exception": [
+    {
+      "type": "Error",
+      "value": "An error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": true,
+        "is_exception_group": true
+        "exception_id": 0
+      }
+    },
+    {
+      "type": "Error",
+      "value": "Another error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": false,
+        "is_exception_group": true,
+        "exception_id": 1,
+        "parent_id": 0
+      }
+    }
+  ]
+}
+```
+`;

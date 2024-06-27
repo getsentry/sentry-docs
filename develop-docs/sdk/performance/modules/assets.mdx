@@ -1,0 +1,51 @@
+---
+title: 'Assets Module'
+---
+
+Browser SDKs should auto-instrument javascript, stylesheet and image assets with the ops `resource.script`, `resource.css` and `resource.img` respectively. The Asset module is technology agnostic, it only cares about span data properties.
+
+## Span conventions
+
+### Span Description
+
+The description of an asset span should be the full URL of the asset, e.g., `https://cdn.com/main.hash123.js?q=11274713`.
+
+### Span Data
+
+The following data should be provided for each asset span
+
+| Data Key                               | Type     | Description                                                                       | Notes                                                                                         |
+| :------------------------------------- | :------- | :-------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| `http.response_content_length`         | `int`    | encoded size of the asset in `bytes` (what is sent over the network)              | required on all asset operations                                                              |
+| `http.decoded_response_content_length` | `int`    | the decoded size of the asset in `bytes`                                          | recommended; if not provided, would show up as 0 on the resource summary size chart            |
+| `http.response_transfer_size`          | `int`    | the size of the encoded asset plus the response headers in `bytes`                | recommended; if not provided, would show up as 0 on the resource summary size chart            |
+| `resource.render_blocking_status`      | `string` | whether the resource blocks UI rendering, values are 'non-blocking' or 'blocking' | recommended; if not provided, the asset can't be narrowed down by their render blocking status |
+
+## Instrumentation Example
+
+The SDK should create a span per asset fetched by the browser.
+
+Consider a basic HTML file that fetches a single script:
+
+```html
+<head>
+  <script src="https://cdn.com/main.hash123.js"></script>
+</head>
+```
+
+Should result in the following span, assuming the request was successful:
+
+```json
+{
+  "description": "https://cdn.com/main.hash123.js",
+  "op": "resource.script",
+  "data": {
+    "http.decoded_response_content_length": 123,
+    "http.response_content_length": 123,
+    "http.response_transfer_size": 123,
+    "resource.render_blocking_status": "blocking",
+    "server.address": "cdn.com",
+    ... other span properties
+  }
+}
+```

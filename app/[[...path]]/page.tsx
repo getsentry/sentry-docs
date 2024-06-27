@@ -15,13 +15,14 @@ import {
   getDocsRootNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {getDevDocsFrontMatter, getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {capitilize} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
-  const docs = await getDocsFrontMatter();
+  const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
   const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
@@ -44,33 +45,43 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page({params}) {
+export default async function Page({params}: {params: {path?: string[]}}) {
+  // get frontmatter of all docs in tree
+  const rootNode = await getDocsRootNode();
+  setServerContext({
+    rootNode,
+    path: params.path ?? [],
+  });
+
+  if (isDeveloperDocs) {
+    // get the MDX for the current doc and render it
+    let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
+    try {
+      doc = await getFileBySlug(`develop-docs/${params.path?.join('/') ?? ''}`);
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        // eslint-disable-next-line no-console
+        console.error('ENOENT', params.path);
+        return notFound();
+      }
+      throw e;
+    }
+    const {mdxSource, frontMatter} = doc;
+    // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
+  }
   if (!params.path) {
     return <Home />;
   }
 
-  // get frontmatter of all docs in tree
-  const docs = await getDocsFrontMatter();
-  const rootNode = await getDocsRootNode();
-  if (!rootNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no root node');
-    return notFound();
-  }
-
-  setServerContext({
-    rootNode,
-    path: params.path,
-  });
-
   if (params.path[0] === 'api' && params.path.length > 1) {
     const categories = await apiCategories();
-    const category = categories.find(c => c.slug === params.path[1]);
+    const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
         return <ApiCategoryPage category={category} />;
       }
-      const api = category.apis.find(a => a.slug === params.path[2]);
+      const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
         return <ApiPage api={api} />;
       }
@@ -99,9 +110,7 @@ export default async function Page({params}) {
   const {mdxSource, frontMatter} = doc;
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
-  return (
-    <MDXLayoutRenderer docs={docs} mdxSource={mdxSource} frontMatter={frontMatter} />
-  );
+  return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
 }
 
 type MetadataProps = {
