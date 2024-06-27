@@ -1,5 +1,5 @@
 import {Fragment, Suspense} from 'react';
-import {type Category, type Changelog} from '@prisma/client';
+import {type Changelog} from '@prisma/client';
 import {GET as sessionHandler} from 'app/api/auth/[...nextauth]/route';
 import type {Metadata, ResolvingMetadata} from 'next';
 import {unstable_cache} from 'next/cache';
@@ -12,10 +12,6 @@ import Article from 'sentry-docs/components/changelog/article';
 import ArticleFooter from 'sentry-docs/components/changelog/articleFooter';
 import {mdxOptions} from 'sentry-docs/mdxOptions';
 import prisma from 'sentry-docs/prisma';
-
-type ChangelogWithCategories = Changelog & {
-  categories: Category[];
-};
 
 export async function generateMetadata(
   {params},
@@ -42,16 +38,10 @@ export async function generateMetadata(
 
 const getChangelog = unstable_cache(
   async slug => {
-    const session = await getServerSession(sessionHandler);
-    let published: boolean | undefined = undefined;
-    if (!session) {
-      published = true;
-    }
     try {
       return await prisma.changelog.findUnique({
         where: {
           slug,
-          published,
         },
         include: {
           categories: true,
@@ -66,10 +56,18 @@ const getChangelog = unstable_cache(
 );
 
 export default async function ChangelogEntry({params}) {
-  const changelog: ChangelogWithCategories | null = await getChangelog(params.slug);
+  const changelog = await getChangelog(params.slug);
 
   if (!changelog) {
-    return notFound();
+    notFound();
+  }
+
+  // Don't show unpublished changelog entries
+  if (!changelog.published) {
+    const session = await getServerSession(sessionHandler);
+    if (!session) {
+      notFound();
+    }
   }
 
   return (
