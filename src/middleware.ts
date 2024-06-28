@@ -60,7 +60,7 @@ const handleRedirects = (request: NextRequest) => {
 
 type Redirect = {
   /** a string with a leading and a trailing slash */
-  from: `/${string}/`;
+  from: `/${string}/` | '/';
   to: string;
 };
 
