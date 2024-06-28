@@ -520,7 +520,6 @@ function DevelopDocsSidebar({path, rootNode}: {path: string; rootNode: DocNode})
               headerClassName={headerClassName}
               collapse
             />
-
           </ul>
           <hr />
           <ul data-sidebar-tree>
