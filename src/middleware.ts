@@ -3453,6 +3453,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/dynamic-sampling/the-big-picture/',
     to: '/application/dynamic-sampling/the-big-picture/',
   },
+  {
+    from: '/feedback-architecture/',
+    to: '/application/feedback-architecture/',
+  }
 ];
 
 const redirectMap = new Map(

@@ -1,5 +1,5 @@
 ---
-title: 'Unified API'
+title: Unified API
 ---
 
 <Alert title="Note" level="info">
@@ -71,7 +71,7 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **integration**: Code that provides middlewares, bindings or hooks into certain frameworks or environments, along with code that inserts those bindings and activates them. Usage for integrations does not follow a common interface.
 
-- **event processors**: Callbacks that run for every event.  
+- **event processors**: Callbacks that run for every event.
   They can either modify and return the event, or `null`.
   Returning `null` will discard the event and not process further.
 
@@ -93,18 +93,18 @@ emitting events to Sentry or configuring scopes.  These shortcut functions shoul
 namespace of your package.  Behind the scenes they use hubs and scopes (see [Concurrency](#concurrency) for more information) if available on that platform.
 Note that all listed functions below are mostly aliases for `Hub::get_current().function`.
 
-- `init(options)`: This is the entry point for every SDK.  
+- `init(options)`: This is the entry point for every SDK.
 
-This typically creates / reinitializes the global hub which is propagated to all new threads/execution contexts, or a hub is created per thread/execution context.  
+This typically creates / reinitializes the global hub which is propagated to all new threads/execution contexts, or a hub is created per thread/execution context.
 
-Takes options (dsn etc.), configures a client and binds it to the current hub or initializes it. Should return a stand-in that can be used to drain events (a disposable).  
+Takes options (dsn etc.), configures a client and binds it to the current hub or initializes it. Should return a stand-in that can be used to drain events (a disposable).
 
-This might return a handle or guard for disposing. How this is implemented is entirely up to the SDK. This might even be a client if that’s something that makes sense for the SDK. In Rust it’s a ClientInitGuard, in JavaScript it could be a helper object with a close method that is awaitable.  
+This might return a handle or guard for disposing. How this is implemented is entirely up to the SDK. This might even be a client if that’s something that makes sense for the SDK. In Rust it’s a ClientInitGuard, in JavaScript it could be a helper object with a close method that is awaitable.
 
-You should be able to call this multiple times where calling it a second time either tears down the previous client or decrements a refcount for the previous client etc.  
+You should be able to call this multiple times where calling it a second time either tears down the previous client or decrements a refcount for the previous client etc.
 
-Calling this multiple times should be used for testing only.  
-It’s undefined what happens if you call `init` on anything but application startup.  
+Calling this multiple times should be used for testing only.
+It’s undefined what happens if you call `init` on anything but application startup.
 
 A user has to call `init` once but it’s permissible to call this with a disabled DSN of sorts. Might for instance be no parameter passed etc.
 
@@ -185,7 +185,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 - `Hub::bind_client(new_client)`: Binds a different client to the hub. If the hub is also the owner of the client that was created by `init` it needs to keep a reference to it still if the hub is the object responsible for disposing it.
 
-- `Hub::unbind_client()` (optional): Optional way to unbind for languages where `bind_client` does not accept nullables.  
+- `Hub::unbind_client()` (optional): Optional way to unbind for languages where `bind_client` does not accept nullables.
 
 - `Hub::last_event_id()`: Should return the last event ID emitted by the current scope.  This is for instance used to implement user feedback dialogs.
 
@@ -227,7 +227,7 @@ Sentry.configureScope(scope =>
 
 - `scope.add_error_processor(processor)` (optional): Registers an error processor function.  It takes an event and exception object and returns a new event or `None` to drop it.  This can be used to extract additional information out of an exception object that the SDK cannot extract itself.
 
-- `scope.clear()`: Resets a scope to default values while keeping all 
+- `scope.clear()`: Resets a scope to default values while keeping all
   registered event processors. This does not affect either child or parent scopes.
 
 - `scope.add_breadcrumb(breadcrumb)`: Adds a breadcrumb to the current scope.
@@ -259,7 +259,7 @@ parameter however is reserved for this purpose.
 
 ## Event Pipeline
 
-An event captured by `capture_event` is processed in the following order.  
+An event captured by `capture_event` is processed in the following order.
 **Note**: The event can be discarded at any of the stages, at which point no further
 processing happens.
 

@@ -13,12 +13,12 @@ When broken down, there are **5** ways to create feedback in our system 😵‍�
 `FeedbackCreationSource(Enum)` in [create_feedback.py](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/feedback/usecases/create_feedback.py#L33-L33).
 The 4 ways _clients_ can create feedback are:
 
-`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/envelopes/#full-examples) created by the Replay team when adding 
-the [User Feedback Widget](https://docs.sentry.io/product/user-feedback/#user-feedback-widget) 
-to the JavaScript SDK. It allows adding more information, for example tags, 
+`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/envelopes/#full-examples) created by the Replay team when adding
+the [User Feedback Widget](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
+to the JavaScript SDK. It allows adding more information, for example tags,
 release, url, etc.
 
-`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/envelopes/#user-feedback) with name/email/comments, that requires 
+`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/envelopes/#user-feedback) with name/email/comments, that requires
 `event_id` to link a Sentry error event.
 
 `USER_REPORT_DJANGO_ENDPOINT`: [The Web API](https://docs.sentry.io/api/projects/submit-user-feedback/)
@@ -26,7 +26,7 @@ release, url, etc.
 `CRASH_REPORT_EMBED_FORM`: The [crash report modal](https://docs.sentry.io/product/user-feedback/#crash-report-modal)
 
 ## How feedback is stored
-On the backend, each feedback submission in Sentry's UI is **an un-grouped issue occurrence**, 
+On the backend, each feedback submission in Sentry's UI is **an un-grouped issue occurrence**,
 saved via the [issues platform](https://develop.sentry.dev/issue-platform/).
 The entrypoint is [**`create_feedback_issue()`**](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/feedback/usecases/create_feedback.py#L184-L184),
 which
@@ -37,9 +37,9 @@ which
 
 ## Feedback events
 
-The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/envelopes/#full-examples). 
-The format is the same as error events, except the `type` header = `"feedback"`. While 
-user reports have an associated event, **new feedback _is_ an event**. This 
+The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/envelopes/#full-examples).
+The format is the same as error events, except the `type` header = `"feedback"`. While
+user reports have an associated event, **new feedback _is_ an event**. This
 offers 2 improvements:
 
 1. Users can submit generic feedback without an error occurring. We're allowing users to catch things that Sentry can’t!
@@ -70,15 +70,15 @@ event[”contexts”][”feedback”] = {
 ![](https://mermaid.ink/svg/pako:eNptkc1qwzAQhF9F7MmGmN59KJSmx_ZQ91IsYxR5YwvbkqqfgEny7l05NW0hOg3a0erb2TNI0yGU0DthB_ax55rREdbWnyY69mTtpKQIyuiGFcUju3BAfcLJWORwYe84iYVrHlaxOo6tNNrHGV1WK92jD8URsTsIORZ4Qh18k6cXv76t8VfEiJ4JzyRO6BYWhB_TL9KhCNhubVrlfcTU425hbWf-UHD44TBSRudQS_QcbhTmP4WmNHwwDuvsbZN5c8dIuC9pmCoQwpwgvY4HUWccqiQenim3cTDRU055Azugl7NQHWV9TiFzCAPOVCxJTqofAgeur2QUMZhq0RLK4CLuINqOhtwrQTuat0vsFLG93pa37vD6DRJvo7g)
 [diagram source](https://mermaid.live/edit#pako:eNptkc1qwzAQhF9F7MmGmN59KJSmx_ZQ91IsYxR5YwvbkqqfgEny7l05NW0hOg3a0erb2TNI0yGU0DthB_ax55rREdbWnyY69mTtpKQIyuiGFcUju3BAfcLJWORwYe84iYVrHlaxOo6tNNrHGV1WK92jD8URsTsIORZ4Qh18k6cXv76t8VfEiJ4JzyRO6BYWhB_TL9KhCNhubVrlfcTU425hbWf-UHD44TBSRudQS_QcbhTmP4WmNHwwDuvsbZN5c8dIuC9pmCoQwpwgvY4HUWccqiQenim3cTDRU055Azugl7NQHWV9TiFzCAPOVCxJTqofAgeur2QUMZhq0RLK4CLuINqOhtwrQTuat0vsFLG93pa37vD6DRJvo7g)
 
-In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer, 
-`ingest-feedback-events`. This decouples risk and ownership from errors 
+In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
+`ingest-feedback-events`. This decouples risk and ownership from errors
 (`ingest-events`).
 <br/>
 
 ### Attachments
 
-We only use attachments for the widget’s screenshot feature, which allows users 
-to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/envelopes/#attachment) 
+We only use attachments for the widget’s screenshot feature, which allows users
+to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/envelopes/#attachment)
 in an envelope.
 - SDK v8.0.0+, Relay v24.5.1+: Sends the feedback and attachment items in the same envelope.
 - SDK < v8, all Relay versions: Sends a separate envelope for each item.
@@ -109,15 +109,15 @@ user_report = {
 
 ### Shimming to feedback
 
-Before it was extended to generic feedback, the [`UserReport` model](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/models/userreport.py#L9-L9) 
-was first used for crash reports. Therefore an associated event ID is required, and 
-we use it to set environment and group before saving the model to **Postgres**. 
+Before it was extended to generic feedback, the [`UserReport` model](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/models/userreport.py#L9-L9)
+was first used for crash reports. Therefore an associated event ID is required, and
+we use it to set environment and group before saving the model to **Postgres**.
 Only then can we shim the report to a **feedback event** and pass it to `create_feedback_issue()`.
 
-If the event hasn’t reached eventstore (Snuba) by the time of ingest, we still 
+If the event hasn’t reached eventstore (Snuba) by the time of ingest, we still
 save the report, but leave the environment + group empty and skip feedback creation.
 
-To ensure the skipped reports eventually get fixed and shimmed, we 
+To ensure the skipped reports eventually get fixed and shimmed, we
 added a post process job to the errors pipeline: [`link_event_to_user_report()`](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/tasks/post_process.py#L1387-L1387).
 This is the 5th, automated way of creating feedback.
 
@@ -129,8 +129,8 @@ Simplified diagram:
 
 ### Envelopes
 
-User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/envelopes/#user-feedback). 
-**This item type is misleadingly called “user feedback” in some of our docs, but the 
+User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/envelopes/#user-feedback).
+**This item type is misleadingly called “user feedback” in some of our docs, but the
 item header will read `"user_report"`.**
 
 The SDK function that sends these is `captureUserFeedback`.
@@ -138,7 +138,7 @@ The SDK function that sends these is `captureUserFeedback`.
 
 ### Django endpoint
 
-Before our envelope ingest service existed, older SDKs directly POST the report 
+Before our envelope ingest service existed, older SDKs directly POST the report
 to Sentry, with
 `/api/0/projects/{organization_id_or_slug}/{project_id_or_slug}/user-feedback/`.
 
@@ -147,8 +147,8 @@ See [https://docs.sentry.io/api/projects/submit-user-feedback/](https://docs.sen
 
 ### Crash reports
 
-The **crash report modal** pops up when Sentry detects an error on the current 
-page, prompting users to describe what happened. On the backend, crash report 
+The **crash report modal** pops up when Sentry detects an error on the current
+page, prompting users to describe what happened. On the backend, crash report
 data is the same as user reports.
 
 You can install it as an [SDK integration](https://docs.sentry.io/platforms/javascript/user-feedback/#crash-report-modal).
@@ -167,15 +167,15 @@ Crash reports are also shimmed to feedback. The pipeline is the same as the
 ![](https://mermaid.ink/svg/pako:eNp9Uj1vwjAQ_SvWTUECsWdgKaViqFQVmDhUmeRILBI7tc8DAv577YRAG6F68fn53b37OkNmcoIUCiubUqznqEU4zu87YMXGyoJcB8fTGMeFJbdNED5utkg2juwnNcayGyGMdg--034vt8kqXtOXSmXH0nhHPYV03hmokR-ypNmeIoSsnPPkvgKxMUrzFmHaQQi7pwwxmczEBeHtdY1wEV4FlwVRvpfZUWyWIpkebq_RPYRtc_8jEpK0k57ZEvuSBuSB3u23lV3GzMScWKrKRe2ZiJ0Si2dh_y_jHvZX3zqzn0jv8O3JqtieyzDTtsdxEE-oA3UYQ022lioPy3GOQghcUk0IaTArVZSMgPoaiNKzWZ10BilbT2PwTS6Z5kqGYdaQHmTlAkq5Csv03q1bu3XXH4El2dU)
 [diagram source](https://mermaid.live/edit#pako:eNp9Uj1vwjAQ_SvWTUECsWdgKaViqFQVmDhUmeRILBI7tc8DAv577YRAG6F68fn53b37OkNmcoIUCiubUqznqEU4zu87YMXGyoJcB8fTGMeFJbdNED5utkg2juwnNcayGyGMdg--034vt8kqXtOXSmXH0nhHPYV03hmokR-ypNmeIoSsnPPkvgKxMUrzFmHaQQi7pwwxmczEBeHtdY1wEV4FlwVRvpfZUWyWIpkebq_RPYRtc_8jEpK0k57ZEvuSBuSB3u23lV3GzMScWKrKRe2ZiJ0Si2dh_y_jHvZX3zqzn0jv8O3JqtieyzDTtsdxEE-oA3UYQ022lioPy3GOQghcUk0IaTArVZSMgPoaiNKzWZ10BilbT2PwTS6Z5kqGYdaQHmTlAkq5Csv03q1bu3XXH4El2dU)
 
-You can view the user reports related to a specific issue at the "User Feedback" 
+You can view the user reports related to a specific issue at the "User Feedback"
 tab of Issue Details. This excludes "new" feedback (anything sent from the widget).
 
 ---
 
 ## Email alerts
 
-Email alerts are triggered in feedback’s post process pipeline. (Unrelated to  
-the post process diagram above.) We apply some feedback-specific 
+Email alerts are triggered in feedback’s post process pipeline. (Unrelated to
+the post process diagram above.) We apply some feedback-specific
 filters, **skipping emails if:**
 
 1. The feedback is [marked as spam](https://docs.sentry.io/product/user-feedback/#spam-detection-for-user-feedback) AND the `organizations.user-feedback-spam-filter-actions` feature flag is enabled.
