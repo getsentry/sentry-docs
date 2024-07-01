@@ -3456,7 +3456,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/feedback-architecture/',
     to: '/application/feedback-architecture/',
-  }
+  },
 ];
 
 const redirectMap = new Map(
