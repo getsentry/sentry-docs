@@ -2078,6 +2078,10 @@ const REDIRECTS: Redirect[] = [
     to: '/organization/early-adopter-features/',
   },
   {
+    from: '/pricing/am2-pricing/',
+    to: '/pricing/legacy-pricing/',
+  },
+  {
     from: '/learn/pricing/',
     to: '/pricing/',
   },
