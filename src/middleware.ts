@@ -62,6 +62,10 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
+    to: '/platforms/javascript/configuration/integrations/browserapierrors/',
+  },
+  {
     from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
   },
