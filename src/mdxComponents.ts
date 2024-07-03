@@ -1,4 +1,5 @@
 import {Alert, Note} from './components/alert';
+import {ApiDocs} from './components/api-docs';
 import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
@@ -61,6 +62,7 @@ export function mdxComponents(
     PlatformCategorySection,
     PlatformOrGuideName,
     PlatformSdkPackageName,
+    ApiDocs,
     OnboardingOption,
     OnboardingOptionButtons,
     RelayMetrics,
