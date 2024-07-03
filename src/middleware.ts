@@ -310,6 +310,10 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/react-native/sourcemaps/',
   },
   {
+    from: '/platforms/react-native/touchevents/',
+    to: '/platforms/react-native/configuration/touchevents/',
+  },
+  {
     from: '/platforms/python/data-collected/',
     to: '/platforms/python/data-management/data-collected/',
   },
