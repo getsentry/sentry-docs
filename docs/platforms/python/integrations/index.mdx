@@ -6,7 +6,9 @@ sidebar_order: 40
 
 The Sentry SDK uses integrations to hook into the functionality of popular libraries to automatically instrument your application and give you the best data out of the box.
 
-## Web Frameworks
+## Available Integrations
+
+### Web Frameworks
 
 |                                                                                                                       | **Auto Enabled** |
 | --------------------------------------------------------------------------------------------------------------------- | :--------------: |
@@ -23,7 +25,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.starlite"  label="Starlite"  url="/platforms/python/integrations/starlite" />  |        ✓         |
 | <LinkWithPlatformIcon platform="python.tornado"   label="Tornado"   url="/platforms/python/integrations/tornado" />   |        ✓         |
 
-## Databases
+### Databases
 
 |                                                                                                                                        | **Auto enabled** |
 | -------------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
@@ -33,7 +35,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.redis"             label="Redis"      url="/platforms/python/integrations/redis" />             |        ✓         |
 | <LinkWithPlatformIcon platform="python.sqlalchemy"        label="SQLAlchemy" url="/platforms/python/integrations/sqlalchemy" />        |        ✓         |
 
-## AI
+### AI
 
 |                                                                                                                                      | **Auto enabled** |
 | ------------------------------------------------------------------------------------------------------------------------------------ | :--------------: |
@@ -42,7 +44,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="langchain"           label="Langchain"       url="/platforms/python/integrations/langchain" />       |        ✓         |
 | <LinkWithPlatformIcon platform="openai"              label="OpenAI"          url="/platforms/python/integrations/openai" />          |        ✓         |
 
-## Data Processing
+### Data Processing
 
 |                                                                                                                        | **Auto enabled** |
 | ---------------------------------------------------------------------------------------------------------------------- | :--------------: |
@@ -54,7 +56,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.huey"    label="huey"           url="/platforms/python/integrations/huey" />    |        ✓         |
 | <LinkWithPlatformIcon platform="python.rq"      label="RQ"             url="/platforms/python/integrations/rq" />      |        ✓         |
 
-## Cloud Computing
+### Cloud Computing
 
 |                                                                                                                                                          | **Auto enabled** |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
@@ -65,7 +67,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.gcpfunctions"         label="Google Cloud Functions" url="/platforms/python/integrations/gcp-functions" />        |                  |
 | <LinkWithPlatformIcon platform="python.serverless"           label="Serverless Framework"   url="/platforms/python/integrations/serverless" />           |                  |
 
-## HTTP Clients
+### HTTP Clients
 
 |                                                                                                                                | **Auto enabled** |
 | ------------------------------------------------------------------------------------------------------------------------------ | :--------------: |
@@ -74,7 +76,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | Python standard HTTP client (in the [Default Integrations](default-integrations/#stdlib))                                      |        ✓         |
 | `Requests` HTTP instrumentation is done via the [Default Integrations](default-integrations/#stdlib).                          |        ✓         |
 
-## GraphQL
+### GraphQL
 
 |                                                                                                                           | **Auto enabled** |
 | ------------------------------------------------------------------------------------------------------------------------- | :--------------: |
@@ -83,20 +85,20 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.graphene"   label="Graphene"   url="/platforms/python/integrations/graphene" />    |        ✓         |
 | <LinkWithPlatformIcon platform="python.strawberry" label="Strawberry" url="/platforms/python/integrations/strawberry/" /> |        ✓         |
 
-## RPC
+### RPC
 
 |                                                                                                        | **Auto enabled** |
 | ------------------------------------------------------------------------------------------------------ | :--------------: |
 | <LinkWithPlatformIcon platform="python.grpc" label="gRPC" url="/platforms/python/integrations/grpc" /> |        ✓         |
 
-## Logging
+### Logging
 
 |                                                                                                                 | **Auto enabled** |
 | --------------------------------------------------------------------------------------------------------------- | :--------------: |
 | <LinkWithPlatformIcon platform="python.logging" label="Logging" url="/platforms/python/integrations/logging" /> |        ✓         |
 | <LinkWithPlatformIcon platform="python.loguru"  label="Loguru"  url="/platforms/python/integrations/loguru" />  |        ✓         |
 
-## Miscellaneous
+### Miscellaneous
 
 |                                                                                                                                     | **Auto enabled** |
 | ----------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
@@ -108,6 +110,90 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.tryton"        label="Tryton"          url="/platforms/python/integrations/tryton" />        |                  |
 | <LinkWithPlatformIcon platform="python.wsgi"          label="WSGI"            url="/platforms/python/integrations/wsgi" />          |                  |
 
-## Default Integrations
+### Default Integrations
 
-- [List of Default Integrations](default-integrations/)
+- [List of default integrations](default-integrations/)
+
+## Configuration
+
+### Enabling Integrations
+
+Non-auto-enabling integrations can be enabled using the `integrations` config option.
+
+Integrations marked as auto enabled in the above table will be turned on automatically with default configuration. If you want to fine-tune a specific integration's settings (for instance, change Flask's default `transaction_style`), add it to your `integrations` list as you would a non-auto-enabling integration and pass in the desired options.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+sentry_sdk.init(
+    integrations=[
+        # The Flask integration is auto enabling, but we want to change
+        # transaction_style from the default "endpoint" to "url"
+        FlaskIntegration(transaction_style="url"),
+        # The asyncio integration is not enabled automatically and needs to be
+        # manually.
+        AsyncioIntegration(),
+    ],
+)
+```
+
+
+### Disabling Integrations
+
+There are two types of integrations that are added automatically:
+
+* **Default integrations** like `logging` or `excepthook` are always enabled,
+  regardless of what packages you have installed. They provide essential
+  SDK functionality like error deduplication or event flushing at interpreter
+  shutdown.
+* **Auto-enabling integrations** like `FlaskIntegration` are automatically added
+  if the SDK detects you have the corresponding package (like Flask) installed.
+
+If you want to disable a specific auto enabling integration, first turn off all
+auto enabling integrations by setting `auto_enabling_integrations` to `False`.
+Any previously auto-enabled integrations that you want then have to be
+explicitly added via the `integrations` config option.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    # Turn off all auto enabling integrations except for Flask
+    auto_enabling_integrations=False,
+    integrations=[
+        FlaskIntegration(),
+    ],
+)
+```
+
+In case you want to disable one of the [default integrations](default-integrations/),
+set `default_integrations` to `False`. Note that this disables _all_ automatically
+added integrations, both default and auto enabling. Any integrations you want use
+then have to be manually specified via the `integrations` config option.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.atexit import AtexitIntegration
+from sentry_sdk.integrations.argv import ArgvIntegration
+from sentry_sdk.integrations.dedupe import DedupeIntegration
+from sentry_sdk.integrations.excepthook import ExcepthookIntegration
+from sentry_sdk.integrations.stdlib import StdlibIntegration
+from sentry_sdk.integrations.modules import ModulesIntegration
+from sentry_sdk.integrations.threading import ThreadingIntegration
+
+sentry_sdk.init(
+    # Turn off the default logging integration, but keep the rest.
+    default_integrations=False,
+    integrations=[
+        AtexitIntegration(),
+        ArgvIntegration(),
+        DedupeIntegration(),
+        ExcepthookIntegration(),
+        StdlibIntegration(),
+        ModulesIntegration(),
+        ThreadingIntegration(),
+    ],
+)
+```
