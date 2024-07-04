@@ -1374,6 +1374,10 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/react/features/react-router/',
   },
   {
+    from: '/platforms/javascript/guides/session-replay/',
+    to: '/platforms/javascript/session-replay/',
+  },
+  {
     from: '/platforms/javascript/react/',
     to: '/platforms/javascript/guides/react/',
   },
