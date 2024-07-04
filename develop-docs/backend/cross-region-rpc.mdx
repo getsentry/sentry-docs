@@ -22,8 +22,8 @@ The cross-region RPC framework is composed of several RPC services, and RPC mode
 Each RPC service is composed of a service interface and local implementation.
 
 ```python
-from sentry.services.hybrid_cloud.region import ByOrganizationSlug
-from sentry.services.hybrid_cloud.rpc import RpcService, regional_rpc_method
+from sentry.hybridcloud.rpc.resolvers import ByOrganizationSlug
+from sentry.hybridcloud.rpc import RpcService, regional_rpc_method
 from sentry.silo.base import SiloMode
 
 class OrganizationService(RpcService):
@@ -32,7 +32,7 @@ class OrganizationService(RpcService):
 
     @classmethod
     def get_local_implementation(cls) -> RpcService:
-        from sentry.services.hybrid_cloud.organization.impl import (
+        from sentry.organizations.services.organization.impl import (
           DatabaseBackedOrganizationService
         )
 
@@ -68,8 +68,8 @@ RPC methods like `get_org_by_slug` must be defined as `abstractmethod` and must 
 The implementation for `get_org_by_slug` looks like:
 
 ```python
-from sentry.services.hybrid_cloud.organization.service import OrganizationService
-from sentry.services.hybrid_cloud.organization.model import RpcOrganizationSummary
+from sentry.organizations.services.organization.service import OrganizationService
+from sentry.organizations.services.organization.model import RpcOrganizationSummary
 from sentry.models.organization import Organization, OrganizationStatus
 
 class DatabaseBackedOrganizationService(OrganizationService):
