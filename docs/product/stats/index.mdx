@@ -10,11 +10,87 @@ The "Usage" tab shows your organization’s event and attachments usage, while a
 
 ## Usage Stats
 
-The "Usage" tab shows you the events (errors and transactions) and attachments Sentry has received across your entire organization along with a list of all projects and their consumption of each of those. Your usage falls into one of three categories: _Accepted_, _Filtered_, or _Dropped_. Filtered events and attachments are ones that were blocked due to your [inbound data filter](/concepts/data-management/filtering/) rules. Dropped events and attachments are ones the system dropped or discarded due to rate limits, quotas, spike protection, [size limits](/concepts/data-management/size-limits), or because of invalid data.
+The "Usage" tab provides an overview of the events (errors and transactions) and attachments that Sentry has received across your entire organization. It includes a detailed breakdown of each project's consumption categorized as _Accepted_, _Filtered_, _Discarded_, or _Dropped_.
 
-You can see which projects have had a recent spike or are the most active and may need more attention. On this page, you can also control the date range that’s displayed, allowing you to focus on a smaller period of time or zoom out for a longer view. The page is designed for org admins, but is available to all team members. This is helpful if a team member who isn't an admin is tasked with reviewing these statistics. Also, this allows team members associated with specific projects to use this page to investigate why their events are being dropped.
+#### Accepted
 
-![Overview of Usage Stats page](./img/usage-stats.png)
+Events and attachments that were successfully processed and stored.
+
+#### Discarded
+
+Events and attachments discarded on the client side due to the sampling configuration in the SDK or other factors. You can see common reasons below:
+
+#### Filtered
+
+| Reason                                                                              | Meaning                                                                            |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [Browser Extensions](/concepts/data-management/filtering/#browser-extension-errors) | Filtered by browser extension.                                                     |
+| Denied Name                                                                         | Filtered due to name being denied.                                                 |
+| Disabled Namespace                                                                  | Filtered due to the namespace being disabled.                                      |
+| Error Message                                                                       | Filtered based on specific error message.                                          |
+| Filtered Transactions                                                               | Filtered because it was a call to a filtered transaction.                          |
+| Ip Address                                                                          | Filtered by IP address.                                                            |
+| Invalid CSP                                                                         | Filtered due to an invalid Content Security Policy (CSP) policy.                   |
+| [Legacy Browsers](/concepts/data-management/filtering/#legacy-browser-filters)      | Filtered out certain legacy versions of browsers that are known to cause problems. |
+| Localhost                                                                           | Filtered due to localhost restriction.                                             |
+| Release Version                                                                     | Filtered by release name (version).                                                |
+| [Web Crawlers](/concepts/data-management/filtering/#web-crawler-errors)             | Identified as known web crawler.                                                   |
+| ? (Others)                                                                          | Filtered due to other generic filtering rules not specified above.                 |
+
+#### Dropped
+
+Events and attachments discarded by the system due to rate limits, quotas, spike protection, [size limits](/concepts/data-management/size-limits), or invalid data. You can see the common reasons below:
+
+| Reason                          | Meaning                                                                                                                 |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Abuse                           | Activated when Sentry is misused.                                                                                       |
+| Auth Client                     | The SDK did not send a client identifier. In Relay, this is no longer required.                                         |
+| Auth Version                    | The protocol version sent by the SDK is not supported and parts of the payload may be invalid.                          |
+| Cardinality Limited             | Exceeded internally defined cardinality limit.                                                                          |
+| Content Type                    | The content type for a specific endpoint was not allowed.                                                               |
+| Cors                            | The request origin is not allowed for the project.                                                                      |
+| Disallowed Method               | A store request was received with an invalid method.                                                                    |
+| Duplicate                       | An event with the same id has already been processed for this project.                                                  |
+| Duplicate Item                  | An envelope was submitted with two items that need to be unique.                                                        |
+| Empty Envelope                  | The envelope contains no items.                                                                                         |
+| Feature Disabled                | The envelope contains no items.                                                                                         |
+| Internal                        | An error in Relay caused event ingestion to fail.                                                                       |
+| Invalid Compression             | The payload had an invalid compression stream.                                                                          |
+| Invalid Envelope                | Parsing an event envelope failed (likely missing a required header).                                                    |
+| Invalid Json                    | Parsing the event JSON payload failed due to a syntax error.                                                            |
+| Invalid Minidump                | The file submitted as minidump is not a valid minidump file.                                                            |
+| Invalid Msgpack                 | Parsing the event msgpack payload failed due to a syntax error.                                                         |
+| Invalid Multipart               | Parsing a multipart form-data request failed.                                                                           |
+| Invalid Replay Event            | Sentry failed to parse the replay so we dropped it.                                                                     |
+| Invalid Replay Event No Payload | Sentry failed to parse the replay so we dropped it.                                                                     |
+| Invalid Replay Event Pii        | Sentry failed to parse the replay so we dropped it.                                                                     |
+| Invalid Replay Record Event     | Sentry failed to parse the replay so we dropped it.                                                                     |
+| Invalid Replay Video Event      | Sentry failed to parse the replay so we dropped it.                                                                     |
+| Invalid Span                    | A span is not valid after normalization.                                                                                |
+| Invalid Transaction             | The event is parseable but semantically invalid. This should only happen with transaction events.                       |
+| Missing Minidump Upload         | A minidump file was missing for the minidump endpoint.                                                                  |
+| Multi Project Id                | The project id in the URL does not match the one specified for the public key.                                          |
+| No Data                         | The store request was missing an event payload.                                                                         |
+| No Event Payload                | An event envelope was submitted but no payload could be extracted.                                                      |
+| Payload                         | Parsing the event JSON payload failed due to a syntax error.                                                            |
+| Process Unreal                  | Symbolic failed to extract an Unreal Crash report from a request sent to the Unreal endpoint.                           |
+| Profiling                       | Profiling related dropped reasons.                                                                                      |
+| Project Id                      | There was no valid project id in the request or the required project does not exist.                                    |
+| Project State                   | A project state returned by the upstream could not be parsed.                                                           |
+| Project State Pii               | A project state returned by the upstream contained datascrubbing settings that could not be converted to PII config.    |
+| Rate Limited                    | Exceeded allowed event rate.                                                                                            |
+| Spike Protection                | Activated to protect from any sudden quota-depleting spike.                                                             |
+| Security Report                 | Triggered to prevent any sudden spikes that could deplete the quota.                                                    |
+| Security Report Time            | The security report was not recognized due to missing data.                                                             |
+| Timestamp                       | The timestamp of an event was required for processing and either missing out of the supported time range for ingestion. |
+| Too Large                       | The event payload exceeds the maximum size limit for the respective endpoint.                                           |
+| Transaction Sampled             | The envelope, which contained only a transaction, was dropped by the dynamic sampling rules.                            |
+
+On this page, you can track projects that have experienced recent spikes in activity or are particularly active, which may require closer attention. Additionally, you have the flexibility to adjust the displayed date range, enabling you to narrow down to a specific period or zoom out for a broader overview.
+
+While primarily designed for organization admins, this page is accessible to all team members. This inclusivity is beneficial, especially when non-admin team members need to review these statistics. It allows them to investigate why events associated with their specific projects might be discarded, dropped or filtered.
+
+![Overview of Usage Stats page](./img/usage-stats-page.png)
 
 With the dropdowns at the top of the page, you can set whether the page displays stats for errors, transactions, or attachments, as well as the date range. With the date selector, the time period can be set from an hour to a maximum of 90 days, and all of the page elements change dynamically when you update this setting.
 
@@ -25,7 +101,7 @@ With the dropdowns at the top of the page, you can set whether the page displays
 
 ### Usage Cards
 
-The cards on the page provide high-level usage stats about events and attachments, including the total number of either for the period, as well as which ones were accepted, filtered, or dropped.
+The cards on the page provide high-level usage stats about events and attachments, including the total number of either for the period, as well as which ones were accepted, filtered, discarded or dropped.
 
 ### Summary Chart
 
