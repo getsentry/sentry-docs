@@ -3090,10 +3090,6 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/quotas/manage-cron-monitors/',
   },
   {
-    from: '/product/accounts/migration/',
-    to: '/concepts/migration/',
-  },
-  {
     from: '/product/accounts/auth-tokens/',
     to: '/account/auth-tokens/',
   },
