@@ -2086,6 +2086,10 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/legacy-pricing/',
   },
   {
+    from: '/pricing/quotas/manage-event-stream-guide/adjusting-quotas/',
+    to: '/pricing/quotas/manage-event-stream-guide/#adjusting-quotas',
+  },
+  {
     from: '/learn/pricing/',
     to: '/pricing/',
   },
