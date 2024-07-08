@@ -10,10 +10,12 @@ import styles from './banner.module.scss';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
-const BANNER_TEXT = '';
-const BANNER_LINK_URL = '';
-const BANNER_LINK_TEXT = '';
+const SHOW_BANNER = true;
+const BANNER_TEXT =
+  'Behind the Code: A Conversation With Backend Experts featuring CEOs of Laravel, Prisma, and Supabase.';
+const BANNER_LINK_URL =
+  'https://sentry.io/resources/behind-the-code-a-discussion-with-backend-experts/';
+const BANNER_LINK_TEXT = 'RSVP';
 const OPTIONAL_BANNER_IMAGE = null;
 
 //

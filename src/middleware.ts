@@ -1132,15 +1132,15 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/tracing/event-detail/',
     to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
-    from: '/product/sentry-basics/concepts/tracing/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    from: '/concepts/key-terms/tracing/event-detail/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/dsn-explainer/',
@@ -2081,6 +2081,10 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/accounts/early-adopter/',
     to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/pricing/am2-pricing/',
+    to: '/pricing/legacy-pricing/',
   },
   {
     from: '/learn/pricing/',

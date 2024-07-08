@@ -209,6 +209,9 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
             onChange={({target: {value}}) => searchFor(value)}
             onFocus={() => setInputFocus(true)}
             ref={inputRef}
+            onKeyDown={ev => {
+              ev.stopPropagation();
+            }}
           />
           <kbd className={styles['search-hotkey']} data-focused={inputFocus}>
             {inputFocus ? 'esc' : '⌘K'}
