@@ -189,12 +189,17 @@ Sentry's Remix SDK will automatically record your [`action`](https://remix.run/d
 
 To capture server-side errors automatically, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point.
 
-If you're using Sentry Remix SDK version `7.87.0` or higher, you can use `wrapHandleErrorWithSentry` to export as your `handleError` function.
+If you're using Sentry Remix SDK version `7.87.0` or higher, you can wrap your error handler with `wrapHandleErrorWithSentry` or use `sentryHandleError` to export as your `handleError` function.
 
 ```typescript {filename: entry.server.tsx (@sentry/remix >= 7.87.0)}
-import { wrapHandleErrorWithSentry } from "@sentry/remix";
+import * as Sentry from "@sentry/remix";
 
-export const handleError = wrapHandleErrorWithSentry;
+export const handleError = Sentry.wrapHandleErrorWithSentry(() => {
+  // Custom handleError implementation
+});
+
+// Alternative: Use the Sentry utility function if you don't need to wrap a custom function
+export const handleError = Sentry.sentryHandleError;
 ```
 
 For SDK versions older than `7.87.0`, you can use `Sentry.captureRemixServerException` to capture errors inside `handleError`.
