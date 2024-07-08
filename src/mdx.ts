@@ -27,6 +27,7 @@ import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
+import {isTruthy} from './utils';
 
 const root = process.cwd();
 
@@ -96,8 +97,31 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   return frontMatter;
 }
 
-function getAllFilesFrontMatter() {
-  const docsPath = path.join(root, 'docs');
+export function getDevDocsFrontMatter(): FrontMatter[] {
+  const folder = 'develop-docs';
+  const docsPath = path.join(root, folder);
+  const files = getAllFilesRecursively(docsPath);
+  const fmts = files
+    .map(file => {
+      const fileName = file.slice(docsPath.length + 1);
+      if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+        return undefined;
+      }
+
+      const source = fs.readFileSync(file, 'utf8');
+      const {data: frontmatter} = matter(source);
+      return {
+        ...(frontmatter as FrontMatter),
+        slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+        sourcePath: path.join(folder, fileName),
+      };
+    })
+    .filter(isTruthy);
+  return fmts;
+}
+
+export function getAllFilesFrontMatter(folder: string = 'docs') {
+  const docsPath = path.join(root, folder);
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach(file => {
