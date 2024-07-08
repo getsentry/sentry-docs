@@ -111,14 +111,6 @@ export SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS="--extra --flags"
 
 For more information about what options to use in `SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS` visit the [Sentry CLI Apple Debug Symbols](/platforms/apple/dsym/#sentry-cli) documentation.
 
-### Linking the Native Library via CocoaPods
-
-To link the native library via CocoaPods, link to the native module in your Podfile. In React Native versions 0.60 and above, the podspec should be automatically linked. If isn't, you can link to the native module manually by adding the `RNSentry.podspec` to your Podfile as follows:
-
-```ruby
-pod 'RNSentry', :path => '../node_modules/@sentry/react-native/RNSentry.podspec'
-```
-
 ### Using node with nvm or Volta
 
 If you are using nvm or Volta, Xcode has trouble locating the default node binary, which can look similar to the [troubleshooting example](/platforms/react-native/troubleshooting/#using-node-with-nvm-or-volta).
@@ -217,46 +209,3 @@ apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 The corresponding flavor files should also be placed within the specific build type folder where you intend to use them. For example, the "Android demo release" flavor would be `react-native/android/sentry-demo-release.properties`.
 
 We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
-
-Include the project by adding it to your dependency list in `android/app/build.gradle`:
-
-```groovy {filename:android/app/build.gradle}
-dependencies {
-    // ... other dependencies listed here //
-    implementation project(':@sentry_react-native')
-}
-```
-
-If you're linking manually, make sure your `MainApplication.java` is similar to:
-
-```java
-import io.sentry.react.RNSentryPackage;
-
-public class MainApplication extends Application implements ReactApplication {
-
-    @Override
-    protected List<ReactPackage> getPackages() {
-      List<ReactPackage> packages = new PackageList(this).getPackages();
-      packages.add(new RNSentryPackage());
-      return packages;
-    }
-}
-```
-
-```kotlin
-import io.sentry.react.RNSentryPackage
-
-class MainApplication() : Application(), ReactApplication {
-  override fun getPackages():List<ReactPackage> =
-    PackageList(this).packages.apply {
-      add(RNSentryPackage())
-    }
-}
-```
-
-Add the following to your `settings.gradle` file:
-
-```groovy {filename:android/settings.gradle}
-include ':@sentry_react-native'
-project(':@sentry_react-native').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
-```
