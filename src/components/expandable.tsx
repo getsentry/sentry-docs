@@ -82,7 +82,7 @@ export function Expandable({title, children, permalink}: Props) {
   return (
     <ExpandableWrapper>
       <p
-        className="m-0 font-medium cursor-pointer relative pr-8"
+        className="m-0 font-medium cursor-pointer relative pr-8 select-none"
         onClick={() => {
           setIsExpanded(!isExpanded);
         }}
