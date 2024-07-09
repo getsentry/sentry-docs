@@ -8,18 +8,16 @@ import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import Article from 'sentry-docs/components/changelog/article';
 import Pagination from 'sentry-docs/components/changelog/pagination';
 import Tag from 'sentry-docs/components/changelog/tag';
+import {MDXRemote, MDXRemoteSerializeResult} from 'next-mdx-remote';
 
 const ENTRIES_PER_PAGE = 10;
 
-type ChangelogWithCategories = Changelog & {
+type EnhancedChangelog = Changelog & {
   categories: Category[];
+  mdxSummary: MDXRemoteSerializeResult;
 };
 
-export default function Changelogs({
-  changelogs,
-}: {
-  changelogs: ChangelogWithCategories[];
-}) {
+export default function Changelogs({changelogs}: {changelogs: EnhancedChangelog[]}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -48,7 +46,7 @@ export default function Changelogs({
   const filtered = selectedCategoriesIds.length || searchValue || selectedMonth;
 
   const filteredChangelogs = changelogs
-    .filter((changelog: ChangelogWithCategories) => {
+    .filter((changelog: EnhancedChangelog) => {
       // map all categories to a string
       const categories = changelog.categories
         .map((category: Category) => category.name)
@@ -125,7 +123,7 @@ export default function Changelogs({
           tags={changelog.categories.map((category: Category) => category.name)}
           image={changelog.image}
         >
-          {changelog.summary}
+          <MDXRemote {...changelog.mdxSummary} />
         </Article>
       </Link>
     );
