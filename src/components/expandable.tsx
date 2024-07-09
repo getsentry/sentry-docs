@@ -47,7 +47,7 @@ function slugify(str: string) {
 
 const header = (title: string, permalink?: boolean) =>
   permalink ? (
-    <h2 id={slugify(title)} className="">
+    <h2 id={slugify(title)} className="!mb-0">
       <a
         href={'#' + slugify(title)}
         className="!text-[1rem] !font-medium hover:!no-underline !text-darkPurple"
