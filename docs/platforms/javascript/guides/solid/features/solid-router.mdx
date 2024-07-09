@@ -3,39 +3,36 @@ title: Solid Router
 description: "Learn about Sentry's Solid Router integration."
 ---
 
+<Note>
+  The routing instrumentation supports [Solid Router](https://docs.solidjs.com/solid-router) 0.13.4 and up.
+</Note>
+
 The Solid SDK provides a routing instrumentation for Solid Router to create navigation spans to ensure
 you collect meaningful performance data about the health of your page loads and associated requests.
 
-The routing instrumentation supports [Solid Router](https://docs.solidjs.com/solid-router) 0.13.0 and up.
+To get started, import `solidRouterBrowserTracingIntegration` from `@sentry/solid/solidrouter` and add it to `Sentry.init`
+instead of the regular `Sentry.browserTracingIntegration` to enable performance tracing.
 
-To get started, add `Sentry.solidRouterBrowserTracingIntegration` instead of the regular `Sentry.browserTracingIntegration`
-and provide the hooks it needs to enable performance tracing:
-
-- `useBeforeLeave` from `@solidjs/router`
-- `useLocation` from `@solidjs/router`
-
-Make sure `Sentry.solidRouterBrowserTracingIntegration` is initialized by your `Sentry.init` call, before you wrap
-`Router`. Otherwise, the routing instrumentation may not work properly.
-
-Wrap `Router`, `MemoryRouter` or `HashRouter` from `@solidjs/router` using `Sentry.withSentryRouterRouting`. This
-creates a higher order component, which will enable Sentry to reach your router context.
+Import `withSentryRouterRouting` from `@sentry/solid/solidrouter` and use it to wrap `Router`, `MemoryRouter` or `HashRouter` from `@solidjs/router`.
+This creates a higher order component, which will enable Sentry to reach your router context.
 
 <SignInNote />
 
 ```jsx
 import * as Sentry from "@sentry/solid";
-import { Route, Router, useBeforeLeave, useLocation } from "@solidjs/router";
+import { solidRouterBrowserTracingIntegration, withSentryRouterRouting } from '@sentry/solid/solidrouter';
+import { Route, Router } from "@solidjs/router";
 import { render } from "solid-js/web";
 import App from "./app";
 
 Sentry.init({
   dsn: "__PUBLIC_DSN__",
-  integrations: [Sentry.solidRouterBrowserTracingIntegration({ useBeforeLeave, useLocation })],
+  integrations: [solidRouterBrowserTracingIntegration()],
   tracesSampleRate: 1.0, //  Capture 100% of the transactions
 });
 
 // Wrap Solid Router to collect meaningful performance data on route changes
-const SentryRouter = Sentry.withSentryRouterRouting(Router);
+const SentryRouter = withSentryRouterRouting(Router);
 
 render(
   () => (
