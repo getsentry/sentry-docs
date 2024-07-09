@@ -14,6 +14,7 @@ const readSchemaFile = () => {
   try {
     return readFileSync(filePath, 'utf8');
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.warn(`Failed to read Relay event schema: ${e}`);
     throw e;
   }
