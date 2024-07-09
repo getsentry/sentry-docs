@@ -120,8 +120,8 @@ export function getDevDocsFrontMatter(): FrontMatter[] {
   return fmts;
 }
 
-export function getAllFilesFrontMatter(folder: string = 'docs') {
-  const docsPath = path.join(root, folder);
+function getAllFilesFrontMatter() {
+  const docsPath = path.join(root, 'docs');
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach(file => {
