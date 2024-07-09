@@ -49,6 +49,55 @@ You can create other users with `sentry createuser`.
   displayed correctly.
 </Alert>
 
+### Frontend Only & Backend Only
+
+Please refer to [Frontend Development Server](/frontend/development-server/) and [Backend Development Server](/backend/development-server/) for alternative ways to bring up the Sentry UI.
+
+### Enabling HTTPS
+
+You may wish to run the development server in HTTPS mode. This can be done by generating and installing local certificates.
+
+We will be using [mkcert](https://github.com/FiloSottile/mkcert) to create and install a locally-trusted, development certificate. The following will install `mkcert` and then create and install the local certificates.
+
+```shell
+brew install mkcert
+brew install nss # if you use Firefox
+yarn mkcert-localhost
+```
+
+Running `sentry devserver` will automatically use HTTPS when the certificates have been installed.
+
+
+### Ingestion Pipeline (Relay)
+
+Some services are not run in all situations. Among those are <Link to="/services/relay/">Relay</Link> and the ingest workers.
+
+<b>If you need to ingest errors, but don't require metrics ingestion: </b> Set `SENTRY_USE_RELAY=True` in `~/.sentry/sentry.conf.py`. If `sentry devservices` is currently up, make sure to restart it after you make the change. This will launch Relay as part of the `devserver` workflow.
+
+Additionally, you can explicitly control this during `devserver` usage with the `--ingest` and `--no-ingest` flags. The `sentry devservices` command will not update Relay automatically in that case, to do this manually run:
+
+```shell
+sentry devservices up --skip-only-if relay
+sentry devserver --workers --ingest
+```
+
+<b>If you want to enable the entire metrics ingestion pipeline:</b> You need to add the following to your config at `~/.sentry/sentry.conf.py`:
+
+```python
+SENTRY_USE_RELAY = True
+SENTRY_USE_METRICS_DEV = True
+SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
+SENTRY_FEATURES['organizations:metrics-extraction'] = True  # Enables session metrics
+SENTRY_FEATURES['organizations:transaction-metrics-extraction'] = True  # Enables transaction metrics
+```
+
+After enabling `KafkaEventStream` the `snuba` service has to be reset to pick up the new configuration:
+
+```shell
+sentry devservices rm snuba
+sentry devservices up snuba
+```
+
 ## Running siloed instances
 
 By default `sentry devserver` will run a monolith mode application server. You can also run ``devserver`` with siloed application instances. Before you do, you need to <Link to="/database-migrations/#cloning-a-monolith-database">create split silo databases</Link>.
@@ -147,57 +196,6 @@ If you need to overwrite configuration options for your local
 environment, you can create `getsentry/conf/settings/devlocal.py` and put the
 configuration option overrides there. This module will be automatically imported
 by `dev.py` if it exists.
-
-
-### Frontend Only & Backend Only
-
-Please refer to [Frontend Development Server](/frontend/development-server/) and [Backend Development Server](/backend/development-server/) for alternative ways to bring up the Sentry UI.
-
-### Enabling HTTPS
-
-You may wish to run the development server in HTTPS mode. This can be done by generating and installing local certificates.
-
-We will be using [mkcert](https://github.com/FiloSottile/mkcert) to create and install a locally-trusted, development certificate. The following will install `mkcert` and then create and install the local certificates.
-
-```shell
-brew install mkcert
-brew install nss # if you use Firefox
-yarn mkcert-localhost
-```
-
-Running `sentry devserver` will automatically use HTTPS when the certificates have been installed.
-
-
-### Ingestion Pipeline (Relay)
-
-Some services are not run in all situations. Among those are <Link to="/services/relay/">Relay</Link> and the ingest workers. If you need
-a more production-like environment in development, you can set `SENTRY_USE_RELAY=True` in `~/.sentry/sentry.conf.py`. If `sentry devservices` is currently up ,make sure to restart it after you make the change. This will launch Relay
-as part of the `devserver` workflow.
-
-Additionally, you can explicitly control this during `devserver` usage with the `--ingest` and `--no-ingest` flags. The `sentry devservices`
-command will not update Relay automatically in that case, to do this manually run:
-
-```shell
-sentry devservices up --skip-only-if relay
-sentry devserver --workers --ingest
-```
-
-If you want to enable the entire metrics ingestion pipeline, you need to add the following to your config at `~/.sentry/sentry.conf.py`:
-
-```python
-SENTRY_USE_RELAY = True
-SENTRY_USE_METRICS_DEV = True
-SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
-SENTRY_FEATURES['organizations:metrics-extraction'] = True  # Enables session metrics
-SENTRY_FEATURES['organizations:transaction-metrics-extraction'] = True  # Enables transaction metrics
-```
-
-After enabling `KafkaEventStream` the `snuba` service has to be reset to pick up the new configuration:
-
-```shell
-sentry devservices rm snuba
-sentry devservices up snuba
-```
 
 
 ## Troubleshooting
