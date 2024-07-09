@@ -4,11 +4,11 @@ import {useEffect, useState} from 'react';
 import {type Category, type Changelog} from '@prisma/client';
 import Link from 'next/link';
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
+import {MDXRemote, MDXRemoteSerializeResult} from 'next-mdx-remote';
 
 import Article from 'sentry-docs/components/changelog/article';
 import Pagination from 'sentry-docs/components/changelog/pagination';
 import Tag from 'sentry-docs/components/changelog/tag';
-import {MDXRemote, MDXRemoteSerializeResult} from 'next-mdx-remote';
 
 const ENTRIES_PER_PAGE = 10;
 
@@ -79,8 +79,7 @@ export default function Changelogs({changelogs}: {changelogs: EnhancedChangelog[
 
   // iterate over all posts and create a list of months & years
   const months = changelogs.reduce((allMonths, post) => {
-    // if no date is set, use the epoch (simulate behavior before this refactor)
-    const date = post.publishedAt instanceof Date ? post.publishedAt : new Date(0);
+    const date = new Date(post.publishedAt || '');
     const year = date.getFullYear();
     const month = date.toLocaleString('default', {
       month: 'long',
@@ -214,7 +213,7 @@ export default function Changelogs({changelogs}: {changelogs: EnhancedChangelog[
           {monthsCopy.map((month, index) => (
             <li key={index}>
               <a
-                className={`text-primary hover:text-purple-900 hover:font-extrabold ${selectedMonth === month ? 'underline' : ''}`}
+                className={`text-primary cursor-pointer hover:text-purple-900 hover:font-extrabold ${selectedMonth === month ? 'underline' : ''}`}
                 onClick={e => {
                   e.preventDefault();
                   if (selectedMonth === month) {
