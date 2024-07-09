@@ -62,6 +62,10 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
+    to: '/platforms/javascript/configuration/integrations/browserapierrors/',
+  },
+  {
     from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
   },
@@ -308,6 +312,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/react-native/manual-setup/sourcemaps/',
     to: '/platforms/react-native/sourcemaps/',
+  },
+  {
+    from: '/platforms/react-native/touchevents/',
+    to: '/platforms/react-native/configuration/touchevents/',
   },
   {
     from: '/platforms/python/data-collected/',
@@ -1370,6 +1378,10 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/react/features/react-router/',
   },
   {
+    from: '/platforms/javascript/guides/session-replay/',
+    to: '/platforms/javascript/session-replay/',
+  },
+  {
     from: '/platforms/javascript/react/',
     to: '/platforms/javascript/guides/react/',
   },
@@ -2080,6 +2092,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/pricing/am2-pricing/',
     to: '/pricing/legacy-pricing/',
+  },
+  {
+    from: '/pricing/quotas/manage-event-stream-guide/adjusting-quotas/',
+    to: '/pricing/quotas/manage-event-stream-guide/#adjusting-quotas',
   },
   {
     from: '/learn/pricing/',
@@ -3080,10 +3096,6 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/product/accounts/quotas/manage-cron-monitors/',
     to: '/pricing/quotas/manage-cron-monitors/',
-  },
-  {
-    from: '/product/accounts/migration/',
-    to: '/concepts/migration/',
   },
   {
     from: '/product/accounts/auth-tokens/',

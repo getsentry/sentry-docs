@@ -313,7 +313,7 @@ export async function getFileBySlug(slug: string) {
             },
             content: [
               s(
-                'svg.anchor.before',
+                'svg.anchorlink.before',
                 {
                   xmlns: 'http://www.w3.org/2000/svg',
                   width: 16,
