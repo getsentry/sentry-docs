@@ -62,8 +62,20 @@ type Redirect = {
 
 const REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
+    to: '/platforms/javascript/configuration/integrations/browserapierrors/',
+  },
+  {
     from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
+  },
+  {
+    from: '/account/early-adopter-features/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
+  },
+  {
+    from: '/platforms/python/migration/configuration/filtering/',
+    to: '/platforms/python/configuration/filtering/',
   },
   {
     from: '/organization/integrations/github/',
@@ -300,6 +312,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/react-native/manual-setup/sourcemaps/',
     to: '/platforms/react-native/sourcemaps/',
+  },
+  {
+    from: '/platforms/react-native/touchevents/',
+    to: '/platforms/react-native/configuration/touchevents/',
   },
   {
     from: '/platforms/python/data-collected/',
@@ -1119,15 +1135,15 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/tracing/event-detail/',
     to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
   },
   {
-    from: '/product/sentry-basics/concepts/tracing/event-detail/',
-    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+    from: '/concepts/key-terms/tracing/event-detail/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/dsn-explainer/',
@@ -1360,6 +1376,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/react/configuration/integrations/react-router/',
     to: '/platforms/javascript/guides/react/features/react-router/',
+  },
+  {
+    from: '/platforms/javascript/guides/session-replay/',
+    to: '/platforms/javascript/session-replay/',
   },
   {
     from: '/platforms/javascript/react/',
@@ -2068,6 +2088,14 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/product/accounts/early-adopter/',
     to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/pricing/am2-pricing/',
+    to: '/pricing/legacy-pricing/',
+  },
+  {
+    from: '/pricing/quotas/manage-event-stream-guide/adjusting-quotas/',
+    to: '/pricing/quotas/manage-event-stream-guide/#adjusting-quotas',
   },
   {
     from: '/learn/pricing/',
@@ -3068,10 +3096,6 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/product/accounts/quotas/manage-cron-monitors/',
     to: '/pricing/quotas/manage-cron-monitors/',
-  },
-  {
-    from: '/product/accounts/migration/',
-    to: '/concepts/migration/',
   },
   {
     from: '/product/accounts/auth-tokens/',
