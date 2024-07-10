@@ -34,6 +34,21 @@ async function seed() {
         deleted: false,
       },
     });
+    
+    const changelog3 = await prisma.changelog.create({
+      data: {
+        id: '3',
+        createdAt: new Date('01/01/2020'),
+        publishedAt: new Date('01/01/2020'),
+        updatedAt: new Date('01/01/2020'),
+        title: 'Changelog 3',
+        slug: 'changelog-3',
+        content: 'Changelog 3 content with [markdown content](https://de.wikipedia.org/wiki/Markdown)',
+        summary: 'Changelog 3 summary with [markdown content](https://de.wikipedia.org/wiki/Markdown)',
+        published: true,
+        deleted: false,
+      },
+    });
 
     // Create categories
     await prisma.category.create({
@@ -53,7 +68,7 @@ async function seed() {
         name: 'Category 2',
         deleted: false,
         changelogs: {
-          connect: [{id: changelog2.id}],
+          connect: [{id: changelog2.id}, {id: changelog3.id}],
         },
       },
     });
