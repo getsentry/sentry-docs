@@ -3374,6 +3374,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
     to: '/product/insights/',
   },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/container-image/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/layer/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
