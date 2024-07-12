@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script is used to skip the build on Vercel process based on the changes in the repository.
-# It depends on the `DEVELOPER_DOCS` environment variable to determine which app to check for changes.
+# It depends on the `NEXT_PUBLIC_DEVELOPER_DOCS` environment variable to determine which app to check for changes.
 # basically an exit code of 0 means the build will be skipped, and 1 means it will be built.
 # read more here:
 # - https://vercel.com/docs/projects/overview#ignored-build-step
@@ -9,8 +9,14 @@
 
 # diff status for develop-docs content
 dev_docs_diff_status=$(git diff HEAD^ HEAD --quiet -- develop-docs; echo $?)
+src_diff_status=$(git diff HEAD^ HEAD --quiet -- src; echo $?)
 
-if [[ "$DEVELOPER_DOCS" == "1" ]] ; then
+# always build on changes in src dir
+if [[ $src_diff_status -eq 1 ]] ; then
+  exit 1
+fi
+
+if [[ "$NEXT_PUBLIC_DEVELOPER_DOCS" == "1" ]] ; then
   exit $dev_docs_diff_status
 else
   # exit with the inverse of the diff status.
