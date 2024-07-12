@@ -8,6 +8,7 @@ import sidebarStyles from './sidebar/style.module.scss';
 import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
+import { isDeveloperDocs } from 'sentry-docs/isDeveloperDocs';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
@@ -56,7 +57,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
           </div>
         )}
         <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
-          <NavLink href="/changelog">Changelog</NavLink>
+          <NavLink href={isDeveloperDocs ? "https://docs.sentry.io/changelog" : "/changelog"}>Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           <NavLink href="https://sentry.io/">Sign In</NavLink>
         </div>
