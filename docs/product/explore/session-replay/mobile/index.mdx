@@ -1,5 +1,72 @@
 ---
 title: "Session Replay for Mobile"
 sidebar_order: 20
-description: "Use Session Replay for mobile to get video reproductions of user sessions to repro issues faster and understand user impact of issues."
+description: "Use Session Replay for mobile to get video-like reproductions of user sessions to repro issues faster and understand user impact better."
+
+<Note>
+
+Session Replay for mobile is currently in open beta for all plans except Enterprise (if you’re on an Enterprise plan, please reach out to your Customer Success Manager for more information). Beta features are still in progress and may have bugs. We recognize the irony.  If you have any questions, feedback, or would like to report a bug, please open a GitHub issue with a link to a relevant replay ([Android](https://github.com/getsentry/sentry-java/issues/new/choose), [iOS](https://github.com/getsentry/sentry-cocoa/issues/new/choose) and [React Native](https://github.com/getsentry/sentry-react-native/issues/new/choose)).
+
+</Note>
+
+Session Replay allows you to see reproductions of user sessions, which can help you understand what happened before, during, and after an error or performance issue occurred. As you play back each session, you'll be able to see every user interaction in relation to network requests, frontend and backend errors, backend spans, and more.
+
+Replays are integrated with our Issues product so you can see how the user experience is impacted by errors. You'll see session replays associated with error events on the [Issue Details](https://docs.sentry.io/product/issues/issue-details/) page. To ensure backend errors will also be included in the replay, please see our [set up instructions](https://docs.sentry.io/product/explore/session-replay/getting-started/#replays-for-backend-errors).
+
+## What is Session Replay?
+
+Session Replay for mobile works by taking snapshots of the view hierarchy as well as a screenshot within the same frame, at the rate of one per second. In order to redact anything potentially sensitive and preserve maximum user privacy, the view hierarchy is used to find the position of controls such as text boxes, images, labels, and buttons. Redaction is done by drawing a block over these controls, using the most predominant color of the control for the block. These screenshots are compressed into a video file representing a segment of the user’s session. All these small segments are streamed into Sentry with additional trace identifiers, breadcrumbs, and other useful debugging information to compose the full user session. The user session (i.e., replay) lasts until the user closes the app, the app crashes, the user puts the app in the background for over 30 seconds, or the session reaches 60 minutes in duration. The result is a video playback that can help you reproduce bugs in your mobile app, including hard-to-debug issues related to backend APIs and microservices.
+
+## Replay Details 
+
+Every replay has a detailed view that contains the embedded video player and rich debugging context. Playing back the video will allow you to see every user interaction in relation to network requests, frontend and backend errors, backend spans, and more.  Almost every component on this page is connected through timestamps. See the breakdown of each component and why it’s valuable:
+
+- **Breadcrumbs:** The replay breadcrumbs show when key user interactions took place, specifically: user taps with the relevant component, navigations, and when the user put the app in background or foreground. Breadcrumbs also provide insight into the device of a given user session at particular timestamps: device battery (when battery level or charging status changes), orientation (when the user rotates the device), and connectivity (when this status changes between wifi, cellular, and offline). These breadcrumbs are synced with the replay player and will auto-scroll as the video plays. Some [breadcrumb types](https://docs.sentry.io/product/issues/issue-details/breadcrumbs/) visible in Issue Details are not 1:1 to the replay breadcrumbs list. The trail of events typically seen in the Issue Details page are now displayed in the Network and Console components of the Replay Details page.
+
+
+- **Timeline:** This is the section at the bottom of the Replay Details page that illustrates where significant events (such as errors, device battery, and user interactions) happen over the course of the replay. This allows users to easily scrub to key events by dragging across the timeline. It also visually conveys the amount of time that took place between events and has a zoom functionality so you can easily zoom-in to distinguish between events that happen close together.
+
+- **Network:** A list of all network requests that were initiated by the app while the replay recording was active. As the video plays, there’s a visual indicator that tracks through the table of network requests, highlighting which requests happened prior to, or next to this point in the video. When a request fails, it is highlighted in red. You can also click the timestamp on the far right of each request to bring yourself to that point in the replay player.
+
+- **Console:** TODO. Bruno at add
+
+- **Errors:** See all the errors that occurred in the replay (including backend), with links to the corresponding events and [issue(s)](https://docs.sentry.io/product/issues/issue-details/error-issues/), and the impact these issues have had holistically across all users on your application when you hover over the issue ID.
+
+- **Tags:** Find a complete list of built-in fields and custom tags associated with a replay, such as operating system version and name, device specs, release, and user details.
+
+- **Trace:** Connects all the [trace(s)](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing/#traces-transactions-and-spans) that happened during the replay.
+
+## SDKs Supported
+
+Session Replay for mobile is currently available for Android, iOS, and React Native SDKs. Support for [Flutter](https://docs.sentry.io/platforms/flutter/) is being tracked on this [GitHub issue](https://github.com/getsentry/sentry-dart/issues/1193).
+
+- iOS, [Needs link, VERSION]
+- Android, [Needs link, VERSION]
+- React Native, [Needs link, VERSION]
+
+## Frequently Asked Questions
+
+**Q: How do you protect user data?**
+A: Sentry is privacy-focused so protecting user data is always top of mind. That’s why by default, our privacy configuration is very aggressive and redacts all text and images to ensure no sensitive user information is collected. We also provide server-side scrubbing on debugging context to additionally filter on the server in case anything slips by.
+
+Additionally, we offer a self-serve deletion capability of individual replays in the UI.
+
+**Q: What is the performance overhead of the Replay package?**
+A: For most mobile applications, the performance overhead of our client SDK will be imperceptible to end-users. In our own testing, the overhead was not noticeable by end-users. However, this testing was not exhaustive and you may discover the recording overhead may negatively impact your web application performance depending on your application complexity.
+
+To reduce the performance overhead, we only take screenshots when something changes on the screen. Our default frame rate is 1 frame (16ms) per second of the main thread time.
+If you experience any performance degradations after installing Session Replay, please open an issue on Github for your respective SDK: [Android](https://github.com/getsentry/sentry-java/issues/new/choose), [iOS](https://github.com/getsentry/sentry-cocoa/issues/new/choose) and [React Native](https://github.com/getsentry/sentry-react-native/issues/new/choose).
+
+**Q: How much does it cost to use Session Replay for mobile?**
+A: Session Replay for mobile is currently in open beta and can be used **free of charge**. It is our intention that it becomes a paid solution in the future (similar to [Session Replay for web](https://sentry.io/pricing/)). The exact release date and pricing have not yet been determined.
+
+**Q: Are unhandled exceptions (i.e., crashes) available as part of Session Replay for mobile?**
+A: Currently only handled exceptions will include a replay. We’re actively working on covering replays for crashes and ANRs. We plan to support crashes and ANR for Session Replay for mobile in the coming weeks, so please refer to the SDK release notes for updates.
+
+**Q: How does Session Replay for mobile work if my app is offline?**
+A: Session Replay for mobile currently doesn’t work in offline mode. We plan on adding support for at least a few segments leading up to errors and crashes. Please subscribe to this [GitHub issue](https://github.com/getsentry/sentry/issues/68287) for updates.
+
+
+
+
 ---
