@@ -35,8 +35,9 @@ export async function Home() {
               Welcome to Sentry Docs
             </h1>
             <p className="max-w-[55ch]">
-              Sentry is a developer-first error tracking and performance monitoring
-              platform.
+              Sentry provides end-to-end distributed tracing, enabling developers to
+              identify and debug performance issues and errors across their systems and
+              services.
             </p>
           </div>
           <div className="self-center">
