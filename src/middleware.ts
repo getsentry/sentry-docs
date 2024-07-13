@@ -147,6 +147,18 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/performance/',
   },
   {
+    from: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/data-management-settings/data-forwarding/',
+    to: '/concepts/data-management/data-forwarding/',
+  },
+  {
+    from: '/product/data-management-settings/filtering/',
+    to: '/concepts/data-management/filtering/',
+  },
+  {
     from: '/platforms/data-management/',
     to: '/concepts/data-management/',
   },
@@ -3128,6 +3140,10 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/account/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/accounts/quotas/',
     to: '/pricing/quotas/',
   },
   {
