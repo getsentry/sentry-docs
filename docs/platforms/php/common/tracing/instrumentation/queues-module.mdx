@@ -23,7 +23,34 @@ You must also include Sentry's trace headers (`sentry-trace` and `baggage`) in y
 
 
 ```php
+$parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
 
+if ($parentSpan !== null) {
+    $context = \Sentry\Tracing\SpanContext::make()
+        ->setOp('queue.publish')
+        ->setDescription('App\Jobs\MyJob');
+
+    $span = $parentSpan->startChild($context);
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+
+    // Publish your job to the queue
+    Queue::push($job, [
+        'publish_time' => microtime(true),
+        'sentry_trace' => \Sentry\getTraceparent(),
+        'baggage' => \Sentry\getBaggage(),
+    ]);
+    
+    $span
+        ->setData([
+            'messaging.message.id' => $job->getId(),
+            'messaging.destination.name' => $job->getQueue(),
+            'messaging.message.body.size' => $job->getSize(),
+        ])
+        ->finish();
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
+}
 ```
 
 
@@ -41,9 +68,36 @@ Wrap your queue consumer code into a span. Your span `op` must be set to `queue.
 
 Make sure that there's a transaction running when you create the spans. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
 
-Use `\Sentry\continueTrace()` to connect your consumer spans to their associated producer spans, and `$span->setStatus()` to mark the trace of your message as success or failed.
+Use `\Sentry\continueTrace()` to connect your consumer transaction to their associated producer spans, and `$transaction->setStatus()` to mark the trace of your message as success or failed.
 
 
 ```php
+$context = \Sentry\continueTrace(
+    $job->getMetadata('sentry_trace'),
+    $job->getMetadata('baggage')
+)
+    ->setOp('queue.process')
+    ->setName('App\Jobs\MyJob');
 
+$transaction = \Sentry\startTransaction($context);
+
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+
+$job = Queue::pop();
+
+try {
+    // Continue job processing...
+} catch (\Throwable $e) {
+    $transaction->setStatus(\Sentry\Tracing\SpanStatus::internalError());
+}
+
+$transaction
+    ->setData([
+        'messaging.message.id' => $job->getId(),
+        'messaging.destination.name' => $job->getQueue(),
+        'messaging.message.body.size' => $job->getSize(),
+        'messaging.message.receive.latency' =>  microtime(true) - $job->getMetadata('publish_time'),
+        'messaging.message.retry.count' => $job->getRetryCount(),
+    ])
+    ->finish();
 ```
