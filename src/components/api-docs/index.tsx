@@ -2,7 +2,7 @@
 
 import 'swagger-ui-react/swagger-ui.css';
 
-import openapiFilter from 'openapi-filter';
+// import {type} from 'swagger-ui-plugin-hierarchical-tags';
 import SwaggerUI, {SwaggerUIProps} from 'swagger-ui-react';
 
 import {DeRefedOpenAPI} from 'sentry-docs/build/open-api/types';
@@ -25,11 +25,26 @@ export function ApiDocs({tagFilter}: Props) {
   const sidebarWidth = '300px';
   const snippetConfig = {
     generators: {
+      curl_bash: {
+        title: 'cURL (bash)',
+        syntax: 'bash',
+      },
+      curl_powershell: {
+        title: 'cURL (PowerShell)',
+        syntax: 'powershell',
+      },
+      curl_cmd: {
+        title: 'cURL (CMD)',
+        syntax: 'bash',
+      },
       node_native: {
         title: 'NodeJs Native',
         syntax: 'javascript',
       },
     },
+    defaultExpanded: true,
+    languages: null,
+    // e.g. only show curl bash = ["curl_bash"]
   };
 
   const plugins: SwaggerUIProps['plugins'] = [SnippedGeneratorNodeJsPlugin];
@@ -52,12 +67,5 @@ export function ApiDocs({tagFilter}: Props) {
   //   filteredSpec.paths = spec.paths;
   // }
 
-  return (
-    <SwaggerUI
-      spec={spec}
-      requestSnippetsEnabled
-      requestSnippets={snippetConfig}
-      plugins={plugins}
-    />
-  );
+  return <SwaggerUI spec={spec} requestSnippetsEnabled requestSnippets={snippetConfig} />;
 }
