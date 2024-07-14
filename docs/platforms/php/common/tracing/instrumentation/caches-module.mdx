@@ -37,27 +37,26 @@ $parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
 if ($parentSpan !== null) {
     $context = \Sentry\Tracing\SpanContext::make()
         ->setOp('cache.put');
+
     $span = $parentSpan->startChild($context);
 
-    // Set the span we just started as the current span
     \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
 
     // Perform you cache operation
     Cache::put($key, $value);
     
-    $span->setData([
-        // Describe the cache server you are accessing
-        'network.peer.address' => '127.0.0.1',
-        'network.peer.port' => 9000,
-        // Add the key you used
-        'cache.key' => $key,
-        // Optionally, add the size of the value you set
-        'cache.item_size' => strlen($value),
-    ]);
+    $span
+        ->setData([
+            // Describe the cache server you are accessing
+            'network.peer.address' => '127.0.0.1',
+            'network.peer.port' => 9000,
+            // Add the key you used
+            'cache.key' => $key,
+            // Optionally, add the size of the value you set
+            'cache.item_size' => strlen($value),
+        ])
+        ->finish();
 
-    $span->finish();
-
-    // Restore the span back to the parent span
     \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
 }
 ```
@@ -84,9 +83,9 @@ $parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
 if ($parentSpan !== null) {
     $context = \Sentry\Tracing\SpanContext::make()
         ->setOp('cache.get');
+
     $span = $parentSpan->startChild($context);
 
-    // Set the span we just started as the current span
     \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
 
     // Perform you cache operation
@@ -108,15 +107,14 @@ if ($parentSpan !== null) {
             'cache.item_size' => strlen($value),
         ]);
     } else {
-        // If you could not retrieve a value, it was a miss
         $span->setData([
+            // If you could not retrieve a value, it was a miss
             'cache.hit' => false,
         ]);
     }
 
     $span->finish();
 
-    // Restore the span back to the parent span
     \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
 }
 ```
