@@ -109,7 +109,7 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
   const {mdxSource, frontMatter} = doc;
 
-  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
 }
 
