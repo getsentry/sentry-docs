@@ -1,6 +1,6 @@
 import {readFileSync, writeFileSync} from 'fs';
 
-const isDeveloperDocs = !!process.env.DEVELOPER_DOCS;
+const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 // base config that is common to both the developer and sdk docs
 const baseVercelJson = JSON.parse(readFileSync('base-vercel.json', 'utf8'));
