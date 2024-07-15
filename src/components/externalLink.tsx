@@ -6,7 +6,7 @@ type Props =
 
 export function ExternalLink({children, ...props}: Props) {
   return (
-    <a {...props} className="inline-flex">
+    <a {...props}>
       {children}
       <span className="icon icon-external-link">
         <svg viewBox="0 0 24 24" width="14" height="14" className="ml-1 inline">
