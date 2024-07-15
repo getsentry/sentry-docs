@@ -1,5 +1,5 @@
 ---
-title: Frontend Handbook
+title: "Frontend Handbook"
 sidebar_order: 40
 ---
 
@@ -24,8 +24,8 @@ Having an `index` file in a folder provides a way to implicitly import the main 
 The use of an index file should comply with the following rules:
 
 - If the folder is created to group components that are used together, and there is an entrypoint component, that uses the components within the grouping (examples, avatar, idBadge). The entrypoint component should be the index file.
-- *Don't* use an `index.tsx?$` file if the folder contains components used in other parts of the app regardless of the entrypoint file. (ie, actionCreators, panels)
-- *Don't* use an index file just to re-export. Prefer importing individual components instead.
+- _Don't_ use an `index.tsx?$` file if the folder contains components used in other parts of the app regardless of the entrypoint file. (ie, actionCreators, panels)
+- _Don't_ use an index file just to re-export. Prefer importing individual components instead.
 
 ## React
 
@@ -62,7 +62,7 @@ export default function Note({author, content, onEdit}: Props) {
 Both the `app/components/` and `app/views/` folders contain React components.
 
 - Put files in `app/views/` when the component can not be reused in other parts of the codebase.
-   - Typically only layout/construction of full pages should be in this folder. ie: files that are imported by [routes.tsx](https://github.com/getsentry/sentry/blob/master/static/app/routes.tsx).
+  - Typically only layout/construction of full pages should be in this folder. ie: files that are imported by [routes.tsx](https://github.com/getsentry/sentry/blob/master/static/app/routes.tsx).
 - Put files into `app/components/` for anything else that _could_ be reused.
   - If the component accepts any prop beyond `RouteComponentProps` then it very likely belongs inside `app/components/`
 
@@ -73,11 +73,10 @@ We do not follow any strict "prefer type over interface" rules for type declarat
 A simple guiding principle is to prefer interfaces when you require declaration merging. The reason for that is that type intersections are poor at detecting conflicts, produce unexpected or unwanted results and when used in combination with large types [perform worse than interfaces](https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections).
 
 Example:
+
 ```typescript
 // This is valid and the outcome is a "never" type
-type A =
-{ color: "blue" } &
-{ color: "red" };
+type A = { color: "blue" } & { color: "red" };
 
 interface B {
   color: "blue";
@@ -96,7 +95,7 @@ We use different prefixes to better distinguish event handlers from event callba
 Use the `handle` prefix for event handlers, e.g:
 
 ```javascript
-<Button onClick={this.handleDelete}/>
+<Button onClick={this.handleDelete} />
 ```
 
 For event callback props passed to the component use the `on` prefix, e.g:
@@ -108,7 +107,8 @@ For event callback props passed to the component use the `on` prefix, e.g:
 ## State management
 
 <Alert level="info">
-  For React Hooks tips check out <Link to="/frontend/using-hooks/">this page</Link>.
+  For React Hooks tips check out{" "}
+  <Link to="/frontend/using-hooks/">this page</Link>.
 </Alert>
 
 Prefer the built-in `useState` and `useReducer` react hooks for state whenever possible.
@@ -120,7 +120,8 @@ Reflux implements the unidirectional data flow pattern outlined by [Flux](https:
 ## Testing
 
 <Alert level="info">
-  For React Testing Library (RTL) tips check out <Link to="/frontend/using-rtl/">this page</Link>.
+  For React Testing Library (RTL) tips check out{" "}
+  <Link to="/frontend/using-rtl/">this page</Link>.
 </Alert>
 
 Note: Your filename needs to be `.spec.tsx` for jest to run run it!
@@ -132,12 +133,13 @@ We have useful fixtures defined in [fixtures/js-stubs/](https://github.com/getse
 Marking your test method `async` and using the `await tick();` utility can let the event loop flush run events and fix this:
 
 ```javascript
-wrapper.find('ExpandButton').simulate('click');
+wrapper.find("ExpandButton").simulate("click");
 await tick();
-expect(wrapper.find('CommitRow')).toHaveLength(2);
+expect(wrapper.find("CommitRow")).toHaveLength(2);
 ```
 
 ## Babel Syntax Plugins
+
 We have decided to only use ECMAScript proposals that are in stage 3 (or later) (See [TC39 Proposals](https://github.com/tc39/proposals)).
 The only exception to this are decorators.
 
@@ -156,6 +158,7 @@ obj?.prop       // optional static property access
 obj?.[expr]     // optional dynamic property access
 func?.(...args) // optional function or method call
 ```
+
 > From https://github.com/tc39/proposal-optional-chaining
 
 ### Nullish Coalescing
@@ -171,12 +174,13 @@ Which is a problem since `0` is a valid value for `volume`, but because it evalu
 If instead we used [nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
 
 ```javascript
-let x = volume ?? 0.5
+let x = volume ?? 0.5;
 ```
 
 It will only default to `0.5` if `volume` is `null` or `undefined`.
 
 #### Syntax
+
 Base case. If the expression at the left-hand side of the ?? operator evaluates to undefined or null, its right-hand side is returned.
 
 ```javascript
@@ -185,14 +189,14 @@ const response = {
     nullValue: null,
     height: 400,
     animationDuration: 0,
-    headerText: '',
-    showSplashScreen: false
-  }
+    headerText: "",
+    showSplashScreen: false,
+  },
 };
 
-const undefinedValue = response.settings.undefinedValue ?? 'some other default'; // result: 'some other default'
-const nullValue = response.settings.nullValue ?? 'some other default'; // result: 'some other default'
-const headerText = response.settings.headerText ?? 'Hello, world!'; // result: ''
+const undefinedValue = response.settings.undefinedValue ?? "some other default"; // result: 'some other default'
+const nullValue = response.settings.nullValue ?? "some other default"; // result: 'some other default'
+const headerText = response.settings.headerText ?? "Hello, world!"; // result: ''
 const animationDuration = response.settings.animationDuration ?? 300; // result: 0
 const showSplashScreen = response.settings.showSplashScreen ?? true; // result: false
 ```
