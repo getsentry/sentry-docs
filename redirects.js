@@ -4,7 +4,13 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 const developerDocsRedirects = [];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
-const sdkDocsRedirects = [];
+const sdkDocsRedirects = [
+  {
+    source: '/platforms/javascript/guides/:path*/best-practices/browser-extensions/',
+    destination:
+      '/platforms/javascript/guides/:path*/best-practices/shared-environments/',
+  },
+];
 
 /**
  * @type {import('next').NextConfig['redirects']}
@@ -17,11 +23,9 @@ const redirects = async () => {
     isDeveloperDocs ? 'developer' : 'sdk',
     'docs redirects in next.config.js'
   );
-  if (isDeveloperDocs) {
-    return developerDocsRedirects;
-  } else {
-    return sdkDocsRedirects;
-  }
+  return (isDeveloperDocs ? developerDocsRedirects : sdkDocsRedirects).map(r => {
+    return {...r, permanent: true};
+  });
 };
 
 module.exports = {redirects};
