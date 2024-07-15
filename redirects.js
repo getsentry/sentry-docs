@@ -1,6 +1,6 @@
 const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
-/** @type {import('next').Redirect[]} */
+/** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
