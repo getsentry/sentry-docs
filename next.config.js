@@ -24,6 +24,10 @@ const nextConfig = {
 
     return config;
   },
+  env: {
+    // This is used on middleware
+    DEVELOPER_DOCS_: process.env.DEVELOPER_DOCS,
+  },
 };
 
 const withMDX = createMDX({
@@ -53,7 +57,7 @@ module.exports = withSentryConfig(module.exports, {
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
 
-  // Enables automatic instrumentation of Vercel Cron Monitors.
+  // Enables automatic instrumentation of Vercel Cron Monitors
   // See the following for more information:
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
