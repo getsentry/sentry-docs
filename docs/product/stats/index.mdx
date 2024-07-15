@@ -4,106 +4,7 @@ description: "Get an overview of how your organization and each project is using
 sidebar_order: 130
 ---
 
-The **Stats** page has three tabs: [Usage](#usage-stats), [Issues](#issue-stats), and [Health](#health-stats).
-
-The "Usage" tab shows your organization’s event and attachments usage, while also providing a high-level overview of how different projects are using Sentry. The "Issues" tab shows a breakdown of the issues assigned to your team and how they triaged them, while the "Health" tab provides an overview of your team’s project health.
-
-## Usage Stats
-
-The "Usage" tab provides an overview of the events (errors and transactions) and attachments that Sentry has received across your entire organization. It includes a detailed breakdown of each project's consumption categorized as _Accepted_, _Filtered_, _Discarded_, or _Dropped_.
-
-#### Accepted
-
-Events and attachments that were successfully processed and stored.
-
-#### Discarded
-
-Events and attachments may be discarded on the client side for the following reasons:
-
-| Reason             | Meaning                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------- |
-| Queue Overflow     | An SDK internal queue (e.g., transport queue) overflowed.                                      |
-| Cache Overflow     | An SDK internal cache (e.g., offline event cache) overflowed.                                  |
-| Ratelimit Backoff  | The SDK dropped events because a previous rate limit instructed the SDK to back off.           |
-| Network Error      | Events were dropped due to network errors and were not retried.                                |
-| Sample Rate        | An event was dropped because of the configured sample rate.                                    |
-| Before Send        | An event was dropped in `before_send`.                                                         |
-| Event Processor    | An event was dropped by an event processor; may also be used for ignored exceptions / errors.  |
-| Send Error         | An event was dropped because of an error when sending it (eg: 400 response).                   |
-| Internal SDK Error | An event was dropped due to an internal SDK error (eg: web worker crash).                      |
-| Insufficient Data  | An event was dropped due to a lack of data in the event (eg: not enough samples in a profile). |
-| Backpressure       | An event was dropped due to downsampling caused by the system being under load.                |
-
-#### Filtered
-
-Filtered events and attachments in Sentry are intentionally excluded based on predefined criteria to reduce noise and prioritize relevant data. Common filtering reasons include:
-
-| Reason                                                                              | Meaning                                                                            |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [Browser Extensions](/concepts/data-management/filtering/#browser-extension-errors) | Filtered by browser extension.                                                     |
-| Error Message                                                                       | Filtered based on specific error message.                                          |
-| Filtered Transactions                                                               | Filtered because it was a call to a filtered transaction.                          |
-| Ip Address                                                                          | Filtered by IP address.                                                            |
-| Invalid CSP                                                                         | Filtered due to an invalid Content Security Policy (CSP) policy.                   |
-| [Legacy Browsers](/concepts/data-management/filtering/#legacy-browser-filters)      | Filtered out certain legacy versions of browsers that are known to cause problems. |
-| Localhost                                                                           | Filtered due to localhost restriction.                                             |
-| Release Version                                                                     | Filtered by release name (version).                                                |
-| [Web Crawlers](/concepts/data-management/filtering/#web-crawler-errors)             | Identified as known web crawler.                                                   |
-| ? (Others)                                                                          | Filtered due to other generic filtering rules not specified above.                 |
-
-#### Dropped
-
-Events and attachments discarded by the system due to rate limits, quotas, spike protection, [size limits](/concepts/data-management/size-limits), or invalid data. You can see the common reasons below:
-
-| Reason                          | Meaning                                                                                                                 |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Abuse                           | Activated when Sentry is misused.                                                                                       |
-| Auth Client                     | The SDK did not send a client identifier. In Relay, this is no longer required.                                         |
-| Auth Version                    | The protocol version sent by the SDK is not supported and parts of the payload may be invalid.                          |
-| Cardinality Limited             | Exceeded internally defined cardinality limit.                                                                          |
-| Content Type                    | The content type for a specific endpoint was not allowed.                                                               |
-| Cors                            | The request origin is not allowed for the project.                                                                      |
-| Disallowed Method               | A store request was received with an invalid method.                                                                    |
-| Duplicate                       | An event with the same id has already been processed for this project.                                                  |
-| Duplicate Item                  | An envelope was submitted with two items that need to be unique.                                                        |
-| Empty Envelope                  | The envelope contains no items.                                                                                         |
-| Feature Disabled                | The envelope contains no items.                                                                                         |
-| Internal                        | An error in Relay caused event ingestion to fail.                                                                       |
-| Invalid Compression             | The payload had an invalid compression stream.                                                                          |
-| Invalid Envelope                | Parsing an event envelope failed (likely missing a required header).                                                    |
-| Invalid Json                    | Parsing the event JSON payload failed due to a syntax error.                                                            |
-| Invalid Minidump                | The file submitted as minidump is not a valid minidump file.                                                            |
-| Invalid Msgpack                 | Parsing the event msgpack payload failed due to a syntax error.                                                         |
-| Invalid Multipart               | Parsing a multipart form-data request failed.                                                                           |
-| Invalid Replay Event            | Sentry failed to parse the replay so we dropped it.                                                                     |
-| Invalid Replay Event No Payload | Sentry failed to parse the replay so we dropped it.                                                                     |
-| Invalid Replay Event Pii        | Sentry failed to parse the replay so we dropped it.                                                                     |
-| Invalid Replay Record Event     | Sentry failed to parse the replay so we dropped it.                                                                     |
-| Invalid Replay Video Event      | Sentry failed to parse the replay so we dropped it.                                                                     |
-| Invalid Span                    | A span is not valid after normalization.                                                                                |
-| Invalid Transaction             | The event is parseable but semantically invalid. This should only happen with transaction events.                       |
-| Missing Minidump Upload         | A minidump file was missing for the minidump endpoint.                                                                  |
-| Multi Project Id                | The project id in the URL does not match the one specified for the public key.                                          |
-| No Data                         | The store request was missing an event payload.                                                                         |
-| No Event Payload                | An event envelope was submitted but no payload could be extracted.                                                      |
-| Payload                         | Parsing the event JSON payload failed due to a syntax error.                                                            |
-| Process Unreal                  | Symbolic failed to extract an Unreal Crash report from a request sent to the Unreal endpoint.                           |
-| Profiling                       | Profiling related dropped reasons.                                                                                      |
-| Project Id                      | There was no valid project id in the request or the required project does not exist.                                    |
-| Project State                   | A project state returned by the upstream could not be parsed.                                                           |
-| Project State Pii               | A project state returned by the upstream contained datascrubbing settings that could not be converted to PII config.    |
-| Rate Limited                    | Exceeded allowed event rate.                                                                                            |
-| Spike Protection                | Activated to protect from any sudden quota-depleting spike.                                                             |
-| Security Report                 | Triggered to prevent any sudden spikes that could deplete the quota.                                                    |
-| Security Report Time            | The security report was not recognized due to missing data.                                                             |
-| Timestamp                       | The timestamp of an event was required for processing and either missing out of the supported time range for ingestion. |
-| Too Large                       | The event payload exceeds the maximum size limit for the respective endpoint.                                           |
-| Transaction Sampled             | The envelope, which contained only a transaction, was dropped by the dynamic sampling rules.                            |
-
-On this page, you can track projects that have experienced recent spikes in activity or are particularly active, which may require closer attention. Additionally, you have the flexibility to adjust the displayed date range, enabling you to narrow down to a specific period or zoom out for a broader overview.
-
-While primarily designed for organization admins, this page is accessible to all team members. This inclusivity is beneficial, especially when non-admin team members need to review these statistics. It allows them to investigate why events associated with their specific projects might be discarded, dropped or filtered.
-
+The [**Stats**](https://sentry.io/orgredirect/organizations/:orgslug/stats/) page is an overview of the usage data that Sentry receives across your entire organization. It allows you to spot projects that have experienced recent spikes in activity or are showing more errors than others and may require a closer look. You can also adjust the displayed date range, enabling you to narrow down to a specific time period or zoom out for a broader view.
 ![Overview of Usage Stats page](./img/usage-stats-page.png)
 
 With the dropdowns at the top of the page, you can set whether the page displays stats for errors, transactions, or attachments, as well as the date range. With the date selector, the time period can be set from an hour to a maximum of 90 days, and all of the page elements change dynamically when you update this setting.
@@ -113,9 +14,77 @@ With the dropdowns at the top of the page, you can set whether the page displays
   event type.
 </Note>
 
+
+The page has three tabs: [Usage](#usage-stats), [Issues](#issue-stats), and [Health](#health-stats).
+
+The "Usage" tab shows your organization’s event and attachments usage, while also providing a high-level overview of how different projects are using Sentry. The "Issues" tab shows a breakdown of the issues assigned to your team and how they triaged them, while the "Health" tab provides an overview of your team’s project health.
+
+
+## Usage Stats
+
+The "Usage" tab provides an overview of the events (errors and transactions) and attachments that Sentry has received across your entire organization. It includes a detailed breakdown of each project's consumption categorized as _Accepted_, _Filtered_, _Rate Limited_, _Invalid_ or _Client Discard_.
+
+### Accepted
+
+Events and attachments that were successfully processed and stored.
+
+### Filtered
+
+Filtered events and attachments in Sentry are intentionally excluded based on predefined criteria to reduce noise and prioritize relevant data. The following reasons are currently defined:
+
+- **Browser Extensions**: Filtered by browser extension.
+- **Error Message**: Filtered based on specific error messages.
+- **Filtered Transactions**: Filtered because it was a call to a filtered transaction.
+- **Ip Address**: Filtered by IP address.
+- **Invalid CSP**: Filtered due to an invalid Content Security Policy (CSP) policy.
+- **Legacy Browsers**: Filtered by certain legacy versions of browsers that are known to cause problems.
+- **Localhost**: Filtered due to localhost restriction.
+- **Release Version**: Filtered by release name (version).
+- **Web Crawlers**: Identified as known web crawler.
+- **Others**: Filtered due to other generic filtering rules not specified above.
+
+For more details, please consult the [Inbound Filters](/concepts/data-management/filtering/) documentation.
+
+### Rate Limited
+Events and attachments discarded due to rate limits or quota.
+
+### Invalid
+Events and attachments discarded by the SDK. The following reasons are currently defined:
+
+- **Duplicate**: An event with the same id has already been processed for this project. Sentry does not allow duplicate events and only stores the first one.
+- **Project Missing**: The specified Sentry project is disabled or project information in the submitted request was inconclusive.
+- **Invalid Request**: The HTTP submission was invalid or was missing required information. This is likely due to a problem in the SDK implementation. Please report a bug if this issue persists.
+- **Invalid Data**: Data sent by the SDK was invalid and does not meet the basic schema. This likely indicates an SDK implementation bug. Please report a bug if this issue persists.
+- **Payload**: The HTTP submission was incomplete and could not be processed. This is likely due to a network failure.
+- **Too Large**: The HTTP submission or its contained data exceeds size limits. See [this document](https://develop.sentry.dev/sdk/envelopes/#size-limits) for the precise limits.
+- **Minidump**: The minidump in a minidump upload request was missing or invalid. See the [Minidumps documentation](https://docs.sentry.io/platforms/native/guides/minidumps/) for details on how to upload minidumps.
+- **Security Report**: An invalid or unsupported security report was submitted. If this report originates from an up-to-date browser, please report a bug to Sentry. See [Security Policy Reporting](https://docs.sentry.io/security-legal-pii/security/security-policy-reporting/) for more information.
+- **Unreal**: An unsupported or invalid Unreal Engine crash report was submitted. If this request originates from a recent or development version of the Unreal Engine, please report a bug to Sentry. See [Unreal Engine](https://docs.sentry.io/platforms/unreal/) for more information.
+- **Cors**: A request from an unallowed origin was sent to Sentry. Check project settings to configure allowed domains.
+- **Empty**: An empty request or a request missing its primary data component was submitted.
+- **Sampling**: Tracing data that is discarded during sampling.
+- **Other**: An internal problem at Sentry prevented regular processing or storage of the submitted information.
+
+### Client Discard
+Events and attachments discarded by the SDK. The following reasons are currently defined:
+
+- **Queue Overflow**: An SDK internal queue (for example, a transport queue) overflowed.
+- **Cache Overflow**: An SDK internal cache (for example, an offline event cache) overflowed.
+- **Ratelimit Backoff**: The SDK dropped events because a previous rate limit instructed the SDK to back off.
+- **Network Error**: Events were dropped due to network errors, and were not retried.
+- **Sample Rate**: An event was dropped because of the configured sample rate.
+- **Before Send**: An event was dropped in `before_send`.
+- **Event Processor**: An event was dropped by an event processor; this may also be used for ignored exception/errors.
+- **Send Error**: An event was dropped because of an error when sending it (for example, a 400 response).
+- **Internal Sdk Error**: An event was dropped due to an internal SDK error (for example, a web worker crash).
+- **Insufficient Data**: An event was dropped due to a lack of data in the event (for example, not enough samples in a profile).
+- **Backpressure**: An event was dropped due to downsampling caused by the system being under load.
+
+For more details, please consult the [Client Reports](https://develop.sentry.dev/sdk/client-reports/#envelope-item-payload) documentation.
+
 ### Usage Cards
 
-The cards on the page provide high-level usage stats about events and attachments, including the total number of either for the period, as well as which ones were accepted, filtered, discarded or dropped.
+The cards on the page provide high-level usage stats about events and attachments, including the total number of either for the time period specified. You can also see which ones were accepted, filtered, rate limited, or invalid.
 
 ### Summary Chart
 
