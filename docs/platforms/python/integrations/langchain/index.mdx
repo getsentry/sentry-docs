@@ -97,11 +97,35 @@ sentry_sdk.init(
     send_default_pii=True,
     integrations = [
         LangchainIntegration(
-            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            max_spans=500,
+            tiktoken_encoding_name="cl100k_base",
         ),
     ],
 )
 ```
+
+You can pass the following keyword arguments to `LangchainIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want include the data, also set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+- `max_spans`:
+
+  The most number of spans (e.g., LLM calls) that can be processed at the same time.
+
+  The default is `1024`.
+
+- `tiktoken_encoding_name`:
+
+  If you want to calculate token usage for streaming chat responses you need to haven an additional dependency, [tiktoken](https://pypi.org/project/tiktoken/) installed and specify the `tiktoken_encoding_name` that you use for tokenization. See the [OpenAI Cookbook](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for possible values.
+
+  The default is `None`.
+
+
 
 ## Supported Versions
 
