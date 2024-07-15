@@ -32,11 +32,17 @@ export default async function ChangelogsListPage() {
         </Button>
         <p>Post Guidelines</p>
         <p>
-          <ul> 
-            <li>Be very matter of fact, direct, and simple. Avoid using words like "excited to announce".</li>
+          <ul>
+            <li>
+              Be very matter of fact, direct, and simple. Avoid using words like "excited
+              to announce".
+            </li>
             <li>Spell out the what, the why, and how to use it.</li>
-            <li>Avoid exclamation points, adjectives, refernvces to competition, and personal opinions.</li>
-          </ul> 
+            <li>
+              Avoid exclamation points, adjectives, refernvces to competition, and
+              personal opinions.
+            </li>
+          </ul>
         </p>
       </header>
 
