@@ -7,16 +7,20 @@
 # - https://vercel.com/docs/projects/overview#ignored-build-step
 # - https://vercel.com/guides/how-do-i-use-the-ignored-build-step-field-on-vercel
 
-# diff status for develop-docs content
+# diff status for develop-docs + docs content
 dev_docs_diff_status=$(git diff HEAD^ HEAD --quiet -- develop-docs; echo $?)
+docs_diff_status=$(git diff HEAD^ HEAD --quiet -- docs includes platform-includes ; echo $?)
+
+# have changes occurred outside of the content directories
+non_content_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(docs/|platform-includes/|includes/|develop-docs/)' | wc -l)
+
+# always build on changes in non-content related directories
+if [[ $non_content_diff_status -eq 1 ]] ; then
+  exit 1
+fi
 
 if [[ "$NEXT_PUBLIC_DEVELOPER_DOCS" == "1" ]] ; then
   exit $dev_docs_diff_status
 else
-  # exit with the inverse of the diff status.
-  if [[ $dev_docs_diff_status -eq 0 ]] ; then
-    exit 1
-  else
-    exit 0
-  fi
+  exit $docs_diff_status
 fi
