@@ -120,7 +120,9 @@ type MetadataProps = {
 };
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
-  const domain = 'https://docs.sentry.io';
+  const domain = isDeveloperDocs
+    ? 'https://develop.sentry.dev'
+    : 'https://docs.sentry.io';
   // enable og iamge preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
