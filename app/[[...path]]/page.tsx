@@ -109,7 +109,7 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
   const {mdxSource, frontMatter} = doc;
 
-  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
 }
 
@@ -120,7 +120,9 @@ type MetadataProps = {
 };
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
-  const domain = 'https://docs.sentry.io';
+  const domain = isDeveloperDocs
+    ? 'https://develop.sentry.dev'
+    : 'https://docs.sentry.io';
   // enable og iamge preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
