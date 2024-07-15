@@ -25,6 +25,7 @@ export function useOnClickOutside<E extends HTMLElement>({
         handler(event);
       }
     };
+    // test
     document.addEventListener('click', cb);
     return () => document.removeEventListener('click', cb);
   }, [enabled, handler, ref]);
