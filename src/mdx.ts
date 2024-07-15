@@ -29,6 +29,7 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isTruthy} from './utils';
 
+// comment
 const root = process.cwd();
 
 function formatSlug(slug: string) {
