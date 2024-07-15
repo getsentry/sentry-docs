@@ -30,6 +30,14 @@ export default async function ChangelogsListPage() {
           <PlusIcon />
           <Link href="/changelog/_admin/create">New Changelog</Link>
         </Button>
+        <p>Post Guidelines</p>
+        <p>
+          <ul> 
+            <li>Be very matter of fact, direct, and simple. Avoid using words like "excited to announce".</li>
+            <li>Spell out the what, the why, and how to use it.</li>
+            <li>Avoid exclamation points, adjectives, refernvces to competition, and personal opinions.</li>
+          </ul> 
+        </p>
       </header>
 
       <table className="table-fixed w-11/12 mx-auto text-sm text-left text-gray-500">
