@@ -1,7 +1,24 @@
 const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
-const developerDocsRedirects = [];
+const developerDocsRedirects = [
+  {
+    source: '/sdk/unified-api/tracing/:path*',
+    destination: '/sdk/performance/:path*',
+  },
+  {
+    source: '/onpremise/:path*',
+    destination: '/self-hosted/:path*',
+  },
+  {
+    source: '/self-hosted/mail/:path*',
+    destination: '/self-hosted/email/:path*',
+  },
+  {
+    source: '/processing-tickets(/?)',
+    destination: 'https://open.sentry.io/triage/',
+  },
+];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
