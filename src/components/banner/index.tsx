@@ -11,9 +11,10 @@ import styles from './banner.module.scss';
 // we put a more robust solution in place.
 //
 const SHOW_BANNER = true;
-const BANNER_TEXT = 'Join Our Live Demo: Intro to Sentry & Codecov on June 25';
+const BANNER_TEXT =
+  'Behind the Code: A Conversation With Backend Experts featuring CEOs of Laravel, Prisma, and Supabase.';
 const BANNER_LINK_URL =
-  'https://sentry.io/resources/intro-to-sentry-and-codecov-live-demo/';
+  'https://sentry.io/resources/behind-the-code-a-discussion-with-backend-experts/';
 const BANNER_LINK_TEXT = 'RSVP';
 const OPTIONAL_BANNER_IMAGE = null;
 

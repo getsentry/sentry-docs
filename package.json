@@ -11,8 +11,10 @@
     "url": "https://github.com/getsentry/sentry-docs/issues"
   },
   "scripts": {
-    "dev": "concurrently \"yarn sidecar\" \"node ./src/hotReloadWatcher.mjs\" \"next dev\"",
-    "build": "prisma generate && next build",
+    "dev": "yarn enforce-redirects && concurrently \"yarn sidecar\" \"node ./src/hotReloadWatcher.mjs\" \"next dev\"",
+    "dev:developer-docs": "yarn enforce-redirects && NEXT_PUBLIC_DEVELOPER_DOCS=1 yarn dev",
+    "build:developer-docs": "yarn enforce-redirects && git submodule init && git submodule update && NEXT_PUBLIC_DEVELOPER_DOCS=1 yarn build",
+    "build": "yarn enforce-redirects && prisma generate && next build",
     "start": "next start",
     "migrate:dev": "dotenv -e .env.development -- yarn prisma migrate reset",
     "lint": "next lint",
@@ -25,7 +27,7 @@
     "lint:fix": "yarn run lint:prettier:fix && yarn run lint:eslint:fix",
     "sidecar": "yarn spotlight-sidecar",
     "test": "jest",
-    "build-trace": "npx next@canary internal turbo-trace-server .next/trace"
+    "enforce-redirects": "node ./scripts/no-vercel-json-redirects.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed/seed.mjs"
@@ -37,8 +39,8 @@
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.0.0",
     "@google-cloud/storage": "^7.7.0",
-    "@mdx-js/loader": "^3.0.1",
-    "@mdx-js/react": "^3.0.1",
+    "@mdx-js/loader": "^3.0.0",
+    "@mdx-js/react": "^3.0.0",
     "@next/mdx": "^14.2.4",
     "@popperjs/core": "^2.11.8",
     "@prettier/plugin-xml": "^3.3.1",
@@ -52,7 +54,7 @@
     "@radix-ui/themes": "^2.0.3",
     "@sentry-internal/global-search": "^1.0.0",
     "@sentry/nextjs": "^8.8.0",
-    "@types/mdx": "^2.0.13",
+    "@types/mdx": "^2.0.9",
     "algoliasearch": "^4.23.3",
     "esbuild": "^0.19.8",
     "framer-motion": "^10.12.16",
@@ -62,7 +64,7 @@
     "js-cookie": "^3.0.5",
     "js-yaml": "^4.1.0",
     "match-sorter": "^6.3.4",
-    "mdx-bundler": "^10.0.2",
+    "mdx-bundler": "^10.0.1",
     "micromark": "^4.0.0",
     "next": "14.2.4",
     "next-auth": "^4.24.5",
@@ -106,6 +108,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/ws": "^8.5.10",
+    "@untitaker/quicktype-core-with-markdown": "^6.0.71",
     "autoprefixer": "^10.4.17",
     "concurrently": "^8.2.2",
     "dotenv-cli": "^7.4.1",

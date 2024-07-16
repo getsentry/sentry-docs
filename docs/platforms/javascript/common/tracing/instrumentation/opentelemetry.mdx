@@ -57,6 +57,7 @@ In this case, you need to set `skipOpenTelemetrySetup: true` in your `init({})` 
 components that Sentry needs yourself. In this case, you need to install `@sentry/opentelemetry`, and add the following:
 
 ```js
+const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
 const Sentry = require("@sentry/node");
 const {
   SentrySpanProcessor,
@@ -64,7 +65,7 @@ const {
   SentrySampler,
 } = require("@sentry/opentelemetry");
 
-Sentry.init({
+const sentryClient = Sentry.init({
   dsn: "__DSN__",
   skipOpenTelemetrySetup: true,
 
@@ -72,20 +73,20 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// This e.g. sets up @opentelemetry/sdk-trace-node
-const provider = manuallySetUpOpenTelemetry();
+// Note: This could be BasicTracerProvider or any other provider depending on
+// how you are using the OpenTelemetry SDK
+const provider = new NodeTracerProvider({
+  // We need our sampler to ensure the correct subset of traces is sent to Sentry
+  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+});
 
 // We need a custom span processor
 provider.addSpanProcessor(new SentrySpanProcessor());
+
 // We need a custom propagator and context manager
 provider.register({
   propagator: new SentryPropagator(),
   contextManager: new Sentry.SentryContextManager(),
-});
-
-// We need our sampler to ensure the correct subset of traces is sent to Sentry
-const provider = new BasicTracerProvider({
-  sampler: new SentrySampler(Sentry.getClient()),
 });
 
 // Validate that the setup is correct
