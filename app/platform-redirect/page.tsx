@@ -6,6 +6,16 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
+const fetchAndFollowRedirects = async (path: string) => {
+  const response = await fetch(
+    process.env.NEXT_PUBLIC_VERCEL_URL ?? 'http://localhost:3000/' + path
+  );
+  if (response.status >= 300 && response.status < 400) {
+    return fetchAndFollowRedirects(response.headers.get('location') ?? path);
+  }
+  return response;
+};
+
 export default async function Page({
   searchParams: {next = '', platform},
 }: {
@@ -27,6 +37,11 @@ export default async function Page({
   });
 
   if (platformList.length === 0) {
+    // try to follow the redirect without any platform
+    const resp = await fetchAndFollowRedirects(next);
+    if (resp.status !== 404) {
+      return redirect(next);
+    }
     return notFound();
   }
 
