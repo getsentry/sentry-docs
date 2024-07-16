@@ -4,7 +4,7 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 const developerDocsRedirects = [];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
-const sdkDocsRedirects = [
+const userDocsRedirects = [
   {
     source: '/internal/:path*',
     destination: 'https://develop.sentry.dev',
@@ -457,7 +457,7 @@ const redirects = async () => {
     isDeveloperDocs ? 'developer' : 'sdk',
     'docs redirects in next.config.js'
   );
-  return (isDeveloperDocs ? developerDocsRedirects : sdkDocsRedirects).map(r => {
+  return (isDeveloperDocs ? developerDocsRedirects : userDocsRedirects).map(r => {
     return {...r, permanent: true};
   });
 };
