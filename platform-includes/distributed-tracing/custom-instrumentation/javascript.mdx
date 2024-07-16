@@ -15,7 +15,7 @@ If you are using a different package, and have not enabled tracing, you can manu
 
 <PlatformCategorySection supported={['browser']}>
 
-To enable distributed tracing for your frontend, add the `BrowserTracing` integration to your `Sentry.init()` options as described in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> docs.
+To enable distributed tracing for your frontend, add `browserTracingIntegration` to your `Sentry.init()` options as described in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> docs.
 
 If you want to use distributed tracing but not tracing, set the `tracesSampleRate` option to `0`.
 
@@ -30,9 +30,38 @@ Sentry.init({
 });
 ```
 
-## Enabling Distributed Tracing without `BrowserTracing`
+### Continuing a Trace Manually
 
-If you don't want to use the `BrowserTracing` integration, you can manually extract and inject tracing data in your application to connect multiple systems. For this, you must:
+By default, the `browserTracingIntegration` will automatically continue a trace found in a `<meta>` tags - see <PlatformLink to="/tracing/trace-propagation/#automatic-trace-propagation">Automatic Trace Propagation</PlatformLink> for details.
+If you want to continue a different trace, for example because you cannot propagate the trace through meta tags but through some different mechanism, you can do this as follows:
+
+```javascript
+const client = Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration({
+      // Disable default pageload instrumentation
+      instrumentPageLoad: false,
+    }),
+  ],
+});
+
+// Start the pageload span manually
+const sentryTrace = getSentryTraceStringFromSomewhere();
+const baggage = getBaggageStringFromSomewhere();
+
+Sentry.startBrowserTracingPageLoadSpan(
+  client,
+  {
+    name: window.location.pathname,
+  },
+  { sentryTrace, baggage }
+);
+```
+
+## Enabling Distributed Tracing without `browserTracingIntegration`
+
+If you don't want to use the `browserTracingIntegration` integration, you can manually extract and inject tracing data in your application to connect multiple systems. For this, you must:
 
 - Extract and store incoming tracing information from HTML `<meta>` tags when loading the page.
 - Inject tracing information to any outgoing requests.
@@ -54,24 +83,29 @@ Some Sentry backend SDKs provide a built-in way to inject these `<meta>` tags in
 Then, on `pageload` you can do the following:
 
 ```javascript
+import { propagationContextFromHeaders } from "@sentry/utils";
+import * as Sentry from "@sentry/browser";
+
 // Read meta tag values
 const sentryTrace = document.querySelector("meta[name=sentry-trace]")?.content;
 const baggage = document.querySelector("meta[name=baggage]")?.content;
 
-Sentry.continueTrace({ sentryTrace, baggage }, () => {
-  Sentry.startSpan(
-    {
-      name: `Pageload: ${window.location.pathname}`,
-      op: "pageload",
-    },
-    () => {
-      // do something
-    }
-  );
-});
+// Generate a propagation context from the meta tags
+const propagationContext = propagationContextFromHeaders(sentryTrace, baggage);
+Sentry.getCurrentScope().setPropagationContext(propagationContext);
+
+Sentry.startSpan(
+  {
+    name: `Pageload: ${window.location.pathname}`,
+    op: "pageload",
+  },
+  () => {
+    // do something
+  }
+);
 ```
 
-In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` HTML `<meta>` tags.
+In this example, we create a new root span that is attached to the trace specified in the `sentry-trace` and `baggage` HTML `<meta>` tags.
 
 </PlatformCategorySection>
 
