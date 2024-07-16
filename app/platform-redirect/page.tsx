@@ -8,7 +8,9 @@ import {setServerContext} from 'sentry-docs/serverContext';
 
 const fetchAndFollowRedirects = async (path: string) => {
   const response = await fetch(
-    process.env.NEXT_PUBLIC_VERCEL_URL ?? 'http://localhost:3000/' + path
+    process.env.NEXT_PUBLIC_VERCEL_URL
+      ? 'https://' + process.env.NEXT_PUBLIC_VERCEL_URL + '/' + path
+      : 'http://localhost:3000/' + path
   );
   if (response.status >= 300 && response.status < 400) {
     return fetchAndFollowRedirects(response.headers.get('location') ?? path);
