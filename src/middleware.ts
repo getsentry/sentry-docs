@@ -3489,6 +3489,26 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/feedback-architecture/',
     to: '/application/feedback-architecture/',
   },
+  {
+    from: '/api/checklist/',
+    to: '/application/api/checklist/',
+  },
+  {
+    from: '/api/checklist/',
+    to: '/application/api/checklist/',
+  },
+  {
+    from: '/feature-flags/options-backed-features/',
+    to: '/application/feature-flags/options-backed-features/',
+  },
+  {
+    from: '/options/',
+    to: '/backend/options/',
+  },
+  {
+    from: '/sdk/features/data-handling/',
+    to: '/sdk/data-handling/',
+  },
 ];
 
 const redirectMap = new Map(
