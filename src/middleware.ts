@@ -65,7 +65,7 @@ type Redirect = {
 };
 
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
-const SDK_DOCS_REDIRECTS: Redirect[] = [
+const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
     to: '/platforms/javascript/configuration/integrations/browserapierrors/',
@@ -3302,6 +3302,70 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
     from: '/account/quotas/spike-protection/',
     to: '/pricing/quotas/spike-protection/',
   },
+  {
+    from: '/_platforms/',
+    to: '/platforms',
+  },
+  {
+    from: '/accounts/require-2fa/',
+    to: '/organization/authentication/two-factor-authentication/',
+  },
+  {
+    from: '/platforms/go/guides/fiber/',
+    to: '/platforms/go/',
+  },
+  {
+    from: '/platforms/go/guides/fiber/user-feedback/configuration/',
+    to: '/platforms/go/user-feedback/',
+  },
+  {
+    from: '/platforms/javascript/guides/',
+    to: '/platforms/javascript/',
+  },
+  {
+    from: '/platforms/native/crashpad/',
+    to: '/platforms/native/guides/crashpad/',
+  },
+  {
+    from: '/platforms/python/legacy-sdk/integrations/pylons/',
+    to: '/platforms/python/legacy-sdk/integrations/#pylons',
+  },
+  {
+    from: '/concepts/data-management/event-grouping/grouping-breakdown/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/explore/session-replay/performance-overhead/',
+    to: '/product/explore/session-replay/web/performance-overhead/',
+  },
+  {
+    from: '/organization/integrations/project-mgmt/jira/',
+    to: '/organization/integrations/issue-tracking/jira/',
+  },
+  {
+    from: '/organization/integrations/source-code-/',
+    to: '/organization/integrations/source-code-mgmt/',
+  },
+  {
+    from: '/product/explore/session-replay/getting-started/',
+    to: '/product/explore/session-replay/',
+  },
+  {
+    from: '/product/explore/session-replay/replay-page-and-filters/',
+    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+  },
+  {
+    from: '/platforms/nintendo-switch/',
+    to: '/platforms/unity/native-support/',
+  },
+  {
+    from: '/product/teams/roles/',
+    to: '/organization/membership/#team-level-roles',
+  },
+  {
+    from: '/enriching-error-data/additional-data/',
+    to: '/concepts/key-terms/enrich-data/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
@@ -3492,7 +3556,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
 ];
 
 const redirectMap = new Map(
-  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [
+  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : USER_DOCS_REDIRECTS).map(r => [
     r.from as string,
     r.to,
   ])
