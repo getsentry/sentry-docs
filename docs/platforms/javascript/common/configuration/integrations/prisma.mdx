@@ -1,6 +1,6 @@
 ---
 title: Prisma
-description: "Adds instrumentation for Prisma. (default)"
+description: "Adds instrumentation for Prisma."
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -27,4 +27,24 @@ This integration only works in the Node.js and Bun runtimes.
 
 _Import name: `Sentry.prismaIntegration`_
 
-The `prismaIntegration` adds instrumentation for the `prisma` library to capture spans using [`@prisma/instrumentation`](https://www.npmjs.com/package/@prisma/instrumentation).
+Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Prisma integration.
+
+The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside `description` if available.
+
+To install the integration, first enable the `tracing` feature flag in the `generator` block of your Prisma schema:
+
+```txt {tabTitle: Prisma Schema} {filename: schema.prisma} {2}
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["tracing"]
+}
+```
+
+Then, add the `prismaIntegration` to your Sentry initialization as follows:
+
+```javascript {3}
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.prismaIntegration()],
+});
+```

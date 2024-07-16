@@ -1,12 +1,13 @@
 'use client';
 
-import {ReactNode, useState} from 'react';
+import {ReactNode, useEffect, useState} from 'react';
 import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 
 type Props = {
   children: ReactNode;
   title: string;
+  permalink?: boolean;
 };
 
 type ExpandedProps = {
@@ -37,17 +38,56 @@ const ExpandableWrapper = styled.div`
   padding: 0.5rem 1rem;
 `;
 
-export function Expandable({title, children}: Props) {
+function slugify(str: string) {
+  return str
+    .toLowerCase()
+    .replace(/ /g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+}
+
+const header = (title: string, permalink?: boolean) =>
+  permalink ? (
+    <h2 id={slugify(title)} className="!mb-0">
+      <a
+        href={'#' + slugify(title)}
+        className="!text-[1rem] !font-medium hover:!no-underline !text-darkPurple"
+      >
+        {title}
+      </a>
+    </h2>
+  ) : (
+    title
+  );
+
+export function Expandable({title, children, permalink}: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    // if the url hash matches the title, expand the section
+    if (permalink && window.location.hash === `#${slugify(title)}`) {
+      setIsExpanded(true);
+    }
+    const onHashChange = () => {
+      if (window.location.hash === `#${slugify(title)}`) {
+        setIsExpanded(true);
+      }
+    };
+    // listen for hash changes and expand the section if the hash matches the title
+    window.addEventListener('hashchange', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+    };
+  }, []);
+
   return (
     <ExpandableWrapper>
       <p
-        className="m-0 font-medium cursor-pointer relative pr-8"
+        className="m-0 font-medium cursor-pointer relative pr-8 select-none"
         onClick={() => {
           setIsExpanded(!isExpanded);
         }}
       >
-        {title}
+        {header(title, permalink)}
         <ExpandedIndicator isExpanded={isExpanded} />
       </p>
       <ExpandableBody isExpanded={isExpanded}>{children}</ExpandableBody>
