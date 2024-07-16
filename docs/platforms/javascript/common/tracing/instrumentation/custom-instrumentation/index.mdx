@@ -72,14 +72,15 @@ This will revert to use the full hierarchy behavior, where spans are children of
 
 The following options can be used for all span starting functions:
 
-| Option             | Type                        | Description                                                         |
-| ------------------ | --------------------------- | ------------------------------------------------------------------- |
-| `name`             | `string`                    | The name of the span.                                               |
-| `op`               | `string`                    | The operation of the span.                                          |
-| `startTime`        | `number`                    | The start time of the span.                                         |
-| `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                   |
-| `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.         |
-| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI. |
+| Option             | Type                        | Description                                                                                                            |
+| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `name`             | `string`                    | The name of the span.                                                                                                  |
+| `op`               | `string`                    | The operation of the span.                                                                                             |
+| `startTime`        | `number`                    | The start time of the span.                                                                                            |
+| `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                                                                      |
+| `parentSpan`       | `Span`                      | If set, make the span a child of the specified span. Otherwise, the span will be a child of the currently active span. |
+| `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.                                                            |
+| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI.                                                    |
 
 Only `name` is required, all other options are optional.
 
@@ -100,6 +101,20 @@ Sometimes, you do not want the span to be ended automatically when the callback 
 To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
 
 <PlatformContent includePath="performance/start-inactive-span" />
+
+## Starting Spans as Children of a Specific Span
+
+By default, any span that is started will be the child of the currently active span. If you want to have a different behavior, you can force spans to be the children of a specific span with the `parentSpan` option:
+
+```js
+const parentSpan = Sentry.startInactiveSpan({ name: "Parent Span" });
+const childSpan = Sentry.startInactiveSpan({ name: "Child Span", parentSpan });
+
+childSpan.end();
+parentSpan.end();
+```
+
+This option is also available for `startSpan` and `startSpanManual`.
 
 ## Utilities to work with Spans
 
@@ -145,6 +160,16 @@ Sentry.withActiveSpan(null, () => {
   Sentry.startSpan({ name: "Parent Span" }, () => {
     // Do something
   });
+});
+```
+
+Alternatively you can also use the `parentSpan` option to achieve the same:
+
+```javascript
+const span = Sentry.startInactiveSpan({ name: "Parent Span" });
+const childSpan = Sentry.startInactiveSpan({
+  name: "Child Span",
+  parentSpan: span,
 });
 ```
 

@@ -1,5 +1,5 @@
 ---
-title: "Cross Region Replication"
+title: Cross Region Replication
 ---
 
 Our data-model includes many relations between users and the objects they create or interact with. Eventually users are deleted, and they need to be detached from the records they created, or those records need to be destroyed. Before sentry became a multi-region application, we relied on a mixture of Django callbacks, and postgres constraints to cascade deletions. However, in a multi-region state we arent't able to rely on these anymore as Users are in [Control Silo](/architecture/#silo-modes) and many of the objects they interact with are in the various Region Silos.
@@ -50,7 +50,7 @@ In step 5 and 6 of the above diagram we reconcile the tombstone changes with the
 
 ### Tombstone Reconciliation
 
-For each model that has a `HybridCloudForeignKey` we have an arbitrary amount of data to process. Furthermore, due to eventual consistency it is possible for us to receive new records referencing a deleted entity after an entity has been deleted. 
+For each model that has a `HybridCloudForeignKey` we have an arbitrary amount of data to process. Furthermore, due to eventual consistency it is possible for us to receive new records referencing a deleted entity after an entity has been deleted.
 
 To account for this inherit eventual consistency we maintain a set of ‘watermark’ for each relation. Watermarks can be incremented in batches and progress can be made on each relation in isolation.
 
