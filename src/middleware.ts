@@ -640,7 +640,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/php/guides/symfony/performance/pm-integrations/',
-    to: '/platforms/php/guides/symfony/performance/instrumentation/automatic-instrumentation/',
+    to: '/platforms/php/guides/symfony/tracing/instrumentation/automatic-instrumentation/',
   },
   {
     from: '/clients/php/integrations/laravel/',
@@ -3365,6 +3365,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/enriching-error-data/additional-data/',
     to: '/concepts/key-terms/enrich-data/',
+  },
+  {
+    from: '/performance/instrumentation/automatic-instrumentation/',
+    to: '/tracing/instrumentation/automatic-instrumentation',
   },
 ];
 
