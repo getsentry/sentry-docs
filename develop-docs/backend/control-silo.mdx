@@ -1,5 +1,5 @@
 ---
-title: "Control Silo"
+title: Control Silo
 ---
 
 Within the Control Silo are features that allow us to provide backwards compatibility for both customer API usage, and integrations
@@ -80,7 +80,7 @@ The storage model for webhooks is similar to outboxes as webhooks were originall
 ```sql
 create table hybridcloud_webhookpayload (
   id bigserial primary key,
-  
+
   -- mailbox_name would contain values like 'jira:12364'
   mailbox_name char,
   region_name char,
@@ -92,7 +92,7 @@ create table hybridcloud_webhookpayload (
   request_path char,
   request_headers text,
   request_body text,
-  
+
   date_added datetime,
   index(mailbox_name),
   index(schedule_for),
@@ -109,12 +109,12 @@ With this storage model we use a pair of queries in a celery task that is spawne
 
 ```sql
 -- Get the 'first' message in each mailbox
-select min(id), mailbox_name 
+select min(id), mailbox_name
 from sentry_webhookpayload
 group by mailbox_name
 
 -- Get any mailboxes with messages that can be delivered
-select * from sentry_webhookpayload 
+select * from sentry_webhookpayload
 where id in (...) and schedule_for < current_timestamp
 ```
 

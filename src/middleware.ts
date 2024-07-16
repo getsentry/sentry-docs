@@ -1,6 +1,10 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
+// This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
+// a workaround edge middleware not having access to env vars
+const isDeveloperDocs = process.env.DEVELOPER_DOCS_;
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -56,11 +60,12 @@ const handleRedirects = (request: NextRequest) => {
 
 type Redirect = {
   /** a string with a leading and a trailing slash */
-  from: `/${string}/`;
+  from: `/${string}/` | '/';
   to: string;
 };
 
-const REDIRECTS: Redirect[] = [
+/** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
+const SDK_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
     to: '/platforms/javascript/configuration/integrations/browserapierrors/',
@@ -140,6 +145,18 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/performance/',
+  },
+  {
+    from: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/data-management-settings/data-forwarding/',
+    to: '/concepts/data-management/data-forwarding/',
+  },
+  {
+    from: '/product/data-management-settings/filtering/',
+    to: '/concepts/data-management/filtering/',
   },
   {
     from: '/platforms/data-management/',
@@ -3126,6 +3143,10 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/quotas/',
   },
   {
+    from: '/accounts/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
     from: '/organization/quotas/',
     to: '/pricing/quotas/',
   },
@@ -3283,4 +3304,196 @@ const REDIRECTS: Redirect[] = [
   },
 ];
 
-const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
+const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/',
+    to: '/getting-started/',
+  },
+  {
+    from: '/docs-components/',
+    to: '/development/docs/',
+  },
+  {
+    from: '/docs/',
+    to: '/development/docs/',
+  },
+  {
+    from: '/inclusion/',
+    to: '/development/inclusive-language/',
+  },
+  {
+    from: '/translations/',
+    to: '/development/translations/',
+  },
+  {
+    from: '/environment/',
+    to: '/development/environment/',
+  },
+  {
+    from: '/environment/pycharm/',
+    to: '/development/environment/pycharm/',
+  },
+  {
+    from: '/environment/u2f/',
+    to: '/development/environment/u2f/',
+  },
+  {
+    from: '/testing/',
+    to: '/development/testing/',
+  },
+  {
+    from: '/philosophy/',
+    to: '/development/philosophy/',
+  },
+  {
+    from: '/commit-messages/',
+    to: '/development/commit-messages/',
+  },
+  {
+    from: '/code-review/',
+    to: '/development/code-review/',
+  },
+  {
+    from: '/workflow/',
+    to: '/development/workflow/',
+  },
+  {
+    from: '/continuous-integration/',
+    to: '/development/continuous-integration/',
+  },
+  {
+    from: '/python-dependencies/',
+    to: '/development/python-dependencies/',
+  },
+  {
+    from: '/rust/',
+    to: '/development/rust/',
+  },
+  {
+    from: '/database-migrations/',
+    to: '/development/database-migrations/',
+  },
+  {
+    from: '/testing/',
+    to: '/development/testing/',
+  },
+  {
+    from: '/analytics/',
+    to: '/development/analytics/',
+  },
+  {
+    from: '/architecture/',
+    to: '/application/architecture/',
+  },
+  {
+    from: '/sentry-vs-getsentry/',
+    to: '/application/sentry-vs-getsentry/',
+  },
+  {
+    from: '/config/',
+    to: '/application/config/',
+  },
+  {
+    from: '/issue-platform/',
+    to: '/application/issue-platform/',
+  },
+  {
+    from: '/issue-platform-detectors/',
+    to: '/application/issue-platform-detectors/',
+  },
+  {
+    from: '/feature-flags/',
+    to: '/application/feature-flags/',
+  },
+  {
+    from: '/feature-flags/flagpole/',
+    to: '/application/feature-flags/flagpole/',
+  },
+  {
+    from: '/ab-testing/',
+    to: '/application/ab-testing/',
+  },
+  {
+    from: '/options/',
+    to: '/application/options/',
+  },
+  {
+    from: '/serializers/',
+    to: '/application/serializers/',
+  },
+  {
+    from: '/grouping/',
+    to: '/application/grouping/',
+  },
+  {
+    from: '/api/',
+    to: '/application/api/',
+  },
+  {
+    from: '/api/basics/',
+    to: '/application/api/basics/',
+  },
+  {
+    from: '/api/design/',
+    to: '/application/api/design/',
+  },
+  {
+    from: '/api/concepts/',
+    to: '/application/api/concepts/',
+  },
+  {
+    from: '/api/public/',
+    to: '/application/api/public/',
+  },
+  {
+    from: '/api/checklist/',
+    to: '/application/api/checklist/',
+  },
+  {
+    from: '/pii/',
+    to: '/application/pii/',
+  },
+  {
+    from: '/pii/types/',
+    to: '/application/pii/types/',
+  },
+  {
+    from: '/pii/methods/',
+    to: '/application/pii/methods/',
+  },
+  {
+    from: '/pii/selectors/',
+    to: '/application/pii/selectors/',
+  },
+  {
+    from: '/transaction-clustering/',
+    to: '/application/transaction-clustering/',
+  },
+  {
+    from: '/dynamic-sampling/',
+    to: '/application/dynamic-sampling/',
+  },
+  {
+    from: '/dynamic-sampling/architecture/',
+    to: '/application/dynamic-sampling/architecture/',
+  },
+  {
+    from: '/dynamic-sampling/fidelity-and-biases/',
+    to: '/application/dynamic-sampling/fidelity-and-biases/',
+  },
+  {
+    from: '/dynamic-sampling/the-big-picture/',
+    to: '/application/dynamic-sampling/the-big-picture/',
+  },
+  {
+    from: '/feedback-architecture/',
+    to: '/application/feedback-architecture/',
+  },
+];
+
+const redirectMap = new Map(
+  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [
+    r.from as string,
+    r.to,
+  ])
+);
