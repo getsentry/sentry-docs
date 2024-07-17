@@ -25,7 +25,7 @@ Inside the project configuration there is a field dedicated to sampling, named `
 
 #### The Rule Definition
 
-A **rule** is the core component of the sampling configuration and is defined as [SamplingRule](https://getsentry.github.io/relay/relay_sampling/struct.SamplingRule.html) in Relay.
+A **rule** is the core component of the sampling configuration and is defined as [SamplingRule](https://getsentry.github.io/relay/relay_sampling/config/struct.SamplingRule.html) in Relay.
 
 An example of rule encoded in JSON is the following:
 
@@ -68,14 +68,14 @@ A sampling decision involves:
 
 _In case no match is found, or there are problems during matching, Relay will accept the event under the assumption that we prefer to oversample rather than drop events._
 
-Relay samples with two [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/struct.SamplingConfig.html) instances, namely **non-root sampling configuration** and **root sampling configuration**. The non-root config is the config of the project to which the incoming event belongs, whereas the root config is the config of the project to which the head transaction of the trace belongs. _In case no root sampling configuration is available, only transaction sampling will be performed._
+Relay samples with two [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/config/struct.SamplingConfig.html) instances, namely **non-root sampling configuration** and **root sampling configuration**. The non-root config is the config of the project to which the incoming event belongs, whereas the root config is the config of the project to which the head transaction of the trace belongs. _In case no root sampling configuration is available, only transaction sampling will be performed._
 
 Once both configurations are fetched, Relay will **compute a merged configuration** (following the algorithm defined [here](https://getsentry.github.io/relay/relay_sampling/fn.merge_rules_from_configs.html)) consisting of all the transaction rules of the non-root project, **concatenated** to all the trace rules of the root project. This will result in a single configuration containing all the rules that Relay is going to try and match (**from top to bottom**). _The order of the rules of the same type is important, as it will influence the sampling decision._
 
 With the merged configurations, Relay is ready to match the rules. During matching, Relay will inspect two payloads:
 
 - [Event](https://getsentry.github.io/relay/relay_general/protocol/struct.Event.html): inspected when the non-root project to has at least one transaction sampling rule.
-- [Dynamic Sampling Context (DSC)](https://getsentry.github.io/relay/relay_sampling/struct.DynamicSamplingContext.html): inspected when the root project (the project of the head of the trace) has at least one trace sampling rule.
+- [Dynamic Sampling Context (DSC)](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html): inspected when the root project (the project of the head of the trace) has at least one trace sampling rule.
 
 The matching that Relay will perform is going to be based on the `samplingValue` of the rules encountered. As specified in the section above, based on the type of `samplingValue`, we will either immediately return or continue matching other rules. More details about the matching algorithm can be found in the implementation [here](https://getsentry.github.io/relay/relay_sampling/struct.SamplingMatch.html#method.match_against_rules).
 
