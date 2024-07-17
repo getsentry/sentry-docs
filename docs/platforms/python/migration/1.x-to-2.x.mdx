@@ -78,19 +78,6 @@ If you were using a custom hub to isolate event data, we recommend using a custo
       sentry_sdk.capture_message("I am isolated")
 ```
 
-### Cloning a Hub
-
-If you previously cloned a hub by passing a hub to the `Hub` constructor, you should now fork an isolation scope by calling the scope's `fork()` method, like this:
-
-```python diff
-- import sentry_sdk
-
-- my_cloned_hub = sentry_sdk.Hub(my_hub)
-+ my_cloned_isolation_scope = my_isolation_scope.fork()
-```
-
-You can follow the previous section's instructions to activate the cloned isolation scope.
-
 ### Activating Current Hub Clone
 
 If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone the current hub and activate the clone, you should now use `with sentry_sdk.isolation_scope()`, like so:
@@ -105,8 +92,6 @@ If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone th
 ```
 
 `sentry_sdk.isolation_scope` is a context manager that creates a new isolation scope by forking the current isolation scope. The forked isolation scope is activated during the context manager's lifetime, providing a similar level of isolation within the context manager as the previous `Hub`-based approach.
-
-Note that using `sentry_sdk.isolation_scope()` is equivalent to `sentry_sdk.scope.use_isolation_scope(sentry_sdk.Scope.get_isolation_scope().fork())`.
 
 ### Scope Configuring
 
