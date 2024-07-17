@@ -29,7 +29,7 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 Environment variable: `SENTRY_DEBUG`
 
-Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+Turns debug mode on or off. When `True`, the SDK will attempt to print out debugging information. This can be useful if something goes wrong with event sending. The default is always `False`. It's generally not recommended to turn it on in production because of the increase in log output.
 
 The `debug` config option takes precedence over the environment variable.
 
@@ -195,25 +195,28 @@ A path to an alternative CA bundle file in PEM-format.
 
 <ConfigKey name="send-client-reports">
 
-Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
+Set this boolean to `False` to disable sending of client reports. Client reports allow the client to send status reports about itself to Sentry, such as information about events that were dropped before being sent.
 
 </ConfigKey>
 
 ## Integration Configuration
 
-For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
-
 <ConfigKey name="integrations" />
 
-In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
-
-<ConfigKey name="default-integrations" />
-
-This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
+List of integrations to enable in addition to [auto-enabling integrations](/platforms/python/integrations). This setting can be used to override the default config options for a specific auto-enabling integration or to add an integration that is not auto-enabled.
 
 <ConfigKey name="auto-enabling-integrations" />
 
-This can be used to disable integrations that are enabled by default if the SDK detects that the corresponding framework or library is installed. When set to `false`, none of these integrations will be enabled by default, even if the corresponding framework/library is detected.
+Configures whether [auto-enabling integrations](/platforms/python/integrations/default-integrations/) should be enabled. The default is `True`.
+
+When set to `False`, no auto-enabling integrations will be enabled by default, even if the corresponding framework/library is detected.
+
+<ConfigKey name="default-integrations" />
+
+Configures whether [default integrations](/platforms/python/integrations/default-integrations/) should be enabled. The default is `True`.
+
+Setting `default_integrations` to `False` disables all default integrations **as well as all auto-enabling integrations**, unless they are specifically added in the `integrations` option, described above. 
+
 
 ## Hooks
 
@@ -277,6 +280,18 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 <ConfigKey name="keep-alive">
 
 Determines whether to keep the connection alive between requests. This can be useful in environments where you encounter frequent network issues such as connection resets.
+
+</ConfigKey>
+
+<ConfigKey name="cert_file">
+
+Path to the client certificate to use. If set, supersedes the `CLIENT_CERT_FILE` environment variable.
+
+</ConfigKey>
+
+<ConfigKey name="key_file">
+
+Path to the key file to use. If set, supersedes the `CLIENT_KEY_FILE` environment variable.
 
 </ConfigKey>
 
