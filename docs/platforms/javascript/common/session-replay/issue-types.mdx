@@ -33,18 +33,14 @@ Sometimes rage or dead clicks will be detected on elements which are not expecte
 
 ## Configuring Hydration Errors
 
-When a [hydration error](/product/issues/issue-details/replay-issues/hydration-error/) occurs in your React app, the SDK will emit an error object as well as a replay breadcrumb, both of which represent the problem. Both of these are sent to the server for processing.
+When a [hydration error](/product/issues/issue-details/replay-issues/hydration-error/) occurs in your React app, the SDK will emit an error object as well as a replay breadcrumb, both of which contain data about the hydration problem. Both of these are sent to the server for processing. When you're looking at the issue stream you'll see Hydration Error issues which could come from either data source. However you will only see the diff tools which make debugging easier if a replay is associated with the error.
 
-The error event, before considering available quota, is subject to [Inbound Filters](/concepts/data-management/filtering/) and may be dropped. If the inbound filters are disabled, the error is accepted (consuming error quota) and an issue is created. Error events may or may not have an attached replay to help debug the problem.
-
-The replay breadcrumb is stored as part of the replay session if the server has already accepted the replay. While storing the breadcrumb, the ingest pipeline looks at your project settings and will create a replay issue based on this hydration breadcrumb if the preference is enabled in Project Settings > Replay. Each event instance inside the issue will have an associated replay, to make debugging easier.
+For this reason we recommend having both [Inbound Filter](/concepts/data-management/filtering/) enabled and the "Create Hydration Error Issues" Replay setting enabled as well. This is also the default!
 
 You can have your preferences configured in one of four ways:
 | Inbound Filters | Replay Hydration Error toggle | Result |
 | --- | --- | --- |
+| enabled | enabled | (recommended) Issue created based on replay breadcrumb data. |
 | enabled | disabled | No issues will be created. |
-| enabled | enabled | Issue created based on replay breadcrumb data. |
-| disabled | disabled | Issue created from captured error data. |
 | disabled | enabled | Two issues created from both replay breadcrumb, and error data. The issues are duplicates. |
-
-Enable both preferences for the best experience. This will result in one issue inside your issue stream where each event has an associated replay to help debug the root cause.
+| disabled | disabled | Issue created from captured error data. |
