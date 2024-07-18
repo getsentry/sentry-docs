@@ -252,3 +252,35 @@ Sentry.startSpan((span: Span) => {
   span.setAttribute("attr", 1);
 });
 ```
+
+### Forcing a sampling decision
+
+Previously in v7, you could force a positive or negative sampling decision when calling `startTransaction` by setting the `sampled` option.
+This would effectively override your <PlatformLink to="/configuration/sampling">sampling configuration</PlatformLink> for the specific transaction.
+In v8, the `sampled` option was removed to align with OpenTelemetry. You can still force a decision by defining a
+`tracesSampler` callback in `Sentry.init` and returning `1` or `0` for specific spans:
+
+```JavaScript
+// v7
+Sentry.startTransition({op: 'function.myFunction', sampled: true});
+
+// v8
+// 1. define a tracesSampler
+Sentry.init({
+  tracesSampler: (samplingContext) => {
+    // force a positive sampling decision for a specific span
+    if (samplingContext.op === 'function.myFunction') {
+      return 1;
+    }
+    // force a negative sampling decision for a specific span
+    if (samplingContext.op === 'function.healthCheck') {
+      return 0;
+    }
+    // return 0.1 as a default sample rate for all other spans
+    return 0.1;
+  }
+});
+
+// 2. start the span
+Sentry.startSpan({op: 'function.myFunction'}, {/*...*/});
+```
