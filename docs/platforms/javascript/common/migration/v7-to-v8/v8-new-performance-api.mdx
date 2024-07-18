@@ -268,9 +268,15 @@ Sentry.startTransition({op: 'function.myFunction', sampled: true});
 // 1. define a tracesSampler
 Sentry.init({
   tracesSampler: (samplingContext) => {
+    // force a positive sampling decision for a specific span
     if (samplingContext.op === 'function.myFunction') {
       return 1;
     }
+    // force a negative sampling decision for a specific span
+    if (samplingContext.op === 'function.healthCheck') {
+      return 0;
+    }
+    // return 0.1 as a default sample rate for all other spans
     return 0.1;
   }
 });
