@@ -63,21 +63,20 @@ On the Sentry side, the configuration will be computed in case of a cache miss a
 A sampling decision involves:
 
 1. Matching the incoming event and/or DSC against the configuration.
-2. Deriving a sample rate from the mix of `factor` and `sampleRate` rules.
-3. Making the sampling decision with a random number generator.
+2. Deriving a sample rate from the combination of `factor` and `sampleRate` rules.
+3. Making the sampling decision using a random number generator.
 
-_In case no match is found, or there are problems during matching, Relay will accept the event under the assumption that we prefer to oversample rather than drop events._
+In case no match is found, or if there are problems during matching, Relay will accept the event under the assumption that it's preferable to oversample rather than drop potentially important events.
 
-Relay samples with two [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/config/struct.SamplingConfig.html) instances, namely **non-root sampling configuration** and **root sampling configuration**. The non-root config is the config of the project to which the incoming event belongs, whereas the root config is the config of the project to which the head transaction of the trace belongs. _In case no root sampling configuration is available, only transaction sampling will be performed._
+Relay samples using two [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/config/struct.SamplingConfig.html) instances: the **non-root sampling configuration** and the **root sampling configuration**. The non-root config belongs to the project of the incoming event, while the root config belongs to the project of the head transaction of the trace. If no root sampling configuration is available, only transaction sampling will be performed.
 
-Once both configurations are fetched, Relay will **compute a merged configuration** (following the algorithm defined [here](https://getsentry.github.io/relay/relay_sampling/fn.merge_rules_from_configs.html)) consisting of all the transaction rules of the non-root project, **concatenated** to all the trace rules of the root project. This will result in a single configuration containing all the rules that Relay is going to try and match (**from top to bottom**). _The order of the rules of the same type is important, as it will influence the sampling decision._
+With both configurations ready, Relay will attempt to match the transaction rules of the non-root config and then the trace rules of the root config. If both root and non-root configs are the same, Relay will perform the matching in the same manner.
 
-With the merged configurations, Relay is ready to match the rules. During matching, Relay will inspect two payloads:
+The payloads inspected for matching vary based on the type of rule being matched:
+- `transaction`: a transaction rule will match against the [Event](https://getsentry.github.io/relay/relay_event_schema/protocol/struct.Event.html) payload itself.
+- `trace`: a trace rule will match against the [Dynamic Sampling Context](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html), which remains consistent across all transactions of the trace.
 
-- [Event](https://getsentry.github.io/relay/relay_general/protocol/struct.Event.html): inspected when the non-root project to has at least one transaction sampling rule.
-- [Dynamic Sampling Context (DSC)](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html): inspected when the root project (the project of the head of the trace) has at least one trace sampling rule.
-
-The matching that Relay will perform is going to be based on the `samplingValue` of the rules encountered. As specified in the section above, based on the type of `samplingValue`, we will either immediately return or continue matching other rules. More details about the matching algorithm can be found in the implementation [here](https://getsentry.github.io/relay/relay_sampling/struct.SamplingMatch.html#method.match_against_rules).
+The matching that Relay performs is based on the `samplingValue` of the encountered rules. As specified earlier, depending on the type of `samplingValue`, Relay will either immediately return a result or continue matching other rules. More details about the matching algorithm can be found in the implementation [here](https://getsentry.github.io/relay/relay_sampling/evaluation/struct.SamplingEvaluator.html#method.match_rules).
 
 #### Example of Sampling Decision
 
