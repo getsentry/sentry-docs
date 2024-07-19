@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const {VERCEL_PROJECT_ID, VERCEL_API_TOKEN, VERCEL_TEAM_ID} = process.env;
 
 if (!VERCEL_PROJECT_ID || !VERCEL_API_TOKEN || !VERCEL_TEAM_ID) {
@@ -25,61 +26,58 @@ interface Pagination {
 }
 
 interface Response {
-  pagination: Pagination;
   deployments: {
-    /** The unique identifier of the deployment. */
-    uid: string;
-    /** The name of the deployment. */
-    name: string;
-    /** The URL of the deployment. */
-    url: string;
     /** Timestamp of when the deployment got created. */
     created: number;
-    /** The source of the deployment. */
-    source?: 'cli' | 'git' | 'import' | 'import/repo' | 'clone/repo';
-    /** In which state is the deployment. */
-    state?: 'BUILDING' | 'ERROR' | 'INITIALIZING' | 'QUEUED' | 'READY' | 'CANCELED';
-    /** The type of the deployment. */
-    type: 'LAMBDAS';
     /** Metadata information of the user who created the deployment. */
     creator: {
       /** The unique identifier of the user. */
       uid: string;
       /** The email address of the user. */
       email?: string;
-      /** The username of the user. */
-      username?: string;
       /** The GitHub login of the user. */
       githubLogin?: string;
       /** The GitLab login of the user. */
       gitlabLogin?: string;
+      /** The username of the user. */
+      username?: string;
     };
-    /** An object containing the deployment's metadata */
-    meta?: {[key: string]: string};
-    /** On which environment has the deployment been deployed to. */
-    target?: ('production' | 'staging') | null;
+    /** Vercel URL to inspect the deployment. */
+    inspectorUrl: string | null;
+    /** The name of the deployment. */
+    name: string;
+    /** The type of the deployment. */
+    type: 'LAMBDAS';
+    /** The unique identifier of the deployment. */
+    uid: string;
+    /** The URL of the deployment. */
+    url: string;
+    aliasAssigned?: (number | boolean) | null;
     /** An error object in case aliasing of the deployment failed. */
     aliasError?: {
       code: string;
       message: string;
     } | null;
-    aliasAssigned?: (number | boolean) | null;
-    /** Timestamp of when the deployment got created. */
-    createdAt?: number;
     /** Timestamp of when the deployment started building at. */
     buildingAt?: number;
-    /** Timestamp of when the deployment got ready. */
-    ready?: number;
-    /** State of all registered checks */
-    checksState?: 'registered' | 'running' | 'completed';
     /** Conclusion for checks */
     checksConclusion?: 'succeeded' | 'failed' | 'skipped' | 'canceled';
-    /** Vercel URL to inspect the deployment. */
-    inspectorUrl: string | null;
+    /** State of all registered checks */
+    checksState?: 'registered' | 'running' | 'completed';
+    /** The ID of Vercel Connect configuration used for this deployment */
+    connectConfigurationId?: string;
+    /** Timestamp of when the deployment got created. */
+    createdAt?: number;
     /** Deployment can be used for instant rollback */
     isRollbackCandidate?: boolean | null;
+    /** An object containing the deployment's metadata */
+    meta?: {[key: string]: string};
     /** The project settings which was used for this deployment */
     projectSettings?: {
+      buildCommand?: string | null;
+      commandForIgnoringBuildStep?: string | null;
+      createdAt?: number;
+      devCommand?: string | null;
       framework?:
         | (
             | 'blitzjs'
@@ -127,34 +125,37 @@ interface Response {
         | null;
       gitForkProtection?: boolean;
       gitLFS?: boolean;
-      devCommand?: string | null;
       installCommand?: string | null;
-      buildCommand?: string | null;
       nodeVersion?: '18.x' | '16.x' | '14.x' | '12.x' | '10.x';
       outputDirectory?: string | null;
       publicSource?: boolean | null;
       rootDirectory?: string | null;
       serverlessFunctionRegion?: string | null;
-      sourceFilesOutsideRootDirectory?: boolean;
-      commandForIgnoringBuildStep?: string | null;
-      createdAt?: number;
       skipGitConnectDuringLink?: boolean;
+      sourceFilesOutsideRootDirectory?: boolean;
     };
-    /** The ID of Vercel Connect configuration used for this deployment */
-    connectConfigurationId?: string;
+    /** Timestamp of when the deployment got ready. */
+    ready?: number;
+    /** The source of the deployment. */
+    source?: 'cli' | 'git' | 'import' | 'import/repo' | 'clone/repo';
+    /** In which state is the deployment. */
+    state?: 'BUILDING' | 'ERROR' | 'INITIALIZING' | 'QUEUED' | 'READY' | 'CANCELED';
+    /** On which environment has the deployment been deployed to. */
+    target?: ('production' | 'staging') | null;
   }[];
+  pagination: Pagination;
 }
 
 interface RateLimitError {
   error: {
     code: string;
-    message: string;
     limit: {
       remaining: number;
       reset: number;
       resetMs: number;
       total: number;
     };
+    message: string;
   };
 }
 
@@ -163,14 +164,14 @@ const timestampThirtyDaysAgo = () => {
   return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).getTime();
 };
 
-const deleteDeployment = async ({deploymentId}: {deploymentId: string}) => {
+const deleteDeployment = ({deploymentId}: {deploymentId: string}) => {
   return fetch(`${VERCEL_API}/v13/deployments/${deploymentId}?teamId=${VERCEL_TEAM_ID}`, {
     method: 'DELETE',
     headers: {...VERCEL_HEADERS},
   });
 };
 
-const listDeployments = async ({limit = 40, until}: {limit?: number; until: number}) => {
+const listDeployments = async ({limit = 40, until}: {until: number; limit?: number}) => {
   try {
     const deploymentsResponse = await fetch(
       `${VERCEL_API}/v6/deployments?teamId=${VERCEL_TEAM_ID}&projectId=${VERCEL_PROJECT_ID}&limit=${limit}&until=${until}`,
