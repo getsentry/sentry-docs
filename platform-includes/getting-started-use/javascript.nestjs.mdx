@@ -1,24 +1,33 @@
-```javascript {filename: main.ts} {17}
+```javascript {filename: main.ts}
 // Import this first!
 import './instrument';
 
 // Now import other modules
-import * as Sentry from "@sentry/nestjs";
-import {
-  BaseExceptionFilter,
-  HttpAdapterHost,
-  NestFactory
-} from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const { httpAdapter } = app.get(HttpAdapterHost);
-
-  Sentry.setupNestErrorHandler(app, new BaseExceptionFilter(httpAdapter));
-
   await app.listen(3000);
 }
 
 bootstrap();
+```
+
+Then you can add the SentryIntegrationModule as a root module:
+
+<Note>The SentryIntegrationModule needs to be the first module registered in your application.</Note>
+
+```javascript {filename: app.module.ts} {7}
+import { Module } from '@nestjs/common';
+import { SentryIntegrationModule } from '@sentry/nestjs/setup';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+@Module({
+  imports: [SentryIntegrationModule.forRoot()],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
 ```
