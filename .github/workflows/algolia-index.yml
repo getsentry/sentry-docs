@@ -37,17 +37,11 @@ jobs:
       # and save some build time.
       - run: rm -r app/changelog
 
-      - run: yarn build
-        if: steps.filter.outputs.docs == 'true'
-
-      - run: yarn build:developer-docs
-        if: steps.filter.outputs.dev-docs == 'true'
-
       # bun seems to be the most straightforward way to run a TypeScript script
       # without introducing another dependency like ts-node or tsx for everyone else
 
-      # build docs index
-      - run: bun ./scripts/algolia.ts
+      - name: Build index for user docs
+        run: yarn build && bun ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -56,8 +50,8 @@ jobs:
           NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
           NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
 
-      # build dev docs index
-      - run: bun ./scripts/algolia.ts
+      - name: Build index for developer docs
+        run: yarn build:developer-docs && bun ./scripts/algolia.ts
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
