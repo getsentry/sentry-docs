@@ -3370,6 +3370,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/performance/instrumentation/automatic-instrumentation/',
     to: '/tracing/instrumentation/automatic-instrumentation',
   },
+  {
+    from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
+    to: '/product/insights/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
