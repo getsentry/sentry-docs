@@ -81,7 +81,6 @@ import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
-import MartiniSVG from 'platformicons/svg/martini.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
@@ -215,7 +214,6 @@ import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
-import MartiniSVGLarge from 'platformicons/svg_80x80/martini.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
@@ -597,10 +595,6 @@ const formatToSVG = {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
   },
-  martini: {
-    sm: MartiniSVG,
-    lg: MartiniSVGLarge,
-  },
   maui: {
     sm: MauiSVG,
     lg: MauiSVGLarge,
@@ -850,7 +844,6 @@ export const PLATFORM_TO_ICON = {
   'go-fasthttp': 'fasthttp',
   'go-gin': 'gin',
   'go-iris': 'iris',
-  'go-martini': 'martini',
   'go-negroni': 'go',
   godot: 'godot',
   huggingface: 'huggingface',
@@ -1040,12 +1033,12 @@ export function PlatformIcon({
 
   if (withLanguageIcon && languageIcon !== icon && languageIcon !== 'default') {
     return (
-      <div {...otherProps} style={{position: 'relative', ...style}}>
+      <div {...otherProps} style={{ position: 'relative', ...style }}>
         <Image
           src={svg}
           width={size}
           height={size}
-          style={{borderRadius: `${radius}px`}}
+          style={{ borderRadius: `${radius}px` }}
           alt={`${platform} icon`}
           loading="eager"
         />
@@ -1077,7 +1070,7 @@ export function PlatformIcon({
       {...otherProps}
       placeholder={undefined}
       loading="eager"
-      style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
+      style={{ borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style }}
       alt={`${platform} icon`}
     />
   );
