@@ -17,8 +17,10 @@ They're declared on the `FeatureManager` like so:
 ```python
 # pass FeatureHandlerStrategy.FLAGPOLE to use our options-backed feature flagging system:
 manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE)
+
 # pass FeatureHandlerStrategy.INTERNAL if you don't plan to use options automator:
 manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
+
 # [DEPRECATED] pass FeatureHandlerStrategy.OPTIONS to use options automator:
 manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
 ```
@@ -57,22 +59,27 @@ Most Sentry feature flags are placed in `temporary.py`, while permanent Sentry f
 
 GetSentry only flags are typically placed in [`features.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/features.py).
 
+### Determine whether your feature needs to be exposed in the API
+
+If you plan on using your feature in the frontend, you need to set
+`api_expose=True` when adding your feature. Features that have `api_expose` will
+be included in the results of the organization details response.
+
 ### Add your feature to the FeatureManager
 
 If you want to back your feature flag via options, you can do so using the [Flagpole](/feature-flags/flagpole/) library
 by adding the feature to the `FeatureManager` with the `FLAGPOLE` enum set as the feature strategy:
 
 ```python
-default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE)
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE, api_expose=True)
 ```
 
-_Note:_ It used to be required to add a new feature's name to `server.py` in Sentry in order to set a default value, but this
-is no longer required. Instead, the `manager.add()` method takes a default value, or automatically sets the value
-to `False` if no default is provided.
+When defining a feature you can also set the default state of the feature flag.
+If no default is provided, `False` will be used.
 
 ```python
 # Example of a feature set with a default value of True
-default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE, default=True)
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE, default=True, api_expose=True)
 ```
 
 If you don't plan to use Flagpole, use `FeatureHandlerStrategy.INTERNAL` with a custom feature handler instead, for example:
@@ -130,9 +137,8 @@ our `'organizations:test-feature'` becomes `'test-feature'`.
 
 ### In JavaScript
 
-There is a difference between using the flag in Sentry and in GetSentry. At this
-stage you're not quite ready to use your feature flag in GetSentry, but you are
-able to use it inside Sentry.
+In order to check a feature flag in JavaScript, your feature flag will need
+`api_expose=True`.
 
 ### Declarative features with the Feature component
 
@@ -177,7 +183,6 @@ configuration file:
 SENTRY_FEATURES['organizations:test-feature'] = True
 ```
 
-
 Alternatively, you can test Flagpole features by setting custom options locally.
 See the [Flagpole Local Development](/feature-flags/flagpole/#testing-a-flagpole-feature-locally) docs for more information on this.
 
@@ -209,9 +214,9 @@ sentry.io, you have a few potential paths:
   options-automator repositories.
 - If the feature will only be available to SaaS customers on specific plans, you
   need to add your feature flag to the appropriate plans and update feature
-  handlers (see below).You should also enable the feature by default in
-  [`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)
-  in sentry to ensure that the feature is available for self-hosted deployments.
+  handlers (see below). You should also move the feature flag from
+  `temporary.py` to `permanent.py` and update the default value to enable the
+  feature in self-hosted instances.
 
 ## Getsentry feature handlers
 
