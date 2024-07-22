@@ -1867,10 +1867,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/notification-incidents/msteams/',
   },
   {
-    from: '/product/integrations/threads/',
-    to: '/organization/integrations/notification-incidents/threads/',
-  },
-  {
     from: '/product/integrations/rootly/',
     to: '/organization/integrations/notification-incidents/rootly/',
   },
