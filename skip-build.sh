@@ -15,7 +15,7 @@ docs_diff_status=$(git diff HEAD^ HEAD --quiet -- docs includes platform-include
 non_content_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(docs/|platform-includes/|includes/|develop-docs/)' | wc -l)
 
 # always build on changes in non-content related directories
-if [[ $non_content_diff_status -eq 1 ]] ; then
+if [[ $non_content_diff_status -gt 0 ]] ; then
   exit 1
 fi
 

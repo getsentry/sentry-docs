@@ -55,7 +55,7 @@ const developerDocsSites: SentryGlobalSearchConfig = [
   'blog',
 ];
 
-const sdkDocsSites: SentryGlobalSearchConfig = [
+const userDocsSites: SentryGlobalSearchConfig = [
   {
     site: 'docs',
     pathBias: true,
@@ -66,7 +66,7 @@ const sdkDocsSites: SentryGlobalSearchConfig = [
   'develop',
   'blog',
 ];
-const config = isDeveloperDocs ? developerDocsSites : sdkDocsSites;
+const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
 function relativizeUrl(url: string) {

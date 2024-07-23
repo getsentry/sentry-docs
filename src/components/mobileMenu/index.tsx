@@ -5,6 +5,7 @@ import {Box, Button, Theme} from '@radix-ui/themes';
 import Link from 'next/link';
 
 import {Search} from 'sentry-docs/components/search';
+import {getChangelogLink} from 'sentry-docs/getChangelogLink';
 
 import styles from './styles.module.scss';
 
@@ -49,7 +50,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
               <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
             </Box>
             <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Link href="/changelog">Changelog</Link>
+              <Link href={getChangelogLink()}>Changelog</Link>
             </DropdownMenu.Item>
             <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
               <Link href="https://try.sentry-demo.com/demo/start/">Sandbox</Link>

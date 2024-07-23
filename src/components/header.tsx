@@ -1,7 +1,7 @@
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import Image from 'next/image';
 
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {getChangelogLink} from 'sentry-docs/getChangelogLink';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import sidebarStyles from './sidebar/style.module.scss';
@@ -57,11 +57,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
           </div>
         )}
         <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
-          <NavLink
-            href={isDeveloperDocs ? 'https://docs.sentry.io/changelog' : '/changelog'}
-          >
-            Changelog
-          </NavLink>
+          <NavLink href={getChangelogLink()}>Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           <NavLink href="https://sentry.io/">Sign In</NavLink>
         </div>

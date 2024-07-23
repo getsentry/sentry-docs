@@ -1,3 +1,5 @@
+const {redirects} = require('./redirects.js');
+
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
 const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
@@ -28,6 +30,7 @@ const nextConfig = {
     // This is used on middleware
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
+  redirects,
 };
 
 const withMDX = createMDX({
