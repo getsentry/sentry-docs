@@ -2,7 +2,7 @@
   {
     "type": "Histogram",
     "name": "buffer.dequeue_attempts",
-    "description": "Number of attempts needed to dequeue spooled envelopes from disk.\n\nAs long as there are enough permits in the [`crate::utils::BufferGuard`], this number should\nalways be one.",
+    "description": "Number of attempts needed to dequeue spooled envelopes from disk.",
     "features": []
   },
   {
@@ -114,18 +114,6 @@
     "features": []
   },
   {
-    "type": "Histogram",
-    "name": "event.queue_size",
-    "description": "The number of envelopes in the queue.\n\nThe queue holds all envelopes that are being processed at a particular time in Relay:\n\n- When Relay receives a Request, it ensures the submitted data is wrapped in a single\nenvelope.\n- The envelope receives some preliminary processing to determine if it can be processed or\nif it must be rejected.\n- Once this determination has been made, the HTTP request that created the envelope\nterminates and, if the request is to be further processed, the envelope enters a queue.\n- After the envelope finishes processing and is sent upstream, the envelope is considered\nhandled and it leaves the queue.\n\nThe queue size can be configured with `cache.event_buffer_size`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "event.queue_size.pct",
-    "description": "The number of envelopes in the queue as a percentage of the maximum number of envelopes that\ncan be stored in the queue.\n\nThe value ranges from `0` when the queue is empty to `1` when the queue is full and no\nadditional events can be added. The queue size can be configured using `event.queue_size`.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "event.rejected",
     "description": "Number of envelopes rejected in the current time slot.\n\nThis includes envelopes being rejected because they are malformed or any other errors during\nprocessing (including filtered events, invalid payloads, and rate limits).\n\nTo check the rejection reason, check `events.outcomes`, instead.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
@@ -221,12 +209,6 @@
     "type": "Timer",
     "name": "health.message.duration",
     "description": "Timing in milliseconds for handling and responding to a health check request.\n\nThis metric is tagged with:\n- `type`: The type of the health check, `liveness` or `readiness`.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "health.system_memory.rss",
-    "description": "The currently used Resident Set Size (RSS).",
     "features": []
   },
   {
@@ -451,6 +433,12 @@
     "type": "Histogram",
     "name": "metrics.partitions.flushed",
     "description": "The number of metric partitions flushed in a cycle.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "metrics.router.message.duration",
+    "description": "Timing in milliseconds for processing a message in the metric router service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
     "features": []
   },
   {
@@ -716,6 +704,14 @@
     "name": "service.back_pressure",
     "description": "A number of messages queued in a services inbound message channel.\n\nThis metric is emitted once per second for every running service. Without backlogs, this\nnumber should be close to `0`. If this number is monotonically increasing, the service is\nnot able to process the inbound message volume.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
     "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "store.message.duration",
+    "description": "Timing in milliseconds for processing a message in the metric store service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Gauge",
