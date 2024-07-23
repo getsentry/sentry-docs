@@ -151,19 +151,34 @@ sentry_sdk.init(
 
 ### Disabling Integrations
 
-There are two types of integrations that are added automatically:
+To disable an integration, use the [`disabled_integrations`](/platforms/python/configuration/options/#disabled-integrations) config option:
 
+```python
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+sentry_sdk.init(
+    # Do not use the Flask integration even if Flask is installed.
+    disabled_integrations=[
+        FlaskIntegration(),
+    ],
+)
+```
+
+It's also possible to disable all integrations that are added automatically.
+There are two types of these:
+
+* **Auto-enabling integrations** like `FlaskIntegration` are automatically added
+  if the SDK detects you have the corresponding package (like Flask) installed.
+  This happens as long as the [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) option is set to
+  `True` (default).
 * **Default integrations** like `logging` or `excepthook` are always enabled,
   regardless of what packages you have installed, as long as the
   [`default_integrations`](/platforms/python/configuration/options/#default-integrations) option is `True` (default). They provide essential
   SDK functionality like error deduplication or event flushing at interpreter
   shutdown.
-* **Auto-enabling integrations** like `FlaskIntegration` are automatically added
-  if the SDK detects you have the corresponding package (like Flask) installed.
-  This happens as long as the [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) option is set to
-  `True` (default).
 
-To disable a specific auto-enabling integration, first disable all auto-enabling integrations by setting the [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) option to `False`. Then, explicitly enable all the auto-enabling integrations you wish to use by setting the [`integrations`](/platforms/python/configuration/options/#integrations) configuration option.
+To disable all auto-enabling integrations, you can use the [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) option:
 
 ```python
 import sentry_sdk
@@ -178,7 +193,7 @@ sentry_sdk.init(
 )
 ```
 
-To disable one of the [default integrations](default-integrations/),
+To disable all [default integrations](default-integrations/),
 set [`default_integrations`](/platforms/python/configuration/options/#default-integrations) to `False`. Note that this disables _all_ automatically
 added integrations, both default and auto-enabling. Any integrations you want to use
 then have to be manually specified via the [`integrations`](/platforms/python/configuration/options/#integrations) config option.
