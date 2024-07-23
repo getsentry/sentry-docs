@@ -35,7 +35,7 @@ import { AppService } from './app.service';
 export class AppModule {}
 ```
 
-By default, exceptions with status code 4xx are not sent to Sentry. If you still want to capture these exceptions, you can do that manually with `Sentry.captureException()`:
+By default, exceptions with status code 4xx are not sent to Sentry. If you still want to capture these exceptions, you can do so manually with `Sentry.captureException()`:
 
 ```javascript {11}
 import { ArgumentsHost, BadRequestException, Catch } from '@nestjs/common';
@@ -46,12 +46,8 @@ import * as Sentry from '@sentry/nestjs';
 @Catch(ExampleException)
 export class ExampleExceptionFilter extends BaseExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    if (exception instanceof ExampleException) {
-      exception = new BadRequestException(exception.message);
-      Sentry.captureException(exception);
-      return super.catch(exception, host);
-    }
-    return super.catch(exception, host);
+    Sentry.captureException(exception);
+    return super.catch(new BadRequestException(exception.message), host)
   }
 }
 ```
