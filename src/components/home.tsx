@@ -71,54 +71,84 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/organization" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
-              <Image src={OrganizationImage} height={64} alt="Organization image" />
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={OrganizationImage}
+                height={64}
+                alt="Organization image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
                 <h3 className="text-xl font-medium">Organization settings</h3>
                 <p>Information for setting up your organization’s Sentry account.</p>
               </div>
             </div>
           </Link>
           <Link href="/pricing" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
-              <Image src={CalculatorImage} height={64} alt="Calculator image" />
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={CalculatorImage}
+                height={64}
+                alt="Calculator image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
                 <h3 className="text-xl font-medium">Pricing & Billing</h3>
                 <p>All about our pricing and billing structure.</p>
               </div>
             </div>
           </Link>
           <Link href="/api" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
-              <Image src={PlugImage} height={64} alt="Plug image" />
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={PlugImage}
+                height={64}
+                alt="Plug image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
                 <h3 className="text-xl font-medium">API</h3>
                 <p>APIs for accessing Sentry programmatically.</p>
               </div>
             </div>
           </Link>
           <Link href="/cli" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
-              <Image src={TerminalImage} height={64} alt="Terminal image" />
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={TerminalImage}
+                height={64}
+                alt="Terminal image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
                 <h3 className="text-xl font-medium">CLI</h3>
                 <p>How to use ‘sentry-cli’ on the command line.</p>
               </div>
             </div>
           </Link>
           <Link href="/security-legal-pii" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
-              <Image src={SecurityImage} height={64} alt="Stamped paper image" />
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={SecurityImage}
+                height={64}
+                alt="Stamped paper image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
                 <h3 className="text-xl font-medium">Security, Legal & PII</h3>
                 <p>Security, compliance, and data-scrubbing processes.</p>
               </div>
             </div>
           </Link>
           <Link href="/concepts" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
-              <Image src={ConceptsImage} height={64} alt="Concept and references image" />
-              <div className="space-y-2">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={ConceptsImage}
+                height={64}
+                alt="Concept and references image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
                 <h3 className="text-xl font-medium">Concepts & Reference</h3>
                 <p>Core concepts that make Sentry, Sentry.</p>
               </div>
