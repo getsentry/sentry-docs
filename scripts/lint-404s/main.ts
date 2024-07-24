@@ -135,7 +135,7 @@ async function main() {
   }
 
   console.log(
-    '\n👉 Note: the markdown syntax is not necessarily on the source files, but the links do exist on the final pages'
+    '\n👉 Note: the markdown syntax is not necessarily present on the source files, but the links do exist on the final pages'
   );
   // signal error
   return true;
