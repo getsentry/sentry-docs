@@ -4,8 +4,6 @@ import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
 import {fileURLToPath} from 'url';
 
-import cliProgress from 'cli-progress';
-
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
 
@@ -13,6 +11,8 @@ const trimSlashes = (s: string) => s.replace(/(^\/|\/$)/g, '');
 
 // @ts-ignore
 const ignoreListFile = path.join(dirname(import.meta.url), './ignore-list.txt');
+
+const showProgress = process.argv.includes('--progress');
 
 // Paths to skip
 const ignoreList: string[] = readFileSync(fileURLToPath(ignoreListFile), 'utf8')
@@ -88,12 +88,9 @@ async function main() {
     return false;
   }
 
-  const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-  progressBar.start(slugs.length, 0);
-
-  for (let i = 0; i < slugs.length; i++) {
-    const slug = slugs[i];
+  for (const slug of slugs) {
     const pageUrl = new URL(slug, baseURL);
+    const now = performance.now();
     const html = await fetchWithFollow(pageUrl.href).then(r => r.text());
 
     const linkRegex = /<a[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g;
@@ -116,7 +113,12 @@ async function main() {
       all404s.push({slug, page404s});
     }
 
-    progressBar.increment();
+    if (showProgress) {
+      console.log(
+        page404s.length ? '❌' : '✅',
+        `in ${(performance.now() - now).toFixed(1).padStart(4, '0')} ms | ${slug}`
+      );
+    }
   }
 
   if (all404s.length === 0) {
@@ -143,22 +145,8 @@ async function main() {
   return true;
 }
 const now = performance.now();
-
-const humanReadableMs = (ms: number) => {
-  const oneSecond = 1000;
-  const oneMinute = oneSecond * 60;
-  if (ms < oneSecond) {
-    return `${ms.toFixed(1)} ms`;
-  }
-  if (ms < oneMinute) {
-    return `${(ms / 1000).toFixed(1)} s`;
-  }
-  // show minutes and seconds
-  return `${Math.floor(ms / oneMinute)} m ${((ms % oneMinute) / 1000).toFixed(1)} s`;
-};
-
 main().then(has404s => {
-  console.log(`\n Done in ${humanReadableMs(performance.now() - now)}`);
+  console.log(`\n Done in ${(performance.now() - now).toFixed(1)} ms`);
   process.exit(has404s ? 1 : 0);
 });
 
