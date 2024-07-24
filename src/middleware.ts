@@ -1867,10 +1867,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/notification-incidents/msteams/',
   },
   {
-    from: '/product/integrations/threads/',
-    to: '/organization/integrations/notification-incidents/threads/',
-  },
-  {
     from: '/product/integrations/rootly/',
     to: '/organization/integrations/notification-incidents/rootly/',
   },
@@ -3373,6 +3369,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
     to: '/product/insights/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/container-image/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/layer/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
   },
 ];
 
