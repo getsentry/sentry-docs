@@ -46,9 +46,15 @@ jobs:
       - run: yarn build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
 
-      # bun seems to be the most straightforward way to run a TypeScript script
-      # without introducing another dependency like ts-node or tsx for everyone else
-
-      # build docs index
-      - run: yarn start & bun ./scripts/lint-404s/main.ts
+      - name: Start Http Server
+        run: yarn start &
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+
+      - name: Lint 404s
+        run: bun ./scripts/lint-404s/main.ts
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+
+      - name: Kill Http Server
+        run: kill $(lsof -t -i:3000) || true
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+        continue-on-error: true
