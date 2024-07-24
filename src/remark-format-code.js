@@ -11,7 +11,7 @@ export default function remarkFormatCodeBlocks() {
       // skip code blocks with diff meta as they might have
       // broken syntax due to + and - characters
       // or with `onboardingOptions` as they need to have predictable line numbers
-      // or @inject statements as they ofeten lead to unnecessary line breaks
+      // or `@inject` statements as they often lead to unnecessary line breaks
       .filter(
         node =>
           !(
