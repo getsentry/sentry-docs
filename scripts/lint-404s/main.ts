@@ -2,8 +2,9 @@
 
 import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
-import readline from 'readline';
 import {fileURLToPath} from 'url';
+
+import cliProgress from 'cli-progress';
 
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
@@ -25,16 +26,6 @@ async function fetchWithFollow(url: URL | string): Promise<Response> {
     return fetchWithFollow(r.headers.get('location')!);
   }
   return r;
-}
-
-function updateProgressBar(current: number, total: number) {
-  const barLength = 40;
-  const progress = current / total;
-  const filledLength = Math.round(barLength * progress);
-  const bar = '▆'.repeat(filledLength) + '-'.repeat(barLength - filledLength);
-  const percentage = Math.round(progress * 100);
-  readline.cursorTo(process.stdout, 0); // Move cursor to the beginning of the line to overwrite
-  process.stdout.write(`Progress: ${bar} ${percentage}% (${current}/${total})`);
 }
 
 async function main() {
@@ -97,6 +88,9 @@ async function main() {
     return false;
   }
 
+  const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+  progressBar.start(slugs.length, 0);
+
   for (let i = 0; i < slugs.length; i++) {
     const slug = slugs[i];
     const pageUrl = new URL(slug, baseURL);
@@ -122,7 +116,7 @@ async function main() {
       all404s.push({slug, page404s});
     }
 
-    updateProgressBar(i + 1, slugs.length);
+    progressBar.increment();
   }
 
   if (all404s.length === 0) {
