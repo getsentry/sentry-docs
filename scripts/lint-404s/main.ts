@@ -2,8 +2,8 @@
 
 import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
-import {fileURLToPath} from 'url';
 import readline from 'readline';
+import {fileURLToPath} from 'url';
 
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
@@ -155,12 +155,12 @@ const humanReadableMs = (ms: number) => {
   const oneMinute = oneSecond * 60;
   if (ms < oneSecond) {
     return `${ms.toFixed(1)} ms`;
-  } else if (ms < oneMinute) {
-    return `${(ms / 1000).toFixed(1)} s`;
-  } else {
-    // show minutes and seconds
-    return `${Math.floor(ms / oneMinute)} m ${((ms % oneMinute) / 1000).toFixed(1)} s`;
   }
+  if (ms < oneMinute) {
+    return `${(ms / 1000).toFixed(1)} s`;
+  }
+  // show minutes and seconds
+  return `${Math.floor(ms / oneMinute)} m ${((ms % oneMinute) / 1000).toFixed(1)} s`;
 };
 
 main().then(has404s => {
