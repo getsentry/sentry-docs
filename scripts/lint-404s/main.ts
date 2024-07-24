@@ -3,6 +3,7 @@
 import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
 import {fileURLToPath} from 'url';
+import readline from 'readline';
 
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
@@ -24,6 +25,16 @@ async function fetchWithFollow(url: URL | string): Promise<Response> {
     return fetchWithFollow(r.headers.get('location')!);
   }
   return r;
+}
+
+function updateProgressBar(current: number, total: number) {
+  const barLength = 40;
+  const progress = current / total;
+  const filledLength = Math.round(barLength * progress);
+  const bar = '▆'.repeat(filledLength) + '-'.repeat(barLength - filledLength);
+  const percentage = Math.round(progress * 100);
+  readline.cursorTo(process.stdout, 0); // Move cursor to the beginning of the line to overwrite
+  process.stdout.write(`Progress: ${bar} ${percentage}% (${current}/${total})`);
 }
 
 async function main() {
@@ -86,9 +97,9 @@ async function main() {
     return false;
   }
 
-  for (const slug of slugs) {
+  for (let i = 0; i < slugs.length; i++) {
+    const slug = slugs[i];
     const pageUrl = new URL(slug, baseURL);
-    const now = performance.now();
     const html = await fetchWithFollow(pageUrl.href).then(r => r.text());
 
     const linkRegex = /<a[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g;
@@ -111,10 +122,7 @@ async function main() {
       all404s.push({slug, page404s});
     }
 
-    console.log(
-      page404s.length ? '❌' : '✅',
-      `in ${(performance.now() - now).toFixed(1).padStart(4, '0')} ms | ${slug}`
-    );
+    updateProgressBar(i + 1, slugs.length);
   }
 
   if (all404s.length === 0) {
@@ -141,8 +149,22 @@ async function main() {
   return true;
 }
 const now = performance.now();
+
+const humanReadableMs = (ms: number) => {
+  const oneSecond = 1000;
+  const oneMinute = oneSecond * 60;
+  if (ms < oneSecond) {
+    return `${ms.toFixed(1)} ms`;
+  } else if (ms < oneMinute) {
+    return `${(ms / 1000).toFixed(1)} s`;
+  } else {
+    // show minutes and seconds
+    return `${Math.floor(ms / oneMinute)} m ${((ms % oneMinute) / 1000).toFixed(1)} s`;
+  }
+};
+
 main().then(has404s => {
-  console.log(`\n Done in ${(performance.now() - now).toFixed(1)} ms`);
+  console.log(`\n Done in ${humanReadableMs(performance.now() - now)}`);
   process.exit(has404s ? 1 : 0);
 });
 
