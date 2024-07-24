@@ -1,4 +1,4 @@
-import {getChangelogs} from 'app/changelog/utils';
+import {getChangelogs} from '@/server/utils';
 import RSS from 'rss';
 
 export async function GET() {
@@ -17,20 +17,25 @@ export async function GET() {
   const allChangelogs = await getChangelogs();
 
   if (allChangelogs) {
-    allChangelogs.map(changelog => {
-      return feed.item({
-        title: changelog.title,
-        // @ts-expect-error TODO(lforst): This is broken for some reason
-        description: changelog.summary,
-        url: `https://sentry.io/changelog/${changelog.slug}`,
-        categories:
-          changelog.categories.map(category => {
-            return category.name;
-          }) || [],
-        // @ts-expect-error TODO(lforst): This is broken for some reason
-        date: changelog.publishedAt,
+    allChangelogs
+      .filter(changelog => {
+        return changelog.publishedAt !== null;
+      })
+      .map(changelog => {
+        return feed.item({
+          title: changelog.title,
+          description:
+            changelog.summary ??
+            (changelog.content && `${changelog.content?.slice(0, 100)}...`) ??
+            '',
+          url: `https://sentry.io/changelog/${changelog.slug}`,
+          categories:
+            changelog.categories.map(category => {
+              return category.name;
+            }) || [],
+          date: changelog.publishedAt!,
+        });
       });
-    });
   }
 
   return new Response(feed.xml({indent: true}), {
