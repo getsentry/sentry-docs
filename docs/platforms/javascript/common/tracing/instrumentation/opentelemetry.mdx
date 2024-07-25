@@ -113,3 +113,72 @@ tracer.startActiveSpan("span name", () => {
 ```
 
 You can also use any other tracer; all OpenTelemetry spans will be picked up by Sentry automatically.
+
+## Using a Custom Sampler
+
+We recommend using `SentrySampler` as this will ensure the correct subset of traces is sent to Sentry depending on your `tracesSampleRate`, as well as that all other Sentry features like trace propagation work as expected.
+If you however need to use your own sampler then make sure to wrap your `SamplingResult` with our `wrapSamplingDecision` method:
+
+```js {filename: custom-sampler.js}
+const { wrapSamplingDecision } = require("@sentry/opentelemetry");
+
+// implements Sampler from "@opentelemetry/sdk-trace-node"
+class CustomSampler {
+  shouldSample(
+    context,
+    _traceId,
+    _spanName,
+    _spanKind,
+    attributes,
+    _links
+  ) {
+    const decision = yourDecisionLogic();
+    
+    // wrap the result
+    return wrapSamplingDecision({
+      decision,
+      context,
+      spanAttributes: attributes,
+    });
+  }
+
+  toString() {
+    return CustomSampler.name;
+  }
+}
+
+module.exports = CustomSampler;
+
+```
+
+Now use your sampler in your `TraceProvider`:
+
+```js {filename: instrument.js}
+const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
+const Sentry = require("@sentry/node");
+const {
+  SentrySpanProcessor,
+  SentryPropagator,
+  SentrySampler,
+} = require("@sentry/opentelemetry");
+const CustomSampler = require("./custom-sampler");
+
+const sentryClient = Sentry.init({
+  dsn: "__DSN__",
+  skipOpenTelemetrySetup: true,
+  
+  // By defining any sample rate,
+  // tracing intergations will be added by default
+  tracesSampleRate: 0
+});
+
+
+const provider = new NodeTracerProvider({
+  sampler: new CustomSampler(sentryClient),
+});
+
+// ...rest of your setup
+
+// Validate that the setup is correct
+Sentry.validateOpenTelemetrySetup();
+```
