@@ -17,7 +17,7 @@ export default function ChangelogLayout({children}: {children: ReactNode}) {
   return (
     <Fragment>
       <NextTopLoader color="#8d5494" />
-      <div className={styles.changelogContent}>
+      <div className="font-sans">
         <Navbar />
         <div className="bg-gray-100">{children}</div>
         <div className="w-full mx-auto h-16 relative bg-darkPurple">
