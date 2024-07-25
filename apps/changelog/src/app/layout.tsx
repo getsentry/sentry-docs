@@ -1,39 +1,32 @@
-import "./globals.css";
+import './globals.css';
 
-import { Theme } from "@radix-ui/themes";
-import type { Metadata } from "next";
-import { Rubik } from "next/font/google";
-import Script from "next/script";
+import {Theme} from '@radix-ui/themes';
+import type {Metadata} from 'next';
+import {Rubik} from 'next/font/google';
+import Script from 'next/script';
 
 const rubik = Rubik({
-  weight: ["400", "500", "700"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-rubik",
+  weight: ['400', '500', '700'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-rubik',
 });
 
 export const metadata: Metadata = {
-  title: "Home",
+  title: 'Home',
   icons: {
     icon:
-      process.env.NODE_ENV === "production"
-        ? "/favicon.ico"
-        : "/favicon_localhost.png",
+      process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
   },
-  metadataBase: new URL("https://docs.sentry.io/"),
   openGraph: {
-    images: "https://docs.sentry.io/changelog/assets/og.png",
+    images: '/img/og.png',
   },
   other: {
-    "zd-site-verification": "ocu6mswx6pke3c6qvozr2e",
+    'zd-site-verification': 'ocu6mswx6pke3c6qvozr2e',
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
       <body className={`${rubik.variable} text-darkPurple`}>
