@@ -5,32 +5,44 @@ description: "Get some inspiration by browsing through example use cases for cus
 ---
 
 If you're not sure where to start, here are a few examples of how you can use custom metrics.
+To track something using
 
 ## Frontend Examples
 
 <details open>
   <summary>Count button clicks on subpages</summary>
 
-  * Metric type: `counter`
+  * Aggregation: `count`
   * Example JavaScript code:
 
   ```JavaScript
-  Sentry.metrics.increment("button_click", 1, {
-    tags: { browser: "Firefox", subpage: "signup" }
-  });
+  Sentry.startSpan({ name: "mySpan"}, (span) => {
+    span.setAttributes({
+   ”button_click”: 1,
+   browser: "Firefox",
+   subpage: "signup",
+    });
+  }
   ```
+
+  * Example
+
 </details>
 
 <details>
   <summary>Track number of user signups</summary>
 
-  * Metric type: `counter`
+  * Metric type: `count`
   * Example JavaScript code:
 
   ```JavaScript
-  Sentry.metrics.increment("signups", 1, {
-    tags: { plan_type: “freemium”, region: "EU" }
+  const span = Sentry.startInactiveSpan({name: “mySpan”});
+    span.setAttributes({
+    ”signups”: 1,
+    “plan_type”: “freemium”,
+    region: "EU",
   });
+  span.end()
   ```
 </details>
 
@@ -41,38 +53,13 @@ If you're not sure where to start, here are a few examples of how you can use cu
   * Example JavaScript code:
 
   ```JavaScript
-  Sentry.metrics.distribution("login.time_to_finish_form", 14.3, {
-   tags: { subpage: “signup” },
-   unit: “second”
-  });
-  ```
-</details>
 
-<details>
-  <summary>Track the loading time for a component</summary>
-
-  * Metric type: `distribution`
-  * Example JavaScript code:
-
-  ```JavaScript
-  Sentry.metrics.distribution("component_load_time", 15.0, {
-   tags: { type: "important" },
-   unit: "millisecond"
-  });
-  ```
-</details>
-
-<details>
-  <summary>Track API request payloads</summary>
-
-  * Metric type: `distribution`
-  * Example JavaScript code:
-
-  ```JavaScript
-  Sentry.metrics.distribution("api_request_payload", 136.3, {
-    tags: { api_name: “maps_provider”, subpage: “signup” },
-    unit: “kilobyte”
-  });
+  Sentry.startSpan({ name: "mySpan"}, (span) => {
+    span.setAttributes({
+   ”login.time_to_finish_form”: 14.3,
+   subpage: "signup",
+    });
+  }
   ```
 </details>
 
@@ -83,22 +70,12 @@ If you're not sure where to start, here are a few examples of how you can use cu
   * Example JavaScript code:
 
   ```JavaScript
-  Sentry.metrics.gauge("concurrent_users", 10, {
-   tags: { browser: "Firefox" }
-  });
-  ```
-</details>
-
-<details>
-  <summary>Track the number of items in a shopping cart</summary>
-
-  * Metric type: `gauge`
-  * Example JavaScript code:
-
-  ```JavaScript
-  Sentry.metrics.gauge("shopping_cart_item_count", itemCount, {
-   tags: { platform: "web" }
-  });
+  Sentry.startSpan({ name: "mySpan"}, (span) => {
+   span.setAttributes({
+     ”concurrent_users”: 10,
+     browser: "firefox",
+   });
+ }
   ```
 </details>
 
@@ -109,25 +86,14 @@ If you're not sure where to start, here are a few examples of how you can use cu
   * Example JavaScript code:
 
   ```JavaScript
-  Sentry.metrics.set("user_view", "jane", {
-   tags: {"page": "/home" }
-  });
+  Sentry.startSpan({ name: "mySpan"}, (span) => {
+   span.setAttributes({
+     ”user_view”: “jane”,
+     page: "home",
+   });
+ }
   ```
 </details>
-
-<details>
-  <summary>Count unique number of user sessions</summary>
-
-  * Metric type: `set`
-  * Example JavaScript code:
-
-  ```JavaScript
-  Sentry.metrics.set("unique_active_sessions", sessionId, {
-   tags: { platform: "mobile" }
-  });
-  ```
-</details>
-
 
 
 ## Backend Examples
