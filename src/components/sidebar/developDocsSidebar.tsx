@@ -8,6 +8,18 @@ import {SidebarLink} from '../sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
+const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] = [
+  {root: 'getting-started', title: 'Getting Started', hideChevron: true},
+  {root: 'development', title: 'Development'},
+  {root: 'application', title: 'Application'},
+  {root: 'frontend', title: 'Frontend'},
+  {root: 'backend', title: 'Backend'},
+  {root: 'sdk', title: 'SDK Development'},
+  {root: 'services', title: 'Services'},
+  {root: 'integrations', title: 'Integrations'},
+  {root: 'self-hosted', title: 'Self-Hosted Sentry'},
+];
+
 export function DevelopDocsSidebar({
   path,
   rootNode,
@@ -33,77 +45,17 @@ export function DevelopDocsSidebar({
       <div className="md:flex flex-col items-stretch">
         <div className={styles.toc}>
           <ul data-sidebar-tree>
-            <DynamicNav
-              root="getting-started"
-              title="Getting Started"
-              tree={getNavTree('getting-started')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="development"
-              title="Development"
-              tree={getNavTree('development')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="application"
-              title="Application"
-              tree={getNavTree('application')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="frontend"
-              title="Frontend"
-              tree={getNavTree('frontend')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="backend"
-              title="Backend"
-              tree={getNavTree('backend')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="sdk"
-              title="SDK Development"
-              tree={getNavTree('sdk')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="services"
-              title="Services"
-              tree={getNavTree('services')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="integrations"
-              title="Integrations"
-              tree={getNavTree('integrations')}
-              headerClassName={headerClassName}
-              collapse
-            />
-
-            <DynamicNav
-              root="self-hosted"
-              title="Self-Hosted Sentry"
-              tree={getNavTree('self-hosted')}
-              headerClassName={headerClassName}
-              collapse
-            />
+            {devDocsMenuItems.map(({root, title, hideChevron}) => (
+              <DynamicNav
+                key={root}
+                root={root}
+                title={title}
+                tree={getNavTree(root)}
+                headerClassName={headerClassName}
+                collapse
+                withChevron={!hideChevron}
+              />
+            ))}
           </ul>
           <hr />
           <ul data-sidebar-tree>

@@ -30,6 +30,7 @@ export function ProductSidebar({rootNode, items, headerClassName}: ProductSideba
                 tree={tree}
                 headerClassName={headerClassName}
                 collapse
+                withChevron
               />
             )
           );
