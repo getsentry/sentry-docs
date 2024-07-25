@@ -10,7 +10,7 @@ import styles from './banner.module.scss';
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   'Behind the Code: A Conversation With Backend Experts featuring CEOs of Laravel, Prisma, and Supabase.';
 const BANNER_LINK_URL =

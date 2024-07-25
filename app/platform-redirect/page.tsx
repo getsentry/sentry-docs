@@ -1,4 +1,4 @@
-import {notFound, redirect} from 'next/navigation';
+import {redirect} from 'next/navigation';
 
 import {DocPage} from 'sentry-docs/components/docPage';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
@@ -27,7 +27,8 @@ export default async function Page({
   });
 
   if (platformList.length === 0) {
-    return notFound();
+    // try to redirect the user to the page directly, might result in 404
+    return redirect(next);
   }
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
