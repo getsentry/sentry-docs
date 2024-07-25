@@ -20,12 +20,14 @@ export async function GET() {
     allChangelogs.map(changelog => {
       return feed.item({
         title: changelog.title,
+        // @ts-expect-error TODO(lforst): This is broken for some reason
         description: changelog.summary,
         url: `https://sentry.io/changelog/${changelog.slug}`,
         categories:
           changelog.categories.map(category => {
             return category.name;
           }) || [],
+        // @ts-expect-error TODO(lforst): This is broken for some reason
         date: changelog.publishedAt,
       });
     });

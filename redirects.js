@@ -15,7 +15,7 @@ const developerDocsRedirects = [
     destination: '/self-hosted/email/:path*',
   },
   {
-    source: '/processing-tickets(/?)',
+    source: '/processing-tickets',
     destination: 'https://open.sentry.io/triage/',
   },
 ];
