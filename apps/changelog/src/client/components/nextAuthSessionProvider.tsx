@@ -8,5 +8,5 @@ type sessionProps = {
 };
 
 export function NextAuthSessionProvider({children}: sessionProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return <SessionProvider basePath={'/changelog'}>{children}</SessionProvider>;
 }
