@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
   },
   openGraph: {
-    images: '/img/og.png',
+    images: '/img/hero.png',
   },
   other: {
     'zd-site-verification': 'ocu6mswx6pke3c6qvozr2e',
