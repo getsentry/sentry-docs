@@ -125,9 +125,11 @@ async function main() {
     console.log('\n\n🎉 No 404s found');
     return false;
   }
+  const numberOf404s = all404s.map(x => x.page404s.length).reduce((a, b) => a + b, 0);
   console.log(
-    '\n❌ Found %d 404s across %d %s',
-    all404s.map(x => x.page404s.length).reduce((a, b) => a + b, 0),
+    '\n❌ Found %d %s across %d %s',
+    numberOf404s,
+    numberOf404s === 1 ? '404' : '404s',
     all404s.length,
     all404s.length === 1 ? 'page' : 'pages'
   );
