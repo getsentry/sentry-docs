@@ -14,9 +14,11 @@ If you're using your own source code, follow the instructions in [Getting Starte
 
 ## Unhandled Errors
 
-The Sentry SDK will automatically capture and report any _unhandled error_ that happens in your application runtime without any additional configuration or explicit handling. Generally, unhandled errors are errors that aren't caught by any except (or try/catch) clause.
+The Sentry SDK will automatically capture and report any _unhandled error_ that happens in your application runtime without any additional configuration or explicit handling. Generally, unhandled errors are errors that aren't caught by any `try/except` clause.
 
-1. In your browser, launch the local Django app in the following endpoint to trigger an unhandled error: `http://localhost:8000/unhandled`.
+1. Run the local Django app.
+
+2. Point your browser to `http://localhost:8000/unhandled` to trigger an unhandled error.
 
 2. If you've set up an alert rule, you should be notified about the error. Otherwise, open the **Issues** page in your Sentry account.
 
@@ -44,13 +46,23 @@ The Sentry SDK contains several methods that you can use to **explicitly** repor
 
 1. Open the `views.py` file. Notice that we import `sentry_sdk` lib which contains the `capture_exception` method:
 
-   ```python
-      import sentry_sdk
+   ```python {filename: myapp/views.py}
+   import sentry_sdk
    ```
 
 2. The method is used to capture the exception handled by the except clause in `HandledErrorView`:
 
-   ![Import and Configure SDK](./img/capture_exception.png)
+   ```python {filename: myapp/views.py}
+   class HandledErrorView(APIView):
+      def get(self, request):
+         ...
+         try:
+             '2' + 2
+         except Exception as err:
+             sentry_sdk.capture_exception(err)
+
+         return Response()
+   ```
 
 3. To try it out on your localhost, trigger the following endpoint: `http://localhost:8000/handled`.
 
@@ -70,13 +82,17 @@ Typically, `capture_message` is not emitted, but there are times when a develope
 
 2. You can use it anywhere within your app. In our example, we've created a dedicated view class, `CaptureMessageView`, to trigger and capture a message we want to track:
 
-   ```Python
-      sentry_sdk.capture_message("You caught me!")
+   ```python {filename: myapp/views.py}
+   sentry_sdk.capture_message("You caught me!")
    ```
 
 3. To try it out on your localhost, trigger the following endpoint: `http://localhost:8000/message`.
 
 4. As before, open the new issue’s detail page from the **Issues** page.
+   <Alert level="info">
+   **Note:** You need to remove the `"issue.priority is high or medium"` filter from issue's page "Custom Search" field to see the messages in the issues list.
+   </Alert>
+
 
    ![Import and Configure SDK](./img/capture_message.png)
 
@@ -84,8 +100,8 @@ Typically, `capture_message` is not emitted, but there are times when a develope
 
 5. In the `views.py` file, change the `capture_message` method to:
 
-   ```Python
-      sentry_sdk.capture_message("You caught me!", "fatal")
+   ```python {filename: myapp/views.py}
+   sentry_sdk.capture_message("You caught me!", "fatal")
    ```
 
 6. Save the changes and trigger the `/message` endpoint again. Changes should be applied immediately through `StateReloader`.
@@ -102,13 +118,12 @@ To enrich the data of the message events we've captured with `capture_message`:
 
 2. Replace that line with the following code:
 
-   ```Python
-   with sentry_sdk.push_scope() as scope:
-      scope.set_tag("my-tag", "my value")
-      scope.user = { "email" : "my.email@your.domain.com" }
-      scope.set_extra("someVariable", "some data")
+   ```python {filename: myapp/views.py}
+   sentry_sdk.set_tag("my-tag", "my value")
+   sentry_sdk.user = { "email" : "my.email@your.domain.com" }
+   sentry_sdk.set_extra("someVariable", "some data")
 
-      sentry_sdk.capture_message("You caught me!", "fatal")
+   sentry_sdk.capture_message("You caught me!", "fatal")
    ```
 
    > We're using the `push_scope` method that allows us to send data with one specific event on a local scope. We're setting a custom tag, user context attribute (email), and extra data on the local scope to enrich the data on the message event.
