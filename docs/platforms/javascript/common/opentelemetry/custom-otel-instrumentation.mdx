@@ -1,0 +1,27 @@
+---
+title: Using Custom OpenTelemetry Instrumentation
+description: "Using custom OpenTelemetry instrumentation with Sentry"
+---
+
+While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like this:
+
+```javascript
+const Sentry = require("@sentry/node");
+const {
+  GenericPoolInstrumentation,
+} = require("@opentelemetry/instrumentation-generic-pool");
+
+Sentry.init({
+  dsn: "__DSN__",
+
+  // The SentrySampler will use this to determine which traces to sample
+  tracesSampleRate: 1.0,
+});
+
+// Afterwards, you can add additional instrumentation:
+Sentry.addOpenTelemetryInstrumentation(new GenericPoolInstrumentation());
+```
+
+Any instrumentation added like this will be automatically picked up by Sentry.
+
+Alternatively, any instrumentation added via `registerInstrumentations()` from `@opentelemetry/instrumentation` will also be picked up by Sentry.

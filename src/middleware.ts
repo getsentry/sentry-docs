@@ -1570,6 +1570,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
   },
   {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/:guide/opentelemetry/',
+  },
+  {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
   },

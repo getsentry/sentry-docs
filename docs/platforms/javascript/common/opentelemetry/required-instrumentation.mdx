@@ -1,0 +1,31 @@
+---
+title: Required OpenTelemetry Instrumentation
+description: "Read about required OpenTelemetry instrumentation for Sentry."
+---
+
+By default, Sentry will register a series of OpenTelemetry instrumentation to automatically capture spans for things spanning incoming and outgoing HTTP requests, DB queries and more.
+
+If tracing is not enabled (no `tracesSampleRate` is defined in the SDK configuration), only a minimal amount of OpenTelemetry instrumentation will be registered. This includes the following:
+
+- <PlatformLink to="/configuration/integrations/http/">httpIntegration</PlatformLink> registers [@opentelemetry/instrumentation-http](https://www.npmjs.com/package/@opentelemetry/instrumentation-http)
+- <PlatformLink to="/configuration/integrations/nodefetch/">nativeNodeFetchIntegration</PlatformLink> registers [opentelemetry-instrumentation-fetch-node](https://www.npmjs.com/package/opentelemetry-instrumentation-fetch-node)
+
+<Note>
+  Note that even though all performance instrumentations will not be registered
+  if tracing is not enabled, it will still be included in the bundle. If you
+  want to reduce the bundle size or used dependencies, you can also <PlatformLink to="/configuration/tree-shaking/#setting-up-sentry-without-performance-integrations">Set up Sentry without Performance Integrations</PlatformLink>.
+</Note>
+
+These are needed to make sure that trace propagation works correctly. Additionally, the HTTP instrumentation is configured to ensure that request isolation is automatically applied for Sentry.
+
+If you want to add your own http/node-fetch instrumentation, you have to follow the following steps:
+
+## Custom HTTP Instrumentation
+
+You cannot add `@opentelemetry/instrumentation-http` yourself - You need to use `httpIntegration` in order for Sentry to work as expected.
+
+If you want to use custom configuration for your HTTP instrumentation, you can do so via the <PlatformLink to="/configuration/integrations/http/">httpIntegration configuration</PlatformLink>.
+
+## Custom Node Fetch Instrumentation
+
+If tracing is disabled, the Node Fetch instrumentation will not emit any spans. In this scenario, it will only inject sentry-specific trace propagation headers. You are free to add your own Node Fetch instrumentation on top of this which may emit spans as you like.
