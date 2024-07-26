@@ -169,12 +169,7 @@ export function DynamicNav({
         data-sidebar-link
       >
         <h6>{title}</h6>
-        {withChevron && (
-          <NavChevron
-            className="w-4 h-4 font-normal"
-            direction={isActive ? 'down' : 'right'}
-          />
-        )}
+        {withChevron && <NavChevron direction={isActive ? 'down' : 'right'} />}
       </SmartLink>
     ) : (
       <div className={headerClassName} data-sidebar-link>
