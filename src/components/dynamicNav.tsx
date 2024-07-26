@@ -186,7 +186,7 @@ export function DynamicNav({
     <li className="mb-3" data-sidebar-branch>
       {header}
       {(!collapse || isActive) && entity.children && (
-        <ul data-sidebar-tree>
+        <ul data-sidebar-tree className="pl-3">
           {prependLinks &&
             prependLinks.map(link => (
               <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />
