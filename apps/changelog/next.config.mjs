@@ -32,7 +32,7 @@ export default withSentryConfig(nextConfig, {
   hideSourceMaps: true,
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+  disableLogger: process.env.NODE_ENV === 'production',
 
   reactComponentAnnotation: {
     enabled: true,

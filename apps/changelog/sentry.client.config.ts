@@ -22,14 +22,10 @@ Sentry.init({
   integrations: [
     Sentry.replayIntegration(),
     SentryCore.thirdPartyErrorFilterIntegration({
-      filterKeys: ['sentry-docs'],
+      filterKeys: ['sentry-changelog'],
       behaviour: 'drop-error-if-contains-third-party-frames',
     }),
   ],
-});
 
-if (process.env.NODE_ENV === 'development') {
-  Spotlight.init({
-    showClearEventsButton: true,
-  });
-}
+  debug: true,
+});
