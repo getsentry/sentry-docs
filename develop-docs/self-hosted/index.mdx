@@ -25,26 +25,26 @@ sudo ./install.sh
 
 ## Recommended system resource
 
-Depending on your usage, required system resource to run Sentry may varies. Minimum system specification for running Sentry looks like this:
-
-- 2 CPU cores
-- 4 GB RAM
-
-Having a machine that have lower system specification than that will fail the installation script.
-
-Current recommended system specification for running Sentry is:
+Depending on your usage, required system resource to run Sentry may varies. Current recommended system specification for running Sentry is:
 
 - 4 CPU cores
 - 16 GB RAM
 - 20 GB free disk storage space
 
-Depending on your traffic volume, you may want to increase your system specification to handle increased load. If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period.
+We'd recommend using a swapfile if you are using a machine with less than 16 GB of RAM. Depending on your traffic volume, you may want to increase your system specification to handle increased load. If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](#event-retention) section below.
 
 ### Self-Hosted Monitoring
 
-When you run `./install.sh`, you have a choice to opt in or out of our monitoring. This monitoring is used for development and debugging purposes so that we're on top of issues you're facing, allowing us to provide a more seamless installation process. For more details please see the [section in the self-hosted README](https://github.com/getsentry/self-hosted#self-hosted-monitoring).
+When you run `./install.sh`, you have a choice to opt in or out of our monitoring. This monitoring is used for development and debugging purposes so that we're on top of issues you're facing, allowing us to provide a more seamless installation process. If you opt into our monitoring, we will send information to our own self-hosted Sentry instance for development and debugging purposes. We may collect:
+- OS username
+- IP address
+- install log
+- runtime errors in Sentry
+- performance data
 
-Note that choosing whether to send errors or not will become mandatory beginning with the 22.11.0 release.
+Thirty (30) day retention. No marketing. Privacy policy at sentry.io/privacy.
+
+Starting with the 22.10.0 release, we will require those running the Sentry installer to choose to opt in or out. If you are running the installer under automation, you may want to set `REPORT_SELF_HOSTED_ISSUES` or pass `--(no-)report-self-hosted-issues` to the installer accordingly.
 
 ### Self-hosted Beacon
 
@@ -167,9 +167,39 @@ You can find more about configuring Sentry at [the configuration section of our
   Once you change your configuration, it's highly recommended to re-run <code>./install.sh</code> script rather than restarting all services using <code>docker compose restart</code>. This ensures no other configuration or migrations that might be missing when something is toggled on.
 </Alert>
 
+### Event Retention
+
+Sentry comes with a cleanup cron job that prunes events older than `90 days` by default. If you want to change that, you can edit the `SENTRY_EVENT_RETENTION_DAYS` environment variable in `.env` or simply override it in your environment. If you do not want the cleanup cron, you can remove the `sentry-cleanup` service from the `docker-compose.yml` file.
+
+### Installing a specific SHA
+
+If you want to install a specific release of Sentry, use the tags/releases on the self-hosted repository.
+
+We continuously push the Docker image for each commit made into [Sentry](https://github.com/getsentry/sentry), and other services such as [Snuba](https://github.com/getsentry/snuba) or [Symbolicator](https://github.com/getsentry/symbolicator) to [our Docker Hub](https://hub.docker.com/u/getsentry) and tag the latest version on master as `:nightly`. This is also usually what we have on sentry.io and what the install script uses. You can use a custom Sentry image, such as a modified version that you have built on your own, or simply a specific commit hash by setting the `SENTRY_IMAGE` environment variable to that image name before running `./install.sh`:
+
+```bash
+SENTRY_IMAGE=getsentry/sentry:83b1380 ./install.sh
+```
+
+Note that this may not work for all commit SHAs as this repository evolves with Sentry and its' satellite projects. It is highly recommended to check out a version of this repository that is close to the timestamp of the Sentry commit you are installing.
+
 ### Enabling Preview Features
 
 Only features that have reached General Availability (GA) status will be enabled by default for self-hosted. As users, you can try new features before it reaches GA by adding required infrastructure components and feature flags. Preview features are tracked and documented through [GitHub issues with Type: Pre-release Feature labels](https://github.com/getsentry/self-hosted/labels/Type%3A%20Pre-release%20Feature).
+
+### Customize DotEnv (.env) file
+
+Environment specific configurations can be done in the `.env.custom` file. It will be located in the root directory of the Sentry installation, and if it exists then `.env` will be ignored entirely.
+
+By default, there exists no `.env.custom` file. In this case, you can manually add this file by copying the `.env` file to a new `.env.custom` file and adjust your settings in the `.env.custom` file.
+
+Please keep in mind to check the `.env` file for changes, when you perform an upgrade of Sentry, so that you can adjust your `.env.custom` accordingly, if required, as `.env` is ignored entirely if `.env.custom` is present.
+
+### Enhance Sentry image
+
+To install plugins and their dependencies or make other modifications to the Sentry base image, copy `sentry/enhance-image.example.sh` to `sentry/enhance-image.sh` and add necessary steps there. For example, you can use `apt-get` to install dependencies and use `pip` to install plugins.
+
+After making modifications to `sentry/enhance-image.sh`, run `./install.sh` again to apply them.
 
 ### Configuration Topics
 
