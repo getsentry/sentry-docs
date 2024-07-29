@@ -1,3 +1,5 @@
+const {redirects} = require('./redirects.js');
+
 const createMDX = require('@next/mdx');
 const remarkPrism = require('remark-prism');
 const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
@@ -24,6 +26,11 @@ const nextConfig = {
 
     return config;
   },
+  env: {
+    // This is used on middleware
+    DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+  },
+  redirects,
 };
 
 const withMDX = createMDX({
@@ -53,7 +60,7 @@ module.exports = withSentryConfig(module.exports, {
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
 
-  // Enables automatic instrumentation of Vercel Cron Monitors.
+  // Enables automatic instrumentation of Vercel Cron Monitors
   // See the following for more information:
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
@@ -61,5 +68,9 @@ module.exports = withSentryConfig(module.exports, {
 
   reactComponentAnnotation: {
     enabled: true,
+  },
+
+  unstable_sentryWebpackPluginOptions: {
+    applicationKey: 'sentry-docs',
   },
 });

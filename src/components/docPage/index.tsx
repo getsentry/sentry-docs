@@ -70,6 +70,7 @@ export function DocPage({
                 <h1>{frontMatter.title}</h1>
                 <h2>{frontMatter.description}</h2>
               </hgroup>
+              {/* This exact id is important for Algolia indexing */}
               <div id="main">
                 <CodeContextProvider>{children}</CodeContextProvider>
               </div>

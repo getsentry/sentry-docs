@@ -1,0 +1,79 @@
+---
+title: User Interface
+sidebar_order: 7
+---
+
+An interface describing the authenticated User for a request.
+
+You should provide at least one of `id`, `email`, `ip_address`,
+`username` for Sentry to be able to tell you how many users are
+affected by one issue, for example. Sending a user that has none
+of these attributes and only custom attributes is valid, but not as useful.
+
+## Attributes
+
+`id`
+
+: The application-specific internal identifier for the user.
+
+`username`
+
+: The username. Typically used as a better label than the internal id.
+
+`email`
+
+: An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+
+`ip_address`
+
+: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Set to `"{{auto}}"` to let Sentry infer the IP address from the connection.
+
+All other keys are stored as extra information but not specifically processed by
+Sentry.
+
+`geo`
+
+: An optional object describing the [geographical location](#geographical-location) of the end user or device, this object is automatically inferred by Relay if `ip_address` is provided.
+
+## Geographical location
+
+Approximate geographical location of the end user or device.
+
+### Attributes
+
+`city`
+
+: Human readable city name.
+
+`country_code`
+
+: Two-letter country code (ISO 3166-1 alpha-2).
+
+`region`
+
+: Human readable region name or code.
+
+## Automatic IP addresses
+
+SDKs running on client platforms, such as browsers and mobile applications,
+should set `ip_address = "{{auto}}"` by default. Server-side SDKs should
+populate the [Request Interface](/sdk/event-payloads/request/), instead. Sentry
+employs several fallbacks to backfill the IP address:
+
+1. Use `user.ip_address`, if set directly.
+2. Fall back to `http.env.REMOTE_ADDR`, if available.
+3. The connection's IP address as seen by Sentry, if `{{auto}}` was used.
+
+## Examples
+
+```json
+{
+  "user": {
+    "id": "unique_id",
+    "username": "my_user",
+    "email": "foo@example.com",
+    "ip_address": "127.0.0.1",
+    "subscription": "basic"
+  }
+}
+```

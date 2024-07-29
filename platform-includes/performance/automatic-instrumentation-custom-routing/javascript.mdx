@@ -5,7 +5,7 @@ By default, the `browserTracingIntegration()` will create a `pageload` span for 
 To make sure that spans are created correctly for a custom routing setup, you'll need to opt out of the default span creation by setting `instrumentNavigation: false` and `instrumentPageLoad: false` in the `browserTracingIntegration()` options. You can then manually create spans like this:
 
 ```javascript
-Sentry.init({
+const client = Sentry.init({
   integrations: [
     Sentry.browserTracingIntegration({
       // disable automatic span creation
@@ -16,7 +16,7 @@ Sentry.init({
 });
 
 // We start the pageload span as early as possible!
-let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan({
+let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan(client, {
   name: window.location.pathname,
   attributes: {
     [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "url",
@@ -25,8 +25,6 @@ let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan({
 
 // Somewhere, instrument your router like this:
 myRouter.on("routeChange", (route) => {
-  const client = Sentry.getClient();
-
   // Make sure that the pageload span uses the route name
   // After that, each route change should trigger a navigation span (which will automatically finish the previous one)
   if (pageLoadSpan) {

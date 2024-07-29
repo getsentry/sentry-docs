@@ -1,0 +1,69 @@
+---
+title: Expo Router
+description: "Learn how to use Sentry's Expo Router instrumentation."
+sidebar_order: 65
+---
+
+Sentry's React Native SDK package ships with instrumentation for Expo Router. This allows you to see the performance of your navigation transitions and the errors that occur during them. This page will guide you through setting up the instrumentation and configuring it to your needs.
+
+## Initialization
+
+The code snippet below shows how to initialize the instrumentation.
+
+```javascript { filename: 'app/_layout.tsx' }
+import React from 'react';
+import { Slot, useNavigationContainerRef } from 'expo-router';
+import Constants from 'expo-constants';
+import * as Sentry from '@sentry/react-native';
+
+const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
+  enableTimeToInitialDisplay: Constants.appOwnership !== 'expo', // Only in native builds, not in Expo Go.
+});
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      routingInstrumentation,
+      enableNativeFramesTracking: Constants.appOwnership !== 'expo', // Only in native builds, not in Expo Go.
+    }),
+  ],
+});
+
+function RootLayout() {
+  const ref = useNavigationContainerRef();
+
+  React.useEffect(() => {
+    if (ref) {
+      routingInstrumentation.registerNavigationContainer(ref);
+    }
+  }, [ref]);
+
+  return <Slot />;
+}
+
+export default Sentry.wrap(RootLayout);
+```
+
+## Options
+
+You can configure the instrumentation by passing an options object to the constructor:
+
+```javascript
+new Sentry.ReactNavigationInstrumentation({
+  enableTimeToInitialDisplay: true, // default: false
+  routeChangeTimeoutMs: 1000, // default: 1000
+});
+```
+
+### routeChangeTimeoutMs
+
+This option specifies how long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. The default value is 1000ms.
+
+### enableTimeToInitialDisplay
+
+This option will enable automatic measuring of the time to initial display for each route. To learn more see [Time to Initial Display](/platforms/react-native/tracing/instrumentation/time-to-display).
+
+## Notes
+
+- Slow and Frozen frames, Time To Initial Display and Time To Full Display are only available in native builds, not in Expo Go.

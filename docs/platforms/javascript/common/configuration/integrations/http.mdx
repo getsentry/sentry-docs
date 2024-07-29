@@ -9,16 +9,21 @@ supported:
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
+  - javascript.hapi
   - javascript.koa
+  - javascript.nestjs
   - javascript.electron
   - javascript.nextjs
   - javascript.sveltekit
   - javascript.remix
   - javascript.astro
+  - javascript.bun
 ---
 
 <Alert level="info">
-  This integration only works inside server environments (Node.js, Bun, Deno).
+
+This integration only works inside server environments (Node.js, Bun, Deno).
+
 </Alert>
 
 _Import name: `Sentry.httpIntegration`_
@@ -40,12 +45,22 @@ If set to false, no breadcrumbs will be captured.
 
 ### `ignoreOutgoingRequests`
 
-_Type: `(url: string) => boolean`_
+_Type: `(url: string, request: RequestOptions) => boolean`_
 
-Allows you to define a method to filter out outgoing requests based on the URL. If the method returns `true`, the request will be ignored.
+Allows you to define a method to filter out outgoing requests based on the URL. If the method returns `true`, no spans or breadcrumbs will be captured for the outgoing request.
+
+The callback function receives two arguments:
+
+- `url`: The full URL of the outgoing request, including the protocol, host, port, path and query string. For example: `https://example.com/users?name=John`.
+- `request`: An object of type `RequestOptions` containing the outgoing request's options. You can use this to filter on properties like the request method or headers.
 
 ### `ignoreIncomingRequests`
 
-_Type: `(url: string) => boolean`_
+_Type: `(urlPath: string, request: IncomingMessage) => boolean`_
 
-Allows you to define a method to filter out incoming requests based on the URL. If the method returns `true`, the request will be ignored.
+Allows you to define a method to filter out incoming requests based on the URL. If the method returns `true`, no span or transaction will be captured for the incoming request.
+
+The callback function receives two arguments:
+
+- `urlPath`: The URL path of the incoming request, including the query string if available. For example: `/users?name=John`.
+- `request`: An object of type `IncomingMessage` containing the incoming request. You can use this to filter on properties like the request method or headers.

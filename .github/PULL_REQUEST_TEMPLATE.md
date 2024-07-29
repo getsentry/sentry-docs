@@ -3,17 +3,17 @@
 ## DESCRIBE YOUR PR
 *Tell us what you're changing and why. If your PR **resolves an issue**, please link it so it closes automatically.*
 
-## IS YOUR CHANGE URGENT?     
+## IS YOUR CHANGE URGENT?  
 
-Help us prioritize incoming PRs by letting us know when the change needs to go live. 
+Help us prioritize incoming PRs by letting us know when the change needs to go live.
 - [ ] Urgent deadline (GA date, etc.): <!-- ENTER DATE HERE -->
 - [ ] Other deadline: <!-- ENTER DATE HERE -->
 - [ ] None: Not urgent, can wait up to 1 week+
 
 ## SLA
 
-- Teamwork makes the dream work, so please add a reviewer to your PRs. 
-- Please give the docs team up to 1 week to review your PR unless you've added an urgent due date to it. 
+- Teamwork makes the dream work, so please add a reviewer to your PRs.
+- Please give the docs team up to 1 week to review your PR unless you've added an urgent due date to it.
 Thanks in advance for your help!
 
 ## PRE-MERGE CHECKLIST
@@ -21,7 +21,7 @@ Thanks in advance for your help!
 *Make sure you've checked the following before merging your changes:*
 
 - [ ] Checked Vercel preview for correctness, including links
-- [ ] PR was reviewed and approved by any necessary SMEs
+- [ ] PR was reviewed and approved by any necessary SMEs (subject matter experts)
 - [ ] PR was reviewed and approved by a member of the [Sentry docs team](https://github.com/orgs/getsentry/teams/docs)
 
 ## LEGAL BOILERPLATE

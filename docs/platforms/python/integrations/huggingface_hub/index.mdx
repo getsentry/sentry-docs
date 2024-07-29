@@ -15,9 +15,9 @@ If you want to try the beta features and are willing to give feedback, please le
 
 This integration connects Sentry with the [Huggingface Hub Python SDK](https://github.com/huggingface/huggingface_hub) and has been confirmed to work with Huggingface Hub version 0.21.4.
 
-Once you've installed this SDK, you can use Sentry AI Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+Once you've installed this SDK, you can use Sentry LLM Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
 
-Sentry AI Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here.](/product/ai-monitoring)
+Sentry LLM Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here](/product/insights/llm-monitoring).
 
 ## Install
 
@@ -31,25 +31,11 @@ pip install --upgrade 'sentry-sdk[huggingface_hub]'
 
 If you have the `huggingface_hub` package in your dependencies, the Huggingface Hub integration will be enabled automatically when you initialize the Sentry SDK.
 
-<SignInNote />
-
-```python
-import sentry_sdk
-from huggingface_hub import InferenceClient
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    traces_sample_rate=1.0,
-)
-
-client = InferenceClient("some-model")
-
-```
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
-Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your LLM monitoring dashboard.
 
 ```python
 import sentry_sdk
@@ -67,7 +53,7 @@ def my_pipeline():
 
 ```
 
-After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard. The pipeline will have an associated Huggingface Hub span for the `text_generation` operation.
+After running this script, a pipeline will be created in the [LLM Monitoring](/product/insights/llm-monitoring) section of the Sentry dashboard. The pipeline will have an associated Huggingface Hub span for the `text_generation` operation.
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
@@ -90,11 +76,9 @@ import sentry_sdk
 from sentry_sdk.integrations.huggingface_hub import HuggingfaceHubIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     send_default_pii=True,
-    traces_sample_rate=1.0,
-    integrations = [
+    integrations=[
         HuggingfaceHubIntegration(
             include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
         ),

@@ -9,10 +9,10 @@ If you can't (or prefer not to) run the [automatic setup](/platforms/javascript/
 ## Installation
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/nextjs
+npm install @sentry/nextjs --save
 ```
 
-```bash {tabTitle:Yarn}
+```bash {tabTitle:yarn}
 yarn add @sentry/nextjs
 ```
 
@@ -85,7 +85,7 @@ Sentry.init({
   integrations: [Sentry.replayIntegration()],
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 
@@ -109,7 +109,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 
@@ -128,7 +128,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 
@@ -144,7 +144,7 @@ We recommend you include your DSN directly in these three files. Alternatively y
 
 While the client initialization code will be injected into your application's client bundle by `withSentryConfig` which we set up earlier,
 the configuration for the server and edge runtime needs to be imported from a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation).
-You can set this file up by adding a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you are using one) and adding the following content:
+To set up this file, add a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you're using one) and add the following content:
 
 ```javascript {filename:instrumentation.(js|ts)}
 export async function register() {
@@ -163,6 +163,14 @@ Make sure that the `import` statements point to your newly created `sentry.serve
 ## Report React Component Render Errors
 
 To capture React render errors you need to add Error components for the App Router and the Pages Router respectively.
+
+<Alert title="Nested React Server Components" level="warning">
+
+Since Next.js is not exposing errors thrown in nested React Server Components, the SDK can currently not capture them.
+
+[Follow our proposal in the Next.js repository.](https://github.com/vercel/next.js/discussions/67149)
+
+</Alert>
 
 ### React Render Errors in App Router
 
@@ -187,8 +195,11 @@ export default function GlobalError({
   return (
     <html>
       <body>
-        {/* This is the default Next.js error component but it doesn't allow omitting the statusCode property yet. */}
-        <NextError statusCode={undefined as any} />
+        {/* `NextError` is the default Next.js error page component. Its type
+        definition requires a `statusCode` prop. However, since the App Router
+        does not expose status codes for errors, we simply pass 0 to render a
+        generic error message. */}
+        <NextError statusCode={0} />
       </body>
     </html>
   );
@@ -218,7 +229,7 @@ export default function GlobalError({ error }) {
 }
 ```
 
-Note that if you create [Next.js `error.js` files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
+Note that if you create [Next.js error.js files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
 This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
 
 ```tsx {filename:error.tsx}
@@ -486,7 +497,7 @@ Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-wi
 
 ## Configure Server-side Auto-instrumentation
 
-The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring.
+The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and tracing.
 
 ### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
 
@@ -608,11 +619,10 @@ module.exports = withSentryConfig(nextConfig, {
 });
 ```
 
-### Opt Out of Sentry SDK bundling in Client or Server side
+### Opt Out of Sentry SDK bundling in Client- or Server-Side
 
-If you want the `sentry` to be available in your server side & not in client side, you can make your `sentry.client.config.js` empty. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle. The same goes the opposite for opting out of server side bundle by emptying `sentry.server.config.js`.
-
-You cannot delete the respective config files because the SDK requires you to have it.
+If you want the Sentry SDK to be available in your server-side & not in client-side, you can simply delete `sentry.client.config.js`. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle.
+Similarly, to opt out of server-side SDK bundling, you can simply delete the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to remove any imports of these files from `instrumentation.ts`.
 
 ## Disable the Sentry SDK Debug Logger to Save Bundle Size
 

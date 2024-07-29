@@ -32,7 +32,7 @@ export function ConfigKey({
       <h3 id={name}>
         <a href={`#${name}`} aria-label="common options permalink">
           <svg
-            className="anchor before"
+            className="anchorlink before"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
             width="16"

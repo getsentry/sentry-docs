@@ -8,28 +8,31 @@ notSupported:
   - javascript.azure-functions
   - javascript.connect
   - javascript.express
-  - javascript.gcp-functions
-  - javascript.koa
   - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
 keywords:
   [
-    "multiple instances",
     "multiple clients",
     "BrowserClient",
     "NodeClient",
-    "monorepo"
+    "monorepo",
   ]
 ---
 
 <Note>
 
-Creating multiple Sentry clients is not recommended in general, as it can lead to unexpected behavior. If you are using Micro Frontends or similar, multiplexing might be a better solution that using multiple clients. Check out [Micro Frontends](/platforms/javascript/best-practices/micro-frontends) in the Best Practices for more information.
+Creating multiple Sentry clients is **not recommended** in general, as it can lead to unexpected behavior. In case you are using Micro Frontends or similar, multiplexing might be a better solution than using multiple clients. Check out [Micro Frontends](/platforms/javascript/best-practices/micro-frontends) in the Best Practices for more information.
 
 </ Note>
 
 To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
 This also helps to prevent tracking of any parent application errors in case your application is integrated
-inside of it. In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
+inside of it. To ensure you don't conflict with your parent application, you should also remove any integrations that rely on global state.
+
+In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
 
 <SignInNote />
 
@@ -37,22 +40,31 @@ inside of it. In this example we use `BrowserClient` from `@sentry/browser` but 
 import {
   BrowserClient,
   defaultStackParser,
-  defaultIntegrations,
+  getDefaultIntegrations,
   makeFetchTransport,
   Scope,
 } from "@sentry/browser";
+
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return ![
+    "BrowserApiErrors",
+    "Breadcrumbs",
+    "GlobalHandlers",
+  ].includes(defaultIntegration.name);
+});
 
 const client = new BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
-  integrations: defaultIntegrations,
+  integrations: integrations,
 });
 
 const scope = new Scope();
 scope.setClient(client);
 
-client.init() // initializing has to be done after setting the client on the scope
+client.init(); // initializing has to be done after setting the client on the scope
 
 // You can capture exceptions manually for this client like this:
 scope.captureException(new Error("example"));
@@ -75,7 +87,7 @@ import * as Sentry from "@sentry/browser";
 // Very happy integration that'll prepend and append very happy stick figure to the message
 function happyIntegration() {
   return {
-    name: 'Happy',
+    name: "Happy",
     setupOnce() {
       Sentry.addEventProcessor((event) => {
         const self = Sentry.getClient().getIntegration(HappyIntegration);
@@ -85,33 +97,46 @@ function happyIntegration() {
         }
         return event;
       });
-    }
-  }
+    },
+  };
 }
+
+// filter integrations that use the global variable
+const integrations = Sentry.getDefaultIntegrations({}).filter(
+  (defaultIntegration) => {
+    return ![
+      "BrowserApiErrors",
+      "Breadcrumbs",
+      "GlobalHandlers",
+    ].includes(defaultIntegration.name);
+  }
+);
 
 const client1 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
+  integrations: [...integrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 1", event);
     return null; // Returning `null` prevents the event from being sent
   },
 });
-const scope1 = new Sentry.Scope(client1);
+const scope1 = new Sentry.Scope();
+scope1.setClient(client1);
 
 const client2 = new Sentry.BrowserClient({
   dsn: "___PUBLIC_DSN___", // Can be a different DSN
   transport: Sentry.makeFetchTransport,
   stackParser: Sentry.defaultStackParser,
-  integrations: [...Sentry.defaultIntegrations, happyIntegration()],
+  integrations: [...integrations, happyIntegration()],
   beforeSend(event) {
     console.log("client 2", event);
     return null; // Returning `null` prevents the event from being sent
   },
 });
-const scope2 = new Sentry.Scope(client2);
+const scope2 = new Sentry.Scope();
+scope2.setClient(client2);
 
 scope1.captureMessage("a");
 scope1.setTag("a", "b");

@@ -9,7 +9,7 @@ React Router support is included in the `@sentry/react` package since version `5
 
 <Alert level="info" title="Note">
 
-The React Router integration is designed to work with Sentry Performance Monitoring. Please see [Getting Started with React Performance](/product/performance/getting-started/?platform=react) for more details on how to set up and install the SDK.
+The React Router integration is designed to work with Sentry Tracing. Please see [Set Up Tracing with React](/platforms/javascript/guides/react/tracing/) for more details on how to set up and install the SDK.
 
 </Alert>
 
@@ -23,15 +23,15 @@ _(Available in version 7 and above)_
 
 To use React Router v6 with Sentry:
 
-Add `Sentry.reactRouterV6BrowserTracingIntegration` instead of the regular `Sentry.browserTracingIntegration` and provide the functions it needs to enable performance tracing:
+Add `Sentry.reactRouterV6BrowserTracingIntegration` instead of the regular `Sentry.browserTracingIntegration` and provide the required React hooks and router functions:
 
     - `useEffect` hook from `react`
     - `useLocation` and `useNavigationType` hooks from `react-router-dom`
-    - `createRoutesFromChildren` and `matchRoutes` functions from `react-router-dom` or `react-router` packages.
+    - `createRoutesFromChildren` and `matchRoutes` functions from `react-router-dom` or `react-router` packages, depending on which package you're using.
 
 <Alert level="warning">
 
-Make sure `Sentry.reactRouterV6BrowserTracingIntegration` is initialized by your `Sentry.init` call, before you wrap `<Routes />` component or `useRoutes` hook. Otherwise, the routing instrumentation may not work properly.
+Make sure you call `Sentry.init`, **before** you wrap your `<Routes />` component or the `useRoutes` hook. Otherwise, the routing instrumentation may not work properly.
 
 </Alert>
 
@@ -43,8 +43,16 @@ If you choose to create your router instance with [`createBrowserRouter`](https:
 
 <SignInNote />
 
-```javascript
-import { createBrowserRouter } from "react-router-dom";
+```javascript {2-8, 15-21, 26-33}
+import React from "react";
+import {
+  createBrowserRouter,
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
+
 import * as Sentry from "@sentry/react";
 
 Sentry.init({
@@ -65,7 +73,7 @@ const sentryCreateBrowserRouter =
   Sentry.wrapCreateBrowserRouter(createBrowserRouter);
 
 const router = sentryCreateBrowserRouter([
-  // ...
+  // your routes...
 ]);
 ```
 
@@ -77,11 +85,11 @@ You can instrument [`createMemoryRouter`](https://reactrouter.com/en/main/router
 
 ### Usage With `<Routes />` Component
 
-If you're using the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/docs/en/v6/api#routes-and-route) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV6Routing` for `Routes` inside `BrowserRouter`. `MemoryRouter`, and `HashRouter` components:
+If you're using the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/en/main/components/routes) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV6Routing` for `Routes` inside `BrowserRouter`. `MemoryRouter`, and `HashRouter` components:
 
 <SignInNote />
 
-```javascript
+```javascript {3-11, 18-24, 29, 33-35}
 import React from "react";
 import ReactDOM from "react-dom";
 import {
@@ -93,6 +101,7 @@ import {
   createRoutesFromChildren,
   matchRoutes,
 } from "react-router-dom";
+
 import * as Sentry from "@sentry/react";
 
 Sentry.init({
@@ -136,7 +145,8 @@ If you specify your route definitions as an object to the [`useRoutes` hook](htt
 
 <SignInNote />
 
-```javascript
+```javascript {2-10, 15-21, 26, 29-31}
+import React from "react";
 import {
   createRoutesFromChildren,
   matchRoutes,
@@ -144,14 +154,14 @@ import {
   useNavigationType,
   useRoutes,
 } from "react-router-dom";
+
 import { wrapUseRoutes } from "@sentry/react";
-import { useEffect } from "react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     Sentry.reactRouterV6BrowserTracingIntegration({
-      useEffect,
+      useEffect: React.useEffect,
       useLocation,
       useNavigationType,
       createRoutesFromChildren,
@@ -165,7 +175,7 @@ const useSentryRoutes = wrapUseRoutes(useRoutes);
 
 function App() {
   return useSentryRoutes([
-    // ...
+    // your routes...
   ]);
 }
 
@@ -191,7 +201,7 @@ We recommend you use the `withSentryRouting` higher order component to create a 
 
 <SignInNote />
 
-```javascript
+```javascript {1, 7, 14-16, 28-30}
 import {Route, Router, Switch } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
@@ -206,7 +216,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     Sentry.reactRouterV5BrowserTracingIntegration({ history }),
-    // or
+    // OR
     Sentry.reactRouterV4BrowserTracingIntegration({ history }),
   ],
 
@@ -232,7 +242,7 @@ If you don't want to wrap individual routes, you can still specify parameterized
 
 <SignInNote />
 
-```javascript
+```javascript {1,8-10,15-19}
 import { Route, Router, Switch, matchPath } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
@@ -279,7 +289,7 @@ To use the router integration, import and set a custom routing instrumentation a
 
 <SignInNote />
 
-```javascript
+```javascript {18-23}
 import * as Router from "react-router";
 
 import * as Sentry from "@sentry/react";

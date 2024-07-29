@@ -4,13 +4,17 @@ import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
 import {ConfigKey} from './components/configKey';
+import {ConfigValue} from './components/configValue';
+import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
+import {JsonSchema} from './components/jsonSchema';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
+import {OnboardingOption, OnboardingOptionButtons} from './components/onboarding';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
@@ -40,6 +44,9 @@ export function mdxComponents(
     CodeBlock,
     CodeTabs,
     ConfigKey,
+    CreateGitHubAppForm,
+    JsonSchema,
+    ConfigValue,
     DefinitionList,
     Expandable,
     GuideGrid,
@@ -60,6 +67,8 @@ export function mdxComponents(
     PlatformCategorySection,
     PlatformOrGuideName,
     PlatformSdkPackageName,
+    OnboardingOption,
+    OnboardingOptionButtons,
     RelayMetrics,
     SandboxLink,
     SignInNote,
