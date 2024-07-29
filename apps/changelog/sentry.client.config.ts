@@ -4,7 +4,6 @@
 
 import * as SentryCore from '@sentry/core';
 import * as Sentry from '@sentry/nextjs';
-import * as Spotlight from '@spotlightjs/spotlight';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -22,14 +21,10 @@ Sentry.init({
   integrations: [
     Sentry.replayIntegration(),
     SentryCore.thirdPartyErrorFilterIntegration({
-      filterKeys: ['sentry-docs'],
+      filterKeys: ['sentry-changelog'],
       behaviour: 'drop-error-if-contains-third-party-frames',
     }),
   ],
-});
 
-if (process.env.NODE_ENV === 'development') {
-  Spotlight.init({
-    showClearEventsButton: true,
-  });
-}
+  debug: process.env.NODE_ENV !== 'production',
+});
