@@ -8,10 +8,12 @@ import {Search} from 'sentry-docs/components/search';
 
 export default function NotFound() {
   const [pathname, setPathname] = useState('');
+  const [host, setHost] = useState('');
   useEffect(() => {
     setPathname(window.location.pathname);
+    setHost(window.location.host);
   }, []);
-  const brokenUrl = `https://docs.sentry.io${pathname}`;
+  const brokenUrl = `${host}${pathname}`;
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
     <div className="tw-app">
