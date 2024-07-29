@@ -67,7 +67,7 @@ The old APIs will continue to work in 2.0, but we recommend migrating to their n
 
 ### Activating a Custom Hub
 
-If you were using a custom hub to isolate event data, we recommend using a custom isolation scope instead. To activate the custom isolation scope, you will need to explicitly pass the isolation scope to the `use_isolation_scope`, which creates a context manager that activates the scope. Here is an example of how to change your code to make it work:
+If you were using a custom hub to isolate event data, we recommend using a custom isolation scope instead. To activate the custom isolation scope, you will need to explicitly pass the isolation scope to `use_isolation_scope`, which creates a context manager that activates the scope. Here is an example of how to change your code to make it work:
 
 ```python diff
   import sentry_sdk
@@ -106,7 +106,7 @@ If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone th
 
 `sentry_sdk.isolation_scope` is a context manager that creates a new isolation scope by forking the current isolation scope. The forked isolation scope is activated during the context manager's lifetime, providing a similar level of isolation within the context manager as the previous `Hub`-based approach.
 
-Note that using `sentry_sdk.isolation_scope()` is equivalent to `sentry_sdk.scope.use_isolation_scope(sentry_sdk.Scope.get_isolation_scope().fork())`.
+Note that using `sentry_sdk.isolation_scope()` is equivalent to `sentry_sdk.scope.use_isolation_scope(sentry_sdk.get_isolation_scope().fork())`.
 
 ### Scope Configuring
 
@@ -120,7 +120,7 @@ If you want your scope change to affect a smaller unit of code such as a span, u
 ```python diff
 - with configure_scope() as scope:
 -     # do something with scope
-+ scope = Scope.get_current_scope()
++ scope = get_current_scope()
 + # do something with scope
 ```
 
@@ -129,7 +129,7 @@ If you want your scope change to affect the whole transaction, use the isolation
 ```python diff
 - with configure_scope() as scope:
 -     # do something with scope
-+ scope = Scope.get_isolation_scope()
++ scope = get_isolation_scope()
 + # do something with scope
 ```
 
@@ -143,7 +143,7 @@ transaction = sentry_sdk.transaction(...)
 - with sentry_sdk.configure_scope() as scope:
 -     scope.set_transaction_name("new-transaction-name")
 
-+ scope = sentry_sdk.Scope.get_current_scope()
++ scope = sentry_sdk.get_current_scope()
 + scope.set_transaction_name("new-transaction-name")
 ```
 
