@@ -1,13 +1,16 @@
 'use client';
 
+import {useEffect, useState} from 'react';
 import {Button} from '@radix-ui/themes';
-import {usePathname} from 'next/navigation';
 
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
 
 export default function NotFound() {
-  const pathname = usePathname() ?? '/';
+  const [pathname, setPathname] = useState('');
+  useEffect(() => {
+    setPathname(window.location.pathname);
+  }, []);
   const brokenUrl = `https://docs.sentry.io${pathname}`;
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
