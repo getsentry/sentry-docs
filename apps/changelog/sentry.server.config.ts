@@ -3,8 +3,7 @@ import * as Sentry from '@sentry/nextjs';
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 1,
-  debug: false,
   environment: process.env.NODE_ENV,
-  spotlight: process.env.NODE_ENV === 'development',
   integrations: [Sentry.prismaIntegration()],
+  debug: process.env.NODE_ENV !== 'production',
 });
