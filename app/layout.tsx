@@ -18,9 +18,8 @@ export const metadata: Metadata = {
     icon:
       process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
   },
-  metadataBase: new URL('https://docs.sentry.io/'),
   openGraph: {
-    images: 'https://docs.sentry.io/changelog/assets/og.png',
+    images: '/og.png',
   },
   other: {
     'zd-site-verification': 'ocu6mswx6pke3c6qvozr2e',

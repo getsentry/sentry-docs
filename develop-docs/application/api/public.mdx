@@ -56,8 +56,7 @@ As a guide, use these questions:
 2. Will the API change substantially in the future?
 
 If your answers are Yes and No, you're in business - make the endpoint public. Head over to the
-[public API checklist](/api/checklist/) and ensure that your endpoint conforms to the checklist.
-
+[public API checklist](/application/api/checklist/) and ensure that your endpoint conforms to the checklist.
 
 ## Publishing an API
 
@@ -73,12 +72,12 @@ our APIs.
 3. Sidebar Tab
 4. Endpoint Description
 5. Method Decorator
-    - Title
-    - Path and Query Parameters
-    - Body Parameters
-    - Success Responses
-    - Error Responses
-    - Sample Response Body
+   - Title
+   - Path and Query Parameters
+   - Body Parameters
+   - Success Responses
+   - Error Responses
+   - Sample Response Body
 
 We utilize the drf-spectacular's
 [`extend_schema`](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema)
@@ -179,50 +178,50 @@ Here's description of each argument in the decorator:
 
 - **parameters:** is a list of path and query parameters.
   - You can find existing parameters in this
-  [file](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/parameters.py). Note
-  that the `description` field in `OpenApiParameter` populates the parameter's description in the
-  documentation.
+    [file](https://github.com/getsentry/sentry/blob/master/src/sentry/apidocs/parameters.py). Note
+    that the `description` field in `OpenApiParameter` populates the parameter's description in the
+    documentation.
   - DRF serializers conveniently translate into parameters. See
-  [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/endpoints/organization_stats_v2.py#L145)
-  for an example of this.
+    [here](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/endpoints/organization_stats_v2.py#L145)
+    for an example of this.
   - Note that the ordering of the list determines the order of the parameters in the documentation.
-  Required parameters will automatically be placed at the top of the section.
+    Required parameters will automatically be placed at the top of the section.
 
 - **request:** is a serializer that generates body parameters.
   - It can generally just be the DRF serializer of the endpoint itself.
     - The `help_text` argument of each serializer field populates the body
       parameter's description in the documentation.
       - For nested serializers, use the class docstring instead to populate the parameter's description.
-      See [here](https://github.com/getsentry/sentry/blob/338916947b1a316bf908d048b9feb27dceced351/src/sentry/api/serializers/rest_framework/project_key.py#L9-L24)
-      for an example of this.
+        See [here](https://github.com/getsentry/sentry/blob/338916947b1a316bf908d048b9feb27dceced351/src/sentry/api/serializers/rest_framework/project_key.py#L9-L24)
+        for an example of this.
     - To exclude certain body parameters, you can pass `exclude_fields` to the
-    [extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
-    decorator. See [here](https://github.com/getsentry/sentry/blob/5573be76bcbbf8cc8f5d36c72bea57c6ca207122/src/sentry/api/endpoints/organization_teams.py#L51)
-    for an example of this.
+      [extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
+      decorator. See [here](https://github.com/getsentry/sentry/blob/5573be76bcbbf8cc8f5d36c72bea57c6ca207122/src/sentry/api/endpoints/organization_teams.py#L51)
+      for an example of this.
     - The ordering of the serializer fields determines the order of the body
       parameters. Required parameters will automatically be placed at the top of
       the section.
       - Note that for Model serializers, the ordering is determined by the ordering
-      of `fields` array within the Meta class. See [here](https://github.com/getsentry/sentry/pull/57884)
-      for an example of this.
+        of `fields` array within the Meta class. See [here](https://github.com/getsentry/sentry/pull/57884)
+        for an example of this.
   - If you need more customization or the endpoint doesn't use a serializer, you can use an
-  [inline_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.inline_serializer)
-  to create a one-off serializer. See [here](https://github.com/getsentry/sentry/blob/6cc2769e13a09414175005bc967bd0e1db8c81bc/src/sentry/api/endpoints/project_key_details.py#L75-L98)
-  for an example of this.
+    [inline_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.inline_serializer)
+    to create a one-off serializer. See [here](https://github.com/getsentry/sentry/blob/6cc2769e13a09414175005bc967bd0e1db8c81bc/src/sentry/api/endpoints/project_key_details.py#L75-L98)
+    for an example of this.
   - For custom serializer fields, you must explicitly type them using the
-  [extend_schema_field](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_field)
-  decorator. See [here](https://github.com/getsentry/sentry/blob/236cc90daa1db5fcedade1db2b0bd7bb1ce9bdcd/src/sentry/api/serializers/rest_framework/project.py#L9-L10)
-  for an example of this.
+    [extend_schema_field](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_field)
+    decorator. See [here](https://github.com/getsentry/sentry/blob/236cc90daa1db5fcedade1db2b0bd7bb1ce9bdcd/src/sentry/api/serializers/rest_framework/project.py#L9-L10)
+    for an example of this.
   -  If there is no request body, you can omit the `request` field entirely.
 
 - **responses:** include all possible success and failure HTTP response cases. You can learn more about them in the next section.
 
 - **examples:** specify the endpoint's sample response. We keep all our examples in this
-[folder](https://github.com/getsentry/sentry/tree/master/src/sentry/apidocs/examples) sorted by
-sidebar tags.
+  [folder](https://github.com/getsentry/sentry/tree/master/src/sentry/apidocs/examples) sorted by
+  sidebar tags.
   - Note that the statement `response_only=True` is required for all examples.
   - We currently only show one response example per endpoint but plan to support
-   this  in the future, so feel free to add multiple examples here.
+   this in the future, so feel free to add multiple examples here.
 
     ```python
     @extend_schema(
@@ -253,58 +252,58 @@ Specify the return type of success responses, which are used to generate the res
 validate any included example responses. There are three ways to do this:
 
 1. If the success response is a single object instead of a list, you can pass a DRF serializer as
-  the response. In order for this serializer to generate a schema, its `serialize` method must be
-  typed to return a [TypedDict](https://peps.python.org/pep-0589/)`*`
+   the response. In order for this serializer to generate a schema, its `serialize` method must be
+   typed to return a [TypedDict](https://peps.python.org/pep-0589/)`*`
 
-  For example, this [sample
-  code](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/scim/endpoints/members.py#L202)
-  has the `200` status code returning an `OrganizationMemberSCIMSerializer`. It's
-  [`serialize`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/scim.py#L14-L16)
-  method is typed to return an
-  [`OrganizationMemberSCIMSerializerResponse`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/response.py#L60)
-  TypedDict which specifies the typing of the response body.
+For example, this [sample
+code](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/scim/endpoints/members.py#L202)
+has the `200` status code returning an `OrganizationMemberSCIMSerializer`. It's
+[`serialize`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/scim.py#L14-L16)
+method is typed to return an
+[`OrganizationMemberSCIMSerializerResponse`](https://github.com/getsentry/sentry/blob/0b9b6563bc4e232334cfc71f136a49117171d13f/src/sentry/api/serializers/models/organization_member/response.py#L60)
+TypedDict which specifies the typing of the response body.
 
-  In order to indicate optional fields that may or may not be set in the response, you must use
-  [totality](https://peps.python.org/pep-0589/#totality) and separate your TypedDict into
-  two classes. The first class should only contain optional fields and inherit from a TypedDict
-  with `total=False` in it's class header. The second class should only contain required fields,
-  and inherit from the first class. See
-  [here](https://github.com/getsentry/sentry/blob/4404deda8376bf1a011b76964b45b58671c2a33b/src/sentry/monitors/serializers.py#L35-L48)
-  for an example of this.
+In order to indicate optional fields that may or may not be set in the response, you must use
+[totality](https://peps.python.org/pep-0589/#totality) and separate your TypedDict into
+two classes. The first class should only contain optional fields and inherit from a TypedDict
+with `total=False` in it's class header. The second class should only contain required fields,
+and inherit from the first class. See
+[here](https://github.com/getsentry/sentry/blob/4404deda8376bf1a011b76964b45b58671c2a33b/src/sentry/monitors/serializers.py#L35-L48)
+for an example of this.
 
-  For fields that may be null, use `Optional` followed by the field's type. Note
-  that a field may be both optional and null.
-  ```python
-  class ExampleResponse(TypedDict):
-      potentiallyNullStringField: Optional[str]
-  ```
+For fields that may be null, use `Optional` followed by the field's type. Note
+that a field may be both optional and null.
+```python
+class ExampleResponse(TypedDict):
+    potentiallyNullStringField: Optional[str]
+```
 
-  `*`Similar to the request serializer, use the
-    [extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
-    directly on the TypedDict to exclude any private fields from the response schema.
-    See [here](https://github.com/getsentry/sentry/blob/4828c60fd7f9fce5e32769054b9a7b10dc795aaa/src/sentry/replays/post_process.py#L43-L44)
-    for an example of this.
+`*`Similar to the request serializer, use the
+[extend_schema_serializer](https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema_serializer)
+directly on the TypedDict to exclude any private fields from the response schema.
+See [here](https://github.com/getsentry/sentry/blob/4828c60fd7f9fce5e32769054b9a7b10dc795aaa/src/sentry/replays/post_process.py#L43-L44)
+for an example of this.
 
 2. To return a list of objects or for more customization, use the
-  [inline_sentry_response_serializer](https://github.com/getsentry/sentry/blob/aa61724035370a47fdc112c14d1467be2609d9a2/src/sentry/apidocs/utils.py#L24).
-  Note that the name of each one must be unique or the docs will fail testing.
+   [inline_sentry_response_serializer](https://github.com/getsentry/sentry/blob/aa61724035370a47fdc112c14d1467be2609d9a2/src/sentry/apidocs/utils.py#L24).
+   Note that the name of each one must be unique or the docs will fail testing.
 
-  ```python
-  from sentry.apidocs.utils import inline_sentry_response_serializer
+```python
+from sentry.apidocs.utils import inline_sentry_response_serializer
 
-  @extend_schema(
-      responses={
-          200: inline_sentry_response_serializer(
-              "ListOrgTeamResponse", List[TeamSerializerResponse]
-          ),
-      }
-  )
-  ```
+@extend_schema(
+    responses={
+        200: inline_sentry_response_serializer(
+            "ListOrgTeamResponse", List[TeamSerializerResponse]
+        ),
+    }
+)
+```
 
-  Note that we HIGHLY discourage returning a single TypedDict object if your
-  endpoint utilizes an existing serializer and returns a single object. Instead,
-  please use the first method as this ensures the documentation stays up-to-date as the
-  endpoint evolves.
+Note that we HIGHLY discourage returning a single TypedDict object if your
+endpoint utilizes an existing serializer and returns a single object. Instead,
+please use the first method as this ensures the documentation stays up-to-date as the
+endpoint evolves.
 
 3. You can also provide OpenAPI JSON if you are running into issues, although we recommend avoiding
    this if possible.
@@ -348,14 +347,14 @@ endpoint.
 ### Caveats
 
 - **If the endpoint you're modifying had previous JSON documentation, you must delete the
-old documentation path in [this
-file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json)
-and its corresponding JSON build in [this
-folder](https://github.com/getsentry/sentry/blob/master/api-docs/paths).**
+  old documentation path in [this
+  file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json)
+  and its corresponding JSON build in [this
+  folder](https://github.com/getsentry/sentry/blob/master/api-docs/paths).**
 
 - **Additionally if there are multiple request types in the same endpoint using the old JSON
-documentation, you must update both of them in the same PR. Updating only one request and
-deleting the old documentation will cause all other requests to disappear from the docs.**
+  documentation, you must update both of them in the same PR. Updating only one request and
+  deleting the old documentation will cause all other requests to disappear from the docs.**
 
 ### Building and Testing Locally
 
@@ -375,7 +374,7 @@ In `sentry`:
    `tests/apidocs/openapi-derefed.json` locally.
 2. Copy the full path to `{YOUR_SYSTEM_FOLDER}/tests/apidocs/openapi-derefed.json`,
 
-  e.g. `/Users/yourname/code/sentry/tests/apidocs/openapi-derefed.json`.
+e.g. `/Users/yourname/code/sentry/tests/apidocs/openapi-derefed.json`.
 
 In `sentry-docs`:
 
