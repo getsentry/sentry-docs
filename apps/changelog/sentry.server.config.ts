@@ -5,5 +5,5 @@ Sentry.init({
   tracesSampleRate: 1,
   environment: process.env.NODE_ENV,
   integrations: [Sentry.prismaIntegration()],
-  debug: process.env.NODE_ENV !== 'production',
+  spotlight: process.env.NODE_ENV === 'development',
 });
