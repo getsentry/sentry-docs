@@ -19,7 +19,6 @@ This integration is built into the Sentry SDK starting with *v10.2.0*. It suppor
 You can configure the Oban integration in your Sentry configuration, under the `:integrations` key:
 
 ```elixir {filename:config/config.exs}
-
 config :sentry,
   # ...,
   integrations: [
@@ -33,3 +32,19 @@ config :sentry,
 ```
 
 This configuration will report failed Oban jobs to Sentry. It will also report started, completed, and failed jobs, as well as their duration. It will use the worker name as the `monitor_slug` of the reported cron.
+
+<Alert level="info" title="Perform Errors">
+Oban wraps *unhandled* crashes, exits, and throws in jobs inside [`Oban.CrashError`](https://hexdocs.pm/oban/2.18.0/Oban.CrashError.html) exceptions. If jobs return errors manually however, such as by returning `{:error, reason}` tuples, then Oban wraps those inside [`Oban.PerformError`](https://hexdocs.pm/oban/2.18.0/Oban.PerformError.html) exceptions. If you want to only report crashes to Sentry, you can configure an event filter that doesn't report `Oban.PerformError` events or that inspects its `:reason` field to determine whether to report them. For example:
+
+```elixir
+def before_send(event) do
+  case event.original_exception do
+    %Oban.PerformError{reason: {:error, reason}} -> event
+    %Oban.PerformError{} -> nil
+    _other -> event
+  end
+end
+```
+
+See <Link to="/platforms/elixir/configuration/filtering">the documentation for event callbacks</Link>.
+</Alert>
