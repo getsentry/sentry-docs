@@ -1,6 +1,6 @@
 ---
-title: Using a Custom OpenTelemetry Setup
-description: "How to use use a completely custom OpenTelemetry setup with Sentry."
+title: Using Your Existing OpenTelemetry Setup
+description: "Learn how to use your existing custom OpenTelemetry setup with Sentry."
 supported:
   - javascript.nextjs
   - javascript.node
@@ -21,10 +21,7 @@ notSupported:
 sidebar_order: 0
 ---
 
-If you already have OpenTelemetry set up yourself, you can also use your existing setup.
-
-In this case, you need to set `skipOpenTelemetrySetup: true` in your `init({})` config, and ensure you setup all the
-components that Sentry needs yourself. In this case, you need to install `@sentry/opentelemetry`, and add the following:
+To use an existing OpenTelemetry setup, set `skipOpenTelemetrySetup: true` in your `init({})` config, then set up all the components that Sentry needs yourself. Finish by installing `@sentry/opentelemetry` and adding the following:
 
 ```javascript
 const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
@@ -66,13 +63,12 @@ provider.register({
 Sentry.validateOpenTelemetrySetup();
 ```
 
-Make sure that all <PlatformLink to="/opentelemetry/required-instrumentation/">Required OpenTelemetry Instrumentation</PlatformLink> is set up correctly - otherwise, the Sentry SDK may not work as expected!
+Make sure that all <PlatformLink to="/opentelemetry/required-instrumentation/">Required OpenTelemetry Instrumentation</PlatformLink> is set up correctly. Otherwise, the Sentry SDK may not work as expected.
 
-## Using Sentry for Error Monitoring only
+## Using Sentry for Error Monitoring Only
 
-If you have a custom OpenTelemetry setup and only want to use Sentry for error monitoring, you can skip adding the `SentrySpanProcessor`. You will still need to add the `SentryContextManager`, `SentryPropagator` and `SentrySampler` to your setup even if you don't want to send any tracing data to Sentry. See below on an explanation of why this is needed.
+If you have a custom OpenTelemetry setup and only want to use Sentry for error monitoring, you can skip adding the `SentrySpanProcessor`. You'll still need to add the `SentryContextManager`, `SentryPropagator`, and `SentrySampler` to your setup even if you don't want to send any tracing data to Sentry. Read on to learn why this is needed.
 
-## Why do I need to do this?
 
 In order for the Sentry SDK to work as expected, and for it to be in sync with OpenTelemetry, we need a few components to be in place. These are needed even if you only use Sentry for error monitoring:
 
@@ -80,14 +76,10 @@ In order for the Sentry SDK to work as expected, and for it to be in sync with O
 - **SentrySampler**: Ensures that the Sentry `tracesSampleRate` is respected. Even if you do not use Sentry for tracing, you still need this in order for trace propagation to work as expected. See <PlatformLink to='/opentelemetry/sampler'>Using a Custom OpenTelemetry Sampler</PlatformLink> if you want to use a custom sampler.
 - **SentryPropagator**: Ensures that trace propagation works correctly.
 - <PlatformLink to="/opentelemetry/required-instrumentation">Required Instrumentation</PlatformLink>: Ensures that trace propagation works correctly.
-
-<Note>
-  Trace propagation is needed for Sentry to automatically connect services (e.g.
-  frontend and backend, or different backend services) together. This makes it
-  possible to see related errors across services.
-  <PlatformLink to="/tracing/trace-propagation">Learn more about Trace Propagation.</PlatformLink>
-</Note>
-
-In addition, the following is only needed if you also use Sentry for tracing:
+**Additional components needed to also use Sentry for tracing:**
 
 - **SentrySpanProcessor**: Ensures that spans are correctly sent to Sentry.
+
+<Note>
+Trace propagation is needed for Sentry to automatically connect services together. (For example, if you want to connect the frontend and backend, or different backend services.) This makes it possible to see related errors across services. <PlatformLink to="/tracing/trace-propagation">Learn more about Trace Propagation.</PlatformLink>
+</Note>
