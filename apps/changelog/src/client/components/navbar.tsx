@@ -86,7 +86,8 @@ export function Navbar() {
                     as={type}
                     variant={variant}
                     target={target}
-                    href={to || ''}
+                    // @ts-ignore
+                    href={to || null}
                     className="w-full !justify-start"
                     onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       e.stopPropagation();

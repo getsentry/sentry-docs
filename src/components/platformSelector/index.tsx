@@ -236,7 +236,10 @@ export function PlatformSelector({
               title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
               path=""
               className={styles['active-platform-title']}
-            />
+            >
+              {/* display chevron icon by adding a child element */}
+              <Fragment />
+            </SidebarLink>
           </ul>
           <hr />
         </div>
