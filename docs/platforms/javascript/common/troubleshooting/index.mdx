@@ -221,7 +221,8 @@ const SENTRY_PROJECT_IDS = ["123456"];
 
 export const postAction = async ({ request }) => {
   try {
-    const envelope = await request.text();
+    const envelopeBytes = await req.arrayBuffer();
+    const envelope = new TextDecoder().decode(envelopeBytes);
     const piece = envelope.split("\n")[0];
     const header = JSON.parse(piece);
     const dsn = new URL(header["dsn"]);
@@ -236,7 +237,7 @@ export const postAction = async ({ request }) => {
     }
 
     const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
-    await fetch(upstream_sentry_url, { method: "POST", body: envelope });
+    await fetch(upstream_sentry_url, { method: "POST", body: envelopeBytes });
 
     return json({}, { status: 200 });
   } catch (e) {
