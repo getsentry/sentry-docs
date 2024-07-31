@@ -169,7 +169,7 @@ In this example, we create a new transaction that is attached to the trace speci
 
 </PlatformCategorySection>
 
-### Inject Tracing Information to Outgoing Requests
+### Inject Tracing Information into Outgoing Requests
 
 For distributed tracing to work, the two headers that you extracted and stored in the active root span, `sentry-trace` and `baggage`, must be added to outgoing HTTP requests.
 
@@ -204,6 +204,45 @@ fetch("https://example.com", {
 In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses a Sentry SDK, it will extract and save the tracing information for later use.
 
 The two services are now connected with your custom distributed tracing implementation.
+
+<PlatformCategorySection supported={['server', 'serverless']}>
+
+### Injecting Tracing Information into HTML
+
+If you're server-side rendering HTML and you use a Sentry SDK in your browser application, you can connect the backend and frontend traces by injecting your server's tracing information into the HTML that's initially served to the client.
+When the frontend SDK is initialized, it will automatically pick up the tracing information from the HTML and continue the trace.
+Note that your browser SDK needs to register `browserTracingIntegration` for this to work.
+
+```javascript
+function renderHtml() {
+  const metaTagValues = Sentry.getMetaTagValues(
+    Sentry.getCurrentScope(),
+    Sentry.getCurrentSpan(),
+    Sentry.getClient()
+  );
+
+  return `
+    <html>
+      <head>
+        <meta name="sentry-trace" content="${metaTagValues["sentry-trace"]}">
+        <meta name="baggage" content="${metaTagValues.baggage}">
+      </head>
+      <body>
+        <!-- Your HTML content -->
+      </body>
+    </html>
+  `;
+}
+```
+
+<Note>
+
+This setup is only required if you have a custom SSR or HTML page generation setup.
+If you're using a meta framework like Next.js, the respective Sentry SDK already takes care of setting the tracing information automatically.
+
+</Note>
+
+</PlatformCategorySection>
 
 ### Starting a New Trace
 
