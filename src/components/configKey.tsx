@@ -29,8 +29,8 @@ export function ConfigKey({
       notSupported={notSupported}
       platform={platform}
     >
-      <h3 id={name}>
-        <a href={`#${name}`} aria-label="common options permalink">
+      <h3 id={name} aria-label={name}>
+        <a href={`#${name}`}>
           <svg
             className="anchorlink before"
             viewBox="0 0 24 24"
