@@ -1,15 +1,23 @@
+import {API, APICategory} from 'sentry-docs/build/resolveOpenAPI';
+
 import {DocPage} from '../docPage';
 
 import {ApiDocs} from './apiDocs';
 
-export function ApiDocsPage() {
+type Props = {
+  api?: API;
+  category?: APICategory;
+};
+
+export function ApiDocsPage({api, category}: Props) {
   const frontMatter: React.ComponentProps<typeof DocPage>['frontMatter'] = {
-    title: 'API Docs',
+    title: 'API Reference',
+    description: 'Sentry API Reference',
   };
 
   return (
     <DocPage frontMatter={frontMatter} fullWidth>
-      <ApiDocs />
+      <ApiDocs api={api} category={category} />
     </DocPage>
   );
 }

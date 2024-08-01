@@ -19,6 +19,10 @@ const SNIPPET_GENERATORS = {
     title: 'cURL (CMD)',
     syntax: 'bash',
   },
+  csharp: {
+    title: 'C#',
+    syntax: 'csharp',
+  },
   node_axios: {
     title: 'NodeJs (axios)',
     syntax: 'javascript',

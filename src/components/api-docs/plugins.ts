@@ -1,4 +1,5 @@
 import {ClientId, HarRequest, HTTPSnippet, TargetId} from 'httpsnippet';
+import {SwaggerUIProps} from 'swagger-ui-react';
 
 import {GeneratorNames} from './settings';
 
@@ -79,6 +80,6 @@ export const HTTPSnippetGenerators: {fn: HTTPGenerators} = {
       generateSnippetFromRequest(req, 'node', 'axios'),
     requestSnippetGenerator_python: req => generateSnippetFromRequest(req, 'python'),
     requestSnippetGenerator_php: req => generateSnippetFromRequest(req, 'php'),
-    requestSnippetGenerator_c_sharp: req => generateSnippetFromRequest(req, 'csharp'),
+    requestSnippetGenerator_csharp: req => generateSnippetFromRequest(req, 'csharp'),
   },
 };
