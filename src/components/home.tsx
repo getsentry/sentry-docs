@@ -4,9 +4,15 @@ import Link from 'next/link';
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
+import TerminalImage from 'sentry-docs/imgs/cli.png';
+import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
 import HeroImage from 'sentry-docs/imgs/home_illustration.png';
+import OrganizationImage from 'sentry-docs/imgs/organization.png';
+import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
+import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 
 import {Header} from './header';
@@ -50,15 +56,105 @@ export async function Home() {
         </div>
 
         <PlatformFilter platforms={sortedPlatforms} />
-        <Link href="/product/sentry-basics/">
-          <div className="flex flex-col md:flex-row shadow p-6 rounded mt-16 gap-4">
-            <Image src={RocketImage} height={64} alt="Rocket image" />
-            <div className="space-y-2">
-              <h3 className="text-xl font-medium">What is Sentry?</h3>
-              <p>Sentry is an application monitoring platform—built by devs, for devs.</p>
+        <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
+        <div className="flex flex-wrap gap-6">
+          <Link href="/product/sentry-basics/" className="w-full">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
+              <Image src={RocketImage} height={64} alt="Rocket image" />
+              <div className="space-y-2">
+                <h3 className="text-xl font-medium">What is Sentry?</h3>
+                <p>
+                  Application monitoring and debugging software considered “not bad” by 4
+                  million developers.
+                </p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+          <Link href="/organization" className="w-full md:w-[calc(50%-12px)]">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={OrganizationImage}
+                height={64}
+                alt="Organization image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
+                <h3 className="text-xl font-medium">Organization settings</h3>
+                <p>Information for setting up your organization’s Sentry account.</p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/pricing" className="w-full md:w-[calc(50%-12px)]">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={CalculatorImage}
+                height={64}
+                alt="Calculator image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
+                <h3 className="text-xl font-medium">Pricing & Billing</h3>
+                <p>All about our pricing and billing structure.</p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/api" className="w-full md:w-[calc(50%-12px)]">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={PlugImage}
+                height={64}
+                alt="Plug image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
+                <h3 className="text-xl font-medium">API</h3>
+                <p>APIs for accessing Sentry programmatically.</p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/cli" className="w-full md:w-[calc(50%-12px)]">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={TerminalImage}
+                height={64}
+                alt="Terminal image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
+                <h3 className="text-xl font-medium">CLI</h3>
+                <p>How to use ‘sentry-cli’ on the command line.</p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/security-legal-pii" className="w-full md:w-[calc(50%-12px)]">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={SecurityImage}
+                height={64}
+                alt="Stamped paper image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
+                <h3 className="text-xl font-medium">Security, Legal & PII</h3>
+                <p>Security, compliance, and data-scrubbing processes.</p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/concepts" className="w-full md:w-[calc(50%-12px)]">
+            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+              <Image
+                src={ConceptsImage}
+                height={64}
+                alt="Concept and references image"
+                className="object-contain"
+              />
+              <div className="flex flex-col justify-center space-y-2">
+                <h3 className="text-xl font-medium">Concepts & Reference</h3>
+                <p>Core concepts that make Sentry, Sentry.</p>
+              </div>
+            </div>
+          </Link>
+        </div>
         <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
         <div className="flex flex-col md:flex-row gap-6">
           <Link href="https://discord.com/invite/sentry" className="w-full">

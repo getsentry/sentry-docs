@@ -214,7 +214,8 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         PROJECT_SLUG: project.projectSlug,
         ORG_ID: project.organizationId,
         ORG_SLUG: project.organizationSlug,
-        ORG_INGEST_DOMAIN: `o${project.organizationId}.ingest.sentry.io`,
+        ORG_INGEST_DOMAIN:
+          parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
         title: `${project.organizationSlug} / ${project.projectSlug}`,

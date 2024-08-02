@@ -13,8 +13,7 @@ export const config = {
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    // - changelog
-    '/((?!api|_next/static|_next/image|favicon.ico|changelog).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
 
@@ -65,7 +64,7 @@ type Redirect = {
 };
 
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
-const SDK_DOCS_REDIRECTS: Redirect[] = [
+const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
     to: '/platforms/javascript/configuration/integrations/browserapierrors/',
@@ -640,7 +639,7 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/php/guides/symfony/performance/pm-integrations/',
-    to: '/platforms/php/guides/symfony/performance/instrumentation/automatic-instrumentation/',
+    to: '/platforms/php/guides/symfony/tracing/instrumentation/automatic-instrumentation/',
   },
   {
     from: '/clients/php/integrations/laravel/',
@@ -1867,10 +1866,6 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/notification-incidents/msteams/',
   },
   {
-    from: '/product/integrations/threads/',
-    to: '/organization/integrations/notification-incidents/threads/',
-  },
-  {
     from: '/product/integrations/rootly/',
     to: '/organization/integrations/notification-incidents/rootly/',
   },
@@ -2691,126 +2686,6 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/python/integrations/gnu_backtrace/',
   },
   {
-    from: '/api/releases/post-organization-release-files/',
-    to: '/api/releases/update-an-organization-release-file/',
-  },
-  {
-    from: '/api/releases/post-release-deploys/',
-    to: '/api/releases/create-a-new-deploy-for-an-organization/',
-  },
-  {
-    from: '/api/projects/post-project-user-reports/',
-    to: '/api/projects/submit-user-feedback/',
-  },
-  {
-    from: '/api/projects/post-project-keys/',
-    to: '/api/projects/create-a-new-client-key/',
-  },
-  {
-    from: '/api/events/get-group-events-latest/',
-    to: '/api/events/retrieve-the-latest-event-for-an-issue/',
-  },
-  {
-    from: '/api/organizations/get-event-id-lookup/',
-    to: '/api/organizations/resolve-an-event-id/',
-  },
-  {
-    from: '/api/events/get-project-group-index/',
-    to: '/api/events/list-a-projects-issues/',
-  },
-  {
-    from: '/api/events/get-group-hashes/',
-    to: '/api/events/list-an-issues-hashes/',
-  },
-  {
-    from: '/api/projects/get-project-stats/',
-    to: '/api/projects/retrieve-event-counts-for-a-project/',
-  },
-  {
-    from: '/api/projects/get-project-index/',
-    to: '/api/projects/list-your-projects/',
-  },
-  {
-    from: '/api/organizations/get-organization-users/',
-    to: '/api/organizations/list-an-organizations-users/',
-  },
-  {
-    from: '/api/events/get-group-details/',
-    to: '/api/events/retrieve-an-issue/',
-  },
-  {
-    from: '/api/events/get-project-event-details/',
-    to: '/api/events/retrieve-an-event-for-a-project/',
-  },
-  {
-    from: '/api/events/get-group-tag-key-details/',
-    to: '/api/events/retrieve-tag-details/',
-  },
-  {
-    from: '/api/organizations/get-organization-projects/',
-    to: '/api/organizations/list-an-organizations-projects/',
-  },
-  {
-    from: '/api/releases/post-project-release-files/',
-    to: '/api/releases/upload-a-new-project-release-file/',
-  },
-  {
-    from: '/api/projects/get-project-users/',
-    to: '/api/projects/list-a-projects-users/',
-  },
-  {
-    from: '/api/projects/put-project-details/',
-    to: '/api/projects/update-a-project/',
-  },
-  {
-    from: '/api/projects/post-debug-files/',
-    to: '/api/projects/upload-a-new-file/',
-  },
-  {
-    from: '/api/organizations/get-organization-stats/',
-    to: '/api/organizations/retrieve-event-counts-for-an-organization/',
-  },
-  {
-    from: '/api/releases/post-organization-releases/',
-    to: '/api/releases/create-a-new-release-for-an-organization/',
-  },
-  {
-    from: '/api/projects/get-project-keys/',
-    to: '/api/projects/list-a-projects-client-keys/',
-  },
-  {
-    from: '/api/teams/get-organization-teams/',
-    to: '/api/teams/list-an-organizations-teams/',
-  },
-  {
-    from: '/api/teams/post-team-projects/',
-    to: '/api/teams/create-a-new-project/',
-  },
-  {
-    from: '/api/events/put-project-group-index/',
-    to: '/api/events/bulk-mutate-a-list-of-issues/',
-  },
-  {
-    from: '/api/events/delete-project-group-index/',
-    to: '/api/events/bulk-remove-a-list-of-issues/',
-  },
-  {
-    from: '/api/projects/delete-project-details/',
-    to: '/api/projects/delete-a-project/',
-  },
-  {
-    from: '/api/events/get-group-events/',
-    to: '/api/events/list-an-issues-events/',
-  },
-  {
-    from: '/api/organizations/get-organization-details/',
-    to: '/api/organizations/retrieve-an-organization/',
-  },
-  {
-    from: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
-    to: '/api/releases/retrieve-release-health-session-statistics/',
-  },
-  {
     from: '/learn/context/',
     to: '/platform-redirect/?next=/enriching-events/context/',
   },
@@ -3302,6 +3177,86 @@ const SDK_DOCS_REDIRECTS: Redirect[] = [
     from: '/account/quotas/spike-protection/',
     to: '/pricing/quotas/spike-protection/',
   },
+  {
+    from: '/_platforms/',
+    to: '/platforms',
+  },
+  {
+    from: '/accounts/require-2fa/',
+    to: '/organization/authentication/two-factor-authentication/',
+  },
+  {
+    from: '/platforms/go/guides/fiber/',
+    to: '/platforms/go/',
+  },
+  {
+    from: '/platforms/go/guides/fiber/user-feedback/configuration/',
+    to: '/platforms/go/user-feedback/',
+  },
+  {
+    from: '/platforms/javascript/guides/',
+    to: '/platforms/javascript/',
+  },
+  {
+    from: '/platforms/native/crashpad/',
+    to: '/platforms/native/guides/crashpad/',
+  },
+  {
+    from: '/platforms/python/legacy-sdk/integrations/pylons/',
+    to: '/platforms/python/legacy-sdk/integrations/#pylons',
+  },
+  {
+    from: '/concepts/data-management/event-grouping/grouping-breakdown/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/explore/session-replay/performance-overhead/',
+    to: '/product/explore/session-replay/web/performance-overhead/',
+  },
+  {
+    from: '/organization/integrations/project-mgmt/jira/',
+    to: '/organization/integrations/issue-tracking/jira/',
+  },
+  {
+    from: '/organization/integrations/source-code-/',
+    to: '/organization/integrations/source-code-mgmt/',
+  },
+  {
+    from: '/product/explore/session-replay/getting-started/',
+    to: '/product/explore/session-replay/',
+  },
+  {
+    from: '/product/explore/session-replay/replay-page-and-filters/',
+    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+  },
+  {
+    from: '/platforms/nintendo-switch/',
+    to: '/platforms/unity/native-support/',
+  },
+  {
+    from: '/product/teams/roles/',
+    to: '/organization/membership/#team-level-roles',
+  },
+  {
+    from: '/enriching-error-data/additional-data/',
+    to: '/concepts/key-terms/enrich-data/',
+  },
+  {
+    from: '/performance/instrumentation/automatic-instrumentation/',
+    to: '/tracing/instrumentation/automatic-instrumentation',
+  },
+  {
+    from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
+    to: '/product/insights/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/container-image/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/layer/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
@@ -3426,30 +3381,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/grouping/',
   },
   {
-    from: '/api/',
-    to: '/application/api/',
-  },
-  {
-    from: '/api/basics/',
-    to: '/application/api/basics/',
-  },
-  {
-    from: '/api/design/',
-    to: '/application/api/design/',
-  },
-  {
-    from: '/api/concepts/',
-    to: '/application/api/concepts/',
-  },
-  {
-    from: '/api/public/',
-    to: '/application/api/public/',
-  },
-  {
-    from: '/api/checklist/',
-    to: '/application/api/checklist/',
-  },
-  {
     from: '/pii/',
     to: '/application/pii/',
   },
@@ -3490,14 +3421,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/feedback-architecture/',
   },
   {
-    from: '/api/checklist/',
-    to: '/application/api/checklist/',
-  },
-  {
-    from: '/api/checklist/',
-    to: '/application/api/checklist/',
-  },
-  {
     from: '/feature-flags/options-backed-features/',
     to: '/application/feature-flags/options-backed-features/',
   },
@@ -3512,7 +3435,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
 ];
 
 const redirectMap = new Map(
-  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : SDK_DOCS_REDIRECTS).map(r => [
+  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : USER_DOCS_REDIRECTS).map(r => [
     r.from as string,
     r.to,
   ])

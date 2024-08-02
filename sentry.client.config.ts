@@ -2,7 +2,6 @@
 // The config you add here will be used whenever a users loads a page in their browser.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as SentryCore from '@sentry/core';
 import * as Sentry from '@sentry/nextjs';
 import * as Spotlight from '@spotlightjs/spotlight';
 
@@ -28,7 +27,7 @@ Sentry.init({
       maskAllText: false,
       blockAllMedia: false,
     }),
-    SentryCore.thirdPartyErrorFilterIntegration({
+    Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
       behaviour: 'apply-tag-if-contains-third-party-frames',
     }),
