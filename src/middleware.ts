@@ -2686,126 +2686,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/python/integrations/gnu_backtrace/',
   },
   {
-    from: '/api/releases/post-organization-release-files/',
-    to: '/api/releases/update-an-organization-release-file/',
-  },
-  {
-    from: '/api/releases/post-release-deploys/',
-    to: '/api/releases/create-a-new-deploy-for-an-organization/',
-  },
-  {
-    from: '/api/projects/post-project-user-reports/',
-    to: '/api/projects/submit-user-feedback/',
-  },
-  {
-    from: '/api/projects/post-project-keys/',
-    to: '/api/projects/create-a-new-client-key/',
-  },
-  {
-    from: '/api/events/get-group-events-latest/',
-    to: '/api/events/retrieve-the-latest-event-for-an-issue/',
-  },
-  {
-    from: '/api/organizations/get-event-id-lookup/',
-    to: '/api/organizations/resolve-an-event-id/',
-  },
-  {
-    from: '/api/events/get-project-group-index/',
-    to: '/api/events/list-a-projects-issues/',
-  },
-  {
-    from: '/api/events/get-group-hashes/',
-    to: '/api/events/list-an-issues-hashes/',
-  },
-  {
-    from: '/api/projects/get-project-stats/',
-    to: '/api/projects/retrieve-event-counts-for-a-project/',
-  },
-  {
-    from: '/api/projects/get-project-index/',
-    to: '/api/projects/list-your-projects/',
-  },
-  {
-    from: '/api/organizations/get-organization-users/',
-    to: '/api/organizations/list-an-organizations-users/',
-  },
-  {
-    from: '/api/events/get-group-details/',
-    to: '/api/events/retrieve-an-issue/',
-  },
-  {
-    from: '/api/events/get-project-event-details/',
-    to: '/api/events/retrieve-an-event-for-a-project/',
-  },
-  {
-    from: '/api/events/get-group-tag-key-details/',
-    to: '/api/events/retrieve-tag-details/',
-  },
-  {
-    from: '/api/organizations/get-organization-projects/',
-    to: '/api/organizations/list-an-organizations-projects/',
-  },
-  {
-    from: '/api/releases/post-project-release-files/',
-    to: '/api/releases/upload-a-new-project-release-file/',
-  },
-  {
-    from: '/api/projects/get-project-users/',
-    to: '/api/projects/list-a-projects-users/',
-  },
-  {
-    from: '/api/projects/put-project-details/',
-    to: '/api/projects/update-a-project/',
-  },
-  {
-    from: '/api/projects/post-debug-files/',
-    to: '/api/projects/upload-a-new-file/',
-  },
-  {
-    from: '/api/organizations/get-organization-stats/',
-    to: '/api/organizations/retrieve-event-counts-for-an-organization/',
-  },
-  {
-    from: '/api/releases/post-organization-releases/',
-    to: '/api/releases/create-a-new-release-for-an-organization/',
-  },
-  {
-    from: '/api/projects/get-project-keys/',
-    to: '/api/projects/list-a-projects-client-keys/',
-  },
-  {
-    from: '/api/teams/get-organization-teams/',
-    to: '/api/teams/list-an-organizations-teams/',
-  },
-  {
-    from: '/api/teams/post-team-projects/',
-    to: '/api/teams/create-a-new-project/',
-  },
-  {
-    from: '/api/events/put-project-group-index/',
-    to: '/api/events/bulk-mutate-a-list-of-issues/',
-  },
-  {
-    from: '/api/events/delete-project-group-index/',
-    to: '/api/events/bulk-remove-a-list-of-issues/',
-  },
-  {
-    from: '/api/projects/delete-project-details/',
-    to: '/api/projects/delete-a-project/',
-  },
-  {
-    from: '/api/events/get-group-events/',
-    to: '/api/events/list-an-issues-events/',
-  },
-  {
-    from: '/api/organizations/get-organization-details/',
-    to: '/api/organizations/retrieve-an-organization/',
-  },
-  {
-    from: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
-    to: '/api/releases/retrieve-release-health-session-statistics/',
-  },
-  {
     from: '/learn/context/',
     to: '/platform-redirect/?next=/enriching-events/context/',
   },
@@ -3501,30 +3381,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/grouping/',
   },
   {
-    from: '/api/',
-    to: '/application/api/',
-  },
-  {
-    from: '/api/basics/',
-    to: '/application/api/basics/',
-  },
-  {
-    from: '/api/design/',
-    to: '/application/api/design/',
-  },
-  {
-    from: '/api/concepts/',
-    to: '/application/api/concepts/',
-  },
-  {
-    from: '/api/public/',
-    to: '/application/api/public/',
-  },
-  {
-    from: '/api/checklist/',
-    to: '/application/api/checklist/',
-  },
-  {
     from: '/pii/',
     to: '/application/pii/',
   },
@@ -3563,14 +3419,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/feedback-architecture/',
     to: '/application/feedback-architecture/',
-  },
-  {
-    from: '/api/checklist/',
-    to: '/application/api/checklist/',
-  },
-  {
-    from: '/api/checklist/',
-    to: '/application/api/checklist/',
   },
   {
     from: '/feature-flags/options-backed-features/',
