@@ -18,6 +18,10 @@ const developerDocsRedirects = [
     source: '/processing-tickets',
     destination: 'https://open.sentry.io/triage/',
   },
+  {
+    source: '/api/:path*',
+    destination: '/application/api/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -460,6 +464,126 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/configuration/integrations/trycatch/',
     destination: '/platforms/javascript/configuration/integrations/browserapierrors/',
+  },
+  {
+    source: '/api/releases/post-organization-release-files/',
+    destination: '/api/releases/update-an-organization-release-file/',
+  },
+  {
+    source: '/api/releases/post-release-deploys/',
+    destination: '/api/releases/create-a-new-deploy-for-an-organization/',
+  },
+  {
+    source: '/api/projects/post-project-user-reports/',
+    destination: '/api/projects/submit-user-feedback/',
+  },
+  {
+    source: '/api/projects/post-project-keys/',
+    destination: '/api/projects/create-a-new-client-key/',
+  },
+  {
+    source: '/api/events/get-group-events-latest/',
+    destination: '/api/events/retrieve-the-latest-event-for-an-issue/',
+  },
+  {
+    source: '/api/organizations/get-event-id-lookup/',
+    destination: '/api/organizations/resolve-an-event-id/',
+  },
+  {
+    source: '/api/events/get-project-group-index/',
+    destination: '/api/events/list-a-projects-issues/',
+  },
+  {
+    source: '/api/events/get-group-hashes/',
+    destination: '/api/events/list-an-issues-hashes/',
+  },
+  {
+    source: '/api/projects/get-project-stats/',
+    destination: '/api/projects/retrieve-event-counts-for-a-project/',
+  },
+  {
+    source: '/api/projects/get-project-index/',
+    destination: '/api/projects/list-your-projects/',
+  },
+  {
+    source: '/api/organizations/get-organization-users/',
+    destination: '/api/organizations/list-an-organizations-members/',
+  },
+  {
+    source: '/api/events/get-group-details/',
+    destination: '/api/events/retrieve-an-issue/',
+  },
+  {
+    source: '/api/events/get-project-event-details/',
+    destination: '/api/events/retrieve-an-event-for-a-project/',
+  },
+  {
+    source: '/api/events/get-group-tag-key-details/',
+    destination: '/api/events/retrieve-tag-details/',
+  },
+  {
+    source: '/api/organizations/get-organization-projects/',
+    destination: '/api/organizations/list-an-organizations-projects/',
+  },
+  {
+    source: '/api/releases/post-project-release-files/',
+    destination: '/api/releases/upload-a-new-project-release-file/',
+  },
+  {
+    source: '/api/projects/get-project-users/',
+    destination: '/api/projects/list-a-projects-users/',
+  },
+  {
+    source: '/api/projects/put-project-details/',
+    destination: '/api/projects/update-a-project/',
+  },
+  {
+    source: '/api/projects/post-debug-files/',
+    destination: '/api/projects/upload-a-new-file/',
+  },
+  {
+    source: '/api/organizations/get-organization-stats/',
+    destination: '/api/organizations/retrieve-event-counts-for-an-organization/',
+  },
+  {
+    source: '/api/releases/post-organization-releases/',
+    destination: '/api/releases/create-a-new-release-for-an-organization/',
+  },
+  {
+    source: '/api/projects/get-project-keys/',
+    destination: '/api/projects/list-a-projects-client-keys/',
+  },
+  {
+    source: '/api/teams/get-organization-teams/',
+    destination: '/api/teams/list-an-organizations-teams/',
+  },
+  {
+    source: '/api/teams/post-team-projects/',
+    destination: '/api/teams/create-a-new-project/',
+  },
+  {
+    source: '/api/events/put-project-group-index/',
+    destination: '/api/events/bulk-mutate-a-list-of-issues/',
+  },
+  {
+    source: '/api/events/delete-project-group-index/',
+    destination: '/api/events/bulk-remove-a-list-of-issues/',
+  },
+  {
+    source: '/api/projects/delete-project-details/',
+    destination: '/api/projects/delete-a-project/',
+  },
+  {
+    source: '/api/events/get-group-events/',
+    destination: '/api/events/list-an-issues-events/',
+  },
+  {
+    source: '/api/organizations/get-organization-details/',
+    destination: '/api/organizations/retrieve-an-organization/',
+  },
+  {
+    source: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
+    destination: '/api/releases/retrieve-release-health-session-statistics/',
   },
 ];
 
