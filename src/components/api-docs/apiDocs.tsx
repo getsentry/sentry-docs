@@ -74,6 +74,7 @@ const removeUnrenderedInfo = (originalSpec: OpenApiSpec) => {
 
 export function ApiDocs({api}: Props) {
   const [loading, setLoading] = useState(true);
+
   const renderedSpec = api
     ? filteredSpecByEndpoint(spec, api?.apiPath, api?.method)
     : spec;

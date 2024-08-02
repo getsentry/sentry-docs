@@ -1,5 +1,4 @@
 import {ClientId, HarRequest, HTTPSnippet, TargetId} from 'httpsnippet';
-import {SwaggerUIProps} from 'swagger-ui-react';
 
 import {GeneratorNames} from './settings';
 
