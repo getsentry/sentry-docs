@@ -41,9 +41,7 @@ export function DocPage({
 
   const pathname = serverContext().path.join('/');
 
-  const searchPlatforms = [currentPlatform?.name, currentGuide?.platform].filter(
-    isTruthy
-  );
+  const searchPlatforms = [currentPlatform?.name, currentGuide?.name].filter(isTruthy);
 
   const leafNode = nodeForPath(rootNode, path);
 
