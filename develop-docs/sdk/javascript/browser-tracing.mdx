@@ -18,17 +18,23 @@ The default configuration of the SDK does not include any performance or tracing
 
 ## Pageload and Navigation Spans
 
-Browser SDKs automatically create spans for the initial pageload as well as for subsequent soft navigations.
+Browser SDKs automatically create spans for the initial pageload as well as for subsequent [soft navigations](#navigation-spans).
 
 These spans however don't behave like conventional spans. We call them **idle spans** because they are started at some point (more on that later) but are not explicitly ended.
 Instead, we use a couple of heuristics and parameters to debounce and end the spans automatically.
 For example, we end an idle span after a certain time of inactivity, meaning no new spans are added to the span tree.
 Also, there are maximum timeout parameters.
 This idling mechanism is necessary because neither in pageload nor navigation scenarios we have a clear end point or event to explicitly end the span.
-It's important to understand this behavior to interpret the duration of the root span in a sensible way:
 
-While at the end of the idle span, we shorten its duration to the longest child span, the duration does not necessarily represent the actual time a pageload or navigation took.
-Due to the debounce mechanism, child spans that you'd intuitively not associate to the initial pageload might be created close enough to the ideal end of the pageload span to prolong it.
+It's important to understand the idle span ending behavior to interpret its duration in a sensible way:
+
+- When ending the idle span, we shorten its duration to the last ended child span.
+- Sometimes, child spans that you'd intuitively not associate to the initial pageload might be started close enough to the expected end of the idle span to debounce ending it.
+- In some cases, the idle span end can be debounced so often, that the maximum duration of the idle span is reached.
+  At this point it is "forcefully" ended.
+
+Therefore, the duration of the idle span does not reliably represent the actual time a pageload or navigation took.
+It's important that we're also aware of this limitation in the product UI to avoid deriving performance scores or alerts based on the idle span duration.
 
 Both, pageload and navigation spans are **always started as root spans**.
 
@@ -64,8 +70,12 @@ Since the pageload span is automatically started at SDK initialization, **there'
 
 Navigation spans are started when a "soft navigation" occurs.
 A "soft navigation" means that the URL or history state of the page changes **without** a full page reload.
+A typical example for a soft navigation is a single-page application (SPA) using a client-side router (for example React Router or Angular's Router).
+While navigations in SPAs can appear like a normal page navigation to users, they do not trigger a full page load request.
+Instead, they typically update the browser's history state, the URL and the content of the page dynamically.
+
 By default, in `@sentry/browser` the SDK listens to the browser's `History` API to detect such navigations.
-Framework-specific SDKs and router instrumentations might use other mechanisms to detect them.
+[Framework-specific SDKs and router instrumentations](#router-instrumentations-and-route-parameterization) might use other mechanisms to detect them.
 
 Like a pageload span, navigation spans are idle spans and end themselves after a certain time of inactivity or after a maximum duration.
 
@@ -94,9 +104,11 @@ Generally speaking, most web vitals are accumulated while the pageload span is a
 it leads to discrepancies for vitals that are still changing after the pageload span ends. This is the case for `LCP` and `CLS` in particular.
 
 <Note>
-  At the time of writing, we're transitioning to a more sophisticated
-  `LCP` and `CLS` capturing technique that should improve the accuracy of these
-  metrics. It will essentially work like `INP` collection works today.
+  At the time of writing, we're transitioning to a [more sophisticated `LCP` and
+  `CLS` capturing
+  technique](https://github.com/getsentry/sentry-javascript/issues/12714) that
+  should improve the accuracy of these metrics. It will essentially work like
+  `INP` collection works today.
 </Note>
 
 ### Interaction To Next paint (INP)
@@ -144,8 +156,12 @@ These meta tags are picked up by the browser SDKs when it initializes (`Sentry.i
 
 ## Tracing Without performance
 
-The browser SDKs support tracing without performance (TwP). This means that the SDK attaches tracing headers to outgoing requests but does not collect any spans.
-While in other SDKs this is the behaviour when neither `tracesSampleRate` nor `tracesSampler` are set, in browser, users still have to add `browserTracingIntegration`.
+The browser SDKs support tracing without performance (TwP).
+TwP means that the SDK attaches tracing headers to outgoing requests but does not start or send any spans.
+This feature enables connecting frontend to backend errors in the UI without depleting users' span quota.
+
+While in other SDKs, TwP is activated by default when neither `tracesSampleRate` nor `tracesSampler` are set, in browser, users still have to add `browserTracingIntegration`.
+The reason for this is that our fetch and XHR instrumentation is not included in the default SDK bundle to save on [bundle size](../bundle-size).
 So the only configuration to enable TwP is to register `browserTracingIntegration` but omit the sampling options completely (or set them to `undefined`).
 
 TwP mode uses the same [tracing model](#tracing-model) as SDKs configured for regular tracing.
