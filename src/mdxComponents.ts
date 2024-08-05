@@ -75,6 +75,7 @@ export function mdxComponents(
     VimeoEmbed,
     a: SmartLink,
     img: DocImage,
+    DocImage,
     ...dynamicComponents,
     wrapper,
   };

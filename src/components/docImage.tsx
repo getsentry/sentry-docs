@@ -39,8 +39,32 @@ export default function DocImage({
     .split('x')
     .map(s => parseInt(s, 10));
 
+  // handle inline images (with |inline at the end of the alt text)
+  if (props.alt?.endsWith('|inline')) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imgPath}
+        style={{
+          display: 'inline',
+          maxWidth: '100%',
+          height: 'auto',
+          border: 'none',
+          boxShadow: 'none',
+        }}
+        {...props}
+        alt={props.alt.replace('|inline', '')}
+      />
+    );
+  }
+
   return (
     <div style={{textAlign: 'center'}}>
+      <pre>
+        src: {src}
+        <br />
+        props: {JSON.stringify(props, null, 2)}
+      </pre>
       <a href={imgPath} target="_blank" rel="noreferrer">
         <Image
           {...props}
