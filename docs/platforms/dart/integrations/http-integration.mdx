@@ -4,20 +4,33 @@ description: "Learn more about the Sentry HTTP integration for the Dart SDK."
 sidebar_order: 2
 ---
 
-## Using the `runWithClient` function (recommended)
+## Using the `runWithClient` function
 
 With [`runWithClient`](https://pub.dev/documentation/http/latest/http/runWithClient.html) you can define a global `SentryHttpClient` and run it in its own [`Zone`](https://api.dart.dev/stable/3.4.4/dart-async/Zone-class.html).
 
 ### Usage
 
-```dart {filename:http_client.dart}{tabTitle: commonMain}
+```dart {filename:http_client.dart}{tabTitle: default}
+import 'package:sentry/sentry.dart';
+
+final client = SentryHttpClient();
+
+try {
+  final response = await client.get(Uri.https('www.example.com', ''));
+  print(response.body);
+} finally {
+  client.close();
+}
+```
+
+```dart {filename:http_client.dart}{tabTitle: runWithClient}
 import 'package:http/http.dart';
 import 'package:sentry/sentry.dart';
 
 final sentryHttpClient = SentryHttpClient();
 
 await runWithClient(() async {
-  var response = await get(Uri.https('www.example.com', ''));
+  final response = await get(Uri.https('www.example.com', ''));
   print(response.body);
 }, () => sentryHttpClient);
 ```
@@ -31,11 +44,11 @@ import 'package:sentry/sentry.dart';
 
 var client = SentryHttpClient();
 try {
-var uriResponse = await client.post('https://example.com/whatsit/create',
-     body: {'name': 'doodle', 'color': 'blue'});
- print(await client.get(uriResponse.bodyFields['uri']));
+  var uriResponse = await client.post('https://example.com/whatsit/create',
+    body: {'name': 'doodle', 'color': 'blue'});
+  print(await client.get(uriResponse.bodyFields['uri']));
 } finally {
- client.close();
+  client.close();
 }
 ```
 
@@ -72,11 +85,11 @@ var client = SentryHttpClient(
 );
 
 try {
-var uriResponse = await client.post('https://example.com/whatsit/create',
-     body: {'name': 'doodle', 'color': 'blue'});
- print(await client.get(uriResponse.bodyFields['uri']));
+  var uriResponse = await client.post('https://example.com/whatsit/create',
+    body: {'name': 'doodle', 'color': 'blue'});
+  print(await client.get(uriResponse.bodyFields['uri']));
 } finally {
- client.close();
+  client.close();
 }
 ```
 
@@ -101,11 +114,11 @@ final transaction = Sentry.startTransaction(
 
 var client = SentryHttpClient();
 try {
-var uriResponse = await client.post('https://example.com/whatsit/create',
-     body: {'name': 'doodle', 'color': 'blue'});
- print(await client.get(uriResponse.bodyFields['uri']));
+  var uriResponse = await client.post('https://example.com/whatsit/create',
+    body: {'name': 'doodle', 'color': 'blue'});
+  print(await client.get(uriResponse.bodyFields['uri']));
 } finally {
- client.close();
+  client.close();
 }
 
 await transaction.finish(status: SpanStatus.ok());
